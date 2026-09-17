@@ -1,6 +1,6 @@
 {
   "type": "directory",
-  "name": "SpaceGame",
+  "name": "spacegame",
   "children": [
     {
       "type": "file",
@@ -28,6 +28,16 @@
       "children": [
         {
           "type": "file",
+          "name": "Godot_v4.3-stable_win64.exe",
+          "path": "Godot/Godot_v4.3-stable_win64.exe"
+        },
+        {
+          "type": "file",
+          "name": "Godot_v4.3-stable_win64_console.exe",
+          "path": "Godot/Godot_v4.3-stable_win64_console.exe"
+        },
+        {
+          "type": "file",
           "name": "Godot_v4.6.3-stable_win64.exe",
           "path": "Godot/Godot_v4.6.3-stable_win64.exe"
         },
@@ -35,55 +45,6 @@
           "type": "file",
           "name": "Godot_v4.6.3-stable_win64_console.exe",
           "path": "Godot/Godot_v4.6.3-stable_win64_console.exe"
-        },
-        {
-          "type": "directory",
-          "name": "app_userdata",
-          "children": [
-            {
-              "type": "directory",
-              "name": "SpaceGame",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "kaelen_intro_stats.json",
-                  "path": "Godot/app_userdata/SpaceGame/kaelen_intro_stats.json"
-                },
-                {
-                  "type": "directory",
-                  "name": "logs",
-                  "children": [
-                    {
-                      "type": "file",
-                      "name": "godot.log",
-                      "path": "Godot/app_userdata/SpaceGame/logs/godot.log"
-                    }
-                  ]
-                },
-                {
-                  "type": "file",
-                  "name": "quest_history.md",
-                  "path": "Godot/app_userdata/SpaceGame/quest_history.md"
-                },
-                {
-                  "type": "file",
-                  "name": "salvager_backstory.md",
-                  "path": "Godot/app_userdata/SpaceGame/salvager_backstory.md"
-                },
-                {
-                  "type": "directory",
-                  "name": "vulkan",
-                  "children": [
-                    {
-                      "type": "file",
-                      "name": "pipelines.forward_plus.nvidia_geforce_rtx_5060_ti.cache",
-                      "path": "Godot/app_userdata/SpaceGame/vulkan/pipelines.forward_plus.nvidia_geforce_rtx_5060_ti.cache"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
         }
       ]
     },
@@ -1606,17 +1567,6 @@
               "path": "Ships/Zenith/desktop.ini"
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "directory",
-      "name": "_local",
-      "children": [
-        {
-          "type": "file",
-          "name": "The string is missing the terminator\uf03a \uf022.",
-          "path": "_local/The string is missing the terminator\uf03a \uf022"
         }
       ]
     },
@@ -5222,6 +5172,22 @@
           "path": "assets/F1HP.glb"
         },
         {
+          "type": "directory",
+          "name": "Godot",
+          "children": [
+            {
+              "type": "file",
+              "name": "Godot_v4.6.3-stable_win64.exe",
+              "path": "assets/Godot/Godot_v4.6.3-stable_win64.exe"
+            },
+            {
+              "type": "file",
+              "name": "Godot_v4.6.3-stable_win64_console.exe",
+              "path": "assets/Godot/Godot_v4.6.3-stable_win64_console.exe"
+            }
+          ]
+        },
+        {
           "type": "file",
           "name": "INDYMiner.glb",
           "path": "assets/INDYMiner.glb"
@@ -5234,6 +5200,105 @@
               "type": "file",
               "name": "portrait_spritesheet_layout_with_gender.json",
               "path": "assets/Portraits/portrait_spritesheet_layout_with_gender.json"
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "Ships",
+          "children": [
+            {
+              "type": "directory",
+              "name": "Aurlelia",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "Aurelia_Gunner.glb",
+                  "path": "assets/Ships/Aurlelia/Aurelia_Gunner.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Aurelia_Logistics.glb",
+                  "path": "assets/Ships/Aurlelia/Aurelia_Logistics.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Aurelia_MiningHauler.glb",
+                  "path": "assets/Ships/Aurlelia/Aurelia_MiningHauler.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Aurelia_interceptor.glb",
+                  "path": "assets/Ships/Aurlelia/Aurelia_interceptor.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "desktop.ini",
+                  "path": "assets/Ships/Aurlelia/desktop.ini"
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "Vanguard",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "Vanguard_Gunner.glb",
+                  "path": "assets/Ships/Vanguard/Vanguard_Gunner.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Vanguard_HaulerMiner.glb",
+                  "path": "assets/Ships/Vanguard/Vanguard_HaulerMiner.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Vanguard_Logistics.glb",
+                  "path": "assets/Ships/Vanguard/Vanguard_Logistics.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Vanguard_interceptor.glb",
+                  "path": "assets/Ships/Vanguard/Vanguard_interceptor.glb"
+                }
+              ]
+            },
+            {
+              "type": "directory",
+              "name": "Zenith",
+              "children": [
+                {
+                  "type": "file",
+                  "name": "Zenith_Gunner.glb",
+                  "path": "assets/Ships/Zenith/Zenith_Gunner.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Zenith_Interceptor.glb",
+                  "path": "assets/Ships/Zenith/Zenith_Interceptor.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Zenith_Logistics.glb",
+                  "path": "assets/Ships/Zenith/Zenith_Logistics.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "Zenith_MiningHauler.glb",
+                  "path": "assets/Ships/Zenith/Zenith_MiningHauler.glb"
+                },
+                {
+                  "type": "file",
+                  "name": "desktop.ini",
+                  "path": "assets/Ships/Zenith/desktop.ini"
+                }
+              ]
+            },
+            {
+              "type": "file",
+              "name": "ship_designs.json",
+              "path": "assets/Ships/ship_designs.json"
             }
           ]
         },
@@ -5253,57 +5318,27 @@
             },
             {
               "type": "file",
-              "name": "Shipyard_ORIGINAL_backup.blend",
-              "path": "assets/TestShips/Shipyard_ORIGINAL_backup.blend"
-            },
-            {
-              "type": "file",
-              "name": "kitbash_test_1_kitbash.glb",
-              "path": "assets/TestShips/kitbash_test_1_kitbash.glb"
-            },
-            {
-              "type": "file",
-              "name": "kitbash_test_2_kitbash.glb",
-              "path": "assets/TestShips/kitbash_test_2_kitbash.glb"
-            },
-            {
-              "type": "file",
-              "name": "kitbash_test_3_kitbash.glb",
-              "path": "assets/TestShips/kitbash_test_3_kitbash.glb"
-            },
-            {
-              "type": "file",
-              "name": "kitbash_test_4_kitbash.glb",
-              "path": "assets/TestShips/kitbash_test_4_kitbash.glb"
-            },
-            {
-              "type": "file",
               "name": "shipyard_catalog.json",
               "path": "assets/TestShips/shipyard_catalog.json"
-            },
+            }
+          ]
+        },
+        {
+          "type": "directory",
+          "name": "assets",
+          "children": [
             {
               "type": "directory",
-              "name": "textures",
+              "name": "audio",
               "children": [
                 {
                   "type": "directory",
-                  "name": "badges",
+                  "name": "taunts_orpheus",
                   "children": [
                     {
                       "type": "file",
-                      "name": "badge_sheets_metadata.json",
-                      "path": "assets/TestShips/textures/badges/badge_sheets_metadata.json"
-                    }
-                  ]
-                },
-                {
-                  "type": "directory",
-                  "name": "metals",
-                  "children": [
-                    {
-                      "type": "file",
-                      "name": "ShipPaint_Textures.json",
-                      "path": "assets/TestShips/textures/metals/ShipPaint_Textures.json"
+                      "name": "manifest.json",
+                      "path": "assets/assets/audio/taunts_orpheus/manifest.json"
                     }
                   ]
                 }
@@ -5707,21 +5742,6 @@
                   "type": "file",
                   "name": "Cube_Engine.glb",
                   "path": "assets/ship_parts/engines/Cube_Engine.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "Cube_EngineAMT.glb",
-                  "path": "assets/ship_parts/engines/Cube_EngineAMT.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "Cube_Engine_variant.blend",
-                  "path": "assets/ship_parts/engines/Cube_Engine_variant.blend"
-                },
-                {
-                  "type": "file",
-                  "name": "Cube_Engine_variant.blend1",
-                  "path": "assets/ship_parts/engines/Cube_Engine_variant.blend1"
                 },
                 {
                   "type": "file",
@@ -6187,21 +6207,6 @@
                 },
                 {
                   "type": "file",
-                  "name": "Hull.PugNoseAMT.glb",
-                  "path": "assets/ship_parts/hulls/Hull.PugNoseAMT.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "Hull.PugNose_variant.blend",
-                  "path": "assets/ship_parts/hulls/Hull.PugNose_variant.blend"
-                },
-                {
-                  "type": "file",
-                  "name": "Hull.PugNose_variant.blend1",
-                  "path": "assets/ship_parts/hulls/Hull.PugNose_variant.blend1"
-                },
-                {
-                  "type": "file",
                   "name": "hull.Grill.glb",
                   "path": "assets/ship_parts/hulls/hull.Grill.glb"
                 },
@@ -6366,21 +6371,6 @@
                 },
                 {
                   "type": "file",
-                  "name": "Big_GunAMT.glb",
-                  "path": "assets/ship_parts/weapons/Big_GunAMT.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "Big_Gun_variant.blend",
-                  "path": "assets/ship_parts/weapons/Big_Gun_variant.blend"
-                },
-                {
-                  "type": "file",
-                  "name": "Big_Gun_variant.blend1",
-                  "path": "assets/ship_parts/weapons/Big_Gun_variant.blend1"
-                },
-                {
-                  "type": "file",
                   "name": "Cube.002.glb",
                   "path": "assets/ship_parts/weapons/Cube.002.glb"
                 },
@@ -6495,298 +6485,6 @@
                   "path": "assets/ship_parts/weapons/hardpoitn.gun.dual.glb"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "type": "directory",
-          "name": "ships",
-          "children": [
-            {
-              "type": "directory",
-              "name": "generated",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_1.glb",
-                  "path": "assets/ships/generated/ship_1088652209_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_2.glb",
-                  "path": "assets/ships/generated/ship_1088652209_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_3.glb",
-                  "path": "assets/ships/generated/ship_1088652209_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_4.glb",
-                  "path": "assets/ships/generated/ship_1088652209_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_5.glb",
-                  "path": "assets/ships/generated/ship_1088652209_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_6.glb",
-                  "path": "assets/ships/generated/ship_1088652209_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_7.glb",
-                  "path": "assets/ships/generated/ship_1088652209_7.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1088652209_8.glb",
-                  "path": "assets/ships/generated/ship_1088652209_8.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_1.glb",
-                  "path": "assets/ships/generated/ship_1578337305_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_2.glb",
-                  "path": "assets/ships/generated/ship_1578337305_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_3.glb",
-                  "path": "assets/ships/generated/ship_1578337305_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_4.glb",
-                  "path": "assets/ships/generated/ship_1578337305_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_5.glb",
-                  "path": "assets/ships/generated/ship_1578337305_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_6.glb",
-                  "path": "assets/ships/generated/ship_1578337305_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_1578337305_7.glb",
-                  "path": "assets/ships/generated/ship_1578337305_7.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_171600929_1.glb",
-                  "path": "assets/ships/generated/ship_171600929_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_171600929_2.glb",
-                  "path": "assets/ships/generated/ship_171600929_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_171600929_3.glb",
-                  "path": "assets/ships/generated/ship_171600929_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_171600929_4.glb",
-                  "path": "assets/ships/generated/ship_171600929_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_171600929_5.glb",
-                  "path": "assets/ships/generated/ship_171600929_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_171600929_6.glb",
-                  "path": "assets/ships/generated/ship_171600929_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_1.glb",
-                  "path": "assets/ships/generated/ship_2351265127_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_2.glb",
-                  "path": "assets/ships/generated/ship_2351265127_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_3.glb",
-                  "path": "assets/ships/generated/ship_2351265127_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_4.glb",
-                  "path": "assets/ships/generated/ship_2351265127_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_5.glb",
-                  "path": "assets/ships/generated/ship_2351265127_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_6.glb",
-                  "path": "assets/ships/generated/ship_2351265127_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_2351265127_7.glb",
-                  "path": "assets/ships/generated/ship_2351265127_7.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_1.glb",
-                  "path": "assets/ships/generated/ship_3416455423_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_2.glb",
-                  "path": "assets/ships/generated/ship_3416455423_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_3.glb",
-                  "path": "assets/ships/generated/ship_3416455423_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_4.glb",
-                  "path": "assets/ships/generated/ship_3416455423_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_5.glb",
-                  "path": "assets/ships/generated/ship_3416455423_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_6.glb",
-                  "path": "assets/ships/generated/ship_3416455423_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3416455423_7.glb",
-                  "path": "assets/ships/generated/ship_3416455423_7.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_1.glb",
-                  "path": "assets/ships/generated/ship_349663091_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_2.glb",
-                  "path": "assets/ships/generated/ship_349663091_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_3.glb",
-                  "path": "assets/ships/generated/ship_349663091_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_4.glb",
-                  "path": "assets/ships/generated/ship_349663091_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_5.glb",
-                  "path": "assets/ships/generated/ship_349663091_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_6.glb",
-                  "path": "assets/ships/generated/ship_349663091_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_7.glb",
-                  "path": "assets/ships/generated/ship_349663091_7.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_349663091_8.glb",
-                  "path": "assets/ships/generated/ship_349663091_8.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3792703086_1.glb",
-                  "path": "assets/ships/generated/ship_3792703086_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3792703086_2.glb",
-                  "path": "assets/ships/generated/ship_3792703086_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3792703086_3.glb",
-                  "path": "assets/ships/generated/ship_3792703086_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3792703086_4.glb",
-                  "path": "assets/ships/generated/ship_3792703086_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3792703086_5.glb",
-                  "path": "assets/ships/generated/ship_3792703086_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3792703086_6.glb",
-                  "path": "assets/ships/generated/ship_3792703086_6.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3818330344_1.glb",
-                  "path": "assets/ships/generated/ship_3818330344_1.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3818330344_2.glb",
-                  "path": "assets/ships/generated/ship_3818330344_2.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3818330344_3.glb",
-                  "path": "assets/ships/generated/ship_3818330344_3.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3818330344_4.glb",
-                  "path": "assets/ships/generated/ship_3818330344_4.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3818330344_5.glb",
-                  "path": "assets/ships/generated/ship_3818330344_5.glb"
-                },
-                {
-                  "type": "file",
-                  "name": "ship_3818330344_6.glb",
-                  "path": "assets/ships/generated/ship_3818330344_6.glb"
-                }
-              ]
-            },
-            {
-              "type": "file",
-              "name": "ship_designs.json",
-              "path": "assets/ships/ship_designs.json"
             }
           ]
         },
@@ -8342,6 +8040,11 @@
         },
         {
           "type": "file",
+          "name": "tts_device_selection.md",
+          "path": "docs/tts_device_selection.md"
+        },
+        {
+          "type": "file",
           "name": "tts_hygiene_notes.md",
           "path": "docs/tts_hygiene_notes.md"
         },
@@ -8406,11 +8109,6 @@
       "children": [
         {
           "type": "file",
-          "name": "campaign_direction_live_fire.json",
-          "path": "logs/campaign_direction_live_fire.json"
-        },
-        {
-          "type": "file",
           "name": "fallback_events.jsonl",
           "path": "logs/fallback_events.jsonl"
         },
@@ -8423,251 +8121,6 @@
           "type": "file",
           "name": "fallback_summary.txt",
           "path": "logs/fallback_summary.txt"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_01.json",
-          "path": "logs/lounge_bundle_live_fire_01.json"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_06.json",
-          "path": "logs/lounge_bundle_live_fire_06.json"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_11.json",
-          "path": "logs/lounge_bundle_live_fire_11.json"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_16.json",
-          "path": "logs/lounge_bundle_live_fire_16.json"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_21.json",
-          "path": "logs/lounge_bundle_live_fire_21.json"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_23.json",
-          "path": "logs/lounge_bundle_live_fire_23.json"
-        },
-        {
-          "type": "file",
-          "name": "lounge_bundle_live_fire_25.json",
-          "path": "logs/lounge_bundle_live_fire_25.json"
-        },
-        {
-          "type": "file",
-          "name": "nova_line_bank_live_fire.json",
-          "path": "logs/nova_line_bank_live_fire.json"
-        },
-        {
-          "type": "file",
-          "name": "ollama_recovery_live_fire.json",
-          "path": "logs/ollama_recovery_live_fire.json"
-        },
-        {
-          "type": "file",
-          "name": "parallel_lounge_bundle_live_fire.json",
-          "path": "logs/parallel_lounge_bundle_live_fire.json"
-        },
-        {
-          "type": "directory",
-          "name": "quality_eval",
-          "children": [
-            {
-              "type": "file",
-              "name": "critic_eval.json",
-              "path": "logs/quality_eval/critic_eval.json"
-            },
-            {
-              "type": "file",
-              "name": "critic_v2_all_12345_1789228134.json",
-              "path": "logs/quality_eval/critic_v2_all_12345_1789228134.json"
-            },
-            {
-              "type": "file",
-              "name": "critic_v2_sentinels_12345_1789228191.json",
-              "path": "logs/quality_eval/critic_v2_sentinels_12345_1789228191.json"
-            },
-            {
-              "type": "file",
-              "name": "critic_v2_sentinels_67890_1789228339.json",
-              "path": "logs/quality_eval/critic_v2_sentinels_67890_1789228339.json"
-            },
-            {
-              "type": "file",
-              "name": "critic_v2_tuning_12345_1789227893.json",
-              "path": "logs/quality_eval/critic_v2_tuning_12345_1789227893.json"
-            },
-            {
-              "type": "file",
-              "name": "writer_eval_12345_1789254934.json",
-              "path": "logs/quality_eval/writer_eval_12345_1789254934.json"
-            },
-            {
-              "type": "file",
-              "name": "writer_eval_12345_1789255022.json",
-              "path": "logs/quality_eval/writer_eval_12345_1789255022.json"
-            },
-            {
-              "type": "file",
-              "name": "writer_eval_12345_1789255066.json",
-              "path": "logs/quality_eval/writer_eval_12345_1789255066.json"
-            },
-            {
-              "type": "file",
-              "name": "writer_eval_67890_1789256554.json",
-              "path": "logs/quality_eval/writer_eval_67890_1789256554.json"
-            }
-          ]
-        },
-        {
-          "type": "file",
-          "name": "quiet_moment_live.json",
-          "path": "logs/quiet_moment_live.json"
-        },
-        {
-          "type": "file",
-          "name": "quiet_moment_live_probe.json",
-          "path": "logs/quiet_moment_live_probe.json"
-        },
-        {
-          "type": "file",
-          "name": "quiet_moment_raw_4b_repro.json",
-          "path": "logs/quiet_moment_raw_4b_repro.json"
-        },
-        {
-          "type": "file",
-          "name": "quiet_moment_raw_8b_repro.json",
-          "path": "logs/quiet_moment_raw_8b_repro.json"
-        },
-        {
-          "type": "file",
-          "name": "quiet_moment_tail_4b_repro.json",
-          "path": "logs/quiet_moment_tail_4b_repro.json"
-        },
-        {
-          "type": "file",
-          "name": "taunt_bake.log",
-          "path": "logs/taunt_bake.log"
-        },
-        {
-          "type": "file",
-          "name": "taunt_bank_live_fire.json",
-          "path": "logs/taunt_bank_live_fire.json"
-        },
-        {
-          "type": "directory",
-          "name": "taunt_pool_audio",
-          "children": [
-            {
-              "type": "file",
-              "name": "INDEX.txt",
-              "path": "logs/taunt_pool_audio/INDEX.txt"
-            },
-            {
-              "type": "directory",
-              "name": "code_enforcement",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/code_enforcement/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "contract_hit",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/contract_hit/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "opportunist",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/opportunist/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "pirate_predation",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/pirate_predation/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "preemptive_strike",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/preemptive_strike/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "reinforcement",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/reinforcement/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "reputation_grudge",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/reputation_grudge/index.txt"
-                }
-              ]
-            },
-            {
-              "type": "directory",
-              "name": "unprovoked",
-              "children": [
-                {
-                  "type": "file",
-                  "name": "index.txt",
-                  "path": "logs/taunt_pool_audio/unprovoked/index.txt"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "file",
-          "name": "taunt_render_final.log",
-          "path": "logs/taunt_render_final.log"
-        },
-        {
-          "type": "file",
-          "name": "taunt_review_state.json",
-          "path": "logs/taunt_review_state.json"
         }
       ]
     },
@@ -9324,6 +8777,7 @@
             "static func validate_nova_bank_line(text: String) -> String",
             "static func _nova_bank_normalize(text: String) -> String",
             "static func _nova_bank_final_sentence(text: String) -> String",
+            "func _generic_faction_examples(mission_type: String) -> Dictionary",
             "func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary",
             "func _get_type_examples_fallback(agent_key: String, mission_type: String) -> Dictionary",
             "func _agent_memory_prompt_block(agent_id: String) -> String",
@@ -9350,6 +8804,7 @@
             "func _non_kaelen_replacement_for(term: String) -> String",
             "func _replace_case_variants(text: String, needle: String, replacement: String) -> String",
             "func _validate_quest_data(quest_data: Dictionary)",
+            "func _dialogue_has_broker_role_leak(dialogue: String, agent_name: String) -> bool",
             "func _objective_summary(obj_type: String, obj: Dictionary) -> String",
             "func _text_mentions_phrase(text_lower: String, phrase: String) -> bool",
             "func _nickname_for_agent(agent_name: String) -> String",
@@ -10868,6 +10323,11 @@
             },
             {
               "type": "file",
+              "name": "CollectionContract.gd.uid",
+              "path": "scripts/domain/CollectionContract.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "CollectionOpportunityCompiler.gd",
               "path": "scripts/domain/CollectionOpportunityCompiler.gd",
               "classes": [],
@@ -10882,6 +10342,11 @@
             },
             {
               "type": "file",
+              "name": "CollectionOpportunityCompiler.gd.uid",
+              "path": "scripts/domain/CollectionOpportunityCompiler.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "CollectionPostingBuilder.gd",
               "path": "scripts/domain/CollectionPostingBuilder.gd",
               "classes": [],
@@ -10892,6 +10357,11 @@
                 "static func _title(contract: Dictionary, requester: Dictionary) -> String",
                 "static func _withheld(reason: String, missing_binding: String) -> Dictionary"
               ]
+            },
+            {
+              "type": "file",
+              "name": "CollectionPostingBuilder.gd.uid",
+              "path": "scripts/domain/CollectionPostingBuilder.gd.uid"
             },
             {
               "type": "file",
@@ -11025,6 +10495,11 @@
             },
             {
               "type": "file",
+              "name": "InvestigationBoardLifecycle.gd.uid",
+              "path": "scripts/domain/InvestigationBoardLifecycle.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "InvestigationOfferBuilder.gd",
               "path": "scripts/domain/InvestigationOfferBuilder.gd",
               "classes": [
@@ -11055,6 +10530,11 @@
                 "func _pose(owner: Node, data: Dictionary, site: Dictionary) -> Dictionary",
                 "func dispatch(owner: Node, command: Dictionary) -> Dictionary"
               ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationRuntime.gd.uid",
+              "path": "scripts/domain/InvestigationRuntime.gd.uid"
             },
             {
               "type": "file",
@@ -11122,6 +10602,11 @@
             },
             {
               "type": "file",
+              "name": "InvestigationStateValidator.gd.uid",
+              "path": "scripts/domain/InvestigationStateValidator.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "InvestigationWorldPlacement.gd",
               "path": "scripts/domain/InvestigationWorldPlacement.gd",
               "classes": [],
@@ -11129,6 +10614,11 @@
                 "static func capture(owner: Node) -> Dictionary",
                 "static func check_saved_sites(data: Dictionary, snapshot: Dictionary) -> Dictionary"
               ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationWorldPlacement.gd.uid",
+              "path": "scripts/domain/InvestigationWorldPlacement.gd.uid"
             },
             {
               "type": "file",
@@ -11145,6 +10635,11 @@
                 "static func _vector(p: Array) -> Vector3",
                 "static func _key(mission_id: String, site_id: String) -> String"
               ]
+            },
+            {
+              "type": "file",
+              "name": "InvestigationWorldRuntime.gd.uid",
+              "path": "scripts/domain/InvestigationWorldRuntime.gd.uid"
             },
             {
               "type": "file",
@@ -11354,6 +10849,11 @@
                 "static func _effect(outcome: Dictionary, kind: String) -> Dictionary",
                 "static func validate(value: Dictionary) -> ValidationResult"
               ]
+            },
+            {
+              "type": "file",
+              "name": "MissionOutcome.gd.uid",
+              "path": "scripts/domain/MissionOutcome.gd.uid"
             },
             {
               "type": "file",
@@ -11699,6 +11199,11 @@
             },
             {
               "type": "file",
+              "name": "QuestCausalContract.gd.uid",
+              "path": "scripts/domain/QuestCausalContract.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "QuestCausalContractCompiler.gd",
               "path": "scripts/domain/QuestCausalContractCompiler.gd",
               "classes": [
@@ -11724,6 +11229,11 @@
             },
             {
               "type": "file",
+              "name": "QuestCausalContractCompiler.gd.uid",
+              "path": "scripts/domain/QuestCausalContractCompiler.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "QuestPlausibilityValidator.gd",
               "path": "scripts/domain/QuestPlausibilityValidator.gd",
               "classes": [
@@ -11742,6 +11252,11 @@
             },
             {
               "type": "file",
+              "name": "QuestPlausibilityValidator.gd.uid",
+              "path": "scripts/domain/QuestPlausibilityValidator.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "QuestWorldSnapshot.gd",
               "path": "scripts/domain/QuestWorldSnapshot.gd",
               "classes": [
@@ -11755,6 +11270,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "QuestWorldSnapshot.gd.uid",
+              "path": "scripts/domain/QuestWorldSnapshot.gd.uid"
             },
             {
               "type": "file",
@@ -13319,6 +12839,11 @@
             },
             {
               "type": "file",
+              "name": "GeneratedDesireConstraints.gd.uid",
+              "path": "scripts/persistence/GeneratedDesireConstraints.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "GeneratedFactionDesire.gd",
               "path": "scripts/persistence/GeneratedFactionDesire.gd",
               "classes": [
@@ -13339,6 +12864,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "GeneratedFactionDesire.gd.uid",
+              "path": "scripts/persistence/GeneratedFactionDesire.gd.uid"
             },
             {
               "type": "file",
@@ -13438,6 +12968,11 @@
             },
             {
               "type": "file",
+              "name": "NoveltyHistoryStore.gd.uid",
+              "path": "scripts/persistence/NoveltyHistoryStore.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "RunOpeningHistoryStore.gd",
               "path": "scripts/persistence/RunOpeningHistoryStore.gd",
               "classes": [],
@@ -13449,6 +12984,11 @@
                 "static func preferred_pairs(history: Dictionary, eligible_kinds: Array, campaign_id: String) -> Array",
                 "static func reset(path: String = DEFAULT_PATH) -> Dictionary"
               ]
+            },
+            {
+              "type": "file",
+              "name": "RunOpeningHistoryStore.gd.uid",
+              "path": "scripts/persistence/RunOpeningHistoryStore.gd.uid"
             },
             {
               "type": "file",
@@ -13763,6 +13303,11 @@
             },
             {
               "type": "file",
+              "name": "CampaignDirectionContract.gd.uid",
+              "path": "scripts/story/CampaignDirectionContract.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "CampaignResolutionCompiler.gd",
               "path": "scripts/story/CampaignResolutionCompiler.gd",
               "classes": [],
@@ -13782,6 +13327,11 @@
                 "static func resolve(plan: Dictionary, record: Dictionary) -> Dictionary",
                 "static func summary_lines(record: Dictionary) -> Array"
               ]
+            },
+            {
+              "type": "file",
+              "name": "CampaignResolutionCompiler.gd.uid",
+              "path": "scripts/story/CampaignResolutionCompiler.gd.uid"
             },
             {
               "type": "file",
@@ -13850,6 +13400,11 @@
             },
             {
               "type": "file",
+              "name": "DesireProgressLedger.gd.uid",
+              "path": "scripts/story/DesireProgressLedger.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "DialogueBundleValidator.gd",
               "path": "scripts/story/DialogueBundleValidator.gd",
               "classes": [
@@ -13893,6 +13448,11 @@
             },
             {
               "type": "file",
+              "name": "DialogueCritic.gd.uid",
+              "path": "scripts/story/DialogueCritic.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "DialogueFactPacket.gd",
               "path": "scripts/story/DialogueFactPacket.gd",
               "classes": [
@@ -13908,6 +13468,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "DialogueFactPacket.gd.uid",
+              "path": "scripts/story/DialogueFactPacket.gd.uid"
             },
             {
               "type": "file",
@@ -13957,6 +13522,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "DialogueQualityGate.gd.uid",
+              "path": "scripts/story/DialogueQualityGate.gd.uid"
             },
             {
               "type": "file",
@@ -14277,6 +13847,11 @@
                 "static func _is_non_negative_int(value: Variant) -> bool",
                 "static func _persistable(value: Dictionary) -> Dictionary"
               ]
+            },
+            {
+              "type": "file",
+              "name": "LocalPressureDirector.gd.uid",
+              "path": "scripts/story/LocalPressureDirector.gd.uid"
             },
             {
               "type": "file",
@@ -14712,6 +14287,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "QuestChoicePolicy.gd.uid",
+              "path": "scripts/story/QuestChoicePolicy.gd.uid"
             },
             {
               "type": "file",
@@ -15240,14 +14820,42 @@
         },
         {
           "type": "file",
+          "name": "tts_device.py",
+          "path": "scripts/tts_device.py",
+          "classes": [
+            {
+              "name": "Capacity",
+              "methods": []
+            },
+            {
+              "name": "AdaptiveDevice",
+              "methods": [
+                "def __init__(self, cpu_model, gpu_factory, probe, release, mode, clock)",
+                "def reserve(sample)",
+                "def _cpu(self, reason, cooldown)",
+                "def select(self)",
+                "def render(self, generate)",
+                "def status(self)"
+              ]
+            }
+          ],
+          "functions": [
+            "def cuda_capacity(torch)"
+          ]
+        },
+        {
+          "type": "file",
           "name": "tts_server.py",
           "path": "scripts/tts_server.py",
           "classes": [],
           "functions": [
+            "def _gpu_model(device)",
+            "def _release_gpu(device)",
             "def resolve_voice(voice_str)",
             "def apply_style(pack, style_scale, style_from)",
             "async def health_check()",
-            "async def text_to_speech(data)"
+            "def text_to_speech(data)",
+            "def _text_to_speech(data)"
           ]
         },
         {
@@ -15464,6 +15072,11 @@
             },
             {
               "type": "file",
+              "name": "InvestigationPanel.gd.uid",
+              "path": "scripts/ui/InvestigationPanel.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "LandingScreen.gd",
               "path": "scripts/ui/LandingScreen.gd",
               "classes": [],
@@ -15544,18 +15157,19 @@
               "path": "scripts/ui/UILayoutManager.gd",
               "classes": [],
               "functions": [
+                "func _disconnect_layout() -> void",
                 "func register_panel(id: String, panel: Control) -> void",
+                "func reset_defaults() -> void",
+                "func _content_minimum(panel: Control) -> Vector2",
+                "func enforce_layout() -> void",
+                "static func solve_layout(viewport: Vector2, entries: Array, quest_size: Vector2) -> Dictionary",
                 "func toggle_edit_mode() -> void",
                 "func is_edit_mode() -> bool",
                 "func handle_input(event: InputEvent) -> void",
                 "func _create_overlay(id: String) -> void",
                 "func _sync_overlay(id: String) -> void",
-                "func _is_dynamic(id: String) -> bool",
-                "func _create_placeholder(id: String) -> void",
-                "func _snap_back_if_overlapping(id: String) -> void",
                 "func _save_layout() -> void",
-                "func _load_layout() -> void",
-                "func _to_pixel_pos(p: Control) -> void"
+                "func _load_layout() -> void"
               ]
             },
             {
@@ -16204,6 +15818,11 @@
             },
             {
               "type": "file",
+              "name": "run_causal_fact_text_tests.gd.uid",
+              "path": "tests/domain/run_causal_fact_text_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_domain_foundation_tests.gd",
               "path": "tests/domain/run_domain_foundation_tests.gd",
               "classes": [],
@@ -16222,6 +15841,18 @@
               "type": "file",
               "name": "run_domain_foundation_tests.gd.uid",
               "path": "tests/domain/run_domain_foundation_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_hud_layout_tests.gd",
+              "path": "tests/domain/run_hud_layout_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _check_rects(rects: Array[Rect2], viewport: Vector2) -> void",
+                "func _expect(ok: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",
@@ -16323,6 +15954,11 @@
             },
             {
               "type": "file",
+              "name": "run_investigation_board_lifecycle_tests.gd.uid",
+              "path": "tests/domain/run_investigation_board_lifecycle_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_investigation_offer_tests.gd",
               "path": "tests/domain/run_investigation_offer_tests.gd",
               "classes": [],
@@ -16389,6 +16025,11 @@
                 "func _expect(ok: bool, message: String)",
                 "func _test_canonical_save_roundtrip()"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_investigation_runtime_tests.gd.uid",
+              "path": "tests/domain/run_investigation_runtime_tests.gd.uid"
             },
             {
               "type": "file",
@@ -16771,6 +16412,11 @@
             },
             {
               "type": "file",
+              "name": "run_quest_causal_contract_tests.gd.uid",
+              "path": "tests/domain/run_quest_causal_contract_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_quest_lifecycle_validation_tests.gd",
               "path": "tests/domain/run_quest_lifecycle_validation_tests.gd",
               "classes": [],
@@ -16783,6 +16429,11 @@
                 "func _test_stage_is_reported_back() -> void",
                 "func _expect(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_quest_lifecycle_validation_tests.gd.uid",
+              "path": "tests/domain/run_quest_lifecycle_validation_tests.gd.uid"
             },
             {
               "type": "file",
@@ -17111,6 +16762,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "QuestContractFixtures.gd.uid",
+              "path": "tests/fixtures/QuestContractFixtures.gd.uid"
             }
           ]
         },
@@ -17650,6 +17306,11 @@
             },
             {
               "type": "file",
+              "name": "run_generated_faction_desire_tests.gd.uid",
+              "path": "tests/persistence/run_generated_faction_desire_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_kaelen_handoff_store_tests.gd",
               "path": "tests/persistence/run_kaelen_handoff_store_tests.gd",
               "classes": [],
@@ -17979,6 +17640,47 @@
               "type": "file",
               "name": "run_speech_service_tests.gd.uid",
               "path": "tests/speech/run_speech_service_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_tts_cache_playback_tests.gd",
+              "path": "tests/speech/run_tts_cache_playback_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _expect(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_tts_cache_playback_tests.gd.uid",
+              "path": "tests/speech/run_tts_cache_playback_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "test_tts_device.py",
+              "path": "tests/speech/test_tts_device.py",
+              "classes": [
+                {
+                  "name": "DeviceTests",
+                  "methods": [
+                    "def setUp(self)",
+                    "def enable_gpu(self)",
+                    "def test_no_gpu_and_missing_monitor(self)",
+                    "def test_cpu_only_torch_does_not_touch_gpu(self)",
+                    "def test_low_memory_small_gpu_stays_cpu(self)",
+                    "def test_pressure_evicts_then_recovers_after_cooldown(self)",
+                    "def test_memory_pressure_and_lost_telemetry_evict(self)",
+                    "def test_multiple_gpus_select_available_adapter(self)",
+                    "def test_initialization_failure_is_backed_off(self)",
+                    "def test_failed_render_retries_whole_line_on_cpu(self)",
+                    "def test_cpu_failure_is_not_retried(self)",
+                    "def test_cpu_override_never_probes(self)"
+                  ]
+                }
+              ],
+              "functions": []
             }
           ]
         },
@@ -18044,6 +17746,11 @@
             },
             {
               "type": "file",
+              "name": "run_branch_policy_wiring_tests.gd.uid",
+              "path": "tests/story/run_branch_policy_wiring_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_campaign_direction_tests.gd",
               "path": "tests/story/run_campaign_direction_tests.gd",
               "classes": [],
@@ -18063,6 +17770,11 @@
                 "func _test_prompt() -> void",
                 "func _test_response_parsing() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_campaign_direction_tests.gd.uid",
+              "path": "tests/story/run_campaign_direction_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18114,6 +17826,11 @@
             },
             {
               "type": "file",
+              "name": "run_campaign_direction_trace_tests.gd.uid",
+              "path": "tests/story/run_campaign_direction_trace_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_campaign_resolution_tests.gd",
               "path": "tests/story/run_campaign_resolution_tests.gd",
               "classes": [],
@@ -18142,6 +17859,11 @@
                 "func _test_v2_evaluation() -> void",
                 "func _test_v1_stays_v1() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_campaign_resolution_tests.gd.uid",
+              "path": "tests/story/run_campaign_resolution_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18248,6 +17970,11 @@
             },
             {
               "type": "file",
+              "name": "run_collection_board_posting_tests.gd.uid",
+              "path": "tests/story/run_collection_board_posting_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_collection_contract_tests.gd",
               "path": "tests/story/run_collection_contract_tests.gd",
               "classes": [],
@@ -18270,6 +17997,11 @@
                 "func _test_posting_generation() -> void",
                 "func _test_posting_withholding() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_collection_contract_tests.gd.uid",
+              "path": "tests/story/run_collection_contract_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18313,6 +18045,11 @@
             },
             {
               "type": "file",
+              "name": "run_desire_progress_tests.gd.uid",
+              "path": "tests/story/run_desire_progress_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_dialogue_bundle_validator_tests.gd",
               "path": "tests/story/run_dialogue_bundle_validator_tests.gd",
               "classes": [],
@@ -18350,6 +18087,11 @@
             },
             {
               "type": "file",
+              "name": "run_dialogue_critic_tests.gd.uid",
+              "path": "tests/story/run_dialogue_critic_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_dialogue_fact_packet_tests.gd",
               "path": "tests/story/run_dialogue_fact_packet_tests.gd",
               "classes": [],
@@ -18363,6 +18105,11 @@
                 "func _test_fingerprint_tracks_facts_not_nudges() -> void",
                 "func _expect(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_fact_packet_tests.gd.uid",
+              "path": "tests/story/run_dialogue_fact_packet_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18411,6 +18158,27 @@
                 "func _test_rewrite_budget_is_bounded() -> void",
                 "func _expect(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_dialogue_quality_gate_tests.gd.uid",
+              "path": "tests/story/run_dialogue_quality_gate_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_faction_agent_role_tests.gd",
+              "path": "tests/story/run_faction_agent_role_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _run() -> void",
+                "func _expect(ok: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "run_faction_agent_role_tests.gd.uid",
+              "path": "tests/story/run_faction_agent_role_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18644,6 +18412,11 @@
                 "func _test_determinism_and_persistence() -> void",
                 "func _test_pacing_families() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_local_pressure_tests.gd.uid",
+              "path": "tests/story/run_local_pressure_tests.gd.uid"
             },
             {
               "type": "file",
@@ -18962,6 +18735,11 @@
             },
             {
               "type": "file",
+              "name": "run_mission_outcome_tests.gd.uid",
+              "path": "tests/story/run_mission_outcome_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_narrative_cache_invalidation_tests.gd",
               "path": "tests/story/run_narrative_cache_invalidation_tests.gd",
               "classes": [],
@@ -19169,6 +18947,11 @@
             },
             {
               "type": "file",
+              "name": "run_novelty_history_tests.gd.uid",
+              "path": "tests/story/run_novelty_history_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_outcome_callback_tests.gd",
               "path": "tests/story/run_outcome_callback_tests.gd",
               "classes": [],
@@ -19247,6 +19030,11 @@
             },
             {
               "type": "file",
+              "name": "run_pressure_card_tests.gd.uid",
+              "path": "tests/story/run_pressure_card_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_quest_choice_policy_tests.gd",
               "path": "tests/story/run_quest_choice_policy_tests.gd",
               "classes": [],
@@ -19264,6 +19052,11 @@
                 "func _mission_plan_for(contract: Dictionary) -> Dictionary",
                 "func _expect(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_quest_choice_policy_tests.gd.uid",
+              "path": "tests/story/run_quest_choice_policy_tests.gd.uid"
             },
             {
               "type": "file",
@@ -19613,6 +19406,11 @@
                 "func _test_staged_callback_applies_once() -> void",
                 "func _test_in_flight_pending() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_terminal_transaction_tests.gd.uid",
+              "path": "tests/story/run_terminal_transaction_tests.gd.uid"
             }
           ]
         },
@@ -19710,6 +19508,11 @@
                 "func _bind_context() -> Dictionary",
                 "func _finish() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_campaign_direction_live_fire.gd.uid",
+              "path": "tests/tools/run_campaign_direction_live_fire.gd.uid"
             },
             {
               "type": "file",
@@ -20093,21 +19896,6 @@
             },
             {
               "type": "file",
-              "name": "inspect_engine_part.gd",
-              "path": "tools/assembler_preview/inspect_engine_part.gd",
-              "classes": [],
-              "functions": [
-                "func _init() -> void",
-                "func _print_tree(node: Node, depth: int) -> void"
-              ]
-            },
-            {
-              "type": "file",
-              "name": "inspect_engine_part.gd.uid",
-              "path": "tools/assembler_preview/inspect_engine_part.gd.uid"
-            },
-            {
-              "type": "file",
               "name": "integ.gd",
               "path": "tools/assembler_preview/integ.gd",
               "classes": [],
@@ -20196,22 +19984,6 @@
               "type": "file",
               "name": "recipe_print.gd.uid",
               "path": "tools/assembler_preview/recipe_print.gd.uid"
-            },
-            {
-              "type": "file",
-              "name": "thruster_preview.gd",
-              "path": "tools/assembler_preview/thruster_preview.gd",
-              "classes": [],
-              "functions": [
-                "func _ready() -> void",
-                "func _setup_world() -> void",
-                "func _capture(path: String) -> void"
-              ]
-            },
-            {
-              "type": "file",
-              "name": "thruster_preview.gd.uid",
-              "path": "tools/assembler_preview/thruster_preview.gd.uid"
             },
             {
               "type": "file",
@@ -20306,6 +20078,25 @@
         },
         {
           "type": "file",
+          "name": "import_and_scan.gd",
+          "path": "tools/import_and_scan.gd",
+          "classes": [],
+          "functions": [
+            "func _initialize() -> void"
+          ]
+        },
+        {
+          "type": "file",
+          "name": "import_and_scan.gd.uid",
+          "path": "tools/import_and_scan.gd.uid"
+        },
+        {
+          "type": "file",
+          "name": "init_cache.ps1",
+          "path": "tools/init_cache.ps1"
+        },
+        {
+          "type": "file",
           "name": "lounge.bat",
           "path": "tools/lounge.bat"
         },
@@ -20323,20 +20114,6 @@
                 "def similarity(left, right)",
                 "def main()"
               ]
-            },
-            {
-              "type": "file",
-              "name": "curated_generation.log",
-              "path": "tools/lounge_review/curated_generation.log",
-              "classes": [],
-              "functions": []
-            },
-            {
-              "type": "file",
-              "name": "curated_generation_errors.log",
-              "path": "tools/lounge_review/curated_generation_errors.log",
-              "classes": [],
-              "functions": []
             },
             {
               "type": "file",
@@ -20361,20 +20138,6 @@
               "functions": [
                 "def main()"
               ]
-            },
-            {
-              "type": "file",
-              "name": "generator_error.log",
-              "path": "tools/lounge_review/generator_error.log",
-              "classes": [],
-              "functions": []
-            },
-            {
-              "type": "file",
-              "name": "generator_progress.log",
-              "path": "tools/lounge_review/generator_progress.log",
-              "classes": [],
-              "functions": []
             },
             {
               "type": "file",
@@ -20517,10 +20280,20 @@
             },
             {
               "type": "file",
+              "name": "CriticCorpus.gd.uid",
+              "path": "tools/quality_eval/CriticCorpus.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "CriticSentinels.gd",
               "path": "tools/quality_eval/CriticSentinels.gd",
               "classes": [],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "CriticSentinels.gd.uid",
+              "path": "tools/quality_eval/CriticSentinels.gd.uid"
             },
             {
               "type": "file",
@@ -20542,6 +20315,11 @@
                 }
               ],
               "functions": []
+            },
+            {
+              "type": "file",
+              "name": "OllamaProbe.gd.uid",
+              "path": "tools/quality_eval/OllamaProbe.gd.uid"
             },
             {
               "type": "directory",
@@ -20568,6 +20346,11 @@
             },
             {
               "type": "file",
+              "name": "run_critic_eval.gd.uid",
+              "path": "tools/quality_eval/run_critic_eval.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_critic_eval_v2.gd",
               "path": "tools/quality_eval/run_critic_eval_v2.gd",
               "classes": [],
@@ -20579,6 +20362,11 @@
             },
             {
               "type": "file",
+              "name": "run_critic_eval_v2.gd.uid",
+              "path": "tools/quality_eval/run_critic_eval_v2.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_smoke.gd",
               "path": "tools/quality_eval/run_smoke.gd",
               "classes": [],
@@ -20586,6 +20374,11 @@
                 "func _initialize() -> void",
                 "func _run() -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_smoke.gd.uid",
+              "path": "tools/quality_eval/run_smoke.gd.uid"
             },
             {
               "type": "file",
@@ -20601,6 +20394,11 @@
                 "func _write(records: Array, summary: Dictionary) -> void",
                 "func _print_summary(summary: Dictionary, records: Array) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_writer_eval.gd.uid",
+              "path": "tools/quality_eval/run_writer_eval.gd.uid"
             }
           ]
         },

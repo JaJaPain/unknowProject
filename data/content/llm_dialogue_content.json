@@ -30,7 +30,7 @@
 		"faction_agent": {
 			"_comment": "Voss / Ryn / Dask and generated station contacts.",
 			"address_rule": "Does not know the pilot's private nickname. May say Indy at most once; usually uses you, pilot, asset, or courier.",
-			"tone_card": "Faction-specific professional contact. Never imitates Kaelen, never says Shiny."
+			"tone_card": "Faction-specific professional contact commissioning work for their own faction. The faction needs the goods or service and pays the pilot directly. Never invent an outside client, buyer, personal cut or brokerage fee. Never imitates Kaelen, never says Shiny."
 		},
 		"mechanic": {
 			"voice_profile_id": "voice.jenna_kross.v1",
@@ -120,15 +120,15 @@
 					},
 					"aurelia": {
 						"dialogues": [
-							"I've got a buyer who needs 25 m³ of ore off the books, George. Deliver it here and my cut stays quiet.",
+							"Aurelia needs 25 m³ of ore for our own reserves, George. Deliver it here, quietly, and we pay you directly.",
 							"There's a quiet deal on the table, George. 25 m³ of ore, delivered to this station. No manifests, no questions.",
-							"A client of mine is short 25 m³ of ore, George. Bring it in clean and the credits are yours. I take my slice.",
+							"We're short 25 m³ of ore, George. Bring it to this station for Aurelia and the credits are yours.",
 							"Opportunity knocking, George. 25 m³ of ore delivered here pays very nicely. I'll handle the paperwork — or lack of it.",
-							"Need 25 m³ of ore moved to this dock, George. My buyer is impatient and pays well for discretion."
+							"I need 25 m³ of ore at this dock for Aurelia, George. Our stockpile is running thin. Discretion pays."
 						],
-						"response_1": "Perfect, George. Deliver it clean and we both walk away richer.",
+						"response_1": "Perfect, George. Deliver it clean. Aurelia gets its ore and you get paid.",
 						"response_2": "Advance wired, George. Mining lanes are contested lately — watch your back out there.",
-						"response_3": "Fine, George, payout bumped. But the ore had better arrive on time. My buyer doesn't do extensions."
+						"response_3": "Fine, George, payout bumped. But the ore had better arrive on time. Aurelia needs those supplies."
 					},
 					"vanguard": {
 						"dialogues": [

@@ -533,11 +533,12 @@ func _ready():
 	# Wire draggable UI layout manager (must be after all 4 panels are created)
 	_ui_layout_manager = UILayoutManagerScript.new()
 	_ui_layout_manager.setup(hud_panel, chat_window_panel, overview_panel, target_panel, self, quest_tracker_panel)
+	resize_handle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	resize_handle.hide()
 	quest_tracker_panel.reset_size()
 	chat_window_panel.resized.connect(_update_chat_font_size)
 
-	# Register combat wheel as a draggable panel (CombatPanel is an autoload CanvasLayer)
-	_ui_layout_manager.register_panel("combat", CombatPanel.get_wheel_panel())
+	# CombatPanel retains its own full-size centre-lower wheel layout.
 
 	# Hide overview and quest tracker during combat.
 	CombatManager.combat_started.connect(func(_e: Node):
@@ -662,6 +663,8 @@ func _complete_offline_loading_for_tests() -> void:
 
 func _on_startup_load_completed(save_loaded: bool) -> void:
 	startup_save_loaded = save_loaded
+	if not save_loaded and _ui_layout_manager:
+		_ui_layout_manager.reset_defaults()
 	if save_loaded:
 		refresh_restored_state()
 	# The landing screen deliberately suppresses this startup gate until a
@@ -678,6 +681,8 @@ func refresh_restored_state() -> void:
 	refresh_overview()
 
 func _process(delta):
+	if _ui_layout_manager:
+		_ui_layout_manager.enforce_layout()
 	if GlobalState.paused: return
 
 	if _story_quest_panel and _story_quest_panel.visible:
@@ -10350,6 +10355,9 @@ func _input(event: InputEvent):
 		_ui_layout_manager.handle_input(event)
 
 func _on_resize_handle_input(event: InputEvent):
+	# The dock manager owns resizing; the old anchor-based handle bypassed it.
+	if _ui_layout_manager:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed:
 			is_resizing = true
@@ -11752,13 +11760,8 @@ func _on_talk_to_agent_pressed():
 	else:
 		_refresh_agent_quest_board()
 
-func _show_kaelen_first_briefing() -> void:
-	agent_name_label.text = "BROKER KAELEN"
-	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
-	_update_agent_portrait("neutral", "", "amused")
-	agent_back_btn.visible = true
-
-	var briefing_lines: Array[String] = [
+static func _kaelen_first_briefing_lines() -> Array[String]:
+	return [
 		"Well, well. Fresh hull, no record, and that desperate look pilots get when they realize fuel costs money. Sit down, Shiny.",
 		"Name's Kaelen. I'm a broker. I connect people who need things done with people dumb enough to do them. That's you, by the way . . I just take a modest cut. . . um. . . Don't look at me like that. . . Modest by my standards.",
 		"Here's how this works. Factions out here, Zenith, Aurelia, Vanguard, they all need grunt work handled. Deliveries, salvage, the occasional aggressive negotiation. They post contracts through me, I find a pilot, everybody gets paid. Simple.",
@@ -11766,6 +11769,15 @@ func _show_kaelen_first_briefing() -> void:
 		"But permits cost more than your ship is worth, and I happen to know a few buyers who don't ask where the rocks came from. You mine it, I move it, we split the difference. Just don't get caught lingering in someone's claim. Faction patrols out here shoot first, file paperwork never.",
 		"So, I've actually got someone who needs something handled right now. You interested?",
 	]
+
+
+func _show_kaelen_first_briefing() -> void:
+	agent_name_label.text = "BROKER KAELEN"
+	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
+	_update_agent_portrait("neutral", "", "amused")
+	agent_back_btn.visible = true
+
+	var briefing_lines := _kaelen_first_briefing_lines()
 	agent_dialogue_label.text = "\n\n".join(briefing_lines)
 	_kaelen_briefing_scroll_serial += 1
 	_kaelen_briefing_auto_scroll_done = false
@@ -14692,6 +14704,9 @@ func _queue_intro_cinematic_voice_cache() -> void:
 		return
 	_intro_cinematic_voice_cache_requested = true
 	IntroCinematicType.cache_nova_voice_lines()
+	# Prepare the scripted station tutorial before the player reaches Kaelen.
+	for line in _kaelen_first_briefing_lines():
+		SpeechService.cache(line, "voice.kaelen.v1")
 
 
 func _on_intro_cinematic_voice_cache_completed() -> void:

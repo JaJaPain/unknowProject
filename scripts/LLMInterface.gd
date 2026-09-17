@@ -2550,7 +2550,23 @@ func _on_chapter_plan_generation_completed(
 	callback.call(parsed)
 
 
+func _generic_faction_examples(mission_type: String) -> Dictionary:
+	var line := "We need 25 m³ of ore delivered here, George. Our reserves need replenishing."
+	if mission_type == "KILL_SHIPS":
+		line = "3 Slithern ships are threatening our routes, George. Eliminate them for us."
+	elif mission_type == "PICKUP_SPECIAL":
+		line = "Sable Mercer at Morrow Station is holding a Sealed Data Drive for us, George. Retrieve it and bring it here."
+	return {
+		"dialogues": [line],
+		"response_1": "Agreed, George. We will pay you for completing the assignment.",
+		"response_2": "Advance approved, George. Bring back what we need.",
+		"response_3": "Payment revised, George. Our requirements remain the same.",
+	}
+
+
 func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary:
+	if agent_key == "faction_agent":
+		return _generic_faction_examples(mission_type)
 	# Few-shot quest examples now live in data/content/llm_dialogue_content.json
 	# (quest_generation.mission_types[TYPE].examples_by_agent). Edit dialogue
 	# phrasing there, not here. This wrapper reads the JSON via the content
@@ -2629,15 +2645,15 @@ func _get_type_examples_fallback(agent_key: String, mission_type: String) -> Dic
 					d["response_3"] = "Playing hardball? I respect the hustle, George. Payout bumped. But rivals will be watching."
 				"DELIVER_ORE":
 					d["dialogues"] = [
-						"I've got a buyer who needs 25 m³ of ore off the books, George. Deliver it here and my cut stays quiet.",
+						"Aurelia needs 25 m³ of ore for our own reserves, George. Deliver it here, quietly, and we pay you directly.",
 						"There's a quiet deal on the table, George. 25 m³ of ore, delivered to this station. No manifests, no questions.",
-						"A client of mine is short 25 m³ of ore, George. Bring it in clean and the credits are yours. I take my slice.",
+						"We're short 25 m³ of ore, George. Bring it to this station for Aurelia and the credits are yours.",
 						"Opportunity knocking, George. 25 m³ of ore delivered here pays very nicely. I'll handle the paperwork — or lack of it.",
-						"Need 25 m³ of ore moved to this dock, George. My buyer is impatient and pays well for discretion.",
+						"I need 25 m³ of ore at this dock for Aurelia, George. Our stockpile is running thin. Discretion pays.",
 					]
-					d["response_1"] = "Perfect, George. Deliver it clean and we both walk away richer."
+					d["response_1"] = "Perfect, George. Deliver it clean. Aurelia gets its ore and you get paid."
 					d["response_2"] = "Advance wired, George. Mining lanes are contested lately — watch your back out there."
-					d["response_3"] = "Fine, George, payout bumped. But the ore had better arrive on time. My buyer doesn't do extensions."
+					d["response_3"] = "Fine, George, payout bumped. But the ore had better arrive on time. Aurelia needs those supplies."
 				"PICKUP_SPECIAL":
 					d["dialogues"] = [
 						"Got a quiet job, George. Sable Mercer at Morrow Station has a Sealed Data Drive. Pick it up and bring it back here — no questions asked.",
@@ -2961,6 +2977,11 @@ func request_quest_generation(
 			"You speak directly to the pilot and use dry PG-13 frontier humor when it fits. Never call the pilot by name or nickname -- use 'you' or 'pilot'. " + \
 			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
 
+	if not agent_profile.is_empty():
+		speaker_card_id = "faction_agent"
+	if speaker_card_id == "faction_agent":
+		agent_persona += " You commission this work for your own faction. Your faction needs the goods or service and pays the pilot directly. Do not invent an outside client or buyer, or claim a personal cut, commission, or brokerage fee."
+
 	var speaker_card_block := LLMDialogueContentRegistry.shared().speaker_prompt_block(
 		speaker_card_id,
 		agent_profile
@@ -3154,7 +3175,7 @@ func request_quest_generation(
 		)
 	
 	# Fetch 5 type-matched example dialogues + responses for this agent × mission type
-	var agent_key = chosen_faction if chosen_faction in ["zenith", "aurelia", "vanguard"] else "neutral"
+	var agent_key = chosen_faction if chosen_faction in ["zenith", "aurelia", "vanguard"] else ("faction_agent" if speaker_card_id == "faction_agent" else "neutral")
 	var type_examples = _get_type_examples(agent_key, chosen_type)
 	var example_dialogues: Array = type_examples.get("dialogues", [])
 	var example_response_1: String = type_examples.get("response_1", "")
@@ -4435,7 +4456,9 @@ func _finalize_validated_quest_display(
 	var rewrite_reason := ""
 	var raw_dialogue := str(quest_data.get("dialogue", ""))
 	var raw_agent := str(quest_data.get("agent_name", ""))
-	if _dialogue_conflicts_with_objective(raw_dialogue, obj_type):
+	if _dialogue_has_broker_role_leak(raw_dialogue, raw_agent):
+		rewrite_reason = "broker_role_leak"
+	elif _dialogue_conflicts_with_objective(raw_dialogue, obj_type):
 		rewrite_reason = "dialogue_conflicts_with_objective"
 	elif _dialogue_has_faction_mismatch(raw_dialogue, obj_type, obj):
 		rewrite_reason = "faction_mismatch"
@@ -4463,6 +4486,16 @@ func _finalize_validated_quest_display(
 		print(
 			"[LLMInterface] ⚠ VALIDATE: Replaced contradictory briefing with verified objective text."
 		)
+
+
+func _dialogue_has_broker_role_leak(dialogue: String, agent_name: String) -> bool:
+	if agent_name.strip_edges().is_empty() or agent_name.to_lower().contains("kaelen"):
+		return false
+	var text := dialogue.to_lower().replace("’", "'")
+	for phrase in ["a client needs", "my client", "a client of mine", "my buyer", "a buyer who", "i take my cut", "my cut", "my slice", "my broker", "my commission", "my percentage", "broker's fee", "brokerage fee"]:
+		if text.contains(phrase):
+			return true
+	return false
 
 
 func _objective_summary(obj_type: String, obj: Dictionary) -> String:

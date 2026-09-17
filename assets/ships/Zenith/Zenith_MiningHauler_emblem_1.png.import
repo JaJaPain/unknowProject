@@ -1,0 +1,38 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://cfgva462xuonn"
+path.s3tc="res://.godot/imported/Zenith_MiningHauler_emblem_1.png-1b910dad4a109a13bd0f9e19a4d28960.s3tc.ctex"
+metadata={
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
+}
+generator_parameters={
+"md5": "2d198e0ed11e65641d6177828e859aa9"
+}
+
+[deps]
+
+source_file="res://assets/Ships/Zenith/Zenith_MiningHauler_emblem_1.png"
+dest_files=["res://.godot/imported/Zenith_MiningHauler_emblem_1.png-1b910dad4a109a13bd0f9e19a4d28960.s3tc.ctex"]
+
+[params]
+
+compress/mode=2
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=0

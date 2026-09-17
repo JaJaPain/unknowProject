@@ -15,7 +15,7 @@ if sys.platform.startswith("win"):
 
 # Configuration
 IGNORED_DIRS = {
-    ".git", "__pycache__", "node_modules", ".godot", "venv", 
+    ".git", "__pycache__", "node_modules", ".godot", "venv", ".venv",
     ".gemini", ".claude", ".tmp_godot_perf", ".tmp_godot_perf_monitor",
     ".tmp_godot_test", ".tmp_godot_user"
 }

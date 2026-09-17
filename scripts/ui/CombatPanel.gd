@@ -407,8 +407,8 @@ func _build_wheel() -> void:
 	var half_w := wheel_sz * 0.5 + _btn_radius + _btn_hit.x * 0.5 + 10.0 * S
 	var half_h := wheel_sz * 0.5 + _btn_radius + _btn_hit.y * 0.5 + 10.0 * S
 
-	# Right-centre default — clear of chat panel on left, clear of screen edge on right
-	var default_pos := Vector2(vp_size.x * 0.60 - half_w, vp_size.y * 0.45 - half_h)
+	# Independent full-size combat wheel, slightly right and below screen centre.
+	var default_pos := Vector2(vp_size.x * 0.60 - half_w, vp_size.y * 0.55 - half_h)
 
 	var container := Control.new()
 	container.set_anchors_preset(Control.PRESET_TOP_LEFT)

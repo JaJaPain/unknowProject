@@ -43,6 +43,7 @@ assets/ships/generated/
 # Python bytecode
 __pycache__/
 *.pyc
+.venv/
 
 # Local bug investigation screenshots (not for the repo)
 docs/bug_screenshots/

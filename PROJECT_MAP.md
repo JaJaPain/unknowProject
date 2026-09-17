@@ -1,290 +1,283 @@
 # Project Repository Map
 
-Root: `SpaceGame`
+Root: `spacegame`
 
-  - 📄 [AGENTS.md](file:///C:/CodingProjects/SpaceGame/AGENTS.md)
-  - 📄 [CLAUDE.md](file:///C:/CodingProjects/SpaceGame/CLAUDE.md)
-  - 📄 [ClaudeWork.md](file:///C:/CodingProjects/SpaceGame/ClaudeWork.md)
-  - 📄 [GateTravelUpgrade.md](file:///C:/CodingProjects/SpaceGame/GateTravelUpgrade.md)
+  - 📄 [AGENTS.md](file:///D:/CodingProjects/spacegame/AGENTS.md)
+  - 📄 [CLAUDE.md](file:///D:/CodingProjects/spacegame/CLAUDE.md)
+  - 📄 [ClaudeWork.md](file:///D:/CodingProjects/spacegame/ClaudeWork.md)
+  - 📄 [GateTravelUpgrade.md](file:///D:/CodingProjects/spacegame/GateTravelUpgrade.md)
   - 📂 **Godot/**
-    - 📄 [Godot_v4.6.3-stable_win64.exe](file:///C:/CodingProjects/SpaceGame/Godot/Godot_v4.6.3-stable_win64.exe)
-    - 📄 [Godot_v4.6.3-stable_win64_console.exe](file:///C:/CodingProjects/SpaceGame/Godot/Godot_v4.6.3-stable_win64_console.exe)
-    - 📂 **app_userdata/**
-      - 📂 **SpaceGame/**
-        - 📄 [kaelen_intro_stats.json](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/kaelen_intro_stats.json)
-        - 📂 **logs/**
-          - 📄 [godot.log](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/logs/godot.log)
-        - 📄 [quest_history.md](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/quest_history.md)
-        - 📄 [salvager_backstory.md](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/salvager_backstory.md)
-        - 📂 **vulkan/**
-          - 📄 [pipelines.forward_plus.nvidia_geforce_rtx_5060_ti.cache](file:///C:/CodingProjects/SpaceGame/Godot/app_userdata/SpaceGame/vulkan/pipelines.forward_plus.nvidia_geforce_rtx_5060_ti.cache)
+    - 📄 [Godot_v4.3-stable_win64.exe](file:///D:/CodingProjects/spacegame/Godot/Godot_v4.3-stable_win64.exe)
+    - 📄 [Godot_v4.3-stable_win64_console.exe](file:///D:/CodingProjects/spacegame/Godot/Godot_v4.3-stable_win64_console.exe)
+    - 📄 [Godot_v4.6.3-stable_win64.exe](file:///D:/CodingProjects/spacegame/Godot/Godot_v4.6.3-stable_win64.exe)
+    - 📄 [Godot_v4.6.3-stable_win64_console.exe](file:///D:/CodingProjects/spacegame/Godot/Godot_v4.6.3-stable_win64_console.exe)
   - 📂 **OllamaTestStories/**
     - 📂 **20260701_175058_first_pass/**
-      - 📄 [balanced_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/balanced_01_envelope.json)
-      - 📄 [balanced_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/balanced_01_validation.json)
-      - 📄 [faction_forward_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_envelope.json)
-      - 📄 [faction_forward_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_story.json)
-      - 📄 [faction_forward_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_validation.json)
-      - 📄 [kaelen_forward_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/kaelen_forward_01_envelope.json)
-      - 📄 [kaelen_forward_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/kaelen_forward_01_validation.json)
-      - 📄 [mystery_forward_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/mystery_forward_01_envelope.json)
-      - 📄 [mystery_forward_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/mystery_forward_01_validation.json)
-      - 📄 [prompt_balanced.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_balanced.txt)
-      - 📄 [prompt_faction_forward.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_faction_forward.txt)
-      - 📄 [prompt_kaelen_forward.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_kaelen_forward.txt)
-      - 📄 [prompt_mystery_forward.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/prompt_mystery_forward.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175058_first_pass/summary.json)
+      - 📄 [balanced_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/balanced_01_envelope.json)
+      - 📄 [balanced_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/balanced_01_validation.json)
+      - 📄 [faction_forward_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_envelope.json)
+      - 📄 [faction_forward_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_story.json)
+      - 📄 [faction_forward_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/faction_forward_01_validation.json)
+      - 📄 [kaelen_forward_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/kaelen_forward_01_envelope.json)
+      - 📄 [kaelen_forward_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/kaelen_forward_01_validation.json)
+      - 📄 [mystery_forward_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/mystery_forward_01_envelope.json)
+      - 📄 [mystery_forward_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/mystery_forward_01_validation.json)
+      - 📄 [prompt_balanced.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/prompt_balanced.txt)
+      - 📄 [prompt_faction_forward.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/prompt_faction_forward.txt)
+      - 📄 [prompt_kaelen_forward.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/prompt_kaelen_forward.txt)
+      - 📄 [prompt_mystery_forward.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/prompt_mystery_forward.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175058_first_pass/summary.json)
     - 📂 **20260701_175706_compact_schema_pass/**
-      - 📄 [compact_structured_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_01_envelope.json)
-      - 📄 [compact_structured_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_01_validation.json)
-      - 📄 [compact_structured_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_02_envelope.json)
-      - 📄 [compact_structured_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_02_validation.json)
-      - 📄 [compact_structured_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_03_envelope.json)
-      - 📄 [compact_structured_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_03_validation.json)
-      - 📄 [prompt_compact_structured.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/prompt_compact_structured.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175706_compact_schema_pass/summary.json)
+      - 📄 [compact_structured_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_01_envelope.json)
+      - 📄 [compact_structured_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_01_validation.json)
+      - 📄 [compact_structured_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_02_envelope.json)
+      - 📄 [compact_structured_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_02_validation.json)
+      - 📄 [compact_structured_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_03_envelope.json)
+      - 📄 [compact_structured_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/compact_structured_03_validation.json)
+      - 📄 [prompt_compact_structured.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/prompt_compact_structured.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175706_compact_schema_pass/summary.json)
     - 📂 **20260701_175954_compact_schema_short_strings/**
-      - 📄 [compact_structured_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/compact_structured_01_envelope.json)
-      - 📄 [compact_structured_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/compact_structured_01_validation.json)
-      - 📄 [prompt_compact_structured.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/prompt_compact_structured.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_175954_compact_schema_short_strings/summary.json)
+      - 📄 [compact_structured_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175954_compact_schema_short_strings/compact_structured_01_envelope.json)
+      - 📄 [compact_structured_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175954_compact_schema_short_strings/compact_structured_01_validation.json)
+      - 📄 [prompt_compact_structured.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175954_compact_schema_short_strings/prompt_compact_structured.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_175954_compact_schema_short_strings/summary.json)
     - 📂 **20260701_180120_compact_json_no_schema/**
-      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_envelope.json)
-      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_story.json)
-      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_validation.json)
-      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_envelope.json)
-      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_story.json)
-      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_validation.json)
-      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/prompt_compact_json.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_180120_compact_json_no_schema/summary.json)
+      - 📄 [compact_json_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/compact_json_02_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_180120_compact_json_no_schema/summary.json)
     - 📂 **20260701_205138_compact_json_with_shape/**
-      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_envelope.json)
-      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_story.json)
-      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_validation.json)
-      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_envelope.json)
-      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_story.json)
-      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_validation.json)
-      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_03_envelope.json)
-      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_03_validation.json)
-      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/prompt_compact_json.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205138_compact_json_with_shape/summary.json)
+      - 📄 [compact_json_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/compact_json_03_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205138_compact_json_with_shape/summary.json)
     - 📂 **20260701_205417_compact_json_stricter_story/**
-      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_envelope.json)
-      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_story.json)
-      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_validation.json)
-      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_envelope.json)
-      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_story.json)
-      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_validation.json)
-      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_envelope.json)
-      - 📄 [compact_json_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_story.json)
-      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_validation.json)
-      - 📄 [compact_json_04_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_envelope.json)
-      - 📄 [compact_json_04_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_story.json)
-      - 📄 [compact_json_04_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_validation.json)
-      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/prompt_compact_json.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205417_compact_json_stricter_story/summary.json)
+      - 📄 [compact_json_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_story.json)
+      - 📄 [compact_json_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_03_validation.json)
+      - 📄 [compact_json_04_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_envelope.json)
+      - 📄 [compact_json_04_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_story.json)
+      - 📄 [compact_json_04_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/compact_json_04_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205417_compact_json_stricter_story/summary.json)
     - 📂 **20260701_205656_compact_json_keyfix/**
-      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_envelope.json)
-      - 📄 [compact_json_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_story.json)
-      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_validation.json)
-      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_envelope.json)
-      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_story.json)
-      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_validation.json)
-      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_envelope.json)
-      - 📄 [compact_json_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_story.json)
-      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_validation.json)
-      - 📄 [compact_json_04_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_envelope.json)
-      - 📄 [compact_json_04_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_story.json)
-      - 📄 [compact_json_04_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_validation.json)
-      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/prompt_compact_json.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_205656_compact_json_keyfix/summary.json)
+      - 📄 [compact_json_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_story.json)
+      - 📄 [compact_json_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_story.json)
+      - 📄 [compact_json_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_03_validation.json)
+      - 📄 [compact_json_04_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_envelope.json)
+      - 📄 [compact_json_04_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_story.json)
+      - 📄 [compact_json_04_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/compact_json_04_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_205656_compact_json_keyfix/summary.json)
     - 📂 **20260701_210002_compact_json_renamed_slots/**
-      - 📄 [compact_json_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_01_envelope.json)
-      - 📄 [compact_json_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_01_validation.json)
-      - 📄 [compact_json_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_envelope.json)
-      - 📄 [compact_json_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_story.json)
-      - 📄 [compact_json_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_validation.json)
-      - 📄 [compact_json_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_envelope.json)
-      - 📄 [compact_json_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_story.json)
-      - 📄 [compact_json_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_validation.json)
-      - 📄 [compact_json_04_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_envelope.json)
-      - 📄 [compact_json_04_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_story.json)
-      - 📄 [compact_json_04_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_validation.json)
-      - 📄 [prompt_compact_json.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/prompt_compact_json.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/summary.json)
+      - 📄 [compact_json_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_01_envelope.json)
+      - 📄 [compact_json_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_01_validation.json)
+      - 📄 [compact_json_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_envelope.json)
+      - 📄 [compact_json_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_story.json)
+      - 📄 [compact_json_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_02_validation.json)
+      - 📄 [compact_json_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_envelope.json)
+      - 📄 [compact_json_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_story.json)
+      - 📄 [compact_json_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_03_validation.json)
+      - 📄 [compact_json_04_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_envelope.json)
+      - 📄 [compact_json_04_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_story.json)
+      - 📄 [compact_json_04_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/compact_json_04_validation.json)
+      - 📄 [prompt_compact_json.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/prompt_compact_json.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210002_compact_json_renamed_slots/summary.json)
     - 📂 **20260701_210257_compact_json_flavor_variants/**
-      - 📄 [compact_criminal_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_envelope.json)
-      - 📄 [compact_criminal_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_story.json)
-      - 📄 [compact_criminal_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_validation.json)
-      - 📄 [compact_political_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_envelope.json)
-      - 📄 [compact_political_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_story.json)
-      - 📄 [compact_political_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_validation.json)
-      - 📄 [compact_resource_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_envelope.json)
-      - 📄 [compact_resource_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_story.json)
-      - 📄 [compact_resource_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_validation.json)
-      - 📄 [compact_salvage_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_envelope.json)
-      - 📄 [compact_salvage_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_story.json)
-      - 📄 [compact_salvage_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_validation.json)
-      - 📄 [prompt_compact_criminal.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_criminal.txt)
-      - 📄 [prompt_compact_political.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_political.txt)
-      - 📄 [prompt_compact_resource.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_resource.txt)
-      - 📄 [prompt_compact_salvage.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_salvage.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/summary.json)
+      - 📄 [compact_criminal_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_envelope.json)
+      - 📄 [compact_criminal_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_story.json)
+      - 📄 [compact_criminal_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_criminal_01_validation.json)
+      - 📄 [compact_political_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_envelope.json)
+      - 📄 [compact_political_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_story.json)
+      - 📄 [compact_political_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_political_01_validation.json)
+      - 📄 [compact_resource_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_envelope.json)
+      - 📄 [compact_resource_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_story.json)
+      - 📄 [compact_resource_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_resource_01_validation.json)
+      - 📄 [compact_salvage_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_envelope.json)
+      - 📄 [compact_salvage_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_story.json)
+      - 📄 [compact_salvage_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/compact_salvage_01_validation.json)
+      - 📄 [prompt_compact_criminal.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_criminal.txt)
+      - 📄 [prompt_compact_political.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_political.txt)
+      - 📄 [prompt_compact_resource.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_resource.txt)
+      - 📄 [prompt_compact_salvage.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/prompt_compact_salvage.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210257_compact_json_flavor_variants/summary.json)
     - 📂 **20260701_210645_two_pass_meta_questions/**
-      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/prompt_meta_questions.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/summary.json)
-      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta.json)
-      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta_envelope.json)
-      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta_validation.json)
-      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta.json)
-      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta_envelope.json)
-      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta_validation.json)
+      - 📄 [prompt_meta_questions.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/summary.json)
+      - 📄 [two_pass_01_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_02_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210645_two_pass_meta_questions/two_pass_02_meta_validation.json)
     - 📂 **20260701_210739_two_pass_meta_questions_v2/**
-      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/prompt_meta_questions.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/summary.json)
-      - 📄 [two_pass_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_envelope.json)
-      - 📄 [two_pass_01_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_final_prompt.txt)
-      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta.json)
-      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta_envelope.json)
-      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta_validation.json)
-      - 📄 [two_pass_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_story.json)
-      - 📄 [two_pass_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_validation.json)
-      - 📄 [two_pass_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_envelope.json)
-      - 📄 [two_pass_02_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_final_prompt.txt)
-      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta.json)
-      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta_envelope.json)
-      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta_validation.json)
-      - 📄 [two_pass_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_story.json)
-      - 📄 [two_pass_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_validation.json)
+      - 📄 [prompt_meta_questions.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/summary.json)
+      - 📄 [two_pass_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_envelope.json)
+      - 📄 [two_pass_01_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_final_prompt.txt)
+      - 📄 [two_pass_01_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_story.json)
+      - 📄 [two_pass_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_01_validation.json)
+      - 📄 [two_pass_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_envelope.json)
+      - 📄 [two_pass_02_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_final_prompt.txt)
+      - 📄 [two_pass_02_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_story.json)
+      - 📄 [two_pass_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_210739_two_pass_meta_questions_v2/two_pass_02_validation.json)
     - 📂 **20260701_211029_two_pass_richer_summary/**
-      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/prompt_meta_questions.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/summary.json)
-      - 📄 [two_pass_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_envelope.json)
-      - 📄 [two_pass_01_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_final_prompt.txt)
-      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta.json)
-      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta_envelope.json)
-      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta_validation.json)
-      - 📄 [two_pass_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_story.json)
-      - 📄 [two_pass_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_validation.json)
-      - 📄 [two_pass_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_envelope.json)
-      - 📄 [two_pass_02_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_final_prompt.txt)
-      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta.json)
-      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta_envelope.json)
-      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta_validation.json)
-      - 📄 [two_pass_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_validation.json)
-      - 📄 [two_pass_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_envelope.json)
-      - 📄 [two_pass_03_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_final_prompt.txt)
-      - 📄 [two_pass_03_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta.json)
-      - 📄 [two_pass_03_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta_envelope.json)
-      - 📄 [two_pass_03_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta_validation.json)
-      - 📄 [two_pass_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_story.json)
-      - 📄 [two_pass_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_validation.json)
+      - 📄 [prompt_meta_questions.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/summary.json)
+      - 📄 [two_pass_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_envelope.json)
+      - 📄 [two_pass_01_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_final_prompt.txt)
+      - 📄 [two_pass_01_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_story.json)
+      - 📄 [two_pass_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_01_validation.json)
+      - 📄 [two_pass_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_envelope.json)
+      - 📄 [two_pass_02_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_final_prompt.txt)
+      - 📄 [two_pass_02_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_02_validation.json)
+      - 📄 [two_pass_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_envelope.json)
+      - 📄 [two_pass_03_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_final_prompt.txt)
+      - 📄 [two_pass_03_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta.json)
+      - 📄 [two_pass_03_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta_envelope.json)
+      - 📄 [two_pass_03_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_meta_validation.json)
+      - 📄 [two_pass_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_story.json)
+      - 📄 [two_pass_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211029_two_pass_richer_summary/two_pass_03_validation.json)
     - 📂 **20260701_211332_two_pass_near_field_questions/**
-      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/prompt_meta_questions.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/summary.json)
-      - 📄 [two_pass_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_envelope.json)
-      - 📄 [two_pass_01_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_final_prompt.txt)
-      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta.json)
-      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta_envelope.json)
-      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta_validation.json)
-      - 📄 [two_pass_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_story.json)
-      - 📄 [two_pass_01_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_validation.json)
-      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta.json)
-      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta_envelope.json)
-      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta_validation.json)
-      - 📄 [two_pass_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_envelope.json)
-      - 📄 [two_pass_03_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_final_prompt.txt)
-      - 📄 [two_pass_03_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta.json)
-      - 📄 [two_pass_03_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta_envelope.json)
-      - 📄 [two_pass_03_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta_validation.json)
-      - 📄 [two_pass_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_story.json)
-      - 📄 [two_pass_03_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_validation.json)
+      - 📄 [prompt_meta_questions.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/summary.json)
+      - 📄 [two_pass_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_envelope.json)
+      - 📄 [two_pass_01_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_final_prompt.txt)
+      - 📄 [two_pass_01_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_story.json)
+      - 📄 [two_pass_01_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_01_validation.json)
+      - 📄 [two_pass_02_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_envelope.json)
+      - 📄 [two_pass_03_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_final_prompt.txt)
+      - 📄 [two_pass_03_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta.json)
+      - 📄 [two_pass_03_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta_envelope.json)
+      - 📄 [two_pass_03_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_meta_validation.json)
+      - 📄 [two_pass_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_story.json)
+      - 📄 [two_pass_03_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211332_two_pass_near_field_questions/two_pass_03_validation.json)
     - 📂 **20260701_211618_two_pass_final_check/**
-      - 📄 [prompt_meta_questions.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/prompt_meta_questions.txt)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/summary.json)
-      - 📄 [two_pass_01_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta.json)
-      - 📄 [two_pass_01_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta_envelope.json)
-      - 📄 [two_pass_01_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta_validation.json)
-      - 📄 [two_pass_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_envelope.json)
-      - 📄 [two_pass_02_final_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_final_prompt.txt)
-      - 📄 [two_pass_02_meta.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta.json)
-      - 📄 [two_pass_02_meta_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta_envelope.json)
-      - 📄 [two_pass_02_meta_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta_validation.json)
-      - 📄 [two_pass_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_story.json)
-      - 📄 [two_pass_02_validation.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_validation.json)
+      - 📄 [prompt_meta_questions.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/prompt_meta_questions.txt)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/summary.json)
+      - 📄 [two_pass_01_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta.json)
+      - 📄 [two_pass_01_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta_envelope.json)
+      - 📄 [two_pass_01_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_01_meta_validation.json)
+      - 📄 [two_pass_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_envelope.json)
+      - 📄 [two_pass_02_final_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_final_prompt.txt)
+      - 📄 [two_pass_02_meta.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta.json)
+      - 📄 [two_pass_02_meta_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta_envelope.json)
+      - 📄 [two_pass_02_meta_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_meta_validation.json)
+      - 📄 [two_pass_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_story.json)
+      - 📄 [two_pass_02_validation.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_211618_two_pass_final_check/two_pass_02_validation.json)
     - 📂 **20260701_215004_claude_production_prompt_check/**
-      - 📄 [high_2800_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_01.json)
-      - 📄 [high_2800_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_02.json)
-      - 📄 [high_2800_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_03.json)
-      - 📄 [prod_900_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_01.json)
-      - 📄 [prod_900_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_02.json)
-      - 📄 [prod_900_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_03.json)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215004_claude_production_prompt_check/summary.json)
+      - 📄 [high_2800_01.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_01.json)
+      - 📄 [high_2800_02.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_02.json)
+      - 📄 [high_2800_03.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/high_2800_03.json)
+      - 📄 [prod_900_01.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_01.json)
+      - 📄 [prod_900_02.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_02.json)
+      - 📄 [prod_900_03.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/prod_900_03.json)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215004_claude_production_prompt_check/summary.json)
     - 📂 **20260701_215226_claude_think_param_check/**
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/summary.json)
-      - 📄 [think_false_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_01.json)
-      - 📄 [think_false_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_02.json)
-      - 📄 [think_false_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_03.json)
-      - 📄 [think_false_04.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_04.json)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215226_claude_think_param_check/summary.json)
+      - 📄 [think_false_01.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_01.json)
+      - 📄 [think_false_02.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_02.json)
+      - 📄 [think_false_03.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_03.json)
+      - 📄 [think_false_04.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215226_claude_think_param_check/think_false_04.json)
     - 📂 **20260701_215502_claude_diversity_check/**
-      - 📄 [hot_no_guidance_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_01.json)
-      - 📄 [hot_no_guidance_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_02.json)
-      - 📄 [hot_no_guidance_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_03.json)
-      - 📄 [hot_with_guidance_01.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_01.json)
-      - 📄 [hot_with_guidance_02.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_02.json)
-      - 📄 [hot_with_guidance_03.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_03.json)
+      - 📄 [hot_no_guidance_01.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_01.json)
+      - 📄 [hot_no_guidance_02.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_02.json)
+      - 📄 [hot_no_guidance_03.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_no_guidance_03.json)
+      - 📄 [hot_with_guidance_01.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_01.json)
+      - 📄 [hot_with_guidance_02.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_02.json)
+      - 📄 [hot_with_guidance_03.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_215502_claude_diversity_check/hot_with_guidance_03.json)
     - 📂 **20260701_222142_patched_production_prompt/**
-      - 📄 [candidate_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_envelope.json)
-      - 📄 [candidate_01_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_prompt.txt)
-      - 📄 [candidate_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_story.json)
-      - 📄 [candidate_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_envelope.json)
-      - 📄 [candidate_02_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_prompt.txt)
-      - 📄 [candidate_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_story.json)
-      - 📄 [candidate_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_envelope.json)
-      - 📄 [candidate_03_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_prompt.txt)
-      - 📄 [candidate_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_story.json)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_222142_patched_production_prompt/summary.json)
+      - 📄 [candidate_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_envelope.json)
+      - 📄 [candidate_01_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_prompt.txt)
+      - 📄 [candidate_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_01_story.json)
+      - 📄 [candidate_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_envelope.json)
+      - 📄 [candidate_02_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_prompt.txt)
+      - 📄 [candidate_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_02_story.json)
+      - 📄 [candidate_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_envelope.json)
+      - 📄 [candidate_03_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_prompt.txt)
+      - 📄 [candidate_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/candidate_03_story.json)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_222142_patched_production_prompt/summary.json)
     - 📂 **20260701_223050_patched_production_prompt/**
-      - 📄 [candidate_01_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_envelope.json)
-      - 📄 [candidate_01_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_prompt.txt)
-      - 📄 [candidate_01_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_story.json)
-      - 📄 [candidate_02_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_envelope.json)
-      - 📄 [candidate_02_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_prompt.txt)
-      - 📄 [candidate_02_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_story.json)
-      - 📄 [candidate_03_envelope.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_envelope.json)
-      - 📄 [candidate_03_prompt.txt](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_prompt.txt)
-      - 📄 [candidate_03_story.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_story.json)
-      - 📄 [summary.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_223050_patched_production_prompt/summary.json)
+      - 📄 [candidate_01_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_envelope.json)
+      - 📄 [candidate_01_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_prompt.txt)
+      - 📄 [candidate_01_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_01_story.json)
+      - 📄 [candidate_02_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_envelope.json)
+      - 📄 [candidate_02_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_prompt.txt)
+      - 📄 [candidate_02_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_02_story.json)
+      - 📄 [candidate_03_envelope.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_envelope.json)
+      - 📄 [candidate_03_prompt.txt](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_prompt.txt)
+      - 📄 [candidate_03_story.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/candidate_03_story.json)
+      - 📄 [summary.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_223050_patched_production_prompt/summary.json)
     - 📂 **20260701_224541_claude_current_prod_check/**
-      - 📄 [cand_01_criminal_economy.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_01_criminal_economy.json)
-      - 📄 [cand_02_ecological_or_industrial_hazard.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_02_ecological_or_industrial_hazard.json)
-      - 📄 [cand_03_criminal_economy.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_03_criminal_economy.json)
-      - 📄 [cand_04_ecological_or_industrial_hazard.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_04_ecological_or_industrial_hazard.json)
-      - 📄 [cand_05_infrastructure_collapse.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_05_infrastructure_collapse.json)
-      - 📄 [cand_06_political_succession.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_06_political_succession.json)
-    - 📄 [claude_critique_and_recommendations.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_critique_and_recommendations.md)
-    - 📄 [claude_test_current_prompt.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_current_prompt.py)
+      - 📄 [cand_01_criminal_economy.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_01_criminal_economy.json)
+      - 📄 [cand_02_ecological_or_industrial_hazard.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_02_ecological_or_industrial_hazard.json)
+      - 📄 [cand_03_criminal_economy.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_03_criminal_economy.json)
+      - 📄 [cand_04_ecological_or_industrial_hazard.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_04_ecological_or_industrial_hazard.json)
+      - 📄 [cand_05_infrastructure_collapse.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_05_infrastructure_collapse.json)
+      - 📄 [cand_06_political_succession.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/20260701_224541_claude_current_prod_check/cand_06_political_succession.json)
+    - 📄 [claude_critique_and_recommendations.md](file:///D:/CodingProjects/spacegame/OllamaTestStories/claude_critique_and_recommendations.md)
+    - 📄 [claude_test_current_prompt.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/claude_test_current_prompt.py)
       - `def lane_for_seed(seed)`
       - `def build_prompt(seed)`
       - `def call_ollama(prompt, seed_int)`
       - `def kaelen_violates(rule)`
-    - 📄 [claude_test_diversity.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_diversity.py)
+    - 📄 [claude_test_diversity.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/claude_test_diversity.py)
       - `def call_ollama(prompt, temperature, seed)`
       - `def run(label, prompt, temperature, count, out_dir)`
-    - 📄 [claude_test_production_prompt.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_production_prompt.py)
+    - 📄 [claude_test_production_prompt.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/claude_test_production_prompt.py)
       - `def call_ollama(prompt, num_predict, temperature, seed)`
       - `def evaluate(raw_text)`
       - `def run_variant(label, num_predict, temperature, count, out_dir)`
-    - 📄 [claude_test_think_param.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/claude_test_think_param.py)
+    - 📄 [claude_test_think_param.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/claude_test_think_param.py)
       - `def call_ollama(prompt, num_predict, temperature, seed, think)`
       - `def run_variant(label, think, count, out_dir)`
-    - 📄 [consensus_brief_story_generation.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/consensus_brief_story_generation.md)
-    - 📄 [gemma4_insights.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_insights.md)
+    - 📄 [consensus_brief_story_generation.md](file:///D:/CodingProjects/spacegame/OllamaTestStories/consensus_brief_story_generation.md)
+    - 📄 [gemma4_insights.md](file:///D:/CodingProjects/spacegame/OllamaTestStories/gemma4_insights.md)
     - 📂 **gemma4_test_run/**
-      - 📄 [pass1.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_test_run/pass1.json)
-      - 📄 [pass2.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/gemma4_test_run/pass2.json)
-    - 📄 [generate_story_candidates.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/generate_story_candidates.py)
-    - 📄 [labeled_bible.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_bible.py)
+      - 📄 [pass1.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/gemma4_test_run/pass1.json)
+      - 📄 [pass2.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/gemma4_test_run/pass2.json)
+    - 📄 [generate_story_candidates.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/generate_story_candidates.py)
+    - 📄 [labeled_bible.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_bible.py)
       - `def _field_ask(field)`
       - `def build_oneshot_prompt(seed)`
       - `def build_repair_prompt(seed, failed_labels, prior_values)`
@@ -301,50 +294,48 @@ Root: `SpaceGame`
       - `def generate_bible(seed, max_repair_rounds, verbose)`
       - `def main()`
     - 📂 **labeled_runs/**
-      - 📄 [bible_20260702_204618_seed424242.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204618_seed424242.json)
-      - 📄 [bible_20260702_204703_seed7.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204703_seed7.json)
-      - 📄 [bible_20260702_204731_seed918273.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204731_seed918273.json)
-      - 📄 [bible_20260702_204744_seed555001.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204744_seed555001.json)
-      - 📄 [bible_20260702_204849_seed918273.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204849_seed918273.json)
-      - 📄 [bible_20260702_204903_seed313131.json](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/labeled_runs/bible_20260702_204903_seed313131.json)
-    - 📄 [notes_two_pass_findings.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/notes_two_pass_findings.md)
-    - 📄 [patched_production_prompt_status.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/patched_production_prompt_status.md)
-    - 📄 [progress.md](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/progress.md)
-    - 📄 [run_test.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/run_test.py)
+      - 📄 [bible_20260702_204618_seed424242.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_runs/bible_20260702_204618_seed424242.json)
+      - 📄 [bible_20260702_204703_seed7.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_runs/bible_20260702_204703_seed7.json)
+      - 📄 [bible_20260702_204731_seed918273.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_runs/bible_20260702_204731_seed918273.json)
+      - 📄 [bible_20260702_204744_seed555001.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_runs/bible_20260702_204744_seed555001.json)
+      - 📄 [bible_20260702_204849_seed918273.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_runs/bible_20260702_204849_seed918273.json)
+      - 📄 [bible_20260702_204903_seed313131.json](file:///D:/CodingProjects/spacegame/OllamaTestStories/labeled_runs/bible_20260702_204903_seed313131.json)
+    - 📄 [notes_two_pass_findings.md](file:///D:/CodingProjects/spacegame/OllamaTestStories/notes_two_pass_findings.md)
+    - 📄 [patched_production_prompt_status.md](file:///D:/CodingProjects/spacegame/OllamaTestStories/patched_production_prompt_status.md)
+    - 📄 [progress.md](file:///D:/CodingProjects/spacegame/OllamaTestStories/progress.md)
+    - 📄 [run_test.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/run_test.py)
       - `def generate(prompt)`
-    - 📄 [verify_patched_production_prompt.py](file:///C:/CodingProjects/SpaceGame/OllamaTestStories/verify_patched_production_prompt.py)
+    - 📄 [verify_patched_production_prompt.py](file:///D:/CodingProjects/spacegame/OllamaTestStories/verify_patched_production_prompt.py)
       - `def creative_lane_for_seed(seed)`
       - `def build_prompt(seed, idea_memory)`
       - `def call_ollama(prompt, seed)`
       - `def evaluate(response_text)`
       - `def main()`
-  - 📄 [PROJECT_MAP.json](file:///C:/CodingProjects/SpaceGame/PROJECT_MAP.json)
-  - 📄 [PROJECT_MAP.md](file:///C:/CodingProjects/SpaceGame/PROJECT_MAP.md)
+  - 📄 [PROJECT_MAP.json](file:///D:/CodingProjects/spacegame/PROJECT_MAP.json)
+  - 📄 [PROJECT_MAP.md](file:///D:/CodingProjects/spacegame/PROJECT_MAP.md)
   - 📂 **Ships/**
     - 📂 **Aurlelia/**
-      - 📄 [Aurelia_Gunner.glb](file:///C:/CodingProjects/SpaceGame/Ships/Aurlelia/Aurelia_Gunner.glb)
-      - 📄 [Aurelia_Logistics.glb](file:///C:/CodingProjects/SpaceGame/Ships/Aurlelia/Aurelia_Logistics.glb)
-      - 📄 [Aurelia_MiningHauler.glb](file:///C:/CodingProjects/SpaceGame/Ships/Aurlelia/Aurelia_MiningHauler.glb)
-      - 📄 [Aurelia_interceptor.glb](file:///C:/CodingProjects/SpaceGame/Ships/Aurlelia/Aurelia_interceptor.glb)
-      - 📄 [desktop.ini](file:///C:/CodingProjects/SpaceGame/Ships/Aurlelia/desktop.ini)
+      - 📄 [Aurelia_Gunner.glb](file:///D:/CodingProjects/spacegame/Ships/Aurlelia/Aurelia_Gunner.glb)
+      - 📄 [Aurelia_Logistics.glb](file:///D:/CodingProjects/spacegame/Ships/Aurlelia/Aurelia_Logistics.glb)
+      - 📄 [Aurelia_MiningHauler.glb](file:///D:/CodingProjects/spacegame/Ships/Aurlelia/Aurelia_MiningHauler.glb)
+      - 📄 [Aurelia_interceptor.glb](file:///D:/CodingProjects/spacegame/Ships/Aurlelia/Aurelia_interceptor.glb)
+      - 📄 [desktop.ini](file:///D:/CodingProjects/spacegame/Ships/Aurlelia/desktop.ini)
     - 📂 **Vanguard/**
-      - 📄 [Vanguard_Gunner.glb](file:///C:/CodingProjects/SpaceGame/Ships/Vanguard/Vanguard_Gunner.glb)
-      - 📄 [Vanguard_HaulerMiner.glb](file:///C:/CodingProjects/SpaceGame/Ships/Vanguard/Vanguard_HaulerMiner.glb)
-      - 📄 [Vanguard_Logistics.glb](file:///C:/CodingProjects/SpaceGame/Ships/Vanguard/Vanguard_Logistics.glb)
-      - 📄 [Vanguard_interceptor.glb](file:///C:/CodingProjects/SpaceGame/Ships/Vanguard/Vanguard_interceptor.glb)
+      - 📄 [Vanguard_Gunner.glb](file:///D:/CodingProjects/spacegame/Ships/Vanguard/Vanguard_Gunner.glb)
+      - 📄 [Vanguard_HaulerMiner.glb](file:///D:/CodingProjects/spacegame/Ships/Vanguard/Vanguard_HaulerMiner.glb)
+      - 📄 [Vanguard_Logistics.glb](file:///D:/CodingProjects/spacegame/Ships/Vanguard/Vanguard_Logistics.glb)
+      - 📄 [Vanguard_interceptor.glb](file:///D:/CodingProjects/spacegame/Ships/Vanguard/Vanguard_interceptor.glb)
     - 📂 **Zenith/**
-      - 📄 [Zenith_Gunner.glb](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/Zenith_Gunner.glb)
-      - 📄 [Zenith_Interceptor.glb](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/Zenith_Interceptor.glb)
-      - 📄 [Zenith_Logistics.glb](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/Zenith_Logistics.glb)
-      - 📄 [Zenith_MiningHauler.glb](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/Zenith_MiningHauler.glb)
-      - 📄 [desktop.ini](file:///C:/CodingProjects/SpaceGame/Ships/Zenith/desktop.ini)
-  - 📂 **_local/**
-    - 📄 [The string is missing the terminator .](file:///C:/CodingProjects/SpaceGame/_local/The string is missing the terminator )
+      - 📄 [Zenith_Gunner.glb](file:///D:/CodingProjects/spacegame/Ships/Zenith/Zenith_Gunner.glb)
+      - 📄 [Zenith_Interceptor.glb](file:///D:/CodingProjects/spacegame/Ships/Zenith/Zenith_Interceptor.glb)
+      - 📄 [Zenith_Logistics.glb](file:///D:/CodingProjects/spacegame/Ships/Zenith/Zenith_Logistics.glb)
+      - 📄 [Zenith_MiningHauler.glb](file:///D:/CodingProjects/spacegame/Ships/Zenith/Zenith_MiningHauler.glb)
+      - 📄 [desktop.ini](file:///D:/CodingProjects/spacegame/Ships/Zenith/desktop.ini)
   - 📂 **addons/**
     - 📂 **godot_ai/**
-      - 📄 [LICENSE](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/LICENSE)
-      - 📄 [README.md](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/README.md)
-      - 📄 [client_configurator.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/client_configurator.gd)
+      - 📄 [LICENSE](file:///D:/CodingProjects/spacegame/addons/godot_ai/LICENSE)
+      - 📄 [README.md](file:///D:/CodingProjects/spacegame/addons/godot_ai/README.md)
+      - 📄 [client_configurator.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/client_configurator.gd)
         - 🏛️ **global class McpClientConfigurator**
           - `static func http_port() -> int`
           - `static func ws_port() -> int`
@@ -412,9 +403,9 @@ Root: `SpaceGame`
           - `static func _find_venv_python_in(start_dir: String) -> String`
           - `static func find_worktree_src_dir(start_dir: String) -> String`
           - `static func _find_system_install() -> String`
-      - 📄 [client_configurator.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/client_configurator.gd.uid)
+      - 📄 [client_configurator.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/client_configurator.gd.uid)
       - 📂 **clients/**
-        - 📄 [_atomic_write.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_atomic_write.gd)
+        - 📄 [_atomic_write.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_atomic_write.gd)
           - 🏛️ **global class McpAtomicWrite**
             - `static func write(path: String, content: String) -> bool`
             - `static func _resolve_symlink_target(path: String) -> String`
@@ -422,8 +413,8 @@ Root: `SpaceGame`
             - `static func _open_restricted_temp(path: String, mode: int) -> FileAccess`
             - `static func _apply_mode(path: String, mode: int) -> bool`
             - `static func _written_size_matches(path: String, content: String) -> bool`
-        - 📄 [_atomic_write.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_atomic_write.gd.uid)
-        - 📄 [_base.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_base.gd)
+        - 📄 [_atomic_write.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_atomic_write.gd.uid)
+        - 📄 [_base.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_base.gd)
           - 🏛️ **global class McpClient**
             - `static func status_label(status: McpClient.Status) -> String`
             - `static func configured_message(client: McpClient, server_url: String) -> String`
@@ -441,23 +432,23 @@ Root: `SpaceGame`
             - `func has_json_fallback() -> bool`
             - `func is_installed() -> bool`
             - `static func _packed_slice(packed: PackedStringArray, from: int, to: int) -> PackedStringArray`
-        - 📄 [_base.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_base.gd.uid)
-        - 📄 [_cli_exec.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_cli_exec.gd)
+        - 📄 [_base.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_base.gd.uid)
+        - 📄 [_cli_exec.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_cli_exec.gd)
           - 🏛️ **global class McpCliExec**
             - `static func _spawn_failed_result() -> Dictionary`
             - `static func _drain_pipe(pipe: Variant) -> String`
             - `static func _join_streams(stdout: String, stderr_text: String) -> String`
             - `static func _close_pipes(stdio: Variant, stderr_pipe: Variant) -> void`
-        - 📄 [_cli_exec.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_cli_exec.gd.uid)
-        - 📄 [_cli_finder.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_cli_finder.gd)
+        - 📄 [_cli_exec.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_cli_exec.gd.uid)
+        - 📄 [_cli_finder.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_cli_finder.gd)
           - 🏛️ **global class McpCliFinder**
             - `static func find(exe_names: Array[String]) -> String`
             - `static func invalidate(exe_name: String = "") -> void`
             - `static func _find_one(exe_name: String) -> String`
             - `static func _resolve(exe_name: String) -> String`
             - `static func _pick_best_path(lines: PackedStringArray) -> String`
-        - 📄 [_cli_finder.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_cli_finder.gd.uid)
-        - 📄 [_cli_strategy.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_cli_strategy.gd)
+        - 📄 [_cli_finder.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_cli_finder.gd.uid)
+        - 📄 [_cli_strategy.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_cli_strategy.gd)
           - 🏛️ **global class McpCliStrategy**
             - `static func command_launch_error(client: McpClient, launch: Dictionary) -> String`
             - `static func _status_details(status: McpClient.Status, error_msg: String = "") -> Dictionary`
@@ -466,8 +457,8 @@ Root: `SpaceGame`
             - `static func uses_scope_token(client: McpClient) -> bool`
             - `static func _resolve_cli(client: McpClient) -> String`
             - `static func resolve_cli_path(client: McpClient) -> String`
-        - 📄 [_cli_strategy.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_cli_strategy.gd.uid)
-        - 📄 [_dsh_strategy.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_dsh_strategy.gd)
+        - 📄 [_cli_strategy.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_cli_strategy.gd.uid)
+        - 📄 [_dsh_strategy.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_dsh_strategy.gd)
           - 🏛️ **global class McpDshStrategy**
             - `static func entry_id(server_name: String) -> String`
             - `static func remove(client: McpClient, server_name: String) -> Dictionary`
@@ -493,8 +484,8 @@ Root: `SpaceGame`
             - `static func _array_copy(value: Variant) -> Array`
             - `static func _arrays_equal(left: Variant, right: Variant) -> bool`
             - `static func _read(path: String) -> Dictionary`
-        - 📄 [_dsh_strategy.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_dsh_strategy.gd.uid)
-        - 📄 [_json_strategy.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_json_strategy.gd)
+        - 📄 [_dsh_strategy.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_dsh_strategy.gd.uid)
+        - 📄 [_json_strategy.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_json_strategy.gd)
           - 🏛️ **global class McpJsonStrategy**
             - `static func build_url_entry(client: McpClient, server_url: String, existing: Variant = null) -> Dictionary`
             - `static func command_launch_error(client: McpClient, launch: Dictionary) -> String`
@@ -518,8 +509,8 @@ Root: `SpaceGame`
             - `static func _find_key_at_container_depth(text: String, start: int, key_bytes: String) -> Dictionary`
             - `static func _json_value_span_end(text: String, value_start: int) -> int`
             - `static func _is_json_ws(c: String) -> bool`
-        - 📄 [_json_strategy.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_json_strategy.gd.uid)
-        - 📄 [_manual_command.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_manual_command.gd)
+        - 📄 [_json_strategy.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_json_strategy.gd.uid)
+        - 📄 [_manual_command.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_manual_command.gd)
           - 🏛️ **global class McpManualCommand**
             - `static func _sweep_caveat(client: McpClient) -> String`
             - `static func _shell_kind_for_platform() -> String`
@@ -530,8 +521,8 @@ Root: `SpaceGame`
             - `static func _toml_header(client: McpClient) -> String`
             - `static func _format_entry_inline(entry: Dictionary) -> String`
             - `static func _format_value(value: Variant) -> String`
-        - 📄 [_manual_command.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_manual_command.gd.uid)
-        - 📄 [_path_template.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_path_template.gd)
+        - 📄 [_manual_command.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_manual_command.gd.uid)
+        - 📄 [_path_template.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_path_template.gd)
           - 🏛️ **global class McpPathTemplate**
             - `static func env_lookup(name: String) -> String`
             - `static func warm_env_snapshot(extra_vars: PackedStringArray = PackedStringArray()) -> void`
@@ -543,8 +534,8 @@ Root: `SpaceGame`
             - `static func _os_key() -> String`
             - `static func _wildcard_segment_matches(value: String, prefix: String, ending: String) -> bool`
             - `static func _home() -> String`
-        - 📄 [_path_template.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_path_template.gd.uid)
-        - 📄 [_registry.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_registry.gd)
+        - 📄 [_path_template.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_path_template.gd.uid)
+        - 📄 [_registry.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_registry.gd)
           - 🏛️ **global class McpClientRegistry**
             - `static func get_by_id(id: String) -> McpClient`
             - `static func ids() -> PackedStringArray`
@@ -554,8 +545,8 @@ Root: `SpaceGame`
             - `static func _cache_is_coherent() -> bool`
             - `static func _ensure_loaded() -> void`
             - `static func _load() -> void`
-        - 📄 [_registry.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_registry.gd.uid)
-        - 📄 [_toml_strategy.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_toml_strategy.gd)
+        - 📄 [_registry.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_registry.gd.uid)
+        - 📄 [_toml_strategy.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_toml_strategy.gd)
           - 🏛️ **global class McpTomlStrategy**
             - `static func remove(client: McpClient, _server_name: String) -> Dictionary`
             - `static func format_body(template: PackedStringArray, server_url: String) -> PackedStringArray`
@@ -582,8 +573,8 @@ Root: `SpaceGame`
             - `static func _matches_any_header(line: String, headers: Array[String]) -> bool`
             - `static func _find_section(lines: Array[String], headers: Array[String]) -> Dictionary`
             - `static func _is_any_section_header(line: String) -> bool`
-        - 📄 [_toml_strategy.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_toml_strategy.gd.uid)
-        - 📄 [_yaml_strategy.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_yaml_strategy.gd)
+        - 📄 [_toml_strategy.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_toml_strategy.gd.uid)
+        - 📄 [_yaml_strategy.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_yaml_strategy.gd)
           - 🏛️ **global class McpYamlStrategy**
             - `static func remove(client: McpClient, server_name: String) -> Dictionary`
             - `static func command_launch_error(client: McpClient, launch: Dictionary) -> String`
@@ -602,80 +593,80 @@ Root: `SpaceGame`
             - `static func _indent_of(line: String) -> int`
             - `static func coerce_scalar(s: String) -> Variant`
             - `static func _read(path: String) -> Dictionary`
-        - 📄 [_yaml_strategy.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/_yaml_strategy.gd.uid)
-        - 📄 [antigravity.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/antigravity.gd)
+        - 📄 [_yaml_strategy.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/_yaml_strategy.gd.uid)
+        - 📄 [antigravity.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/antigravity.gd)
           - `func _init() -> void`
-        - 📄 [antigravity.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/antigravity.gd.uid)
-        - 📄 [cherry_studio.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/cherry_studio.gd)
+        - 📄 [antigravity.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/antigravity.gd.uid)
+        - 📄 [cherry_studio.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/cherry_studio.gd)
           - `func _init() -> void`
-        - 📄 [cherry_studio.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/cherry_studio.gd.uid)
-        - 📄 [claude_code.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/claude_code.gd)
+        - 📄 [cherry_studio.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/cherry_studio.gd.uid)
+        - 📄 [claude_code.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/claude_code.gd)
           - `func _init() -> void`
-        - 📄 [claude_code.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/claude_code.gd.uid)
-        - 📄 [claude_desktop.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/claude_desktop.gd)
+        - 📄 [claude_code.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/claude_code.gd.uid)
+        - 📄 [claude_desktop.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/claude_desktop.gd)
           - `func _init() -> void`
-        - 📄 [claude_desktop.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/claude_desktop.gd.uid)
-        - 📄 [cline.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/cline.gd)
+        - 📄 [claude_desktop.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/claude_desktop.gd.uid)
+        - 📄 [cline.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/cline.gd)
           - `func _init() -> void`
-        - 📄 [cline.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/cline.gd.uid)
-        - 📄 [codex.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/codex.gd)
+        - 📄 [cline.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/cline.gd.uid)
+        - 📄 [codex.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/codex.gd)
           - `func _init() -> void`
-        - 📄 [codex.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/codex.gd.uid)
-        - 📄 [cursor.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/cursor.gd)
+        - 📄 [codex.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/codex.gd.uid)
+        - 📄 [cursor.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/cursor.gd)
           - `func _init() -> void`
-        - 📄 [cursor.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/cursor.gd.uid)
-        - 📄 [deepseek_harness.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/deepseek_harness.gd)
+        - 📄 [cursor.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/cursor.gd.uid)
+        - 📄 [deepseek_harness.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/deepseek_harness.gd)
           - `func _init() -> void`
-        - 📄 [deepseek_harness.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/deepseek_harness.gd.uid)
-        - 📄 [gemini_cli.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/gemini_cli.gd)
+        - 📄 [deepseek_harness.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/deepseek_harness.gd.uid)
+        - 📄 [gemini_cli.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/gemini_cli.gd)
           - `func _init() -> void`
-        - 📄 [gemini_cli.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/gemini_cli.gd.uid)
-        - 📄 [grok.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/grok.gd)
+        - 📄 [gemini_cli.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/gemini_cli.gd.uid)
+        - 📄 [grok.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/grok.gd)
           - `func _init() -> void`
-        - 📄 [grok.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/grok.gd.uid)
-        - 📄 [hermes.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/hermes.gd)
+        - 📄 [grok.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/grok.gd.uid)
+        - 📄 [hermes.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/hermes.gd)
           - `func _init() -> void`
-        - 📄 [hermes.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/hermes.gd.uid)
-        - 📄 [kilo_code.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/kilo_code.gd)
+        - 📄 [hermes.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/hermes.gd.uid)
+        - 📄 [kilo_code.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/kilo_code.gd)
           - `func _init() -> void`
-        - 📄 [kilo_code.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/kilo_code.gd.uid)
-        - 📄 [kimi_code.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/kimi_code.gd)
+        - 📄 [kilo_code.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/kilo_code.gd.uid)
+        - 📄 [kimi_code.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/kimi_code.gd)
           - `func _init() -> void`
-        - 📄 [kimi_code.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/kimi_code.gd.uid)
-        - 📄 [kiro.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/kiro.gd)
+        - 📄 [kimi_code.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/kimi_code.gd.uid)
+        - 📄 [kiro.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/kiro.gd)
           - `func _init() -> void`
-        - 📄 [kiro.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/kiro.gd.uid)
-        - 📄 [opencode.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/opencode.gd)
+        - 📄 [kiro.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/kiro.gd.uid)
+        - 📄 [opencode.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/opencode.gd)
           - `func _init() -> void`
-        - 📄 [opencode.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/opencode.gd.uid)
-        - 📄 [pi.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/pi.gd)
+        - 📄 [opencode.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/opencode.gd.uid)
+        - 📄 [pi.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/pi.gd)
           - `func _init() -> void`
-        - 📄 [pi.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/pi.gd.uid)
-        - 📄 [qwen_code.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/qwen_code.gd)
+        - 📄 [pi.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/pi.gd.uid)
+        - 📄 [qwen_code.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/qwen_code.gd)
           - `func _init() -> void`
-        - 📄 [qwen_code.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/qwen_code.gd.uid)
-        - 📄 [roo_code.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/roo_code.gd)
+        - 📄 [qwen_code.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/qwen_code.gd.uid)
+        - 📄 [roo_code.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/roo_code.gd)
           - `func _init() -> void`
-        - 📄 [roo_code.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/roo_code.gd.uid)
-        - 📄 [trae.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/trae.gd)
+        - 📄 [roo_code.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/roo_code.gd.uid)
+        - 📄 [trae.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/trae.gd)
           - `func _init() -> void`
-        - 📄 [trae.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/trae.gd.uid)
-        - 📄 [vscode.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/vscode.gd)
+        - 📄 [trae.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/trae.gd.uid)
+        - 📄 [vscode.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/vscode.gd)
           - `func _init() -> void`
-        - 📄 [vscode.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/vscode.gd.uid)
-        - 📄 [vscode_insiders.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/vscode_insiders.gd)
+        - 📄 [vscode.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/vscode.gd.uid)
+        - 📄 [vscode_insiders.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/vscode_insiders.gd)
           - `func _init() -> void`
-        - 📄 [vscode_insiders.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/vscode_insiders.gd.uid)
-        - 📄 [windsurf.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/windsurf.gd)
+        - 📄 [vscode_insiders.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/vscode_insiders.gd.uid)
+        - 📄 [windsurf.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/windsurf.gd)
           - `func _init() -> void`
-        - 📄 [windsurf.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/windsurf.gd.uid)
-        - 📄 [zed.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/zed.gd)
+        - 📄 [windsurf.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/windsurf.gd.uid)
+        - 📄 [zed.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/zed.gd)
           - `func _init() -> void`
-        - 📄 [zed.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/zed.gd.uid)
-        - 📄 [zoo_code.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/zoo_code.gd)
+        - 📄 [zed.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/zed.gd.uid)
+        - 📄 [zoo_code.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/zoo_code.gd)
           - `func _init() -> void`
-        - 📄 [zoo_code.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/clients/zoo_code.gd.uid)
-      - 📄 [connection.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/connection.gd)
+        - 📄 [zoo_code.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/clients/zoo_code.gd.uid)
+      - 📄 [connection.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/connection.gd)
         - 🏛️ **global class McpConnection**
           - `func _ready() -> void`
           - `func _process(delta: float) -> void`
@@ -722,28 +713,28 @@ Root: `SpaceGame`
           - `static func _make_session_id(project_path: String) -> String`
           - `static func _slugify(s: String) -> String`
           - `static func _rand_hex(n: int) -> String`
-      - 📄 [connection.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/connection.gd.uid)
+      - 📄 [connection.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/connection.gd.uid)
       - 📂 **custom_tools/**
-        - 📄 [custom_tool_wrapper.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/custom_tool_wrapper.gd)
+        - 📄 [custom_tool_wrapper.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/custom_tool_wrapper.gd)
           - `func _init(spec: McpCustomToolSpec, locator: McpServiceLocator) -> void`
           - `func invoke(params: Dictionary) -> Dictionary`
-        - 📄 [custom_tool_wrapper.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/custom_tool_wrapper.gd.uid)
-        - 📄 [mcp_call_context.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_call_context.gd)
+        - 📄 [custom_tool_wrapper.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/custom_tool_wrapper.gd.uid)
+        - 📄 [mcp_call_context.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_call_context.gd)
           - 🏛️ **global class McpCallContext**
             - `func attach_locator(locator: McpServiceLocator) -> void`
             - `func is_expired() -> bool`
             - `func send_deferred(payload: Dictionary) -> void`
-        - 📄 [mcp_call_context.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_call_context.gd.uid)
-        - 📄 [mcp_custom_tool_spec.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_custom_tool_spec.gd)
+        - 📄 [mcp_call_context.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_call_context.gd.uid)
+        - 📄 [mcp_custom_tool_spec.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_custom_tool_spec.gd)
           - 🏛️ **global class McpCustomToolSpec**
-        - 📄 [mcp_custom_tool_spec.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_custom_tool_spec.gd.uid)
-        - 📄 [mcp_service_locator.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_service_locator.gd)
+        - 📄 [mcp_custom_tool_spec.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_custom_tool_spec.gd.uid)
+        - 📄 [mcp_service_locator.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_service_locator.gd)
           - 🏛️ **global class McpServiceLocator**
             - `func setup(connection: McpConnection, log_buffer: McpLogBuffer) -> void`
             - `func get_connection() -> McpConnection`
             - `func get_log_buffer() -> McpLogBuffer`
-        - 📄 [mcp_service_locator.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_service_locator.gd.uid)
-        - 📄 [mcp_tool_registry.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_tool_registry.gd)
+        - 📄 [mcp_service_locator.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_service_locator.gd.uid)
+        - 📄 [mcp_tool_registry.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_tool_registry.gd)
           - 🏛️ **global class McpToolRegistry**
             - `static func get_instance() -> McpToolRegistry`
             - `func setup(dispatcher: McpDispatcher, locator: McpServiceLocator) -> void`
@@ -766,9 +757,9 @@ Root: `SpaceGame`
             - `static func _read_plugin_name(plugin_cfg_path: String) -> String`
             - `static func _get_command_name(spec: McpCustomToolSpec) -> String`
             - `static func _get_handler_name(spec: McpCustomToolSpec) -> String`
-        - 📄 [mcp_tool_registry.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/custom_tools/mcp_tool_registry.gd.uid)
+        - 📄 [mcp_tool_registry.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/custom_tools/mcp_tool_registry.gd.uid)
       - 📂 **debugger/**
-        - 📄 [mcp_debugger_plugin.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/debugger/mcp_debugger_plugin.gd)
+        - 📄 [mcp_debugger_plugin.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/debugger/mcp_debugger_plugin.gd)
           - 🏛️ **global class McpDebuggerPlugin**
             - `func _init(log_buffer: McpLogBuffer = null, game_log_buffer: McpGameLogBuffer = null, editor_log_buffer: McpEditorLogBuffer = null, surfaced_error_tracker = null, vision_routing: VisionRoutingScript = null) -> void`
             - `func _has_capture(prefix: String) -> bool`
@@ -828,8 +819,8 @@ Root: `SpaceGame`
             - `func _on_eval_probe_tick(request_id: String) -> void`
             - `func _on_game_command_response(data: Array) -> void`
             - `func _on_game_command_error(data: Array) -> void`
-        - 📄 [mcp_debugger_plugin.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/debugger/mcp_debugger_plugin.gd.uid)
-      - 📄 [dispatcher.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/dispatcher.gd)
+        - 📄 [mcp_debugger_plugin.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/debugger/mcp_debugger_plugin.gd.uid)
+      - 📄 [dispatcher.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/dispatcher.gd)
         - 🏛️ **global class McpDispatcher**
           - `func _init(log_buffer: McpLogBuffer, surfaced_error_tracker = null) -> void`
           - `func register(command_name: String, handler: Callable) -> void`
@@ -855,43 +846,43 @@ Root: `SpaceGame`
           - `static func _capture_compact_backtrace(max_frames: int = 8) -> String`
           - `static func _trim_backtrace_string(text: String, max_frames: int) -> String`
           - `static func _format_stack_frames(frames: Array, max_frames: int) -> String`
-      - 📄 [dispatcher.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/dispatcher.gd.uid)
+      - 📄 [dispatcher.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/dispatcher.gd.uid)
       - 📂 **dock_panels/**
-        - 📄 [log_viewer.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/dock_panels/log_viewer.gd)
+        - 📄 [log_viewer.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/dock_panels/log_viewer.gd)
           - `func setup(log_buffer: McpLogBuffer) -> void`
           - `func _build_ui() -> void`
           - `func tick() -> void`
           - `func _on_log_toggled(enabled: bool) -> void`
-        - 📄 [log_viewer.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/dock_panels/log_viewer.gd.uid)
-        - 📄 [port_picker_panel.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/dock_panels/port_picker_panel.gd)
+        - 📄 [log_viewer.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/dock_panels/log_viewer.gd.uid)
+        - 📄 [port_picker_panel.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/dock_panels/port_picker_panel.gd)
           - `func setup() -> void`
           - `func _build_ui() -> void`
           - `func seed_suggested_port() -> void`
           - `func _on_apply_pressed() -> void`
-        - 📄 [port_picker_panel.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/dock_panels/port_picker_panel.gd.uid)
+        - 📄 [port_picker_panel.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/dock_panels/port_picker_panel.gd.uid)
       - 📂 **export/**
-        - 📄 [mcp_export_plugin.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/export/mcp_export_plugin.gd)
+        - 📄 [mcp_export_plugin.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/export/mcp_export_plugin.gd)
           - `func _get_name() -> String`
           - `func _export_begin(_features: PackedStringArray, _is_debug: bool, _path: String, _flags: int) -> void`
           - `func _export_end() -> void`
-        - 📄 [mcp_export_plugin.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/export/mcp_export_plugin.gd.uid)
+        - 📄 [mcp_export_plugin.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/export/mcp_export_plugin.gd.uid)
       - 📂 **handlers/**
-        - 📄 [_node_validator.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/_node_validator.gd)
+        - 📄 [_node_validator.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/_node_validator.gd)
           - 🏛️ **global class McpNodeValidator**
             - `static func require_scene_or_error(scene_file: String = "") -> Dictionary`
-        - 📄 [_node_validator.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/_node_validator.gd.uid)
-        - 📄 [_param_validators.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/_param_validators.gd)
+        - 📄 [_node_validator.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/_node_validator.gd.uid)
+        - 📄 [_param_validators.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/_param_validators.gd)
           - 🏛️ **global class McpParamValidators**
             - `static func require_string(name: String, value: Variant) -> Variant`
-        - 📄 [_param_validators.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/_param_validators.gd.uid)
-        - 📄 [_property_errors.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/_property_errors.gd)
+        - 📄 [_param_validators.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/_param_validators.gd.uid)
+        - 📄 [_property_errors.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/_property_errors.gd)
           - 🏛️ **global class McpPropertyErrors**
             - `static func build_message(target: Object, bad_name: String) -> String`
             - `static func _class_label(target: Object) -> String`
             - `static func _available_property_names(target: Object) -> Array`
             - `static func _rank_suggestions(bad: String, available: Array) -> Array`
-        - 📄 [_property_errors.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/_property_errors.gd.uid)
-        - 📄 [animation_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/animation_handler.gd)
+        - 📄 [_property_errors.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/_property_errors.gd.uid)
+        - 📄 [animation_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/animation_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func create_player(params: Dictionary) -> Dictionary`
           - `func create_animation(params: Dictionary) -> Dictionary`
@@ -916,8 +907,8 @@ Root: `SpaceGame`
           - `func _instantiate_player(player_path: String, scene_root: Node) -> Dictionary`
           - `func _resolve_player_read(player_path: String) -> Dictionary`
           - `func _resolve_animation(player: AnimationPlayer, anim_name: String) -> Dictionary`
-        - 📄 [animation_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/animation_handler.gd.uid)
-        - 📄 [animation_presets.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/animation_presets.gd)
+        - 📄 [animation_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/animation_handler.gd.uid)
+        - 📄 [animation_presets.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/animation_presets.gd)
           - `func _init(handler) -> void`
           - `func _h()`
           - `func preset_fade(params: Dictionary) -> Dictionary`
@@ -926,8 +917,8 @@ Root: `SpaceGame`
           - `func preset_pulse(params: Dictionary) -> Dictionary`
           - `func _resolve_preset_target(player: AnimationPlayer, target_path: String) -> Dictionary`
           - `static func _direction_offset(kind: String, direction: String, distance: float) -> Variant`
-        - 📄 [animation_presets.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/animation_presets.gd.uid)
-        - 📄 [animation_values.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/animation_values.gd)
+        - 📄 [animation_presets.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/animation_presets.gd.uid)
+        - 📄 [animation_values.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/animation_values.gd)
           - `func _init(handler) -> void`
           - `func _h()`
           - `func list_animations(params: Dictionary) -> Dictionary`
@@ -944,15 +935,15 @@ Root: `SpaceGame`
           - `static func loop_mode_to_string(mode: int) -> String`
           - `static func interp_to_string(mode: int) -> String`
           - `static func serialize_value(value: Variant) -> Variant`
-        - 📄 [animation_values.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/animation_values.gd.uid)
-        - 📄 [api_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/api_handler.gd)
+        - 📄 [animation_values.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/animation_values.gd.uid)
+        - 📄 [api_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/api_handler.gd)
           - `func get_class_info(params: Dictionary) -> Dictionary`
           - `static func _unknown_class_error(requested_class: String) -> Dictionary`
           - `static func _global_script_class(requested_class: String) -> Dictionary`
           - `static func _script_class_error(requested_class: String, script_class: Dictionary) -> Dictionary`
           - `static func _invalid_sections_error(invalid_sections: Array[String]) -> Dictionary`
-        - 📄 [api_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/api_handler.gd.uid)
-        - 📄 [audio_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/audio_handler.gd)
+        - 📄 [api_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/api_handler.gd.uid)
+        - 📄 [audio_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/audio_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func create_player(params: Dictionary) -> Dictionary`
           - `func set_stream(params: Dictionary) -> Dictionary`
@@ -964,21 +955,21 @@ Root: `SpaceGame`
           - `static func _instantiate_player(type_str: String) -> Node`
           - `func _resolve_player(player_path: String) -> Dictionary`
           - `static func _coerce_playback_value(value: Variant, expected_type: int) -> Variant`
-        - 📄 [audio_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/audio_handler.gd.uid)
-        - 📄 [autoload_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/autoload_handler.gd)
+        - 📄 [audio_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/audio_handler.gd.uid)
+        - 📄 [autoload_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/autoload_handler.gd)
           - `func list_autoloads(_params: Dictionary) -> Dictionary`
           - `func add_autoload(params: Dictionary) -> Dictionary`
           - `func remove_autoload(params: Dictionary) -> Dictionary`
-        - 📄 [autoload_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/autoload_handler.gd.uid)
-        - 📄 [batch_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/batch_handler.gd)
+        - 📄 [autoload_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/autoload_handler.gd.uid)
+        - 📄 [batch_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/batch_handler.gd)
           - `func _init(dispatcher: McpDispatcher, undo_redo: EditorUndoRedoManager) -> void`
           - `func batch_execute(params: Dictionary) -> Dictionary`
           - `func _tracked_histories() -> Array`
           - `func _record_committed(tracked: Array, before: Array, committed: Array) -> void`
           - `func _unknown_command_error(idx: int, cmd_name: String) -> Dictionary`
           - `func _rollback(committed: Array) -> bool`
-        - 📄 [batch_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/batch_handler.gd.uid)
-        - 📄 [camera_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/camera_handler.gd)
+        - 📄 [batch_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/batch_handler.gd.uid)
+        - 📄 [camera_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/camera_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `static func _is_current(cam: Node) -> bool`
           - `static func _viewport_current_camera(scene_root: Node) -> Node`
@@ -1014,27 +1005,27 @@ Root: `SpaceGame`
           - `static func _list_cameras_in_scene(scene_root: Node, class_filter: String) -> Array`
           - `static func _collect_cameras(node: Node, class_filter: String, out: Array) -> void`
           - `static func _property_type_map(obj: Object) -> Dictionary`
-        - 📄 [camera_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/camera_handler.gd.uid)
-        - 📄 [camera_presets.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/camera_presets.gd)
+        - 📄 [camera_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/camera_handler.gd.uid)
+        - 📄 [camera_presets.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/camera_presets.gd)
           - `static func list_presets() -> Array`
           - `static func build(preset_name: String, overrides: Dictionary) -> Variant`
-        - 📄 [camera_presets.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/camera_presets.gd.uid)
-        - 📄 [camera_values.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/camera_values.gd)
+        - 📄 [camera_presets.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/camera_presets.gd.uid)
+        - 📄 [camera_values.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/camera_values.gd)
           - `static func resolve_enum(property: String, value: Variant) -> Variant`
           - `static func enum_keys(property: String) -> Array`
           - `static func parse_vector2(value: Variant) -> Variant`
           - `static func parse_vector3(value: Variant) -> Variant`
           - `static func coerce(property: String, value: Variant, target_type: int) -> Dictionary`
           - `static func serialize(value: Variant) -> Variant`
-        - 📄 [camera_values.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/camera_values.gd.uid)
-        - 📄 [client_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/client_handler.gd)
+        - 📄 [camera_values.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/camera_values.gd.uid)
+        - 📄 [client_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/client_handler.gd)
           - `func _init(connection = null, fallback_launch_context = null) -> void`
           - `func configure_client(params: Dictionary) -> Dictionary`
           - `func remove_client(params: Dictionary) -> Dictionary`
           - `func check_client_status(params: Dictionary) -> Dictionary`
           - `func prepare_for_teardown() -> void`
-        - 📄 [client_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/client_handler.gd.uid)
-        - 📄 [control_draw_recipe_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/control_draw_recipe_handler.gd)
+        - 📄 [client_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/client_handler.gd.uid)
+        - 📄 [control_draw_recipe_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/control_draw_recipe_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func control_draw_recipe(params: Dictionary) -> Dictionary`
           - `func _coerce_ops(ops: Array) -> Dictionary`
@@ -1047,20 +1038,20 @@ Root: `SpaceGame`
           - `func _coerce_circle(op: Dictionary, idx: int) -> Dictionary`
           - `func _coerce_polyline_or_polygon(op: Dictionary, idx: int, kind: String) -> Dictionary`
           - `func _coerce_string(op: Dictionary, idx: int) -> Dictionary`
-        - 📄 [control_draw_recipe_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/control_draw_recipe_handler.gd.uid)
-        - 📄 [csg_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/csg_handler.gd)
+        - 📄 [control_draw_recipe_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/control_draw_recipe_handler.gd.uid)
+        - 📄 [csg_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/csg_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func create(params: Dictionary) -> Dictionary`
           - `func set_operation(params: Dictionary) -> Dictionary`
-        - 📄 [csg_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/csg_handler.gd.uid)
-        - 📄 [curve_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/curve_handler.gd)
+        - 📄 [csg_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/csg_handler.gd.uid)
+        - 📄 [curve_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/curve_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func set_points(params: Dictionary) -> Dictionary`
           - `static func _infer_curve_class(node: Node, property: String) -> String`
           - `static func _coerce_points(curve: Resource, points: Array) -> Dictionary`
           - `func _apply_snapshot_to_curve(curve: Resource, snapshot: Array) -> void`
-        - 📄 [curve_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/curve_handler.gd.uid)
-        - 📄 [editor_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/editor_handler.gd)
+        - 📄 [curve_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/curve_handler.gd.uid)
+        - 📄 [editor_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/editor_handler.gd)
           - `func _init(log_buffer: McpLogBuffer, connection: McpConnection = null, debugger_plugin: McpDebuggerPlugin = null, game_log_buffer: McpGameLogBuffer = null, editor_log_buffer: McpEditorLogBuffer = null, debugger_errors_root: Node = null, surfaced_error_tracker = null, vision_routing: VisionRoutingScript = null) -> void`
           - `func get_editor_state(_params: Dictionary) -> Dictionary`
           - `func get_selection(_params: Dictionary) -> Dictionary`
@@ -1092,23 +1083,23 @@ Root: `SpaceGame`
           - `func quit_editor(_params: Dictionary) -> Dictionary`
           - `func game_eval(params: Dictionary) -> Dictionary`
           - `func game_command(params: Dictionary) -> Dictionary`
-        - 📄 [editor_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/editor_handler.gd.uid)
-        - 📄 [environment_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/environment_handler.gd)
+        - 📄 [editor_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/editor_handler.gd.uid)
+        - 📄 [environment_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/environment_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func create_environment(params: Dictionary) -> Dictionary`
           - `static func _apply_preset(env: Environment, sky_material: ProceduralSkyMaterial, preset: String) -> void`
           - `func _assign_environment(env: Environment, sky: Sky, sky_material: ProceduralSkyMaterial, node_path: String, preset: String) -> Dictionary`
           - `func _save_environment(env: Environment, _sky: Sky, _sky_material: ProceduralSkyMaterial, resource_path: String, overwrite: bool, preset: String) -> Dictionary`
-        - 📄 [environment_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/environment_handler.gd.uid)
-        - 📄 [filesystem_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/filesystem_handler.gd)
+        - 📄 [environment_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/environment_handler.gd.uid)
+        - 📄 [filesystem_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/filesystem_handler.gd)
           - `func _init(connection: McpConnection = null) -> void`
           - `func read_file(params: Dictionary) -> Dictionary`
           - `func write_file(params: Dictionary) -> Dictionary`
           - `func reimport(params: Dictionary) -> Dictionary`
           - `static func _is_imported_resource(path: String) -> bool`
           - `func scan_filesystem(params: Dictionary) -> Dictionary`
-        - 📄 [filesystem_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/filesystem_handler.gd.uid)
-        - 📄 [gridmap_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/gridmap_handler.gd)
+        - 📄 [filesystem_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/filesystem_handler.gd.uid)
+        - 📄 [gridmap_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/gridmap_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func set_item(params: Dictionary) -> Dictionary`
           - `func fill(params: Dictionary) -> Dictionary`
@@ -1121,8 +1112,8 @@ Root: `SpaceGame`
           - `func _apply_fill(node: GridMap, snapshot: Array[Dictionary], item: int, orientation: int) -> void`
           - `func _restore_rect_snapshot(node: GridMap, snapshot: Array[Dictionary]) -> void`
           - `func _restore_cell_state(node: GridMap, pos: Vector3i, state: Dictionary) -> void`
-        - 📄 [gridmap_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/gridmap_handler.gd.uid)
-        - 📄 [input_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/input_handler.gd)
+        - 📄 [gridmap_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/gridmap_handler.gd.uid)
+        - 📄 [input_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/input_handler.gd)
           - `func list_actions(params: Dictionary) -> Dictionary`
           - `func _read_user_authored_actions() -> Dictionary`
           - `func add_action(params: Dictionary) -> Dictionary`
@@ -1137,8 +1128,8 @@ Root: `SpaceGame`
           - `func _events_match(a: InputEvent, b: InputEvent) -> bool`
           - `func _key_events_match(a: InputEventKey, b: InputEventKey) -> bool`
           - `func _save_action_events(action: String) -> int`
-        - 📄 [input_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/input_handler.gd.uid)
-        - 📄 [material_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/material_handler.gd)
+        - 📄 [input_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/input_handler.gd.uid)
+        - 📄 [material_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/material_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func create_material(params: Dictionary) -> Dictionary`
           - `func set_param(params: Dictionary) -> Dictionary`
@@ -1158,13 +1149,13 @@ Root: `SpaceGame`
           - `func _resolve_slot_property(node: Node, slot: String) -> Dictionary`
           - `func _apply_one_param_on_instance(mat: Material, property: String, raw_value: Variant) -> Variant`
           - `static func _shader_uniform_type(shader: Shader, name: String) -> int`
-        - 📄 [material_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/material_handler.gd.uid)
-        - 📄 [material_presets.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/material_presets.gd)
+        - 📄 [material_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/material_handler.gd.uid)
+        - 📄 [material_presets.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/material_presets.gd)
           - `static func list() -> Array`
           - `static func has(preset_name: String) -> bool`
           - `static func build(preset_name: String, overrides: Dictionary) -> Variant`
-        - 📄 [material_presets.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/material_presets.gd.uid)
-        - 📄 [material_values.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/material_values.gd)
+        - 📄 [material_presets.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/material_presets.gd.uid)
+        - 📄 [material_values.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/material_values.gd)
           - `static func resolve_enum(property: String, value: Variant) -> Variant`
           - `static func parse_color(value: Variant) -> Variant`
           - `static func parse_vector3(value: Variant) -> Variant`
@@ -1172,8 +1163,8 @@ Root: `SpaceGame`
           - `static func load_texture(path: String) -> Texture2D`
           - `static func coerce_material_value(property: String, value: Variant, target_type: int) -> Dictionary`
           - `static func serialize_value(value: Variant) -> Variant`
-        - 📄 [material_values.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/material_values.gd.uid)
-        - 📄 [node_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/node_handler.gd)
+        - 📄 [material_values.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/material_values.gd.uid)
+        - 📄 [node_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/node_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func create_node(params: Dictionary) -> Dictionary`
           - `func delete_node(params: Dictionary) -> Dictionary`
@@ -1202,8 +1193,8 @@ Root: `SpaceGame`
           - `func _resolve_node(params: Dictionary) -> Dictionary`
           - `static func _reject_if_scene_root(node: Node, scene_root: Node, op: String) -> Variant`
           - `static func _serialize_value(value: Variant) -> Variant`
-        - 📄 [node_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/node_handler.gd.uid)
-        - 📄 [particle_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/particle_handler.gd)
+        - 📄 [node_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/node_handler.gd.uid)
+        - 📄 [particle_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/particle_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func create_particle(params: Dictionary) -> Dictionary`
           - `func set_main(params: Dictionary) -> Dictionary`
@@ -1224,13 +1215,13 @@ Root: `SpaceGame`
           - `static func _node_property_type(node: Object, name: String) -> int`
           - `static func _object_property_type(obj: Object, name: String) -> int`
           - `static func _property_names(obj: Object) -> Dictionary`
-        - 📄 [particle_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/particle_handler.gd.uid)
-        - 📄 [particle_presets.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/particle_presets.gd)
+        - 📄 [particle_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/particle_handler.gd.uid)
+        - 📄 [particle_presets.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/particle_presets.gd)
           - `static func list() -> Array`
           - `static func has(preset_name: String) -> bool`
           - `static func build(preset_name: String, overrides: Dictionary) -> Variant`
-        - 📄 [particle_presets.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/particle_presets.gd.uid)
-        - 📄 [particle_values.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/particle_values.gd)
+        - 📄 [particle_presets.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/particle_presets.gd.uid)
+        - 📄 [particle_values.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/particle_values.gd)
           - `static func resolve_emission_shape(value: Variant) -> Variant`
           - `static func emission_shape_names() -> Array`
           - `static func build_gradient(value: Variant) -> Variant`
@@ -1241,16 +1232,16 @@ Root: `SpaceGame`
           - `static func build_draw_material(config: Dictionary) -> Dictionary`
           - `static func _object_property_type(obj: Object, name: String) -> int`
           - `static func serialize(value: Variant) -> Variant`
-        - 📄 [particle_values.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/particle_values.gd.uid)
-        - 📄 [physics_shape_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/physics_shape_handler.gd)
+        - 📄 [particle_values.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/particle_values.gd.uid)
+        - 📄 [physics_shape_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/physics_shape_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func autofit(params: Dictionary) -> Dictionary`
           - `static func _find_bounds_visual(collision_node: Node, is_3d: bool, scene_root: Node) -> Dictionary`
           - `static func _no_visual_error(is_3d: bool) -> Dictionary`
           - `static func _measure_bounds(source: Node, is_3d: bool) -> Dictionary`
           - `static func _apply_shape_size(shape: Resource, shape_type: String, bounds: Dictionary, is_3d: bool) -> Dictionary`
-        - 📄 [physics_shape_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/physics_shape_handler.gd.uid)
-        - 📄 [project_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/project_handler.gd)
+        - 📄 [physics_shape_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/physics_shape_handler.gd.uid)
+        - 📄 [project_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/project_handler.gd)
           - `static func startup_execution_key_refusal(key: String) -> String`
           - `func _init(connection: McpConnection = null, debugger_plugin = null, editor_log_buffer = null) -> void`
           - `func get_project_setting(params: Dictionary) -> Dictionary`
@@ -1268,8 +1259,8 @@ Root: `SpaceGame`
           - `static func _finish_stop_project_deferred(request_id: String, connection) -> void`
           - `func search_filesystem(params: Dictionary) -> Dictionary`
           - `func _scan_directory(dir: EditorFileSystemDirectory, name_filter: String, type_filter: String, path_filter: String, out: Array[Dictionary]) -> void`
-        - 📄 [project_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/project_handler.gd.uid)
-        - 📄 [resource_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/resource_handler.gd)
+        - 📄 [project_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/project_handler.gd.uid)
+        - 📄 [resource_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/resource_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func search_resources(params: Dictionary) -> Dictionary`
           - `func _scan_resources(dir: EditorFileSystemDirectory, type_filter: String, path_filter: String, out: Array[Dictionary]) -> void`
@@ -1285,8 +1276,8 @@ Root: `SpaceGame`
           - `func get_resource_info(params: Dictionary) -> Dictionary`
           - `static func _script_base_type_or_error(scr: Variant, type_str: String, script_path: String) -> Variant`
           - `static func _custom_resource_info(type_str: String) -> Variant`
-        - 📄 [resource_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/resource_handler.gd.uid)
-        - 📄 [scene_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/scene_handler.gd)
+        - 📄 [resource_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/resource_handler.gd.uid)
+        - 📄 [scene_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/scene_handler.gd)
           - `func _init(connection: McpConnection = null) -> void`
           - `func get_scene_tree(params: Dictionary) -> Dictionary`
           - `func get_open_scenes(_params: Dictionary) -> Dictionary`
@@ -1300,8 +1291,8 @@ Root: `SpaceGame`
           - `func _save_current_scene() -> int`
           - `func _save_current_scene_as(path: String) -> void`
           - `func _walk_tree(node: Node, out: Array[Dictionary], depth: int, max_depth: int, scene_root: Node, offset: int, limit: int, index_ref: Array[int], node_path: String) -> void`
-        - 📄 [scene_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/scene_handler.gd.uid)
-        - 📄 [script_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/script_handler.gd)
+        - 📄 [scene_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/scene_handler.gd.uid)
+        - 📄 [script_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/script_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func create_script(params: Dictionary) -> Dictionary`
           - `static func _extract_class_name(content: String) -> String`
@@ -1318,8 +1309,8 @@ Root: `SpaceGame`
           - `func attach_script(params: Dictionary) -> Dictionary`
           - `func detach_script(params: Dictionary) -> Dictionary`
           - `func find_symbols(params: Dictionary) -> Dictionary`
-        - 📄 [script_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/script_handler.gd.uid)
-        - 📄 [signal_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/signal_handler.gd)
+        - 📄 [script_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/script_handler.gd.uid)
+        - 📄 [signal_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/signal_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func list_signals(params: Dictionary) -> Dictionary`
           - `func _is_editor_internal_target(target: Object, scene_root: Node) -> bool`
@@ -1330,22 +1321,22 @@ Root: `SpaceGame`
           - `func _resolve_signal_params(params: Dictionary) -> Dictionary`
           - `func _resolve_node_or_autoload(path: String, scene_root: Node, role: String) -> Dictionary`
           - `func _signal_response(source: Node, signal_name: String, target: Node, method: String, scene_root: Node) -> Dictionary`
-        - 📄 [signal_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/signal_handler.gd.uid)
-        - 📄 [test_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/test_handler.gd)
+        - 📄 [signal_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/signal_handler.gd.uid)
+        - 📄 [test_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/test_handler.gd)
           - `func run_tests(params: Dictionary) -> Dictionary`
           - `static func unknown_suite_error(suite_filter: String, suites: Array) -> Dictionary`
           - `func _validated_budget_sec(params: Dictionary) -> float`
           - `func _annotate_edited_scene(results: Dictionary) -> void`
           - `func get_test_results(params: Dictionary) -> Dictionary`
-        - 📄 [test_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/test_handler.gd.uid)
-        - 📄 [texture_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/texture_handler.gd)
+        - 📄 [test_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/test_handler.gd.uid)
+        - 📄 [texture_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/texture_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func create_gradient_texture(params: Dictionary) -> Dictionary`
           - `func create_noise_texture(params: Dictionary) -> Dictionary`
           - `func _finalize(tex: Resource, sub_resources: Array, params: Dictionary, label: String, extra: Dictionary) -> Dictionary`
           - `func _assign_texture(tex: Resource, sub_resources: Array, node_path: String, property: String, label: String, extra: Dictionary) -> Dictionary`
-        - 📄 [texture_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/texture_handler.gd.uid)
-        - 📄 [theme_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/theme_handler.gd)
+        - 📄 [texture_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/texture_handler.gd.uid)
+        - 📄 [theme_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/theme_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager, connection: McpConnection = null) -> void`
           - `func create_theme(params: Dictionary) -> Dictionary`
           - `func set_color(params: Dictionary) -> Dictionary`
@@ -1361,8 +1352,8 @@ Root: `SpaceGame`
           - `static func _validate_res_path(path: String, required_suffix: String, param_name: String = "theme_path", for_write: bool = false) -> Variant`
           - `static func _parse_color(value: Variant) -> Variant`
           - `static func _serialize_value(value: Variant) -> Variant`
-        - 📄 [theme_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/theme_handler.gd.uid)
-        - 📄 [tilemap_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/tilemap_handler.gd)
+        - 📄 [theme_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/theme_handler.gd.uid)
+        - 📄 [tilemap_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/tilemap_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func set_cell(params: Dictionary) -> Dictionary`
           - `func set_cells_rect(params: Dictionary) -> Dictionary`
@@ -1373,14 +1364,14 @@ Root: `SpaceGame`
           - `func _restore_cells_snapshot(node: TileMapLayer, snapshot: Array[Dictionary]) -> void`
           - `func _restore_rect_snapshot(node: TileMapLayer, snapshot: Array[Dictionary]) -> void`
           - `func _restore_cell_state(node: TileMapLayer, pos: Vector2i, state: Dictionary) -> void`
-        - 📄 [tilemap_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/tilemap_handler.gd.uid)
-        - 📄 [tileset_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/tileset_handler.gd)
+        - 📄 [tilemap_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/tilemap_handler.gd.uid)
+        - 📄 [tileset_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/tileset_handler.gd)
           - `func _init() -> void`
           - `func get_atlas_tiles(params: Dictionary) -> Dictionary`
           - `func get_atlas_image(params: Dictionary) -> Dictionary`
           - `func _resolve_atlas_source(params: Dictionary) -> Dictionary`
-        - 📄 [tileset_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/tileset_handler.gd.uid)
-        - 📄 [ui_handler.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/ui_handler.gd)
+        - 📄 [tileset_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/tileset_handler.gd.uid)
+        - 📄 [ui_handler.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/ui_handler.gd)
           - `func _init(undo_redo: EditorUndoRedoManager) -> void`
           - `func set_anchor_preset(params: Dictionary) -> Dictionary`
           - `func set_text(params: Dictionary) -> Dictionary`
@@ -1389,8 +1380,8 @@ Root: `SpaceGame`
           - `func _apply_property(node: Node, prop: String, value: Variant) -> Variant`
           - `static func _coerce_for_type(value: Variant, prop_type: int) -> Dictionary`
           - `static func _canvas_layer_overlay_hint(node_class: String) -> String`
-        - 📄 [ui_handler.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/handlers/ui_handler.gd.uid)
-      - 📄 [mcp_dock.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/mcp_dock.gd)
+        - 📄 [ui_handler.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/handlers/ui_handler.gd.uid)
+      - 📄 [mcp_dock.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/mcp_dock.gd)
         - 🏛️ **global class McpDock**
           - `func setup(connection: McpConnection, log_buffer: McpLogBuffer, plugin: EditorPlugin) -> void`
           - `func _ready() -> void`
@@ -1536,8 +1527,8 @@ Root: `SpaceGame`
           - `func _on_update_pressed() -> void`
           - `func _on_update_check_result(result: Dictionary) -> void`
           - `func _on_install_state_changed(state: Dictionary) -> void`
-      - 📄 [mcp_dock.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/mcp_dock.gd.uid)
-      - 📄 [plugin.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/plugin.gd)
+      - 📄 [mcp_dock.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/mcp_dock.gd.uid)
+      - 📄 [plugin.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/plugin.gd)
         - `func _init() -> void`
         - `func _enter_tree() -> void`
         - `func record_dev_server_toggle(action: String) -> void`
@@ -1633,20 +1624,20 @@ Root: `SpaceGame`
         - `func can_restart_managed_server() -> bool`
         - `func _on_custom_tools_changed() -> void`
         - `func _on_connection_state_changed(is_open: bool) -> void`
-      - 📄 [plugin.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/plugin.gd.uid)
+      - 📄 [plugin.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/plugin.gd.uid)
       - 📂 **runtime/**
-        - 📄 [draw_recipe.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/draw_recipe.gd)
+        - 📄 [draw_recipe.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/draw_recipe.gd)
           - `func _ready() -> void`
           - `func _draw() -> void`
-        - 📄 [draw_recipe.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/draw_recipe.gd.uid)
-        - 📄 [editor_logger.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/editor_logger.gd)
+        - 📄 [draw_recipe.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/draw_recipe.gd.uid)
+        - 📄 [editor_logger.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/editor_logger.gd)
           - `func _init(buffer = null) -> void`
           - `static func _update_resolved_details(resolved: Dictionary) -> void`
           - `static func _is_user_script(path: String) -> bool`
           - `static func _is_in_godot_ai_addon(path: String) -> bool`
           - `static func _extract_user_res_path(message: String) -> String`
-        - 📄 [editor_logger.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/editor_logger.gd.uid)
-        - 📄 [game_helper.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/game_helper.gd)
+        - 📄 [editor_logger.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/editor_logger.gd.uid)
+        - 📄 [game_helper.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/game_helper.gd)
           - `func _ready() -> void`
           - `func _process(_delta: float) -> void`
           - `func _exit_tree() -> void`
@@ -1692,19 +1683,19 @@ Root: `SpaceGame`
           - `func _handle_eval_check(data: Array) -> void`
           - `func _indent_eval_code(code: String) -> String`
           - `func _variant_to_json(value: Variant) -> Variant`
-        - 📄 [game_helper.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/game_helper.gd.uid)
-        - 📄 [game_logger.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/game_logger.gd)
+        - 📄 [game_helper.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/game_helper.gd.uid)
+        - 📄 [game_logger.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/game_logger.gd)
           - `func _log_message(message: String, error: bool) -> void`
           - `func _append(level: String, text: String, details: Dictionary = {}) -> void`
           - `func drain() -> Array`
           - `func has_pending() -> bool`
           - `func script_error_seq() -> int`
           - `func find_script_error_since(since_seq: int, function_name: String) -> String`
-        - 📄 [game_logger.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/game_logger.gd.uid)
-        - 📄 [validation_logger.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/validation_logger.gd)
+        - 📄 [game_logger.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/game_logger.gd.uid)
+        - 📄 [validation_logger.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/validation_logger.gd)
           - `func _init(buffer = null) -> void`
-        - 📄 [validation_logger.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/runtime/validation_logger.gd.uid)
-      - 📄 [telemetry.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/telemetry.gd)
+        - 📄 [validation_logger.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/runtime/validation_logger.gd.uid)
+      - 📄 [telemetry.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/telemetry.gd)
         - `static func record_pending_plugin_reload(source: String) -> void`
         - `static func _drain_editor_setting_dict(key: String)`
         - `func _init(connection) -> void`
@@ -1717,20 +1708,20 @@ Root: `SpaceGame`
         - `func flush_pending_plugin_reload() -> void`
         - `func _test_set_state(connection, disabled: bool) -> void`
         - `func _test_pending_count() -> int`
-      - 📄 [telemetry.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/telemetry.gd.uid)
+      - 📄 [telemetry.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/telemetry.gd.uid)
       - 📂 **testing/**
-        - 📄 [script_error_capture.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/script_error_capture.gd)
+        - 📄 [script_error_capture.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/script_error_capture.gd)
           - `func begin_capture() -> void`
           - `func end_capture() -> PackedStringArray`
-        - 📄 [script_error_capture.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/script_error_capture.gd.uid)
-        - 📄 [stub_backtrace.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/stub_backtrace.gd)
+        - 📄 [script_error_capture.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/script_error_capture.gd.uid)
+        - 📄 [stub_backtrace.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/stub_backtrace.gd)
           - `func _init(file: String, line: int, function: String, frames: Array[Dictionary] = []) -> void`
           - `func get_frame_count() -> int`
           - `func get_frame_file(idx: int) -> String`
           - `func get_frame_line(idx: int) -> int`
           - `func get_frame_function(idx: int) -> String`
-        - 📄 [stub_backtrace.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/stub_backtrace.gd.uid)
-        - 📄 [test_runner.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/test_runner.gd)
+        - 📄 [stub_backtrace.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/stub_backtrace.gd.uid)
+        - 📄 [test_runner.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/test_runner.gd)
           - 🏛️ **global class McpTestRunner**
             - `func _notification(what: int) -> void`
             - `func run_suite(suite: McpTestSuite, test_filter: String = "", exclude_test_filter: String = "") -> void`
@@ -1748,8 +1739,8 @@ Root: `SpaceGame`
             - `func _cleanup_leaked_nodes(scene_root: Node, before: Array[Node]) -> void`
             - `func _free_mcp_test_nodes_recursive(root: Node) -> void`
             - `static func _matches_any_exclusion(method_name: String, exclusions: Array[String]) -> bool`
-        - 📄 [test_runner.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/test_runner.gd.uid)
-        - 📄 [test_suite.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/test_suite.gd)
+        - 📄 [test_runner.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/test_runner.gd.uid)
+        - 📄 [test_suite.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/test_suite.gd)
           - 🏛️ **global class McpTestSuite**
             - `func suite_name() -> String`
             - `func suite_setup(_ctx: Dictionary) -> void`
@@ -1779,15 +1770,15 @@ Root: `SpaceGame`
             - `func assert_is_error(result: Dictionary, expected_code: String = "", msg: String = "") -> void`
             - `func _add_control(ctl_name: String, ctl: Control = null) -> String`
             - `func _remove_control(path: String) -> void`
-        - 📄 [test_suite.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/testing/test_suite.gd.uid)
-      - 📄 [tool_catalog.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/tool_catalog.gd)
+        - 📄 [test_suite.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/testing/test_suite.gd.uid)
+      - 📄 [tool_catalog.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/tool_catalog.gd)
         - 🏛️ **global class McpToolCatalog**
           - `static func is_excludable_domain(id: String) -> bool`
           - `static func total_tool_count() -> int`
           - `static func enabled_tool_count(excluded: PackedStringArray) -> int`
           - `static func canonical(excluded: PackedStringArray) -> String`
-      - 📄 [tool_catalog.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/tool_catalog.gd.uid)
-      - 📄 [update_reload_runner.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/update_reload_runner.gd)
+      - 📄 [tool_catalog.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/tool_catalog.gd.uid)
+      - 📄 [update_reload_runner.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/update_reload_runner.gd)
         - `func start(zip_path: String, temp_dir: String, detached_dock) -> void`
         - `static func _read_plugin_cfg_version() -> String`
         - `func _process(_delta: float) -> void`
@@ -1811,9 +1802,9 @@ Root: `SpaceGame`
         - `func _enable_new_plugin() -> void`
         - `func _cleanup_and_finish() -> void`
         - `func _cleanup_detached_dock() -> void`
-      - 📄 [update_reload_runner.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/update_reload_runner.gd.uid)
+      - 📄 [update_reload_runner.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/update_reload_runner.gd.uid)
       - 📂 **utils/**
-        - 📄 [allow_hosts.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/allow_hosts.gd)
+        - 📄 [allow_hosts.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/allow_hosts.gd)
           - 🏛️ **global class McpAllowHosts**
             - `static func normalize(raw: String) -> String`
             - `static func token_is_valid(token: String) -> bool`
@@ -1824,20 +1815,20 @@ Root: `SpaceGame`
             - `static func _is_loopback(addr: String) -> bool`
             - `static func _is_link_local(addr: String) -> bool`
             - `static func _is_private_ipv4(addr: String) -> bool`
-        - 📄 [allow_hosts.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/allow_hosts.gd.uid)
-        - 📄 [class_introspection.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/class_introspection.gd)
+        - 📄 [allow_hosts.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/allow_hosts.gd.uid)
+        - 📄 [class_introspection.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/class_introspection.gd)
           - `static func build(type_name: String, options: Dictionary = {}) -> Dictionary`
           - `static func validate_sections(raw_sections: Variant) -> Dictionary`
           - `static func _argument_info(raw_info: Variant) -> Dictionary`
-        - 📄 [class_introspection.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/class_introspection.gd.uid)
-        - 📄 [diagnostics_capture.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/diagnostics_capture.gd)
+        - 📄 [class_introspection.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/class_introspection.gd.uid)
+        - 📄 [diagnostics_capture.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/diagnostics_capture.gd)
           - 🏛️ **global class McpDiagnosticsCapture**
             - `static func capture_this_file(log_buffer: McpEditorLogBuffer, target_path: String, action: Callable) -> Dictionary`
             - `static func _entry_matches_target(entry: Dictionary, target_path: String) -> bool`
             - `static func _normalize_entry(entry: Dictionary, target_path: String) -> Dictionary`
             - `static func _source_location(entry: Dictionary) -> Dictionary`
-        - 📄 [diagnostics_capture.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/diagnostics_capture.gd.uid)
-        - 📄 [editor_log_buffer.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/editor_log_buffer.gd)
+        - 📄 [diagnostics_capture.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/diagnostics_capture.gd.uid)
+        - 📄 [editor_log_buffer.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/editor_log_buffer.gd)
           - 🏛️ **global class McpEditorLogBuffer**
             - `func _init() -> void`
             - `func append(level: String, text: String, path: String = "", line: int = 0, function: String = "", details: Dictionary = {}) -> void`
@@ -1848,15 +1839,15 @@ Root: `SpaceGame`
             - `func error_appended_total() -> int`
             - `func warn_appended_total() -> int`
             - `func clear() -> int`
-        - 📄 [editor_log_buffer.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/editor_log_buffer.gd.uid)
-        - 📄 [error_codes.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/error_codes.gd)
+        - 📄 [editor_log_buffer.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/editor_log_buffer.gd.uid)
+        - 📄 [error_codes.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/error_codes.gd)
           - 🏛️ **global class McpErrorCodes**
             - `static func make(code: String, message: String) -> Dictionary`
             - `static func prefix_message(err: Dictionary, prefix: String) -> Dictionary`
-        - 📄 [error_codes.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/error_codes.gd.uid)
-        - 📄 [fuzzy_suggestions.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/fuzzy_suggestions.gd)
-        - 📄 [fuzzy_suggestions.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/fuzzy_suggestions.gd.uid)
-        - 📄 [game_log_buffer.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/game_log_buffer.gd)
+        - 📄 [error_codes.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/error_codes.gd.uid)
+        - 📄 [fuzzy_suggestions.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/fuzzy_suggestions.gd)
+        - 📄 [fuzzy_suggestions.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/fuzzy_suggestions.gd.uid)
+        - 📄 [game_log_buffer.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/game_log_buffer.gd)
           - 🏛️ **global class McpGameLogBuffer**
             - `func _init() -> void`
             - `func append(level: String, text: String, details: Dictionary = {}) -> void`
@@ -1867,29 +1858,29 @@ Root: `SpaceGame`
             - `func warn_total() -> int`
             - `func get_run_page(run_id: String, offset: int, count: int) -> Dictionary`
             - `func _generate_run_id() -> String`
-        - 📄 [game_log_buffer.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/game_log_buffer.gd.uid)
-        - 📄 [json_values.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/json_values.gd)
+        - 📄 [game_log_buffer.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/game_log_buffer.gd.uid)
+        - 📄 [json_values.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/json_values.gd)
           - 🏛️ **global class McpJsonValues**
             - `static func parse_color(value: Variant) -> Variant`
             - `static func parse_vector2(value: Variant) -> Variant`
             - `static func parse_vector3(value: Variant) -> Variant`
             - `static func _is_number(v: Variant) -> bool`
-        - 📄 [json_values.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/json_values.gd.uid)
-        - 📄 [log_backtrace.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/log_backtrace.gd)
+        - 📄 [json_values.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/json_values.gd.uid)
+        - 📄 [log_backtrace.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/log_backtrace.gd)
           - 🏛️ **global class McpLogBacktrace**
             - `static func _error_type_name(error_type: int) -> String`
-        - 📄 [log_backtrace.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/log_backtrace.gd.uid)
-        - 📄 [log_buffer.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/log_buffer.gd)
+        - 📄 [log_backtrace.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/log_backtrace.gd.uid)
+        - 📄 [log_buffer.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/log_buffer.gd)
           - 🏛️ **global class McpLogBuffer**
             - `func log(msg: String, echo: bool = true) -> void`
             - `func clear() -> void`
             - `func total_count() -> int`
             - `func total_logged() -> int`
-        - 📄 [log_buffer.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/log_buffer.gd.uid)
-        - 📄 [mcp_adoption_label.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_adoption_label.gd)
+        - 📄 [log_buffer.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/log_buffer.gd.uid)
+        - 📄 [mcp_adoption_label.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_adoption_label.gd)
           - 🏛️ **global class McpAdoptionLabel**
-        - 📄 [mcp_adoption_label.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_adoption_label.gd.uid)
-        - 📄 [mcp_client_refresh_state.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_client_refresh_state.gd)
+        - 📄 [mcp_adoption_label.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_adoption_label.gd.uid)
+        - 📄 [mcp_client_refresh_state.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_client_refresh_state.gd)
           - 🏛️ **global class McpClientRefreshState**
             - `static func name_of(state: int) -> String`
             - `static func has_worker_alive(state: int) -> bool`
@@ -1897,18 +1888,18 @@ Root: `SpaceGame`
             - `static func is_blocked_for_spawn(state: int) -> bool`
             - `static func should_show_checking_badge(state: int) -> bool`
             - `static func can_transition(from: int, to: int) -> bool`
-        - 📄 [mcp_client_refresh_state.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_client_refresh_state.gd.uid)
-        - 📄 [mcp_server_state.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_server_state.gd)
+        - 📄 [mcp_client_refresh_state.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_client_refresh_state.gd.uid)
+        - 📄 [mcp_server_state.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_server_state.gd)
           - 🏛️ **global class McpServerState**
             - `static func name_of(state: int) -> String`
             - `static func is_terminal_diagnosis(state: int) -> bool`
             - `static func blocks_client_health(state: int) -> bool`
             - `static func can_transition(from: int, to: int) -> bool`
-        - 📄 [mcp_server_state.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_server_state.gd.uid)
-        - 📄 [mcp_startup_path.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_startup_path.gd)
+        - 📄 [mcp_server_state.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_server_state.gd.uid)
+        - 📄 [mcp_startup_path.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_startup_path.gd)
           - 🏛️ **global class McpStartupPath**
-        - 📄 [mcp_startup_path.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/mcp_startup_path.gd.uid)
-        - 📄 [path_validator.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/path_validator.gd)
+        - 📄 [mcp_startup_path.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/mcp_startup_path.gd.uid)
+        - 📄 [path_validator.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/path_validator.gd)
           - 🏛️ **global class McpPathValidator**
             - `static func _res_root() -> String`
             - `static func _user_root() -> String`
@@ -1919,8 +1910,8 @@ Root: `SpaceGame`
             - `static func _reject_sensitive_write(path: String) -> String`
             - `static func path_error(path: String, param_name: String = "path", for_write: bool = false) -> Variant`
             - `static func loadable_error(path: String, param_name: String = "path") -> Variant`
-        - 📄 [path_validator.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/path_validator.gd.uid)
-        - 📄 [port_resolver.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/port_resolver.gd)
+        - 📄 [path_validator.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/path_validator.gd.uid)
+        - 📄 [port_resolver.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/port_resolver.gd)
           - 🏛️ **global class McpPortResolver**
             - `static func can_bind_local_port(port: int) -> bool`
             - `static func is_port_in_use(port: int) -> bool`
@@ -1938,28 +1929,28 @@ Root: `SpaceGame`
             - `static func pid_alive(pid: int) -> bool`
             - `static func wait_for_port_free(port: int, timeout_s: float) -> void`
             - `static func resolve_ws_port(configured: int, max_port: int, log_buffer = null) -> int`
-        - 📄 [port_resolver.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/port_resolver.gd.uid)
-        - 📄 [resource_io.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/resource_io.gd)
+        - 📄 [port_resolver.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/port_resolver.gd.uid)
+        - 📄 [resource_io.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/resource_io.gd)
           - 🏛️ **global class McpResourceIO**
             - `static func validate_home(params: Dictionary, require_property: bool = true) -> Variant`
             - `static func guarded_save(res: Resource, resource_path: String, pause_target: McpConnection) -> int`
             - `static func ensure_uid(resource_path: String, prior_uid: int) -> Error`
             - `static func attach_cleanup_hint(data: Dictionary, existed_before: bool, paths: Array) -> void`
             - `static func write_text_to_disk(path: String, content: String) -> Variant`
-        - 📄 [resource_io.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/resource_io.gd.uid)
-        - 📄 [scene_path.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/scene_path.gd)
+        - 📄 [resource_io.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/resource_io.gd.uid)
+        - 📄 [scene_path.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/scene_path.gd)
           - 🏛️ **global class McpScenePath**
             - `static func from_node(node: Node, scene_root: Node) -> String`
             - `static func resolve(scene_path: String, scene_root: Node) -> Node`
             - `static func require_edited_scene(expected_scene_file: String) -> Dictionary`
             - `static func format_parent_error(path: String, scene_root: Node) -> String`
             - `static func format_node_error(path: String, scene_root: Node) -> String`
-        - 📄 [scene_path.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/scene_path.gd.uid)
-        - 📄 [screenshot_encode.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/screenshot_encode.gd)
+        - 📄 [scene_path.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/scene_path.gd.uid)
+        - 📄 [screenshot_encode.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/screenshot_encode.gd)
           - 🏛️ **global class McpScreenshotEncode**
             - `static func downscale_and_encode(image: Image, max_resolution: int) -> Dictionary`
-        - 📄 [screenshot_encode.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/screenshot_encode.gd.uid)
-        - 📄 [server_lifecycle.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/server_lifecycle.gd)
+        - 📄 [screenshot_encode.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/screenshot_encode.gd.uid)
+        - 📄 [server_lifecycle.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/server_lifecycle.gd)
           - 🏛️ **global class McpServerLifecycleManager**
             - `func _init(host) -> void`
             - `func _run_blocking(work: Callable) -> Variant`
@@ -2020,8 +2011,8 @@ Root: `SpaceGame`
             - `func has_managed_server() -> bool`
             - `func reset_for_force_restart() -> void`
             - `func force_restart_server() -> void`
-        - 📄 [server_lifecycle.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/server_lifecycle.gd.uid)
-        - 📄 [server_version_check.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/server_version_check.gd)
+        - 📄 [server_lifecycle.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/server_lifecycle.gd.uid)
+        - 📄 [server_version_check.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/server_version_check.gd)
           - 🏛️ **global class McpServerVersionCheck**
             - `func _init(manager) -> void`
             - `func arm(connection, expected_version: String) -> void`
@@ -2030,8 +2021,8 @@ Root: `SpaceGame`
             - `func tick(now_msec: int) -> bool`
             - `func _complete_with_version(version: String) -> void`
             - `func _complete_unverified() -> void`
-        - 📄 [server_version_check.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/server_version_check.gd.uid)
-        - 📄 [settings.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/settings.gd)
+        - 📄 [server_version_check.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/server_version_check.gd.uid)
+        - 📄 [settings.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/settings.gd)
           - 🏛️ **global class McpSettings**
             - `static func truthy(value: String) -> bool`
             - `static func env_truthy(var_name: String) -> bool`
@@ -2041,8 +2032,8 @@ Root: `SpaceGame`
             - `static func telemetry_enabled() -> bool`
             - `static func mcp_logging_enabled() -> bool`
             - `static func set_mcp_logging_enabled(enabled: bool) -> void`
-        - 📄 [settings.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/settings.gd.uid)
-        - 📄 [structured_log_ring.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/structured_log_ring.gd)
+        - 📄 [settings.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/settings.gd.uid)
+        - 📄 [structured_log_ring.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/structured_log_ring.gd)
           - 🏛️ **global class McpStructuredLogRing**
             - `func _init(max_lines: int) -> void`
             - `func _append_entry(entry: Dictionary) -> void`
@@ -2057,8 +2048,8 @@ Root: `SpaceGame`
             - `func _logical_to_physical(logical: int) -> int`
             - `func _clear_storage() -> void`
             - `static func _coerce_level(level: String) -> String`
-        - 📄 [structured_log_ring.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/structured_log_ring.gd.uid)
-        - 📄 [surfaced_error_tracker.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/surfaced_error_tracker.gd)
+        - 📄 [structured_log_ring.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/structured_log_ring.gd.uid)
+        - 📄 [surfaced_error_tracker.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/surfaced_error_tracker.gd)
           - 🏛️ **global class McpSurfacedErrorTracker**
             - `func _init(editor_log_buffer = null, game_log_buffer = null, debugger_errors_root: Node = null) -> void`
             - `func note_game_run_started(sticky_scan: bool = true) -> void`
@@ -2098,8 +2089,8 @@ Root: `SpaceGame`
             - `func _unaccounted_row_times(key: String, times: Dictionary) -> Array`
             - `func _account_row_times(key: String, times: Dictionary) -> void`
             - `func _remove_promoted_debugger_entry(key: String) -> void`
-        - 📄 [surfaced_error_tracker.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/surfaced_error_tracker.gd.uid)
-        - 📄 [update_manager.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/update_manager.gd)
+        - 📄 [surfaced_error_tracker.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/surfaced_error_tracker.gd.uid)
+        - 📄 [update_manager.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/update_manager.gd)
           - 🏛️ **global class McpUpdateManager**
             - `func setup(plugin, dock) -> void`
             - `func check_for_updates() -> void`
@@ -2122,24 +2113,24 @@ Root: `SpaceGame`
             - `func _install_zip() -> void`
             - `func _reload_after_update() -> void`
             - `func _drain_dock_workers() -> void`
-        - 📄 [update_manager.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/update_manager.gd.uid)
-        - 📄 [update_mixed_state.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/update_mixed_state.gd)
+        - 📄 [update_manager.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/update_manager.gd.uid)
+        - 📄 [update_mixed_state.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/update_mixed_state.gd)
           - `static func find_backups(dir: String = ADDON_DIR) -> Array`
           - `static func diagnose(dir: String = ADDON_DIR, force: bool = false) -> Dictionary`
           - `static func clear_cache() -> void`
-        - 📄 [update_mixed_state.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/update_mixed_state.gd.uid)
-        - 📄 [uv_cache_cleanup.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/uv_cache_cleanup.gd)
+        - 📄 [update_mixed_state.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/update_mixed_state.gd.uid)
+        - 📄 [uv_cache_cleanup.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/uv_cache_cleanup.gd)
           - 🏛️ **global class McpUvCacheCleanup**
             - `static func purge_stale_builds() -> Dictionary`
             - `static func purge_directory(builds_root: String) -> Dictionary`
             - `static func _remove_recursive(path: String) -> bool`
             - `static func _empty_result() -> Dictionary`
-        - 📄 [uv_cache_cleanup.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/uv_cache_cleanup.gd.uid)
-        - 📄 [variant_serializer.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/variant_serializer.gd)
+        - 📄 [uv_cache_cleanup.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/uv_cache_cleanup.gd.uid)
+        - 📄 [variant_serializer.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/variant_serializer.gd)
           - `static func _safe_float(f: float) -> Variant`
           - `static func serialize(value: Variant) -> Variant`
-        - 📄 [variant_serializer.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/variant_serializer.gd.uid)
-        - 📄 [windows_port_reservation.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/windows_port_reservation.gd)
+        - 📄 [variant_serializer.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/variant_serializer.gd.uid)
+        - 📄 [windows_port_reservation.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/windows_port_reservation.gd)
           - 🏛️ **global class McpWindowsPortReservation**
             - `static func is_port_excluded(port: int) -> bool`
             - `static func _store_excluded_output(text: String) -> void`
@@ -2151,8 +2142,8 @@ Root: `SpaceGame`
             - `static func _ranges_contain(ranges: Array[Vector2i], port: int) -> bool`
             - `static func suggest_non_excluded_port(start: int, span: int = 2048, max_port: int = 65535) -> int`
             - `static func suggest_non_excluded_port_from_output(text: String, start: int, span: int = 2048, max_port: int = 65535) -> int`
-        - 📄 [windows_port_reservation.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/utils/windows_port_reservation.gd.uid)
-      - 📄 [vision_routing.gd](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/vision_routing.gd)
+        - 📄 [windows_port_reservation.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/utils/windows_port_reservation.gd.uid)
+      - 📄 [vision_routing.gd](file:///D:/CodingProjects/spacegame/addons/godot_ai/vision_routing.gd)
         - `func _init() -> void`
         - `func shutdown() -> void`
         - `func route_editor_screenshot(params: Dictionary, original: Callable, connection: Object) -> Dictionary`
@@ -2201,485 +2192,434 @@ Root: `SpaceGame`
         - `func _on_enable_toggled(enabled: bool) -> void`
         - `func _sync_ui_states() -> void`
         - `func _log(message: String) -> void`
-      - 📄 [vision_routing.gd.uid](file:///C:/CodingProjects/SpaceGame/addons/godot_ai/vision_routing.gd.uid)
+      - 📄 [vision_routing.gd.uid](file:///D:/CodingProjects/spacegame/addons/godot_ai/vision_routing.gd.uid)
   - 📂 **assets/**
-    - 📄 [F1HP.glb](file:///C:/CodingProjects/SpaceGame/assets/F1HP.glb)
-    - 📄 [INDYMiner.glb](file:///C:/CodingProjects/SpaceGame/assets/INDYMiner.glb)
+    - 📄 [F1HP.glb](file:///D:/CodingProjects/spacegame/assets/F1HP.glb)
+    - 📂 **Godot/**
+      - 📄 [Godot_v4.6.3-stable_win64.exe](file:///D:/CodingProjects/spacegame/assets/Godot/Godot_v4.6.3-stable_win64.exe)
+      - 📄 [Godot_v4.6.3-stable_win64_console.exe](file:///D:/CodingProjects/spacegame/assets/Godot/Godot_v4.6.3-stable_win64_console.exe)
+    - 📄 [INDYMiner.glb](file:///D:/CodingProjects/spacegame/assets/INDYMiner.glb)
     - 📂 **Portraits/**
-      - 📄 [portrait_spritesheet_layout_with_gender.json](file:///C:/CodingProjects/SpaceGame/assets/Portraits/portrait_spritesheet_layout_with_gender.json)
+      - 📄 [portrait_spritesheet_layout_with_gender.json](file:///D:/CodingProjects/spacegame/assets/Portraits/portrait_spritesheet_layout_with_gender.json)
+    - 📂 **Ships/**
+      - 📂 **Aurlelia/**
+        - 📄 [Aurelia_Gunner.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Aurlelia/Aurelia_Gunner.glb)
+        - 📄 [Aurelia_Logistics.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Aurlelia/Aurelia_Logistics.glb)
+        - 📄 [Aurelia_MiningHauler.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Aurlelia/Aurelia_MiningHauler.glb)
+        - 📄 [Aurelia_interceptor.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Aurlelia/Aurelia_interceptor.glb)
+        - 📄 [desktop.ini](file:///D:/CodingProjects/spacegame/assets/Ships/Aurlelia/desktop.ini)
+      - 📂 **Vanguard/**
+        - 📄 [Vanguard_Gunner.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Vanguard/Vanguard_Gunner.glb)
+        - 📄 [Vanguard_HaulerMiner.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Vanguard/Vanguard_HaulerMiner.glb)
+        - 📄 [Vanguard_Logistics.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Vanguard/Vanguard_Logistics.glb)
+        - 📄 [Vanguard_interceptor.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Vanguard/Vanguard_interceptor.glb)
+      - 📂 **Zenith/**
+        - 📄 [Zenith_Gunner.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Zenith/Zenith_Gunner.glb)
+        - 📄 [Zenith_Interceptor.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Zenith/Zenith_Interceptor.glb)
+        - 📄 [Zenith_Logistics.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Zenith/Zenith_Logistics.glb)
+        - 📄 [Zenith_MiningHauler.glb](file:///D:/CodingProjects/spacegame/assets/Ships/Zenith/Zenith_MiningHauler.glb)
+        - 📄 [desktop.ini](file:///D:/CodingProjects/spacegame/assets/Ships/Zenith/desktop.ini)
+      - 📄 [ship_designs.json](file:///D:/CodingProjects/spacegame/assets/Ships/ship_designs.json)
     - 📂 **TestShips/**
-      - 📄 [BLENDSWAP_LICENSE.txt](file:///C:/CodingProjects/SpaceGame/assets/TestShips/BLENDSWAP_LICENSE.txt)
-      - 📄 [Shipyard.blend](file:///C:/CodingProjects/SpaceGame/assets/TestShips/Shipyard.blend)
-      - 📄 [Shipyard_ORIGINAL_backup.blend](file:///C:/CodingProjects/SpaceGame/assets/TestShips/Shipyard_ORIGINAL_backup.blend)
-      - 📄 [kitbash_test_1_kitbash.glb](file:///C:/CodingProjects/SpaceGame/assets/TestShips/kitbash_test_1_kitbash.glb)
-      - 📄 [kitbash_test_2_kitbash.glb](file:///C:/CodingProjects/SpaceGame/assets/TestShips/kitbash_test_2_kitbash.glb)
-      - 📄 [kitbash_test_3_kitbash.glb](file:///C:/CodingProjects/SpaceGame/assets/TestShips/kitbash_test_3_kitbash.glb)
-      - 📄 [kitbash_test_4_kitbash.glb](file:///C:/CodingProjects/SpaceGame/assets/TestShips/kitbash_test_4_kitbash.glb)
-      - 📄 [shipyard_catalog.json](file:///C:/CodingProjects/SpaceGame/assets/TestShips/shipyard_catalog.json)
-      - 📂 **textures/**
-        - 📂 **badges/**
-          - 📄 [badge_sheets_metadata.json](file:///C:/CodingProjects/SpaceGame/assets/TestShips/textures/badges/badge_sheets_metadata.json)
-        - 📂 **metals/**
-          - 📄 [ShipPaint_Textures.json](file:///C:/CodingProjects/SpaceGame/assets/TestShips/textures/metals/ShipPaint_Textures.json)
+      - 📄 [BLENDSWAP_LICENSE.txt](file:///D:/CodingProjects/spacegame/assets/TestShips/BLENDSWAP_LICENSE.txt)
+      - 📄 [Shipyard.blend](file:///D:/CodingProjects/spacegame/assets/TestShips/Shipyard.blend)
+      - 📄 [shipyard_catalog.json](file:///D:/CodingProjects/spacegame/assets/TestShips/shipyard_catalog.json)
+    - 📂 **assets/**
+      - 📂 **audio/**
+        - 📂 **taunts_orpheus/**
+          - 📄 [manifest.json](file:///D:/CodingProjects/spacegame/assets/assets/audio/taunts_orpheus/manifest.json)
     - 📂 **asteroids/**
-      - 📄 [asteroid_00.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_00.glb)
-      - 📄 [asteroid_00_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_00_fragments.glb)
-      - 📄 [asteroid_01.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_01.glb)
-      - 📄 [asteroid_01_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_01_fragments.glb)
-      - 📄 [asteroid_02.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_02.glb)
-      - 📄 [asteroid_02_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_02_fragments.glb)
-      - 📄 [asteroid_03.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_03.glb)
-      - 📄 [asteroid_03_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_03_fragments.glb)
-      - 📄 [asteroid_04.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_04.glb)
-      - 📄 [asteroid_04_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_04_fragments.glb)
-      - 📄 [asteroid_05.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_05.glb)
-      - 📄 [asteroid_05_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_05_fragments.glb)
-      - 📄 [asteroid_06.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_06.glb)
-      - 📄 [asteroid_06_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_06_fragments.glb)
-      - 📄 [asteroid_07.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_07.glb)
-      - 📄 [asteroid_07_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_07_fragments.glb)
-      - 📄 [asteroid_08.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_08.glb)
-      - 📄 [asteroid_08_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_08_fragments.glb)
-      - 📄 [asteroid_09.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_09.glb)
-      - 📄 [asteroid_09_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_09_fragments.glb)
-      - 📄 [asteroid_10.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_10.glb)
-      - 📄 [asteroid_10_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_10_fragments.glb)
-      - 📄 [asteroid_11.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_11.glb)
-      - 📄 [asteroid_11_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_11_fragments.glb)
-      - 📄 [asteroid_12.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_12.glb)
-      - 📄 [asteroid_12_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_12_fragments.glb)
-      - 📄 [asteroid_13.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_13.glb)
-      - 📄 [asteroid_13_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_13_fragments.glb)
-      - 📄 [asteroid_14.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_14.glb)
-      - 📄 [asteroid_14_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_14_fragments.glb)
-      - 📄 [asteroid_15.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_15.glb)
-      - 📄 [asteroid_15_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_15_fragments.glb)
-      - 📄 [asteroid_16.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_16.glb)
-      - 📄 [asteroid_16_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_16_fragments.glb)
-      - 📄 [asteroid_17.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_17.glb)
-      - 📄 [asteroid_17_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_17_fragments.glb)
-      - 📄 [asteroid_18.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_18.glb)
-      - 📄 [asteroid_18_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_18_fragments.glb)
-      - 📄 [asteroid_19.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_19.glb)
-      - 📄 [asteroid_19_fragments.glb](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_19_fragments.glb)
-      - 📄 [asteroid_models.json](file:///C:/CodingProjects/SpaceGame/assets/asteroids/asteroid_models.json)
+      - 📄 [asteroid_00.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_00.glb)
+      - 📄 [asteroid_00_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_00_fragments.glb)
+      - 📄 [asteroid_01.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_01.glb)
+      - 📄 [asteroid_01_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_01_fragments.glb)
+      - 📄 [asteroid_02.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_02.glb)
+      - 📄 [asteroid_02_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_02_fragments.glb)
+      - 📄 [asteroid_03.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_03.glb)
+      - 📄 [asteroid_03_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_03_fragments.glb)
+      - 📄 [asteroid_04.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_04.glb)
+      - 📄 [asteroid_04_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_04_fragments.glb)
+      - 📄 [asteroid_05.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_05.glb)
+      - 📄 [asteroid_05_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_05_fragments.glb)
+      - 📄 [asteroid_06.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_06.glb)
+      - 📄 [asteroid_06_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_06_fragments.glb)
+      - 📄 [asteroid_07.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_07.glb)
+      - 📄 [asteroid_07_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_07_fragments.glb)
+      - 📄 [asteroid_08.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_08.glb)
+      - 📄 [asteroid_08_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_08_fragments.glb)
+      - 📄 [asteroid_09.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_09.glb)
+      - 📄 [asteroid_09_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_09_fragments.glb)
+      - 📄 [asteroid_10.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_10.glb)
+      - 📄 [asteroid_10_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_10_fragments.glb)
+      - 📄 [asteroid_11.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_11.glb)
+      - 📄 [asteroid_11_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_11_fragments.glb)
+      - 📄 [asteroid_12.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_12.glb)
+      - 📄 [asteroid_12_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_12_fragments.glb)
+      - 📄 [asteroid_13.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_13.glb)
+      - 📄 [asteroid_13_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_13_fragments.glb)
+      - 📄 [asteroid_14.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_14.glb)
+      - 📄 [asteroid_14_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_14_fragments.glb)
+      - 📄 [asteroid_15.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_15.glb)
+      - 📄 [asteroid_15_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_15_fragments.glb)
+      - 📄 [asteroid_16.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_16.glb)
+      - 📄 [asteroid_16_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_16_fragments.glb)
+      - 📄 [asteroid_17.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_17.glb)
+      - 📄 [asteroid_17_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_17_fragments.glb)
+      - 📄 [asteroid_18.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_18.glb)
+      - 📄 [asteroid_18_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_18_fragments.glb)
+      - 📄 [asteroid_19.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_19.glb)
+      - 📄 [asteroid_19_fragments.glb](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_19_fragments.glb)
+      - 📄 [asteroid_models.json](file:///D:/CodingProjects/spacegame/assets/asteroids/asteroid_models.json)
     - 📂 **audio/**
       - 📂 **cast_en/**
-        - 📄 [manifest.json](file:///C:/CodingProjects/SpaceGame/assets/audio/cast_en/manifest.json)
+        - 📄 [manifest.json](file:///D:/CodingProjects/spacegame/assets/audio/cast_en/manifest.json)
       - 📂 **taunts/**
-        - 📄 [manifest.json](file:///C:/CodingProjects/SpaceGame/assets/audio/taunts/manifest.json)
+        - 📄 [manifest.json](file:///D:/CodingProjects/spacegame/assets/audio/taunts/manifest.json)
       - 📂 **taunts_orpheus/**
-        - 📄 [manifest.json](file:///C:/CodingProjects/SpaceGame/assets/audio/taunts_orpheus/manifest.json)
-    - 📄 [faction1.glb](file:///C:/CodingProjects/SpaceGame/assets/faction1.glb)
-    - 📄 [faction2.glb](file:///C:/CodingProjects/SpaceGame/assets/faction2.glb)
-    - 📄 [hypergate.glb](file:///C:/CodingProjects/SpaceGame/assets/hypergate.glb)
-    - 📄 [render_ship.py](file:///C:/CodingProjects/SpaceGame/assets/render_ship.py)
+        - 📄 [manifest.json](file:///D:/CodingProjects/spacegame/assets/audio/taunts_orpheus/manifest.json)
+    - 📄 [faction1.glb](file:///D:/CodingProjects/spacegame/assets/faction1.glb)
+    - 📄 [faction2.glb](file:///D:/CodingProjects/spacegame/assets/faction2.glb)
+    - 📄 [hypergate.glb](file:///D:/CodingProjects/spacegame/assets/hypergate.glb)
+    - 📄 [render_ship.py](file:///D:/CodingProjects/spacegame/assets/render_ship.py)
       - `def arg(name, default)`
       - `def world_pos_chain(obj)`
       - `def world_bounds_v2(objs)`
       - `def world_bounds(objs)`
     - 📂 **shaders/**
-      - 📄 [thruster_plume.gdshader](file:///C:/CodingProjects/SpaceGame/assets/shaders/thruster_plume.gdshader)
-      - 📄 [thruster_plume.gdshader.current_best_backup](file:///C:/CodingProjects/SpaceGame/assets/shaders/thruster_plume.gdshader.current_best_backup)
-      - 📄 [thruster_plume.gdshader.uid](file:///C:/CodingProjects/SpaceGame/assets/shaders/thruster_plume.gdshader.uid)
+      - 📄 [thruster_plume.gdshader](file:///D:/CodingProjects/spacegame/assets/shaders/thruster_plume.gdshader)
+      - 📄 [thruster_plume.gdshader.current_best_backup](file:///D:/CodingProjects/spacegame/assets/shaders/thruster_plume.gdshader.current_best_backup)
+      - 📄 [thruster_plume.gdshader.uid](file:///D:/CodingProjects/spacegame/assets/shaders/thruster_plume.gdshader.uid)
     - 📂 **ship_parts/**
       - 📂 **detail/**
-        - 📄 [5_mast.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/5_mast.glb)
-        - 📄 [5_star_block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/5_star_block.glb)
-        - 📄 [Angled_Rib-block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Angled_Rib-block.glb)
-        - 📄 [Bi-Polar_Engine.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Bi-Polar_Engine.glb)
-        - 📄 [Cargo_box.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Cargo_box.glb)
-        - 📄 [Dish_Panel.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Dish_Panel.glb)
-        - 📄 [Flower.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Flower.glb)
-        - 📄 [Hex_Tube.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Hex_Tube.glb)
-        - 📄 [Res_Block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Res_Block.glb)
-        - 📄 [Split_Mast.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/Split_Mast.glb)
-        - 📄 [misc.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/misc.glb)
-        - 📄 [mushroom.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/mushroom.glb)
-        - 📄 [portal_block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/detail/portal_block.glb)
+        - 📄 [5_mast.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/5_mast.glb)
+        - 📄 [5_star_block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/5_star_block.glb)
+        - 📄 [Angled_Rib-block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Angled_Rib-block.glb)
+        - 📄 [Bi-Polar_Engine.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Bi-Polar_Engine.glb)
+        - 📄 [Cargo_box.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Cargo_box.glb)
+        - 📄 [Dish_Panel.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Dish_Panel.glb)
+        - 📄 [Flower.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Flower.glb)
+        - 📄 [Hex_Tube.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Hex_Tube.glb)
+        - 📄 [Res_Block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Res_Block.glb)
+        - 📄 [Split_Mast.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/Split_Mast.glb)
+        - 📄 [misc.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/misc.glb)
+        - 📄 [mushroom.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/mushroom.glb)
+        - 📄 [portal_block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/detail/portal_block.glb)
       - 📂 **engines/**
-        - 📄 [5-Engine.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/5-Engine.glb)
-        - 📄 [Block_Engine_single.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Block_Engine_single.glb)
-        - 📄 [Bracket_Engine.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Bracket_Engine.glb)
-        - 📄 [Cube_Engine.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Cube_Engine.glb)
-        - 📄 [Cube_EngineAMT.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Cube_EngineAMT.glb)
-        - 📄 [Cube_Engine_variant.blend](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Cube_Engine_variant.blend)
-        - 📄 [Cube_Engine_variant.blend1](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Cube_Engine_variant.blend1)
-        - 📄 [Fish_Engine.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Fish_Engine.glb)
-        - 📄 [Trap-Engine.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Trap-Engine.glb)
-        - 📄 [Trusswork-Wing.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/Trusswork-Wing.glb)
-        - 📄 [eng.5Pole.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.5Pole.glb)
-        - 📄 [eng.Rect.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.Rect.glb)
-        - 📄 [eng.Vanes.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.Vanes.glb)
-        - 📄 [eng.bit.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.bit.glb)
-        - 📄 [eng.body.Y-block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.Y-block.glb)
-        - 📄 [eng.body.chin.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.chin.glb)
-        - 📄 [eng.body.fish.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.fish.glb)
-        - 📄 [eng.body.slant.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.slant.glb)
-        - 📄 [eng.body.split.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.split.glb)
-        - 📄 [eng.body.splt.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.splt.glb)
-        - 📄 [eng.body.tooth.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.tooth.glb)
-        - 📄 [eng.body.wide_mouth.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.body.wide_mouth.glb)
-        - 📄 [eng.flap.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.flap.glb)
-        - 📄 [eng.multi.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.multi.glb)
-        - 📄 [eng.onion.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.onion.glb)
-        - 📄 [eng.split.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.split.glb)
-        - 📄 [eng.strut.cylindar.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.strut.cylindar.glb)
-        - 📄 [eng.strut.foot.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.strut.foot.glb)
-        - 📄 [eng.strut.ladder.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.strut.ladder.glb)
-        - 📄 [eng.strut.vacuum.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.strut.vacuum.glb)
-        - 📄 [eng.trumpet.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/engines/eng.trumpet.glb)
+        - 📄 [5-Engine.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/5-Engine.glb)
+        - 📄 [Block_Engine_single.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/Block_Engine_single.glb)
+        - 📄 [Bracket_Engine.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/Bracket_Engine.glb)
+        - 📄 [Cube_Engine.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/Cube_Engine.glb)
+        - 📄 [Fish_Engine.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/Fish_Engine.glb)
+        - 📄 [Trap-Engine.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/Trap-Engine.glb)
+        - 📄 [Trusswork-Wing.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/Trusswork-Wing.glb)
+        - 📄 [eng.5Pole.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.5Pole.glb)
+        - 📄 [eng.Rect.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.Rect.glb)
+        - 📄 [eng.Vanes.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.Vanes.glb)
+        - 📄 [eng.bit.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.bit.glb)
+        - 📄 [eng.body.Y-block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.Y-block.glb)
+        - 📄 [eng.body.chin.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.chin.glb)
+        - 📄 [eng.body.fish.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.fish.glb)
+        - 📄 [eng.body.slant.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.slant.glb)
+        - 📄 [eng.body.split.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.split.glb)
+        - 📄 [eng.body.splt.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.splt.glb)
+        - 📄 [eng.body.tooth.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.tooth.glb)
+        - 📄 [eng.body.wide_mouth.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.body.wide_mouth.glb)
+        - 📄 [eng.flap.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.flap.glb)
+        - 📄 [eng.multi.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.multi.glb)
+        - 📄 [eng.onion.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.onion.glb)
+        - 📄 [eng.split.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.split.glb)
+        - 📄 [eng.strut.cylindar.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.strut.cylindar.glb)
+        - 📄 [eng.strut.foot.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.strut.foot.glb)
+        - 📄 [eng.strut.ladder.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.strut.ladder.glb)
+        - 📄 [eng.strut.vacuum.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.strut.vacuum.glb)
+        - 📄 [eng.trumpet.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/engines/eng.trumpet.glb)
       - 📂 **greebles/**
-        - 📄 [Beard.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Beard.glb)
-        - 📄 [Beard_Block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Beard_Block.glb)
-        - 📄 [Beehive.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Beehive.glb)
-        - 📄 [Bridge-1.001.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Bridge-1.001.glb)
-        - 📄 [Bridge-1.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Bridge-1.glb)
-        - 📄 [Bridge.BeerBelly.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Bridge.BeerBelly.glb)
-        - 📄 [Build-up_Block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Build-up_Block.glb)
-        - 📄 [Clip_bridge.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Clip_bridge.glb)
-        - 📄 [Crab_Claw.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Crab_Claw.glb)
-        - 📄 [Crab_face.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Crab_face.glb)
-        - 📄 [Curve_Wing.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Curve_Wing.glb)
-        - 📄 [Dog_Ear.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Dog_Ear.glb)
-        - 📄 [Dual_Window.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Dual_Window.glb)
-        - 📄 [ElephantBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/ElephantBlock.glb)
-        - 📄 [Fin_Hangar.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Fin_Hangar.glb)
-        - 📄 [Fin_Runner.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Fin_Runner.glb)
-        - 📄 [Fin_Wing.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Fin_Wing.glb)
-        - 📄 [Fore-Bridge.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Fore-Bridge.glb)
-        - 📄 [G_block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/G_block.glb)
-        - 📄 [Hangar.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Hangar.glb)
-        - 📄 [Horns.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Horns.glb)
-        - 📄 [Horse_Thing.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Horse_Thing.glb)
-        - 📄 [Instrument_Mast-2.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Instrument_Mast-2.glb)
-        - 📄 [Instrument_Mast.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Instrument_Mast.glb)
-        - 📄 [Instrument_Tube.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Instrument_Tube.glb)
-        - 📄 [Misc-1.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Misc-1.glb)
-        - 📄 [Outrigger.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Outrigger.glb)
-        - 📄 [PE-Wing.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/PE-Wing.glb)
-        - 📄 [Pointer.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Pointer.glb)
-        - 📄 [Rail_Runner.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Rail_Runner.glb)
-        - 📄 [Ram.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Ram.glb)
-        - 📄 [Side_Bridge.001.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Side_Bridge.001.glb)
-        - 📄 [Stub_Wing.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Stub_Wing.glb)
-        - 📄 [Tank.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Tank.glb)
-        - 📄 [Telescope.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Telescope.glb)
-        - 📄 [TongueBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/TongueBlock.glb)
-        - 📄 [Vent_Block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Vent_Block.glb)
-        - 📄 [Window_Block.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Window_Block.glb)
-        - 📄 [Window_Block_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Window_Block_2.glb)
-        - 📄 [Window_Block_half.001.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Window_Block_half.001.glb)
-        - 📄 [Wing-2.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/Wing-2.glb)
-        - 📄 [angleBar.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/angleBar.glb)
-        - 📄 [anglePort.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/anglePort.glb)
-        - 📄 [block.bird.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/block.bird.glb)
-        - 📄 [block.doorStop.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/block.doorStop.glb)
-        - 📄 [block.finger.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/block.finger.glb)
-        - 📄 [bridge.compact.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/bridge.compact.glb)
-        - 📄 [checkBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/checkBlock.glb)
-        - 📄 [doubleBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/doubleBlock.glb)
-        - 📄 [eleBridge.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/eleBridge.glb)
-        - 📄 [falseBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/falseBlock.glb)
-        - 📄 [fintube.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/fintube.glb)
-        - 📄 [leafPanel.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/leafPanel.glb)
-        - 📄 [lifePreserver.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/lifePreserver.glb)
-        - 📄 [plumbBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/plumbBlock.glb)
-        - 📄 [postTube.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/postTube.glb)
-        - 📄 [spire.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/spire.glb)
-        - 📄 [splitBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/splitBlock.glb)
-        - 📄 [tooCompBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/tooCompBlock.glb)
-        - 📄 [top_Wing_.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/top_Wing_.glb)
-        - 📄 [ventPortBlock.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/ventPortBlock.glb)
-        - 📄 [vert_miss_tube.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/vert_miss_tube.glb)
-        - 📄 [window_block_lowpro.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/window_block_lowpro.glb)
-        - 📄 [wrenchPlug.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/greebles/wrenchPlug.glb)
+        - 📄 [Beard.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Beard.glb)
+        - 📄 [Beard_Block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Beard_Block.glb)
+        - 📄 [Beehive.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Beehive.glb)
+        - 📄 [Bridge-1.001.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Bridge-1.001.glb)
+        - 📄 [Bridge-1.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Bridge-1.glb)
+        - 📄 [Bridge.BeerBelly.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Bridge.BeerBelly.glb)
+        - 📄 [Build-up_Block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Build-up_Block.glb)
+        - 📄 [Clip_bridge.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Clip_bridge.glb)
+        - 📄 [Crab_Claw.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Crab_Claw.glb)
+        - 📄 [Crab_face.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Crab_face.glb)
+        - 📄 [Curve_Wing.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Curve_Wing.glb)
+        - 📄 [Dog_Ear.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Dog_Ear.glb)
+        - 📄 [Dual_Window.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Dual_Window.glb)
+        - 📄 [ElephantBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/ElephantBlock.glb)
+        - 📄 [Fin_Hangar.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Fin_Hangar.glb)
+        - 📄 [Fin_Runner.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Fin_Runner.glb)
+        - 📄 [Fin_Wing.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Fin_Wing.glb)
+        - 📄 [Fore-Bridge.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Fore-Bridge.glb)
+        - 📄 [G_block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/G_block.glb)
+        - 📄 [Hangar.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Hangar.glb)
+        - 📄 [Horns.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Horns.glb)
+        - 📄 [Horse_Thing.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Horse_Thing.glb)
+        - 📄 [Instrument_Mast-2.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Instrument_Mast-2.glb)
+        - 📄 [Instrument_Mast.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Instrument_Mast.glb)
+        - 📄 [Instrument_Tube.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Instrument_Tube.glb)
+        - 📄 [Misc-1.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Misc-1.glb)
+        - 📄 [Outrigger.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Outrigger.glb)
+        - 📄 [PE-Wing.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/PE-Wing.glb)
+        - 📄 [Pointer.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Pointer.glb)
+        - 📄 [Rail_Runner.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Rail_Runner.glb)
+        - 📄 [Ram.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Ram.glb)
+        - 📄 [Side_Bridge.001.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Side_Bridge.001.glb)
+        - 📄 [Stub_Wing.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Stub_Wing.glb)
+        - 📄 [Tank.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Tank.glb)
+        - 📄 [Telescope.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Telescope.glb)
+        - 📄 [TongueBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/TongueBlock.glb)
+        - 📄 [Vent_Block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Vent_Block.glb)
+        - 📄 [Window_Block.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Window_Block.glb)
+        - 📄 [Window_Block_2.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Window_Block_2.glb)
+        - 📄 [Window_Block_half.001.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Window_Block_half.001.glb)
+        - 📄 [Wing-2.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/Wing-2.glb)
+        - 📄 [angleBar.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/angleBar.glb)
+        - 📄 [anglePort.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/anglePort.glb)
+        - 📄 [block.bird.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/block.bird.glb)
+        - 📄 [block.doorStop.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/block.doorStop.glb)
+        - 📄 [block.finger.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/block.finger.glb)
+        - 📄 [bridge.compact.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/bridge.compact.glb)
+        - 📄 [checkBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/checkBlock.glb)
+        - 📄 [doubleBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/doubleBlock.glb)
+        - 📄 [eleBridge.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/eleBridge.glb)
+        - 📄 [falseBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/falseBlock.glb)
+        - 📄 [fintube.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/fintube.glb)
+        - 📄 [leafPanel.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/leafPanel.glb)
+        - 📄 [lifePreserver.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/lifePreserver.glb)
+        - 📄 [plumbBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/plumbBlock.glb)
+        - 📄 [postTube.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/postTube.glb)
+        - 📄 [spire.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/spire.glb)
+        - 📄 [splitBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/splitBlock.glb)
+        - 📄 [tooCompBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/tooCompBlock.glb)
+        - 📄 [top_Wing_.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/top_Wing_.glb)
+        - 📄 [ventPortBlock.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/ventPortBlock.glb)
+        - 📄 [vert_miss_tube.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/vert_miss_tube.glb)
+        - 📄 [window_block_lowpro.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/window_block_lowpro.glb)
+        - 📄 [wrenchPlug.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/greebles/wrenchPlug.glb)
       - 📂 **hulls/**
-        - 📄 [Hull.Jaw.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/Hull.Jaw.glb)
-        - 📄 [Hull.PugNose.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/Hull.PugNose.glb)
-        - 📄 [Hull.PugNoseAMT.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/Hull.PugNoseAMT.glb)
-        - 📄 [Hull.PugNose_variant.blend](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/Hull.PugNose_variant.blend)
-        - 📄 [Hull.PugNose_variant.blend1](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/Hull.PugNose_variant.blend1)
-        - 📄 [hull.Grill.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.Grill.glb)
-        - 📄 [hull.Horse.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.Horse.glb)
-        - 📄 [hull._compact.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull._compact.glb)
-        - 📄 [hull.angle.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.angle.glb)
-        - 📄 [hull.beard.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.beard.glb)
-        - 📄 [hull.block_split.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.block_split.glb)
-        - 📄 [hull.bullHead.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.bullHead.glb)
-        - 📄 [hull.cruise.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.cruise.glb)
-        - 📄 [hull.duckHead.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.duckHead.glb)
-        - 📄 [hull.fish.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.fish.glb)
-        - 📄 [hull.handle.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.handle.glb)
-        - 📄 [hull.hangar.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.hangar.glb)
-        - 📄 [hull.joined.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.joined.glb)
-        - 📄 [hull.knuckle.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.knuckle.glb)
-        - 📄 [hull.large.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.large.glb)
-        - 📄 [hull.long.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.long.glb)
-        - 📄 [hull.lump.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.lump.glb)
-        - 📄 [hull.pot.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.pot.glb)
-        - 📄 [hull.rib.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.rib.glb)
-        - 📄 [hull.slick.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.slick.glb)
-        - 📄 [hull.split.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.split.glb)
-        - 📄 [hull.tall.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.tall.glb)
-        - 📄 [hull.v.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/hulls/hull.v.glb)
-      - 📄 [manifest.json](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/manifest.json)
+        - 📄 [Hull.Jaw.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/Hull.Jaw.glb)
+        - 📄 [Hull.PugNose.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/Hull.PugNose.glb)
+        - 📄 [hull.Grill.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.Grill.glb)
+        - 📄 [hull.Horse.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.Horse.glb)
+        - 📄 [hull._compact.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull._compact.glb)
+        - 📄 [hull.angle.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.angle.glb)
+        - 📄 [hull.beard.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.beard.glb)
+        - 📄 [hull.block_split.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.block_split.glb)
+        - 📄 [hull.bullHead.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.bullHead.glb)
+        - 📄 [hull.cruise.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.cruise.glb)
+        - 📄 [hull.duckHead.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.duckHead.glb)
+        - 📄 [hull.fish.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.fish.glb)
+        - 📄 [hull.handle.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.handle.glb)
+        - 📄 [hull.hangar.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.hangar.glb)
+        - 📄 [hull.joined.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.joined.glb)
+        - 📄 [hull.knuckle.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.knuckle.glb)
+        - 📄 [hull.large.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.large.glb)
+        - 📄 [hull.long.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.long.glb)
+        - 📄 [hull.lump.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.lump.glb)
+        - 📄 [hull.pot.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.pot.glb)
+        - 📄 [hull.rib.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.rib.glb)
+        - 📄 [hull.slick.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.slick.glb)
+        - 📄 [hull.split.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.split.glb)
+        - 📄 [hull.tall.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.tall.glb)
+        - 📄 [hull.v.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/hulls/hull.v.glb)
+      - 📄 [manifest.json](file:///D:/CodingProjects/spacegame/assets/ship_parts/manifest.json)
       - 📂 **textures/**
         - 📂 **badges/**
-          - 📄 [badge_sheets_metadata.json](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/textures/badges/badge_sheets_metadata.json)
+          - 📄 [badge_sheets_metadata.json](file:///D:/CodingProjects/spacegame/assets/ship_parts/textures/badges/badge_sheets_metadata.json)
         - 📂 **metals/**
-          - 📄 [ShipPaint_Textures.json](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/textures/metals/ShipPaint_Textures.json)
+          - 📄 [ShipPaint_Textures.json](file:///D:/CodingProjects/spacegame/assets/ship_parts/textures/metals/ShipPaint_Textures.json)
       - 📂 **weapons/**
-        - 📄 [Anti-Air-station.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Anti-Air-station.glb)
-        - 📄 [Big_Gun.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Big_Gun.glb)
-        - 📄 [Big_GunAMT.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Big_GunAMT.glb)
-        - 📄 [Big_Gun_variant.blend](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Big_Gun_variant.blend)
-        - 📄 [Big_Gun_variant.blend1](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Big_Gun_variant.blend1)
-        - 📄 [Cube.002.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Cube.002.glb)
-        - 📄 [Med_Gun.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Med_Gun.glb)
-        - 📄 [Side_Gun_Platform.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Side_Gun_Platform.glb)
-        - 📄 [Small_Gun.001.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Small_Gun.001.glb)
-        - 📄 [Squirtgun.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Squirtgun.glb)
-        - 📄 [Turret_Set.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/Turret_Set.glb)
-        - 📄 [hardPoint.dev.Clunk.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardPoint.dev.Clunk.glb)
-        - 📄 [hardPoint.dev.dual.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardPoint.dev.dual.glb)
-        - 📄 [hardPoint.dev.gas.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardPoint.dev.gas.glb)
-        - 📄 [hardpoint.base.3x.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.base.3x.glb)
-        - 📄 [hardpoint.base.cap.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.base.cap.glb)
-        - 📄 [hardpoint.base.clip.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.base.clip.glb)
-        - 📄 [hardpoint.base.nose.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.base.nose.glb)
-        - 📄 [hardpoint.base.tower.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.base.tower.glb)
-        - 📄 [hardpoint.dev.cruise.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.dev.cruise.glb)
-        - 📄 [hardpoint.dev.dish.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.dev.dish.glb)
-        - 📄 [hardpoint.dev.flush.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.dev.flush.glb)
-        - 📄 [hardpoint.dev.hammer.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.dev.hammer.glb)
-        - 📄 [hardpoint.dev.lowPro.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.dev.lowPro.glb)
-        - 📄 [hardpoint.gun.barb.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.gun.barb.glb)
-        - 📄 [hardpoint.gun.bracket.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.gun.bracket.glb)
-        - 📄 [hardpoint.gun.fork.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoint.gun.fork.glb)
-        - 📄 [hardpoitn.gun.dual.glb](file:///C:/CodingProjects/SpaceGame/assets/ship_parts/weapons/hardpoitn.gun.dual.glb)
-    - 📂 **ships/**
-      - 📂 **generated/**
-        - 📄 [ship_1088652209_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_1.glb)
-        - 📄 [ship_1088652209_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_2.glb)
-        - 📄 [ship_1088652209_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_3.glb)
-        - 📄 [ship_1088652209_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_4.glb)
-        - 📄 [ship_1088652209_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_5.glb)
-        - 📄 [ship_1088652209_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_6.glb)
-        - 📄 [ship_1088652209_7.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_7.glb)
-        - 📄 [ship_1088652209_8.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1088652209_8.glb)
-        - 📄 [ship_1578337305_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_1.glb)
-        - 📄 [ship_1578337305_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_2.glb)
-        - 📄 [ship_1578337305_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_3.glb)
-        - 📄 [ship_1578337305_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_4.glb)
-        - 📄 [ship_1578337305_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_5.glb)
-        - 📄 [ship_1578337305_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_6.glb)
-        - 📄 [ship_1578337305_7.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_1578337305_7.glb)
-        - 📄 [ship_171600929_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_171600929_1.glb)
-        - 📄 [ship_171600929_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_171600929_2.glb)
-        - 📄 [ship_171600929_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_171600929_3.glb)
-        - 📄 [ship_171600929_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_171600929_4.glb)
-        - 📄 [ship_171600929_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_171600929_5.glb)
-        - 📄 [ship_171600929_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_171600929_6.glb)
-        - 📄 [ship_2351265127_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_1.glb)
-        - 📄 [ship_2351265127_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_2.glb)
-        - 📄 [ship_2351265127_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_3.glb)
-        - 📄 [ship_2351265127_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_4.glb)
-        - 📄 [ship_2351265127_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_5.glb)
-        - 📄 [ship_2351265127_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_6.glb)
-        - 📄 [ship_2351265127_7.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_2351265127_7.glb)
-        - 📄 [ship_3416455423_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_1.glb)
-        - 📄 [ship_3416455423_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_2.glb)
-        - 📄 [ship_3416455423_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_3.glb)
-        - 📄 [ship_3416455423_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_4.glb)
-        - 📄 [ship_3416455423_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_5.glb)
-        - 📄 [ship_3416455423_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_6.glb)
-        - 📄 [ship_3416455423_7.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3416455423_7.glb)
-        - 📄 [ship_349663091_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_1.glb)
-        - 📄 [ship_349663091_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_2.glb)
-        - 📄 [ship_349663091_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_3.glb)
-        - 📄 [ship_349663091_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_4.glb)
-        - 📄 [ship_349663091_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_5.glb)
-        - 📄 [ship_349663091_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_6.glb)
-        - 📄 [ship_349663091_7.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_7.glb)
-        - 📄 [ship_349663091_8.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_349663091_8.glb)
-        - 📄 [ship_3792703086_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3792703086_1.glb)
-        - 📄 [ship_3792703086_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3792703086_2.glb)
-        - 📄 [ship_3792703086_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3792703086_3.glb)
-        - 📄 [ship_3792703086_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3792703086_4.glb)
-        - 📄 [ship_3792703086_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3792703086_5.glb)
-        - 📄 [ship_3792703086_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3792703086_6.glb)
-        - 📄 [ship_3818330344_1.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3818330344_1.glb)
-        - 📄 [ship_3818330344_2.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3818330344_2.glb)
-        - 📄 [ship_3818330344_3.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3818330344_3.glb)
-        - 📄 [ship_3818330344_4.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3818330344_4.glb)
-        - 📄 [ship_3818330344_5.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3818330344_5.glb)
-        - 📄 [ship_3818330344_6.glb](file:///C:/CodingProjects/SpaceGame/assets/ships/generated/ship_3818330344_6.glb)
-      - 📄 [ship_designs.json](file:///C:/CodingProjects/SpaceGame/assets/ships/ship_designs.json)
-    - 📄 [space_station1.glb](file:///C:/CodingProjects/SpaceGame/assets/space_station1.glb)
-    - 📄 [space_station2.glb](file:///C:/CodingProjects/SpaceGame/assets/space_station2.glb)
-    - 📄 [wanted_posters.json](file:///C:/CodingProjects/SpaceGame/assets/wanted_posters.json)
-  - 📄 [clean_saves.bat](file:///C:/CodingProjects/SpaceGame/clean_saves.bat)
+        - 📄 [Anti-Air-station.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Anti-Air-station.glb)
+        - 📄 [Big_Gun.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Big_Gun.glb)
+        - 📄 [Cube.002.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Cube.002.glb)
+        - 📄 [Med_Gun.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Med_Gun.glb)
+        - 📄 [Side_Gun_Platform.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Side_Gun_Platform.glb)
+        - 📄 [Small_Gun.001.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Small_Gun.001.glb)
+        - 📄 [Squirtgun.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Squirtgun.glb)
+        - 📄 [Turret_Set.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/Turret_Set.glb)
+        - 📄 [hardPoint.dev.Clunk.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardPoint.dev.Clunk.glb)
+        - 📄 [hardPoint.dev.dual.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardPoint.dev.dual.glb)
+        - 📄 [hardPoint.dev.gas.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardPoint.dev.gas.glb)
+        - 📄 [hardpoint.base.3x.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.base.3x.glb)
+        - 📄 [hardpoint.base.cap.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.base.cap.glb)
+        - 📄 [hardpoint.base.clip.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.base.clip.glb)
+        - 📄 [hardpoint.base.nose.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.base.nose.glb)
+        - 📄 [hardpoint.base.tower.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.base.tower.glb)
+        - 📄 [hardpoint.dev.cruise.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.dev.cruise.glb)
+        - 📄 [hardpoint.dev.dish.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.dev.dish.glb)
+        - 📄 [hardpoint.dev.flush.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.dev.flush.glb)
+        - 📄 [hardpoint.dev.hammer.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.dev.hammer.glb)
+        - 📄 [hardpoint.dev.lowPro.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.dev.lowPro.glb)
+        - 📄 [hardpoint.gun.barb.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.gun.barb.glb)
+        - 📄 [hardpoint.gun.bracket.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.gun.bracket.glb)
+        - 📄 [hardpoint.gun.fork.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoint.gun.fork.glb)
+        - 📄 [hardpoitn.gun.dual.glb](file:///D:/CodingProjects/spacegame/assets/ship_parts/weapons/hardpoitn.gun.dual.glb)
+    - 📄 [space_station1.glb](file:///D:/CodingProjects/spacegame/assets/space_station1.glb)
+    - 📄 [space_station2.glb](file:///D:/CodingProjects/spacegame/assets/space_station2.glb)
+    - 📄 [wanted_posters.json](file:///D:/CodingProjects/spacegame/assets/wanted_posters.json)
+  - 📄 [clean_saves.bat](file:///D:/CodingProjects/spacegame/clean_saves.bat)
   - 📂 **data/**
     - 📂 **content/**
-      - 📄 [character_trait_axes.json](file:///C:/CodingProjects/SpaceGame/data/content/character_trait_axes.json)
-      - 📄 [factions.json](file:///C:/CodingProjects/SpaceGame/data/content/factions.json)
-      - 📄 [fixed_cast_souls.json](file:///C:/CodingProjects/SpaceGame/data/content/fixed_cast_souls.json)
-      - 📄 [fixed_cast_voice_examples.json](file:///C:/CodingProjects/SpaceGame/data/content/fixed_cast_voice_examples.json)
-      - 📄 [llm_dialogue_content.json](file:///C:/CodingProjects/SpaceGame/data/content/llm_dialogue_content.json)
-      - 📄 [local_pressure_tracks.json](file:///C:/CodingProjects/SpaceGame/data/content/local_pressure_tracks.json)
-      - 📄 [mission_shapes.json](file:///C:/CodingProjects/SpaceGame/data/content/mission_shapes.json)
-      - 📄 [npcs.json](file:///C:/CodingProjects/SpaceGame/data/content/npcs.json)
-      - 📄 [portrait_sheets.json](file:///C:/CodingProjects/SpaceGame/data/content/portrait_sheets.json)
-      - 📄 [quiet_moment_beats.json](file:///C:/CodingProjects/SpaceGame/data/content/quiet_moment_beats.json)
-      - 📄 [ship_designs.json](file:///C:/CodingProjects/SpaceGame/data/content/ship_designs.json)
-      - 📄 [store_items.json](file:///C:/CodingProjects/SpaceGame/data/content/store_items.json)
-      - 📄 [store_layouts.json](file:///C:/CodingProjects/SpaceGame/data/content/store_layouts.json)
-      - 📄 [taunt_lines.json](file:///C:/CodingProjects/SpaceGame/data/content/taunt_lines.json)
-      - 📄 [voice_provider_kokoro.json](file:///C:/CodingProjects/SpaceGame/data/content/voice_provider_kokoro.json)
-      - 📄 [voices.json](file:///C:/CodingProjects/SpaceGame/data/content/voices.json)
+      - 📄 [character_trait_axes.json](file:///D:/CodingProjects/spacegame/data/content/character_trait_axes.json)
+      - 📄 [factions.json](file:///D:/CodingProjects/spacegame/data/content/factions.json)
+      - 📄 [fixed_cast_souls.json](file:///D:/CodingProjects/spacegame/data/content/fixed_cast_souls.json)
+      - 📄 [fixed_cast_voice_examples.json](file:///D:/CodingProjects/spacegame/data/content/fixed_cast_voice_examples.json)
+      - 📄 [llm_dialogue_content.json](file:///D:/CodingProjects/spacegame/data/content/llm_dialogue_content.json)
+      - 📄 [local_pressure_tracks.json](file:///D:/CodingProjects/spacegame/data/content/local_pressure_tracks.json)
+      - 📄 [mission_shapes.json](file:///D:/CodingProjects/spacegame/data/content/mission_shapes.json)
+      - 📄 [npcs.json](file:///D:/CodingProjects/spacegame/data/content/npcs.json)
+      - 📄 [portrait_sheets.json](file:///D:/CodingProjects/spacegame/data/content/portrait_sheets.json)
+      - 📄 [quiet_moment_beats.json](file:///D:/CodingProjects/spacegame/data/content/quiet_moment_beats.json)
+      - 📄 [ship_designs.json](file:///D:/CodingProjects/spacegame/data/content/ship_designs.json)
+      - 📄 [store_items.json](file:///D:/CodingProjects/spacegame/data/content/store_items.json)
+      - 📄 [store_layouts.json](file:///D:/CodingProjects/spacegame/data/content/store_layouts.json)
+      - 📄 [taunt_lines.json](file:///D:/CodingProjects/spacegame/data/content/taunt_lines.json)
+      - 📄 [voice_provider_kokoro.json](file:///D:/CodingProjects/spacegame/data/content/voice_provider_kokoro.json)
+      - 📄 [voices.json](file:///D:/CodingProjects/spacegame/data/content/voices.json)
     - 📂 **systems/**
-      - 📄 [system_registry.json](file:///C:/CodingProjects/SpaceGame/data/systems/system_registry.json)
+      - 📄 [system_registry.json](file:///D:/CodingProjects/spacegame/data/systems/system_registry.json)
   - 📂 **docs/**
-    - 📄 [GateMalfunctionWTF.md](file:///C:/CodingProjects/SpaceGame/docs/GateMalfunctionWTF.md)
-    - 📄 [assets_metadata_notes.md](file:///C:/CodingProjects/SpaceGame/docs/assets_metadata_notes.md)
-    - 📄 [attack_mission_flow.md](file:///C:/CodingProjects/SpaceGame/docs/attack_mission_flow.md)
-    - 📄 [audit_boost_thruster.md](file:///C:/CodingProjects/SpaceGame/docs/audit_boost_thruster.md)
-    - 📄 [audit_combat_feedback.md](file:///C:/CodingProjects/SpaceGame/docs/audit_combat_feedback.md)
-    - 📄 [audit_dock_buttons.md](file:///C:/CodingProjects/SpaceGame/docs/audit_dock_buttons.md)
-    - 📄 [audit_lingering_vfx.md](file:///C:/CodingProjects/SpaceGame/docs/audit_lingering_vfx.md)
-    - 📄 [audit_station_lounge_layout.md](file:///C:/CodingProjects/SpaceGame/docs/audit_station_lounge_layout.md)
-    - 📄 [autopilot_stabilization_checkpoint.md](file:///C:/CodingProjects/SpaceGame/docs/autopilot_stabilization_checkpoint.md)
-    - 📄 [bugs.md](file:///C:/CodingProjects/SpaceGame/docs/bugs.md)
-    - 📄 [campaign_bible_schema.md](file:///C:/CodingProjects/SpaceGame/docs/campaign_bible_schema.md)
-    - 📄 [cause_coverage_audit_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/cause_coverage_audit_2026_09_14.md)
-    - 📄 [claude_handoff_after_critic_fix.md](file:///C:/CodingProjects/SpaceGame/docs/claude_handoff_after_critic_fix.md)
-    - 📄 [claude_handoff_pressure_resolutions_novelty_2026_09_13.md](file:///C:/CodingProjects/SpaceGame/docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md)
-    - 📄 [claude_handoff_to_codex_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/claude_handoff_to_codex_2026_09_12.md)
-    - 📄 [combat_overhaul_plan.md](file:///C:/CodingProjects/SpaceGame/docs/combat_overhaul_plan.md)
-    - 📄 [controller_focus_notes.md](file:///C:/CodingProjects/SpaceGame/docs/controller_focus_notes.md)
-    - 📄 [critic_fix_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/critic_fix_2026_09_12.md)
-    - 📄 [design_end_goal.md](file:///C:/CodingProjects/SpaceGame/docs/design_end_goal.md)
-    - 📄 [design_narrative_system.md](file:///C:/CodingProjects/SpaceGame/docs/design_narrative_system.md)
-    - 📄 [design_parking_lot.md](file:///C:/CodingProjects/SpaceGame/docs/design_parking_lot.md)
-    - 📄 [design_station_lounge_social.md](file:///C:/CodingProjects/SpaceGame/docs/design_station_lounge_social.md)
-    - 📄 [desire_coherence_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/desire_coherence_2026_09_12.md)
-    - 📄 [future_contacts.md](file:///C:/CodingProjects/SpaceGame/docs/future_contacts.md)
-    - 📄 [handoff_anomalies_bounties.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_anomalies_bounties.md)
-    - 📄 [handoff_claude_gemini_campaign_completion_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_claude_gemini_campaign_completion_2026_09_14.md)
-    - 📄 [handoff_dialogue_alignment.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_dialogue_alignment.md)
-    - 📄 [handoff_future_plans.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_future_plans.md)
-    - 📄 [handoff_infinite_universe.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_infinite_universe.md)
-    - 📄 [handoff_next.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_next.md)
-    - 📄 [handoff_pickup_quest.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_pickup_quest.md)
-    - 📄 [handoff_segment5_map_rework.md](file:///C:/CodingProjects/SpaceGame/docs/handoff_segment5_map_rework.md)
-    - 📄 [investigation_board_lifecycle_2026_09_13.md](file:///C:/CodingProjects/SpaceGame/docs/investigation_board_lifecycle_2026_09_13.md)
-    - 📄 [investigation_playable_loop_2026_09_13.md](file:///C:/CodingProjects/SpaceGame/docs/investigation_playable_loop_2026_09_13.md)
-    - 📄 [investigation_runtime_2026_09_13.md](file:///C:/CodingProjects/SpaceGame/docs/investigation_runtime_2026_09_13.md)
-    - 📄 [jumpgate_implementation_plan.md](file:///C:/CodingProjects/SpaceGame/docs/jumpgate_implementation_plan.md)
-    - 📄 [known_harmless_warnings.md](file:///C:/CodingProjects/SpaceGame/docs/known_harmless_warnings.md)
-    - 📄 [llm_dialogue_content_editing.md](file:///C:/CodingProjects/SpaceGame/docs/llm_dialogue_content_editing.md)
-    - 📄 [long_term_campaign_architecture.md](file:///C:/CodingProjects/SpaceGame/docs/long_term_campaign_architecture.md)
+    - 📄 [GateMalfunctionWTF.md](file:///D:/CodingProjects/spacegame/docs/GateMalfunctionWTF.md)
+    - 📄 [assets_metadata_notes.md](file:///D:/CodingProjects/spacegame/docs/assets_metadata_notes.md)
+    - 📄 [attack_mission_flow.md](file:///D:/CodingProjects/spacegame/docs/attack_mission_flow.md)
+    - 📄 [audit_boost_thruster.md](file:///D:/CodingProjects/spacegame/docs/audit_boost_thruster.md)
+    - 📄 [audit_combat_feedback.md](file:///D:/CodingProjects/spacegame/docs/audit_combat_feedback.md)
+    - 📄 [audit_dock_buttons.md](file:///D:/CodingProjects/spacegame/docs/audit_dock_buttons.md)
+    - 📄 [audit_lingering_vfx.md](file:///D:/CodingProjects/spacegame/docs/audit_lingering_vfx.md)
+    - 📄 [audit_station_lounge_layout.md](file:///D:/CodingProjects/spacegame/docs/audit_station_lounge_layout.md)
+    - 📄 [autopilot_stabilization_checkpoint.md](file:///D:/CodingProjects/spacegame/docs/autopilot_stabilization_checkpoint.md)
+    - 📄 [bugs.md](file:///D:/CodingProjects/spacegame/docs/bugs.md)
+    - 📄 [campaign_bible_schema.md](file:///D:/CodingProjects/spacegame/docs/campaign_bible_schema.md)
+    - 📄 [cause_coverage_audit_2026_09_14.md](file:///D:/CodingProjects/spacegame/docs/cause_coverage_audit_2026_09_14.md)
+    - 📄 [claude_handoff_after_critic_fix.md](file:///D:/CodingProjects/spacegame/docs/claude_handoff_after_critic_fix.md)
+    - 📄 [claude_handoff_pressure_resolutions_novelty_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/claude_handoff_pressure_resolutions_novelty_2026_09_13.md)
+    - 📄 [claude_handoff_to_codex_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/claude_handoff_to_codex_2026_09_12.md)
+    - 📄 [combat_overhaul_plan.md](file:///D:/CodingProjects/spacegame/docs/combat_overhaul_plan.md)
+    - 📄 [controller_focus_notes.md](file:///D:/CodingProjects/spacegame/docs/controller_focus_notes.md)
+    - 📄 [critic_fix_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/critic_fix_2026_09_12.md)
+    - 📄 [design_end_goal.md](file:///D:/CodingProjects/spacegame/docs/design_end_goal.md)
+    - 📄 [design_narrative_system.md](file:///D:/CodingProjects/spacegame/docs/design_narrative_system.md)
+    - 📄 [design_parking_lot.md](file:///D:/CodingProjects/spacegame/docs/design_parking_lot.md)
+    - 📄 [design_station_lounge_social.md](file:///D:/CodingProjects/spacegame/docs/design_station_lounge_social.md)
+    - 📄 [desire_coherence_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/desire_coherence_2026_09_12.md)
+    - 📄 [future_contacts.md](file:///D:/CodingProjects/spacegame/docs/future_contacts.md)
+    - 📄 [handoff_anomalies_bounties.md](file:///D:/CodingProjects/spacegame/docs/handoff_anomalies_bounties.md)
+    - 📄 [handoff_claude_gemini_campaign_completion_2026_09_14.md](file:///D:/CodingProjects/spacegame/docs/handoff_claude_gemini_campaign_completion_2026_09_14.md)
+    - 📄 [handoff_dialogue_alignment.md](file:///D:/CodingProjects/spacegame/docs/handoff_dialogue_alignment.md)
+    - 📄 [handoff_future_plans.md](file:///D:/CodingProjects/spacegame/docs/handoff_future_plans.md)
+    - 📄 [handoff_infinite_universe.md](file:///D:/CodingProjects/spacegame/docs/handoff_infinite_universe.md)
+    - 📄 [handoff_next.md](file:///D:/CodingProjects/spacegame/docs/handoff_next.md)
+    - 📄 [handoff_pickup_quest.md](file:///D:/CodingProjects/spacegame/docs/handoff_pickup_quest.md)
+    - 📄 [handoff_segment5_map_rework.md](file:///D:/CodingProjects/spacegame/docs/handoff_segment5_map_rework.md)
+    - 📄 [investigation_board_lifecycle_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/investigation_board_lifecycle_2026_09_13.md)
+    - 📄 [investigation_playable_loop_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/investigation_playable_loop_2026_09_13.md)
+    - 📄 [investigation_runtime_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/investigation_runtime_2026_09_13.md)
+    - 📄 [jumpgate_implementation_plan.md](file:///D:/CodingProjects/spacegame/docs/jumpgate_implementation_plan.md)
+    - 📄 [known_harmless_warnings.md](file:///D:/CodingProjects/spacegame/docs/known_harmless_warnings.md)
+    - 📄 [llm_dialogue_content_editing.md](file:///D:/CodingProjects/spacegame/docs/llm_dialogue_content_editing.md)
+    - 📄 [long_term_campaign_architecture.md](file:///D:/CodingProjects/spacegame/docs/long_term_campaign_architecture.md)
     - 📂 **narrative/**
       - 📂 **character_souls/**
-        - 📄 [KAELEN.md](file:///C:/CodingProjects/SpaceGame/docs/narrative/character_souls/KAELEN.md)
-        - 📄 [NOVA.md](file:///C:/CodingProjects/SpaceGame/docs/narrative/character_souls/NOVA.md)
-    - 📄 [narrative_baseline_2026-07-10.md](file:///C:/CodingProjects/SpaceGame/docs/narrative_baseline_2026-07-10.md)
-    - 📄 [p3_corrections_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/p3_corrections_2026_09_14.md)
-    - 📄 [phase_0_baseline_checks.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_baseline_checks.md)
-    - 📄 [phase_0_baseline_plan.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_baseline_plan.md)
-    - 📄 [phase_0_gameplay_regression_2026-06-13.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_gameplay_regression_2026-06-13.md)
-    - 📄 [phase_0_performance_baseline_2026-06-13.md](file:///C:/CodingProjects/SpaceGame/docs/phase_0_performance_baseline_2026-06-13.md)
-    - 📄 [phase_1_checkpoint_2_validation.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_2_validation.md)
-    - 📄 [phase_1_checkpoint_3_system_registry.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_3_system_registry.md)
-    - 📄 [phase_1_checkpoint_4_world_identity.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_4_world_identity.md)
-    - 📄 [phase_1_checkpoint_5_content_registry.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_5_content_registry.md)
-    - 📄 [phase_1_checkpoint_6_speech_service.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_6_speech_service.md)
-    - 📄 [phase_1_checkpoint_7_mission_contract.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_7_mission_contract.md)
-    - 📄 [phase_1_checkpoint_8_save_migration.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_8_save_migration.md)
-    - 📄 [phase_1_checkpoint_9_regression_2026-06-14.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_checkpoint_9_regression_2026-06-14.md)
-    - 📄 [phase_1_domain_contract.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_domain_contract.md)
-    - 📄 [phase_1_procedural_test_system.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_procedural_test_system.md)
-    - 📄 [phase_1_typed_domain_plan.md](file:///C:/CodingProjects/SpaceGame/docs/phase_1_typed_domain_plan.md)
-    - 📄 [phase_2_campaign_store_plan.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_campaign_store_plan.md)
-    - 📄 [phase_2_checkpoint_12_regression_2026-06-15.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_checkpoint_12_regression_2026-06-15.md)
-    - 📄 [phase_2_checkpoint_1_schema_contract.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_checkpoint_1_schema_contract.md)
-    - 📄 [phase_2_checkpoint_2_campaign_slots.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_checkpoint_2_campaign_slots.md)
-    - 📄 [phase_2_checkpoint_3_atomic_store.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_checkpoint_3_atomic_store.md)
-    - 📄 [phase_2_checkpoint_4_manifest_assets.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_checkpoint_4_manifest_assets.md)
-    - 📄 [phase_2_storage_contract.md](file:///C:/CodingProjects/SpaceGame/docs/phase_2_storage_contract.md)
-    - 📄 [phase_3_checkpoint_1_universal_time.md](file:///C:/CodingProjects/SpaceGame/docs/phase_3_checkpoint_1_universal_time.md)
-    - 📄 [phase_3_to_7_development_plan.md](file:///C:/CodingProjects/SpaceGame/docs/phase_3_to_7_development_plan.md)
-    - 📄 [plan_anomalies_bounties.md](file:///C:/CodingProjects/SpaceGame/docs/plan_anomalies_bounties.md)
-    - 📄 [plan_astra_arcana_landing.md](file:///C:/CodingProjects/SpaceGame/docs/plan_astra_arcana_landing.md)
-    - 📄 [plan_boss_and_squads.md](file:///C:/CodingProjects/SpaceGame/docs/plan_boss_and_squads.md)
-    - 📄 [plan_campaign_uniqueness_and_dialogue_quality.md](file:///C:/CodingProjects/SpaceGame/docs/plan_campaign_uniqueness_and_dialogue_quality.md)
-    - 📄 [plan_cheap_features.md](file:///C:/CodingProjects/SpaceGame/docs/plan_cheap_features.md)
-    - 📄 [plan_combat_escalation_decals.md](file:///C:/CodingProjects/SpaceGame/docs/plan_combat_escalation_decals.md)
-    - 📄 [plan_docking_sequence.md](file:///C:/CodingProjects/SpaceGame/docs/plan_docking_sequence.md)
-    - 📄 [plan_enemy_kit_parity.md](file:///C:/CodingProjects/SpaceGame/docs/plan_enemy_kit_parity.md)
-    - 📄 [plan_intro_cinematic.md](file:///C:/CodingProjects/SpaceGame/docs/plan_intro_cinematic.md)
-    - 📄 [plan_kaelen_handoff_pool.md](file:///C:/CodingProjects/SpaceGame/docs/plan_kaelen_handoff_pool.md)
-    - 📄 [plan_living_narrative_shining_star.md](file:///C:/CodingProjects/SpaceGame/docs/plan_living_narrative_shining_star.md)
-    - 📄 [plan_llm_dialogue_content_registry.md](file:///C:/CodingProjects/SpaceGame/docs/plan_llm_dialogue_content_registry.md)
-    - 📄 [plan_lounge_social_layer.md](file:///C:/CodingProjects/SpaceGame/docs/plan_lounge_social_layer.md)
-    - 📄 [plan_mission_conversation_llm_path.md](file:///C:/CodingProjects/SpaceGame/docs/plan_mission_conversation_llm_path.md)
-    - 📄 [plan_replayability_local_inference.md](file:///C:/CodingProjects/SpaceGame/docs/plan_replayability_local_inference.md)
-    - 📄 [plan_screenshot_triggers.md](file:///C:/CodingProjects/SpaceGame/docs/plan_screenshot_triggers.md)
-    - 📄 [plan_visual_effects.md](file:///C:/CodingProjects/SpaceGame/docs/plan_visual_effects.md)
-    - 📄 [playtest_checklist.md](file:///C:/CodingProjects/SpaceGame/docs/playtest_checklist.md)
-    - 📄 [polish_notes_misc.md](file:///C:/CodingProjects/SpaceGame/docs/polish_notes_misc.md)
-    - 📄 [problem_critic_always_passes.md](file:///C:/CodingProjects/SpaceGame/docs/problem_critic_always_passes.md)
-    - 📄 [procedural_campaign_uniqueness_plan.md](file:///C:/CodingProjects/SpaceGame/docs/procedural_campaign_uniqueness_plan.md)
-    - 📄 [prompt_frontier_planning.md](file:///C:/CodingProjects/SpaceGame/docs/prompt_frontier_planning.md)
-    - 📄 [quest_gen_test_results.md](file:///C:/CodingProjects/SpaceGame/docs/quest_gen_test_results.md)
-    - 📄 [quiet_moment_llm_findings.md](file:///C:/CodingProjects/SpaceGame/docs/quiet_moment_llm_findings.md)
-    - 📄 [quiet_moment_llm_research_log.md](file:///C:/CodingProjects/SpaceGame/docs/quiet_moment_llm_research_log.md)
+        - 📄 [KAELEN.md](file:///D:/CodingProjects/spacegame/docs/narrative/character_souls/KAELEN.md)
+        - 📄 [NOVA.md](file:///D:/CodingProjects/spacegame/docs/narrative/character_souls/NOVA.md)
+    - 📄 [narrative_baseline_2026-07-10.md](file:///D:/CodingProjects/spacegame/docs/narrative_baseline_2026-07-10.md)
+    - 📄 [p3_corrections_2026_09_14.md](file:///D:/CodingProjects/spacegame/docs/p3_corrections_2026_09_14.md)
+    - 📄 [phase_0_baseline_checks.md](file:///D:/CodingProjects/spacegame/docs/phase_0_baseline_checks.md)
+    - 📄 [phase_0_baseline_plan.md](file:///D:/CodingProjects/spacegame/docs/phase_0_baseline_plan.md)
+    - 📄 [phase_0_gameplay_regression_2026-06-13.md](file:///D:/CodingProjects/spacegame/docs/phase_0_gameplay_regression_2026-06-13.md)
+    - 📄 [phase_0_performance_baseline_2026-06-13.md](file:///D:/CodingProjects/spacegame/docs/phase_0_performance_baseline_2026-06-13.md)
+    - 📄 [phase_1_checkpoint_2_validation.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_2_validation.md)
+    - 📄 [phase_1_checkpoint_3_system_registry.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_3_system_registry.md)
+    - 📄 [phase_1_checkpoint_4_world_identity.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_4_world_identity.md)
+    - 📄 [phase_1_checkpoint_5_content_registry.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_5_content_registry.md)
+    - 📄 [phase_1_checkpoint_6_speech_service.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_6_speech_service.md)
+    - 📄 [phase_1_checkpoint_7_mission_contract.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_7_mission_contract.md)
+    - 📄 [phase_1_checkpoint_8_save_migration.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_8_save_migration.md)
+    - 📄 [phase_1_checkpoint_9_regression_2026-06-14.md](file:///D:/CodingProjects/spacegame/docs/phase_1_checkpoint_9_regression_2026-06-14.md)
+    - 📄 [phase_1_domain_contract.md](file:///D:/CodingProjects/spacegame/docs/phase_1_domain_contract.md)
+    - 📄 [phase_1_procedural_test_system.md](file:///D:/CodingProjects/spacegame/docs/phase_1_procedural_test_system.md)
+    - 📄 [phase_1_typed_domain_plan.md](file:///D:/CodingProjects/spacegame/docs/phase_1_typed_domain_plan.md)
+    - 📄 [phase_2_campaign_store_plan.md](file:///D:/CodingProjects/spacegame/docs/phase_2_campaign_store_plan.md)
+    - 📄 [phase_2_checkpoint_12_regression_2026-06-15.md](file:///D:/CodingProjects/spacegame/docs/phase_2_checkpoint_12_regression_2026-06-15.md)
+    - 📄 [phase_2_checkpoint_1_schema_contract.md](file:///D:/CodingProjects/spacegame/docs/phase_2_checkpoint_1_schema_contract.md)
+    - 📄 [phase_2_checkpoint_2_campaign_slots.md](file:///D:/CodingProjects/spacegame/docs/phase_2_checkpoint_2_campaign_slots.md)
+    - 📄 [phase_2_checkpoint_3_atomic_store.md](file:///D:/CodingProjects/spacegame/docs/phase_2_checkpoint_3_atomic_store.md)
+    - 📄 [phase_2_checkpoint_4_manifest_assets.md](file:///D:/CodingProjects/spacegame/docs/phase_2_checkpoint_4_manifest_assets.md)
+    - 📄 [phase_2_storage_contract.md](file:///D:/CodingProjects/spacegame/docs/phase_2_storage_contract.md)
+    - 📄 [phase_3_checkpoint_1_universal_time.md](file:///D:/CodingProjects/spacegame/docs/phase_3_checkpoint_1_universal_time.md)
+    - 📄 [phase_3_to_7_development_plan.md](file:///D:/CodingProjects/spacegame/docs/phase_3_to_7_development_plan.md)
+    - 📄 [plan_anomalies_bounties.md](file:///D:/CodingProjects/spacegame/docs/plan_anomalies_bounties.md)
+    - 📄 [plan_astra_arcana_landing.md](file:///D:/CodingProjects/spacegame/docs/plan_astra_arcana_landing.md)
+    - 📄 [plan_boss_and_squads.md](file:///D:/CodingProjects/spacegame/docs/plan_boss_and_squads.md)
+    - 📄 [plan_campaign_uniqueness_and_dialogue_quality.md](file:///D:/CodingProjects/spacegame/docs/plan_campaign_uniqueness_and_dialogue_quality.md)
+    - 📄 [plan_cheap_features.md](file:///D:/CodingProjects/spacegame/docs/plan_cheap_features.md)
+    - 📄 [plan_combat_escalation_decals.md](file:///D:/CodingProjects/spacegame/docs/plan_combat_escalation_decals.md)
+    - 📄 [plan_docking_sequence.md](file:///D:/CodingProjects/spacegame/docs/plan_docking_sequence.md)
+    - 📄 [plan_enemy_kit_parity.md](file:///D:/CodingProjects/spacegame/docs/plan_enemy_kit_parity.md)
+    - 📄 [plan_intro_cinematic.md](file:///D:/CodingProjects/spacegame/docs/plan_intro_cinematic.md)
+    - 📄 [plan_kaelen_handoff_pool.md](file:///D:/CodingProjects/spacegame/docs/plan_kaelen_handoff_pool.md)
+    - 📄 [plan_living_narrative_shining_star.md](file:///D:/CodingProjects/spacegame/docs/plan_living_narrative_shining_star.md)
+    - 📄 [plan_llm_dialogue_content_registry.md](file:///D:/CodingProjects/spacegame/docs/plan_llm_dialogue_content_registry.md)
+    - 📄 [plan_lounge_social_layer.md](file:///D:/CodingProjects/spacegame/docs/plan_lounge_social_layer.md)
+    - 📄 [plan_mission_conversation_llm_path.md](file:///D:/CodingProjects/spacegame/docs/plan_mission_conversation_llm_path.md)
+    - 📄 [plan_replayability_local_inference.md](file:///D:/CodingProjects/spacegame/docs/plan_replayability_local_inference.md)
+    - 📄 [plan_screenshot_triggers.md](file:///D:/CodingProjects/spacegame/docs/plan_screenshot_triggers.md)
+    - 📄 [plan_visual_effects.md](file:///D:/CodingProjects/spacegame/docs/plan_visual_effects.md)
+    - 📄 [playtest_checklist.md](file:///D:/CodingProjects/spacegame/docs/playtest_checklist.md)
+    - 📄 [polish_notes_misc.md](file:///D:/CodingProjects/spacegame/docs/polish_notes_misc.md)
+    - 📄 [problem_critic_always_passes.md](file:///D:/CodingProjects/spacegame/docs/problem_critic_always_passes.md)
+    - 📄 [procedural_campaign_uniqueness_plan.md](file:///D:/CodingProjects/spacegame/docs/procedural_campaign_uniqueness_plan.md)
+    - 📄 [prompt_frontier_planning.md](file:///D:/CodingProjects/spacegame/docs/prompt_frontier_planning.md)
+    - 📄 [quest_gen_test_results.md](file:///D:/CodingProjects/spacegame/docs/quest_gen_test_results.md)
+    - 📄 [quiet_moment_llm_findings.md](file:///D:/CodingProjects/spacegame/docs/quiet_moment_llm_findings.md)
+    - 📄 [quiet_moment_llm_research_log.md](file:///D:/CodingProjects/spacegame/docs/quiet_moment_llm_research_log.md)
     - 📂 **research/**
       - 📂 **quiet_moment/**
-        - 📄 [AGENTS.md](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/AGENTS.md)
-        - 📄 [ITERATIONS.md](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/ITERATIONS.md)
-        - 📄 [MOMENTS.md](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/MOMENTS.md)
-        - 📄 [RESUME.md](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/RESUME.md)
-        - 📄 [SYSTEM.md](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/SYSTEM.md)
-        - 📄 [ab_v1_positive_v1a_positive_oldsoul.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/ab_v1_positive_v1a_positive_oldsoul.json)
-        - 📄 [agent_offer.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/agent_offer.py)
+        - 📄 [AGENTS.md](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/AGENTS.md)
+        - 📄 [ITERATIONS.md](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/ITERATIONS.md)
+        - 📄 [MOMENTS.md](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/MOMENTS.md)
+        - 📄 [RESUME.md](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/RESUME.md)
+        - 📄 [SYSTEM.md](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/SYSTEM.md)
+        - 📄 [ab_v1_positive_v1a_positive_oldsoul.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/ab_v1_positive_v1a_positive_oldsoul.json)
+        - 📄 [agent_offer.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/agent_offer.py)
           - `def _pick_fixation(rng, objective_type)`
           - `def _draw(key, pool, rng)`
           - `def _facts_for(personality_id, rng)`
           - `def build_packet(rng, objective_type, known_tough, high_pay, destination, include)`
           - `def compose(rng, personality_id, demos, name, system, **packet_kwargs)`
-        - 📄 [agents.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/agents.py)
+        - 📄 [agents.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/agents.py)
           - `def demos_for(personality_id, avoid_job)`
-        - 📄 [anatomy.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/anatomy.py)
+        - 📄 [anatomy.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/anatomy.py)
           - `def find_part(line)`
           - `def apply(line, rng, track)`
-        - 📄 [approved.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/approved.py)
-        - 📄 [batch.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/batch.py)
+        - 📄 [approved.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/approved.py)
+        - 📄 [batch.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/batch.py)
           - `def load()`
           - `def add(ch, n)`
           - `def show(ch, start, count)`
-        - 📄 [batch_35b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/batch_35b.json)
-        - 📄 [beat.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/beat.py)
+        - 📄 [batch_35b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/batch_35b.json)
+        - 📄 [beat.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/beat.py)
           - `def build_prompt(beat, packet, rng)`
           - `def make(beat)`
           - `def compose(beat, packet, rng)`
           - `def join(lead, line)`
-        - 📄 [beat_transit.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/beat_transit.py)
+        - 📄 [beat_transit.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/beat_transit.py)
           - 🏛️ **Module**
             - `def prompt(packet, rng)`
             - `def lead_in()`
           - `def _draw(rng, key, pool)`
           - `def compose(rng, packet, device, mechanic)`
-        - 📄 [beats_kaelen.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/beats_kaelen.py)
-        - 📄 [beats_nova.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/beats_nova.py)
-        - 📄 [build_showcase.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/build_showcase.py)
+        - 📄 [beats_kaelen.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/beats_kaelen.py)
+        - 📄 [beats_nova.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/beats_nova.py)
+        - 📄 [build_showcase.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/build_showcase.py)
           - `def build(per_beat, model, seed)`
-        - 📄 [demo_pool.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/demo_pool.py)
+        - 📄 [demo_pool.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/demo_pool.py)
           - `def sample(rng, k, avoid_facts)`
-        - 📄 [demo_pool_v9.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/demo_pool_v9.py)
+        - 📄 [demo_pool_v9.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/demo_pool_v9.py)
           - `def sample(rng, k, avoid_facts)`
-        - 📄 [diagnose.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/diagnose.py)
+        - 📄 [diagnose.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/diagnose.py)
           - 🏛️ **Finding**
             - `def __init__(self, rule, severity, detail, fix)`
             - `def __str__(self)`
@@ -2695,125 +2635,125 @@ Root: `SpaceGame`
           - `def rule_opener_mirroring(outputs, packets, out)`
           - `def rule_valence(outputs, valence, out)`
           - `def diagnose(outputs, demos, packets, cap, valence, show)`
-        - 📄 [export_beats.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/export_beats.py)
+        - 📄 [export_beats.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/export_beats.py)
           - `def unescape(text)`
           - `def demo_block(pool)`
           - `def export_beat(bid, b)`
           - `def lint(beats)`
           - `def main()`
-        - 📄 [fewshot.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/fewshot.py)
+        - 📄 [fewshot.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/fewshot.py)
           - `def prompt(ch, demos)`
-        - 📄 [fewshot2.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/fewshot2.py)
+        - 📄 [fewshot2.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/fewshot2.py)
           - `def prompt(ch)`
-        - 📄 [fewshot3.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/fewshot3.py)
+        - 📄 [fewshot3.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/fewshot3.py)
           - `def prompt(ch)`
-        - 📄 [fewshot4.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/fewshot4.py)
+        - 📄 [fewshot4.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/fewshot4.py)
           - `def prompt(packet, ch)`
-        - 📄 [fewshot5.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/fewshot5.py)
+        - 📄 [fewshot5.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/fewshot5.py)
           - `def prompt(packet, ch)`
-        - 📄 [fragments.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/fragments.py)
+        - 📄 [fragments.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/fragments.py)
           - `def select_prompt(ch)`
           - `def render(ch, opener, follow_up)`
-        - 📄 [lex2.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/lex2.py)
+        - 📄 [lex2.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/lex2.py)
           - `def lexicon(ch)`
           - `def outside(ch, line)`
-        - 📄 [live_tail.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/live_tail.py)
+        - 📄 [live_tail.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/live_tail.py)
           - `def prompt(ch, rng)`
-        - 📄 [nova.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/nova.py)
+        - 📄 [nova.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/nova.py)
           - `def prompt(packet, rng)`
-        - 📄 [nova_damaged.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/nova_damaged.py)
+        - 📄 [nova_damaged.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/nova_damaged.py)
           - `def prompt(packet, rng)`
-        - 📄 [nova_demos.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/nova_demos.py)
+        - 📄 [nova_demos.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/nova_demos.py)
           - `def sample(rng, k, avoid_facts)`
-        - 📄 [nova_flight.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/nova_flight.py)
+        - 📄 [nova_flight.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/nova_flight.py)
           - `def prompt(packet, rng)`
-        - 📄 [offline.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/offline.py)
+        - 📄 [offline.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/offline.py)
           - `def check(ch, s)`
-        - 📄 [offline_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/offline_qwen3_14b.json)
-        - 📄 [offline_qwen3_4b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/offline_qwen3_4b.json)
-        - 📄 [out_beat_transit.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_beat_transit.json)
-        - 📄 [out_k_aband3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_aband3_qwen3_14b.json)
-        - 📄 [out_k_board1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_board1_qwen3_14b.json)
-        - 📄 [out_k_board2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_board2_qwen3_14b.json)
-        - 📄 [out_k_board3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_board3_qwen3_14b.json)
-        - 📄 [out_k_board4_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_board4_qwen3_14b.json)
-        - 📄 [out_k_highpay1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_highpay1_qwen3_14b.json)
-        - 📄 [out_k_highpay2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_highpay2_qwen3_14b.json)
-        - 📄 [out_k_lowpay_v2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_k_lowpay_v2_qwen3_14b.json)
-        - 📄 [out_kaelen_abandoned_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_kaelen_abandoned_qwen3_14b.json)
-        - 📄 [out_kaelen_abandoned_v2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_kaelen_abandoned_v2_qwen3_14b.json)
-        - 📄 [out_kaelen_declined_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_kaelen_declined_qwen3_14b.json)
-        - 📄 [out_n_burn2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_burn2_qwen3_14b.json)
-        - 📄 [out_n_burn3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_burn3_qwen3_14b.json)
-        - 📄 [out_n_cargo1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_cargo1_qwen3_14b.json)
-        - 📄 [out_n_cargo2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_cargo2_qwen3_14b.json)
-        - 📄 [out_n_cargo3.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_cargo3.json)
-        - 📄 [out_n_cargo4.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_cargo4.json)
-        - 📄 [out_n_cargo5.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_cargo5.json)
-        - 📄 [out_n_repair1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_repair1_qwen3_14b.json)
-        - 📄 [out_n_repair2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_repair2_qwen3_14b.json)
-        - 📄 [out_n_repair3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_repair3_qwen3_14b.json)
-        - 📄 [out_n_transit1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_transit1_qwen3_14b.json)
-        - 📄 [out_n_transit2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_transit2_qwen3_14b.json)
-        - 📄 [out_n_transit3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_transit3_qwen3_14b.json)
-        - 📄 [out_n_transit4_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_n_transit4_qwen3_14b.json)
-        - 📄 [out_nova_a1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_a1_qwen3_14b.json)
-        - 📄 [out_nova_a2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_a2_qwen3_14b.json)
-        - 📄 [out_nova_a3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_a3_qwen3_14b.json)
-        - 📄 [out_nova_a4_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_a4_qwen3_14b.json)
-        - 📄 [out_nova_a5_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_a5_qwen3_14b.json)
-        - 📄 [out_nova_dmg1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_dmg1_qwen3_14b.json)
-        - 📄 [out_nova_dmg2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_dmg2_qwen3_14b.json)
-        - 📄 [out_nova_dmg3_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_dmg3_qwen3_14b.json)
-        - 📄 [out_nova_dmg_uk_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_dmg_uk_qwen3_14b.json)
-        - 📄 [out_nova_flight1_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_flight1_qwen3_14b.json)
-        - 📄 [out_nova_hard_burn_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_hard_burn_qwen3_14b.json)
-        - 📄 [out_nova_returned_same_station_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_returned_same_station_qwen3_14b.json)
-        - 📄 [out_nova_rough_arrival_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_rough_arrival_qwen3_14b.json)
-        - 📄 [out_nova_rough_arrival_v2_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_nova_rough_arrival_v2_qwen3_14b.json)
-        - 📄 [out_transit_jealous.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_jealous.json)
-        - 📄 [out_transit_jealous2.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_jealous2.json)
-        - 📄 [out_transit_named.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_named.json)
-        - 📄 [out_transit_offeronly.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_offeronly.json)
-        - 📄 [out_transit_pullback_v2.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_pullback_v2.json)
-        - 📄 [out_transit_rival.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_rival.json)
-        - 📄 [out_transit_rival2.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_rival2.json)
-        - 📄 [out_transit_v2.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_v2.json)
-        - 📄 [out_transit_v3.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_transit_v3.json)
-        - 📄 [out_v10_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_v10_qwen3_14b.json)
-        - 📄 [out_v11_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_v11_qwen3_14b.json)
-        - 📄 [out_v7_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_v7_qwen3_14b.json)
-        - 📄 [out_v8_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_v8_qwen3_14b.json)
-        - 📄 [out_v9_qwen3_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/out_v9_qwen3_14b.json)
-        - 📄 [packets.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/packets.py)
-        - 📄 [playthrough.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/playthrough.py)
+        - 📄 [offline_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/offline_qwen3_14b.json)
+        - 📄 [offline_qwen3_4b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/offline_qwen3_4b.json)
+        - 📄 [out_beat_transit.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_beat_transit.json)
+        - 📄 [out_k_aband3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_aband3_qwen3_14b.json)
+        - 📄 [out_k_board1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_board1_qwen3_14b.json)
+        - 📄 [out_k_board2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_board2_qwen3_14b.json)
+        - 📄 [out_k_board3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_board3_qwen3_14b.json)
+        - 📄 [out_k_board4_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_board4_qwen3_14b.json)
+        - 📄 [out_k_highpay1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_highpay1_qwen3_14b.json)
+        - 📄 [out_k_highpay2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_highpay2_qwen3_14b.json)
+        - 📄 [out_k_lowpay_v2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_k_lowpay_v2_qwen3_14b.json)
+        - 📄 [out_kaelen_abandoned_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_kaelen_abandoned_qwen3_14b.json)
+        - 📄 [out_kaelen_abandoned_v2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_kaelen_abandoned_v2_qwen3_14b.json)
+        - 📄 [out_kaelen_declined_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_kaelen_declined_qwen3_14b.json)
+        - 📄 [out_n_burn2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_burn2_qwen3_14b.json)
+        - 📄 [out_n_burn3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_burn3_qwen3_14b.json)
+        - 📄 [out_n_cargo1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_cargo1_qwen3_14b.json)
+        - 📄 [out_n_cargo2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_cargo2_qwen3_14b.json)
+        - 📄 [out_n_cargo3.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_cargo3.json)
+        - 📄 [out_n_cargo4.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_cargo4.json)
+        - 📄 [out_n_cargo5.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_cargo5.json)
+        - 📄 [out_n_repair1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_repair1_qwen3_14b.json)
+        - 📄 [out_n_repair2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_repair2_qwen3_14b.json)
+        - 📄 [out_n_repair3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_repair3_qwen3_14b.json)
+        - 📄 [out_n_transit1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_transit1_qwen3_14b.json)
+        - 📄 [out_n_transit2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_transit2_qwen3_14b.json)
+        - 📄 [out_n_transit3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_transit3_qwen3_14b.json)
+        - 📄 [out_n_transit4_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_n_transit4_qwen3_14b.json)
+        - 📄 [out_nova_a1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_a1_qwen3_14b.json)
+        - 📄 [out_nova_a2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_a2_qwen3_14b.json)
+        - 📄 [out_nova_a3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_a3_qwen3_14b.json)
+        - 📄 [out_nova_a4_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_a4_qwen3_14b.json)
+        - 📄 [out_nova_a5_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_a5_qwen3_14b.json)
+        - 📄 [out_nova_dmg1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_dmg1_qwen3_14b.json)
+        - 📄 [out_nova_dmg2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_dmg2_qwen3_14b.json)
+        - 📄 [out_nova_dmg3_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_dmg3_qwen3_14b.json)
+        - 📄 [out_nova_dmg_uk_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_dmg_uk_qwen3_14b.json)
+        - 📄 [out_nova_flight1_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_flight1_qwen3_14b.json)
+        - 📄 [out_nova_hard_burn_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_hard_burn_qwen3_14b.json)
+        - 📄 [out_nova_returned_same_station_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_returned_same_station_qwen3_14b.json)
+        - 📄 [out_nova_rough_arrival_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_rough_arrival_qwen3_14b.json)
+        - 📄 [out_nova_rough_arrival_v2_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_nova_rough_arrival_v2_qwen3_14b.json)
+        - 📄 [out_transit_jealous.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_jealous.json)
+        - 📄 [out_transit_jealous2.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_jealous2.json)
+        - 📄 [out_transit_named.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_named.json)
+        - 📄 [out_transit_offeronly.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_offeronly.json)
+        - 📄 [out_transit_pullback_v2.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_pullback_v2.json)
+        - 📄 [out_transit_rival.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_rival.json)
+        - 📄 [out_transit_rival2.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_rival2.json)
+        - 📄 [out_transit_v2.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_v2.json)
+        - 📄 [out_transit_v3.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_transit_v3.json)
+        - 📄 [out_v10_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_v10_qwen3_14b.json)
+        - 📄 [out_v11_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_v11_qwen3_14b.json)
+        - 📄 [out_v7_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_v7_qwen3_14b.json)
+        - 📄 [out_v8_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_v8_qwen3_14b.json)
+        - 📄 [out_v9_qwen3_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/out_v9_qwen3_14b.json)
+        - 📄 [packets.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/packets.py)
+        - 📄 [playthrough.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/playthrough.py)
           - `def run(moments, model, seed)`
-        - 📄 [playthrough30.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/playthrough30.json)
-        - 📄 [playthrough_mixed.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/playthrough_mixed.json)
-        - 📄 [prompts.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/prompts.py)
+        - 📄 [playthrough30.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/playthrough30.json)
+        - 📄 [playthrough_mixed.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/playthrough_mixed.json)
+        - 📄 [prompts.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/prompts.py)
           - `def ref_block(character, rng, n)`
           - `def v0_baseline(character, rng)`
-        - 📄 [qm.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/qm.py)
+        - 📄 [qm.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/qm.py)
           - `def gen(prompt, model, fmt, temperature, num_predict, seed, top_p, top_k, min_p, think, extra)`
           - `def parse_json_field(raw, field)`
           - `def words(s)`
           - `def has_any(line, terms)`
           - `def shares_run(a, b, n)`
           - `def copied(line, refs, n)`
-        - 📄 [ranker.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/ranker.py)
+        - 📄 [ranker.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/ranker.py)
           - `def pick(candidates, model)`
-        - 📄 [ranker_sets.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/ranker_sets.json)
-        - 📄 [render_audio.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/render_audio.py)
+        - 📄 [ranker_sets.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/ranker_sets.json)
+        - 📄 [render_audio.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/render_audio.py)
           - `def voices()`
           - `def synth(label, text, voice, speed)`
           - `def slug(s, n)`
           - `def main()`
-        - 📄 [run_ab.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/run_ab.py)
-        - 📄 [run_fewshot.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/run_fewshot.py)
+        - 📄 [run_ab.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/run_ab.py)
+        - 📄 [run_fewshot.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/run_fewshot.py)
           - `def evaluate(ch, line)`
           - `def run(model, n)`
-        - 📄 [run_v0.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/run_v0.py)
-        - 📄 [runner.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/runner.py)
+        - 📄 [run_v0.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/run_v0.py)
+        - 📄 [runner.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/runner.py)
           - `def tts_risk(line)`
           - `def nova_cold(line)`
           - `def _shares_run(a, b, n)`
@@ -2821,13 +2761,13 @@ Root: `SpaceGame`
           - `def check(line, cap, packet, speaker, demos, brief, lead_in, third_parties)`
           - `def run(mod, model, n, tag)`
           - `def report(rows, name, show)`
-        - 📄 [score.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/score.py)
+        - 📄 [score.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/score.py)
           - `def content_words(line)`
           - `def blacklist_hits(ch, line)`
           - `def lexicon_hits(ch, line)`
           - `def structural_hits(ch, line)`
           - `def score(ch, line, refs)`
-        - 📄 [selector.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/selector.py)
+        - 📄 [selector.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/selector.py)
           - 🏛️ **QuietMomentSelector**
             - `def __init__(self, opener_window, line_window, tic_window)`
             - `def reasons(self, line, packet, speaker, cap, demos, lead_in, third_parties)`
@@ -2835,58 +2775,59 @@ Root: `SpaceGame`
             - `def request(self, mod, packet, rng, model, max_calls)`
           - `def closer_tag(line)`
           - `def shares_run(a, b, n)`
-        - 📄 [session_best.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/session_best.py)
-        - 📄 [showcase.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/showcase.json)
-        - 📄 [sim_k_highpay.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/sim_k_highpay.json)
-        - 📄 [transit.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/transit.py)
+        - 📄 [session_best.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/session_best.py)
+        - 📄 [showcase.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/showcase.json)
+        - 📄 [sim_k_highpay.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/sim_k_highpay.json)
+        - 📄 [transit.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/transit.py)
           - `def _next_detail(rng)`
           - `def compose(rng, packet, with_pullback, place)`
           - `def join(lead, offer, pullback)`
-        - 📄 [transit_jealous.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/transit_jealous.py)
+        - 📄 [transit_jealous.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/transit_jealous.py)
           - `def compose(rng, packet, mechanic)`
-        - 📄 [transit_vocab.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/transit_vocab.py)
+        - 📄 [transit_vocab.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/transit_vocab.py)
           - `def audit()`
-        - 📄 [v0.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v0.json)
-        - 📄 [v2_kaelen.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v2_kaelen.json)
-        - 📄 [v3_kaelen.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v3_kaelen.json)
-        - 📄 [v4_kaelen.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v4_kaelen.json)
-        - 📄 [v5_kaelen.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v5_kaelen.json)
-        - 📄 [v5_kaelen_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v5_kaelen_14b.json)
-        - 📄 [v6.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v6.py)
+        - 📄 [v0.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v0.json)
+        - 📄 [v2_kaelen.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v2_kaelen.json)
+        - 📄 [v3_kaelen.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v3_kaelen.json)
+        - 📄 [v4_kaelen.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v4_kaelen.json)
+        - 📄 [v5_kaelen.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v5_kaelen.json)
+        - 📄 [v5_kaelen_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v5_kaelen_14b.json)
+        - 📄 [v6.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v6.py)
           - `def prompt(packet, rng)`
           - `def packet(rng)`
-        - 📄 [v6_kaelen_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v6_kaelen_14b.json)
-        - 📄 [v6b_kaelen_14b.json](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v6b_kaelen_14b.json)
-        - 📄 [v9.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/v9.py)
+        - 📄 [v6_kaelen_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v6_kaelen_14b.json)
+        - 📄 [v6b_kaelen_14b.json](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v6b_kaelen_14b.json)
+        - 📄 [v9.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/v9.py)
           - `def prompt(packet, rng)`
-        - 📄 [variants.py](file:///C:/CodingProjects/SpaceGame/docs/research/quiet_moment/variants.py)
+        - 📄 [variants.py](file:///D:/CodingProjects/spacegame/docs/research/quiet_moment/variants.py)
           - `def v1_positive(ch, rng)`
           - `def v1a_positive_oldsoul(ch, rng)`
           - `def v1b_positive_norefs(ch, rng)`
           - `def v2_baseline_norefs(ch, rng)`
           - `def v3_baseline_noboard(ch, rng)`
-    - 📄 [review_claude_critic_and_plan_2026_09_12.md](file:///C:/CodingProjects/SpaceGame/docs/review_claude_critic_and_plan_2026_09_12.md)
-    - 📄 [review_claude_p3_and_next_plan_2026_09_14.md](file:///C:/CodingProjects/SpaceGame/docs/review_claude_p3_and_next_plan_2026_09_14.md)
-    - 📄 [salvage_drone_plan.md](file:///C:/CodingProjects/SpaceGame/docs/salvage_drone_plan.md)
-    - 📄 [segment_2_build_order.md](file:///C:/CodingProjects/SpaceGame/docs/segment_2_build_order.md)
-    - 📄 [segment_3_build_order.md](file:///C:/CodingProjects/SpaceGame/docs/segment_3_build_order.md)
-    - 📄 [session_handoff_2026_06_21.md](file:///C:/CodingProjects/SpaceGame/docs/session_handoff_2026_06_21.md)
-    - 📄 [skill_adding_factions.md](file:///C:/CodingProjects/SpaceGame/docs/skill_adding_factions.md)
-    - 📄 [skill_creating_safezones.md](file:///C:/CodingProjects/SpaceGame/docs/skill_creating_safezones.md)
-    - 📄 [story_manager_design.md](file:///C:/CodingProjects/SpaceGame/docs/story_manager_design.md)
-    - 📄 [story_manager_impl.md](file:///C:/CodingProjects/SpaceGame/docs/story_manager_impl.md)
-    - 📄 [storytelling_architecture_plan.md](file:///C:/CodingProjects/SpaceGame/docs/storytelling_architecture_plan.md)
-    - 📄 [taunt_lines_workshop.md](file:///C:/CodingProjects/SpaceGame/docs/taunt_lines_workshop.md)
-    - 📄 [test_and_diagnostics_notes.md](file:///C:/CodingProjects/SpaceGame/docs/test_and_diagnostics_notes.md)
-    - 📄 [testing_generated_systems_visual.md](file:///C:/CodingProjects/SpaceGame/docs/testing_generated_systems_visual.md)
-    - 📄 [todo.md](file:///C:/CodingProjects/SpaceGame/docs/todo.md)
-    - 📄 [tts_hygiene_notes.md](file:///C:/CodingProjects/SpaceGame/docs/tts_hygiene_notes.md)
-    - 📄 [turn_based_combat_design.md](file:///C:/CodingProjects/SpaceGame/docs/turn_based_combat_design.md)
-    - 📄 [ui_presentation_notes.md](file:///C:/CodingProjects/SpaceGame/docs/ui_presentation_notes.md)
-    - 📄 [upgrade_mechanics_design.md](file:///C:/CodingProjects/SpaceGame/docs/upgrade_mechanics_design.md)
-    - 📄 [whileYouWasSleeping.md](file:///C:/CodingProjects/SpaceGame/docs/whileYouWasSleeping.md)
-    - 📄 [world_lore.md](file:///C:/CodingProjects/SpaceGame/docs/world_lore.md)
-  - 📄 [generate_repo_map.py](file:///C:/CodingProjects/SpaceGame/generate_repo_map.py)
+    - 📄 [review_claude_critic_and_plan_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/review_claude_critic_and_plan_2026_09_12.md)
+    - 📄 [review_claude_p3_and_next_plan_2026_09_14.md](file:///D:/CodingProjects/spacegame/docs/review_claude_p3_and_next_plan_2026_09_14.md)
+    - 📄 [salvage_drone_plan.md](file:///D:/CodingProjects/spacegame/docs/salvage_drone_plan.md)
+    - 📄 [segment_2_build_order.md](file:///D:/CodingProjects/spacegame/docs/segment_2_build_order.md)
+    - 📄 [segment_3_build_order.md](file:///D:/CodingProjects/spacegame/docs/segment_3_build_order.md)
+    - 📄 [session_handoff_2026_06_21.md](file:///D:/CodingProjects/spacegame/docs/session_handoff_2026_06_21.md)
+    - 📄 [skill_adding_factions.md](file:///D:/CodingProjects/spacegame/docs/skill_adding_factions.md)
+    - 📄 [skill_creating_safezones.md](file:///D:/CodingProjects/spacegame/docs/skill_creating_safezones.md)
+    - 📄 [story_manager_design.md](file:///D:/CodingProjects/spacegame/docs/story_manager_design.md)
+    - 📄 [story_manager_impl.md](file:///D:/CodingProjects/spacegame/docs/story_manager_impl.md)
+    - 📄 [storytelling_architecture_plan.md](file:///D:/CodingProjects/spacegame/docs/storytelling_architecture_plan.md)
+    - 📄 [taunt_lines_workshop.md](file:///D:/CodingProjects/spacegame/docs/taunt_lines_workshop.md)
+    - 📄 [test_and_diagnostics_notes.md](file:///D:/CodingProjects/spacegame/docs/test_and_diagnostics_notes.md)
+    - 📄 [testing_generated_systems_visual.md](file:///D:/CodingProjects/spacegame/docs/testing_generated_systems_visual.md)
+    - 📄 [todo.md](file:///D:/CodingProjects/spacegame/docs/todo.md)
+    - 📄 [tts_device_selection.md](file:///D:/CodingProjects/spacegame/docs/tts_device_selection.md)
+    - 📄 [tts_hygiene_notes.md](file:///D:/CodingProjects/spacegame/docs/tts_hygiene_notes.md)
+    - 📄 [turn_based_combat_design.md](file:///D:/CodingProjects/spacegame/docs/turn_based_combat_design.md)
+    - 📄 [ui_presentation_notes.md](file:///D:/CodingProjects/spacegame/docs/ui_presentation_notes.md)
+    - 📄 [upgrade_mechanics_design.md](file:///D:/CodingProjects/spacegame/docs/upgrade_mechanics_design.md)
+    - 📄 [whileYouWasSleeping.md](file:///D:/CodingProjects/spacegame/docs/whileYouWasSleeping.md)
+    - 📄 [world_lore.md](file:///D:/CodingProjects/spacegame/docs/world_lore.md)
+  - 📄 [generate_repo_map.py](file:///D:/CodingProjects/spacegame/generate_repo_map.py)
     - `def join_multiline_signatures(content)`
     - `def get_python_function_signature(node)`
     - `def parse_python(file_content)`
@@ -2897,63 +2838,15 @@ Root: `SpaceGame`
     - `def build_tree(dir_path, base_path, visited_paths)`
     - `def render_markdown(node, indent, base_abs_path)`
     - `def main()`
-  - 📄 [godot-ai-LICENSE.txt](file:///C:/CodingProjects/SpaceGame/godot-ai-LICENSE.txt)
-  - 📄 [godot_transition_plan.md](file:///C:/CodingProjects/SpaceGame/godot_transition_plan.md)
+  - 📄 [godot-ai-LICENSE.txt](file:///D:/CodingProjects/spacegame/godot-ai-LICENSE.txt)
+  - 📄 [godot_transition_plan.md](file:///D:/CodingProjects/spacegame/godot_transition_plan.md)
   - 📂 **logs/**
-    - 📄 [campaign_direction_live_fire.json](file:///C:/CodingProjects/SpaceGame/logs/campaign_direction_live_fire.json)
-    - 📄 [fallback_events.jsonl](file:///C:/CodingProjects/SpaceGame/logs/fallback_events.jsonl)
-    - 📄 [fallback_summary.json](file:///C:/CodingProjects/SpaceGame/logs/fallback_summary.json)
-    - 📄 [fallback_summary.txt](file:///C:/CodingProjects/SpaceGame/logs/fallback_summary.txt)
-    - 📄 [lounge_bundle_live_fire_01.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_01.json)
-    - 📄 [lounge_bundle_live_fire_06.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_06.json)
-    - 📄 [lounge_bundle_live_fire_11.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_11.json)
-    - 📄 [lounge_bundle_live_fire_16.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_16.json)
-    - 📄 [lounge_bundle_live_fire_21.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_21.json)
-    - 📄 [lounge_bundle_live_fire_23.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_23.json)
-    - 📄 [lounge_bundle_live_fire_25.json](file:///C:/CodingProjects/SpaceGame/logs/lounge_bundle_live_fire_25.json)
-    - 📄 [nova_line_bank_live_fire.json](file:///C:/CodingProjects/SpaceGame/logs/nova_line_bank_live_fire.json)
-    - 📄 [ollama_recovery_live_fire.json](file:///C:/CodingProjects/SpaceGame/logs/ollama_recovery_live_fire.json)
-    - 📄 [parallel_lounge_bundle_live_fire.json](file:///C:/CodingProjects/SpaceGame/logs/parallel_lounge_bundle_live_fire.json)
-    - 📂 **quality_eval/**
-      - 📄 [critic_eval.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/critic_eval.json)
-      - 📄 [critic_v2_all_12345_1789228134.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/critic_v2_all_12345_1789228134.json)
-      - 📄 [critic_v2_sentinels_12345_1789228191.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/critic_v2_sentinels_12345_1789228191.json)
-      - 📄 [critic_v2_sentinels_67890_1789228339.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/critic_v2_sentinels_67890_1789228339.json)
-      - 📄 [critic_v2_tuning_12345_1789227893.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/critic_v2_tuning_12345_1789227893.json)
-      - 📄 [writer_eval_12345_1789254934.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/writer_eval_12345_1789254934.json)
-      - 📄 [writer_eval_12345_1789255022.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/writer_eval_12345_1789255022.json)
-      - 📄 [writer_eval_12345_1789255066.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/writer_eval_12345_1789255066.json)
-      - 📄 [writer_eval_67890_1789256554.json](file:///C:/CodingProjects/SpaceGame/logs/quality_eval/writer_eval_67890_1789256554.json)
-    - 📄 [quiet_moment_live.json](file:///C:/CodingProjects/SpaceGame/logs/quiet_moment_live.json)
-    - 📄 [quiet_moment_live_probe.json](file:///C:/CodingProjects/SpaceGame/logs/quiet_moment_live_probe.json)
-    - 📄 [quiet_moment_raw_4b_repro.json](file:///C:/CodingProjects/SpaceGame/logs/quiet_moment_raw_4b_repro.json)
-    - 📄 [quiet_moment_raw_8b_repro.json](file:///C:/CodingProjects/SpaceGame/logs/quiet_moment_raw_8b_repro.json)
-    - 📄 [quiet_moment_tail_4b_repro.json](file:///C:/CodingProjects/SpaceGame/logs/quiet_moment_tail_4b_repro.json)
-    - 📄 [taunt_bake.log](file:///C:/CodingProjects/SpaceGame/logs/taunt_bake.log)
-    - 📄 [taunt_bank_live_fire.json](file:///C:/CodingProjects/SpaceGame/logs/taunt_bank_live_fire.json)
-    - 📂 **taunt_pool_audio/**
-      - 📄 [INDEX.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/INDEX.txt)
-      - 📂 **code_enforcement/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/code_enforcement/index.txt)
-      - 📂 **contract_hit/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/contract_hit/index.txt)
-      - 📂 **opportunist/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/opportunist/index.txt)
-      - 📂 **pirate_predation/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/pirate_predation/index.txt)
-      - 📂 **preemptive_strike/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/preemptive_strike/index.txt)
-      - 📂 **reinforcement/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/reinforcement/index.txt)
-      - 📂 **reputation_grudge/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/reputation_grudge/index.txt)
-      - 📂 **unprovoked/**
-        - 📄 [index.txt](file:///C:/CodingProjects/SpaceGame/logs/taunt_pool_audio/unprovoked/index.txt)
-    - 📄 [taunt_render_final.log](file:///C:/CodingProjects/SpaceGame/logs/taunt_render_final.log)
-    - 📄 [taunt_review_state.json](file:///C:/CodingProjects/SpaceGame/logs/taunt_review_state.json)
-  - 📄 [project.godot](file:///C:/CodingProjects/SpaceGame/project.godot)
+    - 📄 [fallback_events.jsonl](file:///D:/CodingProjects/spacegame/logs/fallback_events.jsonl)
+    - 📄 [fallback_summary.json](file:///D:/CodingProjects/spacegame/logs/fallback_summary.json)
+    - 📄 [fallback_summary.txt](file:///D:/CodingProjects/spacegame/logs/fallback_summary.txt)
+  - 📄 [project.godot](file:///D:/CodingProjects/spacegame/project.godot)
   - 📂 **scripts/**
-    - 📄 [AnomalyRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/AnomalyRegistry.gd)
+    - 📄 [AnomalyRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/AnomalyRegistry.gd)
       - `static func shared() -> Object`
       - `static func reset() -> void`
       - `func generate_for_system(system_id: String, scene_parent: Node3D) -> void`
@@ -2965,8 +2858,8 @@ Root: `SpaceGame`
       - `func _random_position(rng: RandomNumberGenerator) -> Vector3`
       - `func _shuffle_with_rng(items: Array, rng: RandomNumberGenerator) -> void`
       - `func _fallback_table() -> Array`
-    - 📄 [AnomalyRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/AnomalyRegistry.gd.uid)
-    - 📄 [Asteroid.gd](file:///C:/CodingProjects/SpaceGame/scripts/Asteroid.gd)
+    - 📄 [AnomalyRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/AnomalyRegistry.gd.uid)
+    - 📄 [Asteroid.gd](file:///D:/CodingProjects/spacegame/scripts/Asteroid.gd)
       - `func _ready()`
       - `func _physics_process(delta: float)`
       - `func _update_lod(delta: float, force_full_detail: bool) -> void`
@@ -3003,8 +2896,8 @@ Root: `SpaceGame`
       - `func capture_state() -> Dictionary`
       - `func restore_state(state: Dictionary) -> void`
       - `func _record_persistent_state() -> void`
-    - 📄 [Asteroid.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/Asteroid.gd.uid)
-    - 📄 [AudioManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/AudioManager.gd)
+    - 📄 [Asteroid.gd.uid](file:///D:/CodingProjects/spacegame/scripts/Asteroid.gd.uid)
+    - 📄 [AudioManager.gd](file:///D:/CodingProjects/spacegame/scripts/AudioManager.gd)
       - `func _ready()`
       - `func play_next_bgm()`
       - `func _create_broken_gate_ambience_player(volume_db: float) -> AudioStreamPlayer`
@@ -3053,13 +2946,13 @@ Root: `SpaceGame`
       - `func _create_jump_tone(duration: float, start_hz: float, end_hz: float, noise_amount: float) -> AudioStreamWAV`
       - `func _load_preferences() -> void`
       - `func _save_preferences() -> void`
-    - 📄 [AudioManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/AudioManager.gd.uid)
-    - 📄 [DroneReticle.gd](file:///C:/CodingProjects/SpaceGame/scripts/DroneReticle.gd)
+    - 📄 [AudioManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/AudioManager.gd.uid)
+    - 📄 [DroneReticle.gd](file:///D:/CodingProjects/spacegame/scripts/DroneReticle.gd)
       - `func _ready() -> void`
       - `func set_target_screen(p: Vector2, on_target: bool) -> void`
       - `func _draw() -> void`
-    - 📄 [DroneReticle.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/DroneReticle.gd.uid)
-    - 📄 [GameRoot.gd](file:///C:/CodingProjects/SpaceGame/scripts/GameRoot.gd)
+    - 📄 [DroneReticle.gd.uid](file:///D:/CodingProjects/spacegame/scripts/DroneReticle.gd.uid)
+    - 📄 [GameRoot.gd](file:///D:/CodingProjects/spacegame/scripts/GameRoot.gd)
       - `func _enter_tree() -> void`
       - `func _ready() -> void`
       - `func _start_gameplay_runtime() -> void`
@@ -3324,8 +3217,8 @@ Root: `SpaceGame`
       - `func _dev_format_chapter_facts_by_privacy(packets: Array) -> String`
       - `func _dev_format_overarching_story(bible: Dictionary) -> String`
       - `func _input(event: InputEvent) -> void`
-    - 📄 [GameRoot.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/GameRoot.gd.uid)
-    - 📄 [GlobalState.gd](file:///C:/CodingProjects/SpaceGame/scripts/GlobalState.gd)
+    - 📄 [GameRoot.gd.uid](file:///D:/CodingProjects/spacegame/scripts/GameRoot.gd.uid)
+    - 📄 [GlobalState.gd](file:///D:/CodingProjects/spacegame/scripts/GlobalState.gd)
       - `static func is_minor_faction(faction_name: String) -> bool`
       - `static func minor_faction_data(faction_name: String) -> Dictionary`
       - `static func is_in_safe_zone(world_pos: Vector3) -> bool`
@@ -3412,8 +3305,8 @@ Root: `SpaceGame`
       - `static func _sub(text: String, pattern: String, replacement: String) -> String`
       - `static func remove_repeated_player_address(text: String) -> String`
       - `static func _match_tone_casing(canonical: String, original: String) -> String`
-    - 📄 [GlobalState.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/GlobalState.gd.uid)
-    - 📄 [JumpGate.gd](file:///C:/CodingProjects/SpaceGame/scripts/JumpGate.gd)
+    - 📄 [GlobalState.gd.uid](file:///D:/CodingProjects/spacegame/scripts/GlobalState.gd.uid)
+    - 📄 [JumpGate.gd](file:///D:/CodingProjects/spacegame/scripts/JumpGate.gd)
       - `func _ready() -> void`
       - `func _process(delta: float) -> void`
       - `func _exit_tree() -> void`
@@ -3433,8 +3326,8 @@ Root: `SpaceGame`
       - `func _apply_dim_visual() -> void`
       - `func _apply_blocked_visual() -> void`
       - `func _apply_damaged_visual() -> void`
-    - 📄 [JumpGate.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/JumpGate.gd.uid)
-    - 📄 [JumpTransitionFX.gd](file:///C:/CodingProjects/SpaceGame/scripts/JumpTransitionFX.gd)
+    - 📄 [JumpGate.gd.uid](file:///D:/CodingProjects/spacegame/scripts/JumpGate.gd.uid)
+    - 📄 [JumpTransitionFX.gd](file:///D:/CodingProjects/spacegame/scripts/JumpTransitionFX.gd)
       - `func _ready() -> void`
       - `func _build_arrival_banner() -> void`
       - `func play_entry(duration: float = 1.2) -> void`
@@ -3443,15 +3336,15 @@ Root: `SpaceGame`
       - `func play_arrival_banner(system_name: String) -> void`
       - `func _find_player_camera() -> Camera3D`
       - `func _trigger_camera_shake(camera: Camera3D, duration: float, start_delay: float = 0.0) -> void`
-    - 📄 [JumpTransitionFX.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/JumpTransitionFX.gd.uid)
-    - 📄 [JumpTunnel.gd](file:///C:/CodingProjects/SpaceGame/scripts/JumpTunnel.gd)
+    - 📄 [JumpTransitionFX.gd.uid](file:///D:/CodingProjects/spacegame/scripts/JumpTransitionFX.gd.uid)
+    - 📄 [JumpTunnel.gd](file:///D:/CodingProjects/spacegame/scripts/JumpTunnel.gd)
       - `func _ready() -> void`
       - `func setup_real_ship(player: CharacterBody3D) -> void`
       - `func cleanup() -> void`
       - `func _process(delta: float) -> void`
       - `func begin_exit_burst(duration: float) -> void`
-    - 📄 [JumpTunnel.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/JumpTunnel.gd.uid)
-    - 📄 [LLMInterface.gd](file:///C:/CodingProjects/SpaceGame/scripts/LLMInterface.gd)
+    - 📄 [JumpTunnel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/JumpTunnel.gd.uid)
+    - 📄 [LLMInterface.gd](file:///D:/CodingProjects/spacegame/scripts/LLMInterface.gd)
       - `func set_campaign_bible_priority_active(active: bool) -> void`
       - `func is_campaign_bible_priority_active() -> bool`
       - `func _skip_for_campaign_bible_priority(capability: String) -> bool`
@@ -3493,6 +3386,7 @@ Root: `SpaceGame`
       - `static func validate_nova_bank_line(text: String) -> String`
       - `static func _nova_bank_normalize(text: String) -> String`
       - `static func _nova_bank_final_sentence(text: String) -> String`
+      - `func _generic_faction_examples(mission_type: String) -> Dictionary`
       - `func _get_type_examples(agent_key: String, mission_type: String) -> Dictionary`
       - `func _get_type_examples_fallback(agent_key: String, mission_type: String) -> Dictionary`
       - `func _agent_memory_prompt_block(agent_id: String) -> String`
@@ -3519,6 +3413,7 @@ Root: `SpaceGame`
       - `func _non_kaelen_replacement_for(term: String) -> String`
       - `func _replace_case_variants(text: String, needle: String, replacement: String) -> String`
       - `func _validate_quest_data(quest_data: Dictionary)`
+      - `func _dialogue_has_broker_role_leak(dialogue: String, agent_name: String) -> bool`
       - `func _objective_summary(obj_type: String, obj: Dictionary) -> String`
       - `func _text_mentions_phrase(text_lower: String, phrase: String) -> bool`
       - `func _nickname_for_agent(agent_name: String) -> String`
@@ -3562,8 +3457,8 @@ Root: `SpaceGame`
       - `func _parse_anomaly_event_response(response_text: String) -> Dictionary`
       - `func _sanitize_anomaly_event(data: Dictionary) -> Dictionary`
       - `func _sanitize_anomaly_actions(raw_actions: Variant) -> Array`
-    - 📄 [LLMInterface.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/LLMInterface.gd.uid)
-    - 📄 [MainScene.gd](file:///C:/CodingProjects/SpaceGame/scripts/MainScene.gd)
+    - 📄 [LLMInterface.gd.uid](file:///D:/CodingProjects/spacegame/scripts/LLMInterface.gd.uid)
+    - 📄 [MainScene.gd](file:///D:/CodingProjects/spacegame/scripts/MainScene.gd)
       - `func _ready()`
       - `func _populate_overview()`
       - `func _spawn_salvager()`
@@ -3575,15 +3470,15 @@ Root: `SpaceGame`
       - `func _spawn_npc_flying_in()`
       - `func _next_runtime_ship_id(category: String) -> String`
       - `func _schedule_anomaly_rumor() -> void`
-    - 📄 [MainScene.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/MainScene.gd.uid)
-    - 📄 [NPCSalvager.gd](file:///C:/CodingProjects/SpaceGame/scripts/NPCSalvager.gd)
+    - 📄 [MainScene.gd.uid](file:///D:/CodingProjects/spacegame/scripts/MainScene.gd.uid)
+    - 📄 [NPCSalvager.gd](file:///D:/CodingProjects/spacegame/scripts/NPCSalvager.gd)
       - `func _ready()`
       - `func _physics_process(delta: float)`
       - `func steer_towards(target_pos: Vector3, delta: float)`
       - `func take_damage(amount: float, attacker_faction: String = "")`
       - `func die()`
-    - 📄 [NPCSalvager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/NPCSalvager.gd.uid)
-    - 📄 [NPCShip.gd](file:///C:/CodingProjects/SpaceGame/scripts/NPCShip.gd)
+    - 📄 [NPCSalvager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/NPCSalvager.gd.uid)
+    - 📄 [NPCShip.gd](file:///D:/CodingProjects/spacegame/scripts/NPCShip.gd)
       - `func _generate_archetype()`
       - `func _configure_role(role: String) -> void`
       - `func apply_faction_profile(profile: Dictionary, tier_override: int = -1) -> void`
@@ -3648,8 +3543,8 @@ Root: `SpaceGame`
       - `func _intent_interceptor(hp_ratio: float) -> Dictionary`
       - `func _intent_logistics(hp_ratio: float) -> Dictionary`
       - `func _intent_mining_hauler(_hp_ratio: float) -> Dictionary`
-    - 📄 [NPCShip.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/NPCShip.gd.uid)
-    - 📄 [OutpostStation.gd](file:///C:/CodingProjects/SpaceGame/scripts/OutpostStation.gd)
+    - 📄 [NPCShip.gd.uid](file:///D:/CodingProjects/spacegame/scripts/NPCShip.gd.uid)
+    - 📄 [OutpostStation.gd](file:///D:/CodingProjects/spacegame/scripts/OutpostStation.gd)
       - `func _ready() -> void`
       - `func _build_fallback_mesh() -> void`
       - `func _exit_tree() -> void`
@@ -3660,8 +3555,8 @@ Root: `SpaceGame`
       - `func get_docking_distance() -> float`
       - `func dock_player() -> void`
       - `func begin_dock_tractor(ship: Node3D) -> void`
-    - 📄 [OutpostStation.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/OutpostStation.gd.uid)
-    - 📄 [PlayerInteractionQueue.gd](file:///C:/CodingProjects/SpaceGame/scripts/PlayerInteractionQueue.gd)
+    - 📄 [OutpostStation.gd.uid](file:///D:/CodingProjects/spacegame/scripts/OutpostStation.gd.uid)
+    - 📄 [PlayerInteractionQueue.gd](file:///D:/CodingProjects/spacegame/scripts/PlayerInteractionQueue.gd)
       - `func _ready() -> void`
       - `func cancel(id: String) -> void`
       - `func is_busy() -> bool`
@@ -3674,8 +3569,8 @@ Root: `SpaceGame`
       - `func _sort_queue() -> void`
       - `func _priority_name(p: int) -> String`
       - `func _log(msg: String) -> void`
-    - 📄 [PlayerInteractionQueue.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/PlayerInteractionQueue.gd.uid)
-    - 📄 [PlayerShip.gd](file:///C:/CodingProjects/SpaceGame/scripts/PlayerShip.gd)
+    - 📄 [PlayerInteractionQueue.gd.uid](file:///D:/CodingProjects/spacegame/scripts/PlayerInteractionQueue.gd.uid)
+    - 📄 [PlayerShip.gd](file:///D:/CodingProjects/spacegame/scripts/PlayerShip.gd)
       - `func _ready()`
       - `func _create_mining_tractor_laser() -> MeshInstance3D`
       - `func _configure_mining_laser_material() -> void`
@@ -3781,13 +3676,13 @@ Root: `SpaceGame`
       - `func _abort_salvage(reason: String) -> void`
       - `func _end_salvage() -> void`
       - `func _update_drone_colors()`
-    - 📄 [PlayerShip.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/PlayerShip.gd.uid)
-    - 📄 [Projectile.gd](file:///C:/CodingProjects/SpaceGame/scripts/Projectile.gd)
+    - 📄 [PlayerShip.gd.uid](file:///D:/CodingProjects/spacegame/scripts/PlayerShip.gd.uid)
+    - 📄 [Projectile.gd](file:///D:/CodingProjects/spacegame/scripts/Projectile.gd)
       - `func _ready()`
       - `func _physics_process(delta: float)`
       - `func _on_body_entered(body: Node)`
-    - 📄 [Projectile.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/Projectile.gd.uid)
-    - 📄 [QuestManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/QuestManager.gd)
+    - 📄 [Projectile.gd.uid](file:///D:/CodingProjects/spacegame/scripts/Projectile.gd.uid)
+    - 📄 [QuestManager.gd](file:///D:/CodingProjects/spacegame/scripts/QuestManager.gd)
       - `func begin_investigation_scan(mission_id: String, site_id: String) -> Dictionary`
       - `func cancel_investigation_scan() -> void`
       - `func dispatch_investigation_command(command: Dictionary) -> Dictionary`
@@ -3863,8 +3758,8 @@ Root: `SpaceGame`
       - `func get_board_cooldown_remaining(template_id: String) -> int`
       - `func capture_board_cooldowns() -> Dictionary`
       - `func restore_board_cooldowns(source: Dictionary) -> void`
-    - 📄 [QuestManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/QuestManager.gd.uid)
-    - 📄 [SpaceAnomaly.gd](file:///C:/CodingProjects/SpaceGame/scripts/SpaceAnomaly.gd)
+    - 📄 [QuestManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/QuestManager.gd.uid)
+    - 📄 [SpaceAnomaly.gd](file:///D:/CodingProjects/spacegame/scripts/SpaceAnomaly.gd)
       - `func _ready() -> void`
       - `func _build_visuals() -> void`
       - `func _pick_color() -> Color`
@@ -3882,8 +3777,8 @@ Root: `SpaceGame`
       - `func capture_state() -> Dictionary`
       - `func restore_state(state: Dictionary) -> void`
       - `func _record_persistent_state() -> void`
-    - 📄 [SpaceAnomaly.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/SpaceAnomaly.gd.uid)
-    - 📄 [Station.gd](file:///C:/CodingProjects/SpaceGame/scripts/Station.gd)
+    - 📄 [SpaceAnomaly.gd.uid](file:///D:/CodingProjects/spacegame/scripts/SpaceAnomaly.gd.uid)
+    - 📄 [Station.gd](file:///D:/CodingProjects/spacegame/scripts/Station.gd)
       - `func _ready()`
       - `func _center_model(model_root: Node3D) -> void`
       - `func _relative_transform_to(from_node: Node3D, to_ancestor: Node3D) -> Transform3D`
@@ -3896,8 +3791,8 @@ Root: `SpaceGame`
       - `func get_docking_distance() -> float`
       - `func dock_player()`
       - `func begin_dock_tractor(ship: Node3D) -> void`
-    - 📄 [Station.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/Station.gd.uid)
-    - 📄 [TTSInterface.gd](file:///C:/CodingProjects/SpaceGame/scripts/TTSInterface.gd)
+    - 📄 [Station.gd.uid](file:///D:/CodingProjects/spacegame/scripts/Station.gd.uid)
+    - 📄 [TTSInterface.gd](file:///D:/CodingProjects/spacegame/scripts/TTSInterface.gd)
       - `func start_interaction(interaction_name: String)`
       - `func _ready()`
       - `func _schedule_tts_heartbeat() -> void`
@@ -3927,8 +3822,8 @@ Root: `SpaceGame`
       - `func _resolve_python_executable(candidate: String) -> String`
       - `func get_voice_for_faction(faction: String) -> String`
       - `func _on_audio_player_finished()`
-    - 📄 [TTSInterface.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/TTSInterface.gd.uid)
-    - 📄 [TestSystem.gd](file:///C:/CodingProjects/SpaceGame/scripts/TestSystem.gd)
+    - 📄 [TTSInterface.gd.uid](file:///D:/CodingProjects/spacegame/scripts/TTSInterface.gd.uid)
+    - 📄 [TestSystem.gd](file:///D:/CodingProjects/spacegame/scripts/TestSystem.gd)
       - `func _ready() -> void`
       - `func _generate_system() -> void`
       - `func _create_planet(spec: Dictionary) -> Node3D`
@@ -3937,8 +3832,8 @@ Root: `SpaceGame`
       - `func _jittered_position(base: Vector3, amount: float) -> Vector3`
       - `func get_generation_seed() -> int`
       - `func _refresh_overview() -> void`
-    - 📄 [TestSystem.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/TestSystem.gd.uid)
-    - 📄 [UIManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/UIManager.gd)
+    - 📄 [TestSystem.gd.uid](file:///D:/CodingProjects/spacegame/scripts/TestSystem.gd.uid)
+    - 📄 [UIManager.gd](file:///D:/CodingProjects/spacegame/scripts/UIManager.gd)
       - `func _ready()`
       - `func _complete_offline_loading_for_tests() -> void`
       - `func _on_startup_load_completed(save_loaded: bool) -> void`
@@ -4380,18 +4275,18 @@ Root: `SpaceGame`
       - `func _format_ore_bank_max() -> String`
       - `func _on_su_slot_pressed(slot: String) -> void`
       - `func _attempt_upgrade(slot: String, path: String)`
-    - 📄 [UIManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/UIManager.gd.uid)
-    - 📄 [WarpExitBubble.gd](file:///C:/CodingProjects/SpaceGame/scripts/WarpExitBubble.gd)
+    - 📄 [UIManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/UIManager.gd.uid)
+    - 📄 [WarpExitBubble.gd](file:///D:/CodingProjects/spacegame/scripts/WarpExitBubble.gd)
       - `func _ready() -> void`
-    - 📄 [WarpExitBubble.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/WarpExitBubble.gd.uid)
-    - 📄 [Wreckage.gd](file:///C:/CodingProjects/SpaceGame/scripts/Wreckage.gd)
+    - 📄 [WarpExitBubble.gd.uid](file:///D:/CodingProjects/spacegame/scripts/WarpExitBubble.gd.uid)
+    - 📄 [Wreckage.gd](file:///D:/CodingProjects/spacegame/scripts/Wreckage.gd)
       - `func initialize(original_hull: Node3D)`
       - `func _apply_wrecked_material(node: Node)`
       - `func _physics_process(delta: float)`
       - `func _exit_tree()`
-    - 📄 [Wreckage.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/Wreckage.gd.uid)
+    - 📄 [Wreckage.gd.uid](file:///D:/CodingProjects/spacegame/scripts/Wreckage.gd.uid)
     - 📂 **ai/**
-      - 📄 [ChapterNarrativeDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/ChapterNarrativeDirector.gd)
+      - 📄 [ChapterNarrativeDirector.gd](file:///D:/CodingProjects/spacegame/scripts/ai/ChapterNarrativeDirector.gd)
         - 🏛️ **global class ChapterNarrativeDirector**
           - `static func _append_block(lines: Array[String], label: String, body: String) -> void`
           - `static func _append_json_block(lines: Array[String], label: String, value: Variant) -> void`
@@ -4403,8 +4298,8 @@ Root: `SpaceGame`
           - `static func _array_or_empty(value: Variant) -> Array`
           - `static func _default_opposing_force_dossier() -> Dictionary`
           - `static func _normalized_opposing_force_dossier(value: Variant) -> Dictionary`
-      - 📄 [ChapterNarrativeDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/ChapterNarrativeDirector.gd.uid)
-      - 📄 [ContextBlockBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/ContextBlockBuilder.gd)
+      - 📄 [ChapterNarrativeDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/ChapterNarrativeDirector.gd.uid)
+      - 📄 [ContextBlockBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/ai/ContextBlockBuilder.gd)
         - 🏛️ **global class ContextBlockBuilder**
           - `static func story_state_public_block(story_state: Dictionary) -> String`
           - `static func mission_offer_block(story_state: Dictionary) -> String`
@@ -4414,14 +4309,14 @@ Root: `SpaceGame`
           - `static func nova_block(story_state: Dictionary) -> String`
           - `static func kaelen_block(story_state: Dictionary) -> String`
           - `static func director_block(story_state: Dictionary) -> String`
-      - 📄 [ContextBlockBuilder.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/ContextBlockBuilder.gd.uid)
-      - 📄 [LocalModelGateway.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/LocalModelGateway.gd)
+      - 📄 [ContextBlockBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/ContextBlockBuilder.gd.uid)
+      - 📄 [LocalModelGateway.gd](file:///D:/CodingProjects/spacegame/scripts/ai/LocalModelGateway.gd)
         - 🏛️ **global class LocalModelGateway**
           - `static func profile_for_capability(capability: String) -> String`
           - `static func request_timeout(capability: String) -> float`
           - `static func diagnostics_context(capability: String, selected_model: String) -> Dictionary`
-      - 📄 [LocalModelGateway.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/LocalModelGateway.gd.uid)
-      - 📄 [NarrativeDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/NarrativeDirector.gd)
+      - 📄 [LocalModelGateway.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/LocalModelGateway.gd.uid)
+      - 📄 [NarrativeDirector.gd](file:///D:/CodingProjects/spacegame/scripts/ai/NarrativeDirector.gd)
         - 🏛️ **global class NarrativeDirector**
           - `static func _campaign_bible_label_protocol_lines() -> Array`
           - `static func validation_correction_notes(validation: ValidationResult) -> String`
@@ -4459,8 +4354,8 @@ Root: `SpaceGame`
           - `static func _is_word_char(c: String) -> bool`
           - `static func _collect_strings(value: Variant, out: Array) -> void`
           - `static func _failure(reason: String, validation: ValidationResult) -> Dictionary`
-      - 📄 [NarrativeDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/NarrativeDirector.gd.uid)
-      - 📄 [Nova.gd](file:///C:/CodingProjects/SpaceGame/scripts/ai/Nova.gd)
+      - 📄 [NarrativeDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/NarrativeDirector.gd.uid)
+      - 📄 [Nova.gd](file:///D:/CodingProjects/spacegame/scripts/ai/Nova.gd)
         - `static func frame_index_for(expression: String) -> int`
         - `static func region_for_frame(index: int, tex_width: float, tex_height: float) -> Rect2`
         - `static func expression_for_event(event_kind: String) -> String`
@@ -4503,13 +4398,13 @@ Root: `SpaceGame`
         - `func _on_action_impact(target: Node, _pos: Vector3, _damage: float, lethal: bool, _blocked: bool, _crit: bool) -> void`
         - `func on_hull_critical() -> void`
         - `func on_system_arrived() -> void`
-      - 📄 [Nova.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ai/Nova.gd.uid)
+      - 📄 [Nova.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/Nova.gd.uid)
     - 📂 **combat/**
-      - 📄 [CombatAction.gd](file:///C:/CodingProjects/SpaceGame/scripts/combat/CombatAction.gd)
+      - 📄 [CombatAction.gd](file:///D:/CodingProjects/spacegame/scripts/combat/CombatAction.gd)
         - 🏛️ **global class CombatAction**
           - `static func make(type: Type, params: Dictionary = {}) -> Dictionary`
-      - 📄 [CombatAction.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/combat/CombatAction.gd.uid)
-      - 📄 [CombatManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/combat/CombatManager.gd)
+      - 📄 [CombatAction.gd.uid](file:///D:/CodingProjects/spacegame/scripts/combat/CombatAction.gd.uid)
+      - 📄 [CombatManager.gd](file:///D:/CodingProjects/spacegame/scripts/combat/CombatManager.gd)
         - `func _sfx(key: String, world_pos: Variant = null, db: float = 0.0) -> void`
         - `func _ready() -> void`
         - `func _build_and_cache_taunts() -> void`
@@ -4587,8 +4482,8 @@ Root: `SpaceGame`
         - `func _combat_voice_on() -> bool`
         - `func _play_kaelen_line(key: String) -> void`
         - `func play_player_reply() -> void`
-      - 📄 [CombatManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/combat/CombatManager.gd.uid)
-      - 📄 [TauntBag.gd](file:///C:/CodingProjects/SpaceGame/scripts/combat/TauntBag.gd)
+      - 📄 [CombatManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/combat/CombatManager.gd.uid)
+      - 📄 [TauntBag.gd](file:///D:/CodingProjects/spacegame/scripts/combat/TauntBag.gd)
         - 🏛️ **global class TauntBag**
           - `func set_rng(rng: RandomNumberGenerator) -> void`
           - `func _next_seed() -> int`
@@ -4601,8 +4496,8 @@ Root: `SpaceGame`
           - `func remaining() -> int`
           - `func to_dict() -> Dictionary`
           - `static func from_dict(data: Dictionary, pool_size: int) -> RefCounted`
-      - 📄 [TauntBag.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/combat/TauntBag.gd.uid)
-      - 📄 [TauntCause.gd](file:///C:/CodingProjects/SpaceGame/scripts/combat/TauntCause.gd)
+      - 📄 [TauntBag.gd.uid](file:///D:/CodingProjects/spacegame/scripts/combat/TauntBag.gd.uid)
+      - 📄 [TauntCause.gd](file:///D:/CodingProjects/spacegame/scripts/combat/TauntCause.gd)
         - 🏛️ **global class TauntCause**
           - `static func is_valid(cause: String) -> bool`
           - `static func is_player_initiated(cause: String) -> bool`
@@ -4613,9 +4508,9 @@ Root: `SpaceGame`
           - `static func _ensure_lines_loaded() -> void`
           - `static func reload_lines() -> void`
           - `static func delivery_for(text: String) -> Dictionary`
-      - 📄 [TauntCause.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/combat/TauntCause.gd.uid)
+      - 📄 [TauntCause.gd.uid](file:///D:/CodingProjects/spacegame/scripts/combat/TauntCause.gd.uid)
     - 📂 **diagnostics/**
-      - 📄 [GenerationDiagnostics.gd](file:///C:/CodingProjects/SpaceGame/scripts/diagnostics/GenerationDiagnostics.gd)
+      - 📄 [GenerationDiagnostics.gd](file:///D:/CodingProjects/spacegame/scripts/diagnostics/GenerationDiagnostics.gd)
         - 🏛️ **global class GenerationDiagnosticsService**
           - `func reset() -> void`
           - `func summary() -> Dictionary`
@@ -4643,14 +4538,14 @@ Root: `SpaceGame`
           - `func _ensure_parent_dir(path: String) -> void`
           - `func _format_counts(counts: Dictionary) -> String`
           - `func _format_context(context: Variant) -> String`
-      - 📄 [GenerationDiagnostics.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/diagnostics/GenerationDiagnostics.gd.uid)
-      - 📄 [RuntimeTrace.gd](file:///C:/CodingProjects/SpaceGame/scripts/diagnostics/RuntimeTrace.gd)
+      - 📄 [GenerationDiagnostics.gd.uid](file:///D:/CodingProjects/spacegame/scripts/diagnostics/GenerationDiagnostics.gd.uid)
+      - 📄 [RuntimeTrace.gd](file:///D:/CodingProjects/spacegame/scripts/diagnostics/RuntimeTrace.gd)
         - 🏛️ **global class RuntimeTrace**
           - `static func begin_session() -> void`
           - `static func absolute_path() -> String`
-      - 📄 [RuntimeTrace.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/diagnostics/RuntimeTrace.gd.uid)
+      - 📄 [RuntimeTrace.gd.uid](file:///D:/CodingProjects/spacegame/scripts/diagnostics/RuntimeTrace.gd.uid)
     - 📂 **domain/**
-      - 📄 [BakedAudioIndex.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/BakedAudioIndex.gd)
+      - 📄 [BakedAudioIndex.gd](file:///D:/CodingProjects/spacegame/scripts/domain/BakedAudioIndex.gd)
         - 🏛️ **global class BakedAudioIndex**
           - `static func is_english(locale: String) -> bool`
           - `static func cast_character_for_voice(voice_id: String, kaelen_voice_id: String) -> String`
@@ -4658,8 +4553,8 @@ Root: `SpaceGame`
           - `static func orpheus_voice_for_lead(lead_voice: String) -> String`
           - `static func cast_key(character: String, clean_text: String) -> String`
           - `static func orpheus_key(orpheus_voice: String, clean_text: String) -> String`
-      - 📄 [BakedAudioIndex.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/BakedAudioIndex.gd.uid)
-      - 📄 [CollectionContract.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/CollectionContract.gd)
+      - 📄 [BakedAudioIndex.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/BakedAudioIndex.gd.uid)
+      - 📄 [CollectionContract.gd](file:///D:/CodingProjects/spacegame/scripts/domain/CollectionContract.gd)
         - `static func is_supported_need(need: String) -> bool`
         - `static func unsupported_reason(need: String) -> String`
         - `static func compile(source: Dictionary, bindings: Dictionary) -> Dictionary`
@@ -4667,49 +4562,52 @@ Root: `SpaceGame`
         - `static func validate(value: Dictionary) -> ValidationResult`
         - `static func _contract_id(source: Dictionary, action: String, item: String) -> String`
         - `static func _withheld(reason: String, missing_binding: String) -> Dictionary`
-      - 📄 [CollectionOpportunityCompiler.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/CollectionOpportunityCompiler.gd)
+      - 📄 [CollectionContract.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/CollectionContract.gd.uid)
+      - 📄 [CollectionOpportunityCompiler.gd](file:///D:/CodingProjects/spacegame/scripts/domain/CollectionOpportunityCompiler.gd)
         - `static func compile_opportunities(context: Dictionary) -> Dictionary`
         - `static func _bind(source: Dictionary, need: String, stations: Dictionary, context: Dictionary) -> Dictionary`
         - `static func _local_recipient(station: Dictionary) -> String`
         - `static func _cause_id(campaign_id: String, system_id: String, desire_id: String) -> String`
         - `static func _missing(reason: String, binding: String) -> Dictionary`
         - `static func _withheld(desire_id: String, need: String, reason: String, binding: String) -> Dictionary`
-      - 📄 [CollectionPostingBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/CollectionPostingBuilder.gd)
+      - 📄 [CollectionOpportunityCompiler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/CollectionOpportunityCompiler.gd.uid)
+      - 📄 [CollectionPostingBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/domain/CollectionPostingBuilder.gd)
         - `static func build(opportunity: Dictionary, context: Dictionary) -> Dictionary`
         - `static func template_id(contract: Dictionary) -> String`
         - `static func _item_id(item_name: String) -> String`
         - `static func _title(contract: Dictionary, requester: Dictionary) -> String`
         - `static func _withheld(reason: String, missing_binding: String) -> Dictionary`
-      - 📄 [DomainDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainDefinition.gd)
+      - 📄 [CollectionPostingBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/CollectionPostingBuilder.gd.uid)
+      - 📄 [DomainDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/DomainDefinition.gd)
         - 🏛️ **global class DomainDefinition**
           - `func to_common_dict() -> Dictionary`
-      - 📄 [DomainDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainDefinition.gd.uid)
-      - 📄 [DomainId.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainId.gd)
+      - 📄 [DomainDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/DomainDefinition.gd.uid)
+      - 📄 [DomainId.gd](file:///D:/CodingProjects/spacegame/scripts/domain/DomainId.gd)
         - 🏛️ **global class DomainId**
           - `static func canonicalize(value: Variant) -> StringName`
           - `static func is_valid(value: Variant, expected_namespace: String = "") -> bool`
           - `static func namespace_of(value: Variant) -> String`
           - `static func is_generated(value: Variant) -> bool`
           - `static func _get_authored_regex() -> RegEx`
-      - 📄 [DomainId.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainId.gd.uid)
-      - 📄 [DomainJson.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainJson.gd)
+      - 📄 [DomainId.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/DomainId.gd.uid)
+      - 📄 [DomainJson.gd](file:///D:/CodingProjects/spacegame/scripts/domain/DomainJson.gd)
         - 🏛️ **global class DomainJson**
           - `static func parse_object(text: String, source: String = "<memory>") -> Dictionary`
           - `static func read_object(path: String) -> Dictionary`
           - `static func stringify(data: Dictionary, pretty: bool = true) -> String`
           - `static func deep_copy(data: Dictionary) -> Dictionary`
-      - 📄 [DomainJson.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/DomainJson.gd.uid)
-      - 📄 [FactionDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/FactionDefinition.gd)
+      - 📄 [DomainJson.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/DomainJson.gd.uid)
+      - 📄 [FactionDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/FactionDefinition.gd)
         - 🏛️ **global class FactionDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
           - `static func _optional_id(value: Variant) -> StringName`
           - `static func _color(value: Variant, result: ValidationResult, path: String) -> Color`
-      - 📄 [FactionDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/FactionDefinition.gd.uid)
-      - 📄 [GateDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/GateDefinition.gd)
+      - 📄 [FactionDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/FactionDefinition.gd.uid)
+      - 📄 [GateDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/GateDefinition.gd)
         - 🏛️ **global class GateDefinition**
           - `func to_dict() -> Dictionary`
-      - 📄 [GateDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/GateDefinition.gd.uid)
-      - 📄 [InvestigationBoardLifecycle.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationBoardLifecycle.gd)
+      - 📄 [GateDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/GateDefinition.gd.uid)
+      - 📄 [InvestigationBoardLifecycle.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationBoardLifecycle.gd)
         - `static func empty_state(seed_value: int) -> Dictionary`
         - `static func prepare(saved: Dictionary, context: Dictionary) -> Dictionary`
         - `static func posting_kind(entry: Dictionary) -> String`
@@ -4728,18 +4626,20 @@ Root: `SpaceGame`
         - `static func validate(value: Dictionary) -> ValidationResult`
         - `static func _failure(reason: String) -> Dictionary`
         - `static func _persistable(value: Dictionary) -> Dictionary`
-      - 📄 [InvestigationOfferBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationOfferBuilder.gd)
+      - 📄 [InvestigationBoardLifecycle.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationBoardLifecycle.gd.uid)
+      - 📄 [InvestigationOfferBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationOfferBuilder.gd)
         - 🏛️ **global class InvestigationOfferBuilder**
           - `static func _is_forged(recipe: String, sites: Array) -> bool`
-      - 📄 [InvestigationOfferBuilder.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationOfferBuilder.gd.uid)
-      - 📄 [InvestigationRuntime.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationRuntime.gd)
+      - 📄 [InvestigationOfferBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationOfferBuilder.gd.uid)
+      - 📄 [InvestigationRuntime.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationRuntime.gd)
         - `func reset() -> void`
         - `func _mission(owner: Node, id: String)`
         - `func begin_scan(owner: Node, mission_id: String, site_id: String) -> Dictionary`
         - `func tick(owner: Node, delta: float) -> Dictionary`
         - `func _pose(owner: Node, data: Dictionary, site: Dictionary) -> Dictionary`
         - `func dispatch(owner: Node, command: Dictionary) -> Dictionary`
-      - 📄 [InvestigationSelector.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationSelector.gd)
+      - 📄 [InvestigationRuntime.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationRuntime.gd.uid)
+      - 📄 [InvestigationSelector.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationSelector.gd)
         - 🏛️ **global class InvestigationSelector**
           - `static func empty_state(campaign_seed: int = 0) -> Dictionary`
           - `static func signature_for(eligible_shape_ids: Array) -> String`
@@ -4756,20 +4656,22 @@ Root: `SpaceGame`
           - `static func _pool(eligible_shape_ids: Array) -> Array`
           - `static func _rng_for(state: Dictionary) -> RandomNumberGenerator`
           - `static func _seed_for(state: Dictionary, shape_id: String) -> int`
-      - 📄 [InvestigationSelector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationSelector.gd.uid)
-      - 📄 [InvestigationSitePlanner.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationSitePlanner.gd)
+      - 📄 [InvestigationSelector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationSelector.gd.uid)
+      - 📄 [InvestigationSitePlanner.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationSitePlanner.gd)
         - 🏛️ **global class InvestigationSitePlanner**
           - `static func _site(role: String, position: Vector3) -> Dictionary`
           - `static func _offset(rng: RandomNumberGenerator, min_d: float, max_d: float) -> Vector3`
           - `static func _point_of(raw: Variant) -> Vector3`
-      - 📄 [InvestigationSitePlanner.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationSitePlanner.gd.uid)
-      - 📄 [InvestigationStateValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationStateValidator.gd)
+      - 📄 [InvestigationSitePlanner.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationSitePlanner.gd.uid)
+      - 📄 [InvestigationStateValidator.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationStateValidator.gd)
         - `static func validate(data: Dictionary) -> RefCounted`
         - `static func _position(value: Variant) -> bool`
-      - 📄 [InvestigationWorldPlacement.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationWorldPlacement.gd)
+      - 📄 [InvestigationStateValidator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationStateValidator.gd.uid)
+      - 📄 [InvestigationWorldPlacement.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationWorldPlacement.gd)
         - `static func capture(owner: Node) -> Dictionary`
         - `static func check_saved_sites(data: Dictionary, snapshot: Dictionary) -> Dictionary`
-      - 📄 [InvestigationWorldRuntime.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/InvestigationWorldRuntime.gd)
+      - 📄 [InvestigationWorldPlacement.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationWorldPlacement.gd.uid)
+      - 📄 [InvestigationWorldRuntime.gd](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationWorldRuntime.gd)
         - `func reset(owner: Node) -> void`
         - `func reconcile(owner: Node) -> bool`
         - `func target(mission_id: String, site_id: String) -> Node3D`
@@ -4778,7 +4680,8 @@ Root: `SpaceGame`
         - `func _create_marker(record: Dictionary) -> Node3D`
         - `static func _vector(p: Array) -> Vector3`
         - `static func _key(mission_id: String, site_id: String) -> String`
-      - 📄 [MissionAdapter.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionAdapter.gd)
+      - 📄 [InvestigationWorldRuntime.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/InvestigationWorldRuntime.gd.uid)
+      - 📄 [MissionAdapter.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionAdapter.gd)
         - 🏛️ **global class MissionAdapter**
           - `static func validate_active_state(source: Dictionary) -> ValidationResult`
           - `static func _display_faction_key(faction_key: String) -> String`
@@ -4786,8 +4689,8 @@ Root: `SpaceGame`
           - `static func _choice_id_from_source(choice: Dictionary, index: int) -> String`
           - `static func _choices_match(left: Dictionary, right: Dictionary) -> bool`
           - `static func _legacy_objective(source: Dictionary) -> Dictionary`
-      - 📄 [MissionAdapter.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionAdapter.gd.uid)
-      - 📄 [MissionCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionCapability.gd)
+      - 📄 [MissionAdapter.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionAdapter.gd.uid)
+      - 📄 [MissionCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionCapability.gd)
         - 🏛️ **global class MissionCapability**
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
@@ -4797,16 +4700,16 @@ Root: `SpaceGame`
           - `func on_cleanup(data: Dictionary) -> Dictionary`
           - `func faction_display(data: Dictionary, fallback_key: String = "hostile") -> String`
           - `func _display_faction_key(faction_key: String) -> String`
-      - 📄 [MissionCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionCapability.gd.uid)
-      - 📄 [MissionCapabilityRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionCapabilityRegistry.gd)
+      - 📄 [MissionCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionCapability.gd.uid)
+      - 📄 [MissionCapabilityRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionCapabilityRegistry.gd)
         - 🏛️ **global class MissionCapabilityRegistry**
           - `static func _ensure_defaults() -> void`
           - `static func register(capability: MissionCapability) -> void`
           - `static func get_for_type(objective_type: String) -> MissionCapability`
           - `static func has_type(objective_type: String) -> bool`
           - `static func reset() -> void`
-      - 📄 [MissionCapabilityRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionCapabilityRegistry.gd.uid)
-      - 📄 [MissionCollection.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionCollection.gd)
+      - 📄 [MissionCapabilityRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionCapabilityRegistry.gd.uid)
+      - 📄 [MissionCollection.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionCollection.gd)
         - 🏛️ **global class MissionCollection**
           - `func add(instance) -> bool`
           - `func remove(runtime_id: String) -> bool`
@@ -4822,19 +4725,19 @@ Root: `SpaceGame`
           - `func clear() -> void`
           - `func to_array() -> Array`
           - `static func from_array(source: Array) -> MissionCollection`
-      - 📄 [MissionCollection.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionCollection.gd.uid)
-      - 📄 [MissionConsequenceDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionConsequenceDefinition.gd)
+      - 📄 [MissionCollection.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionCollection.gd.uid)
+      - 📄 [MissionConsequenceDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionConsequenceDefinition.gd)
         - 🏛️ **global class MissionConsequenceDefinition**
           - `func load_from_choice(choice: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
-      - 📄 [MissionConsequenceDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionConsequenceDefinition.gd.uid)
-      - 📄 [MissionDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionDefinition.gd)
+      - 📄 [MissionConsequenceDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionConsequenceDefinition.gd.uid)
+      - 📄 [MissionDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionDefinition.gd)
         - 🏛️ **global class MissionDefinition**
           - `func load_from_offer(source: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
           - `static func derive_offer_id(source: Dictionary) -> String`
-      - 📄 [MissionDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionDefinition.gd.uid)
-      - 📄 [MissionInstance.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionInstance.gd)
+      - 📄 [MissionDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionDefinition.gd.uid)
+      - 📄 [MissionInstance.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionInstance.gd)
         - 🏛️ **global class MissionInstance**
           - `func transition_to(new_state: State) -> bool`
           - `func is_terminal() -> bool`
@@ -4847,57 +4750,58 @@ Root: `SpaceGame`
           - `static func create_active(state_dict: Dictionary) -> MissionInstance`
           - `func get_field(key: String, default: Variant = null) -> Variant`
           - `static func _detect_lane(source: Dictionary) -> SourceLane`
-      - 📄 [MissionInstance.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionInstance.gd.uid)
-      - 📄 [MissionObjectiveDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionObjectiveDefinition.gd)
+      - 📄 [MissionInstance.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionInstance.gd.uid)
+      - 📄 [MissionObjectiveDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionObjectiveDefinition.gd)
         - 🏛️ **global class MissionObjectiveDefinition**
           - `func load_from_dict(source: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
-      - 📄 [MissionObjectiveDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionObjectiveDefinition.gd.uid)
-      - 📄 [MissionOutcome.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionOutcome.gd)
+      - 📄 [MissionObjectiveDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionObjectiveDefinition.gd.uid)
+      - 📄 [MissionOutcome.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionOutcome.gd)
         - `static func build(quest: Dictionary, terminal_state: String, credits_paid: int, at_minute: int, campaign_id: String = "") -> Dictionary`
         - `static func _is_tutorial_contract(quest: Dictionary) -> bool`
         - `static func _both_sites_scanned(investigation: Dictionary) -> bool`
         - `static func _effects_for(outcome: Dictionary) -> Array`
         - `static func _effect(outcome: Dictionary, kind: String) -> Dictionary`
         - `static func validate(value: Dictionary) -> ValidationResult`
-      - 📄 [MissionRewardDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionRewardDefinition.gd)
+      - 📄 [MissionOutcome.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionOutcome.gd.uid)
+      - 📄 [MissionRewardDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionRewardDefinition.gd)
         - 🏛️ **global class MissionRewardDefinition**
           - `func load_from_objective(source: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
-      - 📄 [MissionRewardDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionRewardDefinition.gd.uid)
-      - 📄 [MissionShapeDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionShapeDefinition.gd)
+      - 📄 [MissionRewardDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionRewardDefinition.gd.uid)
+      - 📄 [MissionShapeDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionShapeDefinition.gd)
         - 🏛️ **global class MissionShapeDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
           - `func _unique_count(values: Array[String]) -> int`
-      - 📄 [MissionShapeDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionShapeDefinition.gd.uid)
-      - 📄 [MissionShapeRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionShapeRegistry.gd)
+      - 📄 [MissionShapeDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionShapeDefinition.gd.uid)
+      - 📄 [MissionShapeRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionShapeRegistry.gd)
         - 🏛️ **global class MissionShapeRegistry**
           - `func load_from_path(path: String = CATALOG_PATH) -> Variant`
           - `func load_from_dict(data: Dictionary, result: Variant = null) -> Variant`
           - `func get_shape(id: Variant) -> Variant`
           - `func shape_for_recipe(recipe: String) -> Variant`
           - `func eligible_shapes(story_flags: Dictionary) -> Array`
-      - 📄 [MissionShapeRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionShapeRegistry.gd.uid)
-      - 📄 [MissionState.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionState.gd)
+      - 📄 [MissionShapeRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionShapeRegistry.gd.uid)
+      - 📄 [MissionState.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionState.gd)
         - 🏛️ **global class MissionState**
           - `func load_from_dict(source: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
-      - 📄 [MissionState.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionState.gd.uid)
-      - 📄 [MissionTemplate.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTemplate.gd)
+      - 📄 [MissionState.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionState.gd.uid)
+      - 📄 [MissionTemplate.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTemplate.gd)
         - 🏛️ **global class MissionTemplate**
           - `static func create(config: Dictionary) -> MissionTemplate`
           - `func get_field_limit(field: String) -> int`
           - `func has_rule(rule: String) -> bool`
-      - 📄 [MissionTemplate.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTemplate.gd.uid)
-      - 📄 [MissionTemplateRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTemplateRegistry.gd)
+      - 📄 [MissionTemplate.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTemplate.gd.uid)
+      - 📄 [MissionTemplateRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTemplateRegistry.gd)
         - 🏛️ **global class MissionTemplateRegistry**
           - `static func get_template(template_id: String) -> MissionTemplate`
           - `static func has_template(template_id: String) -> bool`
           - `static func _ensure_loaded() -> void`
           - `static func _register_board_templates() -> void`
           - `static func _register_agent_templates() -> void`
-      - 📄 [MissionTemplateRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTemplateRegistry.gd.uid)
-      - 📄 [MissionTextGenerator.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTextGenerator.gd)
+      - 📄 [MissionTemplateRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTemplateRegistry.gd.uid)
+      - 📄 [MissionTextGenerator.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTextGenerator.gd)
         - 🏛️ **global class MissionTextGenerator**
           - `static func _diagnostics() -> Node`
           - `static func _primary_job_placeholder(template: MissionTemplate) -> String`
@@ -4906,13 +4810,13 @@ Root: `SpaceGame`
           - `static func _render(text: String, offer: Dictionary) -> String`
           - `static func _facts_for_prompt(offer: Dictionary) -> String`
           - `static func _invalid(reason: String) -> Dictionary`
-      - 📄 [MissionTextGenerator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTextGenerator.gd.uid)
-      - 📄 [MissionTimingDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTimingDefinition.gd)
+      - 📄 [MissionTextGenerator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTextGenerator.gd.uid)
+      - 📄 [MissionTimingDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTimingDefinition.gd)
         - 🏛️ **global class MissionTimingDefinition**
           - `func load_from_dict(source: Dictionary) -> ValidationResult`
           - `func to_dict() -> Dictionary`
-      - 📄 [MissionTimingDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/MissionTimingDefinition.gd.uid)
-      - 📄 [NarrativeMetadata.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/NarrativeMetadata.gd)
+      - 📄 [MissionTimingDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/MissionTimingDefinition.gd.uid)
+      - 📄 [NarrativeMetadata.gd](file:///D:/CodingProjects/spacegame/scripts/domain/NarrativeMetadata.gd)
         - 🏛️ **global class NarrativeMetadata**
           - `static func empty() -> Dictionary`
           - `static func is_allowed_field(field: String) -> bool`
@@ -4922,18 +4826,18 @@ Root: `SpaceGame`
           - `static func validate_metadata(metadata: Dictionary, path_prefix: String = "narrative_metadata") -> ValidationResult`
           - `static func _merge_allowed_fields(target: Dictionary, source: Dictionary) -> void`
           - `static func _get_id_regex() -> RegEx`
-      - 📄 [NarrativeMetadata.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/NarrativeMetadata.gd.uid)
-      - 📄 [NpcDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/NpcDefinition.gd)
+      - 📄 [NarrativeMetadata.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/NarrativeMetadata.gd.uid)
+      - 📄 [NpcDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/NpcDefinition.gd)
         - 🏛️ **global class NpcDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
           - `static func _optional_id(value: Variant) -> StringName`
-      - 📄 [NpcDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/NpcDefinition.gd.uid)
-      - 📄 [PortraitDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/PortraitDefinition.gd)
+      - 📄 [NpcDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/NpcDefinition.gd.uid)
+      - 📄 [PortraitDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/PortraitDefinition.gd)
         - 🏛️ **global class PortraitDefinition**
           - `func load_from_dict(data: Dictionary, owner_id: StringName, path: String) -> ValidationResult`
           - `func texture() -> AtlasTexture`
-      - 📄 [PortraitDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/PortraitDefinition.gd.uid)
-      - 📄 [PublicBoardOfferBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/PublicBoardOfferBuilder.gd)
+      - 📄 [PortraitDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/PortraitDefinition.gd.uid)
+      - 📄 [PublicBoardOfferBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/domain/PublicBoardOfferBuilder.gd)
         - 🏛️ **global class PublicBoardOfferBuilder**
           - `static func _apply_cooldowns(offers: Array[Dictionary]) -> void`
           - `static func _apply_story_intent_priority(offers: Array[Dictionary]) -> void`
@@ -4968,14 +4872,14 @@ Root: `SpaceGame`
           - `static func _global_state() -> Node`
           - `static func _story_faction_display(faction_name: String) -> String`
           - `static func _objective_summary(objective: Dictionary) -> String`
-      - 📄 [PublicBoardOfferBuilder.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/PublicBoardOfferBuilder.gd.uid)
-      - 📄 [PublicBoardTextGenerator.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/PublicBoardTextGenerator.gd)
+      - 📄 [PublicBoardOfferBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/PublicBoardOfferBuilder.gd.uid)
+      - 📄 [PublicBoardTextGenerator.gd](file:///D:/CodingProjects/spacegame/scripts/domain/PublicBoardTextGenerator.gd)
         - 🏛️ **global class PublicBoardTextGenerator**
           - `static func fallback_payload(offer: Dictionary, salt: int = 0) -> Dictionary`
           - `static func validate_payload(offer: Dictionary, payload: Dictionary) -> Dictionary`
           - `static func fallback_offer(offer: Dictionary, salt: int = 0) -> Dictionary`
-      - 📄 [PublicBoardTextGenerator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/PublicBoardTextGenerator.gd.uid)
-      - 📄 [QuestCausalContract.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/QuestCausalContract.gd)
+      - 📄 [PublicBoardTextGenerator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/PublicBoardTextGenerator.gd.uid)
+      - 📄 [QuestCausalContract.gd](file:///D:/CodingProjects/spacegame/scripts/domain/QuestCausalContract.gd)
         - 🏛️ **global class QuestCausalContract**
           - `static func empty() -> Dictionary`
           - `static func is_present(source: Variant) -> bool`
@@ -4996,7 +4900,8 @@ Root: `SpaceGame`
           - `static func private_facts(source: Variant) -> Dictionary`
           - `static func _facts_with_visibility(source: Variant, visibility: String) -> Dictionary`
           - `static func fact_text(source: Variant, fact_id: String) -> String`
-      - 📄 [QuestCausalContractCompiler.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/QuestCausalContractCompiler.gd)
+      - 📄 [QuestCausalContract.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/QuestCausalContract.gd.uid)
+      - 📄 [QuestCausalContractCompiler.gd](file:///D:/CodingProjects/spacegame/scripts/domain/QuestCausalContractCompiler.gd)
         - 🏛️ **global class QuestCausalContractCompiler**
           - `static func compile(source: Dictionary) -> Dictionary`
           - `static func _contract_id(source: Dictionary, cause_id: String, objective_type: String) -> String`
@@ -5010,31 +4915,34 @@ Root: `SpaceGame`
           - `static func _semantic_tokens(desire: Dictionary, objective: Dictionary, objective_type: String) -> Dictionary`
           - `static func _evidence_pattern(recipe: String) -> String`
           - `static func _slug(value: Variant) -> String`
-      - 📄 [QuestPlausibilityValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/QuestPlausibilityValidator.gd)
+      - 📄 [QuestCausalContractCompiler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/QuestCausalContractCompiler.gd.uid)
+      - 📄 [QuestPlausibilityValidator.gd](file:///D:/CodingProjects/spacegame/scripts/domain/QuestPlausibilityValidator.gd)
         - 🏛️ **global class QuestPlausibilityValidator**
           - `static func _check_identity(contract: Dictionary, result: ValidationResult) -> void`
           - `static func _check_fact_references(contract: Dictionary, result: ValidationResult) -> void`
           - `static func _check_effects(contract: Dictionary, result: ValidationResult) -> void`
           - `static func _is_supported_effect(effect: String) -> bool`
           - `static func _check_urgency(contract: Dictionary, result: ValidationResult) -> void`
-      - 📄 [QuestWorldSnapshot.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/QuestWorldSnapshot.gd)
+      - 📄 [QuestPlausibilityValidator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/QuestPlausibilityValidator.gd.uid)
+      - 📄 [QuestWorldSnapshot.gd](file:///D:/CodingProjects/spacegame/scripts/domain/QuestWorldSnapshot.gd)
         - 🏛️ **global class QuestWorldSnapshot**
           - `static func build(destination_station_id: String = "") -> Dictionary`
           - `static func _residents_at(gs: Node, station_id: String) -> Array`
           - `static func _global_state() -> Node`
-      - 📄 [ScanHoldController.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/ScanHoldController.gd)
+      - 📄 [QuestWorldSnapshot.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/QuestWorldSnapshot.gd.uid)
+      - 📄 [ScanHoldController.gd](file:///D:/CodingProjects/spacegame/scripts/domain/ScanHoldController.gd)
         - 🏛️ **global class ScanHoldController**
           - `func _blocking_reason(distance: float, speed: float, in_combat: bool) -> String`
           - `func _report(state: String, reason: String) -> Dictionary`
           - `func _issue_token(site_id: String) -> String`
           - `func consume_token(token: String, site_id: String) -> bool`
           - `func reset() -> void`
-      - 📄 [ScanHoldController.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/ScanHoldController.gd.uid)
-      - 📄 [ShipDesignDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/ShipDesignDefinition.gd)
+      - 📄 [ScanHoldController.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/ScanHoldController.gd.uid)
+      - 📄 [ShipDesignDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/ShipDesignDefinition.gd)
         - 🏛️ **global class ShipDesignDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
-      - 📄 [ShipDesignDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/ShipDesignDefinition.gd.uid)
-      - 📄 [SiteRevealModel.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/SiteRevealModel.gd)
+      - 📄 [ShipDesignDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/ShipDesignDefinition.gd.uid)
+      - 📄 [SiteRevealModel.gd](file:///D:/CodingProjects/spacegame/scripts/domain/SiteRevealModel.gd)
         - 🏛️ **global class SiteRevealModel**
           - `static func anomaly_reveal_range() -> float`
           - `static func get_tuning(key: String) -> float`
@@ -5047,47 +4955,47 @@ Root: `SpaceGame`
           - `static func _pair_for(range_class: String) -> Dictionary`
           - `static func _hidden() -> Dictionary`
           - `static func _shown(state: String, label: String, alpha: float) -> Dictionary`
-      - 📄 [SiteRevealModel.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/SiteRevealModel.gd.uid)
-      - 📄 [SystemDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/SystemDefinition.gd)
+      - 📄 [SiteRevealModel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/SiteRevealModel.gd.uid)
+      - 📄 [SystemDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/SystemDefinition.gd)
         - 🏛️ **global class SystemDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
           - `func get_gate(gate_id: Variant) -> GateDefinition`
           - `func to_dict() -> Dictionary`
           - `func _load_gates(data: Dictionary, result: ValidationResult) -> void`
-      - 📄 [SystemDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/SystemDefinition.gd.uid)
-      - 📄 [ValidationResult.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/ValidationResult.gd)
+      - 📄 [SystemDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/SystemDefinition.gd.uid)
+      - 📄 [ValidationResult.gd](file:///D:/CodingProjects/spacegame/scripts/domain/ValidationResult.gd)
         - 🏛️ **global class ValidationResult**
           - `func is_valid() -> bool`
           - `func summary() -> String`
           - `func to_dict() -> Dictionary`
           - `static func _with_prefix(issue: Dictionary, prefix: String) -> Dictionary`
-      - 📄 [ValidationResult.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/ValidationResult.gd.uid)
-      - 📄 [VoiceProfileDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/VoiceProfileDefinition.gd)
+      - 📄 [ValidationResult.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/ValidationResult.gd.uid)
+      - 📄 [VoiceProfileDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/VoiceProfileDefinition.gd)
         - 🏛️ **global class VoiceProfileDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
-      - 📄 [VoiceProfileDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/VoiceProfileDefinition.gd.uid)
-      - 📄 [WorldIdentity.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/WorldIdentity.gd)
+      - 📄 [VoiceProfileDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/VoiceProfileDefinition.gd.uid)
+      - 📄 [WorldIdentity.gd](file:///D:/CodingProjects/spacegame/scripts/domain/WorldIdentity.gd)
         - 🏛️ **global class WorldIdentity**
           - `static func state_envelope(node: Node) -> Dictionary`
-      - 📄 [WorldIdentity.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/WorldIdentity.gd.uid)
+      - 📄 [WorldIdentity.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/WorldIdentity.gd.uid)
       - 📂 **capabilities/**
-        - 📄 [CommsReversalCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/CommsReversalCapability.gd)
+        - 📄 [CommsReversalCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/CommsReversalCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Dictionary`
           - `func format_tracker_text(data: Dictionary) -> String`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(data: Dictionary) -> Dictionary`
-        - 📄 [CommsReversalCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/CommsReversalCapability.gd.uid)
-        - 📄 [DeliverOreCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/DeliverOreCapability.gd)
+        - 📄 [CommsReversalCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/CommsReversalCapability.gd.uid)
+        - 📄 [DeliverOreCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/DeliverOreCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) -> Dictionary`
           - `func format_tracker_text(data: Dictionary) -> String`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(_data: Dictionary) -> Dictionary`
-        - 📄 [DeliverOreCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/DeliverOreCapability.gd.uid)
-        - 📄 [DeliveryCourierCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/DeliveryCourierCapability.gd)
+        - 📄 [DeliverOreCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/DeliverOreCapability.gd.uid)
+        - 📄 [DeliveryCourierCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/DeliveryCourierCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) -> Dictionary`
@@ -5095,8 +5003,8 @@ Root: `SpaceGame`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(data: Dictionary) -> Dictionary`
           - `func _global_state() -> Node`
-        - 📄 [DeliveryCourierCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/DeliveryCourierCapability.gd.uid)
-        - 📄 [InvestigateSignalCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/InvestigateSignalCapability.gd)
+        - 📄 [DeliveryCourierCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/DeliveryCourierCapability.gd.uid)
+        - 📄 [InvestigateSignalCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/InvestigateSignalCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func _state(data: Dictionary) -> Dictionary`
@@ -5111,24 +5019,24 @@ Root: `SpaceGame`
           - `func _certification_correct(state: Dictionary, branch: String) -> bool`
           - `func _outcome_tag(state: Dictionary, branch: String, payout: Array) -> String`
           - `func format_tracker_text(data: Dictionary) -> String`
-        - 📄 [InvestigateSignalCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/InvestigateSignalCapability.gd.uid)
-        - 📄 [KillShipsCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/KillShipsCapability.gd)
+        - 📄 [InvestigateSignalCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/InvestigateSignalCapability.gd.uid)
+        - 📄 [KillShipsCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/KillShipsCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Dictionary`
           - `func format_tracker_text(data: Dictionary) -> String`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(data: Dictionary) -> Dictionary`
-        - 📄 [KillShipsCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/KillShipsCapability.gd.uid)
-        - 📄 [PickupSpecialCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/PickupSpecialCapability.gd)
+        - 📄 [KillShipsCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/KillShipsCapability.gd.uid)
+        - 📄 [PickupSpecialCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/PickupSpecialCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) -> Dictionary`
           - `func format_tracker_text(data: Dictionary) -> String`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(data: Dictionary) -> Dictionary`
-        - 📄 [PickupSpecialCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/PickupSpecialCapability.gd.uid)
-        - 📄 [PurchaseDeliveryCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/PurchaseDeliveryCapability.gd)
+        - 📄 [PickupSpecialCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/PickupSpecialCapability.gd.uid)
+        - 📄 [PurchaseDeliveryCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/PurchaseDeliveryCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) -> Dictionary`
@@ -5136,17 +5044,17 @@ Root: `SpaceGame`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(_data: Dictionary) -> Dictionary`
           - `func _global_state() -> Node`
-        - 📄 [PurchaseDeliveryCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/PurchaseDeliveryCapability.gd.uid)
-        - 📄 [RecoverCombatDropCapability.gd](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/RecoverCombatDropCapability.gd)
+        - 📄 [PurchaseDeliveryCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/PurchaseDeliveryCapability.gd.uid)
+        - 📄 [RecoverCombatDropCapability.gd](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/RecoverCombatDropCapability.gd)
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
           - `func handle_event(data: Dictionary, event: String, event_data: Dictionary) -> Dictionary`
           - `func format_tracker_text(data: Dictionary) -> String`
           - `func on_complete(data: Dictionary) -> Dictionary`
           - `func on_cleanup(_data: Dictionary) -> Dictionary`
-        - 📄 [RecoverCombatDropCapability.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/domain/capabilities/RecoverCombatDropCapability.gd.uid)
+        - 📄 [RecoverCombatDropCapability.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/capabilities/RecoverCombatDropCapability.gd.uid)
     - 📂 **economy/**
-      - 📄 [BountyRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/BountyRegistry.gd)
+      - 📄 [BountyRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/economy/BountyRegistry.gd)
         - `static func shared() -> Object`
         - `static func reset() -> void`
         - `func set_bounties(bounties: Array) -> void`
@@ -5161,16 +5069,16 @@ Root: `SpaceGame`
         - `func _announcement_lines_for(active: Array) -> Array`
         - `func clear() -> void`
         - `func _cap(b: Dictionary) -> int`
-      - 📄 [BountyRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/BountyRegistry.gd.uid)
-      - 📄 [ConsumableEffects.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/ConsumableEffects.gd)
+      - 📄 [BountyRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/BountyRegistry.gd.uid)
+      - 📄 [ConsumableEffects.gd](file:///D:/CodingProjects/spacegame/scripts/economy/ConsumableEffects.gd)
         - `static func can_use(item_id: String) -> bool`
         - `static func is_usable_now(item_id: String, player: Node3D, inv, shield_cap: float) -> bool`
         - `static func salvage_block_reason(player: Node3D) -> String`
         - `static func salvage_block_reason_for_target(player: Node3D, target: Node3D) -> String`
         - `static func use(item_id: String, player: Node3D, inv, shield_cap: float) -> bool`
         - `static func _apply_effect(effect: Dictionary, player: Node3D, shield_cap: float) -> bool`
-      - 📄 [ConsumableEffects.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/ConsumableEffects.gd.uid)
-      - 📄 [FactionRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/FactionRegistry.gd)
+      - 📄 [ConsumableEffects.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/ConsumableEffects.gd.uid)
+      - 📄 [FactionRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/economy/FactionRegistry.gd)
         - `func _ready() -> void`
         - `func _load_overrides() -> void`
         - `func save_overrides() -> void`
@@ -5182,8 +5090,8 @@ Root: `SpaceGame`
         - `static func derive_damage_max(weapon_tier: int) -> float`
         - `static func derive_combat_ap(powerplant_tier: int) -> int`
         - `static func derive_max_health(hull_tier: int) -> float`
-      - 📄 [FactionRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/FactionRegistry.gd.uid)
-      - 📄 [PlayerInventory.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/PlayerInventory.gd)
+      - 📄 [FactionRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/FactionRegistry.gd.uid)
+      - 📄 [PlayerInventory.gd](file:///D:/CodingProjects/spacegame/scripts/economy/PlayerInventory.gd)
         - `func slot_count() -> int`
         - `func is_full() -> bool`
         - `func can_add(item_id: String, quantity: int = 1, stack_max: int = -1) -> bool`
@@ -5201,8 +5109,8 @@ Root: `SpaceGame`
         - `static func from_dict(data: Dictionary)`
         - `func _add_origin(item_id: String, origin_id: String, quantity: int) -> void`
         - `func _remove_origin_quantity(item_id: String, quantity: int) -> void`
-      - 📄 [PlayerInventory.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/PlayerInventory.gd.uid)
-      - 📄 [StoreDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/StoreDefinition.gd)
+      - 📄 [PlayerInventory.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/PlayerInventory.gd.uid)
+      - 📄 [StoreDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/economy/StoreDefinition.gd)
         - `func add_item(item_def: StoreItemDef, initial_stock: int = -1) -> void`
         - `func get_item_def(item_id: String) -> StoreItemDef`
         - `func get_catalog_ids() -> Array`
@@ -5216,11 +5124,11 @@ Root: `SpaceGame`
         - `func to_dict() -> Dictionary`
         - `static func from_dict(data: Dictionary, catalog: Dictionary)`
         - `func _default_demand_for(item_def: StoreItemDef) -> int`
-      - 📄 [StoreDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/StoreDefinition.gd.uid)
-      - 📄 [StoreItemDefinition.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/StoreItemDefinition.gd)
+      - 📄 [StoreDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/StoreDefinition.gd.uid)
+      - 📄 [StoreItemDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/economy/StoreItemDefinition.gd)
         - `static func from_dict(data: Dictionary)`
-      - 📄 [StoreItemDefinition.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/StoreItemDefinition.gd.uid)
-      - 📄 [StoreRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/economy/StoreRegistry.gd)
+      - 📄 [StoreItemDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/StoreItemDefinition.gd.uid)
+      - 📄 [StoreRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/economy/StoreRegistry.gd)
         - `static func shared()`
         - `static func reset() -> void`
         - `func get_item(item_id: String) -> StoreItemDef`
@@ -5235,28 +5143,28 @@ Root: `SpaceGame`
         - `func _load_data() -> void`
         - `func _load_items() -> void`
         - `func _load_layouts() -> void`
-      - 📄 [StoreRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/economy/StoreRegistry.gd.uid)
+      - 📄 [StoreRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/StoreRegistry.gd.uid)
     - 📂 **effects/**
-      - 📄 [DockingTractorBeam.gd](file:///C:/CodingProjects/SpaceGame/scripts/effects/DockingTractorBeam.gd)
+      - 📄 [DockingTractorBeam.gd](file:///D:/CodingProjects/spacegame/scripts/effects/DockingTractorBeam.gd)
         - 🏛️ **global class DockingTractorBeam**
           - `func configure(station: Node3D, ship: Node3D) -> void`
           - `func _process(_delta: float) -> void`
           - `func _update_beam() -> void`
-      - 📄 [DockingTractorBeam.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/effects/DockingTractorBeam.gd.uid)
+      - 📄 [DockingTractorBeam.gd.uid](file:///D:/CodingProjects/spacegame/scripts/effects/DockingTractorBeam.gd.uid)
     - 📂 **events/**
-      - 📄 [EventContext.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/EventContext.gd)
+      - 📄 [EventContext.gd](file:///D:/CodingProjects/spacegame/scripts/events/EventContext.gd)
         - `func to_dict() -> Dictionary`
         - `static func from_dict(data: Dictionary)`
-      - 📄 [EventContext.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/EventContext.gd.uid)
-      - 📄 [EventHistory.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/EventHistory.gd)
+      - 📄 [EventContext.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/EventContext.gd.uid)
+      - 📄 [EventHistory.gd](file:///D:/CodingProjects/spacegame/scripts/events/EventHistory.gd)
         - `func record(event_type_id: String, campaign_time: int, details: Dictionary = {}) -> void`
         - `func last_time_for_type(event_type_id: String) -> int`
         - `func minutes_since(event_type_id: String, current_time: int) -> int`
         - `func count_since(start_time: int) -> int`
         - `func to_dict() -> Dictionary`
         - `static func from_dict(data: Dictionary)`
-      - 📄 [EventHistory.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/EventHistory.gd.uid)
-      - 📄 [EventScheduler.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/EventScheduler.gd)
+      - 📄 [EventHistory.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/EventHistory.gd.uid)
+      - 📄 [EventScheduler.gd](file:///D:/CodingProjects/spacegame/scripts/events/EventScheduler.gd)
         - `static func shared()`
         - `static func reset() -> void`
         - `func register_event_type(event_type, cooldown_minutes: int = DEFAULT_TYPE_COOLDOWN_MINUTES) -> void`
@@ -5266,15 +5174,15 @@ Root: `SpaceGame`
         - `func _select(candidates: Array, campaign_time: int, system_id: String)`
         - `func save_state() -> Dictionary`
         - `func restore_state(data: Dictionary) -> void`
-      - 📄 [EventScheduler.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/EventScheduler.gd.uid)
-      - 📄 [EventType.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/EventType.gd)
+      - 📄 [EventScheduler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/EventScheduler.gd.uid)
+      - 📄 [EventType.gd](file:///D:/CodingProjects/spacegame/scripts/events/EventType.gd)
         - `func event_type_id() -> String`
         - `func is_eligible(_context) -> bool`
         - `func priority(_context) -> float`
         - `func execute(_context) -> Dictionary`
-      - 📄 [EventType.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/EventType.gd.uid)
+      - 📄 [EventType.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/EventType.gd.uid)
       - 📂 **types/**
-        - 📄 [GateRumorEvent.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/types/GateRumorEvent.gd)
+        - 📄 [GateRumorEvent.gd](file:///D:/CodingProjects/spacegame/scripts/events/types/GateRumorEvent.gd)
           - `func event_type_id() -> String`
           - `func is_eligible(context) -> bool`
           - `func priority(_context) -> float`
@@ -5282,8 +5190,8 @@ Root: `SpaceGame`
           - `func _get_system_registry()`
           - `func _get_current_system_id() -> String`
           - `func _get_game_root()`
-        - 📄 [GateRumorEvent.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/types/GateRumorEvent.gd.uid)
-        - 📄 [InterceptorEvent.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/types/InterceptorEvent.gd)
+        - 📄 [GateRumorEvent.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/types/GateRumorEvent.gd.uid)
+        - 📄 [InterceptorEvent.gd](file:///D:/CodingProjects/spacegame/scripts/events/types/InterceptorEvent.gd)
           - `func event_type_id() -> String`
           - `func is_eligible(context) -> bool`
           - `func priority(context) -> float`
@@ -5294,8 +5202,8 @@ Root: `SpaceGame`
           - `func _current_story_pack(context) -> Dictionary`
           - `func _current_system_config(context)`
           - `func _story_faction_label(faction_name: String) -> String`
-        - 📄 [InterceptorEvent.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/types/InterceptorEvent.gd.uid)
-        - 📄 [SystemStoryArcEvent.gd](file:///C:/CodingProjects/SpaceGame/scripts/events/types/SystemStoryArcEvent.gd)
+        - 📄 [InterceptorEvent.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/types/InterceptorEvent.gd.uid)
+        - 📄 [SystemStoryArcEvent.gd](file:///D:/CodingProjects/spacegame/scripts/events/types/SystemStoryArcEvent.gd)
           - `func event_type_id() -> String`
           - `func is_eligible(context) -> bool`
           - `func priority(_context) -> float`
@@ -5305,9 +5213,9 @@ Root: `SpaceGame`
           - `func _global_state() -> Node`
           - `func _remote_consequence_summary(pack: Dictionary, pressure: int) -> Dictionary`
           - `func _arc_note(pack: Dictionary, pressure: int) -> String`
-        - 📄 [SystemStoryArcEvent.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/events/types/SystemStoryArcEvent.gd.uid)
+        - 📄 [SystemStoryArcEvent.gd.uid](file:///D:/CodingProjects/spacegame/scripts/events/types/SystemStoryArcEvent.gd.uid)
     - 📂 **generation/**
-      - 📄 [CampaignSystemNames.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/CampaignSystemNames.gd)
+      - 📄 [CampaignSystemNames.gd](file:///D:/CodingProjects/spacegame/scripts/generation/CampaignSystemNames.gd)
         - 🏛️ **global class CampaignSystemNames**
           - `static func load_or_create() -> CampaignSystemNames`
           - `func next_name() -> String`
@@ -5316,8 +5224,8 @@ Root: `SpaceGame`
           - `func set_names(names: Array[String]) -> void`
           - `static func reset() -> void`
           - `func _save() -> void`
-      - 📄 [CampaignSystemNames.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/CampaignSystemNames.gd.uid)
-      - 📄 [GeneratedSystemNPCManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/GeneratedSystemNPCManager.gd)
+      - 📄 [CampaignSystemNames.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/CampaignSystemNames.gd.uid)
+      - 📄 [GeneratedSystemNPCManager.gd](file:///D:/CodingProjects/spacegame/scripts/generation/GeneratedSystemNPCManager.gd)
         - 🏛️ **global class GeneratedSystemNPCManager**
           - `func initialize(system_config: SystemConfig) -> void`
           - `func _ready() -> void`
@@ -5338,8 +5246,8 @@ Root: `SpaceGame`
           - `func _count_minor_faction_ships() -> int`
           - `func _next_id(category: String) -> String`
           - `func _apply_npc_profile(npc: Node, faction_name: String) -> void`
-      - 📄 [GeneratedSystemNPCManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/GeneratedSystemNPCManager.gd.uid)
-      - 📄 [ShipAssembler.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/ShipAssembler.gd)
+      - 📄 [GeneratedSystemNPCManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/GeneratedSystemNPCManager.gd.uid)
+      - 📄 [ShipAssembler.gd](file:///D:/CodingProjects/spacegame/scripts/generation/ShipAssembler.gd)
         - 🏛️ **global class ShipAssembler**
           - `static func _part_path(cat: String, stem: String) -> String`
           - `static func _load_part(cat: String, stem: String) -> Node3D`
@@ -5371,8 +5279,8 @@ Root: `SpaceGame`
           - `static func _measure_part(cat: String, stem: String)`
           - `static func _arr_vec3(a) -> Vector3`
           - `static func _spread_positions(n: int, spread: float) -> Array`
-      - 📄 [ShipAssembler.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/ShipAssembler.gd.uid)
-      - 📄 [ShipGenerator.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/ShipGenerator.gd)
+      - 📄 [ShipAssembler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/ShipAssembler.gd.uid)
+      - 📄 [ShipGenerator.gd](file:///D:/CodingProjects/spacegame/scripts/generation/ShipGenerator.gd)
         - 🏛️ **global class ShipGenerator**
           - `static func output_dir() -> String`
           - `static func generate_for_system(system_seed: int, ship_index: int, faction: String = "") -> String`
@@ -5380,8 +5288,8 @@ Root: `SpaceGame`
           - `static func has_cached(seed_str: String) -> bool`
           - `static func load_runtime(seed_str: String) -> Node3D`
           - `static func _ensure_dir(dir_path: String) -> void`
-      - 📄 [ShipGenerator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/ShipGenerator.gd.uid)
-      - 📄 [ShipPreGenerator.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/ShipPreGenerator.gd)
+      - 📄 [ShipGenerator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/ShipGenerator.gd.uid)
+      - 📄 [ShipPreGenerator.gd](file:///D:/CodingProjects/spacegame/scripts/generation/ShipPreGenerator.gd)
         - 🏛️ **global class ShipPreGenerator**
           - `func initialize(registry: SystemRegistry) -> void`
           - `func on_system_entered(system_id: String, _arrival_gate_id: String) -> void`
@@ -5391,8 +5299,8 @@ Root: `SpaceGame`
           - `func _worker() -> void`
           - `func _on_thread_done() -> void`
           - `func _exit_tree() -> void`
-      - 📄 [ShipPreGenerator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/ShipPreGenerator.gd.uid)
-      - 📄 [SystemConfig.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/SystemConfig.gd)
+      - 📄 [ShipPreGenerator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/ShipPreGenerator.gd.uid)
+      - 📄 [SystemConfig.gd](file:///D:/CodingProjects/spacegame/scripts/generation/SystemConfig.gd)
         - 🏛️ **global class SystemConfig**
           - `func to_dict() -> Dictionary`
           - `static func from_dict(data: Dictionary) -> SystemConfig`
@@ -5404,8 +5312,8 @@ Root: `SpaceGame`
           - `static func _story_faction_display(faction_name: String) -> String`
           - `static func _story_nickname(system_name: String, rng: RandomNumberGenerator) -> String`
           - `static func _story_danger_summary(tier: int) -> String`
-      - 📄 [SystemConfig.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/SystemConfig.gd.uid)
-      - 📄 [SystemFactory.gd](file:///C:/CodingProjects/SpaceGame/scripts/generation/SystemFactory.gd)
+      - 📄 [SystemConfig.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/SystemConfig.gd.uid)
+      - 📄 [SystemFactory.gd](file:///D:/CodingProjects/spacegame/scripts/generation/SystemFactory.gd)
         - 🏛️ **global class SystemFactory**
           - `func _load_resources() -> void`
           - `static func generate(config: SystemConfig) -> Dictionary`
@@ -5415,11 +5323,11 @@ Root: `SpaceGame`
           - `func _find_placement(clearance: float, max_attempts: int) -> Vector3`
           - `func _is_clear(pos: Vector3, clearance: float) -> bool`
           - `func _roman_numeral(n: int) -> String`
-      - 📄 [SystemFactory.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/generation/SystemFactory.gd.uid)
-    - 📄 [jumpgate_portal.gdshader](file:///C:/CodingProjects/SpaceGame/scripts/jumpgate_portal.gdshader)
-    - 📄 [jumpgate_portal.gdshader.uid](file:///C:/CodingProjects/SpaceGame/scripts/jumpgate_portal.gdshader.uid)
+      - 📄 [SystemFactory.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/SystemFactory.gd.uid)
+    - 📄 [jumpgate_portal.gdshader](file:///D:/CodingProjects/spacegame/scripts/jumpgate_portal.gdshader)
+    - 📄 [jumpgate_portal.gdshader.uid](file:///D:/CodingProjects/spacegame/scripts/jumpgate_portal.gdshader.uid)
     - 📂 **navigation/**
-      - 📄 [GateDiscoveryAction.gd](file:///C:/CodingProjects/SpaceGame/scripts/navigation/GateDiscoveryAction.gd)
+      - 📄 [GateDiscoveryAction.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/GateDiscoveryAction.gd)
         - 🏛️ **global class GateDiscoveryAction**
           - `static func from_gate_definition(gate_def: GateDefinition) -> GateDiscoveryAction`
           - `func can_execute(current_state: String) -> bool`
@@ -5430,8 +5338,8 @@ Root: `SpaceGame`
           - `func get_prerequisite_text() -> String`
           - `static func _parse_action_type(action_str: String) -> ActionType`
           - `static func _reputation_tier_threshold(tier: String) -> float`
-      - 📄 [GateDiscoveryAction.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/navigation/GateDiscoveryAction.gd.uid)
-      - 📄 [GateDiscoveryManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/navigation/GateDiscoveryManager.gd)
+      - 📄 [GateDiscoveryAction.gd.uid](file:///D:/CodingProjects/spacegame/scripts/navigation/GateDiscoveryAction.gd.uid)
+      - 📄 [GateDiscoveryManager.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/GateDiscoveryManager.gd)
         - `func apply_rumor(gate_id: String, narrative: String = "") -> Dictionary`
         - `func kaelen_reveal(gate_id: String, cost: int) -> Dictionary`
         - `func is_kaelen_gate_eligible() -> bool`
@@ -5445,24 +5353,24 @@ Root: `SpaceGame`
         - `func _sync_active_gate_target(gate_def: GateDefinition) -> void`
         - `func _get_store() -> CampaignCheckpointStore`
         - `func _get_game_root() -> Node`
-      - 📄 [GateDiscoveryManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/navigation/GateDiscoveryManager.gd.uid)
-      - 📄 [GeneratedGateBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/navigation/GeneratedGateBuilder.gd)
+      - 📄 [GateDiscoveryManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/navigation/GateDiscoveryManager.gd.uid)
+      - 📄 [GeneratedGateBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/GeneratedGateBuilder.gd)
         - 🏛️ **global class GeneratedGateBuilder**
           - `static func _id_suffix(id: String, prefix: String) -> String`
-      - 📄 [GeneratedGateBuilder.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/navigation/GeneratedGateBuilder.gd.uid)
-      - 📄 [NavigationRoutePlanner.gd](file:///C:/CodingProjects/SpaceGame/scripts/navigation/NavigationRoutePlanner.gd)
+      - 📄 [GeneratedGateBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/navigation/GeneratedGateBuilder.gd.uid)
+      - 📄 [NavigationRoutePlanner.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/NavigationRoutePlanner.gd)
         - 🏛️ **global class NavigationRoutePlanner**
-      - 📄 [NavigationRoutePlanner.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/navigation/NavigationRoutePlanner.gd.uid)
-      - 📄 [TangentNavigator.gd](file:///C:/CodingProjects/SpaceGame/scripts/navigation/TangentNavigator.gd)
+      - 📄 [NavigationRoutePlanner.gd.uid](file:///D:/CodingProjects/spacegame/scripts/navigation/NavigationRoutePlanner.gd.uid)
+      - 📄 [TangentNavigator.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/TangentNavigator.gd)
         - 🏛️ **global class TangentNavigator**
           - `static func segment_clears_sphere(a: Vector3, b: Vector3, c: Vector3, radius: float) -> bool`
           - `static func effective_radius(obstacle: Dictionary, destination: Vector3) -> float`
           - `static func sideways_from(axis: Vector3, toward: Vector3) -> Vector3`
           - `static func exit_distance(radius: float) -> float`
           - `static func route_min_clearance(path: PackedVector3Array, center: Vector3) -> float`
-      - 📄 [TangentNavigator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/navigation/TangentNavigator.gd.uid)
+      - 📄 [TangentNavigator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/navigation/TangentNavigator.gd.uid)
     - 📂 **persistence/**
-      - 📄 [CampaignAgentMemorySnippetStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignAgentMemorySnippetStore.gd)
+      - 📄 [CampaignAgentMemorySnippetStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignAgentMemorySnippetStore.gd)
         - 🏛️ **global class CampaignAgentMemorySnippetStore**
           - `static func open(path: String) -> RefCounted`
           - `func is_valid() -> bool`
@@ -5481,8 +5389,8 @@ Root: `SpaceGame`
           - `static func _sequence_asc(left: Dictionary, right: Dictionary) -> bool`
           - `static func _sequence_desc(left: Dictionary, right: Dictionary) -> bool`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignAgentMemorySnippetStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignAgentMemorySnippetStore.gd.uid)
-      - 📄 [CampaignBibleStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignBibleStore.gd)
+      - 📄 [CampaignAgentMemorySnippetStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignAgentMemorySnippetStore.gd.uid)
+      - 📄 [CampaignBibleStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignBibleStore.gd)
         - 🏛️ **global class CampaignBibleStore**
           - `static func open(path: String) -> CampaignBibleStore`
           - `func is_valid() -> bool`
@@ -5508,8 +5416,8 @@ Root: `SpaceGame`
           - `static func _default_trigger_threshold(metric: String) -> int`
           - `static func _slug(value: String) -> String`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignBibleStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignBibleStore.gd.uid)
-      - 📄 [CampaignCheckpointStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignCheckpointStore.gd)
+      - 📄 [CampaignBibleStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignBibleStore.gd.uid)
+      - 📄 [CampaignCheckpointStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignCheckpointStore.gd)
         - 🏛️ **global class CampaignCheckpointStore**
           - `func set_registry_defaults(registry: SystemRegistry) -> void`
           - `static func open(path: String) -> CampaignCheckpointStore`
@@ -5537,8 +5445,8 @@ Root: `SpaceGame`
           - `static func _new_copy_token(slot_index: int) -> String`
           - `static func _stable_hash(value: Variant) -> String`
           - `static func _remove_tree(path: String) -> bool`
-      - 📄 [CampaignCheckpointStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignCheckpointStore.gd.uid)
-      - 📄 [CampaignChronicleStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignChronicleStore.gd)
+      - 📄 [CampaignCheckpointStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignCheckpointStore.gd.uid)
+      - 📄 [CampaignChronicleStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignChronicleStore.gd)
         - 🏛️ **global class CampaignChronicleStore**
           - `static func open(path: String) -> CampaignChronicleStore`
           - `func is_valid() -> bool`
@@ -5551,8 +5459,8 @@ Root: `SpaceGame`
           - `func _load() -> void`
           - `func _bootstrap_index() -> Dictionary`
           - `static func _new_id(id_namespace: String, label: String) -> String`
-      - 📄 [CampaignChronicleStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignChronicleStore.gd.uid)
-      - 📄 [CampaignGeneratedFactionStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignGeneratedFactionStore.gd)
+      - 📄 [CampaignChronicleStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignChronicleStore.gd.uid)
+      - 📄 [CampaignGeneratedFactionStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignGeneratedFactionStore.gd)
         - 🏛️ **global class CampaignGeneratedFactionStore**
           - `static func open(path: String) -> CampaignGeneratedFactionStore`
           - `func is_valid() -> bool`
@@ -5579,8 +5487,8 @@ Root: `SpaceGame`
           - `static func _fallback_faction_text(field: String, seed_text: String, index: int) -> String`
           - `static func _slug(value: String) -> String`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignGeneratedFactionStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignGeneratedFactionStore.gd.uid)
-      - 📄 [CampaignIdeaMemoryStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignIdeaMemoryStore.gd)
+      - 📄 [CampaignGeneratedFactionStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignGeneratedFactionStore.gd.uid)
+      - 📄 [CampaignIdeaMemoryStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignIdeaMemoryStore.gd)
         - 🏛️ **global class CampaignIdeaMemoryStore**
           - `static func open(path: String) -> CampaignIdeaMemoryStore`
           - `func is_valid() -> bool`
@@ -5601,8 +5509,8 @@ Root: `SpaceGame`
           - `static func _sequence_asc(left: Dictionary, right: Dictionary) -> bool`
           - `static func _sequence_desc(left: Dictionary, right: Dictionary) -> bool`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignIdeaMemoryStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignIdeaMemoryStore.gd.uid)
-      - 📄 [CampaignKaelenMemoryStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignKaelenMemoryStore.gd)
+      - 📄 [CampaignIdeaMemoryStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignIdeaMemoryStore.gd.uid)
+      - 📄 [CampaignKaelenMemoryStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignKaelenMemoryStore.gd)
         - 🏛️ **global class CampaignKaelenMemoryStore**
           - `static func open(path: String) -> CampaignKaelenMemoryStore`
           - `func is_valid() -> bool`
@@ -5616,15 +5524,15 @@ Root: `SpaceGame`
           - `static func _sequence_less(left: Dictionary, right: Dictionary) -> bool`
           - `static func _new_id(id_namespace: String, sequence: int) -> String`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignKaelenMemoryStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignKaelenMemoryStore.gd.uid)
-      - 📄 [CampaignLegacySaveImporter.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignLegacySaveImporter.gd)
+      - 📄 [CampaignKaelenMemoryStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignKaelenMemoryStore.gd.uid)
+      - 📄 [CampaignLegacySaveImporter.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignLegacySaveImporter.gd)
         - 🏛️ **global class CampaignLegacySaveImporter**
           - `static func _has_import_marker(root_path: String) -> bool`
           - `static func _remove_import_marker(root_path: String) -> void`
           - `static func _available_backup_path(save_path: String) -> String`
           - `static func _blocked(code: String, message: String) -> Dictionary`
-      - 📄 [CampaignLegacySaveImporter.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignLegacySaveImporter.gd.uid)
-      - 📄 [CampaignManifestStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignManifestStore.gd)
+      - 📄 [CampaignLegacySaveImporter.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignLegacySaveImporter.gd.uid)
+      - 📄 [CampaignManifestStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignManifestStore.gd)
         - 🏛️ **global class CampaignManifestStore**
           - `static func open(path: String) -> CampaignManifestStore`
           - `func is_valid() -> bool`
@@ -5645,8 +5553,8 @@ Root: `SpaceGame`
           - `static func _ship_snapshot(definition: ShipDesignDefinition) -> Dictionary`
           - `static func _portrait_snapshot(definition: PortraitDefinition) -> Dictionary`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignManifestStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignManifestStore.gd.uid)
-      - 📄 [CampaignNpcIdentityStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignNpcIdentityStore.gd)
+      - 📄 [CampaignManifestStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignManifestStore.gd.uid)
+      - 📄 [CampaignNpcIdentityStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignNpcIdentityStore.gd)
         - 🏛️ **global class CampaignNpcIdentityStore**
           - `static func open(path: String) -> RefCounted`
           - `func is_valid() -> bool`
@@ -5675,8 +5583,8 @@ Root: `SpaceGame`
           - `static func _slug(value: String) -> String`
           - `static func _fingerprint(value: String) -> String`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignNpcIdentityStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignNpcIdentityStore.gd.uid)
-      - 📄 [CampaignNpcStateStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignNpcStateStore.gd)
+      - 📄 [CampaignNpcIdentityStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignNpcIdentityStore.gd.uid)
+      - 📄 [CampaignNpcStateStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignNpcStateStore.gd)
         - 🏛️ **global class CampaignNpcStateStore**
           - `static func open(path: String) -> RefCounted`
           - `func is_valid() -> bool`
@@ -5698,8 +5606,8 @@ Root: `SpaceGame`
           - `static func _memory_summary_from_events(events: Array) -> String`
           - `static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [CampaignNpcStateStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignNpcStateStore.gd.uid)
-      - 📄 [CampaignSchemaCatalog.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignSchemaCatalog.gd)
+      - 📄 [CampaignNpcStateStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignNpcStateStore.gd.uid)
+      - 📄 [CampaignSchemaCatalog.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignSchemaCatalog.gd)
         - 🏛️ **global class CampaignSchemaCatalog**
           - `static func validate_document(data: Dictionary) -> ValidationResult`
           - `static func validate_bundle(documents: Array) -> ValidationResult`
@@ -5713,8 +5621,8 @@ Root: `SpaceGame`
           - `static func is_investigation_site_position(path: Array) -> bool`
           - `static func _is_whole_number(value: Variant) -> bool`
           - `static func _is_sha256_hex(value: String) -> bool`
-      - 📄 [CampaignSchemaCatalog.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignSchemaCatalog.gd.uid)
-      - 📄 [CampaignSlotRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignSlotRegistry.gd)
+      - 📄 [CampaignSchemaCatalog.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignSchemaCatalog.gd.uid)
+      - 📄 [CampaignSlotRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignSlotRegistry.gd)
         - 🏛️ **global class CampaignSlotRegistry**
           - `static func open(path: String = DEFAULT_ROOT) -> CampaignSlotRegistry`
           - `func is_valid() -> bool`
@@ -5734,8 +5642,8 @@ Root: `SpaceGame`
           - `func _remove_tree(path: String) -> bool`
           - `static func _empty_slot(slot_id: String) -> Dictionary`
           - `static func _random_hex(byte_count: int) -> String`
-      - 📄 [CampaignSlotRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignSlotRegistry.gd.uid)
-      - 📄 [CampaignTransactionStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignTransactionStore.gd)
+      - 📄 [CampaignSlotRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignSlotRegistry.gd.uid)
+      - 📄 [CampaignTransactionStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignTransactionStore.gd)
         - 🏛️ **global class CampaignTransactionStore**
           - `static func is_locked(store_root: String) -> bool`
           - `static func consume_pending_autosave(store_root: String) -> bool`
@@ -5747,8 +5655,8 @@ Root: `SpaceGame`
           - `static func _make_directory(path: String) -> bool`
           - `static func _remove_tree(path: String) -> bool`
           - `static func _is_safe_relative_path(path: String) -> bool`
-      - 📄 [CampaignTransactionStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/CampaignTransactionStore.gd.uid)
-      - 📄 [ChapterNarrativePacketStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/ChapterNarrativePacketStore.gd)
+      - 📄 [CampaignTransactionStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/CampaignTransactionStore.gd.uid)
+      - 📄 [ChapterNarrativePacketStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/ChapterNarrativePacketStore.gd)
         - 🏛️ **global class ChapterNarrativePacketStore**
           - `static func open(path: String) -> RefCounted`
           - `func is_valid() -> bool`
@@ -5763,10 +5671,11 @@ Root: `SpaceGame`
           - `static func _normalized_opposing_force_dossier(value: Variant) -> Dictionary`
           - `static func _validate_document(value: Dictionary) -> ValidationResult`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [ChapterNarrativePacketStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/ChapterNarrativePacketStore.gd.uid)
-      - 📄 [GeneratedDesireConstraints.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/GeneratedDesireConstraints.gd)
+      - 📄 [ChapterNarrativePacketStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/ChapterNarrativePacketStore.gd.uid)
+      - 📄 [GeneratedDesireConstraints.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/GeneratedDesireConstraints.gd)
         - `static func need_reason(goal_index: int, need: String) -> String`
-      - 📄 [GeneratedFactionDesire.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/GeneratedFactionDesire.gd)
+      - 📄 [GeneratedDesireConstraints.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/GeneratedDesireConstraints.gd.uid)
+      - 📄 [GeneratedFactionDesire.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/GeneratedFactionDesire.gd)
         - 🏛️ **global class GeneratedFactionDesire**
           - `static func item_for_need(need: String, salt: String = "") -> String`
           - `static func binds_item_to_need(need: String, item_name: String) -> bool`
@@ -5778,7 +5687,8 @@ Root: `SpaceGame`
           - `static func _digest(seed_text: String, dimension: String) -> int`
           - `static func _draw(scope: String, index: int, dimension: String, options: Array) -> Variant`
           - `static func build_relationships(scope: String, factions: Array) -> void`
-      - 📄 [KaelenHandoffStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/KaelenHandoffStore.gd)
+      - 📄 [GeneratedFactionDesire.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/GeneratedFactionDesire.gd.uid)
+      - 📄 [KaelenHandoffStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/KaelenHandoffStore.gd)
         - 🏛️ **global class KaelenHandoffStore**
           - `static func open(path: String) -> KaelenHandoffStore`
           - `func is_valid() -> bool`
@@ -5788,8 +5698,8 @@ Root: `SpaceGame`
           - `func _draw_key(pool_key: String) -> String`
           - `func _load_or_create() -> void`
           - `func _commit() -> void`
-      - 📄 [KaelenHandoffStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/KaelenHandoffStore.gd.uid)
-      - 📄 [NarrativeCacheStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/NarrativeCacheStore.gd)
+      - 📄 [KaelenHandoffStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/KaelenHandoffStore.gd.uid)
+      - 📄 [NarrativeCacheStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/NarrativeCacheStore.gd)
         - 🏛️ **global class NarrativeCacheStore**
           - `static func open(path: String) -> RefCounted`
           - `func is_valid() -> bool`
@@ -5823,8 +5733,8 @@ Root: `SpaceGame`
           - `static func _json_size(value: Dictionary) -> int`
           - `static func _validate_data(value: Dictionary, campaign_id: String) -> ValidationResult`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [NarrativeCacheStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/NarrativeCacheStore.gd.uid)
-      - 📄 [NoveltyHistoryStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/NoveltyHistoryStore.gd)
+      - 📄 [NarrativeCacheStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/NarrativeCacheStore.gd.uid)
+      - 📄 [NoveltyHistoryStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/NoveltyHistoryStore.gd)
         - `static func empty_history() -> Dictionary`
         - `static func load_history(path: String = DEFAULT_PATH) -> Dictionary`
         - `static func save_history(history: Dictionary, path: String = DEFAULT_PATH) -> Dictionary`
@@ -5837,14 +5747,16 @@ Root: `SpaceGame`
         - `static func _opened(history: Dictionary) -> Dictionary`
         - `static func _trimmed(history: Dictionary) -> Dictionary`
         - `static func variety_exhausted(history: Dictionary, candidates: Array) -> bool`
-      - 📄 [RunOpeningHistoryStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/RunOpeningHistoryStore.gd)
+      - 📄 [NoveltyHistoryStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/NoveltyHistoryStore.gd.uid)
+      - 📄 [RunOpeningHistoryStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/RunOpeningHistoryStore.gd)
         - `static func empty_history() -> Dictionary`
         - `static func load_history(path: String = DEFAULT_PATH) -> Dictionary`
         - `static func save_history(history: Dictionary, path: String = DEFAULT_PATH) -> Dictionary`
         - `static func upsert_opening(history: Dictionary, campaign_id: String, pressure_pair: Array, first_shapes: Array) -> Dictionary`
         - `static func preferred_pairs(history: Dictionary, eligible_kinds: Array, campaign_id: String) -> Array`
         - `static func reset(path: String = DEFAULT_PATH) -> Dictionary`
-      - 📄 [SaveMigrator.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/SaveMigrator.gd)
+      - 📄 [RunOpeningHistoryStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/RunOpeningHistoryStore.gd.uid)
+      - 📄 [SaveMigrator.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/SaveMigrator.gd)
         - 🏛️ **global class SaveMigrator**
           - `static func write_current(path: String, saved_data: Dictionary) -> bool`
           - `static func _map_investigation_sites(quest: Dictionary, registry: SystemRegistry, to_runtime: bool) -> void`
@@ -5856,8 +5768,8 @@ Root: `SpaceGame`
           - `static func _available_backup_path(path: String) -> String`
           - `static func _success(data: Variant) -> Dictionary`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [SaveMigrator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/SaveMigrator.gd.uid)
-      - 📄 [StoryStateStore.gd](file:///C:/CodingProjects/SpaceGame/scripts/persistence/StoryStateStore.gd)
+      - 📄 [SaveMigrator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/SaveMigrator.gd.uid)
+      - 📄 [StoryStateStore.gd](file:///D:/CodingProjects/spacegame/scripts/persistence/StoryStateStore.gd)
         - 🏛️ **global class StoryStateStore**
           - `static func open(path: String) -> StoryStateStore`
           - `func is_valid() -> bool`
@@ -5874,9 +5786,9 @@ Root: `SpaceGame`
           - `static func _validate_data(value: Dictionary) -> ValidationResult`
           - `static func _is_non_negative_integer(value: Variant) -> bool`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [StoryStateStore.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/persistence/StoryStateStore.gd.uid)
+      - 📄 [StoryStateStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/persistence/StoryStateStore.gd.uid)
     - 📂 **registry/**
-      - 📄 [GameContentRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/registry/GameContentRegistry.gd)
+      - 📄 [GameContentRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/registry/GameContentRegistry.gd)
         - 🏛️ **global class GameContentRegistry**
           - `static func shared() -> GameContentRegistry`
           - `func is_valid() -> bool`
@@ -5894,8 +5806,8 @@ Root: `SpaceGame`
           - `func _register_portrait_sheet(sheet: Dictionary) -> void`
           - `func _load_provider_mappings() -> void`
           - `func _cross_validate() -> void`
-      - 📄 [GameContentRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/registry/GameContentRegistry.gd.uid)
-      - 📄 [LLMDialogueContentRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/registry/LLMDialogueContentRegistry.gd)
+      - 📄 [GameContentRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/registry/GameContentRegistry.gd.uid)
+      - 📄 [LLMDialogueContentRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/registry/LLMDialogueContentRegistry.gd)
         - 🏛️ **global class LLMDialogueContentRegistry**
           - `static func shared() -> LLMDialogueContentRegistry`
           - `static func reset_shared() -> void`
@@ -5922,8 +5834,8 @@ Root: `SpaceGame`
           - `func _agent_profile_voice_rules(agent_profile: Dictionary) -> Dictionary`
           - `func set_speaker(speaker_id: String, address_rule: String, tone_card: String) -> void`
           - `func set_global_rules(rules: Dictionary) -> void`
-      - 📄 [LLMDialogueContentRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/registry/LLMDialogueContentRegistry.gd.uid)
-      - 📄 [SystemRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/registry/SystemRegistry.gd)
+      - 📄 [LLMDialogueContentRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/registry/LLMDialogueContentRegistry.gd.uid)
+      - 📄 [SystemRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/registry/SystemRegistry.gd)
         - 🏛️ **global class SystemRegistry**
           - `static func load_default() -> SystemRegistry`
           - `static func load_from_path(path: String) -> SystemRegistry`
@@ -5949,9 +5861,9 @@ Root: `SpaceGame`
           - `func _register_system(definition: SystemDefinition, index: int) -> void`
           - `func _validate_gate_destinations() -> void`
           - `func _validate_gate_pairs() -> void`
-      - 📄 [SystemRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/registry/SystemRegistry.gd.uid)
+      - 📄 [SystemRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/registry/SystemRegistry.gd.uid)
     - 📂 **speech/**
-      - 📄 [KokoroSpeechProvider.gd](file:///C:/CodingProjects/SpaceGame/scripts/speech/KokoroSpeechProvider.gd)
+      - 📄 [KokoroSpeechProvider.gd](file:///D:/CodingProjects/spacegame/scripts/speech/KokoroSpeechProvider.gd)
         - 🏛️ **global class KokoroSpeechProvider**
           - `func is_ready() -> bool`
           - `func connection_attempts() -> int`
@@ -5961,8 +5873,8 @@ Root: `SpaceGame`
           - `func play(text: String, voice_profile_id: StringName, speed_override: float = -1.0) -> void`
           - `func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0)`
           - `func stop() -> void`
-      - 📄 [KokoroSpeechProvider.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/speech/KokoroSpeechProvider.gd.uid)
-      - 📄 [SpeechService.gd](file:///C:/CodingProjects/SpaceGame/scripts/speech/SpeechService.gd)
+      - 📄 [KokoroSpeechProvider.gd.uid](file:///D:/CodingProjects/spacegame/scripts/speech/KokoroSpeechProvider.gd.uid)
+      - 📄 [SpeechService.gd](file:///D:/CodingProjects/spacegame/scripts/speech/SpeechService.gd)
         - `func _ready() -> void`
         - `func _connect_playback_finished() -> void`
         - `func _on_playback_finished() -> void`
@@ -5988,9 +5900,9 @@ Root: `SpaceGame`
         - `func _filler_rejected(reason: String) -> Dictionary`
         - `func _is_latency_filler_speaker(speaker_id: String, profile_id: StringName) -> bool`
         - `func _simulate_failed_request_for_test() -> void`
-      - 📄 [SpeechService.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/speech/SpeechService.gd.uid)
+      - 📄 [SpeechService.gd.uid](file:///D:/CodingProjects/spacegame/scripts/speech/SpeechService.gd.uid)
     - 📂 **story/**
-      - 📄 [AmbientChatGenerator.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/AmbientChatGenerator.gd)
+      - 📄 [AmbientChatGenerator.gd](file:///D:/CodingProjects/spacegame/scripts/story/AmbientChatGenerator.gd)
         - `static func pick_bucket(roll: float) -> String`
         - `static func topic_id(bucket: String, subject: String) -> String`
         - `static func build_topic_candidates(bucket: String, story_state: Dictionary) -> Array`
@@ -6007,8 +5919,8 @@ Root: `SpaceGame`
         - `func _fire_conversation() -> void`
         - `func _deliver_lines(lines: Array, pair: Array) -> void`
         - `func _emit_line(sender: String, text: String, color: Color) -> void`
-      - 📄 [AmbientChatGenerator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/AmbientChatGenerator.gd.uid)
-      - 📄 [CampaignDirectionContract.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/CampaignDirectionContract.gd)
+      - 📄 [AmbientChatGenerator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/AmbientChatGenerator.gd.uid)
+      - 📄 [CampaignDirectionContract.gd](file:///D:/CodingProjects/spacegame/scripts/story/CampaignDirectionContract.gd)
         - `static func writer_view(packet: Dictionary) -> Dictionary`
         - `static func validate_proposal(proposal: Variant, packet: Dictionary) -> Dictionary`
         - `static func _leaked_identifier(text: String) -> String`
@@ -6021,7 +5933,8 @@ Root: `SpaceGame`
         - `static func build_prompt(writer_view: Dictionary, correction_note: String = "") -> String`
         - `static func _schema_description() -> String`
         - `static func parse_response(inner_text: String) -> Dictionary`
-      - 📄 [CampaignResolutionCompiler.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/CampaignResolutionCompiler.gd)
+      - 📄 [CampaignDirectionContract.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/CampaignDirectionContract.gd.uid)
+      - 📄 [CampaignResolutionCompiler.gd](file:///D:/CodingProjects/spacegame/scripts/story/CampaignResolutionCompiler.gd)
         - `static func plan_version(plan: Dictionary) -> int`
         - `static func is_legacy_plan(plan: Dictionary) -> bool`
         - `static func empty_plan() -> Dictionary`
@@ -6036,12 +5949,13 @@ Root: `SpaceGame`
         - `static func _record(plan: Dictionary, alternative: Dictionary, world: Dictionary) -> Dictionary`
         - `static func resolve(plan: Dictionary, record: Dictionary) -> Dictionary`
         - `static func summary_lines(record: Dictionary) -> Array`
-      - 📄 [ChallengeBudget.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/ChallengeBudget.gd)
+      - 📄 [CampaignResolutionCompiler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/CampaignResolutionCompiler.gd.uid)
+      - 📄 [ChallengeBudget.gd](file:///D:/CodingProjects/spacegame/scripts/story/ChallengeBudget.gd)
         - 🏛️ **global class ChallengeBudget**
           - `static func _deadline_for_band(duration: int, band: String) -> int`
           - `static func _reward_multiplier_for_band(band: String) -> float`
-      - 📄 [ChallengeBudget.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/ChallengeBudget.gd.uid)
-      - 📄 [CharacterDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/CharacterDirector.gd)
+      - 📄 [ChallengeBudget.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/ChallengeBudget.gd.uid)
+      - 📄 [CharacterDirector.gd](file:///D:/CodingProjects/spacegame/scripts/story/CharacterDirector.gd)
         - 🏛️ **global class CharacterDirector**
           - `static func is_complete_card(card: Dictionary) -> bool`
           - `static func _load_registry() -> Dictionary`
@@ -6052,8 +5966,8 @@ Root: `SpaceGame`
           - `static func _axis_value_count(axes: Dictionary, axis: String) -> int`
           - `static func _combination_key(selected: Dictionary) -> String`
           - `static func _hash_index(key: String, count: int) -> int`
-      - 📄 [CharacterDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/CharacterDirector.gd.uid)
-      - 📄 [DesireProgressLedger.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DesireProgressLedger.gd)
+      - 📄 [CharacterDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/CharacterDirector.gd.uid)
+      - 📄 [DesireProgressLedger.gd](file:///D:/CodingProjects/spacegame/scripts/story/DesireProgressLedger.gd)
         - `static func empty_state() -> Dictionary`
         - `static func key_for(system_id: String, faction_id: String, desire_id: String) -> String`
         - `static func apply_outcome(saved: Dictionary, outcome: Dictionary, context: Dictionary = {}) -> Dictionary`
@@ -6064,7 +5978,8 @@ Root: `SpaceGame`
         - `static func validate(value: Dictionary) -> ValidationResult`
         - `static func _open(saved: Dictionary) -> Dictionary`
         - `static func _result(changed: bool, state: Dictionary, deltas: Array, reason: String, ok: bool = true) -> Dictionary`
-      - 📄 [DialogueBundleValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueBundleValidator.gd)
+      - 📄 [DesireProgressLedger.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/DesireProgressLedger.gd.uid)
+      - 📄 [DialogueBundleValidator.gd](file:///D:/CodingProjects/spacegame/scripts/story/DialogueBundleValidator.gd)
         - 🏛️ **global class DialogueBundleValidator**
           - `static func _has_overlong_sentence(text: String, max_words: int) -> bool`
           - `static func _field_for_error(error: String) -> String`
@@ -6072,8 +5987,8 @@ Root: `SpaceGame`
           - `static func _line_fingerprint(text: String) -> String`
           - `static func _contains_wordish(text: String, needle: String) -> bool`
           - `static func _contains_any_anchor(text: String, anchors: Array[String]) -> bool`
-      - 📄 [DialogueBundleValidator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueBundleValidator.gd.uid)
-      - 📄 [DialogueCritic.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueCritic.gd)
+      - 📄 [DialogueBundleValidator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/DialogueBundleValidator.gd.uid)
+      - 📄 [DialogueCritic.gd](file:///D:/CodingProjects/spacegame/scripts/story/DialogueCritic.gd)
         - 🏛️ **global class DialogueCritic**
           - `static func schema(kind: String = "support") -> Dictionary`
           - `static func _job(kind: String, target: String, facts: Array[String], packet: Dictionary) -> Dictionary`
@@ -6081,14 +5996,16 @@ Root: `SpaceGame`
           - `static func parse(raw: String, job: Dictionary, done_reason: String = "stop") -> Dictionary`
           - `static func aggregate(expected_jobs: Array[Dictionary], replies: Array[Dictionary], kind: String) -> Dictionary`
           - `static func qualify(records: Array, fingerprint: String) -> Dictionary`
-      - 📄 [DialogueFactPacket.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueFactPacket.gd)
+      - 📄 [DialogueCritic.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/DialogueCritic.gd.uid)
+      - 📄 [DialogueFactPacket.gd](file:///D:/CodingProjects/spacegame/scripts/story/DialogueFactPacket.gd)
         - 🏛️ **global class DialogueFactPacket**
           - `static func _speaker_block(speaker: Dictionary) -> Dictionary`
           - `static func _wants_right_now(contract: Dictionary, purpose: String) -> String`
           - `static func _question_overlap(text: String, question_words: Array[String]) -> int`
           - `static func prompt_block(packet: Dictionary) -> String`
           - `static func fingerprint(packet: Dictionary) -> String`
-      - 📄 [DialogueFieldContract.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueFieldContract.gd)
+      - 📄 [DialogueFactPacket.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/DialogueFactPacket.gd.uid)
+      - 📄 [DialogueFieldContract.gd](file:///D:/CodingProjects/spacegame/scripts/story/DialogueFieldContract.gd)
         - 🏛️ **global class DialogueFieldContract**
           - `static func max_words_for(purpose: String) -> int`
           - `static func max_chars_for(purpose: String) -> int`
@@ -6096,8 +6013,8 @@ Root: `SpaceGame`
           - `static func _fail(reason: String) -> Dictionary`
           - `static func validate_prepared(prepared: Dictionary, request: Dictionary) -> Dictionary`
           - `static func is_still_applicable(prepared: Dictionary, current_fingerprint: String) -> bool`
-      - 📄 [DialogueFieldContract.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueFieldContract.gd.uid)
-      - 📄 [DialogueQualityGate.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/DialogueQualityGate.gd)
+      - 📄 [DialogueFieldContract.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/DialogueFieldContract.gd.uid)
+      - 📄 [DialogueQualityGate.gd](file:///D:/CodingProjects/spacegame/scripts/story/DialogueQualityGate.gd)
         - 🏛️ **global class DialogueQualityGate**
           - `static func advisory_checks(text: String, packet: Dictionary) -> Dictionary`
           - `static func _report(issues: Array) -> Dictionary`
@@ -6111,7 +6028,8 @@ Root: `SpaceGame`
           - `static func _uncertain(reason: String) -> Dictionary`
           - `static func decide(hard: Dictionary, review: Dictionary = {}, calibration: Dictionary = {}, fingerprint: String = "") -> Dictionary`
           - `static func rewrite_allowed(attempts_used: int) -> bool`
-      - 📄 [FallbackLineBank.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FallbackLineBank.gd)
+      - 📄 [DialogueQualityGate.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/DialogueQualityGate.gd.uid)
+      - 📄 [FallbackLineBank.gd](file:///D:/CodingProjects/spacegame/scripts/story/FallbackLineBank.gd)
         - 🏛️ **global class FallbackLineBank**
           - `static func available_count(bank: Dictionary) -> int`
           - `static func fallback_use_count(bank: Dictionary) -> int`
@@ -6119,8 +6037,8 @@ Root: `SpaceGame`
           - `static func is_retired(bank: Dictionary, text: String) -> bool`
           - `static func _retired_fingerprints(bank: Dictionary) -> Array`
           - `static func _text_seen(entries: Array[Dictionary]) -> Dictionary`
-      - 📄 [FallbackLineBank.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FallbackLineBank.gd.uid)
-      - 📄 [FixedCastAttachmentLedger.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastAttachmentLedger.gd)
+      - 📄 [FallbackLineBank.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FallbackLineBank.gd.uid)
+      - 📄 [FixedCastAttachmentLedger.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastAttachmentLedger.gd)
         - 🏛️ **global class FixedCastAttachmentLedger**
           - `static func default_ledger() -> Dictionary`
           - `static func normalize_ledger(source: Dictionary) -> Dictionary`
@@ -6132,14 +6050,14 @@ Root: `SpaceGame`
           - `static func _next_beat(character_id: String, completed: Array) -> Dictionary`
           - `static func _event_matches(required_event: String, event_type: String, context: Dictionary) -> bool`
           - `static func _is_known_tough(context: Dictionary) -> bool`
-      - 📄 [FixedCastAttachmentLedger.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastAttachmentLedger.gd.uid)
-      - 📄 [FixedCastLineValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastLineValidator.gd)
+      - 📄 [FixedCastAttachmentLedger.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastAttachmentLedger.gd.uid)
+      - 📄 [FixedCastLineValidator.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastLineValidator.gd)
         - 🏛️ **global class FixedCastLineValidator**
           - `static func _repeats_recent(line: String, recent_lines: Variant) -> bool`
           - `static func _contains_any(text: String, terms: Array[String]) -> bool`
           - `static func _normalize(line: String) -> String`
-      - 📄 [FixedCastLineValidator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastLineValidator.gd.uid)
-      - 📄 [FixedCastRapport.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastRapport.gd)
+      - 📄 [FixedCastLineValidator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastLineValidator.gd.uid)
+      - 📄 [FixedCastRapport.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastRapport.gd)
         - 🏛️ **global class FixedCastRapport**
           - `static func default_ledger() -> Dictionary`
           - `static func normalize_ledger(source: Dictionary) -> Dictionary`
@@ -6151,12 +6069,12 @@ Root: `SpaceGame`
           - `static func _reward_credits(mission: Dictionary) -> int`
           - `static func _is_known_tough(mission: Dictionary) -> bool`
           - `static func _entry(score: int) -> Dictionary`
-      - 📄 [FixedCastRapport.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastRapport.gd.uid)
-      - 📄 [FixedCastSoulRegistry.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastSoulRegistry.gd)
+      - 📄 [FixedCastRapport.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastRapport.gd.uid)
+      - 📄 [FixedCastSoulRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastSoulRegistry.gd)
         - 🏛️ **global class FixedCastSoulRegistry**
           - `static func load_registry() -> Dictionary`
-      - 📄 [FixedCastSoulRegistry.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastSoulRegistry.gd.uid)
-      - 📄 [FixedCastStateMachine.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastStateMachine.gd)
+      - 📄 [FixedCastSoulRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastSoulRegistry.gd.uid)
+      - 📄 [FixedCastStateMachine.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastStateMachine.gd)
         - 🏛️ **global class FixedCastStateMachine**
           - `static func default_ledger() -> Dictionary`
           - `static func normalize_ledger(source: Dictionary) -> Dictionary`
@@ -6166,8 +6084,8 @@ Root: `SpaceGame`
           - `static func _earned_change_completed(character_id: String, attachments: Dictionary) -> bool`
           - `static func _is_known_tough(context: Dictionary) -> bool`
           - `static func _entry(_character_id: String, state_id: String) -> Dictionary`
-      - 📄 [FixedCastStateMachine.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastStateMachine.gd.uid)
-      - 📄 [FixedCastVoiceBank.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastVoiceBank.gd)
+      - 📄 [FixedCastStateMachine.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastStateMachine.gd.uid)
+      - 📄 [FixedCastVoiceBank.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastVoiceBank.gd)
         - 🏛️ **global class FixedCastVoiceBank**
           - `static func load_examples() -> Dictionary`
           - `static func reference_combination_count(example_count: int, selection_size: int) -> int`
@@ -6177,8 +6095,8 @@ Root: `SpaceGame`
           - `static func _example_id(example: Dictionary) -> String`
           - `static func _normalized_line(line: String) -> String`
           - `static func _shares_word_run(candidate: String, reference: String, word_count: int) -> bool`
-      - 📄 [FixedCastVoiceBank.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/FixedCastVoiceBank.gd.uid)
-      - 📄 [IntroCinematic.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/IntroCinematic.gd)
+      - 📄 [FixedCastVoiceBank.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastVoiceBank.gd.uid)
+      - 📄 [IntroCinematic.gd](file:///D:/CodingProjects/spacegame/scripts/story/IntroCinematic.gd)
         - `static func cache_nova_voice_lines() -> void`
         - `func start(ui_manager: Control) -> void`
         - `func _run_after_initial_black_frame() -> void`
@@ -6207,14 +6125,14 @@ Root: `SpaceGame`
         - `func _beat(seconds: float) -> void`
         - `func _settle_to_gameplay_camera(duration: float = 2.0) -> void`
         - `func _run() -> void`
-      - 📄 [IntroCinematic.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/IntroCinematic.gd.uid)
-      - 📄 [KaelenInteractionKinds.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/KaelenInteractionKinds.gd)
+      - 📄 [IntroCinematic.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/IntroCinematic.gd.uid)
+      - 📄 [KaelenInteractionKinds.gd](file:///D:/CodingProjects/spacegame/scripts/story/KaelenInteractionKinds.gd)
         - 🏛️ **global class KaelenInteractionKinds**
           - `static func is_valid(kind: String) -> bool`
           - `static func is_turn_in(kind: String) -> bool`
           - `static func allows_safe_after_completion_reveal(kind: String) -> bool`
-      - 📄 [KaelenInteractionKinds.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/KaelenInteractionKinds.gd.uid)
-      - 📄 [KaelenInteractionPacketBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/KaelenInteractionPacketBuilder.gd)
+      - 📄 [KaelenInteractionKinds.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/KaelenInteractionKinds.gd.uid)
+      - 📄 [KaelenInteractionPacketBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/story/KaelenInteractionPacketBuilder.gd)
         - 🏛️ **global class KaelenInteractionPacketBuilder**
           - `static func turn_in_kind_for_mission(mission_state: Dictionary) -> String`
           - `static func _mission_projection(mission_state: Dictionary) -> Dictionary`
@@ -6224,8 +6142,8 @@ Root: `SpaceGame`
           - `static func _partial_delivery_profile(mission_state: Dictionary) -> Dictionary`
           - `static func _accepted_term_profile(mission_state: Dictionary) -> Dictionary`
           - `static func _turn_in_kind_for_tone(outcome_tone: String) -> String`
-      - 📄 [KaelenInteractionPacketBuilder.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/KaelenInteractionPacketBuilder.gd.uid)
-      - 📄 [KnowledgeLedger.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/KnowledgeLedger.gd)
+      - 📄 [KaelenInteractionPacketBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/KaelenInteractionPacketBuilder.gd.uid)
+      - 📄 [KnowledgeLedger.gd](file:///D:/CodingProjects/spacegame/scripts/story/KnowledgeLedger.gd)
         - 🏛️ **global class KnowledgeLedger**
           - `func _init(source_state: Dictionary = {}) -> void`
           - `func state_for(fact_id: String) -> String`
@@ -6236,8 +6154,8 @@ Root: `SpaceGame`
           - `func _question_rank(kind: String, state: String) -> int`
           - `func _sync_player_knows_for_record(state: String, record: Dictionary) -> void`
           - `func _failure(message: String) -> Dictionary`
-      - 📄 [KnowledgeLedger.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/KnowledgeLedger.gd.uid)
-      - 📄 [LocalPressureDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/LocalPressureDirector.gd)
+      - 📄 [KnowledgeLedger.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/KnowledgeLedger.gd.uid)
+      - 📄 [LocalPressureDirector.gd](file:///D:/CodingProjects/spacegame/scripts/story/LocalPressureDirector.gd)
         - `static func empty_state(seed_value: int) -> Dictionary`
         - `static func load_catalog(path: String = CATALOG_PATH) -> Dictionary`
         - `static func parse_catalog(raw: Dictionary) -> Dictionary`
@@ -6263,7 +6181,8 @@ Root: `SpaceGame`
         - `static func _next_random(state: Dictionary, bound: int) -> int`
         - `static func _is_non_negative_int(value: Variant) -> bool`
         - `static func _persistable(value: Dictionary) -> Dictionary`
-      - 📄 [LoungeConversation.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/LoungeConversation.gd)
+      - 📄 [LocalPressureDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/LocalPressureDirector.gd.uid)
+      - 📄 [LoungeConversation.gd](file:///D:/CodingProjects/spacegame/scripts/story/LoungeConversation.gd)
         - 🏛️ **global class LoungeConversation**
           - `static func _shared_rules(npc: Dictionary, flavor_block: String) -> Array`
           - `static func parse_turn(inner_json_text: String, npc_name: String = "") -> Dictionary`
@@ -6277,12 +6196,12 @@ Root: `SpaceGame`
           - `static func _answer_hits_anchors(answer: String, anchors: Array) -> bool`
           - `static func _answer_in_character(answer: String) -> bool`
           - `static func transcript_block(turns: Array, keep: int = 6) -> String`
-      - 📄 [LoungeConversation.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/LoungeConversation.gd.uid)
-      - 📄 [LoungeIntentSelector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/LoungeIntentSelector.gd)
+      - 📄 [LoungeConversation.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/LoungeConversation.gd.uid)
+      - 📄 [LoungeIntentSelector.gd](file:///D:/CodingProjects/spacegame/scripts/story/LoungeIntentSelector.gd)
         - 🏛️ **global class LoungeIntentSelector**
           - `static func anchor_tokens(phrase: String) -> Array`
-      - 📄 [LoungeIntentSelector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/LoungeIntentSelector.gd.uid)
-      - 📄 [MissionConversationCompiler.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationCompiler.gd)
+      - 📄 [LoungeIntentSelector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/LoungeIntentSelector.gd.uid)
+      - 📄 [MissionConversationCompiler.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationCompiler.gd)
         - 🏛️ **global class MissionConversationCompiler**
           - `static func _is_branch_intent(intent: Dictionary) -> bool`
           - `static func merge_slice(bundle: Dictionary, slice_result: Dictionary) -> Dictionary`
@@ -6290,13 +6209,13 @@ Root: `SpaceGame`
           - `static func _objective_summary(mission_plan: Dictionary) -> String`
           - `static func _text(source: Dictionary, key: String, fallback: String) -> String`
           - `static func _contains_any(text: String, needles: Array[String]) -> bool`
-      - 📄 [MissionConversationCompiler.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationCompiler.gd.uid)
-      - 📄 [MissionConversationController.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationController.gd)
+      - 📄 [MissionConversationCompiler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationCompiler.gd.uid)
+      - 📄 [MissionConversationController.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationController.gd)
         - 🏛️ **global class MissionConversationController**
           - `static func _screen(state: Dictionary) -> Dictionary`
           - `static func _terminal_choice_id(intent_id: String) -> String`
-      - 📄 [MissionConversationController.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationController.gd.uid)
-      - 📄 [MissionConversationGeneration.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationGeneration.gd)
+      - 📄 [MissionConversationController.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationController.gd.uid)
+      - 📄 [MissionConversationGeneration.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationGeneration.gd)
         - 🏛️ **global class MissionConversationGeneration**
           - `static func attach(quest: Dictionary, mission: Dictionary, speaker: Dictionary) -> void`
           - `static func fingerprint(quest: Dictionary) -> String`
@@ -6309,8 +6228,8 @@ Root: `SpaceGame`
           - `static func _intent_label(plan: Dictionary, field: String) -> String`
           - `static func promote(quest: Dictionary, result: Dictionary) -> void`
           - `static func copy_generation(source: Dictionary, target: Dictionary) -> void`
-      - 📄 [MissionConversationGeneration.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationGeneration.gd.uid)
-      - 📄 [MissionConversationPlan.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationPlan.gd)
+      - 📄 [MissionConversationGeneration.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationGeneration.gd.uid)
+      - 📄 [MissionConversationPlan.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationPlan.gd)
         - 🏛️ **global class MissionConversationPlan**
           - `static func intent_registry() -> Dictionary`
           - `static func _branch_label(branch: Dictionary) -> String`
@@ -6318,8 +6237,8 @@ Root: `SpaceGame`
           - `static func _has_text(source: Dictionary, keys: Array) -> bool`
           - `static func _has_risk(mission_plan: Dictionary) -> bool`
           - `static func _join_arrays(left: Variant, right: Variant) -> Array`
-      - 📄 [MissionConversationPlan.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationPlan.gd.uid)
-      - 📄 [MissionConversationWorker.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationWorker.gd)
+      - 📄 [MissionConversationPlan.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationPlan.gd.uid)
+      - 📄 [MissionConversationWorker.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationWorker.gd)
         - 🏛️ **global class MissionConversationWorker**
           - `func configure(root_node: Node, transport: Callable) -> void`
           - `func queue_offer(quest: Dictionary) -> void`
@@ -6330,8 +6249,8 @@ Root: `SpaceGame`
           - `func retire_offer(quest: Dictionary) -> void`
           - `func _report_result(id: String) -> void`
           - `func _sync_offer(id: String) -> void`
-      - 📄 [MissionConversationWorker.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionConversationWorker.gd.uid)
-      - 📄 [MissionDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionDirector.gd)
+      - 📄 [MissionConversationWorker.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionConversationWorker.gd.uid)
+      - 📄 [MissionDirector.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionDirector.gd)
         - 🏛️ **global class MissionDirector**
           - `static func declined_offer_cooldown_key(candidate: Dictionary) -> String`
           - `static func _array_fingerprint(value: Variant) -> String`
@@ -6342,13 +6261,13 @@ Root: `SpaceGame`
           - `static func _score_player_ship_fit(candidate: Dictionary, context: Dictionary) -> int`
           - `static func _beat_is_available(beat: Dictionary, beat_states: Dictionary) -> bool`
           - `static func _array_or_empty(value: Variant) -> Array`
-      - 📄 [MissionDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionDirector.gd.uid)
-      - 📄 [MissionHistoryLedger.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionHistoryLedger.gd)
+      - 📄 [MissionDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionDirector.gd.uid)
+      - 📄 [MissionHistoryLedger.gd](file:///D:/CodingProjects/spacegame/scripts/story/MissionHistoryLedger.gd)
         - 🏛️ **global class MissionHistoryLedger**
           - `static func _is_agent_mission_event(event: Dictionary, payload: Dictionary) -> bool`
           - `static func _entry_from_payload(payload: Dictionary) -> Dictionary`
-      - 📄 [MissionHistoryLedger.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/MissionHistoryLedger.gd.uid)
-      - 📄 [NarrativeCacheScheduler.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeCacheScheduler.gd)
+      - 📄 [MissionHistoryLedger.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/MissionHistoryLedger.gd.uid)
+      - 📄 [NarrativeCacheScheduler.gd](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeCacheScheduler.gd)
         - 🏛️ **global class NarrativeCacheScheduler**
           - `func queue_job(job: Dictionary) -> Dictionary`
           - `func queue_conversation_slices(base_job: Dictionary, slices: Array) -> Dictionary`
@@ -6388,8 +6307,8 @@ Root: `SpaceGame`
           - `static func _stamp(job: Dictionary, timestamp_name: String) -> void`
           - `static func _duration_summary(values: Array[int]) -> Dictionary`
           - `static func _failure(message: String) -> Dictionary`
-      - 📄 [NarrativeCacheScheduler.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeCacheScheduler.gd.uid)
-      - 📄 [NarrativeFingerprintLedger.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeFingerprintLedger.gd)
+      - 📄 [NarrativeCacheScheduler.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeCacheScheduler.gd.uid)
+      - 📄 [NarrativeFingerprintLedger.gd](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeFingerprintLedger.gd)
         - 🏛️ **global class NarrativeFingerprintLedger**
           - `func inspect(text: String, kind: String = "") -> Dictionary`
           - `func register(text: String, kind: String = "", metadata: Dictionary = {}) -> Dictionary`
@@ -6399,37 +6318,37 @@ Root: `SpaceGame`
           - `static func _bigrams(tokens: Array) -> Dictionary`
           - `static func _jaccard(left: Dictionary, right: Dictionary) -> float`
           - `static func _threshold_for(word_count: int) -> float`
-      - 📄 [NarrativeFingerprintLedger.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeFingerprintLedger.gd.uid)
-      - 📄 [NarrativeQualityGate.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeQualityGate.gd)
+      - 📄 [NarrativeFingerprintLedger.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeFingerprintLedger.gd.uid)
+      - 📄 [NarrativeQualityGate.gd](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeQualityGate.gd)
         - 🏛️ **global class NarrativeQualityGate**
           - `static func _starts_a_sentence(text: String, index: int) -> bool`
           - `static func _fail(reason: String, detail: Dictionary = {}) -> Dictionary`
-      - 📄 [NarrativeQualityGate.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeQualityGate.gd.uid)
-      - 📄 [NarrativeRuntimeConfig.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeRuntimeConfig.gd)
+      - 📄 [NarrativeQualityGate.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeQualityGate.gd.uid)
+      - 📄 [NarrativeRuntimeConfig.gd](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeRuntimeConfig.gd)
         - 🏛️ **global class NarrativeRuntimeConfigService**
           - `func _ready() -> void`
           - `func reset() -> void`
           - `func is_enabled(flag_name: String) -> bool`
           - `func set_enabled(flag_name: String, enabled: bool) -> bool`
           - `func snapshot() -> Dictionary`
-      - 📄 [NarrativeRuntimeConfig.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/NarrativeRuntimeConfig.gd.uid)
-      - 📄 [NovaAnatomySlip.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/NovaAnatomySlip.gd)
+      - 📄 [NarrativeRuntimeConfig.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NarrativeRuntimeConfig.gd.uid)
+      - 📄 [NovaAnatomySlip.gd](file:///D:/CodingProjects/spacegame/scripts/story/NovaAnatomySlip.gd)
         - 🏛️ **global class NovaAnatomySlip**
           - `func apply(line: String, rng: RandomNumberGenerator) -> String`
           - `static func _find_own_part(low: String) -> String`
           - `func reset() -> void`
           - `func to_save_dict() -> Dictionary`
           - `func load_from_dict(data: Dictionary) -> void`
-      - 📄 [NovaAnatomySlip.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/NovaAnatomySlip.gd.uid)
-      - 📄 [NovaLineBankCategories.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/NovaLineBankCategories.gd)
+      - 📄 [NovaAnatomySlip.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NovaAnatomySlip.gd.uid)
+      - 📄 [NovaLineBankCategories.gd](file:///D:/CodingProjects/spacegame/scripts/story/NovaLineBankCategories.gd)
         - 🏛️ **global class NovaLineBankCategories**
           - `static func is_valid(category: String) -> bool`
           - `static func is_movement(category: String) -> bool`
           - `static func is_protected(category: String) -> bool`
           - `static func for_semantic_event(event_id: String) -> String`
           - `static func describe(category: String) -> String`
-      - 📄 [NovaLineBankCategories.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/NovaLineBankCategories.gd.uid)
-      - 📄 [OutcomeReactionProjector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/OutcomeReactionProjector.gd)
+      - 📄 [NovaLineBankCategories.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NovaLineBankCategories.gd.uid)
+      - 📄 [OutcomeReactionProjector.gd](file:///D:/CodingProjects/spacegame/scripts/story/OutcomeReactionProjector.gd)
         - 🏛️ **global class OutcomeReactionProjector**
           - `static func remember_completed(ledger: Array, mission: Dictionary, activity_step: int = 0) -> Array`
           - `static func normalize_memories(raw: Variant) -> Array`
@@ -6439,15 +6358,16 @@ Root: `SpaceGame`
           - `static func payout_band(credits: int) -> String`
           - `static func is_public(outcome_tag: String) -> bool`
           - `static func _empty(reason: String) -> Dictionary`
-      - 📄 [OutcomeReactionProjector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/OutcomeReactionProjector.gd.uid)
-      - 📄 [QuestChoicePolicy.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/QuestChoicePolicy.gd)
+      - 📄 [OutcomeReactionProjector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/OutcomeReactionProjector.gd.uid)
+      - 📄 [QuestChoicePolicy.gd](file:///D:/CodingProjects/spacegame/scripts/story/QuestChoicePolicy.gd)
         - 🏛️ **global class QuestChoicePolicy**
           - `static func filter_branches(contract_source: Variant, context: Dictionary = {}) -> Dictionary`
           - `static func _equivalence_reason(branch: Dictionary, kept: Array[Dictionary]) -> String`
           - `static func _branch_fingerprint(branch: Dictionary) -> String`
           - `static func _substance_already_spoken(fact_text: String, opening_lower: String) -> bool`
           - `static func contract_records_risk(contract_source: Variant) -> bool`
-      - 📄 [QuietMomentBeats.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentBeats.gd)
+      - 📄 [QuestChoicePolicy.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuestChoicePolicy.gd.uid)
+      - 📄 [QuietMomentBeats.gd](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentBeats.gd)
         - 🏛️ **global class QuietMomentBeats**
           - `static func load_document() -> Dictionary`
           - `static func reset_rotation() -> void`
@@ -6455,8 +6375,8 @@ Root: `SpaceGame`
           - `static func beat(beat_id: String) -> Dictionary`
           - `static func _draw(key: String, pool: Array, rng: RandomNumberGenerator) -> Variant`
           - `static func build_request(beat_id: String, rng: RandomNumberGenerator) -> Dictionary`
-      - 📄 [QuietMomentBeats.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentBeats.gd.uid)
-      - 📄 [QuietMomentChecks.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentChecks.gd)
+      - 📄 [QuietMomentBeats.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentBeats.gd.uid)
+      - 📄 [QuietMomentChecks.gd](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentChecks.gd)
         - 🏛️ **global class QuietMomentChecks**
           - `static func normalize(text: String) -> String`
           - `static func words_of(text: String) -> PackedStringArray`
@@ -6468,8 +6388,8 @@ Root: `SpaceGame`
           - `static func _packet_has_number(packet: String) -> bool`
           - `static func _has_hyphen_compound(text: String) -> bool`
           - `static func _has_all_caps_run(text: String) -> bool`
-      - 📄 [QuietMomentChecks.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentChecks.gd.uid)
-      - 📄 [QuietMomentDirector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentDirector.gd)
+      - 📄 [QuietMomentChecks.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentChecks.gd.uid)
+      - 📄 [QuietMomentDirector.gd](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentDirector.gd)
         - 🏛️ **global class QuietMomentDirector**
           - `func try_outcome(memory: Dictionary, state_id: String, still_valid: Callable, deliver: Callable, finished: Callable) -> bool`
           - `func _request_outcome(serial: int, built: Dictionary, state_id: String, still_valid: Callable, deliver: Callable, finished: Callable, attempt: int) -> void`
@@ -6487,14 +6407,14 @@ Root: `SpaceGame`
           - `func to_save_dict() -> Dictionary`
           - `func load_from_dict(data: Dictionary) -> void`
           - `func reset_for_new_campaign() -> void`
-      - 📄 [QuietMomentDirector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentDirector.gd.uid)
-      - 📄 [QuietMomentLineValidator.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentLineValidator.gd)
+      - 📄 [QuietMomentDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentDirector.gd.uid)
+      - 📄 [QuietMomentLineValidator.gd](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentLineValidator.gd)
         - 🏛️ **global class QuietMomentLineValidator**
           - `static func _contains_any(text: String, terms: Array) -> bool`
           - `static func _contains_reference_run(text: String, phrases: Array) -> bool`
           - `static func _normalize(value: String) -> String`
-      - 📄 [QuietMomentLineValidator.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentLineValidator.gd.uid)
-      - 📄 [QuietMomentSelector.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentSelector.gd)
+      - 📄 [QuietMomentLineValidator.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentLineValidator.gd.uid)
+      - 📄 [QuietMomentSelector.gd](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentSelector.gd)
         - 🏛️ **global class QuietMomentSelector**
           - `static func closer_tag(line: String) -> String`
           - `static func opener_of(line: String) -> String`
@@ -6504,8 +6424,8 @@ Root: `SpaceGame`
           - `func to_save_dict() -> Dictionary`
           - `func load_from_dict(data: Dictionary) -> void`
           - `func clear() -> void`
-      - 📄 [QuietMomentSelector.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/QuietMomentSelector.gd.uid)
-      - 📄 [ShipBehaviorObserver.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/ShipBehaviorObserver.gd)
+      - 📄 [QuietMomentSelector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentSelector.gd.uid)
+      - 📄 [ShipBehaviorObserver.gd](file:///D:/CodingProjects/spacegame/scripts/story/ShipBehaviorObserver.gd)
         - 🏛️ **global class ShipBehaviorObserver**
           - `func state_snapshot() -> Dictionary`
           - `func _on_ship_movement_event(event_id: String, context: Dictionary) -> void`
@@ -6515,12 +6435,12 @@ Root: `SpaceGame`
           - `func _note_dock_target(context: Dictionary) -> void`
           - `func _observe_dock(now_seconds: float) -> void`
           - `func _observe_arrival(context: Dictionary, now_seconds: float) -> void`
-      - 📄 [ShipBehaviorObserver.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/ShipBehaviorObserver.gd.uid)
-      - 📄 [ShipMovementEvents.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/ShipMovementEvents.gd)
+      - 📄 [ShipBehaviorObserver.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/ShipBehaviorObserver.gd.uid)
+      - 📄 [ShipMovementEvents.gd](file:///D:/CodingProjects/spacegame/scripts/story/ShipMovementEvents.gd)
         - 🏛️ **global class ShipMovementEvents**
           - `static func is_valid(event_id: String) -> bool`
-      - 📄 [ShipMovementEvents.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/ShipMovementEvents.gd.uid)
-      - 📄 [StoryAgentOfferBuilder.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryAgentOfferBuilder.gd)
+      - 📄 [ShipMovementEvents.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/ShipMovementEvents.gd.uid)
+      - 📄 [StoryAgentOfferBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/story/StoryAgentOfferBuilder.gd)
         - 🏛️ **global class StoryAgentOfferBuilder**
           - `static func can_build(agent_profile: Dictionary) -> bool`
           - `static func _causal_contract_for(quest: Dictionary, candidate: Dictionary) -> Dictionary`
@@ -6546,8 +6466,8 @@ Root: `SpaceGame`
           - `static func _global_state() -> Node`
           - `static func _global_state_value(property: String, fallback: Variant) -> Variant`
           - `static func _global_state_call(method: String, fallback: Variant) -> Variant`
-      - 📄 [StoryAgentOfferBuilder.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryAgentOfferBuilder.gd.uid)
-      - 📄 [StoryManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryManager.gd)
+      - 📄 [StoryAgentOfferBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/StoryAgentOfferBuilder.gd.uid)
+      - 📄 [StoryManager.gd](file:///D:/CodingProjects/spacegame/scripts/story/StoryManager.gd)
         - `func _ready() -> void`
         - `func reset_for_restart() -> void`
         - `func _on_llm_ready(_model_name: String) -> void`
@@ -6705,8 +6625,8 @@ Root: `SpaceGame`
         - `func _kaelen_handoff_relationship_band(_agent_name: String) -> String`
         - `func _faction_ids_for_system(system_id: String) -> Array`
         - `func _fire_debug_story_quest() -> void`
-      - 📄 [StoryManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryManager.gd.uid)
-      - 📄 [StoryQuestManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryQuestManager.gd)
+      - 📄 [StoryManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/StoryManager.gd.uid)
+      - 📄 [StoryQuestManager.gd](file:///D:/CodingProjects/spacegame/scripts/story/StoryQuestManager.gd)
         - `func _process(delta: float) -> void`
         - `func reset_for_restart() -> void`
         - `func is_active() -> bool`
@@ -6725,16 +6645,16 @@ Root: `SpaceGame`
         - `func _emit_ui_update() -> void`
         - `func _objective_display_line() -> String`
         - `func _find_ui_manager() -> Node`
-      - 📄 [StoryQuestManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryQuestManager.gd.uid)
-      - 📄 [StoryScreenshots.gd](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryScreenshots.gd)
+      - 📄 [StoryQuestManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/StoryQuestManager.gd.uid)
+      - 📄 [StoryScreenshots.gd](file:///D:/CodingProjects/spacegame/scripts/story/StoryScreenshots.gd)
         - 🏛️ **global class StoryScreenshots**
           - `static func shot_path(campaign_path: String, tag: String, unix_time: int) -> String`
           - `static func _sanitize_tag(tag: String) -> String`
           - `static func capture_deferred(campaign_path: String, tag: String) -> void`
           - `static func _capture_now(campaign_path: String, tag: String) -> void`
-      - 📄 [StoryScreenshots.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/story/StoryScreenshots.gd.uid)
+      - 📄 [StoryScreenshots.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/StoryScreenshots.gd.uid)
     - 📂 **systems/**
-      - 📄 [IllegalMiningEnforcement.gd](file:///C:/CodingProjects/SpaceGame/scripts/systems/IllegalMiningEnforcement.gd)
+      - 📄 [IllegalMiningEnforcement.gd](file:///D:/CodingProjects/spacegame/scripts/systems/IllegalMiningEnforcement.gd)
         - 🏛️ **global class IllegalMiningEnforcement**
           - `func clear_expired(now_msec: int) -> int`
           - `func active_response_count(system_id: String, owner_faction: String = "") -> int`
@@ -6744,8 +6664,8 @@ Root: `SpaceGame`
           - `static func mark_enforcement_ship(ship: Node, owner_faction: String, system_id: String) -> void`
           - `static func is_enforcement_ship(ship: Node) -> bool`
           - `func _key(system_id: String, owner_faction: String) -> String`
-      - 📄 [IllegalMiningEnforcement.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/systems/IllegalMiningEnforcement.gd.uid)
-    - 📄 [test_quest_gen.gd](file:///C:/CodingProjects/SpaceGame/scripts/test_quest_gen.gd)
+      - 📄 [IllegalMiningEnforcement.gd.uid](file:///D:/CodingProjects/spacegame/scripts/systems/IllegalMiningEnforcement.gd.uid)
+    - 📄 [test_quest_gen.gd](file:///D:/CodingProjects/spacegame/scripts/test_quest_gen.gd)
       - `func _ready() -> void`
       - `func _run_next() -> void`
       - `func _on_quest_result(quest_data: Dictionary, is_fallback: bool) -> void`
@@ -6755,9 +6675,9 @@ Root: `SpaceGame`
       - `func _cause_ids_for_quest(quest_data: Dictionary) -> Dictionary`
       - `func _content_source_since(start_msec: int) -> String`
       - `func _write_results_artifact() -> void`
-    - 📄 [test_quest_gen.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/test_quest_gen.gd.uid)
+    - 📄 [test_quest_gen.gd.uid](file:///D:/CodingProjects/spacegame/scripts/test_quest_gen.gd.uid)
     - 📂 **time/**
-      - 📄 [CampaignClock.gd](file:///C:/CodingProjects/SpaceGame/scripts/time/CampaignClock.gd)
+      - 📄 [CampaignClock.gd](file:///D:/CodingProjects/spacegame/scripts/time/CampaignClock.gd)
         - `func reset_for_restart() -> void`
         - `func advance_minutes(minutes: int) -> void`
         - `func advance_hours(hours: int) -> void`
@@ -6765,17 +6685,30 @@ Root: `SpaceGame`
         - `func restore_state(state: Dictionary) -> void`
         - `func formatted_datetime() -> String`
         - `func format_duration(minutes: int) -> String`
-      - 📄 [CampaignClock.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/time/CampaignClock.gd.uid)
-    - 📄 [tts_server.py](file:///C:/CodingProjects/SpaceGame/scripts/tts_server.py)
+      - 📄 [CampaignClock.gd.uid](file:///D:/CodingProjects/spacegame/scripts/time/CampaignClock.gd.uid)
+    - 📄 [tts_device.py](file:///D:/CodingProjects/spacegame/scripts/tts_device.py)
+      - 🏛️ **Capacity**
+      - 🏛️ **AdaptiveDevice**
+        - `def __init__(self, cpu_model, gpu_factory, probe, release, mode, clock)`
+        - `def reserve(sample)`
+        - `def _cpu(self, reason, cooldown)`
+        - `def select(self)`
+        - `def render(self, generate)`
+        - `def status(self)`
+      - `def cuda_capacity(torch)`
+    - 📄 [tts_server.py](file:///D:/CodingProjects/spacegame/scripts/tts_server.py)
+      - `def _gpu_model(device)`
+      - `def _release_gpu(device)`
       - `def resolve_voice(voice_str)`
       - `def apply_style(pack, style_scale, style_from)`
       - `async def health_check()`
-      - `async def text_to_speech(data)`
-    - 📄 [tts_style_test.py](file:///C:/CodingProjects/SpaceGame/scripts/tts_style_test.py)
+      - `def text_to_speech(data)`
+      - `def _text_to_speech(data)`
+    - 📄 [tts_style_test.py](file:///D:/CodingProjects/spacegame/scripts/tts_style_test.py)
       - `def synth(label, text, voice, style_scale, style_from)`
       - `def main()`
     - 📂 **ui/**
-      - 📄 [BranchMapUI.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/BranchMapUI.gd)
+      - 📄 [BranchMapUI.gd](file:///D:/CodingProjects/spacegame/scripts/ui/BranchMapUI.gd)
         - 🏛️ **global class BranchMapUI**
           - `func _ready() -> void`
           - `func _build_title() -> void`
@@ -6805,8 +6738,8 @@ Root: `SpaceGame`
           - `func _on_system_changed(_system_id: String, _arrival_gate_id: String) -> void`
           - `func get_next_hop_legacy_id() -> String`
           - `func clear_route() -> void`
-      - 📄 [BranchMapUI.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/BranchMapUI.gd.uid)
-      - 📄 [CombatPanel.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/CombatPanel.gd)
+      - 📄 [BranchMapUI.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/BranchMapUI.gd.uid)
+      - 📄 [CombatPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/CombatPanel.gd)
         - 🏛️ **_ScanlineOverlay**
           - `func _draw() -> void`
         - `func _sensor_sig(action_type: Variant, faction: String, is_boss: bool) -> String`
@@ -6855,8 +6788,8 @@ Root: `SpaceGame`
         - `func _add_queue_chip(action: Dictionary) -> void`
         - `func _remove_last_queue_chip() -> void`
         - `func _clear_queue_chips() -> void`
-      - 📄 [CombatPanel.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/CombatPanel.gd.uid)
-      - 📄 [DevPanel.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/DevPanel.gd)
+      - 📄 [CombatPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/CombatPanel.gd.uid)
+      - 📄 [DevPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/DevPanel.gd)
         - 🏛️ **global class DevPanel**
           - `func add_action_button(label: String, callback: Callable) -> Button`
           - `func add_tab(title: String) -> VBoxContainer`
@@ -6910,8 +6843,8 @@ Root: `SpaceGame`
           - `func _on_sv_selected(index: int) -> void`
           - `func _make_panel_style() -> StyleBoxFlat`
           - `func _style_action_btn(btn: Button) -> void`
-      - 📄 [DevPanel.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/DevPanel.gd.uid)
-      - 📄 [InvestigationPanel.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/InvestigationPanel.gd)
+      - 📄 [DevPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/DevPanel.gd.uid)
+      - 📄 [InvestigationPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/InvestigationPanel.gd)
         - `func setup(owner_ui: Control, quest_manager: Node) -> void`
         - `func open_mission(id: String) -> void`
         - `func _process(delta: float) -> void`
@@ -6920,7 +6853,8 @@ Root: `SpaceGame`
         - `func _button(text: String, reason: String, action: Callable) -> void`
         - `func _label(text: String) -> void`
         - `static func _reason(reason: String) -> String`
-      - 📄 [LandingScreen.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/LandingScreen.gd)
+      - 📄 [InvestigationPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/InvestigationPanel.gd.uid)
+      - 📄 [LandingScreen.gd](file:///D:/CodingProjects/spacegame/scripts/ui/LandingScreen.gd)
         - `func _ready() -> void`
         - `func _exit_tree() -> void`
         - `func _seed_backdrop() -> void`
@@ -6934,8 +6868,8 @@ Root: `SpaceGame`
         - `func _confirm_delete() -> void`
         - `func _process(delta: float) -> void`
         - `func _draw() -> void`
-      - 📄 [LandingScreen.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/LandingScreen.gd.uid)
-      - 📄 [LoadingWarpStarfield.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/LoadingWarpStarfield.gd)
+      - 📄 [LandingScreen.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/LandingScreen.gd.uid)
+      - 📄 [LoadingWarpStarfield.gd](file:///D:/CodingProjects/spacegame/scripts/ui/LoadingWarpStarfield.gd)
         - `func set_vanishing_target(target: Control) -> void`
         - `func _ready() -> void`
         - `func _process(delta: float) -> void`
@@ -6944,8 +6878,8 @@ Root: `SpaceGame`
         - `func _move_band(stars: Array[Dictionary], delta: float, band: String) -> void`
         - `func _draw() -> void`
         - `func _draw_band(stars: Array[Dictionary], base_color: Color) -> void`
-      - 📄 [LoadingWarpStarfield.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/LoadingWarpStarfield.gd.uid)
-      - 📄 [ModelViewer.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/ModelViewer.gd)
+      - 📄 [LoadingWarpStarfield.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/LoadingWarpStarfield.gd.uid)
+      - 📄 [ModelViewer.gd](file:///D:/CodingProjects/spacegame/scripts/ui/ModelViewer.gd)
         - 🏛️ **global class ModelViewer**
           - `func _ready() -> void`
           - `func _build_rig() -> void`
@@ -6958,23 +6892,24 @@ Root: `SpaceGame`
           - `func _zoom(amount: float) -> void`
           - `func _aabb(node: Node3D) -> AABB`
           - `func _collect(node: Node, out: Array) -> void`
-      - 📄 [ModelViewer.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/ModelViewer.gd.uid)
-      - 📄 [UILayoutManager.gd](file:///C:/CodingProjects/SpaceGame/scripts/ui/UILayoutManager.gd)
+      - 📄 [ModelViewer.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/ModelViewer.gd.uid)
+      - 📄 [UILayoutManager.gd](file:///D:/CodingProjects/spacegame/scripts/ui/UILayoutManager.gd)
+        - `func _disconnect_layout() -> void`
         - `func register_panel(id: String, panel: Control) -> void`
+        - `func reset_defaults() -> void`
+        - `func _content_minimum(panel: Control) -> Vector2`
+        - `func enforce_layout() -> void`
+        - `static func solve_layout(viewport: Vector2, entries: Array, quest_size: Vector2) -> Dictionary`
         - `func toggle_edit_mode() -> void`
         - `func is_edit_mode() -> bool`
         - `func handle_input(event: InputEvent) -> void`
         - `func _create_overlay(id: String) -> void`
         - `func _sync_overlay(id: String) -> void`
-        - `func _is_dynamic(id: String) -> bool`
-        - `func _create_placeholder(id: String) -> void`
-        - `func _snap_back_if_overlapping(id: String) -> void`
         - `func _save_layout() -> void`
         - `func _load_layout() -> void`
-        - `func _to_pixel_pos(p: Control) -> void`
-      - 📄 [UILayoutManager.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/ui/UILayoutManager.gd.uid)
+      - 📄 [UILayoutManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/UILayoutManager.gd.uid)
     - 📂 **visuals/**
-      - 📄 [AsteroidModels.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/AsteroidModels.gd)
+      - 📄 [AsteroidModels.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/AsteroidModels.gd)
         - 🏛️ **global class AsteroidModels**
           - `static func _ensure_loaded() -> void`
           - `static func apply_random_model(mesh_instance: MeshInstance3D, rng_seed: int) -> void`
@@ -6982,35 +6917,35 @@ Root: `SpaceGame`
           - `static func model_index_for_seed(rng_seed: int) -> int`
           - `static func material_for_index(idx: int) -> Material`
           - `static func fragment_scene_path_for_index(idx: int) -> String`
-      - 📄 [AsteroidModels.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/AsteroidModels.gd.uid)
-      - 📄 [CombatDamageNumber.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/CombatDamageNumber.gd)
+      - 📄 [AsteroidModels.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/AsteroidModels.gd.uid)
+      - 📄 [CombatDamageNumber.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/CombatDamageNumber.gd)
         - 🏛️ **global class CombatDamageNumber**
           - `static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: bool = false, scale: float = 1.0) -> void`
-      - 📄 [CombatDamageNumber.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/CombatDamageNumber.gd.uid)
-      - 📄 [EngineExhaust.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/EngineExhaust.gd)
+      - 📄 [CombatDamageNumber.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/CombatDamageNumber.gd.uid)
+      - 📄 [EngineExhaust.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/EngineExhaust.gd)
         - 🏛️ **global class EngineExhaust**
-      - 📄 [EngineExhaust.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/EngineExhaust.gd.uid)
-      - 📄 [ImpactEffect.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/ImpactEffect.gd)
+      - 📄 [EngineExhaust.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/EngineExhaust.gd.uid)
+      - 📄 [ImpactEffect.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/ImpactEffect.gd)
         - 🏛️ **global class ImpactEffect**
           - `static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void`
           - `static func spawn_explosion(parent: Node3D, pos: Vector3, col: Color, size: float = 1.0) -> void`
-      - 📄 [ImpactEffect.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/ImpactEffect.gd.uid)
-      - 📄 [PlanetRotation.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/PlanetRotation.gd)
+      - 📄 [ImpactEffect.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/ImpactEffect.gd.uid)
+      - 📄 [PlanetRotation.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/PlanetRotation.gd)
         - `func _ready() -> void`
         - `func _process(delta: float) -> void`
         - `static func apply(planet: Node3D, is_gas: bool, rng: RandomNumberGenerator) -> void`
-      - 📄 [PlanetRotation.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/PlanetRotation.gd.uid)
-      - 📄 [SkyFollower.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/SkyFollower.gd)
+      - 📄 [PlanetRotation.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/PlanetRotation.gd.uid)
+      - 📄 [SkyFollower.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/SkyFollower.gd)
         - `func _process(_delta: float) -> void`
-      - 📄 [SkyFollower.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/SkyFollower.gd.uid)
-      - 📄 [SystemAmbience.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/SystemAmbience.gd)
+      - 📄 [SkyFollower.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/SkyFollower.gd.uid)
+      - 📄 [SystemAmbience.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/SystemAmbience.gd)
         - `static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D`
         - `static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D`
         - `static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D`
         - `static func apply_glow(env: Environment, connect_toggle: bool = true) -> void`
         - `static func apply_bloom_amount(env: Environment, amount: float) -> void`
-      - 📄 [SystemAmbience.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/SystemAmbience.gd.uid)
-      - 📄 [ThrusterBank.gd](file:///C:/CodingProjects/SpaceGame/scripts/visuals/ThrusterBank.gd)
+      - 📄 [SystemAmbience.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/SystemAmbience.gd.uid)
+      - 📄 [ThrusterBank.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/ThrusterBank.gd)
         - 🏛️ **global class ThrusterBank**
           - `func setup(anchor_points: Array[Node3D], color: Color, scale_factor: float = 1.0) -> void`
           - `func clear() -> void`
@@ -7022,35 +6957,35 @@ Root: `SpaceGame`
           - `func _create_shared_light() -> void`
           - `func _socket_scale_for(anchor: Node3D) -> float`
           - `func _set_node_visible(effect: Dictionary, visible: bool) -> void`
-      - 📄 [ThrusterBank.gd.current_best_backup](file:///C:/CodingProjects/SpaceGame/scripts/visuals/ThrusterBank.gd.current_best_backup)
-      - 📄 [ThrusterBank.gd.uid](file:///C:/CodingProjects/SpaceGame/scripts/visuals/ThrusterBank.gd.uid)
+      - 📄 [ThrusterBank.gd.current_best_backup](file:///D:/CodingProjects/spacegame/scripts/visuals/ThrusterBank.gd.current_best_backup)
+      - 📄 [ThrusterBank.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/ThrusterBank.gd.uid)
   - 📂 **shaders/**
-    - 📄 [distortion.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/distortion.gdshader)
-    - 📄 [distortion.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/distortion.gdshader.uid)
-    - 📄 [hyperspace_tunnel.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/hyperspace_tunnel.gdshader)
-    - 📄 [hyperspace_tunnel.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/hyperspace_tunnel.gdshader.uid)
-    - 📄 [hyperspace_tunnel_3d.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/hyperspace_tunnel_3d.gdshader)
-    - 📄 [hyperspace_tunnel_3d.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/hyperspace_tunnel_3d.gdshader.uid)
-    - 📄 [intro_glitch.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/intro_glitch.gdshader)
-    - 📄 [intro_glitch.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/intro_glitch.gdshader.uid)
-    - 📄 [nebula.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/nebula.gdshader)
-    - 📄 [nebula.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/nebula.gdshader.uid)
-    - 📄 [starfield.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/starfield.gdshader)
-    - 📄 [starfield.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/starfield.gdshader.uid)
-    - 📄 [warp_exit_bubble.gdshader](file:///C:/CodingProjects/SpaceGame/shaders/warp_exit_bubble.gdshader)
-    - 📄 [warp_exit_bubble.gdshader.uid](file:///C:/CodingProjects/SpaceGame/shaders/warp_exit_bubble.gdshader.uid)
+    - 📄 [distortion.gdshader](file:///D:/CodingProjects/spacegame/shaders/distortion.gdshader)
+    - 📄 [distortion.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/distortion.gdshader.uid)
+    - 📄 [hyperspace_tunnel.gdshader](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel.gdshader)
+    - 📄 [hyperspace_tunnel.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel.gdshader.uid)
+    - 📄 [hyperspace_tunnel_3d.gdshader](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel_3d.gdshader)
+    - 📄 [hyperspace_tunnel_3d.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel_3d.gdshader.uid)
+    - 📄 [intro_glitch.gdshader](file:///D:/CodingProjects/spacegame/shaders/intro_glitch.gdshader)
+    - 📄 [intro_glitch.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/intro_glitch.gdshader.uid)
+    - 📄 [nebula.gdshader](file:///D:/CodingProjects/spacegame/shaders/nebula.gdshader)
+    - 📄 [nebula.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/nebula.gdshader.uid)
+    - 📄 [starfield.gdshader](file:///D:/CodingProjects/spacegame/shaders/starfield.gdshader)
+    - 📄 [starfield.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/starfield.gdshader.uid)
+    - 📄 [warp_exit_bubble.gdshader](file:///D:/CodingProjects/spacegame/shaders/warp_exit_bubble.gdshader)
+    - 📄 [warp_exit_bubble.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/warp_exit_bubble.gdshader.uid)
   - 📂 **skills/**
-    - 📄 [skill_adding_minor_npcs.md](file:///C:/CodingProjects/SpaceGame/skills/skill_adding_minor_npcs.md)
-    - 📄 [skill_adding_solar_systems_with_jumpgates.md](file:///C:/CodingProjects/SpaceGame/skills/skill_adding_solar_systems_with_jumpgates.md)
-    - 📄 [skill_creating_fetch_quests.md](file:///C:/CodingProjects/SpaceGame/skills/skill_creating_fetch_quests.md)
-    - 📄 [skill_jump_gate_transition.md](file:///C:/CodingProjects/SpaceGame/skills/skill_jump_gate_transition.md)
-    - 📄 [skill_llm_character_dialogue.md](file:///C:/CodingProjects/SpaceGame/skills/skill_llm_character_dialogue.md)
-    - 📄 [skill_tts_interface_and_caching.md](file:///C:/CodingProjects/SpaceGame/skills/skill_tts_interface_and_caching.md)
-    - 📄 [skill_tts_troubleshooting.md](file:///C:/CodingProjects/SpaceGame/skills/skill_tts_troubleshooting.md)
-    - 📄 [skill_tts_voice_selection.md](file:///C:/CodingProjects/SpaceGame/skills/skill_tts_voice_selection.md)
+    - 📄 [skill_adding_minor_npcs.md](file:///D:/CodingProjects/spacegame/skills/skill_adding_minor_npcs.md)
+    - 📄 [skill_adding_solar_systems_with_jumpgates.md](file:///D:/CodingProjects/spacegame/skills/skill_adding_solar_systems_with_jumpgates.md)
+    - 📄 [skill_creating_fetch_quests.md](file:///D:/CodingProjects/spacegame/skills/skill_creating_fetch_quests.md)
+    - 📄 [skill_jump_gate_transition.md](file:///D:/CodingProjects/spacegame/skills/skill_jump_gate_transition.md)
+    - 📄 [skill_llm_character_dialogue.md](file:///D:/CodingProjects/spacegame/skills/skill_llm_character_dialogue.md)
+    - 📄 [skill_tts_interface_and_caching.md](file:///D:/CodingProjects/spacegame/skills/skill_tts_interface_and_caching.md)
+    - 📄 [skill_tts_troubleshooting.md](file:///D:/CodingProjects/spacegame/skills/skill_tts_troubleshooting.md)
+    - 📄 [skill_tts_voice_selection.md](file:///D:/CodingProjects/spacegame/skills/skill_tts_voice_selection.md)
   - 📂 **tests/**
     - 📂 **ai/**
-      - 📄 [run_chapter_narrative_director_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_chapter_narrative_director_tests.gd)
+      - 📄 [run_chapter_narrative_director_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_chapter_narrative_director_tests.gd)
         - `func _initialize() -> void`
         - `func _test_prompt_uses_labeled_director_inputs_only() -> void`
         - `func _test_prompt_declares_chapter_packet_contract() -> void`
@@ -7062,24 +6997,24 @@ Root: `SpaceGame`
         - `func _test_fallback_packet_is_valid_and_grounded() -> void`
         - `func _has_error_code(validation: ValidationResult, code: String) -> bool`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_chapter_narrative_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_chapter_narrative_director_tests.gd.uid)
-      - 📄 [run_context_block_leak_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_context_block_leak_tests.gd)
+      - 📄 [run_chapter_narrative_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_chapter_narrative_director_tests.gd.uid)
+      - 📄 [run_context_block_leak_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_context_block_leak_tests.gd)
         - `func _initialize() -> void`
         - `func _test_story_state_public_block_uses_allowlist() -> void`
         - `func _test_named_small_model_blocks_do_not_leak_director_fields() -> void`
         - `func _salted_story_state() -> Dictionary`
         - `func _assert_no_secret_tokens(block: String, block_name: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_context_block_leak_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_context_block_leak_tests.gd.uid)
-      - 📄 [run_llm_recovery_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_llm_recovery_tests.gd)
+      - 📄 [run_context_block_leak_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_context_block_leak_tests.gd.uid)
+      - 📄 [run_llm_recovery_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_llm_recovery_tests.gd)
         - `func _initialize() -> void`
         - `func _test_heartbeat_starts_once_after_service_recovery(source: String) -> void`
         - `func _test_small_transport_failures_trigger_recovery(source: String) -> void`
         - `func _test_failed_probe_keeps_optional_work_deferred(source: String) -> void`
         - `func _function_body(source: String, marker: String) -> String`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_llm_recovery_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_llm_recovery_tests.gd.uid)
-      - 📄 [run_local_model_gateway_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_local_model_gateway_tests.gd)
+      - 📄 [run_llm_recovery_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_llm_recovery_tests.gd.uid)
+      - 📄 [run_local_model_gateway_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_local_model_gateway_tests.gd)
         - `func _initialize() -> void`
         - `func _test_prefers_qwen_3b_for_small_dialogue() -> void`
         - `func _test_prefers_large_story_model_for_bible() -> void`
@@ -7088,8 +7023,8 @@ Root: `SpaceGame`
         - `func _test_routes_new_capabilities_to_expected_profiles() -> void`
         - `func _test_chapter_plan_uses_large_story_profile() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_local_model_gateway_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_local_model_gateway_tests.gd.uid)
-      - 📄 [run_narrative_director_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_narrative_director_tests.gd)
+      - 📄 [run_local_model_gateway_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_local_model_gateway_tests.gd.uid)
+      - 📄 [run_narrative_director_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_narrative_director_tests.gd)
         - `func _initialize() -> void`
         - `func _test_campaign_bible_prompt_includes_guardrails() -> void`
         - `func _test_parses_campaign_bible_response() -> void`
@@ -7114,8 +7049,8 @@ Root: `SpaceGame`
         - `func _baseline_bible() -> Dictionary`
         - `func _failure_text(result: Dictionary) -> String`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_narrative_director_tests.gd.uid)
-      - 📄 [run_nova_line_bank_batch_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_nova_line_bank_batch_tests.gd)
+      - 📄 [run_narrative_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_narrative_director_tests.gd.uid)
+      - 📄 [run_nova_line_bank_batch_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_nova_line_bank_batch_tests.gd)
         - `func _initialize() -> void`
         - `func _test_label_expansion() -> void`
         - `func _test_per_line_validation() -> void`
@@ -7123,8 +7058,8 @@ Root: `SpaceGame`
         - `func _test_shared_sentence_rejection() -> void`
         - `func _test_duplicate_closer_rejection() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_nova_line_bank_batch_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_nova_line_bank_batch_tests.gd.uid)
-      - 📄 [run_nova_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/ai/run_nova_tests.gd)
+      - 📄 [run_nova_line_bank_batch_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_nova_line_bank_batch_tests.gd.uid)
+      - 📄 [run_nova_tests.gd](file:///D:/CodingProjects/spacegame/tests/ai/run_nova_tests.gd)
         - `func _initialize() -> void`
         - `func _test_expression_frame_mapping() -> void`
         - `func _test_region_math() -> void`
@@ -7141,13 +7076,13 @@ Root: `SpaceGame`
         - `func _test_gate_glitch_bank_is_protected() -> void`
         - `func _test_combat_lines_do_not_spend_budget() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_nova_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/ai/run_nova_tests.gd.uid)
+      - 📄 [run_nova_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/ai/run_nova_tests.gd.uid)
     - 📂 **combat/**
-      - 📄 [run_baked_audio_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/combat/run_baked_audio_tests.gd)
+      - 📄 [run_baked_audio_tests.gd](file:///D:/CodingProjects/spacegame/tests/combat/run_baked_audio_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_baked_audio_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/combat/run_baked_audio_tests.gd.uid)
-      - 📄 [run_taunt_cause_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/combat/run_taunt_cause_tests.gd)
+      - 📄 [run_baked_audio_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/combat/run_baked_audio_tests.gd.uid)
+      - 📄 [run_taunt_cause_tests.gd](file:///D:/CodingProjects/spacegame/tests/combat/run_taunt_cause_tests.gd)
         - `func _initialize() -> void`
         - `func _test_cause_derivation() -> void`
         - `func _test_cause_briefs() -> void`
@@ -7159,17 +7094,17 @@ Root: `SpaceGame`
         - `func _test_delivery_overrides() -> void`
         - `func _pool(count: int) -> Array`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_taunt_cause_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/combat/run_taunt_cause_tests.gd.uid)
-      - 📄 [run_taunt_parse_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/combat/run_taunt_parse_tests.gd)
+      - 📄 [run_taunt_cause_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/combat/run_taunt_cause_tests.gd.uid)
+      - 📄 [run_taunt_parse_tests.gd](file:///D:/CodingProjects/spacegame/tests/combat/run_taunt_parse_tests.gd)
         - `func _initialize() -> void`
         - `func _test_validation() -> void`
         - `func _test_batch_parsing() -> void`
         - `func _test_truncation_salvage() -> void`
         - `func _test_cross_session_dedupe() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_taunt_parse_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/combat/run_taunt_parse_tests.gd.uid)
+      - 📄 [run_taunt_parse_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/combat/run_taunt_parse_tests.gd.uid)
     - 📂 **diagnostics/**
-      - 📄 [run_generation_diagnostics_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/diagnostics/run_generation_diagnostics_tests.gd)
+      - 📄 [run_generation_diagnostics_tests.gd](file:///D:/CodingProjects/spacegame/tests/diagnostics/run_generation_diagnostics_tests.gd)
         - `func _initialize() -> void`
         - `func _test_records_fallback_summary() -> void`
         - `func _test_persistent_fallback_log_written() -> void`
@@ -7184,9 +7119,9 @@ Root: `SpaceGame`
         - `func _test_developer_warning_marks_high_fallback_rate() -> void`
         - `func _test_reset_clears_summary() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_generation_diagnostics_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/diagnostics/run_generation_diagnostics_tests.gd.uid)
+      - 📄 [run_generation_diagnostics_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/diagnostics/run_generation_diagnostics_tests.gd.uid)
     - 📂 **domain/**
-      - 📄 [run_baked_audio_index_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_baked_audio_index_tests.gd)
+      - 📄 [run_baked_audio_index_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_baked_audio_index_tests.gd)
         - `func _initialize() -> void`
         - `func _test_english_gate() -> void`
         - `func _test_cast_identification() -> void`
@@ -7194,8 +7129,8 @@ Root: `SpaceGame`
         - `func _test_lead_extraction() -> void`
         - `func _test_keys_never_match_on_empty_input() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_baked_audio_index_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_baked_audio_index_tests.gd.uid)
-      - 📄 [run_bounty_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_bounty_registry_tests.gd)
+      - 📄 [run_baked_audio_index_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_baked_audio_index_tests.gd.uid)
+      - 📄 [run_bounty_registry_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_bounty_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _make_registry() -> RefCounted`
         - `func _test_check_kill_returns_payout() -> void`
@@ -7209,8 +7144,8 @@ Root: `SpaceGame`
         - `func _pass(label: String) -> void`
         - `func _fail(label: String, detail: String) -> void`
         - `func _print_results() -> void`
-      - 📄 [run_bounty_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_bounty_registry_tests.gd.uid)
-      - 📄 [run_causal_fact_text_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_causal_fact_text_tests.gd)
+      - 📄 [run_bounty_registry_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_bounty_registry_tests.gd.uid)
+      - 📄 [run_causal_fact_text_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_causal_fact_text_tests.gd)
         - `func _initialize() -> void`
         - `func _test_compiler_preserves_goal_need_explanation() -> void`
         - `func _compile(overrides: Dictionary = {}) -> Dictionary`
@@ -7223,7 +7158,8 @@ Root: `SpaceGame`
         - `func _test_delegation_cites_the_real_obstacle() -> void`
         - `func _test_no_unchecked_superlatives() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_domain_foundation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_domain_foundation_tests.gd)
+      - 📄 [run_causal_fact_text_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_causal_fact_text_tests.gd.uid)
+      - 📄 [run_domain_foundation_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_domain_foundation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_authored_ids() -> void`
         - `func _test_generated_ids() -> void`
@@ -7232,8 +7168,13 @@ Root: `SpaceGame`
         - `func _test_definition_common_fields() -> void`
         - `func _test_json_codec() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_domain_foundation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_domain_foundation_tests.gd.uid)
-      - 📄 [run_intro_handhold_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_intro_handhold_tests.gd)
+      - 📄 [run_domain_foundation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_domain_foundation_tests.gd.uid)
+      - 📄 [run_hud_layout_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_hud_layout_tests.gd)
+        - `func _initialize() -> void`
+        - `func _run() -> void`
+        - `func _check_rects(rects: Array[Rect2], viewport: Vector2) -> void`
+        - `func _expect(ok: bool, message: String) -> void`
+      - 📄 [run_intro_handhold_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_intro_handhold_tests.gd)
         - `func _initialize() -> void`
         - `func _test_dock_command_hides_intro_arrow_until_docking() -> void`
         - `func _test_kaelen_intro_wording() -> void`
@@ -7244,8 +7185,8 @@ Root: `SpaceGame`
         - `func _test_intro_repair_target_tip_contract() -> void`
         - `func _test_kaelen_briefing_scrolls_at_speech_midpoint() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_intro_handhold_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_intro_handhold_tests.gd.uid)
-      - 📄 [run_investigate_signal_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigate_signal_tests.gd)
+      - 📄 [run_intro_handhold_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_intro_handhold_tests.gd.uid)
+      - 📄 [run_investigate_signal_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigate_signal_tests.gd)
         - `func _initialize() -> void`
         - `func _mission(recipe: String, primary_code: String, verify_code: String) -> Dictionary`
         - `func _scan(cap, data: Dictionary, site_id: String, cmd: String = "") -> Dictionary`
@@ -7257,8 +7198,8 @@ Root: `SpaceGame`
         - `func _test_commands_are_idempotent() -> void`
         - `func _test_extraction_commits_then_completes() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_investigate_signal_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigate_signal_tests.gd.uid)
-      - 📄 [run_investigation_board_lifecycle_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_board_lifecycle_tests.gd)
+      - 📄 [run_investigate_signal_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigate_signal_tests.gd.uid)
+      - 📄 [run_investigation_board_lifecycle_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_board_lifecycle_tests.gd)
         - 🏛️ **FailedStore**
           - `func is_valid() -> bool`
           - `func save_state(_state: Dictionary) -> Dictionary`
@@ -7282,7 +7223,8 @@ Root: `SpaceGame`
         - `func _test_local_context(context: Dictionary)`
         - `func _finish_board_job(quests: Node, gs: Node, pilot: CharacterBody3D, ui: Control, station: Node3D)`
         - `func _test_board_save_aliases(context: Dictionary)`
-      - 📄 [run_investigation_offer_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_offer_tests.gd)
+      - 📄 [run_investigation_board_lifecycle_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_board_lifecycle_tests.gd.uid)
+      - 📄 [run_investigation_offer_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_offer_tests.gd)
         - `func _initialize() -> void`
         - `func _shape(recipe: String) -> Dictionary`
         - `func _placement(seed_value: int = 4242) -> Dictionary`
@@ -7296,8 +7238,8 @@ Root: `SpaceGame`
         - `func _test_budget_is_mirrored_not_invented() -> void`
         - `func _test_failed_placement_produces_no_offer() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_investigation_offer_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_offer_tests.gd.uid)
-      - 📄 [run_investigation_runtime_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_runtime_tests.gd)
+      - 📄 [run_investigation_offer_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_offer_tests.gd.uid)
+      - 📄 [run_investigation_runtime_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_runtime_tests.gd)
         - 🏛️ **Pilot**
           - `func navigation_obstacle_snapshot() -> Array`
         - 🏛️ **DockUI**
@@ -7320,7 +7262,8 @@ Root: `SpaceGame`
         - `func _test_corrupt_restore_is_atomic()`
         - `func _expect(ok: bool, message: String)`
         - `func _test_canonical_save_roundtrip()`
-      - 📄 [run_investigation_selector_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_selector_tests.gd)
+      - 📄 [run_investigation_runtime_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_runtime_tests.gd.uid)
+      - 📄 [run_investigation_selector_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_selector_tests.gd)
         - `func _initialize() -> void`
         - `func _test_first_draw_is_campaign_seeded() -> void`
         - `func _test_repeated_opens_return_the_same_offer() -> void`
@@ -7333,8 +7276,8 @@ Root: `SpaceGame`
         - `func _test_legacy_bag_migrates_mid_cycle() -> void`
         - `func _test_migration_leaves_outstanding_reservation_alone() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_investigation_selector_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_selector_tests.gd.uid)
-      - 📄 [run_investigation_site_planner_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_site_planner_tests.gd)
+      - 📄 [run_investigation_selector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_selector_tests.gd.uid)
+      - 📄 [run_investigation_site_planner_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_site_planner_tests.gd)
         - `func _initialize() -> void`
         - `func _station(id: String, at: Vector3) -> Dictionary`
         - `func _hazard(at: Vector3, radius: float) -> Dictionary`
@@ -7344,15 +7287,15 @@ Root: `SpaceGame`
         - `func _test_reports_failure_rather_than_shrinking_margins() -> void`
         - `func _test_uses_the_navigator_radius_not_a_second_formula() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_investigation_site_planner_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_investigation_site_planner_tests.gd.uid)
-      - 📄 [run_mechanic_dialogue_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mechanic_dialogue_tests.gd)
+      - 📄 [run_investigation_site_planner_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_site_planner_tests.gd.uid)
+      - 📄 [run_mechanic_dialogue_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mechanic_dialogue_tests.gd)
         - `func _initialize() -> void`
         - `func _test_mechanic_rejects_ui_style_faction_status() -> void`
         - `func _test_mechanic_prompt_keeps_faction_status_private() -> void`
         - `func _test_jenna_first_meeting_is_authored_and_gated() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mechanic_dialogue_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mechanic_dialogue_tests.gd.uid)
-      - 📄 [run_mission_capability_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_capability_tests.gd)
+      - 📄 [run_mechanic_dialogue_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mechanic_dialogue_tests.gd.uid)
+      - 📄 [run_mission_capability_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_capability_tests.gd)
         - 🏛️ **_TestEchoCapability**
           - `func capability_id() -> String`
           - `func is_completed(data: Dictionary) -> bool`
@@ -7389,8 +7332,8 @@ Root: `SpaceGame`
         - `func _test_purchase_delivery_requires_inventory_item() -> void`
         - `func _test_purchase_delivery_removes_inventory_quantity() -> void`
         - `func _test_purchase_delivery_failure_message() -> void`
-      - 📄 [run_mission_capability_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_capability_tests.gd.uid)
-      - 📄 [run_mission_collection_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_collection_tests.gd)
+      - 📄 [run_mission_capability_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_capability_tests.gd.uid)
+      - 📄 [run_mission_collection_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_collection_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _make_mission(lane: MI.SourceLane, id_suffix: String) -> MI`
@@ -7409,8 +7352,8 @@ Root: `SpaceGame`
         - `func _test_from_array_restores_focus() -> void`
         - `func _test_legacy_single_dict_compat() -> void`
         - `func _test_station_lane_detection() -> void`
-      - 📄 [run_mission_collection_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_collection_tests.gd.uid)
-      - 📄 [run_mission_contract_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_contract_tests.gd)
+      - 📄 [run_mission_collection_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_collection_tests.gd.uid)
+      - 📄 [run_mission_contract_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_contract_tests.gd)
         - `func _initialize() -> void`
         - `func _test_ore_offer() -> void`
         - `func _test_kill_offer() -> void`
@@ -7437,8 +7380,8 @@ Root: `SpaceGame`
         - `func _test_invalid_runtime_state() -> void`
         - `func _has_offer_template(offers: Array, template_id: String) -> bool`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_contract_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_contract_tests.gd.uid)
-      - 📄 [run_mission_instance_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_instance_tests.gd)
+      - 📄 [run_mission_contract_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_contract_tests.gd.uid)
+      - 📄 [run_mission_instance_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_instance_tests.gd)
         - `func _initialize() -> void`
         - `func _test_create_active_sets_state() -> void`
         - `func _test_create_active_detects_board_lane() -> void`
@@ -7468,8 +7411,8 @@ Root: `SpaceGame`
         - `func _sample_state() -> Dictionary`
         - `func _active_instance()`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_instance_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_instance_tests.gd.uid)
-      - 📄 [run_mission_shape_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_shape_registry_tests.gd)
+      - 📄 [run_mission_instance_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_instance_tests.gd.uid)
+      - 📄 [run_mission_shape_registry_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_shape_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _test_real_catalog_loads() -> void`
         - `func _catalog(shape_overrides: Dictionary = {}) -> Dictionary`
@@ -7477,8 +7420,8 @@ Root: `SpaceGame`
         - `func _test_report_branch_is_mandatory() -> void`
         - `func _test_eligibility_filters_on_flags() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_shape_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_shape_registry_tests.gd.uid)
-      - 📄 [run_mission_state_transition_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_state_transition_tests.gd)
+      - 📄 [run_mission_shape_registry_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_shape_registry_tests.gd.uid)
+      - 📄 [run_mission_state_transition_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_state_transition_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_transition_rules() -> void`
@@ -7493,20 +7436,20 @@ Root: `SpaceGame`
         - `func _write_text(path: String, text: String) -> void`
         - `func _cleanup() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_state_transition_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_mission_state_transition_tests.gd.uid)
-      - 📄 [run_narrative_metadata_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_narrative_metadata_tests.gd)
+      - 📄 [run_mission_state_transition_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_mission_state_transition_tests.gd.uid)
+      - 📄 [run_narrative_metadata_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_narrative_metadata_tests.gd)
         - `func _initialize() -> void`
         - `func _test_allowed_field_contract() -> void`
         - `func _test_empty_metadata_defaults_are_legacy_safe() -> void`
         - `func _test_extracts_nested_and_legacy_fields() -> void`
         - `func _test_validates_present_metadata() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_metadata_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_narrative_metadata_tests.gd.uid)
-      - 📄 [run_overview_filter_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_overview_filter_tests.gd)
+      - 📄 [run_narrative_metadata_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_narrative_metadata_tests.gd.uid)
+      - 📄 [run_overview_filter_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_overview_filter_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_overview_filter_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_overview_filter_tests.gd.uid)
-      - 📄 [run_public_board_validation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_public_board_validation_tests.gd)
+      - 📄 [run_overview_filter_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_overview_filter_tests.gd.uid)
+      - 📄 [run_public_board_validation_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_public_board_validation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_incoherent_generated_causes_are_withheld() -> void`
         - `func _test_builder_produces_all_templates() -> void`
@@ -7539,8 +7482,8 @@ Root: `SpaceGame`
         - `func _test_field_length_limit_enforced() -> void`
         - `func _test_multiple_fallback_salts() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_public_board_validation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_public_board_validation_tests.gd.uid)
-      - 📄 [run_quest_causal_contract_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_quest_causal_contract_tests.gd)
+      - 📄 [run_public_board_validation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_public_board_validation_tests.gd.uid)
+      - 📄 [run_quest_causal_contract_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_quest_causal_contract_tests.gd)
         - `func _initialize() -> void`
         - `func _test_one_path_courier_is_valid() -> void`
         - `func _test_justified_investigation_is_valid() -> void`
@@ -7555,7 +7498,8 @@ Root: `SpaceGame`
         - `func _test_narrative_metadata_roundtrip() -> void`
         - `func _test_semantic_signature_ignores_names_but_not_shape() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_quest_lifecycle_validation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_quest_lifecycle_validation_tests.gd)
+      - 📄 [run_quest_causal_contract_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_quest_causal_contract_tests.gd.uid)
+      - 📄 [run_quest_lifecycle_validation_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_quest_lifecycle_validation_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_legacy_missions_are_not_checked() -> void`
@@ -7563,7 +7507,8 @@ Root: `SpaceGame`
         - `func _test_snapshot_omits_what_it_cannot_resolve() -> void`
         - `func _test_stage_is_reported_back() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_scan_hold_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_scan_hold_tests.gd)
+      - 📄 [run_quest_lifecycle_validation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_quest_lifecycle_validation_tests.gd.uid)
+      - 📄 [run_scan_hold_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_scan_hold_tests.gd)
         - `func _initialize() -> void`
         - `func _hold(controller, site: String, seconds: float, step: float = 0.5) -> Dictionary`
         - `func _test_completes_only_after_the_full_hold() -> void`
@@ -7571,8 +7516,8 @@ Root: `SpaceGame`
         - `func _test_progress_cannot_be_banked() -> void`
         - `func _test_token_is_required_and_one_shot() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_scan_hold_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_scan_hold_tests.gd.uid)
-      - 📄 [run_site_reveal_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_site_reveal_tests.gd)
+      - 📄 [run_scan_hold_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_scan_hold_tests.gd.uid)
+      - 📄 [run_site_reveal_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_site_reveal_tests.gd)
         - `func _initialize() -> void`
         - `func _test_hidden_beyond_sensor_range() -> void`
         - `func _test_better_sensors_see_further() -> void`
@@ -7589,8 +7534,8 @@ Root: `SpaceGame`
         - `func _test_live_tuning_moves_real_ranges() -> void`
         - `func _test_anomalies_are_gated_tightly() -> void`
         - `func _test_wreck_penalty_and_its_ordering() -> void`
-      - 📄 [run_site_reveal_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_site_reveal_tests.gd.uid)
-      - 📄 [run_timed_mission_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_timed_mission_tests.gd)
+      - 📄 [run_site_reveal_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_site_reveal_tests.gd.uid)
+      - 📄 [run_timed_mission_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_timed_mission_tests.gd)
         - `func _initialize() -> void`
         - `func _test_timed_metadata_round_trip() -> void`
         - `func _test_untimed_mission_has_no_timing() -> void`
@@ -7610,8 +7555,8 @@ Root: `SpaceGame`
         - `func _purchase_offer() -> Dictionary`
         - `func _accept_choice() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_timed_mission_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_timed_mission_tests.gd.uid)
-      - 📄 [run_world_identity_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/domain/run_world_identity_tests.gd)
+      - 📄 [run_timed_mission_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_timed_mission_tests.gd.uid)
+      - 📄 [run_world_identity_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_world_identity_tests.gd)
         - 🏛️ **IdentityNode**
           - `func _init(id_value: String) -> void`
           - `func get_world_id() -> String`
@@ -7627,9 +7572,9 @@ Root: `SpaceGame`
         - `func _test_duplicate_detection() -> void`
         - `func _test_state_envelope() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_world_identity_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/domain/run_world_identity_tests.gd.uid)
+      - 📄 [run_world_identity_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_world_identity_tests.gd.uid)
     - 📂 **economy/**
-      - 📄 [run_consumable_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/economy/run_consumable_tests.gd)
+      - 📄 [run_consumable_tests.gd](file:///D:/CodingProjects/spacegame/tests/economy/run_consumable_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _mock_player(hp: float = 100.0, max_hp: float = 100.0, shield: float = 50.0) -> Node3D`
@@ -7642,8 +7587,8 @@ Root: `SpaceGame`
         - `func _test_cannot_use_without_item() -> void`
         - `func _test_use_deducts_from_inventory() -> void`
         - `func _test_can_use_known_items() -> void`
-      - 📄 [run_consumable_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/economy/run_consumable_tests.gd.uid)
-      - 📄 [run_inventory_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/economy/run_inventory_tests.gd)
+      - 📄 [run_consumable_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/economy/run_consumable_tests.gd.uid)
+      - 📄 [run_inventory_tests.gd](file:///D:/CodingProjects/spacegame/tests/economy/run_inventory_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_add_and_get() -> void`
@@ -7660,8 +7605,8 @@ Root: `SpaceGame`
         - `func _test_slot_limit() -> void`
         - `func _test_stack_max() -> void`
         - `func _test_save_load_max_slots() -> void`
-      - 📄 [run_inventory_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/economy/run_inventory_tests.gd.uid)
-      - 📄 [run_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/economy/run_store_tests.gd)
+      - 📄 [run_inventory_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/economy/run_inventory_tests.gd.uid)
+      - 📄 [run_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/economy/run_store_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _make_item(overrides: Dictionary = {}) -> StoreItemDef`
@@ -7685,17 +7630,17 @@ Root: `SpaceGame`
         - `func _test_registry_stores_for_station() -> void`
         - `func _test_registry_save_restore_stock() -> void`
         - `func _test_registry_restock_all() -> void`
-      - 📄 [run_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/economy/run_store_tests.gd.uid)
-      - 📄 [run_upgrade_power_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/economy/run_upgrade_power_tests.gd)
+      - 📄 [run_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/economy/run_store_tests.gd.uid)
+      - 📄 [run_upgrade_power_tests.gd](file:///D:/CodingProjects/spacegame/tests/economy/run_upgrade_power_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _reset_with_resources() -> void`
         - `func _test_baseline_power_budget() -> void`
         - `func _test_sensor_upgrade_power_draw() -> void`
         - `func _test_powerplant_gates_stacked_upgrades() -> void`
-      - 📄 [run_upgrade_power_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/economy/run_upgrade_power_tests.gd.uid)
+      - 📄 [run_upgrade_power_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/economy/run_upgrade_power_tests.gd.uid)
     - 📂 **events/**
-      - 📄 [run_event_scheduler_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/events/run_event_scheduler_tests.gd)
+      - 📄 [run_event_scheduler_tests.gd](file:///D:/CodingProjects/spacegame/tests/events/run_event_scheduler_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _make_context(time: int = 100, system: String = "test_sys") -> EventContextScript`
@@ -7721,8 +7666,8 @@ Root: `SpaceGame`
         - `func _test_system_story_arc_event_advances_pack() -> void`
         - `func _test_interceptor_event_uses_system_story_pack() -> void`
         - `func _test_story_arc_named_npc_irreversible_guard() -> void`
-      - 📄 [run_event_scheduler_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/events/run_event_scheduler_tests.gd.uid)
-      - 📄 [run_interceptor_event_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/events/run_interceptor_event_tests.gd)
+      - 📄 [run_event_scheduler_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/events/run_event_scheduler_tests.gd.uid)
+      - 📄 [run_interceptor_event_tests.gd](file:///D:/CodingProjects/spacegame/tests/events/run_interceptor_event_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _make_ctx(tags: Array = [], arrived: bool = true, reps: Dictionary = {}) -> EventCtx`
@@ -7734,9 +7679,9 @@ Root: `SpaceGame`
         - `func _test_faction_defaults_reaver() -> void`
         - `func _test_count_scales_with_tags() -> void`
         - `func _test_execute_returns_details() -> void`
-      - 📄 [run_interceptor_event_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/events/run_interceptor_event_tests.gd.uid)
+      - 📄 [run_interceptor_event_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/events/run_interceptor_event_tests.gd.uid)
     - 📂 **fixtures/**
-      - 📄 [QuestContractFixtures.gd](file:///C:/CodingProjects/SpaceGame/tests/fixtures/QuestContractFixtures.gd)
+      - 📄 [QuestContractFixtures.gd](file:///D:/CodingProjects/spacegame/tests/fixtures/QuestContractFixtures.gd)
         - 🏛️ **global class QuestContractFixtures**
           - `static func world() -> Dictionary`
           - `static func courier_one_path() -> Dictionary`
@@ -7746,8 +7691,9 @@ Root: `SpaceGame`
           - `static func impossible_delivery_contract() -> Dictionary`
           - `static func protected_recipient_contract() -> Dictionary`
           - `static func leaking_contract() -> Dictionary`
+      - 📄 [QuestContractFixtures.gd.uid](file:///D:/CodingProjects/spacegame/tests/fixtures/QuestContractFixtures.gd.uid)
     - 📂 **generation/**
-      - 📄 [run_system_factory_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/generation/run_system_factory_tests.gd)
+      - 📄 [run_system_factory_tests.gd](file:///D:/CodingProjects/spacegame/tests/generation/run_system_factory_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_config_from_seed() -> void`
@@ -7763,8 +7709,8 @@ Root: `SpaceGame`
         - `func _test_generated_outbound_gate_defs() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _count_descendants_in_group(root: Node, group_name: String) -> int`
-      - 📄 [run_system_factory_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/generation/run_system_factory_tests.gd.uid)
-      - 📄 [run_system_npc_route_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/generation/run_system_npc_route_tests.gd)
+      - 📄 [run_system_factory_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/generation/run_system_factory_tests.gd.uid)
+      - 📄 [run_system_npc_route_tests.gd](file:///D:/CodingProjects/spacegame/tests/generation/run_system_npc_route_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_hostiles_use_shipping_lane_without_belt() -> void`
@@ -7776,22 +7722,22 @@ Root: `SpaceGame`
         - `func _make_asteroid(belt_id: String, pos: Vector3) -> Node3D`
         - `func _make_manager() -> Node`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_system_npc_route_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/generation/run_system_npc_route_tests.gd.uid)
+      - 📄 [run_system_npc_route_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/generation/run_system_npc_route_tests.gd.uid)
     - 📂 **navigation/**
-      - 📄 [_trace_autopilot.gd](file:///C:/CodingProjects/SpaceGame/tests/navigation/_trace_autopilot.gd)
+      - 📄 [_trace_autopilot.gd](file:///D:/CodingProjects/spacegame/tests/navigation/_trace_autopilot.gd)
         - `func _initialize() -> void`
-      - 📄 [_trace_autopilot.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/navigation/_trace_autopilot.gd.uid)
-      - 📄 [_trace_smoke.gd](file:///C:/CodingProjects/SpaceGame/tests/navigation/_trace_smoke.gd)
+      - 📄 [_trace_autopilot.gd.uid](file:///D:/CodingProjects/spacegame/tests/navigation/_trace_autopilot.gd.uid)
+      - 📄 [_trace_smoke.gd](file:///D:/CodingProjects/spacegame/tests/navigation/_trace_smoke.gd)
         - `func _initialize() -> void`
-      - 📄 [_trace_smoke.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/navigation/_trace_smoke.gd.uid)
-      - 📄 [run_navigation_route_planner_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/navigation/run_navigation_route_planner_tests.gd)
+      - 📄 [_trace_smoke.gd.uid](file:///D:/CodingProjects/spacegame/tests/navigation/_trace_smoke.gd.uid)
+      - 📄 [run_navigation_route_planner_tests.gd](file:///D:/CodingProjects/spacegame/tests/navigation/run_navigation_route_planner_tests.gd)
         - `func _initialize() -> void`
         - `func _test_direct_route() -> void`
         - `func _test_blocked_route() -> void`
         - `func _test_three_dimensional_route() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_navigation_route_planner_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/navigation/run_navigation_route_planner_tests.gd.uid)
-      - 📄 [run_tangent_navigator_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/navigation/run_tangent_navigator_tests.gd)
+      - 📄 [run_navigation_route_planner_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/navigation/run_navigation_route_planner_tests.gd.uid)
+      - 📄 [run_tangent_navigator_tests.gd](file:///D:/CodingProjects/spacegame/tests/navigation/run_tangent_navigator_tests.gd)
         - `func _initialize() -> void`
         - `func _planet(center: Vector3, radius: float) -> Dictionary`
         - `func _test_clear_shot_goes_straight() -> void`
@@ -7803,23 +7749,23 @@ Root: `SpaceGame`
         - `func _test_long_range_and_crowded_fields() -> void`
         - `func _test_moving_target_is_caught() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_tangent_navigator_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/navigation/run_tangent_navigator_tests.gd.uid)
-    - 📄 [parse_check.gd](file:///C:/CodingProjects/SpaceGame/tests/parse_check.gd)
+      - 📄 [run_tangent_navigator_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/navigation/run_tangent_navigator_tests.gd.uid)
+    - 📄 [parse_check.gd](file:///D:/CodingProjects/spacegame/tests/parse_check.gd)
       - `func _init() -> void`
-    - 📄 [parse_check.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/parse_check.gd.uid)
-    - 📄 [parse_check_scene_scripts.gd](file:///C:/CodingProjects/SpaceGame/tests/parse_check_scene_scripts.gd)
+    - 📄 [parse_check.gd.uid](file:///D:/CodingProjects/spacegame/tests/parse_check.gd.uid)
+    - 📄 [parse_check_scene_scripts.gd](file:///D:/CodingProjects/spacegame/tests/parse_check_scene_scripts.gd)
       - `func _initialize() -> void`
-    - 📄 [parse_check_scene_scripts.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/parse_check_scene_scripts.gd.uid)
+    - 📄 [parse_check_scene_scripts.gd.uid](file:///D:/CodingProjects/spacegame/tests/parse_check_scene_scripts.gd.uid)
     - 📂 **persistence/**
-      - 📄 [run_campaign_agent_memory_snippet_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_agent_memory_snippet_store_tests.gd)
+      - 📄 [run_campaign_agent_memory_snippet_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_agent_memory_snippet_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_agent_memory_bootstrap_append_context_and_reopen() -> void`
         - `func _initial_state() -> Dictionary`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_agent_memory_snippet_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_agent_memory_snippet_store_tests.gd.uid)
-      - 📄 [run_campaign_bible_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_bible_store_tests.gd)
+      - 📄 [run_campaign_agent_memory_snippet_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_agent_memory_snippet_store_tests.gd.uid)
+      - 📄 [run_campaign_bible_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_bible_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_bible_bootstrap_replace_and_reopen() -> void`
         - `func _test_public_prompt_context_excludes_secrets() -> void`
@@ -7828,8 +7774,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_bible_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_bible_store_tests.gd.uid)
-      - 📄 [run_campaign_checkpoint_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_checkpoint_store_tests.gd)
+      - 📄 [run_campaign_bible_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_bible_store_tests.gd.uid)
+      - 📄 [run_campaign_checkpoint_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_checkpoint_store_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_permanent_site_position_scope() -> void`
@@ -7842,8 +7788,8 @@ Root: `SpaceGame`
         - `func _count_autosave_bundle_directories() -> int`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_checkpoint_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_checkpoint_store_tests.gd.uid)
-      - 📄 [run_campaign_chronicle_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_chronicle_store_tests.gd)
+      - 📄 [run_campaign_checkpoint_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_checkpoint_store_tests.gd.uid)
+      - 📄 [run_campaign_chronicle_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_chronicle_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_append_branch_filter_and_legacy_import() -> void`
         - `func _initial_state() -> Dictionary`
@@ -7851,8 +7797,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_chronicle_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_chronicle_store_tests.gd.uid)
-      - 📄 [run_campaign_generated_faction_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_generated_faction_store_tests.gd)
+      - 📄 [run_campaign_chronicle_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_chronicle_store_tests.gd.uid)
+      - 📄 [run_campaign_generated_faction_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_generated_faction_store_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_bootstrap_generate_reveal_and_reopen() -> void`
@@ -7863,8 +7809,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_generated_faction_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_generated_faction_store_tests.gd.uid)
-      - 📄 [run_campaign_idea_memory_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_idea_memory_store_tests.gd)
+      - 📄 [run_campaign_generated_faction_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_generated_faction_store_tests.gd.uid)
+      - 📄 [run_campaign_idea_memory_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_idea_memory_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_idea_memory_bootstrap_append_query_and_reopen() -> void`
         - `func _initial_state() -> Dictionary`
@@ -7872,16 +7818,16 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_idea_memory_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_idea_memory_store_tests.gd.uid)
-      - 📄 [run_campaign_kaelen_memory_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_kaelen_memory_store_tests.gd)
+      - 📄 [run_campaign_idea_memory_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_idea_memory_store_tests.gd.uid)
+      - 📄 [run_campaign_kaelen_memory_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_kaelen_memory_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_death_memory_and_rollback_classification() -> void`
         - `func _initial_state() -> Dictionary`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_kaelen_memory_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_kaelen_memory_store_tests.gd.uid)
-      - 📄 [run_campaign_legacy_import_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_legacy_import_tests.gd)
+      - 📄 [run_campaign_kaelen_memory_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_kaelen_memory_store_tests.gd.uid)
+      - 📄 [run_campaign_legacy_import_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_legacy_import_tests.gd)
         - `func _initialize() -> void`
         - `func _test_successful_import_and_backup() -> void`
         - `func _test_full_slots_refuse_without_changes() -> void`
@@ -7892,8 +7838,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_legacy_import_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_legacy_import_tests.gd.uid)
-      - 📄 [run_campaign_manifest_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_manifest_store_tests.gd)
+      - 📄 [run_campaign_legacy_import_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_legacy_import_tests.gd.uid)
+      - 📄 [run_campaign_manifest_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_manifest_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_handcrafted_canon_and_append_only_identity() -> void`
         - `func _test_missing_asset_fallback_without_reroll() -> void`
@@ -7902,8 +7848,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_manifest_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_manifest_store_tests.gd.uid)
-      - 📄 [run_campaign_npc_identity_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_npc_identity_store_tests.gd)
+      - 📄 [run_campaign_manifest_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_manifest_store_tests.gd.uid)
+      - 📄 [run_campaign_npc_identity_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_npc_identity_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_npc_identity_bootstrap_upsert_line_memory_and_reopen() -> void`
         - `func _test_legacy_v1_identity_migrates_to_v2_persona_voice() -> void`
@@ -7915,8 +7861,8 @@ Root: `SpaceGame`
         - `func _write_json(path: String, value: Dictionary) -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_npc_identity_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_npc_identity_store_tests.gd.uid)
-      - 📄 [run_campaign_npc_state_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_npc_state_store_tests.gd)
+      - 📄 [run_campaign_npc_identity_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_npc_identity_store_tests.gd.uid)
+      - 📄 [run_campaign_npc_state_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_npc_state_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_bootstrap_update_and_reopen_npc_state() -> void`
         - `func _test_one_shot_flag_persists() -> void`
@@ -7928,8 +7874,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_npc_state_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_npc_state_store_tests.gd.uid)
-      - 📄 [run_campaign_schema_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_schema_tests.gd)
+      - 📄 [run_campaign_npc_state_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_npc_state_store_tests.gd.uid)
+      - 📄 [run_campaign_schema_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_schema_tests.gd)
         - `func _initialize() -> void`
         - `func _test_ownership_catalog() -> void`
         - `func _test_valid_documents() -> void`
@@ -7951,8 +7897,8 @@ Root: `SpaceGame`
         - `func _kaelen_meta() -> Dictionary`
         - `func _chapter_packets() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_schema_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_schema_tests.gd.uid)
-      - 📄 [run_campaign_slot_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_slot_registry_tests.gd)
+      - 📄 [run_campaign_schema_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_schema_tests.gd.uid)
+      - 📄 [run_campaign_slot_registry_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_slot_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _test_three_stable_slots() -> void`
         - `func _test_create_reopen_and_initial_checkpoint() -> void`
@@ -7970,8 +7916,8 @@ Root: `SpaceGame`
         - `func _write_text(path: String, text: String) -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_slot_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_slot_registry_tests.gd.uid)
-      - 📄 [run_campaign_transaction_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_transaction_tests.gd)
+      - 📄 [run_campaign_slot_registry_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_slot_registry_tests.gd.uid)
+      - 📄 [run_campaign_transaction_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_transaction_tests.gd)
         - `func _initialize() -> void`
         - `func _test_successful_visibility_commit() -> void`
         - `func _test_failure_stages_preserve_prior_index() -> void`
@@ -7985,16 +7931,16 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_transaction_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_campaign_transaction_tests.gd.uid)
-      - 📄 [run_chapter_narrative_packet_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_chapter_narrative_packet_store_tests.gd)
+      - 📄 [run_campaign_transaction_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_campaign_transaction_tests.gd.uid)
+      - 📄 [run_chapter_narrative_packet_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_chapter_narrative_packet_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_bootstrap_append_reopen_and_reject_duplicate() -> void`
         - `func _packet(packet_id: String, chapter: int) -> Dictionary`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_chapter_narrative_packet_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_chapter_narrative_packet_store_tests.gd.uid)
-      - 📄 [run_generated_faction_desire_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_generated_faction_desire_tests.gd)
+      - 📄 [run_chapter_narrative_packet_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_chapter_narrative_packet_store_tests.gd.uid)
+      - 📄 [run_generated_faction_desire_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_generated_faction_desire_tests.gd)
         - `func _initialize() -> void`
         - `func _test_desire_dimensions_have_compatible_variety() -> void`
         - `func _test_joint_coherence_and_corrupt_bindings() -> void`
@@ -8007,14 +7953,15 @@ Root: `SpaceGame`
         - `func _test_cross_seed_variety() -> void`
         - `func _relationship_between(factions: Array, from_id: String, to_id: String) -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_kaelen_handoff_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_kaelen_handoff_store_tests.gd)
+      - 📄 [run_generated_faction_desire_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_generated_faction_desire_tests.gd.uid)
+      - 📄 [run_kaelen_handoff_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_kaelen_handoff_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_scoped_pools_do_not_cross_story_system_or_relationship() -> void`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_kaelen_handoff_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_kaelen_handoff_store_tests.gd.uid)
-      - 📄 [run_kaelen_reaction_bundle_persistence_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_kaelen_reaction_bundle_persistence_tests.gd)
+      - 📄 [run_kaelen_handoff_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_kaelen_handoff_store_tests.gd.uid)
+      - 📄 [run_kaelen_reaction_bundle_persistence_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_kaelen_reaction_bundle_persistence_tests.gd)
         - `func _initialize() -> void`
         - `func _test_bundle_survives_save_reload_complete_turn_in() -> void`
         - `func _runtime_save(quest_array: Array) -> Dictionary`
@@ -8023,8 +7970,8 @@ Root: `SpaceGame`
         - `func _write_text(path: String, text: String) -> void`
         - `func _cleanup() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_kaelen_reaction_bundle_persistence_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_kaelen_reaction_bundle_persistence_tests.gd.uid)
-      - 📄 [run_narrative_cache_store_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_narrative_cache_store_tests.gd)
+      - 📄 [run_kaelen_reaction_bundle_persistence_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_kaelen_reaction_bundle_persistence_tests.gd.uid)
+      - 📄 [run_narrative_cache_store_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_narrative_cache_store_tests.gd)
         - `func _initialize() -> void`
         - `func _test_semantic_cache_keys_use_truth_inputs() -> void`
         - `func _test_bootstrap_upsert_reopen_consume_and_invalidate() -> void`
@@ -8047,13 +7994,13 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_cache_store_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_narrative_cache_store_tests.gd.uid)
-      - 📄 [run_narrative_checkpoint_state_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_narrative_checkpoint_state_tests.gd)
+      - 📄 [run_narrative_cache_store_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_narrative_cache_store_tests.gd.uid)
+      - 📄 [run_narrative_checkpoint_state_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_narrative_checkpoint_state_tests.gd)
         - `func _initialize() -> void`
         - `func _test_story_state_checkpoint_restore_rewinds_later_timeline() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_checkpoint_state_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_narrative_checkpoint_state_tests.gd.uid)
-      - 📄 [run_phase_2_acceptance_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_phase_2_acceptance_tests.gd)
+      - 📄 [run_narrative_checkpoint_state_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_narrative_checkpoint_state_tests.gd.uid)
+      - 📄 [run_phase_2_acceptance_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_phase_2_acceptance_tests.gd)
         - `func _initialize() -> void`
         - `func _test_phase_2_ownership_and_isolation() -> void`
         - `func _runtime_state(credits: int) -> Dictionary`
@@ -8061,8 +8008,8 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_phase_2_acceptance_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_phase_2_acceptance_tests.gd.uid)
-      - 📄 [run_save_migration_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_save_migration_tests.gd)
+      - 📄 [run_phase_2_acceptance_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_phase_2_acceptance_tests.gd.uid)
+      - 📄 [run_save_migration_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_save_migration_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_consequence_system_aliases() -> void`
@@ -8077,8 +8024,8 @@ Root: `SpaceGame`
         - `func _write_text(path: String, text: String) -> void`
         - `func _cleanup() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_save_migration_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_save_migration_tests.gd.uid)
-      - 📄 [run_story_state_bible_seed_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_bible_seed_tests.gd)
+      - 📄 [run_save_migration_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_save_migration_tests.gd.uid)
+      - 📄 [run_story_state_bible_seed_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_story_state_bible_seed_tests.gd)
         - `func _initialize() -> void`
         - `func _fake_bible() -> Dictionary`
         - `func _fresh_manager() -> Node`
@@ -8090,8 +8037,8 @@ Root: `SpaceGame`
         - `func _test_kaelen_hint_surfacing_pacing() -> void`
         - `func _test_glitch_line_leak_guard() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_story_state_bible_seed_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_bible_seed_tests.gd.uid)
-      - 📄 [run_story_state_migration_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_migration_tests.gd)
+      - 📄 [run_story_state_bible_seed_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_story_state_bible_seed_tests.gd.uid)
+      - 📄 [run_story_state_migration_tests.gd](file:///D:/CodingProjects/spacegame/tests/persistence/run_story_state_migration_tests.gd)
         - `func _initialize() -> void`
         - `func _test_version_1_state_migrates_to_current_shape() -> void`
         - `func _test_new_story_state_fields_validate_type_and_range() -> void`
@@ -8099,13 +8046,13 @@ Root: `SpaceGame`
         - `func _cleanup() -> void`
         - `func _remove_tree(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_story_state_migration_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/persistence/run_story_state_migration_tests.gd.uid)
+      - 📄 [run_story_state_migration_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/persistence/run_story_state_migration_tests.gd.uid)
     - 📂 **registry/**
-      - 📄 [run_game_content_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/registry/run_game_content_registry_tests.gd)
+      - 📄 [run_game_content_registry_tests.gd](file:///D:/CodingProjects/spacegame/tests/registry/run_game_content_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_game_content_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/registry/run_game_content_registry_tests.gd.uid)
-      - 📄 [run_llm_dialogue_content_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/registry/run_llm_dialogue_content_registry_tests.gd)
+      - 📄 [run_game_content_registry_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/registry/run_game_content_registry_tests.gd.uid)
+      - 📄 [run_llm_dialogue_content_registry_tests.gd](file:///D:/CodingProjects/spacegame/tests/registry/run_llm_dialogue_content_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _test_quest_content(registry: LLMDialogueContentRegistry) -> void`
         - `func _test_global_rules(registry: LLMDialogueContentRegistry) -> void`
@@ -8115,8 +8062,8 @@ Root: `SpaceGame`
         - `func _test_in_memory_mutation(registry: LLMDialogueContentRegistry) -> void`
         - `func _test_override_lifecycle(registry: LLMDialogueContentRegistry) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_llm_dialogue_content_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/registry/run_llm_dialogue_content_registry_tests.gd.uid)
-      - 📄 [run_system_registry_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/registry/run_system_registry_tests.gd)
+      - 📄 [run_llm_dialogue_content_registry_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/registry/run_llm_dialogue_content_registry_tests.gd.uid)
+      - 📄 [run_system_registry_tests.gd](file:///D:/CodingProjects/spacegame/tests/registry/run_system_registry_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_resolution(registry: RefCounted) -> void`
@@ -8129,8 +8076,8 @@ Root: `SpaceGame`
         - `func _minimal_registry_data() -> Dictionary`
         - `func _collect_scene_gates(node: Node, output: Dictionary) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_system_registry_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/registry/run_system_registry_tests.gd.uid)
-    - 📄 [run_comms_reversal_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/run_comms_reversal_tests.gd)
+      - 📄 [run_system_registry_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/registry/run_system_registry_tests.gd.uid)
+    - 📄 [run_comms_reversal_tests.gd](file:///D:/CodingProjects/spacegame/tests/run_comms_reversal_tests.gd)
       - `func _initialize() -> void`
       - `func _expect(condition: bool, message: String) -> void`
       - `func _make_data(overrides: Dictionary = {}) -> Dictionary`
@@ -8150,8 +8097,8 @@ Root: `SpaceGame`
       - `func _test_normalize_legacy_state() -> void`
       - `func _test_save_load_mid_branch_roundtrip() -> void`
       - `func _test_fallback_template_exists() -> void`
-    - 📄 [run_comms_reversal_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/run_comms_reversal_tests.gd.uid)
-    - 📄 [run_mission_template_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/run_mission_template_tests.gd)
+    - 📄 [run_comms_reversal_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/run_comms_reversal_tests.gd.uid)
+    - 📄 [run_mission_template_tests.gd](file:///D:/CodingProjects/spacegame/tests/run_mission_template_tests.gd)
       - `func _initialize() -> void`
       - `func _expect(condition: bool, message: String) -> void`
       - `func _test_registry_has_all_templates() -> void`
@@ -8168,15 +8115,34 @@ Root: `SpaceGame`
       - `func _test_wrapper_delegates_correctly() -> void`
       - `func _test_offer_builder_constants_match() -> void`
       - `func _test_agent_template_no_kaelen_rule() -> void`
-    - 📄 [run_mission_template_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/run_mission_template_tests.gd.uid)
+    - 📄 [run_mission_template_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/run_mission_template_tests.gd.uid)
     - 📂 **speech/**
-      - 📄 [run_speech_service_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/speech/run_speech_service_tests.gd)
+      - 📄 [run_speech_service_tests.gd](file:///D:/CodingProjects/spacegame/tests/speech/run_speech_service_tests.gd)
         - `func _initialize() -> void`
         - `func _check_gameplay_caller(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_speech_service_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/speech/run_speech_service_tests.gd.uid)
+      - 📄 [run_speech_service_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/speech/run_speech_service_tests.gd.uid)
+      - 📄 [run_tts_cache_playback_tests.gd](file:///D:/CodingProjects/spacegame/tests/speech/run_tts_cache_playback_tests.gd)
+        - `func _initialize() -> void`
+        - `func _run() -> void`
+        - `func _expect(condition: bool, message: String) -> void`
+      - 📄 [run_tts_cache_playback_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/speech/run_tts_cache_playback_tests.gd.uid)
+      - 📄 [test_tts_device.py](file:///D:/CodingProjects/spacegame/tests/speech/test_tts_device.py)
+        - 🏛️ **DeviceTests**
+          - `def setUp(self)`
+          - `def enable_gpu(self)`
+          - `def test_no_gpu_and_missing_monitor(self)`
+          - `def test_cpu_only_torch_does_not_touch_gpu(self)`
+          - `def test_low_memory_small_gpu_stays_cpu(self)`
+          - `def test_pressure_evicts_then_recovers_after_cooldown(self)`
+          - `def test_memory_pressure_and_lost_telemetry_evict(self)`
+          - `def test_multiple_gpus_select_available_adapter(self)`
+          - `def test_initialization_failure_is_backed_off(self)`
+          - `def test_failed_render_retries_whole_line_on_cpu(self)`
+          - `def test_cpu_failure_is_not_retried(self)`
+          - `def test_cpu_override_never_probes(self)`
     - 📂 **story/**
-      - 📄 [run_ambient_chat_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_ambient_chat_tests.gd)
+      - 📄 [run_ambient_chat_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_ambient_chat_tests.gd)
         - `func _initialize() -> void`
         - `func _test_bucket_boundaries() -> void`
         - `func _fake_story_state() -> Dictionary`
@@ -8186,13 +8152,13 @@ Root: `SpaceGame`
         - `func _test_parse_chat_lines() -> void`
         - `func _test_story_manager_topic_bookkeeping() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_ambient_chat_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_ambient_chat_tests.gd.uid)
-      - 📄 [run_board_delivery_recipient_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_board_delivery_recipient_tests.gd)
+      - 📄 [run_ambient_chat_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ambient_chat_tests.gd.uid)
+      - 📄 [run_board_delivery_recipient_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_board_delivery_recipient_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _expect(value: bool, message: String) -> void`
-      - 📄 [run_board_delivery_recipient_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_board_delivery_recipient_tests.gd.uid)
-      - 📄 [run_branch_policy_wiring_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_branch_policy_wiring_tests.gd)
+      - 📄 [run_board_delivery_recipient_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_board_delivery_recipient_tests.gd.uid)
+      - 📄 [run_branch_policy_wiring_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_branch_policy_wiring_tests.gd)
         - `func _initialize() -> void`
         - `func _plan_for(contract: Dictionary, mechanical: Dictionary = {}) -> Dictionary`
         - `func _intent_ids(plan: Dictionary) -> Array`
@@ -8203,7 +8169,8 @@ Root: `SpaceGame`
         - `func _test_ineligible_branch_is_explained_not_removed() -> void`
         - `func _test_unknown_eligibility_does_not_revoke_an_option() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_direction_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_campaign_direction_tests.gd)
+      - 📄 [run_branch_policy_wiring_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_branch_policy_wiring_tests.gd.uid)
+      - 📄 [run_campaign_direction_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_campaign_direction_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _opportunity(suffix: String) -> Dictionary`
@@ -8218,7 +8185,8 @@ Root: `SpaceGame`
         - `func _test_compiled_plan() -> void`
         - `func _test_prompt() -> void`
         - `func _test_response_parsing() -> void`
-      - 📄 [run_campaign_direction_trace_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_campaign_direction_trace_tests.gd)
+      - 📄 [run_campaign_direction_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_campaign_direction_tests.gd.uid)
+      - 📄 [run_campaign_direction_trace_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_campaign_direction_trace_tests.gd)
         - 🏛️ **World**
           - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
         - 🏛️ **Pilot**
@@ -8246,7 +8214,8 @@ Root: `SpaceGame`
         - `func _desire_state(progress: Dictionary, contract: Dictionary) -> String`
         - `func _deliver(contract: Dictionary) -> Dictionary`
         - `func _compare_traces(first: Dictionary, second: Dictionary) -> void`
-      - 📄 [run_campaign_resolution_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_campaign_resolution_tests.gd)
+      - 📄 [run_campaign_direction_trace_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_campaign_direction_trace_tests.gd.uid)
+      - 📄 [run_campaign_resolution_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_campaign_resolution_tests.gd)
         - `func _initialize()`
         - `func _run()`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8270,15 +8239,16 @@ Root: `SpaceGame`
         - `func _test_v2_binding() -> void`
         - `func _test_v2_evaluation() -> void`
         - `func _test_v1_stays_v1() -> void`
-      - 📄 [run_challenge_budget_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_challenge_budget_tests.gd)
+      - 📄 [run_campaign_resolution_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_campaign_resolution_tests.gd.uid)
+      - 📄 [run_challenge_budget_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_challenge_budget_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_ore_amount_uses_cargo_capacity_and_mining_rate() -> void`
         - `func _test_kill_count_uses_combat_vs_enemy_strength() -> void`
         - `func _test_budget_sets_difficulty_deadline_and_reward() -> void`
         - `func _test_low_hull_forces_recovery_band() -> void`
-      - 📄 [run_challenge_budget_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_challenge_budget_tests.gd.uid)
-      - 📄 [run_chapter_packet_consumption_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_chapter_packet_consumption_tests.gd)
+      - 📄 [run_challenge_budget_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_challenge_budget_tests.gd.uid)
+      - 📄 [run_chapter_packet_consumption_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_chapter_packet_consumption_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_register_packet_creates_rewindable_beat_states() -> void`
@@ -8287,14 +8257,14 @@ Root: `SpaceGame`
         - `func _test_required_decline_activates_alternate_or_failure() -> void`
         - `func _test_npc_stake_projection_from_packet() -> void`
         - `func _packet() -> Dictionary`
-      - 📄 [run_chapter_packet_consumption_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_chapter_packet_consumption_tests.gd.uid)
-      - 📄 [run_character_director_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_character_director_tests.gd)
+      - 📄 [run_chapter_packet_consumption_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_chapter_packet_consumption_tests.gd.uid)
+      - 📄 [run_character_director_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_character_director_tests.gd)
         - `func _initialize() -> void`
         - `func _test_deterministic_complete_cards() -> void`
         - `func _test_recent_combinations_are_avoided_when_possible() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_character_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_character_director_tests.gd.uid)
-      - 📄 [run_collection_board_posting_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_collection_board_posting_tests.gd)
+      - 📄 [run_character_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_character_director_tests.gd.uid)
+      - 📄 [run_collection_board_posting_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_collection_board_posting_tests.gd)
         - 🏛️ **World**
           - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
         - 🏛️ **Pilot**
@@ -8320,7 +8290,8 @@ Root: `SpaceGame`
         - `func _test_live_direction_eligibility() -> void`
         - `func _test_live_repair_budget() -> void`
         - `func _test_live_pending_fallback() -> void`
-      - 📄 [run_collection_contract_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_collection_contract_tests.gd)
+      - 📄 [run_collection_board_posting_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_collection_board_posting_tests.gd.uid)
+      - 📄 [run_collection_contract_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_collection_contract_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _source(overrides: Dictionary = {}) -> Dictionary`
@@ -8338,7 +8309,8 @@ Root: `SpaceGame`
         - `func _posting_context(overrides: Dictionary = {}) -> Dictionary`
         - `func _test_posting_generation() -> void`
         - `func _test_posting_withholding() -> void`
-      - 📄 [run_conversation_slicing_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_conversation_slicing_tests.gd)
+      - 📄 [run_collection_contract_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_collection_contract_tests.gd.uid)
+      - 📄 [run_conversation_slicing_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_conversation_slicing_tests.gd)
         - `func _initialize() -> void`
         - `func _plan(intent_count: int) -> Dictionary`
         - `func _test_opening_is_always_first() -> void`
@@ -8348,8 +8320,8 @@ Root: `SpaceGame`
         - `func _test_missing_keys_asks_only_for_what_is_absent() -> void`
         - `func _test_slice_prompt_asks_for_one_thing_only() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_conversation_slicing_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_conversation_slicing_tests.gd.uid)
-      - 📄 [run_desire_progress_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_desire_progress_tests.gd)
+      - 📄 [run_conversation_slicing_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_conversation_slicing_tests.gd.uid)
+      - 📄 [run_desire_progress_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_desire_progress_tests.gd)
         - `func _initialize()`
         - `func _run()`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8360,7 +8332,8 @@ Root: `SpaceGame`
         - `func _test_satisfaction_requires_a_predicate() -> void`
         - `func _test_binding_and_idempotency() -> void`
         - `func _test_validation() -> void`
-      - 📄 [run_dialogue_bundle_validator_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_bundle_validator_tests.gd)
+      - 📄 [run_desire_progress_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_desire_progress_tests.gd.uid)
+      - 📄 [run_dialogue_bundle_validator_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_bundle_validator_tests.gd)
         - `func _initialize() -> void`
         - `func _test_valid_bundle_passes() -> void`
         - `func _test_missing_and_extra_keys_fail() -> void`
@@ -8374,12 +8347,13 @@ Root: `SpaceGame`
         - `func _mission_plan() -> Dictionary`
         - `func _speaker_card() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_dialogue_bundle_validator_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_bundle_validator_tests.gd.uid)
-      - 📄 [run_dialogue_critic_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_critic_tests.gd)
+      - 📄 [run_dialogue_bundle_validator_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_bundle_validator_tests.gd.uid)
+      - 📄 [run_dialogue_critic_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_critic_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func check(value: bool, message: String) -> void`
-      - 📄 [run_dialogue_fact_packet_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_fact_packet_tests.gd)
+      - 📄 [run_dialogue_critic_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_critic_tests.gd.uid)
+      - 📄 [run_dialogue_fact_packet_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_fact_packet_tests.gd)
         - `func _initialize() -> void`
         - `func _buried_contract() -> Dictionary`
         - `func _test_answering_fact_survives_the_cap() -> void`
@@ -8388,7 +8362,8 @@ Root: `SpaceGame`
         - `func _test_private_facts_never_selected() -> void`
         - `func _test_fingerprint_tracks_facts_not_nudges() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_dialogue_field_contract_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_field_contract_tests.gd)
+      - 📄 [run_dialogue_fact_packet_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_fact_packet_tests.gd.uid)
+      - 📄 [run_dialogue_field_contract_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_field_contract_tests.gd)
         - `func _initialize() -> void`
         - `func _req(purpose: String = "opening", options: Dictionary = {}) -> Dictionary`
         - `func _test_budgets_follow_purpose() -> void`
@@ -8399,8 +8374,8 @@ Root: `SpaceGame`
         - `func _test_attempts_are_bounded() -> void`
         - `func _test_line_identity_is_situation_specific() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_dialogue_field_contract_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_field_contract_tests.gd.uid)
-      - 📄 [run_dialogue_quality_gate_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_dialogue_quality_gate_tests.gd)
+      - 📄 [run_dialogue_field_contract_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_field_contract_tests.gd.uid)
+      - 📄 [run_dialogue_quality_gate_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_quality_gate_tests.gd)
         - `func _initialize() -> void`
         - `func _packet(purpose: String = "opening", options: Dictionary = {}) -> Dictionary`
         - `func _test_packet_never_carries_private_facts() -> void`
@@ -8418,7 +8393,13 @@ Root: `SpaceGame`
         - `func _test_decide_separates_passed_from_unknown() -> void`
         - `func _test_rewrite_budget_is_bounded() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fallback_line_bank_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_fallback_line_bank_tests.gd)
+      - 📄 [run_dialogue_quality_gate_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_quality_gate_tests.gd.uid)
+      - 📄 [run_faction_agent_role_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_faction_agent_role_tests.gd)
+        - `func _initialize() -> void`
+        - `func _run() -> void`
+        - `func _expect(ok: bool, message: String) -> void`
+      - 📄 [run_faction_agent_role_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_faction_agent_role_tests.gd.uid)
+      - 📄 [run_fallback_line_bank_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fallback_line_bank_tests.gd)
         - `func _initialize() -> void`
         - `func _test_create_bank_caps_at_target_and_marks_fallbacks() -> void`
         - `func _test_create_bank_preserves_per_line_kinds() -> void`
@@ -8430,42 +8411,42 @@ Root: `SpaceGame`
         - `func _test_generated_lines_can_carry_their_own_kinds() -> void`
         - `func _test_prefer_generated_scores_story_aware_lines_first() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fallback_line_bank_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_fallback_line_bank_tests.gd.uid)
-      - 📄 [run_fixed_cast_line_validator_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_line_validator_tests.gd)
+      - 📄 [run_fallback_line_bank_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fallback_line_bank_tests.gd.uid)
+      - 📄 [run_fixed_cast_line_validator_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_line_validator_tests.gd)
         - `func _initialize() -> void`
         - `func _test_runtime_kaelen_wiring() -> void`
         - `func _fixture(character: String, state: String, situation: String, line: String, context: Dictionary, ok: bool, error: String = "") -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fixed_cast_line_validator_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_line_validator_tests.gd.uid)
-      - 📄 [run_fixed_cast_rapport_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_rapport_tests.gd)
+      - 📄 [run_fixed_cast_line_validator_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_line_validator_tests.gd.uid)
+      - 📄 [run_fixed_cast_rapport_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_rapport_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fixed_cast_rapport_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_rapport_tests.gd.uid)
-      - 📄 [run_fixed_cast_soul_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_soul_tests.gd)
+      - 📄 [run_fixed_cast_rapport_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_rapport_tests.gd.uid)
+      - 📄 [run_fixed_cast_soul_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_soul_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fixed_cast_soul_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_soul_tests.gd.uid)
-      - 📄 [run_fixed_cast_state_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_state_tests.gd)
+      - 📄 [run_fixed_cast_soul_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_soul_tests.gd.uid)
+      - 📄 [run_fixed_cast_state_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_state_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fixed_cast_state_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_state_tests.gd.uid)
-      - 📄 [run_fixed_cast_voice_bank_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_voice_bank_tests.gd)
+      - 📄 [run_fixed_cast_state_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_state_tests.gd.uid)
+      - 📄 [run_fixed_cast_voice_bank_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_voice_bank_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_fixed_cast_voice_bank_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_fixed_cast_voice_bank_tests.gd.uid)
-      - 📄 [run_intro_dock_gating_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_intro_dock_gating_tests.gd)
+      - 📄 [run_fixed_cast_voice_bank_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_voice_bank_tests.gd.uid)
+      - 📄 [run_intro_dock_gating_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_intro_dock_gating_tests.gd)
         - `func _initialize() -> void`
         - `func _test_first_dock_line_is_once_per_campaign() -> void`
         - `func _test_new_campaign_resets_the_latch() -> void`
         - `func _test_filler_is_blocked_during_loading() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_intro_dock_gating_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_intro_dock_gating_tests.gd.uid)
-      - 📄 [run_intro_offer_revisit_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_intro_offer_revisit_tests.gd)
+      - 📄 [run_intro_dock_gating_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_intro_dock_gating_tests.gd.uid)
+      - 📄 [run_intro_offer_revisit_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_intro_offer_revisit_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_intro_offer_revisit_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_intro_offer_revisit_tests.gd.uid)
-      - 📄 [run_kaelen_interaction_bundle_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_kaelen_interaction_bundle_tests.gd)
+      - 📄 [run_intro_offer_revisit_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_intro_offer_revisit_tests.gd.uid)
+      - 📄 [run_kaelen_interaction_bundle_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_kaelen_interaction_bundle_tests.gd)
         - `func _initialize() -> void`
         - `func _test_phase_7_interaction_kinds_are_registered() -> void`
         - `func _test_turn_in_and_reveal_groups_are_explicit() -> void`
@@ -8486,8 +8467,8 @@ Root: `SpaceGame`
         - `func _memory_fixture() -> Dictionary`
         - `func _assert_no_secret_tokens(source: String, label: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_kaelen_interaction_bundle_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_kaelen_interaction_bundle_tests.gd.uid)
-      - 📄 [run_knowledge_ledger_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_knowledge_ledger_tests.gd)
+      - 📄 [run_kaelen_interaction_bundle_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_kaelen_interaction_bundle_tests.gd.uid)
+      - 📄 [run_knowledge_ledger_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_knowledge_ledger_tests.gd)
         - `func _initialize() -> void`
         - `func _test_monotonic_fact_promotion_records_provenance() -> void`
         - `func _test_fact_demotion_is_ignored() -> void`
@@ -8497,15 +8478,15 @@ Root: `SpaceGame`
         - `func _test_question_candidates_skip_already_asked_intents() -> void`
         - `func _test_known_facts_sync_legacy_player_knows() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_knowledge_ledger_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_knowledge_ledger_tests.gd.uid)
-      - 📄 [run_line_bank_refill_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_line_bank_refill_tests.gd)
+      - 📄 [run_knowledge_ledger_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_knowledge_ledger_tests.gd.uid)
+      - 📄 [run_line_bank_refill_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_line_bank_refill_tests.gd)
         - `func _initialize() -> void`
         - `func _refill_jobs(scheduler: RefCounted) -> Array`
         - `func _test_low_bank_triggers_refill_and_tops_up() -> void`
         - `func _test_nova_bank_seed_wiring() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_line_bank_refill_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_line_bank_refill_tests.gd.uid)
-      - 📄 [run_local_pressure_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_local_pressure_tests.gd)
+      - 📄 [run_line_bank_refill_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_line_bank_refill_tests.gd.uid)
+      - 📄 [run_local_pressure_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_local_pressure_tests.gd)
         - `func _initialize()`
         - `func _run()`
         - `func _test_family_mapping_and_decision() -> void`
@@ -8523,7 +8504,8 @@ Root: `SpaceGame`
         - `func _test_constraints_and_payouts() -> void`
         - `func _test_determinism_and_persistence() -> void`
         - `func _test_pacing_families() -> void`
-      - 📄 [run_lounge_conversation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_conversation_tests.gd)
+      - 📄 [run_local_pressure_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_local_pressure_tests.gd.uid)
+      - 📄 [run_lounge_conversation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_conversation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_parse_turn() -> void`
         - `func _test_prompt_content() -> void`
@@ -8550,8 +8532,8 @@ Root: `SpaceGame`
         - `func _test_bundle_consumption_is_model_free() -> void`
         - `func _test_keep_talking_requires_cached_second_bundle() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_lounge_conversation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_conversation_tests.gd.uid)
-      - 📄 [run_lounge_intent_selector_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_intent_selector_tests.gd)
+      - 📄 [run_lounge_conversation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_conversation_tests.gd.uid)
+      - 📄 [run_lounge_intent_selector_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_intent_selector_tests.gd)
         - `func _initialize() -> void`
         - `func _ids(intents: Array) -> Array`
         - `func _test_story_questions_displace_generics() -> void`
@@ -8559,19 +8541,19 @@ Root: `SpaceGame`
         - `func _test_generics_pad_to_minimum_only() -> void`
         - `func _test_warm_callback_beats_generics() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_lounge_intent_selector_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_intent_selector_tests.gd.uid)
-      - 📄 [run_lounge_station_roster_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_station_roster_tests.gd)
+      - 📄 [run_lounge_intent_selector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_intent_selector_tests.gd.uid)
+      - 📄 [run_lounge_station_roster_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_station_roster_tests.gd)
         - 🏛️ **StationFixture**
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_lounge_station_roster_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_lounge_station_roster_tests.gd.uid)
-      - 📄 [run_mission_card_delivery_route_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_card_delivery_route_tests.gd)
+      - 📄 [run_lounge_station_roster_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_station_roster_tests.gd.uid)
+      - 📄 [run_mission_card_delivery_route_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_card_delivery_route_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_card_delivery_route_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_card_delivery_route_tests.gd.uid)
-      - 📄 [run_mission_conversation_compiler_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_compiler_tests.gd)
+      - 📄 [run_mission_card_delivery_route_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_card_delivery_route_tests.gd.uid)
+      - 📄 [run_mission_conversation_compiler_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_compiler_tests.gd)
         - `func _initialize() -> void`
         - `func _test_required_keys_are_flat_and_intent_owned() -> void`
         - `func _test_prompt_uses_actual_values_and_code_owned_intents() -> void`
@@ -8585,8 +8567,8 @@ Root: `SpaceGame`
         - `func _mission_plan() -> Dictionary`
         - `func _speaker_card() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_conversation_compiler_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_compiler_tests.gd.uid)
-      - 📄 [run_mission_conversation_controller_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_controller_tests.gd)
+      - 📄 [run_mission_conversation_compiler_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_compiler_tests.gd.uid)
+      - 📄 [run_mission_conversation_controller_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_controller_tests.gd)
         - `func _initialize() -> void`
         - `func _test_opening_shows_all_available_choices() -> void`
         - `func _test_opening_uses_more_options_navigation_for_extra_intents() -> void`
@@ -8599,15 +8581,15 @@ Root: `SpaceGame`
         - `func _expanded_conversation_plan() -> Dictionary`
         - `func _expanded_bundle() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_conversation_controller_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_controller_tests.gd.uid)
-      - 📄 [run_mission_conversation_flow_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_flow_tests.gd)
+      - 📄 [run_mission_conversation_controller_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_controller_tests.gd.uid)
+      - 📄 [run_mission_conversation_flow_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_flow_tests.gd)
         - `func _initialize() -> void`
         - `func _test_pure_mission_conversation_flow() -> void`
         - `func _speaker_card() -> Dictionary`
         - `func _quest_offer() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_conversation_flow_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_flow_tests.gd.uid)
-      - 📄 [run_mission_conversation_generation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_generation_tests.gd)
+      - 📄 [run_mission_conversation_flow_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_flow_tests.gd.uid)
+      - 📄 [run_mission_conversation_generation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_generation_tests.gd)
         - 🏛️ **QueueProbe**
           - `func queue_offer(quest: Dictionary) -> void`
         - 🏛️ **FakeHost**
@@ -8638,8 +8620,8 @@ Root: `SpaceGame`
         - `func _test_stale_fact_packet_is_refused() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_runtime_persistence() -> void`
-      - 📄 [run_mission_conversation_generation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_generation_tests.gd.uid)
-      - 📄 [run_mission_conversation_plan_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_plan_tests.gd)
+      - 📄 [run_mission_conversation_generation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_generation_tests.gd.uid)
+      - 📄 [run_mission_conversation_plan_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_plan_tests.gd)
         - `func _initialize() -> void`
         - `func _test_registry_contains_required_intents() -> void`
         - `func _test_plan_uses_knowledge_questions_and_mission_context() -> void`
@@ -8648,8 +8630,8 @@ Root: `SpaceGame`
         - `func _test_terminal_intents_carry_code_owned_consequences() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _intent_by_id(plan: Dictionary, intent_id: String) -> Dictionary`
-      - 📄 [run_mission_conversation_plan_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_conversation_plan_tests.gd.uid)
-      - 📄 [run_mission_director_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_director_tests.gd)
+      - 📄 [run_mission_conversation_plan_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_plan_tests.gd.uid)
+      - 📄 [run_mission_director_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_director_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_feasible_candidates_cross_available_beats_objectives_and_givers() -> void`
@@ -8661,14 +8643,14 @@ Root: `SpaceGame`
         - `func _test_declined_offer_cooldowns_filter_candidates() -> void`
         - `func _test_select_best_candidate_or_withhold_for_alternate() -> void`
         - `func _packet() -> Dictionary`
-      - 📄 [run_mission_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_director_tests.gd.uid)
-      - 📄 [run_mission_history_ledger_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_history_ledger_tests.gd)
+      - 📄 [run_mission_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_director_tests.gd.uid)
+      - 📄 [run_mission_history_ledger_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_history_ledger_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_recent_agent_contracts_from_chronicle_events() -> void`
         - `func _test_filters_non_agent_missions() -> void`
-      - 📄 [run_mission_history_ledger_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_history_ledger_tests.gd.uid)
-      - 📄 [run_mission_history_revision_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_history_revision_tests.gd)
+      - 📄 [run_mission_history_ledger_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_history_ledger_tests.gd.uid)
+      - 📄 [run_mission_history_revision_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_history_revision_tests.gd)
         - `func _initialize() -> void`
         - `func _test_story_manager_increments_revision() -> void`
         - `func _test_story_and_knowledge_revision_methods_increment_owned_fields() -> void`
@@ -8677,8 +8659,8 @@ Root: `SpaceGame`
         - `func _test_quest_decline_increments_revision() -> void`
         - `func _on_quest_declined(quest_data: Dictionary) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_mission_history_revision_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_history_revision_tests.gd.uid)
-      - 📄 [run_mission_outcome_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_mission_outcome_tests.gd)
+      - 📄 [run_mission_history_revision_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_history_revision_tests.gd.uid)
+      - 📄 [run_mission_outcome_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_outcome_tests.gd)
         - `func _initialize()`
         - `func _run()`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8686,15 +8668,16 @@ Root: `SpaceGame`
         - `func _test_identity() -> void`
         - `func _test_code_owned_fields() -> void`
         - `func _test_effects() -> void`
-      - 📄 [run_narrative_cache_invalidation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_cache_invalidation_tests.gd)
+      - 📄 [run_mission_outcome_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_outcome_tests.gd.uid)
+      - 📄 [run_narrative_cache_invalidation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_cache_invalidation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_store_and_scheduler_discard_stale_disposable_work() -> void`
         - `func _write_campaign() -> void`
         - `func _cleanup() -> void`
         - `func _remove_directory(path: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_cache_invalidation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_cache_invalidation_tests.gd.uid)
-      - 📄 [run_narrative_cache_scheduler_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_cache_scheduler_tests.gd)
+      - 📄 [run_narrative_cache_invalidation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_cache_invalidation_tests.gd.uid)
+      - 📄 [run_narrative_cache_scheduler_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_cache_scheduler_tests.gd)
         - `func _initialize() -> void`
         - `func _test_priority_trigger_mapping_matches_phase_contract() -> void`
         - `func _test_priority_order_and_dedupe() -> void`
@@ -8744,22 +8727,22 @@ Root: `SpaceGame`
         - `func _truth_job(job_id: String, truth_frozen: bool) -> Dictionary`
         - `func _scoped_job(job_id: String, station_id: String, npc_id: String) -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_cache_scheduler_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_cache_scheduler_tests.gd.uid)
-      - 📄 [run_narrative_chronicle_payload_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_chronicle_payload_tests.gd)
+      - 📄 [run_narrative_cache_scheduler_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_cache_scheduler_tests.gd.uid)
+      - 📄 [run_narrative_chronicle_payload_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_chronicle_payload_tests.gd)
         - `func _initialize() -> void`
         - `func _test_quest_chronicle_payload_preserves_narrative_metadata() -> void`
         - `func _test_quest_giver_npc_id_prefers_explicit_real_contact() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_chronicle_payload_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_chronicle_payload_tests.gd.uid)
-      - 📄 [run_narrative_fingerprint_ledger_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_fingerprint_ledger_tests.gd)
+      - 📄 [run_narrative_chronicle_payload_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_chronicle_payload_tests.gd.uid)
+      - 📄 [run_narrative_fingerprint_ledger_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_fingerprint_ledger_tests.gd)
         - `func _initialize() -> void`
         - `func _test_exact_duplicate_is_rejected() -> void`
         - `func _test_near_duplicate_is_rejected() -> void`
         - `func _test_distinct_line_passes() -> void`
         - `func _test_round_trip_keeps_history() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_fingerprint_ledger_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_fingerprint_ledger_tests.gd.uid)
-      - 📄 [run_narrative_quality_gate_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_quality_gate_tests.gd)
+      - 📄 [run_narrative_fingerprint_ledger_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_fingerprint_ledger_tests.gd.uid)
+      - 📄 [run_narrative_quality_gate_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_quality_gate_tests.gd)
         - `func _initialize() -> void`
         - `func _warnings_for(text: String, aliases: Array = []) -> Array`
         - `func _test_sentence_openers_do_not_warn() -> void`
@@ -8767,25 +8750,25 @@ Root: `SpaceGame`
         - `func _test_known_aliases_are_accepted() -> void`
         - `func _test_mid_sentence_capitals_are_still_caught() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_quality_gate_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_quality_gate_tests.gd.uid)
-      - 📄 [run_narrative_runtime_config_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_runtime_config_tests.gd)
+      - 📄 [run_narrative_quality_gate_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_quality_gate_tests.gd.uid)
+      - 📄 [run_narrative_runtime_config_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_runtime_config_tests.gd)
         - `func _initialize() -> void`
         - `func _test_defaults_are_disabled() -> void`
         - `func _test_flags_are_independent() -> void`
         - `func _test_unknown_flags_are_rejected() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_narrative_runtime_config_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_narrative_runtime_config_tests.gd.uid)
-      - 📄 [run_nova_anatomy_slip_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_nova_anatomy_slip_tests.gd)
+      - 📄 [run_narrative_runtime_config_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_runtime_config_tests.gd.uid)
+      - 📄 [run_nova_anatomy_slip_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_nova_anatomy_slip_tests.gd)
         - `func _initialize() -> void`
-      - 📄 [run_nova_anatomy_slip_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_nova_anatomy_slip_tests.gd.uid)
-      - 📄 [run_nova_line_bank_category_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_nova_line_bank_category_tests.gd)
+      - 📄 [run_nova_anatomy_slip_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_nova_anatomy_slip_tests.gd.uid)
+      - 📄 [run_nova_line_bank_category_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_nova_line_bank_category_tests.gd)
         - `func _initialize() -> void`
         - `func _test_registry_contents() -> void`
         - `func _test_movement_categories_mirror_observer_semantics() -> void`
         - `func _test_protected_and_legacy_kinds() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_nova_line_bank_category_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_nova_line_bank_category_tests.gd.uid)
-      - 📄 [run_novelty_history_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_novelty_history_tests.gd)
+      - 📄 [run_nova_line_bank_category_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_nova_line_bank_category_tests.gd.uid)
+      - 📄 [run_novelty_history_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_novelty_history_tests.gd)
         - `func _initialize()`
         - `func _run()`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8798,13 +8781,14 @@ Root: `SpaceGame`
         - `func _test_ranking() -> void`
         - `func _test_history_integrity() -> void`
         - `func _test_opening_history() -> void`
-      - 📄 [run_outcome_callback_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_outcome_callback_tests.gd)
+      - 📄 [run_novelty_history_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_novelty_history_tests.gd.uid)
+      - 📄 [run_outcome_callback_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_outcome_callback_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _test_game_root_delivery(mission: Dictionary) -> void`
         - `func _expect(value: bool, message: String) -> void`
-      - 📄 [run_outcome_callback_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_outcome_callback_tests.gd.uid)
-      - 📄 [run_outcome_reaction_projector_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_outcome_reaction_projector_tests.gd)
+      - 📄 [run_outcome_callback_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_outcome_callback_tests.gd.uid)
+      - 📄 [run_outcome_reaction_projector_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_outcome_reaction_projector_tests.gd)
         - `func _initialize() -> void`
         - `func _test_a_mistaken_certification_never_reaches_dialogue() -> void`
         - `func _test_public_outcomes_project_facts() -> void`
@@ -8814,16 +8798,16 @@ Root: `SpaceGame`
         - `func _test_refusal_is_not_an_error() -> void`
         - `func _test_persisted_outcome_memories() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_outcome_reaction_projector_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_outcome_reaction_projector_tests.gd.uid)
-      - 📄 [run_player_address_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_player_address_tests.gd)
+      - 📄 [run_outcome_reaction_projector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_outcome_reaction_projector_tests.gd.uid)
+      - 📄 [run_player_address_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_player_address_tests.gd)
         - `func _initialize() -> void`
         - `func _test_strips_every_position() -> void`
         - `func _test_the_reported_shape() -> void`
         - `func _test_kaelen_keeps_her_signature() -> void`
         - `func _test_leaves_ordinary_text_alone() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_player_address_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_player_address_tests.gd.uid)
-      - 📄 [run_pressure_card_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_pressure_card_tests.gd)
+      - 📄 [run_player_address_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_player_address_tests.gd.uid)
+      - 📄 [run_pressure_card_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_pressure_card_tests.gd)
         - `func _initialize()`
         - `func _run()`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8836,7 +8820,8 @@ Root: `SpaceGame`
         - `func _test_frozen_terms() -> void`
         - `func _test_retired_cause() -> void`
         - `func _test_terms_survive_acceptance() -> void`
-      - 📄 [run_quest_choice_policy_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quest_choice_policy_tests.gd)
+      - 📄 [run_pressure_card_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_pressure_card_tests.gd.uid)
+      - 📄 [run_quest_choice_policy_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quest_choice_policy_tests.gd)
         - `func _initialize() -> void`
         - `func _test_courier_stays_one_path() -> void`
         - `func _test_justified_investigation_keeps_both_options() -> void`
@@ -8849,7 +8834,8 @@ Root: `SpaceGame`
         - `func _test_plan_without_contract_is_unchanged() -> void`
         - `func _mission_plan_for(contract: Dictionary) -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_quest_manager_memory_context_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quest_manager_memory_context_tests.gd)
+      - 📄 [run_quest_choice_policy_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quest_choice_policy_tests.gd.uid)
+      - 📄 [run_quest_manager_memory_context_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quest_manager_memory_context_tests.gd)
         - 🏛️ **FakeAgentMemoryStore**
           - `func prompt_context(agent_id: String, _limit: int = 4) -> String`
         - `func _initialize() -> void`
@@ -8859,16 +8845,16 @@ Root: `SpaceGame`
         - `func _test_empty_store_uses_first_contact_context() -> void`
         - `func _test_campaign_memory_context_does_not_cross_stores() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_quest_manager_memory_context_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quest_manager_memory_context_tests.gd.uid)
-      - 📄 [run_quest_speaker_rule_validation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quest_speaker_rule_validation_tests.gd)
+      - 📄 [run_quest_manager_memory_context_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quest_manager_memory_context_tests.gd.uid)
+      - 📄 [run_quest_speaker_rule_validation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quest_speaker_rule_validation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_non_kaelen_speaker_leaks_are_repaired(llm: Node) -> void`
         - `func _test_kaelen_speaker_keeps_shiny(llm: Node) -> void`
         - `func _test_ui_choice_response_fallback_is_speaker_safe() -> void`
         - `func _test_quest_generation_uses_single_constrained_bundle_call() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_quest_speaker_rule_validation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quest_speaker_rule_validation_tests.gd.uid)
-      - 📄 [run_quiet_moment_beats_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_beats_tests.gd)
+      - 📄 [run_quest_speaker_rule_validation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quest_speaker_rule_validation_tests.gd.uid)
+      - 📄 [run_quiet_moment_beats_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_beats_tests.gd)
         - `func _initialize() -> void`
         - `func _rng(seed_value: int) -> RandomNumberGenerator`
         - `func _test_document_loads() -> void`
@@ -8877,8 +8863,8 @@ Root: `SpaceGame`
         - `func _test_lead_in_beats() -> void`
         - `func _test_transit_rotates_devices() -> void`
         - `func _test_authored_text_passes_own_checks() -> void`
-      - 📄 [run_quiet_moment_beats_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_beats_tests.gd.uid)
-      - 📄 [run_quiet_moment_checks_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_checks_tests.gd)
+      - 📄 [run_quiet_moment_beats_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_beats_tests.gd.uid)
+      - 📄 [run_quiet_moment_checks_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_checks_tests.gd)
         - `func _initialize() -> void`
         - `func _expect_clean(line: String, context: Dictionary, label: String) -> void`
         - `func _expect_flag(line: String, context: Dictionary, tag: String, label: String) -> void`
@@ -8888,21 +8874,21 @@ Root: `SpaceGame`
         - `func _test_nova_affection_guard() -> void`
         - `func _test_smart_quote_normalisation() -> void`
         - `func _test_number_licensing() -> void`
-      - 📄 [run_quiet_moment_checks_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_checks_tests.gd.uid)
-      - 📄 [run_quiet_moment_director_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_director_tests.gd)
+      - 📄 [run_quiet_moment_checks_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_checks_tests.gd.uid)
+      - 📄 [run_quiet_moment_director_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_director_tests.gd)
         - `func _initialize() -> void`
         - `func _test_parse_line() -> void`
         - `func _test_unknown_beat_declined() -> void`
         - `func _test_persistence_round_trip() -> void`
         - `func _test_new_campaign_reset() -> void`
         - `func _test_base_line_mode() -> void`
-      - 📄 [run_quiet_moment_director_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_director_tests.gd.uid)
-      - 📄 [run_quiet_moment_line_validator_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_line_validator_tests.gd)
+      - 📄 [run_quiet_moment_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_director_tests.gd.uid)
+      - 📄 [run_quiet_moment_line_validator_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_line_validator_tests.gd)
         - `func _initialize() -> void`
         - `func _has_error(result: Dictionary, expected: String) -> bool`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_quiet_moment_line_validator_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_line_validator_tests.gd.uid)
-      - 📄 [run_quiet_moment_selector_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_selector_tests.gd)
+      - 📄 [run_quiet_moment_line_validator_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_line_validator_tests.gd.uid)
+      - 📄 [run_quiet_moment_selector_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_selector_tests.gd)
         - `func _initialize() -> void`
         - `func _ctx() -> Dictionary`
         - `func _test_opener_recency() -> void`
@@ -8911,8 +8897,8 @@ Root: `SpaceGame`
         - `func _test_windows_expire() -> void`
         - `func _test_persistence_round_trip() -> void`
         - `func _test_replace_last_line() -> void`
-      - 📄 [run_quiet_moment_selector_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_quiet_moment_selector_tests.gd.uid)
-      - 📄 [run_scheduler_slice_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_scheduler_slice_tests.gd)
+      - 📄 [run_quiet_moment_selector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_selector_tests.gd.uid)
+      - 📄 [run_scheduler_slice_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_scheduler_slice_tests.gd)
         - `func _initialize() -> void`
         - `func _plan(intent_count: int) -> Dictionary`
         - `func _base() -> Dictionary`
@@ -8923,8 +8909,8 @@ Root: `SpaceGame`
         - `func _test_a_failed_opening_does_not_block_forever() -> void`
         - `func _test_waiting_is_distinguishable_from_stalled() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_scheduler_slice_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_scheduler_slice_tests.gd.uid)
-      - 📄 [run_ship_behavior_observer_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_ship_behavior_observer_tests.gd)
+      - 📄 [run_scheduler_slice_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_scheduler_slice_tests.gd.uid)
+      - 📄 [run_ship_behavior_observer_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_ship_behavior_observer_tests.gd)
         - `func _initialize() -> void`
         - `func _capture(observer: Node) -> Array`
         - `func _ids(received: Array) -> Array`
@@ -8936,23 +8922,23 @@ Root: `SpaceGame`
         - `func _test_safe_context_enrichment() -> void`
         - `func _test_movement_path_never_touches_the_model() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_ship_behavior_observer_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_ship_behavior_observer_tests.gd.uid)
-      - 📄 [run_ship_movement_event_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_ship_movement_event_tests.gd)
+      - 📄 [run_ship_behavior_observer_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ship_behavior_observer_tests.gd.uid)
+      - 📄 [run_ship_movement_event_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_ship_movement_event_tests.gd)
         - `func _initialize() -> void`
         - `func _test_registry_matches_phase_8a_contract() -> void`
         - `func _test_global_state_channel_validates_event_ids() -> void`
         - `func _test_player_ship_emits_dock_boost_evasive_hull_events() -> void`
         - `func _test_remaining_emitters_are_wired() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_ship_movement_event_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_ship_movement_event_tests.gd.uid)
-      - 📄 [run_story_agent_offer_builder_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_agent_offer_builder_tests.gd)
+      - 📄 [run_ship_movement_event_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ship_movement_event_tests.gd.uid)
+      - 📄 [run_story_agent_offer_builder_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_story_agent_offer_builder_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_template_backed_story_agent_offers_validate() -> void`
         - `func _profile_for_objective(objective_type: String) -> Dictionary`
         - `func _generation_diagnostics() -> Node`
-      - 📄 [run_story_agent_offer_builder_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_agent_offer_builder_tests.gd.uid)
-      - 📄 [run_story_manager_hook_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_manager_hook_tests.gd)
+      - 📄 [run_story_agent_offer_builder_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_story_agent_offer_builder_tests.gd.uid)
+      - 📄 [run_story_manager_hook_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_story_manager_hook_tests.gd)
         - 🏛️ **FakeBibleStore**
           - `func is_valid() -> bool`
           - `func replace_bible(next_data: Dictionary) -> Dictionary`
@@ -8975,21 +8961,21 @@ Root: `SpaceGame`
         - `func _test_regeneration_trigger_selection() -> void`
         - `func _choice() -> Dictionary`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_story_manager_hook_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_manager_hook_tests.gd.uid)
-      - 📄 [run_story_offer_simulation_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_offer_simulation_tests.gd)
+      - 📄 [run_story_manager_hook_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_story_manager_hook_tests.gd.uid)
+      - 📄 [run_story_offer_simulation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_story_offer_simulation_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
         - `func _test_deterministic_100_offer_simulation() -> void`
         - `func _simulation_packet(count: int) -> Dictionary`
         - `func _beat_required(packet: Dictionary, beat_id: String) -> bool`
-      - 📄 [run_story_offer_simulation_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_offer_simulation_tests.gd.uid)
-      - 📄 [run_story_screenshot_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_screenshot_tests.gd)
+      - 📄 [run_story_offer_simulation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_story_offer_simulation_tests.gd.uid)
+      - 📄 [run_story_screenshot_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_story_screenshot_tests.gd)
         - `func _initialize() -> void`
         - `func _test_path_and_tag_sanitizing() -> void`
         - `func _test_headless_capture_is_safe() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_story_screenshot_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/story/run_story_screenshot_tests.gd.uid)
-      - 📄 [run_terminal_transaction_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/story/run_terminal_transaction_tests.gd)
+      - 📄 [run_story_screenshot_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_story_screenshot_tests.gd.uid)
+      - 📄 [run_terminal_transaction_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_terminal_transaction_tests.gd)
         - 🏛️ **World**
           - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
         - 🏛️ **Pilot**
@@ -9014,8 +9000,9 @@ Root: `SpaceGame`
         - `func _test_compatibility_is_not_durable() -> void`
         - `func _test_staged_callback_applies_once() -> void`
         - `func _test_in_flight_pending() -> void`
+      - 📄 [run_terminal_transaction_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_terminal_transaction_tests.gd.uid)
     - 📂 **systems/**
-      - 📄 [run_illegal_mining_enforcement_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/systems/run_illegal_mining_enforcement_tests.gd)
+      - 📄 [run_illegal_mining_enforcement_tests.gd](file:///D:/CodingProjects/spacegame/tests/systems/run_illegal_mining_enforcement_tests.gd)
         - `func _initialize() -> void`
         - `func _test_first_violation_dispatches_two_ships() -> void`
         - `func _test_repeated_violation_refreshes_heat_without_stacking() -> void`
@@ -9025,39 +9012,40 @@ Root: `SpaceGame`
         - `func _test_unwitnessed_global_report_does_not_dispatch() -> void`
         - `func _test_witnessed_global_report_dispatches_and_spawns() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_illegal_mining_enforcement_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/systems/run_illegal_mining_enforcement_tests.gd.uid)
+      - 📄 [run_illegal_mining_enforcement_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/systems/run_illegal_mining_enforcement_tests.gd.uid)
     - 📂 **time/**
-      - 📄 [run_campaign_clock_tests.gd](file:///C:/CodingProjects/SpaceGame/tests/time/run_campaign_clock_tests.gd)
+      - 📄 [run_campaign_clock_tests.gd](file:///D:/CodingProjects/spacegame/tests/time/run_campaign_clock_tests.gd)
         - `func _init() -> void`
         - `func _expect(condition: bool, message: String) -> void`
-      - 📄 [run_campaign_clock_tests.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/time/run_campaign_clock_tests.gd.uid)
+      - 📄 [run_campaign_clock_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/time/run_campaign_clock_tests.gd.uid)
     - 📂 **tools/**
-      - 📄 [check_taunt_lines.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/check_taunt_lines.gd)
+      - 📄 [check_taunt_lines.gd](file:///D:/CodingProjects/spacegame/tests/tools/check_taunt_lines.gd)
         - `func _initialize() -> void`
-      - 📄 [check_taunt_lines.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/check_taunt_lines.gd.uid)
-      - 📄 [print_ambient_prompts.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/print_ambient_prompts.gd)
+      - 📄 [check_taunt_lines.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/check_taunt_lines.gd.uid)
+      - 📄 [print_ambient_prompts.gd](file:///D:/CodingProjects/spacegame/tests/tools/print_ambient_prompts.gd)
         - `func _initialize() -> void`
-      - 📄 [print_ambient_prompts.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/print_ambient_prompts.gd.uid)
-      - 📄 [run_campaign_direction_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_campaign_direction_live_fire.gd)
+      - 📄 [print_ambient_prompts.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/print_ambient_prompts.gd.uid)
+      - 📄 [run_campaign_direction_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_campaign_direction_live_fire.gd)
         - `func _initialize() -> void`
         - `func _build_packet() -> Dictionary`
         - `func _run_next(correction_note: String) -> void`
         - `func _on_reply(result: Dictionary, correction_note: String) -> void`
         - `func _bind_context() -> Dictionary`
         - `func _finish() -> void`
-      - 📄 [run_kaelen_curated_style_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_kaelen_curated_style_live_fire.gd)
+      - 📄 [run_campaign_direction_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_campaign_direction_live_fire.gd.uid)
+      - 📄 [run_kaelen_curated_style_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_kaelen_curated_style_live_fire.gd)
         - `func _initialize() -> void`
         - `func _run_next() -> void`
-      - 📄 [run_kaelen_curated_style_live_fire.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_kaelen_curated_style_live_fire.gd.uid)
-      - 📄 [run_lounge_bundle_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_lounge_bundle_live_fire.gd)
+      - 📄 [run_kaelen_curated_style_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_kaelen_curated_style_live_fire.gd.uid)
+      - 📄 [run_lounge_bundle_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_lounge_bundle_live_fire.gd)
         - `func _initialize() -> void`
         - `func _run_next() -> void`
         - `func _base_row(fixture: Dictionary, prompt: String, writer_result: Dictionary, parsed: Dictionary) -> Dictionary`
         - `func _fixture(index: int) -> Dictionary`
         - `func _elapsed_seconds() -> float`
         - `func _finish() -> void`
-      - 📄 [run_lounge_bundle_live_fire.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_lounge_bundle_live_fire.gd.uid)
-      - 📄 [run_narrative_baseline_capture.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_narrative_baseline_capture.gd)
+      - 📄 [run_lounge_bundle_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_lounge_bundle_live_fire.gd.uid)
+      - 📄 [run_narrative_baseline_capture.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_narrative_baseline_capture.gd)
         - `func _initialize() -> void`
         - `func _run_next_agent_offer() -> void`
         - `func _run_next_lounge_conversation() -> void`
@@ -9077,8 +9065,8 @@ Root: `SpaceGame`
         - `func _example(kind: String, payload: Dictionary, score: int, reason: String) -> Dictionary`
         - `func _count_any(text: String, needles: Array[String]) -> int`
         - `func _phrase_signature(text: String) -> String`
-      - 📄 [run_narrative_baseline_capture.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_narrative_baseline_capture.gd.uid)
-      - 📄 [run_nova_line_bank_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_nova_line_bank_live_fire.gd)
+      - 📄 [run_narrative_baseline_capture.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_narrative_baseline_capture.gd.uid)
+      - 📄 [run_nova_line_bank_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_nova_line_bank_live_fire.gd)
         - `func _initialize() -> void`
         - `func _movement_fields() -> Array`
         - `func _combat_fields() -> Array`
@@ -9086,195 +9074,186 @@ Root: `SpaceGame`
         - `func _run_next() -> void`
         - `func _on_batch_result(job: Dictionary, labels: Array, result: Dictionary) -> void`
         - `func _finish() -> void`
-      - 📄 [run_nova_line_bank_live_fire.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_nova_line_bank_live_fire.gd.uid)
-      - 📄 [run_ollama_recovery_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_ollama_recovery_live_fire.gd)
+      - 📄 [run_nova_line_bank_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_nova_line_bank_live_fire.gd.uid)
+      - 📄 [run_ollama_recovery_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_ollama_recovery_live_fire.gd)
         - `func _initialize() -> void`
         - `func _ping_once() -> bool`
         - `func _finish(ok: bool, detail: String) -> void`
-      - 📄 [run_ollama_recovery_live_fire.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_ollama_recovery_live_fire.gd.uid)
-      - 📄 [run_parallel_lounge_bundle_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_parallel_lounge_bundle_live_fire.gd)
+      - 📄 [run_ollama_recovery_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_ollama_recovery_live_fire.gd.uid)
+      - 📄 [run_parallel_lounge_bundle_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_parallel_lounge_bundle_live_fire.gd)
         - `func _initialize() -> void`
         - `func _fixture(index: int) -> Dictionary`
         - `func _finish() -> void`
-      - 📄 [run_parallel_lounge_bundle_live_fire.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_parallel_lounge_bundle_live_fire.gd.uid)
-      - 📄 [run_parse_check.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_parse_check.gd)
+      - 📄 [run_parallel_lounge_bundle_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_parallel_lounge_bundle_live_fire.gd.uid)
+      - 📄 [run_parse_check.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_parse_check.gd)
         - `func _initialize() -> void`
         - `func _test_cast_name_guard(failures: Array[String]) -> void`
-      - 📄 [run_parse_check.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_parse_check.gd.uid)
-      - 📄 [run_quiet_moment_live.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_quiet_moment_live.gd)
+      - 📄 [run_parse_check.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_parse_check.gd.uid)
+      - 📄 [run_quiet_moment_live.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_quiet_moment_live.gd)
         - `func _initialize() -> void`
         - `func _next() -> void`
         - `func _on_ready(speaker: String, beat_id: String, line: String) -> void`
         - `func _on_silent(beat_id: String, reasons: Array) -> void`
         - `func _finish() -> void`
-      - 📄 [run_quiet_moment_live.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_quiet_moment_live.gd.uid)
-      - 📄 [run_quiet_moment_live_probe.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_quiet_moment_live_probe.gd)
+      - 📄 [run_quiet_moment_live.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_quiet_moment_live.gd.uid)
+      - 📄 [run_quiet_moment_live_probe.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_quiet_moment_live_probe.gd)
         - `func _initialize() -> void`
         - `func _run_next() -> void`
         - `func _verified_prefix(character_id: String) -> String`
         - `func _tail_prompt(character_id: String) -> String`
         - `func _style_guidance(character_id: String, reference_seed: String, combination_index: int) -> String`
         - `func _finish() -> void`
-      - 📄 [run_quiet_moment_live_probe.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_quiet_moment_live_probe.gd.uid)
-      - 📄 [run_taunt_bank_live_fire.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_taunt_bank_live_fire.gd)
+      - 📄 [run_quiet_moment_live_probe.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_quiet_moment_live_probe.gd.uid)
+      - 📄 [run_taunt_bank_live_fire.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_taunt_bank_live_fire.gd)
         - `func _initialize() -> void`
         - `func _context_for(cause: String) -> Dictionary`
         - `func _run_next() -> void`
         - `func _on_result(cause: String, result: Dictionary) -> void`
         - `func _finish() -> void`
-      - 📄 [run_taunt_bank_live_fire.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_taunt_bank_live_fire.gd.uid)
-      - 📄 [run_taunt_growth_probe.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_taunt_growth_probe.gd)
+      - 📄 [run_taunt_bank_live_fire.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_taunt_bank_live_fire.gd.uid)
+      - 📄 [run_taunt_growth_probe.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_taunt_growth_probe.gd)
         - `func _initialize() -> void`
         - `func _next() -> void`
         - `func _wait_for_idle() -> void`
         - `func _total() -> int`
         - `func _report(label: String) -> void`
-      - 📄 [run_taunt_growth_probe.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_taunt_growth_probe.gd.uid)
-      - 📄 [run_taunt_rotation_probe.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/run_taunt_rotation_probe.gd)
+      - 📄 [run_taunt_growth_probe.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_taunt_growth_probe.gd.uid)
+      - 📄 [run_taunt_rotation_probe.gd](file:///D:/CodingProjects/spacegame/tests/tools/run_taunt_rotation_probe.gd)
         - `func _initialize() -> void`
-      - 📄 [run_taunt_rotation_probe.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/run_taunt_rotation_probe.gd.uid)
-      - 📄 [validate_taunt_data.gd](file:///C:/CodingProjects/SpaceGame/tests/tools/validate_taunt_data.gd)
+      - 📄 [run_taunt_rotation_probe.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/run_taunt_rotation_probe.gd.uid)
+      - 📄 [validate_taunt_data.gd](file:///D:/CodingProjects/spacegame/tests/tools/validate_taunt_data.gd)
         - `func _initialize() -> void`
-      - 📄 [validate_taunt_data.gd.uid](file:///C:/CodingProjects/SpaceGame/tests/tools/validate_taunt_data.gd.uid)
+      - 📄 [validate_taunt_data.gd.uid](file:///D:/CodingProjects/spacegame/tests/tools/validate_taunt_data.gd.uid)
   - 📂 **tools/**
-    - 📄 [apply_taunt_review.py](file:///C:/CodingProjects/SpaceGame/tools/apply_taunt_review.py)
+    - 📄 [apply_taunt_review.py](file:///D:/CodingProjects/spacegame/tools/apply_taunt_review.py)
       - `def main()`
     - 📂 **assembler_preview/**
-      - 📄 [catalog_gen.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/catalog_gen.gd)
+      - 📄 [catalog_gen.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/catalog_gen.gd)
         - `func _ready() -> void`
         - `func _first_stem(recipe: Dictionary, cat: String) -> String`
         - `func _score(role: String, box: AABB) -> float`
         - `func _render_sheet(role: String, designs: Array, cam: Camera3D, out_dir: String) -> void`
         - `func _aabb(node: Node3D) -> AABB`
         - `func _collect(node: Node, out: Array) -> void`
-      - 📄 [catalog_gen.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/catalog_gen.gd.uid)
-      - 📄 [devpanel_test.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/devpanel_test.gd)
+      - 📄 [catalog_gen.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/catalog_gen.gd.uid)
+      - 📄 [devpanel_test.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/devpanel_test.gd)
         - `func _ready() -> void`
         - `func _find_tab_container(node: Node) -> TabContainer`
         - `func _settle(frames: int) -> void`
         - `func _shot(out_dir: String, tag: String) -> void`
-      - 📄 [devpanel_test.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/devpanel_test.gd.uid)
-      - 📄 [export_parts.py](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/export_parts.py)
+      - 📄 [devpanel_test.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/devpanel_test.gd.uid)
+      - 📄 [export_parts.py](file:///D:/CodingProjects/spacegame/tools/assembler_preview/export_parts.py)
         - `def safe_filename(name)`
-      - 📄 [faction_check.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/faction_check.gd)
+      - 📄 [faction_check.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/faction_check.gd)
         - `func _ready() -> void`
         - `func _ab(n: Node3D) -> AABB`
         - `func _c(n: Node,o: Array) -> void`
-      - 📄 [faction_check.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/faction_check.gd.uid)
-      - 📄 [focused.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/focused.gd)
+      - 📄 [faction_check.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/faction_check.gd.uid)
+      - 📄 [focused.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/focused.gd)
         - `func _ready() -> void`
         - `func _aabb(n: Node3D) -> AABB`
         - `func _c(n: Node, o: Array) -> void`
-      - 📄 [focused.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/focused.gd.uid)
-      - 📄 [guns.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/guns.gd)
+      - 📄 [focused.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/focused.gd.uid)
+      - 📄 [guns.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/guns.gd)
         - `func _ready() -> void`
         - `func _ab(n: Node3D) -> AABB`
         - `func _c(n: Node,o: Array) -> void`
-      - 📄 [guns.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/guns.gd.uid)
-      - 📄 [hp.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/hp.gd)
+      - 📄 [guns.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/guns.gd.uid)
+      - 📄 [hp.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/hp.gd)
         - `func _ready() -> void`
         - `func _ab(n: Node3D) -> AABB`
         - `func _c(n: Node,o: Array) -> void`
-      - 📄 [hp.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/hp.gd.uid)
-      - 📄 [hull_sheet.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/hull_sheet.gd)
+      - 📄 [hp.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/hp.gd.uid)
+      - 📄 [hull_sheet.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/hull_sheet.gd)
         - `func _ready() -> void`
         - `func _aabb(node: Node3D) -> AABB`
         - `func _collect(node: Node, out: Array) -> void`
-      - 📄 [hull_sheet.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/hull_sheet.gd.uid)
-      - 📄 [inspect_engine_part.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/inspect_engine_part.gd)
-        - `func _init() -> void`
-        - `func _print_tree(node: Node, depth: int) -> void`
-      - 📄 [inspect_engine_part.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/inspect_engine_part.gd.uid)
-      - 📄 [integ.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/integ.gd)
+      - 📄 [hull_sheet.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/hull_sheet.gd.uid)
+      - 📄 [integ.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/integ.gd)
         - `func _ready() -> void`
         - `func _aabb(node: Node3D) -> AABB`
         - `func _collect(node: Node, out: Array) -> void`
-      - 📄 [integ.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/integ.gd.uid)
-      - 📄 [orient.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/orient.gd)
+      - 📄 [integ.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/integ.gd.uid)
+      - 📄 [orient.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/orient.gd)
         - `func _ready() -> void`
         - `func _aabb(n: Node3D) -> AABB`
         - `func _c(n: Node,o: Array) -> void`
-      - 📄 [orient.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/orient.gd.uid)
-      - 📄 [playertest.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/playertest.gd)
+      - 📄 [orient.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/orient.gd.uid)
+      - 📄 [playertest.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/playertest.gd)
         - `func _ready() -> void`
-      - 📄 [playertest.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/playertest.gd.uid)
-      - 📄 [preview.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/preview.gd)
+      - 📄 [playertest.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/playertest.gd.uid)
+      - 📄 [preview.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/preview.gd)
         - `func _ready() -> void`
         - `func _aabb(node: Node3D, mcount: Array = []) -> AABB`
         - `func _collect(node: Node, out: Array) -> void`
-      - 📄 [preview.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/preview.gd.uid)
-      - 📄 [probe.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/probe.gd)
+      - 📄 [preview.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/preview.gd.uid)
+      - 📄 [probe.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/probe.gd)
         - `func _init()`
         - `func _c(n: Node, o: Array) -> void`
-      - 📄 [probe.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/probe.gd.uid)
-      - 📄 [recipe_print.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/recipe_print.gd)
+      - 📄 [probe.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/probe.gd.uid)
+      - 📄 [recipe_print.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/recipe_print.gd)
         - `func _init()`
-      - 📄 [recipe_print.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/recipe_print.gd.uid)
-      - 📄 [thruster_preview.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/thruster_preview.gd)
-        - `func _ready() -> void`
-        - `func _setup_world() -> void`
-        - `func _capture(path: String) -> void`
-      - 📄 [thruster_preview.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/thruster_preview.gd.uid)
-      - 📄 [tilt.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/tilt.gd)
+      - 📄 [recipe_print.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/recipe_print.gd.uid)
+      - 📄 [tilt.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/tilt.gd)
         - `func _ready() -> void`
         - `func _ab(n: Node3D) -> AABB`
         - `func _c(n: Node,o: Array) -> void`
-      - 📄 [tilt.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/tilt.gd.uid)
-      - 📄 [viewer_test.gd](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/viewer_test.gd)
+      - 📄 [tilt.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/tilt.gd.uid)
+      - 📄 [viewer_test.gd](file:///D:/CodingProjects/spacegame/tools/assembler_preview/viewer_test.gd)
         - `func _ready() -> void`
         - `func _settle(frames: int) -> void`
         - `func _shot(out_dir: String, tag: String) -> void`
-      - 📄 [viewer_test.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/assembler_preview/viewer_test.gd.uid)
-    - 📄 [bake_taunt_audio.py](file:///C:/CodingProjects/SpaceGame/tools/bake_taunt_audio.py)
+      - 📄 [viewer_test.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/viewer_test.gd.uid)
+    - 📄 [bake_taunt_audio.py](file:///D:/CodingProjects/spacegame/tools/bake_taunt_audio.py)
       - `def render_wav(text, voice, speed, pause)`
       - `def to_ogg(wav_bytes, path)`
       - `def main()`
-    - 📄 [cut_taunt_line.py](file:///C:/CodingProjects/SpaceGame/tools/cut_taunt_line.py)
+    - 📄 [cut_taunt_line.py](file:///D:/CodingProjects/spacegame/tools/cut_taunt_line.py)
       - `def main()`
-    - 📄 [export_lounge_reviews.bat](file:///C:/CodingProjects/SpaceGame/tools/export_lounge_reviews.bat)
-    - 📄 [generate_asteroid_fragments.py](file:///C:/CodingProjects/SpaceGame/tools/generate_asteroid_fragments.py)
+    - 📄 [export_lounge_reviews.bat](file:///D:/CodingProjects/spacegame/tools/export_lounge_reviews.bat)
+    - 📄 [generate_asteroid_fragments.py](file:///D:/CodingProjects/spacegame/tools/generate_asteroid_fragments.py)
       - `def clear_scene()`
       - `def import_mesh(filepath)`
       - `def export_fragments(source_path, output_path, model_index)`
       - `def main()`
-    - 📄 [generate_asteroids.py](file:///C:/CodingProjects/SpaceGame/tools/generate_asteroids.py)
+    - 📄 [generate_asteroids.py](file:///D:/CodingProjects/spacegame/tools/generate_asteroids.py)
       - `def clear_scene()`
       - `def create_rock(index, seed_val)`
       - `def export_rock(rock, filepath)`
-    - 📄 [generate_jet_spool.py](file:///C:/CodingProjects/SpaceGame/tools/generate_jet_spool.py)
+    - 📄 [generate_jet_spool.py](file:///D:/CodingProjects/spacegame/tools/generate_jet_spool.py)
       - `def lowpass(x, cutoff, order)`
-    - 📄 [lounge.bat](file:///C:/CodingProjects/SpaceGame/tools/lounge.bat)
+    - 📄 [import_and_scan.gd](file:///D:/CodingProjects/spacegame/tools/import_and_scan.gd)
+      - `func _initialize() -> void`
+    - 📄 [import_and_scan.gd.uid](file:///D:/CodingProjects/spacegame/tools/import_and_scan.gd.uid)
+    - 📄 [init_cache.ps1](file:///D:/CodingProjects/spacegame/tools/init_cache.ps1)
+    - 📄 [lounge.bat](file:///D:/CodingProjects/spacegame/tools/lounge.bat)
     - 📂 **lounge_review/**
-      - 📄 [curate_selected_lounge_reviews.py](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/curate_selected_lounge_reviews.py)
+      - 📄 [curate_selected_lounge_reviews.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/curate_selected_lounge_reviews.py)
         - `def words(text)`
         - `def similarity(left, right)`
         - `def main()`
-      - 📄 [curated_generation.log](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/curated_generation.log)
-      - 📄 [curated_generation_errors.log](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/curated_generation_errors.log)
-      - 📄 [export_saved_reviews.html](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/export_saved_reviews.html)
-      - 📄 [generate_batch.py](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/generate_batch.py)
+      - 📄 [export_saved_reviews.html](file:///D:/CodingProjects/spacegame/tools/lounge_review/export_saved_reviews.html)
+      - 📄 [generate_batch.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/generate_batch.py)
         - `def generate(name, role, facts, question, index)`
         - `def review(data, question)`
-      - 📄 [generate_diverse_remainder.py](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/generate_diverse_remainder.py)
+      - 📄 [generate_diverse_remainder.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/generate_diverse_remainder.py)
         - `def main()`
-      - 📄 [generator_error.log](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/generator_error.log)
-      - 📄 [generator_progress.log](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/generator_progress.log)
-      - 📄 [index.html](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/index.html)
-      - 📄 [lounge_assistant_rewrite_review.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_assistant_rewrite_review.json)
-      - 📄 [lounge_curated_100.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_curated_100.json)
-      - 📄 [lounge_curated_selected_examples.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_curated_selected_examples.json)
-      - 📄 [lounge_diverse_remainder.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_diverse_remainder.json)
-      - 📄 [lounge_diverse_review_decisions.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_diverse_review_decisions.json)
-      - 📄 [lounge_diverse_rewrite_review.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_diverse_rewrite_review.json)
-      - 📄 [lounge_review_batch.example.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_review_batch.example.json)
-      - 📄 [lounge_review_batch.json](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_review_batch.json)
-      - 📄 [lounge_review_live_batch.js](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/lounge_review_live_batch.js)
-      - 📄 [prepare_assistant_rewrites.py](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/prepare_assistant_rewrites.py)
+      - 📄 [index.html](file:///D:/CodingProjects/spacegame/tools/lounge_review/index.html)
+      - 📄 [lounge_assistant_rewrite_review.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_assistant_rewrite_review.json)
+      - 📄 [lounge_curated_100.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_curated_100.json)
+      - 📄 [lounge_curated_selected_examples.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_curated_selected_examples.json)
+      - 📄 [lounge_diverse_remainder.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_diverse_remainder.json)
+      - 📄 [lounge_diverse_review_decisions.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_diverse_review_decisions.json)
+      - 📄 [lounge_diverse_rewrite_review.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_diverse_rewrite_review.json)
+      - 📄 [lounge_review_batch.example.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_review_batch.example.json)
+      - 📄 [lounge_review_batch.json](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_review_batch.json)
+      - 📄 [lounge_review_live_batch.js](file:///D:/CodingProjects/spacegame/tools/lounge_review/lounge_review_live_batch.js)
+      - 📄 [prepare_assistant_rewrites.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/prepare_assistant_rewrites.py)
         - `def rewritten(item, n)`
         - `def main()`
-      - 📄 [prepare_diverse_rewrites.py](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/prepare_diverse_rewrites.py)
+      - 📄 [prepare_diverse_rewrites.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/prepare_diverse_rewrites.py)
         - `def main()`
-      - 📄 [review_server.py](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/review_server.py)
+      - 📄 [review_server.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/review_server.py)
         - 🏛️ **Handler**
           - `def __init__(self, *args, **kwargs)`
           - `def end_headers(self)`
@@ -9283,8 +9262,8 @@ Root: `SpaceGame`
           - `def do_GET(self)`
           - `def do_POST(self)`
         - 🏛️ **ReusableThreadingHTTPServer**
-      - 📄 [rewrite_review.html](file:///C:/CodingProjects/SpaceGame/tools/lounge_review/rewrite_review.html)
-    - 📄 [measure_phase_2_storage.gd](file:///C:/CodingProjects/SpaceGame/tools/measure_phase_2_storage.gd)
+      - 📄 [rewrite_review.html](file:///D:/CodingProjects/spacegame/tools/lounge_review/rewrite_review.html)
+    - 📄 [measure_phase_2_storage.gd](file:///D:/CodingProjects/spacegame/tools/measure_phase_2_storage.gd)
       - `func _initialize() -> void`
       - `func _runtime_state(credits: int) -> Dictionary`
       - `func _directory_stats(path: String) -> Dictionary`
@@ -9294,12 +9273,14 @@ Root: `SpaceGame`
       - `func _cleanup() -> void`
       - `func _remove_directory(path: String) -> void`
       - `func _fail(message: String) -> void`
-    - 📄 [measure_phase_2_storage.gd.uid](file:///C:/CodingProjects/SpaceGame/tools/measure_phase_2_storage.gd.uid)
+    - 📄 [measure_phase_2_storage.gd.uid](file:///D:/CodingProjects/spacegame/tools/measure_phase_2_storage.gd.uid)
     - 📂 **quality_eval/**
-      - 📄 [CriticCorpus.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/CriticCorpus.gd)
+      - 📄 [CriticCorpus.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/CriticCorpus.gd)
         - 🏛️ **global class CriticCorpus**
-      - 📄 [CriticSentinels.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/CriticSentinels.gd)
-      - 📄 [OllamaProbe.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/OllamaProbe.gd)
+      - 📄 [CriticCorpus.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/CriticCorpus.gd.uid)
+      - 📄 [CriticSentinels.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/CriticSentinels.gd)
+      - 📄 [CriticSentinels.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/CriticSentinels.gd.uid)
+      - 📄 [OllamaProbe.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/OllamaProbe.gd)
         - 🏛️ **global class OllamaProbe**
           - `func _ready() -> void`
           - `func generate(capability: String, prompt: String, options: Dictionary) -> Dictionary`
@@ -9309,18 +9290,22 @@ Root: `SpaceGame`
           - `func model_footprint() -> Dictionary`
           - `func model_identity(model: String) -> Dictionary`
           - `func _get_json(url: String) -> Dictionary`
+      - 📄 [OllamaProbe.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/OllamaProbe.gd.uid)
       - 📂 **repro/**
-        - 📄 [repro_should_pass.json](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/repro/repro_should_pass.json)
-        - 📄 [repro_should_repair.json](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/repro/repro_should_repair.json)
-      - 📄 [run_critic_eval.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/run_critic_eval.gd)
-      - 📄 [run_critic_eval_v2.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/run_critic_eval_v2.gd)
+        - 📄 [repro_should_pass.json](file:///D:/CodingProjects/spacegame/tools/quality_eval/repro/repro_should_pass.json)
+        - 📄 [repro_should_repair.json](file:///D:/CodingProjects/spacegame/tools/quality_eval/repro/repro_should_repair.json)
+      - 📄 [run_critic_eval.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_critic_eval.gd)
+      - 📄 [run_critic_eval.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_critic_eval.gd.uid)
+      - 📄 [run_critic_eval_v2.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_critic_eval_v2.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _write(path: String, payload: Dictionary) -> void`
-      - 📄 [run_smoke.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/run_smoke.gd)
+      - 📄 [run_critic_eval_v2.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_critic_eval_v2.gd.uid)
+      - 📄 [run_smoke.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_smoke.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
-      - 📄 [run_writer_eval.gd](file:///C:/CodingProjects/SpaceGame/tools/quality_eval/run_writer_eval.gd)
+      - 📄 [run_smoke.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_smoke.gd.uid)
+      - 📄 [run_writer_eval.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_writer_eval.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _quest_for(case: Dictionary) -> Dictionary`
@@ -9328,24 +9313,25 @@ Root: `SpaceGame`
         - `func _percentile(sorted_values: Array[int], fraction: float) -> int`
         - `func _write(records: Array, summary: Dictionary) -> void`
         - `func _print_summary(summary: Dictionary, records: Array) -> void`
-    - 📄 [render_taunt_audition.py](file:///C:/CodingProjects/SpaceGame/tools/render_taunt_audition.py)
+      - 📄 [run_writer_eval.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_writer_eval.gd.uid)
+    - 📄 [render_taunt_audition.py](file:///D:/CodingProjects/spacegame/tools/render_taunt_audition.py)
       - `def find_bank()`
       - `def render(text, voice, out_path)`
       - `def main()`
-    - 📄 [render_taunt_pool.py](file:///C:/CodingProjects/SpaceGame/tools/render_taunt_pool.py)
+    - 📄 [render_taunt_pool.py](file:///D:/CodingProjects/spacegame/tools/render_taunt_pool.py)
       - `def render(text, voice, speed, pause)`
       - `def main()`
-    - 📄 [run_baseline_checks.ps1](file:///C:/CodingProjects/SpaceGame/tools/run_baseline_checks.ps1)
+    - 📄 [run_baseline_checks.ps1](file:///D:/CodingProjects/spacegame/tools/run_baseline_checks.ps1)
     - 📂 **ship_generator/**
-      - 📄 [__init__.py](file:///C:/CodingProjects/SpaceGame/tools/ship_generator/__init__.py)
+      - 📄 [__init__.py](file:///D:/CodingProjects/spacegame/tools/ship_generator/__init__.py)
         - 🏛️ **GenerateSpaceship**
           - `def execute(self, context)`
         - `def menu_func(self, context)`
         - `def register()`
         - `def unregister()`
-      - 📄 [batch_generate.ps1](file:///C:/CodingProjects/SpaceGame/tools/ship_generator/batch_generate.ps1)
-      - 📄 [generate_single.py](file:///C:/CodingProjects/SpaceGame/tools/ship_generator/generate_single.py)
-      - 📄 [spaceship_generator.py](file:///C:/CodingProjects/SpaceGame/tools/ship_generator/spaceship_generator.py)
+      - 📄 [batch_generate.ps1](file:///D:/CodingProjects/spacegame/tools/ship_generator/batch_generate.ps1)
+      - 📄 [generate_single.py](file:///D:/CodingProjects/spacegame/tools/ship_generator/generate_single.py)
+      - 📄 [spaceship_generator.py](file:///D:/CodingProjects/spacegame/tools/ship_generator/spaceship_generator.py)
         - 🏛️ **Material**
         - `def resource_path(*path_components)`
         - `def reset_scene()`
@@ -9375,6 +9361,6 @@ Root: `SpaceGame`
         - `def generate_spaceship(random_seed, ship_class, num_hull_segments_min, num_hull_segments_max, num_asymmetry_segments_min, num_asymmetry_segments_max, texture_file, emblem_file, normal_file, metallic, apply_bevel_modifier, assign_materials)`
       - 📂 **textures/**
         - 📂 **badges/**
-          - 📄 [badge_sheets_metadata.json](file:///C:/CodingProjects/SpaceGame/tools/ship_generator/textures/badges/badge_sheets_metadata.json)
+          - 📄 [badge_sheets_metadata.json](file:///D:/CodingProjects/spacegame/tools/ship_generator/textures/badges/badge_sheets_metadata.json)
         - 📂 **metals/**
-          - 📄 [ShipPaint_Textures.json](file:///C:/CodingProjects/SpaceGame/tools/ship_generator/textures/metals/ShipPaint_Textures.json)
+          - 📄 [ShipPaint_Textures.json](file:///D:/CodingProjects/spacegame/tools/ship_generator/textures/metals/ShipPaint_Textures.json)

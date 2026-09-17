@@ -1,11 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 import io
+import os
+import threading
 import re
 import numpy as np
 import soundfile as sf
 import torch
-from kokoro import KPipeline
+from kokoro import KPipeline, KModel
+from huggingface_hub import hf_hub_download
+from tts_device import AdaptiveDevice, cuda_capacity
 
 app = FastAPI()
 
@@ -22,11 +26,35 @@ DEFAULT_PAUSE_SECONDS = 0.7
 # Initialize the Kokoro pipeline (it will download weights on first run, ~300MB)
 print("[TTS Server] Initializing Kokoro Pipeline...")
 try:
-    pipeline = KPipeline(lang_code='a')
+    pipeline = KPipeline(lang_code='a', device='cpu')
     print("[TTS Server] Kokoro Pipeline initialized successfully.")
 except Exception as e:
     print("[TTS Server] Error initializing pipeline: ", e)
     pipeline = None
+
+def _gpu_model(device):
+    # CPU initialization already cached these assets. Switching never downloads.
+    repo = "hexgrad/Kokoro-82M"
+    config = hf_hub_download(repo, "config.json", local_files_only=True)
+    weights = hf_hub_download(repo, KModel.MODEL_NAMES[repo], local_files_only=True)
+    return KModel(repo_id=repo, config=config, model=weights).to(device).eval()
+
+
+def _release_gpu(device):
+    with torch.cuda.device(device):
+        torch.cuda.empty_cache()
+
+
+_device_mode = os.environ.get("SPACEGAME_TTS_DEVICE", "auto").strip().lower()
+if _device_mode not in ("auto", "cpu"):
+    print("[TTS Server] Invalid SPACEGAME_TTS_DEVICE; using auto.")
+    _device_mode = "auto"
+devices = AdaptiveDevice(
+    pipeline.model, _gpu_model, lambda: cuda_capacity(torch), _release_gpu,
+    mode=_device_mode,
+) if pipeline is not None else None
+_render_lock = threading.Lock()
+
 
 _blend_cache: dict = {}
 
@@ -84,10 +112,18 @@ def apply_style(pack, style_scale: float = 1.0, style_from: str = ""):
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "pipeline_ready": pipeline is not None}
+    return {"status": "ok", "pipeline_ready": pipeline is not None,
+            **(devices.status() if devices else {"device": "unavailable"})}
 
 @app.post("/tts")
-async def text_to_speech(data: dict):
+def text_to_speech(data: dict):
+    # FastAPI runs this synchronous handler in its thread pool. Health probes
+    # remain responsive while synthesis runs; serialize shared pipeline/models.
+    with _render_lock:
+        return _text_to_speech(data)
+
+
+def _text_to_speech(data: dict):
     if pipeline is None:
         raise HTTPException(status_code=500, detail="Kokoro pipeline not initialized")
         
@@ -124,14 +160,17 @@ async def text_to_speech(data: dict):
                 gaps.append(pause_seconds * (0.5 if part.strip() == '..' else 1.0))
         if not segments:
             raise HTTPException(status_code=400, detail="Text had no speakable content")
-        chunks = []
-        for segment in segments:
-            produced = [audio for _, _, audio in
-                        pipeline(segment, voice=voice_pack, speed=speed)]
-            if not produced:
-                continue
-            chunks.append(np.concatenate([np.asarray(a, dtype=np.float32)
-                                          for a in produced]))
+        def generate(model):
+            chunks = []
+            for segment in segments:
+                produced = [audio for _, _, audio in
+                            pipeline(segment, voice=voice_pack, speed=speed, model=model)]
+                if not produced:
+                    continue
+                chunks.append(np.concatenate([np.asarray(a, dtype=np.float32)
+                                              for a in produced]))
+            return chunks
+        chunks = devices.render(generate)
         if not chunks:
             raise HTTPException(status_code=500, detail="Failed to generate audio")
         pieces = [chunks[0]]

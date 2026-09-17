@@ -451,7 +451,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	clean_text = GlobalState.apply_tone_guard(clean_text, voice_id)
 	clean_text = normalize_tts_pronunciation(clean_text)
 
-	var cache_key: String = voice_id + "|" + clean_text
+	var cache_key := _delivery_cache_key(voice_id, clean_text, speed, -1.0, style_scale)
 	if tts_audio_cache.has(cache_key):
 		GenerationDiagnostics.record_lifecycle_timestamp(
 			"tts_cache",
@@ -886,6 +886,13 @@ func _resolve_python_launcher() -> Dictionary:
 		var env_path := _resolve_python_executable(env_value)
 		if not env_path.is_empty():
 			return {"executable": env_path, "args": _launcher_args(env_path)}
+	# Prefer the project's installed dependencies over an unrelated system Python.
+	var local_python := ProjectSettings.globalize_path(
+		"res://.venv/Scripts/python.exe" if OS.get_name() == "Windows"
+		else "res://.venv/bin/python"
+	)
+	if FileAccess.file_exists(local_python):
+		return {"executable": local_python, "args": []}
 	for candidate in ["python", "python3", "py"]:
 		var resolved := _resolve_python_executable(candidate)
 		if not resolved.is_empty():
