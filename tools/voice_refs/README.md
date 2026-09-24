@@ -19,3 +19,9 @@ The model weights (SWivid/F5-TTS, about 1.3 GB) download from Hugging Face on fi
 ## Use
 
 `tools/bake_undercurrent_audio.py` routes any voice listed under `voices` in `clones.json` through `tools/f5_render.py`.
+
+## Clean takes
+
+F5 fills exactly the time it is given: its own guess often cuts the last word, and too much time drags a line out. `f5_render.py` therefore tries up to 18 takes per line (a little more time or not, an optional trailing pause, three seeds) and keeps the first that passes three checks: Whisper (`openai/whisper-small`) hears every word, every "Kaelen" is said in full, and the raw take has gone quiet by its end. A line that never passes is kept as its best take and flagged `CHECK BY EAR`.
+
+`transformers` must stay at 4.46.3 in the F5 environment: newer versions refuse PyTorch 2.4.

@@ -3,14 +3,14 @@
     "Voices rendered with F5-TTS instead of Kokoro, cloned from a reference clip. Only N.O.V.A. is cloned; Kaelen stays on Kokoro (Abe, 2026-09-24).",
     "The reference is made by tools/make_voice_ref.py: Kokoro in the character's game voice, steady delivery (no shouting), trimmed, normalised, with its exact transcript.",
     "speed and nfe (sampling steps) apply to every line in that voice.",
-    "nova_baked is cut from one of the old F5 Nova clips (assets/audio/cast_en/nova_d4021d1329df8e38.wav); set voices.voice.nova.v1.ref to it to use that instead.",
-    "respell: how F5 should say words it gets wrong (the line's text, subtitles and data keep the real spelling)."
+    "respell: how F5 should say words it gets wrong (the line's text, subtitles and data keep the real spelling).",
+    "nova_baked (the default, Abe's pick of voice) is one of the old F5 Nova clips (assets/audio/cast_en/nova_d4021d1329df8e38.wav), whole, levelled, with a silent tail. 'nova' is the Kokoro-made alternative."
   ],
   "f5_python": "D:/CodingProjects/f5-tts-env/Scripts/python.exe",
   "voices": {
     "voice.nova.v1": {
       "engine": "f5",
-      "ref": "nova",
+      "ref": "nova_baked",
       "speed": 0.85,
       "nfe": 64
     }

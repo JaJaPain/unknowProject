@@ -19,7 +19,7 @@ import soundfile as sf
 
 TTS_URL = "http://localhost:5000/tts"
 VOICES = "data/content/voice_provider_kokoro.json"
-SILENCE = 0.01        # amplitude treated as silence when trimming
+SILENCE = 0.003       # amplitude treated as silence when trimming (low: soft final consonants must survive)
 TAIL_SECONDS = 0.35   # quiet tail left after the last word
 PEAK = 0.89           # about -1 dBFS
 
