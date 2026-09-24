@@ -15,6 +15,9 @@ import io
 import json
 import sys
 
+import numpy
+import soundfile as sf
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -38,18 +41,49 @@ def main():
     tts = F5TTS()
     for job in jobs:
         ref_text = io.open(job["ref_text_file"], encoding="utf-8").read().strip()
-        tts.infer(
+        speed = float(job.get("speed", 1.0))
+        wav, rate, _ = tts.infer(
             ref_file=job["ref"],
             ref_text=ref_text,
             gen_text=job["text"],
-            file_wave=job["out"],
             seed=int(job.get("seed", 7)),
-            speed=float(job.get("speed", 1.0)),
+            speed=speed,
             nfe_step=int(job.get("nfe", 64)),
-            remove_silence=True,
+            # F5's own length guess can cut the last word; give it room and
+            # trim the spare silence here instead of with remove_silence,
+            # which also clips soft endings.
+            fix_duration=roomy_duration(job["ref"], ref_text, job["text"], speed),
+            remove_silence=False,
         )
+        sf.write(job["out"], trim(numpy.asarray(wav, dtype="float32"), rate), rate)
         print("rendered", job["out"])
     return 0
+
+
+ROOM = 1.2          # generated speech gets 20% more time than F5 would guess
+PAD_SECONDS = 0.4   # plus a little, so a final word always lands
+SILENCE = 0.012
+TAIL_SECONDS = 0.25
+FADE_SECONDS = 0.03
+
+
+def roomy_duration(ref_wav, ref_text, gen_text, speed):
+    """Total seconds (reference + new line) for F5's fix_duration."""
+    ref_seconds = sf.info(ref_wav).duration
+    per_byte = ref_seconds / max(1, len(ref_text.encode("utf-8")))
+    return ref_seconds + per_byte * len(gen_text.encode("utf-8")) / speed * ROOM + PAD_SECONDS
+
+
+def trim(data, rate):
+    """Trim leading/trailing silence, keep a short tail, fade out gently."""
+    loud = numpy.nonzero(numpy.abs(data) > SILENCE)[0]
+    if len(loud) == 0:
+        return data
+    end = min(len(data), loud[-1] + int(TAIL_SECONDS * rate))
+    data = data[max(0, loud[0] - int(0.02 * rate)):end].copy()
+    fade = min(len(data), int(FADE_SECONDS * rate))
+    data[len(data) - fade:] *= numpy.linspace(1.0, 0.0, fade, dtype="float32")
+    return data
 
 
 if __name__ == "__main__":

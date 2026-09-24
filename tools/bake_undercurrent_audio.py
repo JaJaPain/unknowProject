@@ -11,6 +11,7 @@ between speakers: each part in its own voice, joined into one clip. Needs the lo
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -40,6 +41,13 @@ def render(text, voice):
 CLONES = "tools/voice_refs/clones.json"
 
 
+def spoken(text, clones):
+    """The text as F5 should say it (clones.json respellings, whole words)."""
+    for word, say in clones.get("respell", {}).items():
+        text = re.sub(r"\b%s\b" % re.escape(word), say, text)
+    return text
+
+
 def render_part(part, line, mappings, clones):
     """Kokoro, or F5-TTS for voices cloned in tools/voice_refs/clones.json."""
     clone = clones.get("voices", {}).get(part["voice_profile"])
@@ -49,7 +57,7 @@ def render_part(part, line, mappings, clones):
     with tempfile.TemporaryDirectory() as tmp:
         out = os.path.join(tmp, "part.wav")
         subprocess.run([clones["f5_python"], "tools/f5_render.py", "--ref", ref["wav"], "--ref-text-file", ref["text"],
-                        "--text", part["text"], "--out", out, "--seed", str(line.get("seed", 7)),
+                        "--text", spoken(part["text"], clones), "--out", out, "--seed", str(line.get("seed", 7)),
                         "--speed", str(clone.get("speed", 1.0)), "--nfe", str(clone.get("nfe", 64))], check=True)
         return sf.read(out, dtype="float32")
 
