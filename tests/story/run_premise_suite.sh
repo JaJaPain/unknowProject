@@ -16,6 +16,8 @@ TESTS=(
   run_premise_casting_tests
   run_premise_composer_tests
   run_premise_director_tests
+  run_hidden_hand_tests
+  run_showrunner_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

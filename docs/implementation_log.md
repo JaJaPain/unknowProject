@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2b.1 `HiddenHand`: motive/method/goal draw + thread seeding (trace vs decoy) on arc start.
+- 2b.4 Reveal + confrontation (synthetic card forged from the lock) + director integration (season start, thread seeding, seen marking, draft casting priority, background showrunner with code fallback).
 
 ## Plan of small bites (vertical slice)
 
@@ -67,6 +67,9 @@
 
 - 2026-09-24: Spawn safety: generated factions carry `spawn_key` (legacy key from `SystemConfig.faction_id_lookup` present in `faction_weights`); card ships fly under the owner's spawn key or a hostile system faction. Composer test asserts every combat target is spawnable.
 - Order chosen after the slice review: logic-heavy, headless-testable work first (Hidden Hand, deeds, recurring cast, undercurrent logic, radio text); UI-heavy work (activities, visuals) later with Abe testing, since the windowed game isn't available to me.
+
+- 2026-09-24: 2b.1-2b.2 `HiddenHand.gd` + tests: season draw (motive/method/goal) weighted toward methods with >=5 deck threads (deck coverage is thin for cornering_a_market 1, debt_leverage 3, slow_infiltration 3; deck report now shows it); trace/decoy seeding; seen/pinned; candidate scoring; draft at 3 seen; lock at 6 seen + 3 traces + 3 candidates; lock refuses strangers/thin links; code fallback.
+- 2026-09-24: 2b.3 `Showrunner.gd` + offline test + `tests/story/run_showrunner_live.gd` (manual, needs Ollama). Live qwen3:8b: first run duplicated a link (correctly rejected), after prompt fix it locked (chose a less-evidenced candidate), then it wrote `npc.recurring|Oren Vask` (copied the prompt layout) -> parser now accepts an id with a name attached or an exact display name. num_ctx 4096. **Speed not measurable today:** another process held ~7GB and 88% of the RTX 3060 (12GB); saw 3.8-8 tok/s and 45s loads. Measure properly in the 8GB pass.
 
 ## Decisions made along the way
 
