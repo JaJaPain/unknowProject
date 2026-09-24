@@ -20,7 +20,7 @@
 
 ## Now
 
-- Next: system quirk gameplay effects (pulsar, nebula, ion storm, relay dark zone), then UI-heavy work (pin board, activities) for Abe to test. Faction DNA visual genes (silhouette, wear) wait for the ShipAssembler/visual pass. UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
+- Next: UI-heavy work (evidence pin board, activities: signal tuning, drone micro-mining maze) for Abe to test; Phase 1 generation windows. Faction DNA visual genes and recurring-cast scars wait for the visual pass. UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
 - 2b.5 remaining: pin-board UI for threads (InvestigationPanel), voiced reveal. Then next phase (see plan list).
 
 ## Plan of small bites (vertical slice)
@@ -84,6 +84,10 @@
 - 2026-09-24: Model scheduling (commit e02e5c5): the director unloads the small model before the Showrunner's 8b request. Known gap: a line request already in flight can still finish first; harmless (it completes before the unload).
 - 2026-09-24: Recurring cast (commit 5059351). `RecurringCast.gd` derives each person's history from arcs + fates (no new save data): attitude from their last ending (bitter/warm/mixed/gone), candidates (met, alive, free, not busy in any live arc, shown or not), weighted casting (grudges and debts come back 3x), and a public `history_note` for the line writer. **Bugs the campaign test caught:** (1) two arcs starting on the same arrival could cast the same person (busy now counts unshown live arcs); (2) the Hidden Hand confrontation could cast someone dead, jailed, or starring in another live story. Now the dead and jailed are never suspects, the lock waits while the prime suspect's other story runs, and the Showrunner's shortlist holds only free people. The director simulation still locks at system 5. 12-system simulation: 36 returning faces, no double casting. Live: qwen3:4b uses warm history well ("You got my last two runs right") but muddled a grudge, so the grudge phrase was sharpened. Scars (visible ship damage) wait for the visual pass.
 - 2026-09-24: Faction DNA (commit 0e27cbe). `FactionDNA.gd` derived from the faction id: axes (order/profit/mercy), one of 6 naming languages (clipped "Stad Brod", flowing "Silae Lain", guttural "Draum Khugraur", sibilant, bright, ceremonial), doctrine, silhouette, wear. Casting names people and ships in their faction's language (faction role sharing a word, else the card's first faction). Radio: a local faction's take on each deed via `judge_deed` (verbs in the tag -> axes); all 96 deck deed tags understood; shrugs go unsaid. Existing per-faction fields in `CampaignGeneratedFactionStore` (ideology text, humour, voice_style, badge, colours) were left as they are; DNA adds what was missing without a save change.
+- 2026-09-24: Stray Gemini files in the repo root deleted (Abe's go-ahead).
+- 2026-09-24: System quirks in play (commit 7ed8511). `scripts/story/quirks/SystemQuirkEffects.gd` (pure rules) + `SystemQuirkRunner.gd` (GameRoot child): pulsar sweep every 90 s (8 s NAV warning, screen wash, 15% shield drain, never hull); ion storm 40 s windows every 150 s (shield recharge x0.4); nebula (hostiles notice the player at 70% range); relay dark zone (no system radio). Effects via `GlobalState.system_environment` / `environment_value()` (defaults = unchanged play); clocks run only undocked; tutorial plain; `enabled` switch. Other quirks (dense_debris, dying_star, black_hole_proximity, dead_system, gravity_tides) still only shape card choice.
+- 2026-09-24: Death-line drafts (commit c3bbebb): 4 N.O.V.A., 2 Kaelen blaming N.O.V.A. (Abe's idea), 1 exchange with Abe's "Shut up, Kaelen." reply. Per Abe, an exchange bakes into ONE clip (`parts` in the JSON; the bake tool joins voices with a 0.35 s gap). Test guards that drafts never play.
+- 2026-09-24: Subtitles (commit 8102d66). `SpeechService.subtitle` signal -> `scripts/ui/SubtitleOverlay.gd` (layer 129). Fixed cast named; comms lines named by caller; unset voices unnamed (they fall back to Kaelen's voice, so never label by resolved profile). Death moment unnamed. Settings > Audio > Subtitles, saved in `user://player_preferences.json`, default ON; the intro's caption follows it. Known overlap: dialogue windows that already print a line will also caption it; the toggle covers players who dislike that.
 
 ## Decisions made along the way
 
@@ -93,8 +97,8 @@
 
 ## Open questions for Abe
 
-- Death line variants: the plan allows 3-4 alternates for players who see it again years later. Only your canonical line exists, so it plays at most once per machine. Want to write alternates (or approve drafts)?
-- Subtitles: there is no subtitle setting in the game. Should one be added (accessibility), and if so, confirm the death line shows text with no speaker label?
+- Death-line drafts 02-08 in `data/content/undercurrent_lines.json` (preview clips: `python tools/bake_undercurrent_audio.py --preview` -> `.tmp_godot_user/undercurrent_previews/`). To approve one, set `approved_by_abe: true` (or tell Claude which ones), then run the bake tool. 07 is Abe's Kaelen -> N.O.V.A. exchange baked as one clip.
+- Listen to the comms filter and the pulsar screen wash in the windowed game; say if either is too strong.
 
 ## Image needs (collected for the final ChatGPT JSON)
 
