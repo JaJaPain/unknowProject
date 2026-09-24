@@ -1249,6 +1249,22 @@ func _init_premise_director() -> void:
 	premise_director.decision_ready.connect(_on_premise_decision_ready)
 	premise_director.main_story_locked.connect(_on_premise_main_story_locked)
 	premise_director.season_closed.connect(_on_premise_season_closed)
+	# System radio: one item every couple of minutes (voiced later; comms feed now).
+	var radio_timer := Timer.new()
+	radio_timer.name = "PremiseRadioTimer"
+	radio_timer.wait_time = 120.0
+	radio_timer.autostart = true
+	radio_timer.timeout.connect(_premise_radio_tick)
+	add_child(radio_timer)
+
+
+func _premise_radio_tick() -> void:
+	if not is_instance_valid(premise_director) or not gameplay_runtime_started:
+		return
+	var now := int(CampaignClock.total_minutes)
+	var item: Dictionary = premise_director.next_radio_item(PremiseWorldSnapshotType.capture(now), now)
+	if not item.is_empty():
+		GlobalState.emit_chatter("SYSTEM RADIO", str(item.get("text", "")), Color(0.75, 0.9, 0.8))
 
 
 func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> void:

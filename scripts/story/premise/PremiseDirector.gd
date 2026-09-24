@@ -29,6 +29,7 @@ const ComposerType := preload("res://scripts/story/premise/PremiseMissionCompose
 const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
 const ForgeType := preload("res://scripts/story/premise/HiddenHandForge.gd")
 const ShowType := preload("res://scripts/story/premise/Showrunner.gd")
+const RadioType := preload("res://scripts/story/premise/RadioBroadcaster.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -54,6 +55,8 @@ var use_showrunner := true
 var _showrunner_busy := false
 var _method_coverage: Dictionary = {}
 var _last_world: Dictionary = {}
+# Radio items already aired, per system, this session.
+var _aired: Dictionary = {}
 
 
 func _init() -> void:
@@ -164,6 +167,27 @@ func _odd_details(arc_id: String, arc_record: Dictionary, world: Dictionary) -> 
 		if bool(t.get("seen", false)):
 			lines.append(CastingType.fill_text(str(t["detail"]), arc_record.get("cast", {}), world))
 	return "" if lines.is_empty() else "Something doesn't sit right: " + " ".join(lines)
+
+
+## The next radio item this system hasn't aired yet this visit, or {}.
+## Airing a main-story thread counts as the pilot hearing it.
+func next_radio_item(world: Dictionary, now_minute: int) -> Dictionary:
+	if not enabled:
+		return {}
+	var system_id := str(world.get("system_id", ""))
+	var radio_world := world.duplicate()
+	radio_world["system_names"] = _system_names
+	var aired: Dictionary = _aired.get(system_id, {})
+	for item in RadioType.broadcast(state, library, radio_world, now_minute):
+		if aired.has(str(item["id"])):
+			continue
+		aired[str(item["id"])] = true
+		_aired[system_id] = aired
+		if str(item.get("kind", "")) == "thread":
+			state = HandType.set_seen(state, str(item["thread_id"]), now_minute)
+			state = HandType.update_draft(state)
+		return item
+	return {}
 
 
 ## Seen threads for a pin board: [{id, text, pinned}].

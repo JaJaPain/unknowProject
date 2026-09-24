@@ -132,6 +132,18 @@ static func mark_arc_threads_seen(state: Dictionary, arc_id: String, now_minute:
 	return next
 
 
+## One specific thread is noticed (for example, heard on the radio).
+static func set_seen(state: Dictionary, thread_id: String, now_minute: int) -> Dictionary:
+	if main_story(state).is_empty():
+		return state
+	var next := state.duplicate(true)
+	for t in next["main_story"]["threads"]:
+		if str(t["id"]) == thread_id and not bool(t["seen"]):
+			t["seen"] = true
+			t["seen_minute"] = now_minute
+	return next
+
+
 static func set_pinned(state: Dictionary, thread_id: String, pinned: bool) -> Dictionary:
 	if main_story(state).is_empty():
 		return state

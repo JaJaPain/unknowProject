@@ -75,6 +75,8 @@
 
 - 2026-09-24: Undercurrent death line. `data/content/undercurrent_lines.json` (Abe's line, approved_by_abe), `tools/bake_undercurrent_audio.py` (Kokoro, N.O.V.A.'s blend `voice.nova.v1`; baked `assets/audio/undercurrent/death_line_01.ogg`, 3.2s; **.ogg is git-ignored project-wide, so run the bake tool on any new machine**), `EchoLedgerStore.gd` (user://echo_ledger.json: play seconds, deaths, lines shown), `UndercurrentDirector.gd` (>=5h play, >=5 prior deaths, 1.5% per eligible death, once per machine per line, 20h cooldown), GameRoot `record_player_death` -> director; UIManager `show_death_screen` plays black screen + line + 2s before the panel. Measured 1.49% of 20,000 eligible deaths. No subtitle setting exists yet: when added, show the text with NO speaker label.
 
+- 2026-09-24: System radio + travelling deeds. `RadioBroadcaster.gd` (headlines from live arcs' radio_hooks, deeds from other systems as rumours after 240 campaign minutes naming their origin, local deeds as talk, state/law news from arc consequences, main-story threads with surface 'radio' air here and count as seen) + director `next_radio_item` (each item once per visit) + GameRoot 120s timer -> comms feed 'SYSTEM RADIO'. Voicing (host voice + comms filter, pre-rendered in generation windows) comes with the voice pipeline.
+
 ## Decisions made along the way
 
 - Card missions carry their identity in the existing `narrative_metadata` fields `story_thread_id` (arc instance) and `story_beat_id` (card:beat:mission), so no mission-schema change is needed.

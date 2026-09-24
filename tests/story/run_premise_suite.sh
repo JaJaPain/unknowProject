@@ -20,6 +20,7 @@ TESTS=(
   run_showrunner_tests
   run_hidden_hand_forge_tests
   run_undercurrent_tests
+  run_radio_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do
