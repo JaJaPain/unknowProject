@@ -78,6 +78,13 @@ def main():
     if secrets:
         print("Secrets already used (don't reuse; a similar shape is fine):")
         print("  " + ", ".join(secrets))
+    methods = ("debt_leverage sabotage forged_records cornering_a_market blackmail impersonation manufactured_crisis "
+               "proxy_violence slow_infiltration information_control bribery false_flag").split()
+    carried = Counter(m for c in cards for t in c.get("loose_threads", []) for m in t.get("can_carry_methods", []))
+    print(line("Thread methods", carried, methods))
+    thin = [m for m in methods if carried.get(m, 0) < 8]
+    if thin:
+        print("  (the main story needs loose threads that can carry these methods: %s)" % ", ".join(thin))
     print("\nMost common beat shapes:")
     for shape, count in shapes.most_common(5):
         print("  %3d  %s" % (count, shape))

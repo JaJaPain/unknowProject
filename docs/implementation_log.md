@@ -20,7 +20,7 @@
 
 ## Now
 
-- Next: review the whole slice end to end (what a player sees), then Phase 1 generation windows OR voiced arc dialogue. Decide after review.
+- 2b.1 `HiddenHand`: motive/method/goal draw + thread seeding (trace vs decoy) on arc start.
 
 ## Plan of small bites (vertical slice)
 
@@ -33,7 +33,8 @@
 7. [x] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
 8. [x] 2.6 Persistence: arc state in the campaign save.
 9. [x] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
-10. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
+10. [ ] 2b Main story: 2b.1 HiddenHand data + thread seeding; 2b.2 candidate scoring + code lock; 2b.3 Showrunner LLM pass (Ollama) + validation; 2b.4 reveal + confrontation + season rollover; 2b.5 presentation (threads in briefings, reveal message).
+11. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
 
 ## Done
 
@@ -63,6 +64,9 @@
 - **Gotcha:** Python on Windows writes CRLF by default; Godot rejects `\` line continuations followed by CRLF. Always write with `newline='
 '` (or binary). Heredoc-embedded `
 ` can also land as a literal backslash-n; prefer the Edit tool for GDScript edits.
+
+- 2026-09-24: Spawn safety: generated factions carry `spawn_key` (legacy key from `SystemConfig.faction_id_lookup` present in `faction_weights`); card ships fly under the owner's spawn key or a hostile system faction. Composer test asserts every combat target is spawnable.
+- Order chosen after the slice review: logic-heavy, headless-testable work first (Hidden Hand, deeds, recurring cast, undercurrent logic, radio text); UI-heavy work (activities, visuals) later with Abe testing, since the windowed game isn't available to me.
 
 ## Decisions made along the way
 
