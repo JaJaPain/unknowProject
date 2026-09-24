@@ -39,16 +39,6 @@
       "approval_note": "DRAFT by Claude (2026-09-24), awaiting Abe. Adds 'too soon': hints they are in the middle of something, without saying what."
     },
     {
-      "id": "death_line_04",
-      "kind": "death_line",
-      "speaker": "nova",
-      "voice_profile": "voice.nova.v1",
-      "text": "No, no, no. Kaelen, pull it back. Pull it back now!",
-      "audio": "res://assets/audio/undercurrent/death_line_04.ogg",
-      "approved_by_abe": false,
-      "approval_note": "DRAFT by Claude (2026-09-24), awaiting Abe. Hints the death might be undone. Slightly bolder."
-    },
-    {
       "id": "death_line_05",
       "kind": "death_line",
       "speaker": "nova",
