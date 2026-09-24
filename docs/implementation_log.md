@@ -20,7 +20,7 @@
 
 ## Now
 
-- Next (logic-first order): Faction DNA naming, system quirk effects. (Recurring cast done; scars wait for the visual pass.) UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
+- Next: system quirk gameplay effects (pulsar, nebula, ion storm, relay dark zone), then UI-heavy work (pin board, activities) for Abe to test. Faction DNA visual genes (silhouette, wear) wait for the ShipAssembler/visual pass. UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
 - 2b.5 remaining: pin-board UI for threads (InvestigationPanel), voiced reveal. Then next phase (see plan list).
 
 ## Plan of small bites (vertical slice)
@@ -83,6 +83,7 @@
 - 2026-09-24: Comms voice (commit f33084b). `TTSInterface` builds a "Comms" bus (band-pass 1.7kHz + light overdrive) that feeds the Voice bus; `SpeechService.play_on_comms` routes exactly one line there. The board's "Play message" and the system radio use it; each system's host has a VoiceDNA voice and reads radio items only in quiet moments (no other speech, no interaction, no combat window). `tests/story/run_comms_bus_tests.gd`; the suite passes `-- --baseline-offline` to every test. Untested by ear: Abe should listen in the windowed game and say if the filter is too harsh.
 - 2026-09-24: Model scheduling (commit e02e5c5): the director unloads the small model before the Showrunner's 8b request. Known gap: a line request already in flight can still finish first; harmless (it completes before the unload).
 - 2026-09-24: Recurring cast (commit 5059351). `RecurringCast.gd` derives each person's history from arcs + fates (no new save data): attitude from their last ending (bitter/warm/mixed/gone), candidates (met, alive, free, not busy in any live arc, shown or not), weighted casting (grudges and debts come back 3x), and a public `history_note` for the line writer. **Bugs the campaign test caught:** (1) two arcs starting on the same arrival could cast the same person (busy now counts unshown live arcs); (2) the Hidden Hand confrontation could cast someone dead, jailed, or starring in another live story. Now the dead and jailed are never suspects, the lock waits while the prime suspect's other story runs, and the Showrunner's shortlist holds only free people. The director simulation still locks at system 5. 12-system simulation: 36 returning faces, no double casting. Live: qwen3:4b uses warm history well ("You got my last two runs right") but muddled a grudge, so the grudge phrase was sharpened. Scars (visible ship damage) wait for the visual pass.
+- 2026-09-24: Faction DNA (commit 0e27cbe). `FactionDNA.gd` derived from the faction id: axes (order/profit/mercy), one of 6 naming languages (clipped "Stad Brod", flowing "Silae Lain", guttural "Draum Khugraur", sibilant, bright, ceremonial), doctrine, silhouette, wear. Casting names people and ships in their faction's language (faction role sharing a word, else the card's first faction). Radio: a local faction's take on each deed via `judge_deed` (verbs in the tag -> axes); all 96 deck deed tags understood; shrugs go unsaid. Existing per-faction fields in `CampaignGeneratedFactionStore` (ideology text, humour, voice_style, badge, colours) were left as they are; DNA adds what was missing without a save change.
 
 ## Decisions made along the way
 
