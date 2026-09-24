@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2.3b `SystemProfile`: data-only quirks + states per generated system (needed before arcs can use ~37% of the deck).
+- 2.4a `ArcEngine` core (design in `docs/arc_engine_design.md` first).
 
 ## Plan of small bites (vertical slice)
 
@@ -28,7 +28,7 @@
 2. [x] 2.1 `PremiseCardLibrary`: load approved cards from `res://data/content/premise_cards/approved/`, index, light runtime checks. Test.
 3. [x] 2.2 `PremiseCardHistoryStore`: per-machine `user://` usage history (cycles, recency). Test.
 4. [x] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
-5. [ ] 2.3b `SystemProfile`: seeded quirks (0-2) and starting states per generated system; states also change when arcs resolve. Test.
+5. [x] 2.3b `SystemProfile`: seeded quirks (0-2) and starting states per generated system; states also change when arcs resolve. Test.
 6. [ ] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
 7. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
 8. [ ] 2.6 Persistence: arc state in the campaign save.
@@ -44,6 +44,8 @@
 - 2026-09-24: 2.2 `scripts/story/premise/PremiseCardHistoryStore.gd` + test (per-machine `user://premise_card_history.json`; fresh first, then oldest, recent window 30, new cycle at 90%; atomic save; corrupt file = quiet fresh start).
 
 - 2026-09-24: 2.3 `scripts/story/premise/PremiseCardSelector.gd` + test. Hard filters (quirks/states/factions/scale/campaign exclusion); order = machine freshness, then fit (seeds x3, hidden-hand method x2, preferred quirk, theme), then oldest/seeded shuffle. **Finding:** only 75/120 cards fit a plain system; 37 need a quirk the game doesn't generate yet (dead_system 10, dying_star 8, relay_dark_zone 8, gravity_tides 6, ion_storm 2, pulsar/nebula/black_hole 1 each) and 8 need a state (quarantine 3, shortage 2, strike/mourning/power_vacuum 1). Hence step 2.3b.
+
+- 2026-09-24: 2.3b `scripts/story/premise/SystemProfile.gd` + test. Deterministic from system id + seed + star type; tutorial system plain; 0/1/2 quirks at 40/45/15%; star bias (red -> dying_star, white -> pulsar, blue -> ion_storm/nebula); starting states from quirks plus a 45% random one; `apply_changes` for resolution consequences.
 
 ## Decisions made along the way
 
