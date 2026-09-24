@@ -176,6 +176,8 @@ var ship_behavior_observer: Node = null
 var quiet_moment_director: Node = null
 # Premise-card arcs (docs/arc_engine_design.md). Owned like quiet_moment_director.
 var premise_director: Node = null
+# Fixed-cast undercurrent moments (director-only; plan Section 5).
+var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
 # seeded this session, so the two-batch seed fires at most once per bank.
 var _nova_bank_seed_requests: Dictionary = {}
@@ -224,6 +226,7 @@ func _start_gameplay_runtime() -> void:
 	_init_ship_behavior_observer()
 	_init_quiet_moment_director()
 	_init_premise_director()
+	_init_undercurrent_director()
 	_init_generated_system_configs()
 	var start_definition := system_registry.get_system("system.start")
 	if start_definition == null:
@@ -1216,6 +1219,7 @@ func _init_ship_behavior_observer() -> void:
 const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirector.gd")
 const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
+const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
 
 # Which game event fires which beat. The behaviour observer already emits
 # these with a 180s semantic cooldown of its own.
@@ -1225,6 +1229,17 @@ const QUIET_MOMENT_MOVEMENT_BEATS := {
 	"boost_again_quickly": "nova_hard_burn",
 	"returned_to_same_station": "nova_returned_same_station",
 }
+
+
+func _init_undercurrent_director() -> void:
+	undercurrent_director = UndercurrentDirectorType.new()
+	undercurrent_director.name = "UndercurrentDirector"
+	add_child(undercurrent_director)
+
+
+## The rare death moment, if this death earned one (consumed once).
+func consume_undercurrent_death_moment() -> Dictionary:
+	return undercurrent_director.consume_death_moment() if is_instance_valid(undercurrent_director) else {}
 
 
 func _init_premise_director() -> void:
@@ -2768,6 +2783,8 @@ func _classify_kaelen_rollback(restored: Dictionary) -> bool:
 
 
 func record_player_death(death_source: String = "") -> void:
+	if is_instance_valid(undercurrent_director):
+		undercurrent_director.on_player_death()
 	if campaign_checkpoint_store == null:
 		_initialize_campaign_registry()
 	if campaign_checkpoint_store == null \

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "document_type": "undercurrent_lines",
+  "_comment": [
+    "Hand-authored, baked-audio lines for the fixed cast's undercurrent.",
+    "Director-only: never sent to a language model, never logged, never shown in a codex or recap.",
+    "Every line needs approved_by_abe: true before tools/bake_undercurrent_audio.py will render it."
+  ],
+  "lines": [
+    {
+      "id": "death_line_01",
+      "kind": "death_line",
+      "speaker": "nova",
+      "voice_profile": "voice.nova.v1",
+      "text": "Damn it, Kaelen! I told you this could happen!",
+      "audio": "res://assets/audio/undercurrent/death_line_01.ogg",
+      "approved_by_abe": true,
+      "approval_note": "Abe's own line (2026-09-23)."
+    }
+  ]
+}

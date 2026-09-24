@@ -10416,6 +10416,40 @@ func activate_selected_jumpgate() -> void:
 		show_hud_warning("Jump request was not accepted.")
 
 func show_death_screen():
+	# Director-only (plan Section 5): a very rare death gets a moment first.
+	var root := get_tree().current_scene
+	if root != null and root.has_method("consume_undercurrent_death_moment"):
+		var moment: Dictionary = root.consume_undercurrent_death_moment()
+		if not moment.is_empty():
+			_play_undercurrent_death_moment(moment)
+			return
+	death_panel.visible = true
+
+
+## Black screen, the baked line, two seconds of silence, then the ordinary
+## death screen, as if nothing happened. No subtitle (the game has no subtitle
+## setting yet; when it does, show the text with NO speaker label), no log.
+func _play_undercurrent_death_moment(moment: Dictionary) -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 128
+	add_child(layer)
+	var black := ColorRect.new()
+	black.color = Color.BLACK
+	black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	black.mouse_filter = Control.MOUSE_FILTER_STOP
+	layer.add_child(black)
+	SpeechService.stop()
+	var wait := 2.0
+	var stream: AudioStream = preload("res://scripts/story/undercurrent/UndercurrentDirector.gd").load_line_audio(str(moment.get("audio", "")))
+	if stream != null:
+		var player := AudioStreamPlayer.new()
+		player.stream = stream
+		player.bus = "Voice"
+		layer.add_child(player)
+		player.play()
+		wait += stream.get_length()
+	await get_tree().create_timer(wait, true).timeout
+	layer.queue_free()
 	death_panel.visible = true
 
 func _input(event: InputEvent):

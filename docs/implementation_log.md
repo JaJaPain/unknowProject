@@ -73,6 +73,8 @@
 
 - 2026-09-24: 2b.4 `HiddenHandForge.gd` + test (confrontation forged as a synthetic premise card from the lock; passes runtime card checks; all four endings reachable; offers validate). Director integration: season begins with first arcs; selector gets the hand's method; new arcs seed threads; one thread surfaces when a story is shown and one per completed job; draft identity is offered first for prefer_existing roles (recurring cast); lock -> background Showrunner (HTTPRequest, keep_alive 0) with code fallback -> forged confrontation arc; its resolution closes the season; next arrival starts season 2; forged cards persist in the save (`synthetic_cards`). Lock gate now also needs evidence from >= 4 systems: simulation locks at system 5 (target 4-6). GameRoot announces lock/season end in the comms feed. Suite: 12/12 PASS.
 
+- 2026-09-24: Undercurrent death line. `data/content/undercurrent_lines.json` (Abe's line, approved_by_abe), `tools/bake_undercurrent_audio.py` (Kokoro, N.O.V.A.'s blend `voice.nova.v1`; baked `assets/audio/undercurrent/death_line_01.ogg`, 3.2s; **.ogg is git-ignored project-wide, so run the bake tool on any new machine**), `EchoLedgerStore.gd` (user://echo_ledger.json: play seconds, deaths, lines shown), `UndercurrentDirector.gd` (>=5h play, >=5 prior deaths, 1.5% per eligible death, once per machine per line, 20h cooldown), GameRoot `record_player_death` -> director; UIManager `show_death_screen` plays black screen + line + 2s before the panel. Measured 1.49% of 20,000 eligible deaths. No subtitle setting exists yet: when added, show the text with NO speaker label.
+
 ## Decisions made along the way
 
 - Card missions carry their identity in the existing `narrative_metadata` fields `story_thread_id` (arc instance) and `story_beat_id` (card:beat:mission), so no mission-schema change is needed.
@@ -81,7 +83,8 @@
 
 ## Open questions for Abe
 
-(none yet)
+- Death line variants: the plan allows 3-4 alternates for players who see it again years later. Only your canonical line exists, so it plays at most once per machine. Want to write alternates (or approve drafts)?
+- Subtitles: there is no subtitle setting in the game. Should one be added (accessibility), and if so, confirm the death line shows text with no speaker label?
 
 ## Image needs (collected for the final ChatGPT JSON)
 
