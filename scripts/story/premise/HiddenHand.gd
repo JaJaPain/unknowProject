@@ -152,6 +152,130 @@ static func threads_for_arc(state: Dictionary, arc_id: String) -> Array:
 	return out
 
 
+# --- who is it? -------------------------------------------------------------------
+
+const DRAFT_MIN_SEEN := 3
+const LOCK_MIN_SEEN := 6
+const LOCK_MIN_TRACES := 3
+const LOCK_MIN_CANDIDATES := 3
+
+
+## Every person cast in an arc whose threads the player has seen, scored by how
+## much of the evidence they could explain. Best first.
+## Each: {entity_id, display_name, score, arcs: [arc_id], traces: [thread_id], decoys: [thread_id]}.
+static func candidates(state: Dictionary) -> Array:
+	var seen_by_arc := {}
+	for t in seen_threads(state):
+		var list: Array = seen_by_arc.get(str(t["arc_id"]), [])
+		list.append(t)
+		seen_by_arc[str(t["arc_id"])] = list
+	var people := {}
+	for arc_id in seen_by_arc.keys():
+		var a: Dictionary = (state.get("arcs", {}) as Dictionary).get(arc_id, {})
+		for role_id in (a.get("cast", {}) as Dictionary).keys():
+			var entry: Dictionary = a["cast"][role_id]
+			if str(entry.get("kind", "")) != "person":
+				continue
+			var eid := str(entry.get("entity_id", ""))
+			var person: Dictionary = people.get(eid, {"entity_id": eid, "display_name": str(entry.get("display_name", "")),
+				"score": 0.0, "arcs": [], "traces": [], "decoys": []})
+			if not arc_id in person["arcs"]:
+				(person["arcs"] as Array).append(arc_id)
+				for t in seen_by_arc[arc_id]:
+					if bool(t["trace"]):
+						(person["traces"] as Array).append(str(t["id"]))
+						person["score"] = float(person["score"]) + 2.0
+					else:
+						(person["decoys"] as Array).append(str(t["id"]))
+						person["score"] = float(person["score"]) + 0.5
+					if bool(t["pinned"]):
+						person["score"] = float(person["score"]) + 2.0
+			people[eid] = person
+	var out: Array = people.values()
+	for p in out:
+		p["score"] = float(p["score"]) + maxf(0.0, float((p["arcs"] as Array).size() - 1))
+	out.sort_custom(func(a, b): return float(a["score"]) > float(b["score"]) or (float(a["score"]) == float(b["score"]) and str(a["entity_id"]) < str(b["entity_id"])))
+	return out
+
+
+static func seen_trace_count(state: Dictionary) -> int:
+	return seen_threads(state).filter(func(t): return bool(t["trace"])).size()
+
+
+## After a few threads, a private guess: the likely identity is cast again in
+## later stories, so the eventual reveal has been on screen all along.
+static func update_draft(state: Dictionary) -> Dictionary:
+	var story := main_story(state)
+	if story.is_empty() or str(story["stage"]) != "hidden" or seen_threads(state).size() < DRAFT_MIN_SEEN:
+		return state
+	var ranked := candidates(state)
+	if ranked.is_empty():
+		return state
+	var next := state.duplicate(true)
+	next["main_story"]["draft_entity_id"] = str(ranked[0]["entity_id"])
+	next["main_story"]["draft_display_name"] = str(ranked[0]["display_name"])
+	return next
+
+
+static func ready_to_lock(state: Dictionary) -> bool:
+	var story := main_story(state)
+	return not story.is_empty() and str(story["stage"]) == "hidden" \
+		and seen_threads(state).size() >= LOCK_MIN_SEEN \
+		and seen_trace_count(state) >= LOCK_MIN_TRACES \
+		and candidates(state).size() >= LOCK_MIN_CANDIDATES
+
+
+## Top-3 candidates handed to the Showrunner pass (or used by lock_by_code).
+static func proposal(state: Dictionary) -> Array:
+	var ranked := candidates(state)
+	return ranked.slice(0, 3)
+
+
+## Commits the identity and truth. `choice` = {entity_id, truth, links: {thread_id: text}, source}.
+## Rejects a choice that isn't one of the proposed candidates or explains too little.
+static func lock(state: Dictionary, choice: Dictionary, now_minute: int) -> Dictionary:
+	var story := main_story(state)
+	if story.is_empty() or str(story["stage"]) != "hidden":
+		return {"ok": false, "reason": "not_hidden", "state": state}
+	var pick: Dictionary = {}
+	for c in proposal(state):
+		if str(c["entity_id"]) == str(choice.get("entity_id", "")):
+			pick = c
+	if pick.is_empty():
+		return {"ok": false, "reason": "not_a_candidate", "state": state}
+	var seen_ids := seen_threads(state).map(func(t): return str(t["id"]))
+	var links: Dictionary = {}
+	for tid in (choice.get("links", {}) as Dictionary).keys():
+		if str(tid) in seen_ids:
+			links[str(tid)] = str(choice["links"][tid])
+	if links.size() < LOCK_MIN_TRACES:
+		return {"ok": false, "reason": "explains_too_little", "state": state}
+	var next := state.duplicate(true)
+	next["main_story"]["stage"] = "locked"
+	next["main_story"]["lock"] = {"entity_id": str(pick["entity_id"]), "display_name": str(pick["display_name"]),
+		"truth": str(choice.get("truth", "")), "links": links, "source": str(choice.get("source", "code")),
+		"arcs": (pick["arcs"] as Array).duplicate(), "locked_minute": now_minute}
+	return {"ok": true, "reason": "", "state": next}
+
+
+## The fallback when no model is available (or the model's answer fails checks):
+## the best-scored candidate, with a truth assembled from the season's draw.
+static func lock_by_code(state: Dictionary, now_minute: int) -> Dictionary:
+	var ranked := proposal(state)
+	if ranked.is_empty():
+		return {"ok": false, "reason": "no_candidates", "state": state}
+	var story := main_story(state)
+	var pick: Dictionary = ranked[0]
+	var links := {}
+	for t in seen_threads(state):
+		if str(t["arc_id"]) in (pick["arcs"] as Array) or bool(t["trace"]):
+			links[str(t["id"])] = "part of %s's work" % str(pick["display_name"])
+	var truth := "%s has been working to %s, through %s, out of %s." % [
+		str(pick["display_name"]), str(story["goal_text"]), str(story["method"]).replace("_", " "),
+		str(story["motive"]).replace("_", " ")]
+	return lock(state, {"entity_id": pick["entity_id"], "truth": truth, "links": links, "source": "code"}, now_minute)
+
+
 ## How many loose threads in the deck can carry each method.
 static func method_coverage(library) -> Dictionary:
 	var counts := {}

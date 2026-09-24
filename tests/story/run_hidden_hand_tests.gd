@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_seeding_traces_and_decoys()
 	_test_seen_and_pinned()
 	_test_whole_deck_traces()
+	_test_candidates_draft_and_lock()
 	if _failures.is_empty():
 		print("[PASS] Hidden hand tests")
 		quit(0)
@@ -81,3 +82,38 @@ func _test_whole_deck_traces() -> void:
 		var story := Hand.main_story(Hand.begin_season(Arcs.empty_state(), seed_value, 0, coverage))
 		var m := str(story["method"])
 		_check(int(coverage.get(m, 0)) >= Hand.MIN_METHOD_COVERAGE, "seed %d drew thinly evidenced method %s (%d threads)" % [seed_value, m, int(coverage.get(m, 0))])
+
+
+## Three arcs: "npc.culprit" is in all three (each leaves a trace); two other
+## people appear once each. The lock must land on the culprit.
+func _test_candidates_draft_and_lock() -> void:
+	var s := Hand.begin_season(Arcs.empty_state(), 7, 0)
+	var method := str(Hand.main_story(s)["method"])
+	for i in 3:
+		var card := _card_with_threads(method)
+		card["id"] = "premise.c%d" % i
+		var cast := {"villain": {"kind": "person", "entity_id": "npc.culprit", "display_name": "Oren Vask"},
+			"bystander": {"kind": "person", "entity_id": "npc.bystander_%d" % i, "display_name": "Bystander %d" % i},
+			"dock": {"kind": "place", "entity_id": "station.x", "display_name": "Dock"}}
+		var started := Arcs.start_arc(s, {"id": card["id"], "scale": "local", "beats": [{"n": 1}]}, "system.x", cast, i)
+		s = started["state"]
+		s = Hand.seed_threads(s, card, started["arc_id"], 7)
+		if i < 2:
+			s = Hand.mark_arc_threads_seen(s, started["arc_id"], i)
+	_check(not Hand.ready_to_lock(s), "four seen threads are not enough to lock")
+	s = Hand.update_draft(s)
+	_check(Hand.main_story(s).get("draft_entity_id") == "npc.culprit", "the draft should already point at the culprit")
+	s = Hand.mark_arc_threads_seen(s, "arc.0003", 3)
+	_check(Hand.ready_to_lock(s), "six seen threads with three traces and three people should be ready to lock")
+	var ranked := Hand.candidates(s)
+	_check(ranked[0]["entity_id"] == "npc.culprit", "the culprit should score highest: %s" % str(ranked[0]))
+	var bad := Hand.lock(s, {"entity_id": "npc.nobody", "links": {}}, 10)
+	_check(not bool(bad["ok"]) and bad["reason"] == "not_a_candidate", "locking on a stranger must be refused")
+	var thin := Hand.lock(s, {"entity_id": "npc.culprit", "links": {"th.0001": "x"}}, 10)
+	_check(not bool(thin["ok"]) and thin["reason"] == "explains_too_little", "a truth that explains one thread must be refused")
+	var locked := Hand.lock_by_code(s, 10)
+	_check(bool(locked["ok"]), "the code fallback should lock: %s" % locked["reason"])
+	var story := Hand.main_story(locked["state"])
+	_check(story["stage"] == "locked" and story["lock"]["entity_id"] == "npc.culprit", "the lock should name the culprit")
+	_check(str(story["lock"]["truth"]).contains("Oren Vask"), "the truth should name them")
+	_check(not Hand.ready_to_lock(locked["state"]), "a locked story can't lock again")
