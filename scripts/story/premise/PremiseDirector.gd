@@ -333,6 +333,26 @@ func _maybe_lock(world: Dictionary, now_minute: int) -> void:
 
 func _request_showrunner(world: Dictionary, now_minute: int) -> void:
 	_showrunner_busy = true
+	# 8GB budget: the small model and the story model never fit together, so
+	# free the small one first (it reloads on its next use).
+	var unload := HTTPRequest.new()
+	unload.timeout = 20.0
+	add_child(unload)
+	unload.request_completed.connect(func(_r: int, _c: int, _h: PackedStringArray, _b: PackedByteArray) -> void:
+		unload.queue_free()
+		_send_showrunner(world, now_minute))
+	if unload.request(LocalModelGatewayURL(), ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+			JSON.stringify(unload_request(line_model))) != OK:
+		unload.queue_free()
+		_send_showrunner(world, now_minute)
+
+
+## Ollama unloads a model when asked to generate nothing with keep_alive 0.
+static func unload_request(model: String = "") -> Dictionary:
+	return {"model": model if not model.is_empty() else preload("res://scripts/ai/LocalModelGateway.gd").DEFAULT_SMALL_MODEL, "keep_alive": 0}
+
+
+func _send_showrunner(world: Dictionary, now_minute: int) -> void:
 	var http := HTTPRequest.new()
 	http.timeout = 300.0
 	add_child(http)
