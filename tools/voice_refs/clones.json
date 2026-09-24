@@ -1,31 +1,20 @@
 {
   "_comment": [
-    "Voices rendered with F5-TTS instead of Kokoro, cloned from a reference clip. Only N.O.V.A. is cloned; Kaelen stays on Kokoro (Abe, 2026-09-24).",
-    "The reference is made by tools/make_voice_ref.py: Kokoro in the character's game voice, steady delivery (no shouting), trimmed, normalised, with its exact transcript.",
-    "speed and nfe (sampling steps) apply to every line in that voice.",
-    "respell: how F5 should say words it gets wrong (the line's text, subtitles and data keep the real spelling).",
-    "nova_baked (the default, Abe's pick of voice) is one of the old F5 Nova clips (assets/audio/cast_en/nova_d4021d1329df8e38.wav), whole, levelled, with a silent tail. 'nova' is the Kokoro-made alternative."
+    "Voices rendered with F5-TTS instead of Kokoro. Only N.O.V.A. is cloned; Kaelen stays on Kokoro (Abe, 2026-09-24).",
+    "nova_original is the exact reference the approved cast bake used (pure Kokoro bf_emma), from Abe's Nova_Voice_Fixes_And_Clone_Files.zip. Render with F5 defaults; tools/f5_render.py applies the original tail fix."
   ],
   "f5_python": "D:/CodingProjects/f5-tts-env/Scripts/python.exe",
   "voices": {
     "voice.nova.v1": {
       "engine": "f5",
-      "ref": "nova_baked",
-      "speed": 0.85,
-      "nfe": 64
+      "ref": "nova_original",
+      "speed": 1.0
     }
   },
   "refs": {
-    "nova": {
-      "wav": "tools/voice_refs/nova.wav",
-      "text": "tools/voice_refs/nova.txt"
-    },
-    "nova_baked": {
-      "wav": "tools/voice_refs/nova_baked.wav",
-      "text": "tools/voice_refs/nova_baked.txt"
+    "nova_original": {
+      "wav": "tools/voice_refs/nova_original.wav",
+      "text": "tools/voice_refs/nova_original.txt"
     }
-  },
-  "respell": {
-    "Kaelen": "Kaylen"
   }
 }

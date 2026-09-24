@@ -1,8 +1,14 @@
-# Voice references for F5-TTS clones
+# N.O.V.A.'s F5-TTS clone
 
-Nova's baked lines are rendered with [F5-TTS](https://github.com/SWivid/F5-TTS), which clones a voice from a short reference clip and follows its delivery. Kokoro still renders everyone else, Kaelen included: only N.O.V.A. is cloned.
+N.O.V.A.'s baked lines are rendered with [F5-TTS](https://github.com/SWivid/F5-TTS), cloned from a reference clip. Kokoro renders everyone else, Kaelen included.
 
-`nova.wav` was made by `tools/make_voice_ref.py` from Kokoro in N.O.V.A.'s game voice (see `data/content/voice_provider_kokoro.json`), with its exact transcript in `nova.txt`. F5 copies the reference's delivery as well as its timbre, so the reference is steady and clean: no shouting, silence trimmed, level normalised. Lines render at 0.85 speed with 64 sampling steps (`clones.json`).
+**This reproduces the approved cast bake exactly** (the old machine's `C:\CodingProjects\TestTTS`: `bake_cast.py`, `run_f5_clone.py`, `fix_tails.py`, recovered from Abe's `Nova_Voice_Fixes_And_Clone_Files.zip`):
+
+- Reference: `nova_original.wav` + `.txt`, the original file. It is pure Kokoro `bf_emma` (not her in-game blend) saying "Navigation checks complete. Micro-warp drive primed and aligned for system transit."
+- F5 defaults: `cfg_strength` 2.0, speed 1.0, F5's own timing.
+- Then the tail fix: an 18 ms fade plus 140 ms of silence, only on clips that end within 80 ms of their last sound.
+
+Don't tune the render itself. On 2026-09-24 extra time, retries, trimmed references, remade references and slower speeds were all tried, and Abe heard every one as worse than the original method.
 
 ## Setup (once per machine)
 
@@ -19,9 +25,3 @@ The model weights (SWivid/F5-TTS, about 1.3 GB) download from Hugging Face on fi
 ## Use
 
 `tools/bake_undercurrent_audio.py` routes any voice listed under `voices` in `clones.json` through `tools/f5_render.py`.
-
-## Clean takes
-
-F5 fills exactly the time it is given: its own guess often cuts the last word, and too much time drags a line out. `f5_render.py` therefore tries up to 18 takes per line (a little more time or not, an optional trailing pause, three seeds) and keeps the first that passes three checks: Whisper (`openai/whisper-small`) hears every word, every "Kaelen" is said in full, and the raw take has gone quiet by its end. A line that never passes is kept as its best take and flagged `CHECK BY EAR`.
-
-`transformers` must stay at 4.46.3 in the F5 environment: newer versions refuse PyTorch 2.4.
