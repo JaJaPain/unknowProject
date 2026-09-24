@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2.4b `PremiseCasting`: fill card roles with world entities (stations, generated factions, NPCs, ships, items).
+- 2.5 `PremiseMissionComposer`: card mission + cast + world -> existing offer dict.
 
 ## Plan of small bites (vertical slice)
 
@@ -29,7 +29,7 @@
 3. [x] 2.2 `PremiseCardHistoryStore`: per-machine `user://` usage history (cycles, recency). Test.
 4. [x] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
 5. [x] 2.3b `SystemProfile`: seeded quirks (0-2) and starting states per generated system; states also change when arcs resolve. Test.
-6. [~] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
+6. [x] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
 7. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
 8. [ ] 2.6 Persistence: arc state in the campaign save.
 9. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
@@ -48,6 +48,8 @@
 - 2026-09-24: 2.3b `scripts/story/premise/SystemProfile.gd` + test. Deterministic from system id + seed + star type; tutorial system plain; 0/1/2 quirks at 40/45/15%; star bias (red -> dying_star, white -> pulsar, blue -> ion_storm/nebula); starting states from quirks plus a 45% random one; `apply_changes` for resolution consequences.
 
 - 2026-09-24: 2.4a `scripts/story/premise/ArcEngine.gd` + `docs/arc_engine_design.md` + test. One saveable state dict; start/offers/decisions/outcomes/choices/resolve; game outcome -> card tag mapping (failure tags, comms-reversal offer vs fight, multi-tag findings); consequences land on cast entities, system states/laws/prices, deeds, seeds, ledger. **Stress test: all 120 cards x 6 random playthroughs always resolve.**
+
+- 2026-09-24: 2.4b `PremiseCasting.gd` + `NameForge.gd` + test. Pure over a `world` snapshot (main station, outposts, factions, hostile faction keys, known NPCs). Places distinct in first-use order; factions distinct; `prefer_existing` reuses known NPCs; ships inherit the faction whose role shares a word (else a hostile key); objects -> item names; `fill_text` resolves `{role:x}`, `{system}`, `{player}`. Test: every approved card casts fully with zero unfilled placeholders.
 
 ## Decisions made along the way
 
