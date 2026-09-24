@@ -4,7 +4,8 @@
   "_comment": [
     "Hand-authored, baked-audio lines for the fixed cast's undercurrent.",
     "Director-only: never sent to a language model, never logged, never shown in a codex or recap.",
-    "Every line needs approved_by_abe: true before tools/bake_undercurrent_audio.py will render it."
+    "Every line needs approved_by_abe: true before tools/bake_undercurrent_audio.py will render it.",
+    "A line with parts is an exchange: the bake tool renders each part in its own voice and joins them into one clip, with a short gap between."
   ],
   "lines": [
     {
@@ -16,6 +17,87 @@
       "audio": "res://assets/audio/undercurrent/death_line_01.ogg",
       "approved_by_abe": true,
       "approval_note": "Abe's own line (2026-09-23)."
+    },
+    {
+      "id": "death_line_02",
+      "kind": "death_line",
+      "speaker": "nova",
+      "voice_profile": "voice.nova.v1",
+      "text": "Kaelen! That is exactly what I warned you about!",
+      "audio": "res://assets/audio/undercurrent/death_line_02.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT by Claude (2026-09-24), awaiting Abe. Closest to your line. Same beat, different words, for a player who has already heard yours."
+    },
+    {
+      "id": "death_line_03",
+      "kind": "death_line",
+      "speaker": "nova",
+      "voice_profile": "voice.nova.v1",
+      "text": "I told you it was too soon, Kaelen. I told you!",
+      "audio": "res://assets/audio/undercurrent/death_line_03.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT by Claude (2026-09-24), awaiting Abe. Adds 'too soon': hints they are in the middle of something, without saying what."
+    },
+    {
+      "id": "death_line_04",
+      "kind": "death_line",
+      "speaker": "nova",
+      "voice_profile": "voice.nova.v1",
+      "text": "No, no, no. Kaelen, pull it back. Pull it back now!",
+      "audio": "res://assets/audio/undercurrent/death_line_04.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT by Claude (2026-09-24), awaiting Abe. Hints the death might be undone. Slightly bolder."
+    },
+    {
+      "id": "death_line_05",
+      "kind": "death_line",
+      "speaker": "nova",
+      "voice_profile": "voice.nova.v1",
+      "text": "Kaelen, we are not doing this again. Do you hear me? Not again.",
+      "audio": "res://assets/audio/undercurrent/death_line_05.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT by Claude (2026-09-24), awaiting Abe. Boldest: 'again' suggests they have lost the Captain before. Save for a player's third or later sighting, or drop it."
+    },
+    {
+      "id": "death_line_06",
+      "kind": "death_line",
+      "speaker": "kaelen",
+      "voice_profile": "voice.kaelen.v1",
+      "text": "Nova! You could have pulled Shiny out of that. You just watched!",
+      "audio": "res://assets/audio/undercurrent/death_line_06.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT (2026-09-24), awaiting Abe. Abe's idea (Kaelen blames Nova), Claude's wording. Uses 'Shiny' instead of a pronoun so it fits every Captain."
+    },
+    {
+      "id": "death_line_07",
+      "kind": "death_line",
+      "speaker": "kaelen+nova",
+      "text": "Don't look at me, Nova. This is not coming out of my cut. / Shut up, Kaelen.",
+      "audio": "res://assets/audio/undercurrent/death_line_07.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT (2026-09-24), awaiting Abe. Abe's exchange: Kaelen's jab, then Nova's reply, baked into one clip.",
+      "parts": [
+        {
+          "speaker": "kaelen",
+          "voice_profile": "voice.kaelen.v1",
+          "text": "Don't look at me, Nova. This is not coming out of my cut."
+        },
+        {
+          "speaker": "nova",
+          "voice_profile": "voice.nova.v1",
+          "text": "Shut up, Kaelen."
+        }
+      ]
+    },
+    {
+      "id": "death_line_08",
+      "kind": "death_line",
+      "speaker": "kaelen",
+      "voice_profile": "voice.kaelen.v1",
+      "text": "That was yours to catch, Nova. Yours!",
+      "audio": "res://assets/audio/undercurrent/death_line_08.ogg",
+      "approved_by_abe": false,
+      "approval_note": "DRAFT (2026-09-24), awaiting Abe. Short Kaelen variant of the blame line."
     }
   ]
 }

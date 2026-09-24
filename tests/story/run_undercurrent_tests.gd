@@ -83,6 +83,18 @@ func _test_once_per_machine() -> void:
 			again += 1
 	_check(again == 0, "with one approved line, it plays at most once per machine (played %d more times)" % again)
 	d.free()
+	# Drafts never play: with every approved line used up, nothing is eligible,
+	# however many unapproved drafts sit in the file.
+	var e = _director(6.0, 5, 2)
+	var drafts := 0
+	for line in e._lines:
+		if not bool(line.get("approved_by_abe", false)):
+			drafts += 1
+		else:
+			e.ledger["lines_shown"][str(line["id"])] = 1
+	e.ledger["last_shown_play_seconds"] = -1.0
+	_check(e._eligible_death_line(10).is_empty(), "unapproved drafts (%d in the file) are never eligible" % drafts)
+	e.free()
 
 
 func _test_audio_and_ledger_persist() -> void:
