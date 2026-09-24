@@ -30,6 +30,8 @@ const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
 const ForgeType := preload("res://scripts/story/premise/HiddenHandForge.gd")
 const ShowType := preload("res://scripts/story/premise/Showrunner.gd")
 const RadioType := preload("res://scripts/story/premise/RadioBroadcaster.gd")
+const WriterType := preload("res://scripts/story/premise/LineWriter.gd")
+const VoiceType := preload("res://scripts/story/premise/VoiceDNA.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -57,6 +59,15 @@ var _method_coverage: Dictionary = {}
 var _last_world: Dictionary = {}
 # Radio items already aired, per system, this session.
 var _aired: Dictionary = {}
+## Ask the small model to turn director notes into spoken lines (background,
+## one at a time, while docked). Off, or outside the scene tree, the board
+## shows the director note and nothing is voiced.
+var use_line_writer := true
+## Override for the line model ("" = LocalModelGateway's small model).
+var line_model := ""
+const LINE_ATTEMPTS := 2
+var _line_queue: Array[Dictionary] = []
+var _line_busy := false
 
 
 func _init() -> void:
@@ -135,6 +146,36 @@ func board_postings(world: Dictionary, now_minute: int) -> Array[Dictionary]:
 	var postings: Array[Dictionary] = []
 	if not enabled:
 		return postings
+	for item in _live_offers(world):
+		var arc_id := str(item["arc_id"])
+		var offer: Dictionary = item["offer"]
+		offer["objective_summary"] = str(offer["objective"].get("type", "")).replace("_", " ").capitalize()
+		var written := written_line(arc_id, offer)
+		if not written.is_empty():
+			offer["premise_director_note"] = str(offer["dialogue"])
+			offer["dialogue"] = written
+			offer["voice_profile"] = VoiceType.register(VoiceType.for_person(str(offer.get("agent_id", "")), str(offer.get("faction", ""))))
+		var posting := _posting(arc_id, item["ref"], offer)
+		if not written.is_empty():
+			posting["voice_line"] = written
+			posting["voice_profile"] = offer["voice_profile"]
+		var odd := _odd_details(arc_id, ArcsType.arc(state, arc_id), world)
+		if not odd.is_empty():
+			posting["body"] = str(posting["body"]) + "\n\n" + odd
+		postings.append(posting)
+		if not bool(ArcsType.arc(state, arc_id).get("shown", false)):
+			_record_shown(arc_id, str(item["card"]["id"]))
+			state = HandType.mark_arc_threads_seen(state, arc_id, now_minute, 1)
+			state = HandType.update_draft(state)
+	_maybe_lock(world, now_minute)
+	prepare_lines(world)
+	return postings
+
+
+## Composed offers for the arcs live in this system (no side effects):
+## [{arc_id, ref, card, offer}].
+func _live_offers(world: Dictionary) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
 	var system_id := str(world.get("system_id", ""))
 	for arc_id in ArcsType.active_arc_ids(state):
 		var a := ArcsType.arc(state, arc_id)
@@ -145,19 +186,94 @@ func board_postings(world: Dictionary, now_minute: int) -> Array[Dictionary]:
 			var offer: Dictionary = ComposerType.compose(ref, card, a["cast"], world, campaign_seed)
 			if offer.is_empty() or bool(offer.get("premise_needs_completion", false)):
 				continue
-			offer["objective_summary"] = str(offer["objective"].get("type", "")).replace("_", " ").capitalize()
-			var posting := _posting(arc_id, ref, offer)
-			var odd := _odd_details(arc_id, a, world)
-			if not odd.is_empty():
-				posting["body"] = str(posting["body"]) + "\n\n" + odd
-			postings.append(posting)
-			if not bool(a.get("shown", false)):
-				_record_shown(arc_id, str(a["card_id"]))
-				state = HandType.mark_arc_threads_seen(state, arc_id, now_minute, 1)
-				state = HandType.update_draft(state)
-				a = ArcsType.arc(state, arc_id)
-	_maybe_lock(world, now_minute)
-	return postings
+			out.append({"arc_id": arc_id, "ref": ref, "card": card, "offer": offer})
+	return out
+
+
+# --- spoken lines ---------------------------------------------------------------
+
+static func line_key(arc_id: String, offer: Dictionary) -> String:
+	return "%s|%s" % [arc_id, str(offer.get("story_beat_id", ""))]
+
+
+## The written line for an offer, or "" (not written yet, or it failed and the
+## board falls back to the director note).
+func written_line(arc_id: String, offer: Dictionary) -> String:
+	var entry: Dictionary = (state.get("written_lines", {}) as Dictionary).get(line_key(arc_id, offer), {})
+	return str(entry.get("line", "")) if str(entry.get("status", "")) == "ok" else ""
+
+
+## Queues line writing for this system's offers. Called on arrival (and from
+## the board); runs in the background, one request at a time.
+func prepare_lines(world: Dictionary) -> void:
+	if not enabled or not use_line_writer or not is_inside_tree():
+		return
+	var lines: Dictionary = state.get("written_lines", {})
+	for item in _live_offers(world):
+		var offer: Dictionary = item["offer"]
+		var key := line_key(str(item["arc_id"]), offer)
+		var entry: Dictionary = lines.get(key, {})
+		if str(entry.get("status", "")) in ["ok", "failed"] or _line_queue.any(func(j): return j["key"] == key):
+			continue
+		_line_queue.append(line_job(key, offer, item["card"], ArcsType.arc(state, str(item["arc_id"]))["cast"], world))
+	_pump_lines()
+
+
+static func line_job(key: String, offer: Dictionary, card: Dictionary, cast: Dictionary, world: Dictionary) -> Dictionary:
+	return {"key": key, "private": str(offer.get("premise_private_fact", "")),
+		"brief": WriterType.brief_for_offer(offer, card, cast, world),
+		"agent_id": str(offer.get("agent_id", "")), "faction": str(offer.get("faction", ""))}
+
+
+func _pump_lines() -> void:
+	if _line_busy or _showrunner_busy or not is_inside_tree() or _line_queue.is_empty():
+		return
+	var job: Dictionary = _line_queue.pop_front()
+	_line_busy = true
+	var http := HTTPRequest.new()
+	http.timeout = 60.0
+	add_child(http)
+	http.request_completed.connect(func(result: int, code: int, _headers: PackedStringArray, reply: PackedByteArray) -> void:
+		http.queue_free()
+		_line_busy = false
+		var checked := {"ok": false, "reason": "http", "line": ""}
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			checked = WriterType.check_line(WriterType.response_text(reply.get_string_from_utf8()), job["brief"], job["private"])
+		store_line(job, checked)
+		_pump_lines())
+	if http.request(LocalModelGatewayURL(), ["Content-Type: application/json"], HTTPClient.METHOD_POST,
+			JSON.stringify(WriterType.build_briefing_request(job["brief"], line_model))) != OK:
+		http.queue_free()
+		_line_busy = false
+
+
+## Records a checked line (public for tests). A failed check gets one retry,
+## then the offer keeps its director note for good.
+func store_line(job: Dictionary, checked: Dictionary) -> void:
+	var lines: Dictionary = (state.get("written_lines", {}) as Dictionary).duplicate(true)
+	var entry: Dictionary = lines.get(job["key"], {"attempts": 0})
+	entry["attempts"] = int(entry.get("attempts", 0)) + 1
+	if bool(checked["ok"]):
+		entry["status"] = "ok"
+		entry["line"] = str(checked["line"])
+		_precache_voice(str(checked["line"]), job)
+	elif int(entry["attempts"]) >= LINE_ATTEMPTS:
+		entry["status"] = "failed"
+		entry["reason"] = str(checked["reason"])
+	else:
+		_line_queue.append(job)
+	lines[job["key"]] = entry
+	state["written_lines"] = lines
+
+
+## Renders the line's audio now, so the board plays it without waiting.
+func _precache_voice(line: String, job: Dictionary) -> void:
+	if not is_inside_tree():
+		return
+	var speech := get_node_or_null("/root/SpeechService")
+	if speech == null:
+		return
+	speech.call("cache", line, VoiceType.register(VoiceType.for_person(str(job["agent_id"]), str(job["faction"]))))
 
 
 ## The main story's loose threads for this arc, as a line the pilot notices.
@@ -224,6 +340,7 @@ func _request_showrunner(world: Dictionary, now_minute: int) -> void:
 	http.request_completed.connect(func(result: int, code: int, _headers: PackedStringArray, reply: PackedByteArray) -> void:
 		http.queue_free()
 		_showrunner_busy = false
+		_pump_lines.call_deferred()
 		if not HandType.ready_to_lock(state):
 			return  # the world moved on (reload, or already locked)
 		var locked := {}
@@ -409,6 +526,10 @@ func _after_change(arc_id: String) -> void:
 	if a.is_empty():
 		return
 	if str(a["status"]) == "resolved":
+		var lines: Dictionary = state.get("written_lines", {})
+		for key in lines.keys():
+			if str(key).begins_with(arc_id + "|"):
+				lines.erase(key)
 		arc_resolved.emit(arc_id, str(a["resolution_id"]))
 		if ForgeType.is_forged(str(a["card_id"])) and not HandType.main_story(state).is_empty():
 			state["main_story"]["stage"] = "closed"

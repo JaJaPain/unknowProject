@@ -2352,6 +2352,16 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		terms.add_theme_color_override("font_color", Color(0.6, 0.9, 0.75))
 		vbox.add_child(terms)
 
+	# Premise postings whose line has been written (in the background, on
+	# arrival) carry it with the poster's generated voice.
+	var voice_line := str(posting.get("voice_line", ""))
+	if not voice_line.is_empty() and is_instance_valid(SpeechService):
+		var listen := Button.new()
+		listen.text = "Play message"
+		var voice_profile := str(posting.get("voice_profile", ""))
+		listen.pressed.connect(func(): SpeechService.play(voice_line, voice_profile))
+		vbox.add_child(listen)
+
 	var accept := Button.new()
 	if _should_show_public_board_turn_in():
 		accept.text = "Turn In Active Board Job To Local Agent"

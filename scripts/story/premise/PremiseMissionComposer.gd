@@ -111,6 +111,7 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 		"story_thread_id": arc_id,
 		"story_beat_id": beat_id,
 		"premise_card_id": str(card.get("id", "")),
+		"premise_requester_role": str(mission.get("requester", "")),
 		"premise_private_fact": CastingType.fill_text(str(mission.get("private_fact", "")), cast, world),
 		"premise_competing": bool(offer_ref.get("competing", false)),
 	}

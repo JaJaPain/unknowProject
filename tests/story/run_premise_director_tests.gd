@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_save_reload_keeps_arcs()
 	_test_ignored_arcs_settle()
 	_test_main_story_season()
+	_test_written_lines()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(HISTORY_PATH))
 	if _failures.is_empty():
 		print("[PASS] Premise director tests")
@@ -185,5 +186,36 @@ func _test_main_story_season() -> void:
 	e.load_from_dict(JSON.parse_string(JSON.stringify(d.to_dict())))
 	var forged_id := "premise.hidden_hand.s1"
 	_check(e.library.has_card(forged_id), "the forged confrontation card must come back with the save")
+	d.free()
+	e.free()
+
+
+func _test_written_lines() -> void:
+	var d = _director()
+	d.ensure_arcs(_world(6), 0)
+	var postings: Array = d.board_postings(_world(6), 5)
+	_check(postings.size() >= 2, "need two postings to test lines")
+	if postings.size() < 2:
+		d.free()
+		return
+	_check(not postings[0].has("voice_line"), "nothing is voiced before a line is written")
+	var note := str(postings[0]["quest_data"]["dialogue"])
+	var key := DirectorType.line_key(str(postings[0]["arc_id"]), postings[0]["quest_data"])
+	var line := "I need that cargo moved before the shift change, and I need it done quietly."
+	d.store_line({"key": key}, {"ok": true, "line": line, "reason": ""})
+	var again: Dictionary = d.board_postings(_world(6), 6)[0]
+	_check(str(again["body"]).begins_with(line), "the written line replaces the director note on the board")
+	_check(str(again.get("voice_line", "")) == line and str(again.get("voice_profile", "")).begins_with("voice.generated."), "the posting carries the line and a generated voice")
+	_check(str(again["quest_data"]["dialogue"]) == line and str(again["quest_data"]["premise_director_note"]) == note, "the accepted job speaks the line and keeps the note")
+	var key2 := DirectorType.line_key(str(postings[1]["arc_id"]), postings[1]["quest_data"])
+	var job := {"key": key2}
+	d.store_line(job, {"ok": false, "line": "", "reason": "stock_phrase"})
+	_check(d._line_queue.size() == 1 and str(d.state["written_lines"][key2].get("status", "")) == "", "a failed line gets one retry")
+	d.store_line(job, {"ok": false, "line": "", "reason": "length"})
+	_check(str(d.state["written_lines"][key2]["status"]) == "failed", "after the retry the note stands for good")
+	_check(not d.board_postings(_world(6), 7)[1].has("voice_line"), "a failed line is never voiced")
+	var e = _director()
+	e.load_from_dict(JSON.parse_string(JSON.stringify(d.to_dict())))
+	_check(e.written_line(str(postings[0]["arc_id"]), postings[0]["quest_data"]) == line, "written lines survive a save round trip")
 	d.free()
 	e.free()

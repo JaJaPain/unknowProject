@@ -1289,7 +1289,11 @@ func _premise_on_system_arrived() -> void:
 	_premise_sync_seed()
 	var now := int(CampaignClock.total_minutes)
 	premise_director.tick(now)
-	premise_director.ensure_arcs(PremiseWorldSnapshotType.capture(now), now)
+	var world := PremiseWorldSnapshotType.capture(now)
+	premise_director.ensure_arcs(world, now)
+	# Write this system's lines in the background, so they are ready (and
+	# voiced) by the time the pilot opens the board.
+	premise_director.prepare_lines(world)
 
 
 ## Board postings for the current system's premise arcs (read by UIManager).

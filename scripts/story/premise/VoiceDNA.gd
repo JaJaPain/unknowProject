@@ -45,11 +45,16 @@ static func for_radio_host(system_id: String) -> Dictionary:
 	return for_person("radio_host|%s" % system_id)
 
 
-## Adds the voice to the game's registry so SpeechService can play it by blend.
-static func register(voice: Dictionary) -> void:
-	var registry = GameContentRegistry.shared()
+## Adds the voice to the game's registry and returns its profile id, which
+## SpeechService.play() accepts. "" when the voice is empty.
+static func register(voice: Dictionary) -> String:
 	var provider := str(voice.get("provider_voice", ""))
 	if provider.is_empty():
-		return
-	var profile_id := "voice.generated.%s" % str(abs(hash(provider)))
-	registry.provider_voice_mappings[profile_id] = {"provider_voice": provider, "speed": float(voice.get("speed", 1.0))}
+		return ""
+	var profile_id := profile_id_for(voice)
+	GameContentRegistry.shared().provider_voice_mappings[profile_id] = {"provider_voice": provider, "speed": float(voice.get("speed", 1.0))}
+	return profile_id
+
+
+static func profile_id_for(voice: Dictionary) -> String:
+	return "voice.generated.%s" % str(abs(hash("%s|%s" % [voice.get("provider_voice", ""), voice.get("speed", 1.0)])))
