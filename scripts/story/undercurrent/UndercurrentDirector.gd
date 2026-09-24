@@ -10,6 +10,7 @@ extends Node
 ##   - never before MIN_PLAY_SECONDS of total play on this machine,
 ##   - never before MIN_PRIOR_DEATHS earlier deaths,
 ##   - DEATH_LINE_CHANCE per eligible death,
+##   - a random line among the approved ones not yet heard,
 ##   - each line at most once per machine (more variants need Abe's approval),
 ##   - COOLDOWN_PLAY_SECONDS of play between any two undercurrent moments.
 
@@ -18,7 +19,8 @@ const LINES_PATH := "res://data/content/undercurrent_lines.json"
 
 const MIN_PLAY_SECONDS := 5.0 * 3600.0
 const MIN_PRIOR_DEATHS := 5
-const DEATH_LINE_CHANCE := 0.015
+## Abe (2026-09-24): "very low, like 5-8 percent", then one line at random.
+const DEATH_LINE_CHANCE := 0.06
 const COOLDOWN_PLAY_SECONDS := 20.0 * 3600.0
 const SAVE_EVERY_SECONDS := 60.0
 
@@ -84,13 +86,14 @@ func _eligible_death_line(prior_deaths: int) -> Dictionary:
 	var last := float(ledger.get("last_shown_play_seconds", -1.0))
 	if last >= 0.0 and played - last < COOLDOWN_PLAY_SECONDS:
 		return {}
+	var fresh: Array = []
 	for line in _lines:
 		if str(line.get("kind", "")) != "death_line" or not bool(line.get("approved_by_abe", false)):
 			continue
 		if int((ledger.get("lines_shown", {}) as Dictionary).get(str(line["id"]), 0)) > 0:
 			continue
-		return line
-	return {}
+		fresh.append(line)
+	return fresh[rng.randi_range(0, fresh.size() - 1)] if not fresh.is_empty() else {}
 
 
 func _load_lines() -> Array:

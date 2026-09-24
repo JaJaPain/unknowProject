@@ -62,7 +62,7 @@ func _test_rarity() -> void:
 		d.free()
 	var rate := float(fired) / float(trials)
 	print("  death line rate on eligible deaths: %.2f%% (%d of %d)" % [rate * 100.0, fired, trials])
-	_check(rate > 0.008 and rate < 0.025, "the eligible rate should be about 1.5%%, got %.2f%%" % (rate * 100.0))
+	_check(rate > 0.045 and rate < 0.08, "the eligible rate should be about 6%%, got %.2f%%" % (rate * 100.0))
 
 
 func _test_once_per_machine() -> void:
@@ -95,6 +95,20 @@ func _test_once_per_machine() -> void:
 	e.ledger["last_shown_play_seconds"] = -1.0
 	_check(e._eligible_death_line(10).is_empty(), "unapproved drafts (%d in the file) are never eligible" % drafts)
 	e.free()
+	# Several approved lines: each moment picks one at random, never repeating.
+	var firsts := {}
+	for seed_value in 40:
+		var f = _director(6.0, 5, seed_value)
+		f._lines = [
+			{"id": "a", "kind": "death_line", "approved_by_abe": true},
+			{"id": "b", "kind": "death_line", "approved_by_abe": true},
+			{"id": "c", "kind": "death_line", "approved_by_abe": true},
+		]
+		firsts[str(f._eligible_death_line(10)["id"])] = true
+		f.ledger["lines_shown"] = {"a": 1, "b": 1}
+		_check(f._eligible_death_line(10).get("id") == "c", "a heard line never comes back")
+		f.free()
+	_check(firsts.size() == 3, "the pick is random among unheard lines (saw %s)" % str(firsts.keys()))
 
 
 func _test_audio_and_ledger_persist() -> void:
