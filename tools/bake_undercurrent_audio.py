@@ -103,6 +103,10 @@ def main():
     clones = json.load(io.open(CLONES, encoding="utf-8")) if os.path.exists(CLONES) else {"voices": {}}
     made = skipped = refused = 0
     for line in lines:
+        if line.get("chosen_take", False) and not preview:
+            print("chosen take, never re-rendered:", line["id"])
+            skipped += 1
+            continue
         if not line.get("approved_by_abe", False) and not preview:
             print("not approved, skipping:", line["id"])
             refused += 1

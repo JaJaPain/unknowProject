@@ -74,14 +74,18 @@ func _test_once_per_machine() -> void:
 			break
 	_check(first >= 0, "it should eventually fire for an eligible player")
 	var moment: Dictionary = d.consume_death_moment()
-	_check(moment.get("id") == "death_line_01" and str(moment.get("text", "")).begins_with("Damn it, Kaelen"), "the moment carries the canonical line")
+	var approved: Array = d._lines.filter(func(l): return bool(l.get("approved_by_abe", false)) and str(l.get("kind", "")) == "death_line")
+	_check(approved.any(func(l): return str(l["id"]) == str(moment.get("id", ""))) and not str(moment.get("text", "")).is_empty(), "the moment carries an approved line")
 	_check(d.consume_death_moment().is_empty(), "a moment is consumed once")
-	d.ledger["play_seconds"] = float(d.ledger["play_seconds"]) + 100.0 * 3600.0
-	var again := 0
-	for i in 5000:
+	# Play on for a very long time: every approved line plays exactly once, then never again.
+	var heard := {str(moment["id"]): true}
+	var total := 1
+	for i in 3000:
+		d.ledger["play_seconds"] = float(d.ledger["play_seconds"]) + 21.0 * 3600.0
 		if d.on_player_death():
-			again += 1
-	_check(again == 0, "with one approved line, it plays at most once per machine (played %d more times)" % again)
+			total += 1
+			heard[str(d.consume_death_moment()["id"])] = true
+	_check(total == approved.size() and heard.size() == approved.size(), "each approved line plays once per machine (%d plays, %d lines, %d approved)" % [total, heard.size(), approved.size()])
 	d.free()
 	# Drafts never play: with every approved line used up, nothing is eligible,
 	# however many unapproved drafts sit in the file.
