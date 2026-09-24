@@ -20,7 +20,7 @@
 
 ## Now
 
-- Next: UI-heavy work (evidence pin board, activities: signal tuning, drone micro-mining maze) for Abe to test; Phase 1 generation windows. Faction DNA visual genes and recurring-cast scars wait for the visual pass. UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
+- Next: activities (signal tuning, drone micro-mining maze) for Abe to test; Phase 1 generation windows. Waiting on Abe: which F5 Nova takes (pace) and which death lines to approve. Faction DNA visual genes and recurring-cast scars wait for the visual pass. UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
 - 2b.5 remaining: pin-board UI for threads (InvestigationPanel), voiced reveal. Then next phase (see plan list).
 
 ## Plan of small bites (vertical slice)
@@ -88,6 +88,8 @@
 - 2026-09-24: System quirks in play (commit 7ed8511). `scripts/story/quirks/SystemQuirkEffects.gd` (pure rules) + `SystemQuirkRunner.gd` (GameRoot child): pulsar sweep every 90 s (8 s NAV warning, screen wash, 15% shield drain, never hull); ion storm 40 s windows every 150 s (shield recharge x0.4); nebula (hostiles notice the player at 70% range); relay dark zone (no system radio). Effects via `GlobalState.system_environment` / `environment_value()` (defaults = unchanged play); clocks run only undocked; tutorial plain; `enabled` switch. Other quirks (dense_debris, dying_star, black_hole_proximity, dead_system, gravity_tides) still only shape card choice.
 - 2026-09-24: Death-line drafts (commit c3bbebb): 4 N.O.V.A., 2 Kaelen blaming N.O.V.A. (Abe's idea), 1 exchange with Abe's "Shut up, Kaelen." reply. Per Abe, an exchange bakes into ONE clip (`parts` in the JSON; the bake tool joins voices with a 0.35 s gap). Test guards that drafts never play.
 - 2026-09-24: Subtitles (commit 8102d66). `SpeechService.subtitle` signal -> `scripts/ui/SubtitleOverlay.gd` (layer 129). Fixed cast named; comms lines named by caller; unset voices unnamed (they fall back to Kaelen's voice, so never label by resolved profile). Death moment unnamed. Settings > Audio > Subtitles, saved in `user://player_preferences.json`, default ON; the intro's caption follows it. Known overlap: dialogue windows that already print a line will also caption it; the toggle covers players who dislike that.
+- 2026-09-24: Pin board (commit ec3a176). `scripts/ui/PinBoardPanel.gd` opens from a "Loose ends (N noticed, M pinned)" button on the contract board (hidden until a thread is noticed). Notes show place and campaign day; Pin/Unpin feeds HiddenHand scoring. No hints until stage revealed/closed, then "Connected: ..." or "A dead end." and the hand's name. Undock closes it (it had to join toggle_dock_menu's open-screen check, or undocking would have ignored it).
+- 2026-09-24: F5-TTS voice clones (commits d1a7524, 7be2e38). Abe's old pipeline: F5-TTS cloned from Kokoro-made samples. Env at `D:/CodingProjects/f5-tts-env` (py3.10, torch 2.4.1+cu124, f5-tts; weights from Hugging Face on first run). `tools/voice_refs/` (nova_calm, nova_urgent, kaelen refs + transcripts, clones.json, README), `tools/f5_render.py`. Bake tool routes voice.nova.v1 through F5 (per-line `clone_ref` override). Kaelen stays Kokoro (Abe likes it). F5 Nova renders faster than Kokoro (follows the urgent reference); a 0.85-speed take was sent for comparison. About 10-15 s per line, mostly model load.
 
 ## Decisions made along the way
 
