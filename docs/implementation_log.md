@@ -1,0 +1,54 @@
+# Implementation Log: Vision Slice
+
+**Branch:** `claude/vision-slice` (created 2026-09-24 from `codex/tts-dialogue-hud-fixes`)
+**Plan:** `docs/fresh_eyes_vision_plan_2026_09_23.md`
+**Owner:** Claude, with free rein from Abe (2026-09-24).
+
+> **Resume here.** A new session reads this file first. The "Now" section says
+> exactly what is in progress. Every step below is small, saved to disk as it
+> goes, and committed in batches (larger changes are committed immediately).
+
+## Ground rules (from Abe, 2026-09-24)
+
+- Small bites; save to disk very often; commit frequently (batches of small changes, larger ones immediately). Never push unless asked.
+- Nobody else edits the repo while this work runs.
+- Allowed tools: headless Godot (one test at a time, unique `--log-file`), Ollama, Kokoro TTS, Blender MCP (port 9876). The windowed game is **not** on the list: ask before launching it.
+- Old systems are disabled behind flags, not deleted.
+- Anything touching the fixed-cast secret goes to Abe for sign-off before it's voiced. The secret never enters a prompt.
+- Build my own drone-maze activity (Abe's version stays on his other machine).
+- At the end: a JSON file listing every image needed, plus a prompt that makes ChatGPT loop through it and save each image.
+
+## Now
+
+- Phase 2 domain layer: `PremiseCardLibrary` (load + index approved cards), next.
+
+## Plan of small bites (vertical slice)
+
+1. [x] 0.1 Secret-leak test + shared `ReservedTopics` list.
+2. [ ] 2.1 `PremiseCardLibrary`: load approved cards from `res://data/content/premise_cards/approved/`, index, light runtime checks. Test.
+3. [ ] 2.2 `PremiseCardHistoryStore`: per-machine `user://` usage history (cycles, recency). Test.
+4. [ ] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
+5. [ ] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
+6. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
+7. [ ] 2.6 Persistence: arc state in the campaign save.
+8. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
+9. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
+
+## Done
+
+- 2026-09-24: Branch created; vision plan, card brief, card tools and 120 approved cards committed (`38bf096`).
+- 2026-09-24: 0.1 `scripts/story/ReservedTopics.gd` (one shared reserved-topic list) and `tests/story/run_secret_leak_tests.gd` (scans all `data/content` JSON, lore/soul docs, and quoted strings in scripts; 362 files; PASS). Fixed one real hit: `the_mutiny_in_the_dark` said "The captain is dead. Or is he?" (Captain is the player's title). Guard lists that *block* reserved words are marked `# reserved-topics: guard`.
+
+## Decisions made along the way
+
+- Card missions carry their identity in the existing `narrative_metadata` fields `story_thread_id` (arc instance) and `story_beat_id` (card:beat:mission), so no mission-schema change is needed.
+- Engine code is built as pure domain classes first (headless-testable), then wired into the game.
+- Use `PROJECT_MAP.md` to find signatures before opening big files (Abe's reminder).
+
+## Open questions for Abe
+
+(none yet)
+
+## Image needs (collected for the final ChatGPT JSON)
+
+(none yet)

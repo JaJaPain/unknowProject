@@ -167,7 +167,7 @@
       ],
       "player_choice": {
         "when": "after_missions",
-        "prompt": "The freighter is drifting. The pilot holds the master key. The captain is dead. Or is he?",
+        "prompt": "The freighter is drifting. The pilot holds the master key. The freighter's commander hasn't answered a hail in hours.",
         "options": [
           {
             "id": "save_crew",

@@ -829,7 +829,7 @@ static func _repair_kaelen_public_role(target: Dictionary, repairs: Array = []) 
 		for public_role in ["mechanic", "scientist", "commander", "prophet", " ai", "archive", "failsafe"]:
 			if lower.contains(public_role):
 				return
-	for forbidden in [" ai", "archive", "failsafe", "uploaded mind", "non-human"]:
+	for forbidden in [" ai", "archive", "failsafe", "uploaded mind", "non-human"]:  # reserved-topics: guard list
 		if lower.contains(forbidden.strip_edges()):
 			return
 	target["kaelen_rule"] = (
