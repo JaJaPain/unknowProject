@@ -14,6 +14,7 @@ extends RefCounted
 ## Returns {role_id: {kind, entity_id, display_name, ...}}. Deterministic for a
 ## given seed. Every role gets a cast entry, so text placeholders always resolve.
 
+const DNAType := preload("res://scripts/story/premise/FactionDNA.gd")
 const NameForgeType := preload("res://scripts/story/premise/NameForge.gd")
 
 
@@ -70,7 +71,12 @@ static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_
 			cast[role_id] = {"kind": "person", "entity_id": str(pick.get("id", "")), "display_name": str(pick.get("display_name", "")),
 				"archetype": str(role.get("archetype", "")), "reused": true}
 		else:
-			var name := NameForgeType.person_name(rng)
+			# Named in the language of their faction (the faction role sharing a
+			# word with theirs, else the card's first faction), else neutral.
+			var owner := _owner_faction_role(role_id, cast)
+			if owner.is_empty():
+				owner = _first_faction_role(cast)
+			var name: String = DNAType.person_name(DNAType.for_faction(str(cast[owner]["entity_id"])), rng) if not owner.is_empty() else NameForgeType.person_name(rng)
 			cast[role_id] = {"kind": "person", "entity_id": "npc.%s.%s" % [arc_id.replace(".", "_"), role_id], "display_name": name,
 				"archetype": str(role.get("archetype", "")), "reused": false}
 
@@ -86,7 +92,8 @@ static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_
 		if faction_key.is_empty():
 			faction_key = str(hostile[rng.randi_range(0, hostile.size() - 1)]) if not hostile.is_empty() else "reavers"
 		cast[role_id] = {"kind": "ship", "entity_id": "ship.%s.%s" % [arc_id.replace(".", "_"), role_id],
-			"display_name": NameForgeType.ship_name(rng), "faction_key": faction_key}
+			"display_name": DNAType.ship_name(DNAType.for_faction(str(cast[owner]["entity_id"])), rng) if not owner.is_empty() else NameForgeType.ship_name(rng),
+			"faction_key": faction_key}
 
 	# Objects: a short item name from the role id ("sample_cases" -> "sample cases").
 	for role in roles:
@@ -128,6 +135,15 @@ static func _roles_in_use_order(card: Dictionary, kind: String) -> Array[String]
 		if not role_id in ordered:
 			ordered.append(role_id)
 	return ordered
+
+
+static func _first_faction_role(cast: Dictionary) -> String:
+	var ids := cast.keys()
+	ids.sort()
+	for role_id in ids:
+		if str(cast[role_id].get("kind", "")) == "faction":
+			return str(role_id)
+	return ""
 
 
 static func _owner_faction_role(ship_role_id: String, cast: Dictionary) -> String:

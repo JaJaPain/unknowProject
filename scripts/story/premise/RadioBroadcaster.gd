@@ -14,6 +14,7 @@ extends RefCounted
 const ArcsType := preload("res://scripts/story/premise/ArcEngine.gd")
 const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
 const CastingType := preload("res://scripts/story/premise/PremiseCasting.gd")
+const DNAType := preload("res://scripts/story/premise/FactionDNA.gd")
 
 ## Minutes a deed takes to travel to another system as rumour.
 const DEED_TRAVEL_MINUTES := 240
@@ -24,6 +25,14 @@ const RUMOUR_OPENERS := [
 	"Unconfirmed, out of %s: ",
 ]
 const LOCAL_OPENERS := ["Around here they're saying: ", "Local talk: "]
+## How a local faction takes the pilot's deed (FactionDNA.judge_deed). A shrug
+## goes unsaid.
+const DEED_REACTIONS := {
+	"admire": [" %s are calling it the best thing they've heard all cycle.", " %s would buy that pilot a drink."],
+	"approve": [" %s seem to think it was the right call.", " %s are nodding along."],
+	"disapprove": [" %s aren't happy about it.", " %s say it was a mistake."],
+	"condemn": [" %s are calling it a crime.", " %s want that pilot's name on a list."],
+}
 const STATE_NEWS := {
 	"blockade": "Traffic advisory: a blockade is holding ships at the lanes into %s.",
 	"quarantine": "Health notice: quarantine orders are in effect in parts of %s.",
@@ -78,11 +87,12 @@ static func broadcast(state: Dictionary, library, world: Dictionary, now_minute:
 		var text := CastingType.fill_text(summary, d.get("cast", {}), {"system_display": str(names.get(origin, "somewhere"))})
 		var arc: Dictionary = ArcsType.arc(state, str(d.get("arc_id", "")))
 		var when := int(arc.get("resolved_minute", now_minute))
+		var reaction := deed_reaction(str(d.get("tag", "")), world.get("factions", []), i)
 		if origin == system_id:
-			items.append({"id": "deed%d" % i, "kind": "local_deed", "text": LOCAL_OPENERS[i % LOCAL_OPENERS.size()] + text})
+			items.append({"id": "deed%d" % i, "kind": "local_deed", "text": LOCAL_OPENERS[i % LOCAL_OPENERS.size()] + text + reaction})
 		elif now_minute - when >= DEED_TRAVEL_MINUTES:
 			var opener: String = RUMOUR_OPENERS[i % RUMOUR_OPENERS.size()] % str(names.get(origin, "another system"))
-			items.append({"id": "deed%d" % i, "kind": "rumour", "text": opener + text})
+			items.append({"id": "deed%d" % i, "kind": "rumour", "text": opener + text + reaction})
 
 	# News about this system: states and laws the stories changed.
 	var change: Dictionary = (state.get("system_changes", {}) as Dictionary).get(system_id, {})
@@ -107,3 +117,17 @@ static func broadcast(state: Dictionary, library, world: Dictionary, now_minute:
 		items.append({"id": "thread:%s" % t["id"], "kind": "thread", "thread_id": str(t["id"]),
 			"text": "Odd one to end on: " + CastingType.fill_text(str(t["detail"]), a.get("cast", {}), {"system_display": here})})
 	return items
+
+
+## One local faction's take on a deed, as a sentence to append ("" for a
+## shrug or when the system has no factions). Factions take turns by deed.
+static func deed_reaction(deed_tag: String, factions: Array, index: int) -> String:
+	if factions.is_empty() or deed_tag.is_empty():
+		return ""
+	var f: Dictionary = factions[index % factions.size()]
+	var view := DNAType.judge_deed(DNAType.for_faction(str(f.get("id", ""))), deed_tag)
+	if not DEED_REACTIONS.has(view):
+		return ""
+	var options: Array = DEED_REACTIONS[view]
+	var who := str(f.get("display_name", "some people here"))
+	return str(options[index % options.size()]) % (who.left(1).to_upper() + who.substr(1))
