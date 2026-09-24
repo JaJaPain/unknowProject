@@ -3,7 +3,9 @@
 Only lines marked approved_by_abe: true are rendered. Each uses its speaker's
 voice blend from data/content/voice_provider_kokoro.json, so the baked line is
 the same voice the game uses at runtime. A line with "parts" is an exchange
-between speakers: each part in its own voice, joined into one clip. Needs the local Kokoro server
+between speakers: each part in its own voice, joined into one clip. A line or
+part may carry "spoken": what the TTS says instead of "text" (for example a
+full stop where "!" makes F5 lift the last word); subtitles keep "text". Needs the local Kokoro server
 (http://localhost:5000/tts), like tools/bake_taunt_audio.py.
 
   python tools/bake_undercurrent_audio.py [--force] [--preview]
@@ -52,12 +54,12 @@ def render_part(part, line, mappings, clones):
     """Kokoro, or F5-TTS for voices cloned in tools/voice_refs/clones.json."""
     clone = clones.get("voices", {}).get(part["voice_profile"])
     if not clone:
-        return render(part["text"], mappings[part["voice_profile"]])
+        return render(part.get("spoken", part["text"]), mappings[part["voice_profile"]])
     ref = clones["refs"][part.get("clone_ref", line.get("clone_ref", clone["ref"]))]
     with tempfile.TemporaryDirectory() as tmp:
         out = os.path.join(tmp, "part.wav")
         subprocess.run([clones["f5_python"], "tools/f5_render.py", "--ref", ref["wav"], "--ref-text-file", ref["text"],
-                        "--text", spoken(part["text"], clones), "--out", out,
+                        "--text", spoken(part.get("spoken", part["text"]), clones), "--out", out,
                         "--speed", str(clone.get("speed", 1.0))], check=True)
         return sf.read(out, dtype="float32")
 
