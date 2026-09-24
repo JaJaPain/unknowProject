@@ -9,6 +9,7 @@ full stop where "!" makes F5 lift the last word); subtitles keep "text". Needs t
 (http://localhost:5000/tts), like tools/bake_taunt_audio.py.
 
   python tools/bake_undercurrent_audio.py [--force] [--preview]
+  python tools/bake_undercurrent_audio.py --take <line_id> <picked_file>   (install a take chosen by ear)
 """
 import io
 import json
@@ -68,7 +69,31 @@ def res_to_path(res_path):
     return res_path.replace("res://", "", 1)
 
 
+def install_take(line_id, take_path):
+    """Install a take Abe picked by ear as the line's game audio.
+
+    F5 renders differ every time, so an approved F5 line is never re-rendered:
+    the exact file Abe listened to is converted to OGG and put where the game
+    looks. Refuses lines that are not approved_by_abe.
+    """
+    doc = json.load(io.open(LINES, encoding="utf-8"))
+    line = next((l for l in doc["lines"] if l["id"] == line_id), None)
+    if line is None:
+        raise SystemExit("no line %s" % line_id)
+    if not line.get("approved_by_abe", False):
+        raise SystemExit("%s is not approved_by_abe; not installing" % line_id)
+    data, rate = sf.read(take_path, dtype="float32")
+    out = res_to_path(line["audio"])
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    sf.write(out, data, rate, format="OGG", subtype="VORBIS")
+    print("installed", line_id, "<-", take_path, "(%.1fs)" % (len(data) / rate))
+
+
 def main():
+    if "--take" in sys.argv:
+        i = sys.argv.index("--take")
+        install_take(sys.argv[i + 1], sys.argv[i + 2])
+        return
     force = "--force" in sys.argv
     # --preview renders EVERY line (drafts too) into a git-ignored scratch
     # folder so Abe can listen before approving. Nothing lands in the game.
