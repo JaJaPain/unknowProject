@@ -24,6 +24,9 @@ var _ambient_queue: Array[Dictionary] = []
 var _ambient_drain_accum := 0.0
 
 signal cache_queue_completed()
+## A line is starting to play: `speaker` is a display name, or "" when the
+## voice should stay unnamed (generated people use their board name upstream).
+signal subtitle(text: String, speaker: String)
 signal speech_connection_attempt(attempt: int)
 signal speech_connection_established()
 # Fires when a spoken clip finishes playing. A clean public re-expose of the
@@ -113,15 +116,35 @@ func play(
 	if prepared.is_empty():
 		provider.stop()
 		return
+	# Named from the voice the caller ASKED for: unset voices fall back to
+	# Kaelen's, and a stranger must never be captioned as her.
+	var label := _next_subtitle_speaker if not _next_subtitle_speaker.is_empty() else speaker_label(StringName(str(voice_profile)))
+	_next_subtitle_speaker = ""
+	subtitle.emit(clean_dialogue_text(text), label)
 	provider.play(prepared, profile_id, speed_override)
 
 
 ## Plays a line as heard over a ship's radio (narrow band, a little grit):
 ## premise contacts on comms and the system radio host.
-func play_on_comms(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> void:
+func play_on_comms(text: String, voice_profile: Variant = DEFAULT_PROFILE, speaker: String = "") -> void:
 	TTSInterface.next_dialogue_bus = TTSInterface.COMMS_BUS
+	_next_subtitle_speaker = speaker
 	play(text, voice_profile)
+	_next_subtitle_speaker = ""
 	TTSInterface.next_dialogue_bus = "Voice"  # play() can return early
+
+
+## The subtitle name for a voice: the fixed cast by name, anyone else unnamed.
+var _next_subtitle_speaker := ""
+
+
+static func speaker_label(profile_id: StringName) -> String:
+	match profile_id:
+		KAELEN_PROFILE:
+			return "Kaelen"
+		NOVA_PROFILE:
+			return "N.O.V.A."
+	return ""
 
 
 func cache(

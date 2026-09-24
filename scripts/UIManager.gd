@@ -481,9 +481,16 @@ var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the com
 var undock_btn: Button = null
 var selected_row_style: StyleBoxFlat
 
+const SubtitleOverlayType := preload("res://scripts/ui/SubtitleOverlay.gd")
+var subtitle_overlay: CanvasLayer = null
+
+
 func _ready():
 	add_to_group("ui_manager")
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	subtitle_overlay = SubtitleOverlayType.new()
+	subtitle_overlay.name = "SubtitleOverlay"
+	add_child(subtitle_overlay)
 	# Configure selected row highlight stylebox
 	selected_row_style = StyleBoxFlat.new()
 	selected_row_style.bg_color = Color(0.0, 0.35, 0.55, 0.45) # Glowing semi-transparent cyan background
@@ -2359,7 +2366,8 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		var listen := Button.new()
 		listen.text = "Play message"
 		var voice_profile := str(posting.get("voice_profile", ""))
-		listen.pressed.connect(func(): SpeechService.play_on_comms(voice_line, voice_profile))
+		var poster_name := str(posting.get("poster", ""))
+		listen.pressed.connect(func(): SpeechService.play_on_comms(voice_line, voice_profile, poster_name))
 		vbox.add_child(listen)
 
 	var accept := Button.new()
@@ -2582,6 +2590,12 @@ func _create_pause_menu():
 		"Game Sound",
 		AudioManager.get_sfx_volume(),
 		AudioManager.set_sfx_volume
+	)
+	_add_toggle_row(
+		controls,
+		"Subtitles",
+		GlobalState.subtitles_enabled,
+		func(enabled: bool) -> void: GlobalState.subtitles_enabled = enabled
 	)
 
 	var video_title := Label.new()
@@ -10458,6 +10472,9 @@ func _play_undercurrent_death_moment(moment: Dictionary) -> void:
 		layer.add_child(player)
 		player.play()
 		wait += stream.get_length()
+	# Captioned with no speaker name; an exchange shows each voice on its own line.
+	if is_instance_valid(subtitle_overlay):
+		subtitle_overlay.show_line(str(moment.get("text", "")).replace(" / ", "\n"), "", wait)
 	await get_tree().create_timer(wait, true).timeout
 	layer.queue_free()
 	death_panel.visible = true

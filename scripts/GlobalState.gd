@@ -1697,6 +1697,14 @@ func is_intro_tutorial_player_protection_active() -> bool:
 		return false
 	return true
 
+## Subtitles for spoken lines (Settings > Audio). Saved with the visual prefs.
+signal subtitles_changed(enabled: bool)
+var subtitles_enabled: bool = true:
+	set(val):
+		subtitles_enabled = val
+		subtitles_changed.emit(val)
+		_save_visual_prefs()
+
 var bloom_enabled: bool = true:
 	set(val):
 		bloom_enabled = val
@@ -2234,6 +2242,8 @@ func _load_visual_prefs() -> void:
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	file.close()
 	if parsed is Dictionary:
+		if parsed.has("subtitles_enabled"):
+			subtitles_enabled = bool(parsed["subtitles_enabled"])
 		if parsed.has("bloom_amount"):
 			bloom_amount = float(parsed.get("bloom_amount", 1.0))
 		else:
@@ -2250,6 +2260,7 @@ func _save_visual_prefs() -> void:
 				prefs = parsed
 	prefs["bloom_enabled"] = bloom_enabled
 	prefs["bloom_amount"] = bloom_amount
+	prefs["subtitles_enabled"] = subtitles_enabled
 	var file := FileAccess.open(VISUAL_PREFS_PATH, FileAccess.WRITE)
 	if file == null:
 		return

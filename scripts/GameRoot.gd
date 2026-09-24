@@ -1283,7 +1283,7 @@ func _premise_radio_tick() -> void:
 	# text stays in the feed either way.
 	if not SpeechService.is_busy() and not PlayerInteractionQueue.is_busy() and not PlayerInteractionQueue.in_combat_window():
 		var host := PremiseVoiceDNAType.register(PremiseVoiceDNAType.for_radio_host(str(world.get("system_id", ""))))
-		SpeechService.play_on_comms(text, host)
+		SpeechService.play_on_comms(text, host, "System radio")
 
 
 func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> void:

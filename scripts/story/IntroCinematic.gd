@@ -191,6 +191,7 @@ func _build_visuals() -> void:
 	_subtitle.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
 	_subtitle.add_theme_constant_override("shadow_offset_y", 2)
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_subtitle.visible = GlobalState.subtitles_enabled  # Settings > Audio > Subtitles
 	_layer.add_child(_subtitle)
 
 	_stream_label = Label.new()
