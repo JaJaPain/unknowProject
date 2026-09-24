@@ -196,6 +196,17 @@ implemented, tested and wired. Commits `31e685fa`, `d35de049`, `91e6ea11`,
 _Work that is committed and green in headless tests but that only a person can
 sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 
+- [ ] **Vision-slice checks, 2026-09-24** (branch `claude/vision-slice`; all
+  green headless, none seen or heard in the running game yet):
+  - Death moment: black screen, the line, the caption with no speaker name,
+    then the death panel. Quick way to trigger it: meet the gates in
+    `user://echo_ledger.json` (5 h play, 5 deaths).
+  - Comms filter on "Play message" and the system radio: too harsh?
+  - Pulsar sweep screen wash and NAV warnings: too strong or too frequent?
+  - Subtitles: placement, timing, and the Settings > Audio toggle.
+  - "Loose ends" pin board: layout, pinning, closing it on undock.
+  - Premise contacts' written lines and voices on the board.
+
 - [x] **Cause-aware enemy taunts -- heard in a REAL FIGHT.** VERDICT 2026-09-09
   (Abe, run sheet 2.2). The result splits cleanly and the split matters:
   - **The CONTENT system passes.** "The words are correct" -- the right lines
@@ -400,6 +411,22 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 ---
 
 ## Speech / TTS
+
+- [ ] **Rare death lines: more variants later** (Abe, 2026-09-24, parked as a
+  tangent). Seven are voiced (`data/content/undercurrent_lines.json`; rules in
+  `UndercurrentDirector.gd`: 6% per eligible death, random unheard line, each
+  once per machine). Draft 04 was dropped. New lines follow the method in
+  `tools/voice_refs/README.md`: N.O.V.A. on F5 with several takes per line,
+  Abe picks by ear, install with `bake_undercurrent_audio.py --take`, commit the
+  .ogg with `git add -f`. Kaelen stays on Kokoro. Every new line needs Abe's
+  approval before it can play.
+- [ ] **Clean up the Orpheus leftovers from 2026-09-24**: the half-built
+  `D:\CodingProjects\orpheus-env` (19 MB, no model) and the uncommitted
+  `tools/orpheus_clone.py`. Delete both unless Orpheus comes back.
+- [ ] **One N.O.V.A. voice everywhere?** Baked lines now use her F5 voice, while
+  live lines still use Kokoro's `bf_emma[0.7]+af_bella[0.3]`. The plan's rule is
+  that baked and live must match. Decide whether the difference is audible
+  enough to matter.
 
 - [ ] **Baked audio is an ENGLISH-ONLY layer -- the game must keep live TTS**
   (Abe, 2026-09-09). This is a hard architectural rule, not a preference.
