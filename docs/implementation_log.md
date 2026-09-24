@@ -20,19 +20,20 @@
 
 ## Now
 
-- 2.3 `PremiseCardSelector`: filter cards by situation, rank by history.
+- 2.3b `SystemProfile`: data-only quirks + states per generated system (needed before arcs can use ~37% of the deck).
 
 ## Plan of small bites (vertical slice)
 
 1. [x] 0.1 Secret-leak test + shared `ReservedTopics` list.
 2. [x] 2.1 `PremiseCardLibrary`: load approved cards from `res://data/content/premise_cards/approved/`, index, light runtime checks. Test.
 3. [x] 2.2 `PremiseCardHistoryStore`: per-machine `user://` usage history (cycles, recency). Test.
-4. [ ] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
-5. [ ] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
-6. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
-7. [ ] 2.6 Persistence: arc state in the campaign save.
-8. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
-9. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
+4. [x] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
+5. [ ] 2.3b `SystemProfile`: seeded quirks (0-2) and starting states per generated system; states also change when arcs resolve. Test.
+6. [ ] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
+7. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
+8. [ ] 2.6 Persistence: arc state in the campaign save.
+9. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
+10. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
 
 ## Done
 
@@ -41,6 +42,8 @@
 
 - 2026-09-24: 2.1 `scripts/story/premise/PremiseCardLibrary.gd` + test (all 120 approved cards load; bad cards are skipped with a reason, never fatal).
 - 2026-09-24: 2.2 `scripts/story/premise/PremiseCardHistoryStore.gd` + test (per-machine `user://premise_card_history.json`; fresh first, then oldest, recent window 30, new cycle at 90%; atomic save; corrupt file = quiet fresh start).
+
+- 2026-09-24: 2.3 `scripts/story/premise/PremiseCardSelector.gd` + test. Hard filters (quirks/states/factions/scale/campaign exclusion); order = machine freshness, then fit (seeds x3, hidden-hand method x2, preferred quirk, theme), then oldest/seeded shuffle. **Finding:** only 75/120 cards fit a plain system; 37 need a quirk the game doesn't generate yet (dead_system 10, dying_star 8, relay_dark_zone 8, gravity_tides 6, ion_storm 2, pulsar/nebula/black_hole 1 each) and 8 need a state (quarantine 3, shortage 2, strike/mourning/power_vacuum 1). Hence step 2.3b.
 
 ## Decisions made along the way
 
