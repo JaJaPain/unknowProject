@@ -312,10 +312,32 @@ func next_radio_item(world: Dictionary, now_minute: int) -> Dictionary:
 ## Seen threads for a pin board: [{id, text, pinned}].
 func main_story_threads() -> Array:
 	var out: Array = []
+	var story := HandType.main_story(state)
+	# Only once the hand is revealed does the board say what connected; until
+	# then it never hints which threads are real traces.
+	var revealed := str(story.get("stage", "")) in ["revealed", "closed"]
+	var links: Dictionary = (story.get("lock", {}) as Dictionary).get("links", {})
 	for t in HandType.seen_threads(state):
 		var a := ArcsType.arc(state, str(t["arc_id"]))
-		var names := {"system_display": str(_system_names.get(str(a.get("system_id", "")), "this system"))}
-		out.append({"id": str(t["id"]), "text": CastingType.fill_text(str(t["detail"]), a.get("cast", {}), names), "pinned": bool(t["pinned"])})
+		var system_name := str(_system_names.get(str(a.get("system_id", "")), "this system"))
+		var entry := {"id": str(t["id"]), "text": CastingType.fill_text(str(t["detail"]), a.get("cast", {}), {"system_display": system_name}),
+			"pinned": bool(t["pinned"]), "system": system_name, "seen_minute": int(t.get("seen_minute", -1))}
+		if revealed:
+			if links.has(str(t["id"])):
+				entry["explanation"] = str(links[str(t["id"])])
+			else:
+				entry["dead_end"] = true
+		out.append(entry)
+	return out
+
+
+## Where the main story stands, for the pin board: {stage, season, hand?}.
+## The hand's name appears only once they are revealed.
+func main_story_summary() -> Dictionary:
+	var story := HandType.main_story(state)
+	var out := {"stage": str(story.get("stage", "")), "season": int(story.get("season", 1))}
+	if out["stage"] in ["revealed", "closed"]:
+		out["hand"] = str((story.get("lock", {}) as Dictionary).get("display_name", ""))
 	return out
 
 

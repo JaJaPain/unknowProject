@@ -291,6 +291,8 @@ var public_board_panel: Panel
 var public_board_list: VBoxContainer
 var public_board_back_btn: Button
 var public_board_current_offers: Array[Dictionary] = []
+var loose_ends_btn: Button
+var pin_board_panel: PanelContainer
 
 var store_panel: Panel
 var store_list: VBoxContainer
@@ -482,6 +484,7 @@ var undock_btn: Button = null
 var selected_row_style: StyleBoxFlat
 
 const SubtitleOverlayType := preload("res://scripts/ui/SubtitleOverlay.gd")
+const PinBoardPanelType := preload("res://scripts/ui/PinBoardPanel.gd")
 var subtitle_overlay: CanvasLayer = null
 
 
@@ -2080,6 +2083,12 @@ func _create_public_board_panel() -> void:
 	public_board_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	public_board_list.add_theme_constant_override("separation", 8)
 	scroll.add_child(public_board_list)
+
+	# The main story's pin board; hidden until the pilot has noticed something.
+	loose_ends_btn = Button.new()
+	loose_ends_btn.visible = false
+	loose_ends_btn.pressed.connect(_on_loose_ends_pressed)
+	board_vbox.add_child(loose_ends_btn)
 
 	public_board_back_btn = Button.new()
 	public_board_back_btn.text = "Back to Services"
@@ -4303,6 +4312,7 @@ func toggle_dock_menu(
 	current_station = station
 	var dock_ui_open := dock_panel.visible or agent_panel.visible \
 			or (public_board_panel and public_board_panel.visible) \
+			or (pin_board_panel and pin_board_panel.visible) \
 			or (store_panel and store_panel.visible)
 	if inventory_panel and inventory_panel.visible and inventory_return_to_dock:
 		dock_ui_open = true
@@ -4316,6 +4326,8 @@ func toggle_dock_menu(
 		agent_panel.visible = false
 		if public_board_panel:
 			public_board_panel.visible = false
+		if pin_board_panel:
+			pin_board_panel.visible = false
 		if store_panel:
 			store_panel.visible = false
 		if inventory_panel:
@@ -7798,6 +7810,7 @@ func _on_public_board_pressed() -> void:
 	if inventory_panel:
 		inventory_panel.visible = false
 	public_board_panel.visible = true
+	_refresh_loose_ends_button()
 	# A premise-card story waiting on the pilot's answer comes first.
 	var premise_root := get_tree().current_scene
 	if premise_root != null and premise_root.has_method("premise_pending_decisions"):
@@ -7806,6 +7819,44 @@ func _on_public_board_pressed() -> void:
 			_show_premise_decision(decisions[0])
 			return
 	_render_public_board_offers()
+
+
+func _refresh_loose_ends_button() -> void:
+	if loose_ends_btn == null:
+		return
+	var root := get_tree().current_scene
+	var threads: Array = root.premise_main_story_threads() if root != null and root.has_method("premise_main_story_threads") else []
+	loose_ends_btn.visible = not threads.is_empty()
+	var pinned := threads.filter(func(t): return bool(t.get("pinned", false))).size()
+	loose_ends_btn.text = "Loose ends (%d noticed, %d pinned)" % [threads.size(), pinned]
+
+
+func _on_loose_ends_pressed() -> void:
+	var root := get_tree().current_scene
+	if root == null or not root.has_method("premise_main_story_threads"):
+		return
+	if pin_board_panel == null:
+		pin_board_panel = PinBoardPanelType.new()
+		pin_board_panel.name = "PinBoardPanel"
+		public_board_panel.get_parent().add_child(pin_board_panel)
+		# Same place and size as the contract board it opens from.
+		pin_board_panel.anchor_left = public_board_panel.anchor_left
+		pin_board_panel.anchor_right = public_board_panel.anchor_right
+		pin_board_panel.anchor_top = public_board_panel.anchor_top
+		pin_board_panel.anchor_bottom = public_board_panel.anchor_bottom
+		pin_board_panel.offset_left = public_board_panel.offset_left
+		pin_board_panel.offset_right = public_board_panel.offset_right
+		pin_board_panel.offset_top = public_board_panel.offset_top
+		pin_board_panel.offset_bottom = public_board_panel.offset_bottom
+		pin_board_panel.pin_toggled.connect(func(thread_id: String, pinned: bool) -> void:
+			var scene := get_tree().current_scene
+			if scene != null and scene.has_method("premise_pin_thread"):
+				scene.premise_pin_thread(thread_id, pinned))
+		pin_board_panel.closed.connect(func() -> void:
+			public_board_panel.visible = true
+			_refresh_loose_ends_button())
+	public_board_panel.visible = false
+	pin_board_panel.show_threads(root.premise_main_story_threads(), root.premise_main_story_summary())
 
 
 ## Shows one premise-arc decision (a finding to report, or a story choice)

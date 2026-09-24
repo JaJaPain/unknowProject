@@ -28,6 +28,7 @@ TESTS=(
   run_faction_dna_tests
   run_system_quirk_tests
   run_subtitle_tests
+  run_pin_board_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

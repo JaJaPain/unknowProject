@@ -1340,6 +1340,21 @@ func premise_apply_decision(arc_id: String, option_id: String) -> void:
 		premise_director.apply_decision(arc_id, option_id, int(CampaignClock.total_minutes))
 
 
+## The pin board ("Loose ends"): the main story's noticed threads and where
+## the story stands (read by UIManager).
+func premise_main_story_threads() -> Array:
+	return premise_director.main_story_threads() if is_instance_valid(premise_director) else []
+
+
+func premise_main_story_summary() -> Dictionary:
+	return premise_director.main_story_summary() if is_instance_valid(premise_director) else {}
+
+
+func premise_pin_thread(thread_id: String, pinned: bool) -> void:
+	if is_instance_valid(premise_director):
+		premise_director.pin_thread(thread_id, pinned)
+
+
 func _on_premise_decision_ready(_arc_id: String, _decision: Dictionary) -> void:
 	# Decisions are presented at the next dock (UIManager reads
 	# premise_pending_decisions when the board opens); flag it for the player.
