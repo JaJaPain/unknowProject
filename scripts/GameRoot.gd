@@ -174,6 +174,8 @@ var pending_gate_discoveries: Array[String] = []
 var event_scheduler = null
 var ship_behavior_observer: Node = null
 var quiet_moment_director: Node = null
+# Premise-card arcs (docs/arc_engine_design.md). Owned like quiet_moment_director.
+var premise_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
 # seeded this session, so the two-batch seed fires at most once per bank.
 var _nova_bank_seed_requests: Dictionary = {}
@@ -221,6 +223,7 @@ func _start_gameplay_runtime() -> void:
 	_init_event_scheduler()
 	_init_ship_behavior_observer()
 	_init_quiet_moment_director()
+	_init_premise_director()
 	_init_generated_system_configs()
 	var start_definition := system_registry.get_system("system.start")
 	if start_definition == null:
@@ -255,6 +258,9 @@ func _start_gameplay_runtime() -> void:
 	QuestManager.quest_abandoned_details.connect(_on_quiet_moment_quest_abandoned)
 	QuestManager.quest_declined_details.connect(_on_quiet_moment_quest_declined)
 	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
+	QuestManager.quest_completed_details.connect(_on_premise_quest_completed)
+	QuestManager.quest_abandoned_details.connect(_on_premise_quest_abandoned)
+	QuestManager.quest_expired_details.connect(_on_premise_quest_expired)
 
 
 func _start_requested_runtime_mode() -> void:
@@ -310,6 +316,9 @@ func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary
 	# continuation of the last playthrough.
 	if is_instance_valid(quiet_moment_director):
 		quiet_moment_director.reset_for_new_campaign()
+	if is_instance_valid(premise_director):
+		# The campaign seed is read lazily once it exists (see _premise_sync_seed).
+		premise_director.reset_for_new_campaign(0)
 	return create_campaign_in_slot(
 		slot_id,
 		# The opening quest generator replaces this provisional label with its
@@ -654,6 +663,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		StoryManager.on_system_arrived(runtime_system_id)
 	if is_instance_valid(StoryQuestManager):
 		StoryQuestManager.on_system_arrived(runtime_system_id)
+	call_deferred("_premise_on_system_arrived")
 
 func _find_gate(system_root: Node3D, gate_id: String) -> Node3D:
 	for gate in get_tree().get_nodes_in_group("jumpgate"):
@@ -1204,6 +1214,8 @@ func _init_ship_behavior_observer() -> void:
 # always valid, so every connection here is best-effort.
 # Method and rationale: skills/skill_llm_character_dialogue.md
 const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirector.gd")
+const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
+const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
 
 # Which game event fires which beat. The behaviour observer already emits
 # these with a 180s semantic cooldown of its own.
@@ -1213,6 +1225,72 @@ const QUIET_MOMENT_MOVEMENT_BEATS := {
 	"boost_again_quickly": "nova_hard_burn",
 	"returned_to_same_station": "nova_returned_same_station",
 }
+
+
+func _init_premise_director() -> void:
+	premise_director = PremiseDirectorType.new()
+	premise_director.name = "PremiseDirector"
+	add_child(premise_director)
+	premise_director.decision_ready.connect(_on_premise_decision_ready)
+
+
+## The campaign seed exists only once a campaign is running; adopt it lazily.
+func _premise_sync_seed() -> void:
+	if is_instance_valid(premise_director) and int(premise_director.campaign_seed) == 0:
+		premise_director.campaign_seed = int(GlobalState.campaign_seed)
+
+
+func _premise_on_system_arrived() -> void:
+	if not is_instance_valid(premise_director):
+		return
+	_premise_sync_seed()
+	var now := int(CampaignClock.total_minutes)
+	premise_director.tick(now)
+	premise_director.ensure_arcs(PremiseWorldSnapshotType.capture(now), now)
+
+
+## Board postings for the current system's premise arcs (read by UIManager).
+func premise_board_postings() -> Array:
+	if not is_instance_valid(premise_director):
+		return []
+	_premise_sync_seed()
+	var now := int(CampaignClock.total_minutes)
+	premise_director.tick(now)
+	var world := PremiseWorldSnapshotType.capture(now)
+	premise_director.ensure_arcs(world, now)
+	return premise_director.board_postings(world, now)
+
+
+func premise_pending_decisions() -> Array:
+	return premise_director.pending_decisions() if is_instance_valid(premise_director) else []
+
+
+func premise_apply_decision(arc_id: String, option_id: String) -> void:
+	if is_instance_valid(premise_director):
+		premise_director.apply_decision(arc_id, option_id, int(CampaignClock.total_minutes))
+
+
+func _on_premise_decision_ready(_arc_id: String, _decision: Dictionary) -> void:
+	# Decisions are presented at the next dock (UIManager reads
+	# premise_pending_decisions when the board opens); flag it for the player.
+	GlobalState.emit_chatter("CONTRACTS", "A contact wants your answer. Check the board when you dock.", Color(0.6, 0.85, 1.0))
+
+
+func _on_premise_quest_completed(quest_data: Dictionary) -> void:
+	_premise_terminal(quest_data, "completed")
+
+
+func _on_premise_quest_abandoned(quest_data: Dictionary) -> void:
+	_premise_terminal(quest_data, "abandoned")
+
+
+func _on_premise_quest_expired(quest_data: Dictionary) -> void:
+	_premise_terminal(quest_data, "expired")
+
+
+func _premise_terminal(quest_data: Dictionary, terminal_state: String) -> void:
+	if is_instance_valid(premise_director):
+		premise_director.on_mission_terminal(quest_data, terminal_state, int(CampaignClock.total_minutes))
 
 
 func _init_quiet_moment_director() -> void:
@@ -2121,6 +2199,8 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		# Quiet-moment recency. WITHOUT THIS the freshness guarantee resets on
 		# every reload, which is the entire point of the feature.
 		"quiet_moments": _capture_quiet_moment_state(),
+		# Premise-card arcs roll back with the checkpoint like everything else.
+		"premise_arcs": premise_director.to_dict() if is_instance_valid(premise_director) else {},
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -6141,6 +6221,13 @@ func _apply_save_data(data: Dictionary) -> void:
 	var checkpoint_quiet_moments = data.get("quiet_moments", {})
 	if checkpoint_quiet_moments is Dictionary and is_instance_valid(quiet_moment_director):
 		quiet_moment_director.load_from_dict(checkpoint_quiet_moments)
+	var checkpoint_premise_arcs = data.get("premise_arcs", {})
+	if is_instance_valid(premise_director):
+		if checkpoint_premise_arcs is Dictionary and not (checkpoint_premise_arcs as Dictionary).is_empty():
+			premise_director.load_from_dict(checkpoint_premise_arcs)
+		else:
+			# Saves from before premise arcs existed simply start with none.
+			premise_director.reset_for_new_campaign(0)
 	var checkpoint_npc_states = data.get("npc_states", {})
 	if checkpoint_npc_states is Dictionary \
 			and not (checkpoint_npc_states as Dictionary).is_empty():

@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2.7 Live wiring: `PremiseWorldSnapshot` (GlobalState -> world dict), then GameRoot (init/reset/capture/restore like quiet_moments), UIManager board postings + accept, QuestManager terminal signals, decision UI.
+- 2.7c UIManager: premise postings on the public board (skip text generation), decision prompt when docked.
 
 ## Plan of small bites (vertical slice)
 
@@ -55,6 +55,9 @@
 
 - 2026-09-24: 2.6 `PremiseDirector.gd` (Node, owned by GameRoot later) + campaign-simulation test (4 systems, board -> missions -> decisions, save/reload, ignored arcs settle). Saves as a checkpoint runtime-state section so arcs roll back on reload (same path as `quiet_moments`: GameRoot `_capture_prepared_runtime_state` + `_apply_save_data`). Interim: `investigation_fallback` turns card investigations into a 'collect the survey readings' pickup; the arc still asks for the finding.
 - Live facts found: outposts `GlobalState.get_current_pickup_outposts()`, hostile keys `get_current_system_minor_factions()`, generated factions `PublicBoardOfferBuilder._current_system_config().story_pack.faction_agendas`, tutorial done `StoryManager.story_state.first_contract_handed_in`, deliveries need `GlobalState.get_delivery_recipient(station)` non-empty. Board accept path: `UIManager._on_public_board_offer_accept` -> `QuestManager.accept_quest(quest_data, choices[0])` (BOARD lane).
+
+- 2026-09-24: 2.7a `PremiseWorldSnapshot.gd` (the only premise file that reads the live game; docks filtered to those with a delivery recipient).
+- 2026-09-24: 2.7b GameRoot wiring: `premise_director` node (init next to quiet moments), reset on new campaign, lazy campaign-seed sync, ensure arcs on system arrival (deferred), QuestManager completed/abandoned/expired -> director, `premise_arcs` checkpoint section (old saves start with none), public helpers `premise_board_postings()`, `premise_pending_decisions()`, `premise_apply_decision()`. Scene-script parse check: 415 scripts, 0 failed.
 
 ## Decisions made along the way
 
