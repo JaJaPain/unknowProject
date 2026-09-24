@@ -9,15 +9,30 @@ extends RefCounted
 ##   narrative_metadata.story_thread_id = arc id
 ##   narrative_metadata.story_beat_id   = "<card_id>:b<beat>:m<mission_index>"
 ##
-## INVESTIGATE_SIGNAL needs live site placement, so it comes back marked
-## `premise_needs_completion: true`; the live adapter completes it with
-## InvestigationOfferBuilder. Everything else is complete here.
+## INVESTIGATE_SIGNAL becomes a real investigation (scan sites placed in
+## space, evidence, branches) when the world carries `investigation_world`;
+## the recipe follows the mission's wording. If no safe sites can be placed it
+## falls back to collecting "Survey readings" at the site.
 ##
 ## `world` is the same snapshot PremiseCasting uses, plus optionally:
 ##   store_items: Array[{item_id, display_name, quantity, station_id, store_display, base_price}]
+##   investigation_world: InvestigationWorldPlacement.capture() (stations, gates, hazards)
 
 const LibraryType := preload("res://scripts/story/premise/PremiseCardLibrary.gd")
 const CastingType := preload("res://scripts/story/premise/PremiseCasting.gd")
+const SitePlannerType := preload("res://scripts/domain/InvestigationSitePlanner.gd")
+const InvestigationBuilderType := preload("res://scripts/domain/InvestigationOfferBuilder.gd")
+const InvestigationPlacementType := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
+const InvestigationValidatorType := preload("res://scripts/domain/InvestigationStateValidator.gd")
+const ShapesType := preload("res://scripts/domain/MissionShapeRegistry.gd")
+
+## Which investigation a card mission becomes, from words in its reason.
+const RECIPE_WORDS := {
+	"transmitter_lure": ["signal", "beacon", "transmission", "transmitter", "frequency", "broadcast", "distress"],
+	"unstable_archive": ["record", "records", "archive", "log", "logs", "recorder", "data", "files", "black box", "ledger"],
+	"competing_claims": ["claim", "claims", "ownership", "salvage rights", "owner", "deed"],
+}
+static var _shapes = null
 
 const BASE_REWARD := {
 	"kill_ships": 420, "comms_reversal": 620, "recover_combat_drop": 520, "deliver_ore": 300,
@@ -79,9 +94,12 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 				"target_npc": str(requester.get("display_name", "a local contact")), "part_name": item,
 				"destination": str(main.get("display", "the main station")), "reward_credits": reward}
 		"investigate_signal":
-			if bool(world.get("investigation_fallback", false)):
-				# Interim, until card investigations are wired to the live scan system:
-				# collect the readings at the site; the arc then asks for the finding.
+			var real := _investigation_objective(offer_ref, card, cast, world, mission, target, main, reward, seed_value)
+			if not real.is_empty():
+				objective = real
+			elif bool(world.get("investigation_fallback", false)) or world.has("investigation_world"):
+				# No safe scan sites here (or no live world): collect the readings
+				# at the site instead; the arc then asks for the finding.
 				objective = {"type": "PICKUP_SPECIAL", "target_outpost": str(target.get("entity_id", main.get("id", ""))),
 					"target_outpost_display": str(target.get("display_name", main.get("display", ""))),
 					"target_npc": str(requester.get("display_name", "a local contact")), "part_name": "Survey readings",
@@ -185,3 +203,74 @@ static func _title(verb: String, target: Dictionary, item: String, mission: Dict
 static func _accept_choice() -> Dictionary:
 	return {"text": "Accept contract.", "consequence": {"credits_immediate": 0, "reputation_change": {},
 		"combat_multiplier": 1.0, "reward_credits_multiplier": 1.0, "dialogue_response": "Good. I'll send the details now."}}
+
+
+## A real investigation for a card mission, or {} (no world data, or no safe
+## sites): scan sites around the target (else the main station), turned in at
+## the main station.
+static func _investigation_objective(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, world: Dictionary,
+		mission: Dictionary, target: Dictionary, main: Dictionary, reward: int, seed_value: int) -> Dictionary:
+	var inv_world: Dictionary = world.get("investigation_world", {})
+	if not bool(inv_world.get("ok", false)):
+		return {}
+	var recipe := recipe_for(str(mission.get("reason", "")), cast)
+	if _shapes == null:
+		_shapes = ShapesType.new()
+		if not _shapes.load_from_path().is_valid():
+			_shapes = null
+			return {}
+	var shape = _shapes.shape_for_recipe(recipe)
+	if shape == null:
+		return {}
+	# Anchor at the story's place if it is a station here, else the main station.
+	var anchors: Array = []
+	var main_station_id := str(main.get("station_id", main.get("id", "")))
+	var wanted := [str(target.get("entity_id", "")), main_station_id, str(main.get("id", ""))]
+	for want in wanted:
+		for station: Dictionary in inv_world.get("stations", []):
+			if want in station.get("ids", [station.get("id", "")]) and not anchors.has(station):
+				anchors.append(station)
+	if anchors.is_empty():
+		return {}
+	var beat_n := int(offer_ref.get("beat", 1))
+	var mission_id := "premise.%s.b%d.m%d" % [str(offer_ref.get("arc_id", "arc")).replace(".", "_"), beat_n, int(offer_ref.get("mission_index", 0))]
+	var inv_seed: int = abs(hash("%d|%s" % [seed_value, mission_id]))
+	var placement := SitePlannerType.plan_sites(inv_seed, anchors, inv_world.get("hazards", []), inv_world.get("gates", []))
+	if not bool(placement.get("ok", false)):
+		return {}
+	var branches: Array = (shape.branch_ids as Array).duplicate()
+	branches.erase("liquidate")  # a client seeking evidence has not funded its destruction
+	var claimants: Array = []
+	for entity: Dictionary in cast.values():
+		if str(entity.get("kind", "")) == "faction":
+			claimants.append(str(entity.get("entity_id", "")))
+	var built := InvestigationBuilderType.build_objective(mission_id, {"id": str(shape.id), "recipe": recipe, "branch_ids": branches},
+		inv_seed, placement, reward, main_station_id, claimants, str(inv_world.get("system_id", "")))
+	if not bool(built.get("ok", false)):
+		return {}
+	var objective: Dictionary = built["objective"]
+	objective["system_id"] = str(inv_world.get("system_id", ""))
+	objective["site_display"] = str(target.get("display_name", main.get("display", "")))
+	if not InvestigationValidatorType.validate(objective).is_valid():
+		return {}
+	if not bool(InvestigationPlacementType.check_saved_sites(objective, inv_world).get("ok", false)):
+		return {}
+	return objective
+
+
+## The investigation recipe a mission reason calls for, among the recipes the
+## game can actually run (InvestigationStateValidator.BRANCHES: today survey
+## and competing claims; lure and archive join automatically when they get
+## runtime handlers). Competing claims needs two factions to be claimants.
+static func recipe_for(reason: String, cast: Dictionary) -> String:
+	var text := reason.to_lower()
+	var factions := cast.values().filter(func(e): return str(e.get("kind", "")) == "faction").size()
+	for recipe in ["transmitter_lure", "unstable_archive", "competing_claims"]:
+		if not InvestigationValidatorType.BRANCHES.has(recipe):
+			continue
+		if recipe == "competing_claims" and factions < 2:
+			continue
+		for word in RECIPE_WORDS[recipe]:
+			if (" %s " % text.replace(".", " ").replace(",", " ")).contains(" %s " % word):
+				return recipe
+	return "survey_discrepancy"

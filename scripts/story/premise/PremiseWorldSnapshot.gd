@@ -8,6 +8,7 @@ extends RefCounted
 ## returns is data; nothing downstream touches GlobalState or the scene tree.
 ## Missing pieces degrade to safe defaults (a story simply has fewer options).
 
+const InvestigationPlacementType := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
 const BoardBuilderType := preload("res://scripts/domain/PublicBoardOfferBuilder.gd")
 
 
@@ -22,7 +23,8 @@ static func capture(now_minute: int) -> Dictionary:
 		"star_type": str(config.star_type) if config != null else "yellow",
 		"is_first_system": _is_home(),
 		"post_tutorial": _post_tutorial(),
-		# Card investigations are not yet wired to the live scan system.
+		# Card investigations use the live scan system (investigation_world,
+		# below); where no safe sites exist they fall back to a pickup.
 		"investigation_fallback": true,
 		"main_station": {"id": system_id, "display": "the main station"},
 		"outposts": [],
@@ -33,12 +35,18 @@ static func capture(now_minute: int) -> Dictionary:
 	}
 	if gs == null:
 		return world
+	# Stations, gates and hazards for placing investigation scan sites.
+	world["investigation_world"] = InvestigationPlacementType.capture(gs)
 
 	# Main station display, if the primary station is loaded.
 	if gs.has_method("get_primary_station"):
 		var station = gs.call("get_primary_station")
 		if station != null and "display_name" in station and not str(station.display_name).is_empty():
 			world["main_station"]["display"] = str(station.display_name)
+		# The station's own id, as the investigation system knows it (turn-in and
+		# scan-site anchor); the StoryManager board derives it the same way.
+		if station != null:
+			world["main_station"]["station_id"] = str(station.get_world_id()) if station.has_method("get_world_id") else str(station.name)
 
 	# Docks: only places a delivery can actually be handed over at (the board
 	# refuses deliveries without a verified recipient at the destination).
