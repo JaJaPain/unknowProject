@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2.6 Persistence: save `ArcEngine` state inside the campaign save (study `CampaignTransactionStore` pattern first).
+- 2.7 Live wiring: `PremiseWorldSnapshot` (GlobalState -> world dict), then GameRoot (init/reset/capture/restore like quiet_moments), UIManager board postings + accept, QuestManager terminal signals, decision UI.
 
 ## Plan of small bites (vertical slice)
 
@@ -31,7 +31,7 @@
 5. [x] 2.3b `SystemProfile`: seeded quirks (0-2) and starting states per generated system; states also change when arcs resolve. Test.
 6. [x] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
 7. [x] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
-8. [ ] 2.6 Persistence: arc state in the campaign save.
+8. [x] 2.6 Persistence: arc state in the campaign save.
 9. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
 10. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
 
@@ -52,6 +52,9 @@
 - 2026-09-24: 2.4b `PremiseCasting.gd` + `NameForge.gd` + test. Pure over a `world` snapshot (main station, outposts, factions, hostile faction keys, known NPCs). Places distinct in first-use order; factions distinct; `prefer_existing` reuses known NPCs; ships inherit the faction whose role shares a word (else a hostile key); objects -> item names; `fill_text` resolves `{role:x}`, `{system}`, `{player}`. Test: every approved card casts fully with zero unfilled placeholders.
 
 - 2026-09-24: 2.5 `PremiseMissionComposer.gd` + test. Card mission -> standard offer dict (same shape as StoryAgentOfferBuilder), identity in `story_thread_id`/`story_beat_id`, rewards/counts by scale and beat, purchase uses store stock (courier fallback). **All 335 non-investigation missions in the deck validate through MissionAdapter.build_active_state.** 101 investigate missions return `premise_needs_completion` for the live adapter (InvestigationOfferBuilder needs live site placement).
+
+- 2026-09-24: 2.6 `PremiseDirector.gd` (Node, owned by GameRoot later) + campaign-simulation test (4 systems, board -> missions -> decisions, save/reload, ignored arcs settle). Saves as a checkpoint runtime-state section so arcs roll back on reload (same path as `quiet_moments`: GameRoot `_capture_prepared_runtime_state` + `_apply_save_data`). Interim: `investigation_fallback` turns card investigations into a 'collect the survey readings' pickup; the arc still asks for the finding.
+- Live facts found: outposts `GlobalState.get_current_pickup_outposts()`, hostile keys `get_current_system_minor_factions()`, generated factions `PublicBoardOfferBuilder._current_system_config().story_pack.faction_agendas`, tutorial done `StoryManager.story_state.first_contract_handed_in`, deliveries need `GlobalState.get_delivery_recipient(station)` non-empty. Board accept path: `UIManager._on_public_board_offer_accept` -> `QuestManager.accept_quest(quest_data, choices[0])` (BOARD lane).
 
 ## Decisions made along the way
 

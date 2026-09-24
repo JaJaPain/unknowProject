@@ -78,9 +78,17 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 				"target_npc": str(requester.get("display_name", "a local contact")), "part_name": item,
 				"destination": str(main.get("display", "the main station")), "reward_credits": reward}
 		"investigate_signal":
-			objective = {"type": "INVESTIGATE_SIGNAL", "reward_credits": reward, "site_target_id": str(target.get("entity_id", "")),
-				"site_display": str(target.get("display_name", "")), "turn_in_station_id": str(main.get("id", ""))}
-			needs_completion = true
+			if bool(world.get("investigation_fallback", false)):
+				# Interim, until card investigations are wired to the live scan system:
+				# collect the readings at the site; the arc then asks for the finding.
+				objective = {"type": "PICKUP_SPECIAL", "target_outpost": str(target.get("entity_id", main.get("id", ""))),
+					"target_outpost_display": str(target.get("display_name", main.get("display", ""))),
+					"target_npc": str(requester.get("display_name", "a local contact")), "part_name": "Survey readings",
+					"destination": str(main.get("display", "the main station")), "reward_credits": reward}
+			else:
+				objective = {"type": "INVESTIGATE_SIGNAL", "reward_credits": reward, "site_target_id": str(target.get("entity_id", "")),
+					"site_display": str(target.get("display_name", "")), "turn_in_station_id": str(main.get("id", ""))}
+				needs_completion = true
 		_:
 			return {}
 
