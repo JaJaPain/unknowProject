@@ -206,6 +206,16 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - Subtitles: placement, timing, and the Settings > Audio toggle.
   - "Loose ends" pin board: layout, pinning, closing it on undock.
   - Premise contacts' written lines and voices on the board.
+  - Premise-card investigations (commit de83537): accept one from the board,
+    find the scan sites near the story's station, scan both, resolve, turn in
+    at the main station, then answer the story's finding on the board.
+- [ ] **Premise investigations ask twice.** The investigation's own branch
+  (report / certify match / certify mismatch) and then the card's "how do you
+  report what you found?" decision. Map branches onto the card's outcome tags
+  so one answer does both. Also: only survey_discrepancy and competing_claims
+  have runtime handlers today, so 100 of 101 card investigations are surveys;
+  transmitter_lure and unstable_archive would add variety once they can run
+  (the composer already picks them by wording).
 
 - [x] **Cause-aware enemy taunts -- heard in a REAL FIGHT.** VERDICT 2026-09-09
   (Abe, run sheet 2.2). The result splits cleanly and the split matters:
