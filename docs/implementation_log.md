@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2.5 `PremiseMissionComposer`: card mission + cast + world -> existing offer dict.
+- 2.6 Persistence: save `ArcEngine` state inside the campaign save (study `CampaignTransactionStore` pattern first).
 
 ## Plan of small bites (vertical slice)
 
@@ -30,7 +30,7 @@
 4. [x] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
 5. [x] 2.3b `SystemProfile`: seeded quirks (0-2) and starting states per generated system; states also change when arcs resolve. Test.
 6. [x] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
-7. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
+7. [x] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
 8. [ ] 2.6 Persistence: arc state in the campaign save.
 9. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
 10. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
@@ -50,6 +50,8 @@
 - 2026-09-24: 2.4a `scripts/story/premise/ArcEngine.gd` + `docs/arc_engine_design.md` + test. One saveable state dict; start/offers/decisions/outcomes/choices/resolve; game outcome -> card tag mapping (failure tags, comms-reversal offer vs fight, multi-tag findings); consequences land on cast entities, system states/laws/prices, deeds, seeds, ledger. **Stress test: all 120 cards x 6 random playthroughs always resolve.**
 
 - 2026-09-24: 2.4b `PremiseCasting.gd` + `NameForge.gd` + test. Pure over a `world` snapshot (main station, outposts, factions, hostile faction keys, known NPCs). Places distinct in first-use order; factions distinct; `prefer_existing` reuses known NPCs; ships inherit the faction whose role shares a word (else a hostile key); objects -> item names; `fill_text` resolves `{role:x}`, `{system}`, `{player}`. Test: every approved card casts fully with zero unfilled placeholders.
+
+- 2026-09-24: 2.5 `PremiseMissionComposer.gd` + test. Card mission -> standard offer dict (same shape as StoryAgentOfferBuilder), identity in `story_thread_id`/`story_beat_id`, rewards/counts by scale and beat, purchase uses store stock (courier fallback). **All 335 non-investigation missions in the deck validate through MissionAdapter.build_active_state.** 101 investigate missions return `premise_needs_completion` for the live adapter (InvestigationOfferBuilder needs live site placement).
 
 ## Decisions made along the way
 
