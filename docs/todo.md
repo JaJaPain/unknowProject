@@ -420,9 +420,10 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
   Abe picks by ear, install with `bake_undercurrent_audio.py --take`, commit the
   .ogg with `git add -f`. Kaelen stays on Kokoro. Every new line needs Abe's
   approval before it can play.
-- [ ] **Clean up the Orpheus leftovers from 2026-09-24**: the half-built
-  `D:\CodingProjects\orpheus-env` (19 MB, no model) and the uncommitted
-  `tools/orpheus_clone.py`. Delete both unless Orpheus comes back.
+- [ ] **Orpheus leftovers from 2026-09-24**: delete the half-built
+  `D:\CodingProjects\orpheus-env` (19 MB, no model) unless Orpheus comes back.
+  `tools/orpheus_clone.py` (committed, never run) holds the cloning recipe from
+  the first trial, in case it is wanted for NPC voices.
 - [ ] **One N.O.V.A. voice everywhere?** Baked lines now use her F5 voice, while
   live lines still use Kokoro's `bf_emma[0.7]+af_bella[0.3]`. The plan's rule is
   that baked and live must match. Decide whether the difference is audible
