@@ -20,13 +20,13 @@
 
 ## Now
 
-- Phase 2 domain layer: `PremiseCardLibrary` (load + index approved cards), next.
+- 2.3 `PremiseCardSelector`: filter cards by situation, rank by history.
 
 ## Plan of small bites (vertical slice)
 
 1. [x] 0.1 Secret-leak test + shared `ReservedTopics` list.
-2. [ ] 2.1 `PremiseCardLibrary`: load approved cards from `res://data/content/premise_cards/approved/`, index, light runtime checks. Test.
-3. [ ] 2.2 `PremiseCardHistoryStore`: per-machine `user://` usage history (cycles, recency). Test.
+2. [x] 2.1 `PremiseCardLibrary`: load approved cards from `res://data/content/premise_cards/approved/`, index, light runtime checks. Test.
+3. [x] 2.2 `PremiseCardHistoryStore`: per-machine `user://` usage history (cycles, recency). Test.
 4. [ ] 2.3 `PremiseCardSelector`: filter by situation (quirks, states, factions, seeds, scale, used-in-campaign) and rank by history. Test.
 5. [ ] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
 6. [ ] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
@@ -38,6 +38,9 @@
 
 - 2026-09-24: Branch created; vision plan, card brief, card tools and 120 approved cards committed (`38bf096`).
 - 2026-09-24: 0.1 `scripts/story/ReservedTopics.gd` (one shared reserved-topic list) and `tests/story/run_secret_leak_tests.gd` (scans all `data/content` JSON, lore/soul docs, and quoted strings in scripts; 362 files; PASS). Fixed one real hit: `the_mutiny_in_the_dark` said "The captain is dead. Or is he?" (Captain is the player's title). Guard lists that *block* reserved words are marked `# reserved-topics: guard`.
+
+- 2026-09-24: 2.1 `scripts/story/premise/PremiseCardLibrary.gd` + test (all 120 approved cards load; bad cards are skipped with a reason, never fatal).
+- 2026-09-24: 2.2 `scripts/story/premise/PremiseCardHistoryStore.gd` + test (per-machine `user://premise_card_history.json`; fresh first, then oldest, recent window 30, new cycle at 90%; atomic save; corrupt file = quiet fresh start).
 
 ## Decisions made along the way
 
