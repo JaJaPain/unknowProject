@@ -1095,6 +1095,7 @@ func _verify_small_model_ready(model_name: String, attempt: int) -> void:
 		# model at one context size and force a reload on the first real request.
 		"options": {"num_predict": 8, "temperature": 0.0, "num_ctx": LocalModelGatewayType.SMALL_NUM_CTX},
 	})
+	LocalModelGatewayType.note_request("model_ready_probe")
 	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
 	if err != OK:
 		h.queue_free()
@@ -1179,6 +1180,7 @@ func _warm_single_model(model_name: String, label: String, on_done: Callable) ->
 		"model": model_name,
 		"keep_alive": LocalModelGatewayType.MODEL_KEEP_ALIVE,
 	})
+	LocalModelGatewayType.note_request("model_warmup")
 	var err := h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, payload)
 	if err != OK:
 		h.queue_free()
@@ -7474,6 +7476,7 @@ func _start_kaelen_handoff_batch_request(
 		"think": false,
 		"options": {"num_predict": 800, "temperature": 0.85, "num_ctx": LocalModelGateway.LARGE_NUM_CTX},
 	})
+	LocalModelGatewayType.note_request("kaelen_handoff_batch")
 	var err := http.request(
 		LocalModelGateway.OLLAMA_GENERATE_URL,
 		["Content-Type: application/json"],

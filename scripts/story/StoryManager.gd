@@ -2442,6 +2442,7 @@ func _generate_foreshadow() -> void:
 		"stream": false,
 		"options": {"num_predict": 40, "temperature": 0.8, "num_ctx": LocalModelGateway.SMALL_NUM_CTX},
 	})
+	LocalModelGateway.note_request("foreshadow")
 	http.request(
 		LocalModelGateway.OLLAMA_GENERATE_URL,
 		["Content-Type: application/json"],
@@ -2550,6 +2551,7 @@ func _update_kaelen_mood() -> void:
 		"stream": false,
 		"options": {"num_predict": 20, "temperature": 0.8, "num_ctx": LocalModelGateway.SMALL_NUM_CTX},
 	})
+	LocalModelGateway.note_request("kaelen_mood")
 	http.request(
 		LocalModelGateway.OLLAMA_GENERATE_URL,
 		["Content-Type: application/json"],

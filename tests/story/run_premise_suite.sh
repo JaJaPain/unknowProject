@@ -29,6 +29,7 @@ TESTS=(
   run_system_quirk_tests
   run_subtitle_tests
   run_pin_board_tests
+  run_generation_window_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

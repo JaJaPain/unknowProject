@@ -33,6 +33,7 @@ const RadioType := preload("res://scripts/story/premise/RadioBroadcaster.gd")
 const WriterType := preload("res://scripts/story/premise/LineWriter.gd")
 const VoiceType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const CastType := preload("res://scripts/story/premise/RecurringCast.gd")
+const GatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -69,6 +70,13 @@ var line_model := ""
 const LINE_ATTEMPTS := 2
 var _line_queue: Array[Dictionary] = []
 var _line_busy := false
+## Breathe in, breathe out: model work (lines, the Showrunner) runs only while
+## this returns true (GameRoot wires GenerationWindow.is_open). Unset = always.
+var window_probe: Callable = Callable()
+
+
+func _window_open() -> bool:
+	return not window_probe.is_valid() or bool(window_probe.call())
 
 
 func _init() -> void:
@@ -229,7 +237,7 @@ static func line_job(key: String, offer: Dictionary, card: Dictionary, cast: Dic
 
 
 func _pump_lines() -> void:
-	if _line_busy or _showrunner_busy or not is_inside_tree() or _line_queue.is_empty():
+	if _line_busy or _showrunner_busy or not is_inside_tree() or _line_queue.is_empty() or not _window_open():
 		return
 	var job: Dictionary = _line_queue.pop_front()
 	_line_busy = true
@@ -244,6 +252,7 @@ func _pump_lines() -> void:
 			checked = WriterType.check_line(WriterType.response_text(reply.get_string_from_utf8()), job["brief"], job["private"])
 		store_line(job, checked)
 		_pump_lines())
+	GatewayType.note_request("premise_line_writer")
 	if http.request(LocalModelGatewayURL(), ["Content-Type: application/json"], HTTPClient.METHOD_POST,
 			JSON.stringify(WriterType.build_briefing_request(job["brief"], line_model))) != OK:
 		http.queue_free()
@@ -351,6 +360,8 @@ func _maybe_lock(world: Dictionary, now_minute: int) -> void:
 	if not HandType.ready_to_lock(state) or _showrunner_busy:
 		return
 	if use_showrunner and is_inside_tree():
+		if not _window_open():
+			return  # the story model waits for a dock or jump; the board asks again
 		_request_showrunner(world, now_minute)
 	else:
 		_apply_lock(HandType.lock_by_code(state, now_minute), world, now_minute)
@@ -396,6 +407,7 @@ func _send_showrunner(world: Dictionary, now_minute: int) -> void:
 		if locked.is_empty() or not bool(locked["ok"]):
 			locked = HandType.lock_by_code(state, now_minute)
 		_apply_lock(locked, _last_world if not _last_world.is_empty() else world, now_minute))
+	GatewayType.note_request("premise_showrunner")
 	if http.request(LocalModelGatewayURL(), ["Content-Type: application/json"], HTTPClient.METHOD_POST, body) != OK:
 		http.queue_free()
 		_showrunner_busy = false

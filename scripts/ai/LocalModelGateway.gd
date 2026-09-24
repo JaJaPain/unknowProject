@@ -27,6 +27,22 @@ const LARGE_NUM_CTX := 16384
 # resident beside the small dialogue model and Godot renderer.
 const LARGE_MODEL_KEEP_ALIVE := 0
 
+# The generation-window ledger (GenerationWindow, plan Phase 1). The window
+# sets `window_open`; every model request reports itself through
+# note_request(), so a session can show which features still call the model
+# in flight. Counts are per session, not saved.
+static var window_open := false
+static var request_ledger := {"window": 0, "flight": 0, "flight_by_source": {}}
+
+
+static func note_request(source: String) -> void:
+	if window_open:
+		request_ledger["window"] = int(request_ledger["window"]) + 1
+		return
+	request_ledger["flight"] = int(request_ledger["flight"]) + 1
+	var by_source: Dictionary = request_ledger["flight_by_source"]
+	by_source[source] = int(by_source.get(source, 0)) + 1
+
 const SMALL_DIALOGUE_MODELS: Array[String] = [
 	"qwen3:4b",
 	"qwen2.5:3b-instruct-q4_K_M",
@@ -192,6 +208,7 @@ static func generation_body(
 		"stream": false,
 		"options": options.duplicate(true),
 	}
+	note_request(capability)
 	var is_large := profile_for_capability(capability) == "large_story"
 	body["keep_alive"] = LARGE_MODEL_KEEP_ALIVE if is_large else MODEL_KEEP_ALIVE
 	# Never let Ollama fall back to the model's trained context (see

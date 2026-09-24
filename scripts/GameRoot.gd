@@ -177,6 +177,7 @@ var quiet_moment_director: Node = null
 # Premise-card arcs (docs/arc_engine_design.md). Owned like quiet_moment_director.
 var premise_director: Node = null
 var system_quirk_runner: Node = null
+var generation_window: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
@@ -1223,6 +1224,7 @@ const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirecto
 const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
 const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
+const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
 const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
 
@@ -1254,6 +1256,13 @@ func _init_premise_director() -> void:
 	premise_director.decision_ready.connect(_on_premise_decision_ready)
 	premise_director.main_story_locked.connect(_on_premise_main_story_locked)
 	premise_director.season_closed.connect(_on_premise_season_closed)
+	# Breathe in, breathe out: model work happens while docked or jumping.
+	generation_window = GenerationWindowType.new()
+	generation_window.name = "GenerationWindow"
+	generation_window.jump_probe = func() -> bool: return transition_in_progress or jump_request_pending
+	add_child(generation_window)
+	premise_director.window_probe = generation_window.is_open
+	generation_window.opened.connect(_on_generation_window_opened)
 	# System quirks in play (pulsar sweeps, ion storms, nebula, dark relays).
 	system_quirk_runner = SystemQuirkRunnerType.new()
 	system_quirk_runner.name = "SystemQuirkRunner"
@@ -1265,6 +1274,17 @@ func _init_premise_director() -> void:
 	radio_timer.autostart = true
 	radio_timer.timeout.connect(_premise_radio_tick)
 	add_child(radio_timer)
+
+
+## A dock or jump began: write what the next stretch of flight needs, and
+## log how many model calls still happened in flight (Phase 1 wants zero).
+func _on_generation_window_opened(reason: String) -> void:
+	var ledger: Dictionary = LocalModelGateway.request_ledger
+	print("[GenerationWindow] open (%s). Model calls so far: %d in windows, %d in flight %s" % [
+		reason, int(ledger["window"]), int(ledger["flight"]), str(ledger["flight_by_source"])])
+	if is_instance_valid(premise_director) and gameplay_runtime_started:
+		var now := int(CampaignClock.total_minutes)
+		premise_director.prepare_lines(PremiseWorldSnapshotType.capture(now))
 
 
 func _premise_radio_tick() -> void:
