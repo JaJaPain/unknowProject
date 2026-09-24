@@ -4,11 +4,11 @@ Runs inside the F5 environment (see tools/voice_refs/README.md), not the
 system Python:
 
   D:/CodingProjects/f5-tts-env/Scripts/python.exe tools/f5_render.py \
-      --ref tools/voice_refs/nova_urgent.wav --ref-text-file tools/voice_refs/nova_urgent.txt \
-      --text "Damn it, Kaelen!" --out out.wav [--seed 7] [--speed 1.0]
+      --ref tools/voice_refs/nova.wav --ref-text-file tools/voice_refs/nova.txt \
+      --text "Damn it, Kaelen!" --out out.wav [--seed 7] [--speed 0.85] [--nfe 64]
 
 Several lines in one call (one model load): --jobs jobs.json, a list of
-{"text", "ref", "ref_text_file", "out", "seed"?, "speed"?}.
+{"text", "ref", "ref_text_file", "out", "seed"?, "speed"?, "nfe"?}.
 """
 import argparse
 import io
@@ -24,6 +24,7 @@ def main():
     ap.add_argument("--out")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--speed", type=float, default=1.0)
+    ap.add_argument("--nfe", type=int, default=64, help="sampling steps: F5's default is 32; 64 renders cleaner")
     ap.add_argument("--jobs")
     args = ap.parse_args()
 
@@ -31,7 +32,7 @@ def main():
         jobs = json.load(io.open(args.jobs, encoding="utf-8"))
     else:
         jobs = [{"text": args.text, "ref": args.ref, "ref_text_file": args.ref_text_file,
-                 "out": args.out, "seed": args.seed, "speed": args.speed}]
+                 "out": args.out, "seed": args.seed, "speed": args.speed, "nfe": args.nfe}]
 
     from f5_tts.api import F5TTS  # imported late: slow, and only here
     tts = F5TTS()
@@ -44,6 +45,7 @@ def main():
             file_wave=job["out"],
             seed=int(job.get("seed", 7)),
             speed=float(job.get("speed", 1.0)),
+            nfe_step=int(job.get("nfe", 64)),
             remove_silence=True,
         )
         print("rendered", job["out"])

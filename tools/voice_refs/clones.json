@@ -1,16 +1,27 @@
 {
   "_comment": [
-    "Voices rendered with F5-TTS instead of Kokoro, cloned from a reference clip.",
-    "The references were themselves rendered by Kokoro in the character's game voice (tools/voice_refs/*.wav + exact transcript .txt).",
-    "A line may pick another reference of the same voice with \"clone_ref\" (for example nova_calm)."
+    "Voices rendered with F5-TTS instead of Kokoro, cloned from a reference clip. Only N.O.V.A. is cloned; Kaelen stays on Kokoro (Abe, 2026-09-24).",
+    "The reference is made by tools/make_voice_ref.py: Kokoro in the character's game voice, steady delivery (no shouting), trimmed, normalised, with its exact transcript.",
+    "speed and nfe (sampling steps) apply to every line in that voice.",
+    "nova_baked is cut from one of the old F5 Nova clips (assets/audio/cast_en/nova_d4021d1329df8e38.wav); set voices.voice.nova.v1.ref to it to use that instead."
   ],
   "f5_python": "D:/CodingProjects/f5-tts-env/Scripts/python.exe",
   "voices": {
-    "voice.nova.v1": {"engine": "f5", "ref": "nova_urgent"}
+    "voice.nova.v1": {
+      "engine": "f5",
+      "ref": "nova",
+      "speed": 0.85,
+      "nfe": 64
+    }
   },
   "refs": {
-    "nova_calm": {"wav": "tools/voice_refs/nova_calm.wav", "text": "tools/voice_refs/nova_calm.txt"},
-    "nova_urgent": {"wav": "tools/voice_refs/nova_urgent.wav", "text": "tools/voice_refs/nova_urgent.txt"},
-    "kaelen": {"wav": "tools/voice_refs/kaelen.wav", "text": "tools/voice_refs/kaelen.txt"}
+    "nova": {
+      "wav": "tools/voice_refs/nova.wav",
+      "text": "tools/voice_refs/nova.txt"
+    },
+    "nova_baked": {
+      "wav": "tools/voice_refs/nova_baked.wav",
+      "text": "tools/voice_refs/nova_baked.txt"
+    }
   }
 }

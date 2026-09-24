@@ -49,7 +49,8 @@ def render_part(part, line, mappings, clones):
     with tempfile.TemporaryDirectory() as tmp:
         out = os.path.join(tmp, "part.wav")
         subprocess.run([clones["f5_python"], "tools/f5_render.py", "--ref", ref["wav"], "--ref-text-file", ref["text"],
-                        "--text", part["text"], "--out", out, "--seed", str(line.get("seed", 7))], check=True)
+                        "--text", part["text"], "--out", out, "--seed", str(line.get("seed", 7)),
+                        "--speed", str(clone.get("speed", 1.0)), "--nfe", str(clone.get("nfe", 64))], check=True)
         return sf.read(out, dtype="float32")
 
 
