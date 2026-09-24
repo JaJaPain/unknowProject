@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2.7c UIManager: premise postings on the public board (skip text generation), decision prompt when docked.
+- Next: review the whole slice end to end (what a player sees), then Phase 1 generation windows OR voiced arc dialogue. Decide after review.
 
 ## Plan of small bites (vertical slice)
 
@@ -32,7 +32,7 @@
 6. [x] 2.4 `ArcState` / `ArcEngine`: live arcs, role casting, beat progression from mission outcomes, resolutions → consequences + seeds. Test with scripted outcomes.
 7. [x] 2.5 `PremiseMissionComposer`: card beat mission → existing offer dict, tagged with `story_thread_id` / `story_beat_id`. Test with a fake world snapshot.
 8. [x] 2.6 Persistence: arc state in the campaign save.
-9. [ ] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
+9. [x] 2.7 Live wiring: arc offers reach the player; QuestManager signals advance arcs.
 10. [ ] Then Phase 1 (generation windows), Phase 3 extras, activities, fixed-cast work.
 
 ## Done
@@ -58,6 +58,11 @@
 
 - 2026-09-24: 2.7a `PremiseWorldSnapshot.gd` (the only premise file that reads the live game; docks filtered to those with a delivery recipient).
 - 2026-09-24: 2.7b GameRoot wiring: `premise_director` node (init next to quiet moments), reset on new campaign, lazy campaign-seed sync, ensure arcs on system arrival (deferred), QuestManager completed/abandoned/expired -> director, `premise_arcs` checkpoint section (old saves start with none), public helpers `premise_board_postings()`, `premise_pending_decisions()`, `premise_apply_decision()`. Scene-script parse check: 415 scripts, 0 failed.
+
+- 2026-09-24: 2.7c UIManager: premise postings appended to the public board after collection postings and excluded from the board text generator; when the board opens, a pending arc decision is shown first in the agent panel (one button per option; answering returns to the board). Director fills `{role:x}`/`{system}` in decision text. `tests/story/run_premise_suite.sh` runs all 9 premise tests in sequence (all PASS). Existing board/mission/lifecycle/collection tests still PASS. Scene-script parse check 415/0.
+- **Gotcha:** Python on Windows writes CRLF by default; Godot rejects `\` line continuations followed by CRLF. Always write with `newline='
+'` (or binary). Heredoc-embedded `
+` can also land as a literal backslash-n; prefer the Edit tool for GDScript edits.
 
 ## Decisions made along the way
 

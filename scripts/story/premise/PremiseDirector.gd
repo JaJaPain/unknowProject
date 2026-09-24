@@ -39,6 +39,8 @@ var campaign_seed := 0
 var state: Dictionary = ArcsType.empty_state()
 var _history: Dictionary = HistoryType.empty_history()
 var _history_loaded := false
+# System display names seen this session, for filling {system} in decision text.
+var _system_names: Dictionary = {}
 
 
 func _init() -> void:
@@ -77,6 +79,7 @@ func profile_for(world: Dictionary) -> Dictionary:
 ## Starts arcs so this system has its share of live stories. Returns new arc ids.
 func ensure_arcs(world: Dictionary, now_minute: int) -> Array[String]:
 	var started: Array[String] = []
+	_system_names[str(world.get("system_id", ""))] = str(world.get("system_display", ""))
 	if not enabled or not bool(world.get("post_tutorial", false)) or bool(world.get("is_first_system", false)):
 		return started
 	var system_id := str(world.get("system_id", ""))
@@ -144,6 +147,11 @@ func pending_decisions() -> Array[Dictionary]:
 		var d := ArcsType.pending_decision(state, library, arc_id)
 		if not d.is_empty():
 			d["arc_id"] = arc_id
+			var a := ArcsType.arc(state, arc_id)
+			var names := {"system_display": str(_system_names.get(str(a["system_id"]), "this system"))}
+			d["prompt"] = CastingType.fill_text(str(d.get("prompt", "")), a["cast"], names)
+			for option in d.get("options", []):
+				option["label"] = CastingType.fill_text(str(option.get("label", "")), a["cast"], names)
 			out.append(d)
 	return out
 

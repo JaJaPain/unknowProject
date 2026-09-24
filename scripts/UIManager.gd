@@ -2102,6 +2102,12 @@ func _render_public_board_offers() -> void:
 		for collection_posting: Dictionary in StoryManager.collection_board_postings(current_station):
 			if not collection_posting.is_empty():
 				public_board_current_offers.append(collection_posting)
+		# Premise-card arcs (docs/arc_engine_design.md): bound postings, like collections.
+		var premise_root := get_tree().current_scene
+		if premise_root != null and premise_root.has_method("premise_board_postings"):
+			for premise_posting in premise_root.premise_board_postings():
+				if premise_posting is Dictionary and not (premise_posting as Dictionary).is_empty():
+					public_board_current_offers.append(premise_posting)
 	if not QuestManager.is_lane_occupied("BOARD") and current_station != null and public_board_panel.visible:
 		var prepared := StoryManager.prepare_local_investigation_board_offer(current_station)
 		if bool(prepared.get("ok", false)):
@@ -2122,7 +2128,9 @@ func _render_public_board_offers() -> void:
 		# compiled from their own verified bindings. Regenerating that text would
 		# put the one sentence this package exists to bound back in a writer's
 		# hands, so neither goes through the board text generator.
-		if bool(candidate.get("investigation_posting", false)) 				or bool(candidate.get("collection_posting", false)):
+		if bool(candidate.get("investigation_posting", false)) \
+				or bool(candidate.get("collection_posting", false)) \
+				or bool(candidate.get("premise_posting", false)):
 			continue
 		_request_public_board_text_attempt(index, candidate, "", 0)
 
@@ -7766,7 +7774,44 @@ func _on_public_board_pressed() -> void:
 	if inventory_panel:
 		inventory_panel.visible = false
 	public_board_panel.visible = true
+	# A premise-card story waiting on the pilot's answer comes first.
+	var premise_root := get_tree().current_scene
+	if premise_root != null and premise_root.has_method("premise_pending_decisions"):
+		var decisions: Array = premise_root.premise_pending_decisions()
+		if not decisions.is_empty():
+			_show_premise_decision(decisions[0])
+			return
 	_render_public_board_offers()
+
+
+## Shows one premise-arc decision (a finding to report, or a story choice)
+## in the agent panel; answering it returns to the board.
+func _show_premise_decision(decision: Dictionary) -> void:
+	public_board_panel.visible = false
+	agent_panel.visible = true
+	agent_name_label.text = "YOUR CALL"
+	agent_subtitle_label.text = "A contract is waiting on your answer"
+	_show_agent_portrait(false)
+	var prompt := str(decision.get("prompt", "")).strip_edges()
+	if str(decision.get("kind", "")) == "finding":
+		prompt = "The job is done. How do you report what you found?"
+	agent_dialogue_label.text = prompt if not prompt.is_empty() else "Choose."
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	for option in decision.get("options", []):
+		var btn := Button.new()
+		btn.text = str(option.get("label", option.get("id", "")))
+		btn.pressed.connect(_on_premise_decision_option.bind(str(decision.get("arc_id", "")), str(option.get("id", ""))))
+		agent_choices_container.add_child(btn)
+	agent_back_btn.visible = false
+
+
+func _on_premise_decision_option(arc_id: String, option_id: String) -> void:
+	var premise_root := get_tree().current_scene
+	if premise_root != null and premise_root.has_method("premise_apply_decision"):
+		premise_root.premise_apply_decision(arc_id, option_id)
+	agent_back_btn.visible = true
+	_on_public_board_pressed()
 
 
 func _on_public_board_back_pressed() -> void:
