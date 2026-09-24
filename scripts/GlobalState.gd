@@ -1657,6 +1657,14 @@ var runtime_entity_sequence: int = 0
 
 # Game references
 var player: Node3D = null
+## The current system's environment (SystemQuirkRunner writes it; see
+## SystemQuirkEffects for the keys). Empty = an ordinary system.
+var system_environment: Dictionary = {}
+
+
+func environment_value(key: String, default_value: Variant) -> Variant:
+	return system_environment.get(key, default_value)
+
 var active_system_root: Node3D = null
 var current_system_id: String = "start_system"
 var intro_tutorial_player_protected: bool = false

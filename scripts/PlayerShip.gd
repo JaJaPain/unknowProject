@@ -1042,7 +1042,7 @@ func _physics_process(delta: float):
 	if shield_regen_timer > 0.0:
 		shield_regen_timer -= delta
 	elif current_shield < GlobalState.shield_capacity and GlobalState.shield_regen_rate > 0.0:
-		current_shield = min(current_shield + GlobalState.shield_regen_rate * delta, GlobalState.shield_capacity)
+		current_shield = min(current_shield + GlobalState.shield_regen_rate * float(GlobalState.environment_value("shield_regen_mult", 1.0)) * delta, GlobalState.shield_capacity)
 		
 	if engine_stall_timer > 0.0:
 		engine_stall_timer -= delta

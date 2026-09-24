@@ -665,7 +665,8 @@ func _physics_process(delta: float):
 				
 				if is_player_enemy:
 					var dist_to_player = global_position.distance_to(p.global_position)
-					if dist_to_player < min_dist:
+					# System environment (a nebula) shortens how far they notice the player.
+					if dist_to_player < min_dist * float(GlobalState.environment_value("player_detection_mult", 1.0)):
 						min_dist = dist_to_player
 						best_target = p
 						

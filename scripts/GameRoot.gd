@@ -176,6 +176,7 @@ var ship_behavior_observer: Node = null
 var quiet_moment_director: Node = null
 # Premise-card arcs (docs/arc_engine_design.md). Owned like quiet_moment_director.
 var premise_director: Node = null
+var system_quirk_runner: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
@@ -684,6 +685,8 @@ func _find_gate_in_tree(node: Node, gate_id: String) -> Node3D:
 	return null
 
 func _prepare_player_for_system_change() -> void:
+	if is_instance_valid(system_quirk_runner):
+		system_quirk_runner.leave_system()
 	player.set("nav_mode", "MANUAL")
 	player.set("target_position", null)
 	player.set("is_aligning", false)
@@ -1220,6 +1223,7 @@ const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirecto
 const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
 const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
+const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
 
 # Which game event fires which beat. The behaviour observer already emits
@@ -1250,6 +1254,10 @@ func _init_premise_director() -> void:
 	premise_director.decision_ready.connect(_on_premise_decision_ready)
 	premise_director.main_story_locked.connect(_on_premise_main_story_locked)
 	premise_director.season_closed.connect(_on_premise_season_closed)
+	# System quirks in play (pulsar sweeps, ion storms, nebula, dark relays).
+	system_quirk_runner = SystemQuirkRunnerType.new()
+	system_quirk_runner.name = "SystemQuirkRunner"
+	add_child(system_quirk_runner)
 	# System radio: one item every couple of minutes (voiced later; comms feed now).
 	var radio_timer := Timer.new()
 	radio_timer.name = "PremiseRadioTimer"
@@ -1268,6 +1276,8 @@ func _premise_radio_tick() -> void:
 	if item.is_empty():
 		return
 	var text := str(item.get("text", ""))
+	if not bool(GlobalState.environment_value("radio", true)):
+		return  # a relay dark zone: nothing gets through
 	GlobalState.emit_chatter("SYSTEM RADIO", text, Color(0.75, 0.9, 0.8))
 	# The system's own host reads it over comms, only in a quiet moment; the
 	# text stays in the feed either way.
@@ -1300,6 +1310,10 @@ func _premise_on_system_arrived() -> void:
 	premise_director.tick(now)
 	var world := PremiseWorldSnapshotType.capture(now)
 	premise_director.ensure_arcs(world, now)
+	if is_instance_valid(system_quirk_runner):
+		# The tutorial stays an ordinary system.
+		var quirks: Array = premise_director.profile_for(world).get("quirks", []) if bool(world.get("post_tutorial", false)) else []
+		system_quirk_runner.enter_system(quirks)
 	# Write this system's lines in the background, so they are ready (and
 	# voiced) by the time the pilot opens the board.
 	premise_director.prepare_lines(world)

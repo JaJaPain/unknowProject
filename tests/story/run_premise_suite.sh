@@ -26,6 +26,7 @@ TESTS=(
   run_comms_bus_tests
   run_recurring_cast_tests
   run_faction_dna_tests
+  run_system_quirk_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do
