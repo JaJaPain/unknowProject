@@ -23,10 +23,11 @@ TESTS=(
   run_radio_tests
   run_voice_dna_tests
   run_line_writer_tests
+  run_comms_bus_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do
-  out=$(timeout 300 "$GODOT" --headless --path . --script "res://tests/story/$t.gd" --log-file "$LOGDIR/$t.log" 2>&1)
+  out=$(timeout 300 "$GODOT" --headless --path . --script "res://tests/story/$t.gd" --log-file "$LOGDIR/$t.log" -- --baseline-offline 2>&1)
   if echo "$out" | grep -q "\[PASS\]"; then
     echo "PASS  $t"
   else

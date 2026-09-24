@@ -7,6 +7,10 @@ const MAX_BACKGROUND_CACHE_REQUESTS := 2
 const _TTS_HEARTBEAT_SECONDS := 30.0
 var http_request: HTTPRequest
 var audio_player: AudioStreamPlayer
+## Bus for the NEXT play_dialogue_audio call ("Voice", or "Comms" for lines
+## heard over a ship radio). Reset to "Voice" after each call picks it up.
+var next_dialogue_bus: String = "Voice"
+const COMMS_BUS := "Comms"
 var is_requesting: bool = false
 var tts_request_time: float = 0.0
 
@@ -62,6 +66,7 @@ func _ready():
 		AudioServer.add_bus()
 		voice_bus_idx = AudioServer.get_bus_count() - 1
 		AudioServer.set_bus_name(voice_bus_idx, "Voice")
+	_ensure_comms_bus()
 	
 	http_request = HTTPRequest.new()
 	add_child(http_request)
@@ -321,6 +326,27 @@ func _delivery_cache_key(
 	return key
 
 
+## A narrow-band "heard over the radio" bus that feeds the Voice bus, so the
+## player's voice volume still applies.
+func _ensure_comms_bus() -> void:
+	if AudioServer.get_bus_index(COMMS_BUS) != -1:
+		return
+	AudioServer.add_bus()
+	var idx := AudioServer.get_bus_count() - 1
+	AudioServer.set_bus_name(idx, COMMS_BUS)
+	AudioServer.set_bus_send(idx, "Voice")
+	var band := AudioEffectBandPassFilter.new()
+	band.cutoff_hz = 1700.0
+	band.resonance = 0.35
+	AudioServer.add_bus_effect(idx, band)
+	var crunch := AudioEffectDistortion.new()
+	crunch.mode = AudioEffectDistortion.MODE_OVERDRIVE
+	crunch.drive = 0.18
+	crunch.pre_gain = 2.0
+	crunch.post_gain = -3.0
+	AudioServer.add_bus_effect(idx, crunch)
+
+
 func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0, pause_seconds: float = -1.0):
 	# Support legacy call: play_dialogue_audio(text, faction_string)
 	# Detect by checking if voice_id_override is a known faction OR if
@@ -337,6 +363,8 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 			speed_override = 1.0
 
 	tts_request_time = Time.get_ticks_msec()
+	audio_player.bus = next_dialogue_bus if AudioServer.get_bus_index(next_dialogue_bus) != -1 else "Voice"
+	next_dialogue_bus = "Voice"
 
 	if is_requesting:
 		http_request.cancel_request()

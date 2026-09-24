@@ -2359,7 +2359,7 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		var listen := Button.new()
 		listen.text = "Play message"
 		var voice_profile := str(posting.get("voice_profile", ""))
-		listen.pressed.connect(func(): SpeechService.play(voice_line, voice_profile))
+		listen.pressed.connect(func(): SpeechService.play_on_comms(voice_line, voice_profile))
 		vbox.add_child(listen)
 
 	var accept := Button.new()

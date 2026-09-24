@@ -116,6 +116,14 @@ func play(
 	provider.play(prepared, profile_id, speed_override)
 
 
+## Plays a line as heard over a ship's radio (narrow band, a little grit):
+## premise contacts on comms and the system radio host.
+func play_on_comms(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> void:
+	TTSInterface.next_dialogue_bus = TTSInterface.COMMS_BUS
+	play(text, voice_profile)
+	TTSInterface.next_dialogue_bus = "Voice"  # play() can return early
+
+
 func cache(
 	text: String,
 	voice_profile: Variant = KAELEN_PROFILE,

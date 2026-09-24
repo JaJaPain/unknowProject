@@ -1219,6 +1219,7 @@ func _init_ship_behavior_observer() -> void:
 const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirector.gd")
 const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
+const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
 
 # Which game event fires which beat. The behaviour observer already emits
@@ -1262,9 +1263,17 @@ func _premise_radio_tick() -> void:
 	if not is_instance_valid(premise_director) or not gameplay_runtime_started:
 		return
 	var now := int(CampaignClock.total_minutes)
-	var item: Dictionary = premise_director.next_radio_item(PremiseWorldSnapshotType.capture(now), now)
-	if not item.is_empty():
-		GlobalState.emit_chatter("SYSTEM RADIO", str(item.get("text", "")), Color(0.75, 0.9, 0.8))
+	var world := PremiseWorldSnapshotType.capture(now)
+	var item: Dictionary = premise_director.next_radio_item(world, now)
+	if item.is_empty():
+		return
+	var text := str(item.get("text", ""))
+	GlobalState.emit_chatter("SYSTEM RADIO", text, Color(0.75, 0.9, 0.8))
+	# The system's own host reads it over comms, only in a quiet moment; the
+	# text stays in the feed either way.
+	if not SpeechService.is_busy() and not PlayerInteractionQueue.is_busy() and not PlayerInteractionQueue.in_combat_window():
+		var host := PremiseVoiceDNAType.register(PremiseVoiceDNAType.for_radio_host(str(world.get("system_id", ""))))
+		SpeechService.play_on_comms(text, host)
 
 
 func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> void:
