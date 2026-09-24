@@ -29,8 +29,8 @@ func _world() -> Dictionary:
 		"system_id": "system.gen_3", "system_display": "Vessa",
 		"main_station": {"id": "system.gen_3", "display": "Vessa Main"},
 		"outposts": [{"id": "outpost.a", "display": "Iron Reach"}, {"id": "outpost.b", "display": "Kova Station"}],
-		"factions": [{"id": "faction.generated.one", "display_name": "The Tessin Guild"},
-			{"id": "faction.generated.two", "display_name": "Harrow Consortium"}],
+		"factions": [{"id": "faction.generated.one", "display_name": "The Tessin Guild", "spawn_key": "gen_one"},
+			{"id": "faction.generated.two", "display_name": "Harrow Consortium", "spawn_key": "gen_two"}],
 		"hostile_factions": ["reavers", "dustborn"],
 		"known_npcs": [{"id": "npc.known.mira", "display_name": "Mira Holt"}],
 	}
@@ -85,7 +85,12 @@ func _test_reuse_and_distinct_places() -> void:
 	_check(cast["old_friend"]["entity_id"] == "npc.known.mira" and bool(cast["old_friend"]["reused"]), "prefer_existing should reuse a known NPC")
 	_check(not bool(cast["stranger"]["reused"]) and str(cast["stranger"]["entity_id"]).begins_with("npc.arc_0007"), "must_be_new should create a new person")
 	_check(cast["dest"]["entity_id"] != cast["origin"]["entity_id"], "two places should get two different docks")
-	_check(cast["consortium_enforcer"]["faction_key"] == cast["harrow_consortium"]["entity_id"], "a ship sharing a faction role's name should fly for that faction")
+	_check(cast["consortium_enforcer"]["faction_key"] == cast["harrow_consortium"]["spawn_key"], "a ship sharing a faction role's name should fly under that faction's spawn key")
+	var no_spawn := _world()
+	for f in no_spawn["factions"]:
+		f["spawn_key"] = ""
+	var fallback := Casting.cast_card(card, no_spawn, 5, "arc.0007")
+	_check(fallback["consortium_enforcer"]["faction_key"] in ["reavers", "dustborn"], "without a spawn key, a ship must fall back to a hostile faction that can spawn")
 	_check(cast["sample_cases"]["display_name"] == "sample cases", "objects get readable item names")
 
 

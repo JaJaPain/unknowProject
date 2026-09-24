@@ -48,7 +48,8 @@ static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_
 			cast[role["id"]] = {"kind": "faction", "entity_id": "faction.neutral", "display_name": _humanize(str(role["id"]))}
 		else:
 			var f: Dictionary = factions[faction_index % factions.size()]
-			cast[role["id"]] = {"kind": "faction", "entity_id": str(f.get("id", "")), "display_name": str(f.get("display_name", f.get("id", "")))}
+			cast[role["id"]] = {"kind": "faction", "entity_id": str(f.get("id", "")), "display_name": str(f.get("display_name", f.get("id", ""))),
+				"spawn_key": str(f.get("spawn_key", ""))}
 		faction_index += 1
 
 	# People: reuse someone the player knows when the card prefers it.
@@ -73,7 +74,10 @@ static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_
 			continue
 		var role_id := str(role["id"])
 		var owner := _owner_faction_role(role_id, cast)
-		var faction_key := str(cast[owner]["entity_id"]) if not owner.is_empty() else (str(hostile[rng.randi_range(0, hostile.size() - 1)]) if not hostile.is_empty() else "reavers")
+		# Combat targets must be spawnable: the owner's spawn key, else a hostile faction here.
+		var faction_key := str(cast[owner].get("spawn_key", "")) if not owner.is_empty() else ""
+		if faction_key.is_empty():
+			faction_key = str(hostile[rng.randi_range(0, hostile.size() - 1)]) if not hostile.is_empty() else "reavers"
 		cast[role_id] = {"kind": "ship", "entity_id": "ship.%s.%s" % [arc_id.replace(".", "_"), role_id],
 			"display_name": NameForgeType.ship_name(rng), "faction_key": faction_key}
 

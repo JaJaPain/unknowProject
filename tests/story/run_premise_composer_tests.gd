@@ -29,8 +29,8 @@ func _world() -> Dictionary:
 		"system_id": "system.gen_3", "system_display": "Vessa",
 		"main_station": {"id": "system.gen_3", "display": "Vessa Main"},
 		"outposts": [{"id": "outpost.gen_3_a", "display": "Iron Reach"}, {"id": "outpost.gen_3_b", "display": "Kova Station"}],
-		"factions": [{"id": "faction.generated.tessin_guild", "display_name": "The Tessin Guild"},
-			{"id": "faction.generated.harrow", "display_name": "Harrow Consortium"}],
+		"factions": [{"id": "faction.generated.tessin_guild", "display_name": "The Tessin Guild", "spawn_key": "gen_tessin"},
+			{"id": "faction.generated.harrow", "display_name": "Harrow Consortium", "spawn_key": ""}],
 		"hostile_factions": ["reavers", "dustborn"],
 		"known_npcs": [{"id": "npc.known.mira", "display_name": "Mira Holt"}],
 		"store_items": [{"item_id": "medical_kit", "display_name": "Medical kit", "quantity": 2,
@@ -58,6 +58,10 @@ func _test_every_mission_composes_into_a_valid_offer() -> void:
 					continue
 				_check(str(offer["narrative_metadata"]["story_beat_id"]).begins_with(card_id), "story_beat_id must carry the card id")
 				_check(not str(offer["dialogue"]).contains("{role:"), "%s: unfilled placeholder in dialogue" % card_id)
+				var target_faction := str(offer["objective"].get("target_faction", ""))
+				if not target_faction.is_empty():
+					_check(target_faction in ["reavers", "dustborn", "gen_tessin"],
+						"%s: combat target %s is not a spawnable faction key" % [card_id, target_faction])
 				if bool(offer.get("premise_needs_completion", false)):
 					pending += 1
 					continue

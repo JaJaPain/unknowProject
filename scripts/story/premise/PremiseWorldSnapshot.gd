@@ -51,7 +51,16 @@ static func capture(now_minute: int) -> Dictionary:
 	if config != null and config.story_pack is Dictionary:
 		for agenda in config.story_pack.get("faction_agendas", []):
 			if agenda is Dictionary and not str(agenda.get("faction_id", "")).is_empty():
-				(world["factions"] as Array).append({"id": str(agenda["faction_id"]), "display_name": str(agenda.get("faction_name", agenda["faction_id"]))})
+				var faction_id := str(agenda["faction_id"])
+				# Ships spawn under the LEGACY key (faction_weights); the canonical id
+				# is only for identity. A faction with no spawn key here can't be a
+				# combat target, so casting falls back to a hostile faction.
+				var spawn_key := ""
+				for legacy in config.faction_id_lookup.keys():
+					if str(config.faction_id_lookup[legacy]) == faction_id and config.faction_weights.has(legacy):
+						spawn_key = str(legacy)
+						break
+				(world["factions"] as Array).append({"id": faction_id, "display_name": str(agenda.get("faction_name", faction_id)), "spawn_key": spawn_key})
 
 	for key in gs.call("get_current_system_minor_factions"):
 		(world["hostile_factions"] as Array).append(str(key))

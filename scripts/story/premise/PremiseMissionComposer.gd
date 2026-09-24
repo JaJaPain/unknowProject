@@ -46,7 +46,8 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 	var needs_completion := false
 	match verb:
 		"kill_ships", "comms_reversal", "recover_combat_drop":
-			var faction_key := str(target.get("faction_key", target.get("entity_id", "")))
+			# Only spawnable keys: a ship's faction_key, or a targeted faction's spawn_key.
+			var faction_key := str(target.get("faction_key", target.get("spawn_key", "")))
 			if faction_key.is_empty():
 				faction_key = _first_hostile(world)
 			objective = {"type": LibraryType.VERB_TO_OBJECTIVE[verb], "target_faction": faction_key,
