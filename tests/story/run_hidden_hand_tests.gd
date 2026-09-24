@@ -89,13 +89,15 @@ func _test_whole_deck_traces() -> void:
 func _test_candidates_draft_and_lock() -> void:
 	var s := Hand.begin_season(Arcs.empty_state(), 7, 0)
 	var method := str(Hand.main_story(s)["method"])
-	for i in 3:
+	for i in 4:
 		var card := _card_with_threads(method)
 		card["id"] = "premise.c%d" % i
-		var cast := {"villain": {"kind": "person", "entity_id": "npc.culprit", "display_name": "Oren Vask"},
+		var villain_id := "npc.culprit" if i < 3 else "npc.other_%d" % i
+		var villain_name := "Oren Vask" if i < 3 else "Someone Else"
+		var cast := {"villain": {"kind": "person", "entity_id": villain_id, "display_name": villain_name},
 			"bystander": {"kind": "person", "entity_id": "npc.bystander_%d" % i, "display_name": "Bystander %d" % i},
 			"dock": {"kind": "place", "entity_id": "station.x", "display_name": "Dock"}}
-		var started := Arcs.start_arc(s, {"id": card["id"], "scale": "local", "beats": [{"n": 1}]}, "system.x", cast, i)
+		var started := Arcs.start_arc(s, {"id": card["id"], "scale": "local", "beats": [{"n": 1}]}, "system.x%d" % i, cast, i)
 		s = started["state"]
 		s = Hand.seed_threads(s, card, started["arc_id"], 7)
 		if i < 2:
@@ -104,7 +106,9 @@ func _test_candidates_draft_and_lock() -> void:
 	s = Hand.update_draft(s)
 	_check(Hand.main_story(s).get("draft_entity_id") == "npc.culprit", "the draft should already point at the culprit")
 	s = Hand.mark_arc_threads_seen(s, "arc.0003", 3)
-	_check(Hand.ready_to_lock(s), "six seen threads with three traces and three people should be ready to lock")
+	_check(not Hand.ready_to_lock(s), "evidence from only three systems must not lock yet")
+	s = Hand.mark_arc_threads_seen(s, "arc.0004", 4)
+	_check(Hand.ready_to_lock(s), "enough threads, traces, people and systems should be ready to lock")
 	var ranked := Hand.candidates(s)
 	_check(ranked[0]["entity_id"] == "npc.culprit", "the culprit should score highest: %s" % str(ranked[0]))
 	var bad := Hand.lock(s, {"entity_id": "npc.nobody", "links": {}}, 10)

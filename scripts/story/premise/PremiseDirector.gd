@@ -14,6 +14,10 @@ extends Node
 
 signal decision_ready(arc_id: String, decision: Dictionary)
 signal arc_resolved(arc_id: String, resolution_id: String)
+## The main story has named its Hidden Hand; the confrontation arc is starting.
+signal main_story_locked(display_name: String, arc_id: String)
+## A main story (season) has ended; a new one begins with the next arcs.
+signal season_closed(season: int, resolution_id: String)
 
 const LibraryType := preload("res://scripts/story/premise/PremiseCardLibrary.gd")
 const HistoryType := preload("res://scripts/story/premise/PremiseCardHistoryStore.gd")
@@ -22,6 +26,9 @@ const ProfileType := preload("res://scripts/story/premise/SystemProfile.gd")
 const ArcsType := preload("res://scripts/story/premise/ArcEngine.gd")
 const CastingType := preload("res://scripts/story/premise/PremiseCasting.gd")
 const ComposerType := preload("res://scripts/story/premise/PremiseMissionComposer.gd")
+const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
+const ForgeType := preload("res://scripts/story/premise/HiddenHandForge.gd")
+const ShowType := preload("res://scripts/story/premise/Showrunner.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -41,6 +48,12 @@ var _history: Dictionary = HistoryType.empty_history()
 var _history_loaded := false
 # System display names seen this session, for filling {system} in decision text.
 var _system_names: Dictionary = {}
+## Ask the local story model to explain the main story's lock (background,
+## non-blocking). Off, or outside the scene tree (tests), the code lock is used.
+var use_showrunner := true
+var _showrunner_busy := false
+var _method_coverage: Dictionary = {}
+var _last_world: Dictionary = {}
 
 
 func _init() -> void:
@@ -66,6 +79,9 @@ func load_from_dict(data: Dictionary) -> void:
 		return
 	campaign_seed = int(data.get("campaign_seed", 0))
 	state = (data["arcs"] as Dictionary).duplicate(true)
+	# Forged cards (the Hidden Hand confrontations) live in the save, not the deck.
+	for card_id in (state.get("synthetic_cards", {}) as Dictionary).keys():
+		library.cards[card_id] = (state["synthetic_cards"][card_id] as Dictionary).duplicate(true)
 
 
 # --- the world asks -----------------------------------------------------------
@@ -82,6 +98,11 @@ func ensure_arcs(world: Dictionary, now_minute: int) -> Array[String]:
 	_system_names[str(world.get("system_id", ""))] = str(world.get("system_display", ""))
 	if not enabled or not bool(world.get("post_tutorial", false)) or bool(world.get("is_first_system", false)):
 		return started
+	_last_world = world
+	if not HandType.is_active(state):
+		if _method_coverage.is_empty():
+			_method_coverage = HandType.method_coverage(library)
+		state = HandType.begin_season(state, campaign_seed, now_minute, _method_coverage)
 	var system_id := str(world.get("system_id", ""))
 	var profile := profile_for(world)
 	var live_here := {"personal": 0, "local": 0}
@@ -122,11 +143,100 @@ func board_postings(world: Dictionary, now_minute: int) -> Array[Dictionary]:
 			if offer.is_empty() or bool(offer.get("premise_needs_completion", false)):
 				continue
 			offer["objective_summary"] = str(offer["objective"].get("type", "")).replace("_", " ").capitalize()
-			postings.append(_posting(arc_id, ref, offer))
+			var posting := _posting(arc_id, ref, offer)
+			var odd := _odd_details(arc_id, a, world)
+			if not odd.is_empty():
+				posting["body"] = str(posting["body"]) + "\n\n" + odd
+			postings.append(posting)
 			if not bool(a.get("shown", false)):
 				_record_shown(arc_id, str(a["card_id"]))
+				state = HandType.mark_arc_threads_seen(state, arc_id, now_minute, 1)
+				state = HandType.update_draft(state)
 				a = ArcsType.arc(state, arc_id)
+	_maybe_lock(world, now_minute)
 	return postings
+
+
+## The main story's loose threads for this arc, as a line the pilot notices.
+func _odd_details(arc_id: String, arc_record: Dictionary, world: Dictionary) -> String:
+	var lines: PackedStringArray = []
+	for t in HandType.threads_for_arc(state, arc_id):
+		if bool(t.get("seen", false)):
+			lines.append(CastingType.fill_text(str(t["detail"]), arc_record.get("cast", {}), world))
+	return "" if lines.is_empty() else "Something doesn't sit right: " + " ".join(lines)
+
+
+## Seen threads for a pin board: [{id, text, pinned}].
+func main_story_threads() -> Array:
+	var out: Array = []
+	for t in HandType.seen_threads(state):
+		var a := ArcsType.arc(state, str(t["arc_id"]))
+		var names := {"system_display": str(_system_names.get(str(a.get("system_id", "")), "this system"))}
+		out.append({"id": str(t["id"]), "text": CastingType.fill_text(str(t["detail"]), a.get("cast", {}), names), "pinned": bool(t["pinned"])})
+	return out
+
+
+func pin_thread(thread_id: String, pinned: bool) -> void:
+	state = HandType.set_pinned(state, thread_id, pinned)
+
+
+# --- main story lock -------------------------------------------------------------
+
+func _maybe_lock(world: Dictionary, now_minute: int) -> void:
+	if not HandType.ready_to_lock(state) or _showrunner_busy:
+		return
+	if use_showrunner and is_inside_tree():
+		_request_showrunner(world, now_minute)
+	else:
+		_apply_lock(HandType.lock_by_code(state, now_minute), world, now_minute)
+
+
+func _request_showrunner(world: Dictionary, now_minute: int) -> void:
+	_showrunner_busy = true
+	var http := HTTPRequest.new()
+	http.timeout = 300.0
+	add_child(http)
+	var body := JSON.stringify(ShowType.build_request(state, library, _system_names))
+	http.request_completed.connect(func(result: int, code: int, _headers: PackedStringArray, reply: PackedByteArray) -> void:
+		http.queue_free()
+		_showrunner_busy = false
+		if not HandType.ready_to_lock(state):
+			return  # the world moved on (reload, or already locked)
+		var locked := {}
+		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
+			var parsed := ShowType.parse_response(ShowType.response_text(reply.get_string_from_utf8()), state)
+			if bool(parsed["ok"]):
+				locked = HandType.lock(state, parsed["choice"], now_minute)
+		if locked.is_empty() or not bool(locked["ok"]):
+			locked = HandType.lock_by_code(state, now_minute)
+		_apply_lock(locked, _last_world if not _last_world.is_empty() else world, now_minute))
+	if http.request(LocalModelGatewayURL(), ["Content-Type: application/json"], HTTPClient.METHOD_POST, body) != OK:
+		http.queue_free()
+		_showrunner_busy = false
+		_apply_lock(HandType.lock_by_code(state, now_minute), world, now_minute)
+
+
+static func LocalModelGatewayURL() -> String:
+	return preload("res://scripts/ai/LocalModelGateway.gd").OLLAMA_GENERATE_URL
+
+
+func _apply_lock(locked: Dictionary, world: Dictionary, now_minute: int) -> void:
+	if not bool(locked.get("ok", false)):
+		return
+	state = locked["state"]
+	var forged := ForgeType.forge(state, world)
+	if forged.is_empty():
+		return
+	var card: Dictionary = forged["card"]
+	library.cards[card["id"]] = card.duplicate(true)
+	var synthetic: Dictionary = state.get("synthetic_cards", {})
+	synthetic[card["id"]] = card.duplicate(true)
+	state["synthetic_cards"] = synthetic
+	var started := ArcsType.start_arc(state, card, str(world.get("system_id", "")), forged["cast"], now_minute)
+	state = started["state"]
+	state["main_story"]["stage"] = "revealed"
+	state["main_story"]["confrontation_arc_id"] = str(started["arc_id"])
+	main_story_locked.emit(str(state["main_story"]["lock"]["display_name"]), str(started["arc_id"]))
 
 
 ## A mission the game finished (or dropped). Returns true if it belonged to an arc.
@@ -137,6 +247,10 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 	var branch := str((quest_data.get("objective", {}) as Dictionary).get("branch_id", quest_data.get("branch_id", "")))
 	state = ArcsType.apply_mission_result(state, library, ref["arc_id"], int(ref["beat"]), int(ref["mission_index"]),
 		terminal_state, branch, now_minute)
+	# Working a story turns up more of its odd details.
+	if terminal_state == "completed":
+		state = HandType.mark_arc_threads_seen(state, ref["arc_id"], now_minute, 1)
+		state = HandType.update_draft(state)
 	_after_change(ref["arc_id"])
 	return true
 
@@ -192,6 +306,7 @@ func _start_one(world: Dictionary, profile: Dictionary, scale: String, now_minut
 		"seeds": ArcsType.seed_tags(state, str(world.get("system_id", ""))),
 		"scale": scale,
 		"excluded_ids": state.get("used_card_ids", []),
+		"hidden_hand_method": str(HandType.main_story(state).get("method", "")),
 	}
 	var seed_value := hash("%d|%s|%d" % [campaign_seed, world.get("system_id", ""), int(state.get("next_seq", 1))])
 	var picks := SelectorType.pick(library, _history, situation, seed_value, 1)
@@ -199,10 +314,38 @@ func _start_one(world: Dictionary, profile: Dictionary, scale: String, now_minut
 		return ""
 	var card: Dictionary = library.get_card(picks[0])
 	var arc_id_preview := "arc.%04d" % int(state.get("next_seq", 1))
-	var cast := CastingType.cast_card(card, world, seed_value, arc_id_preview)
+	var cast := CastingType.cast_card(card, _with_known_people(world), seed_value, arc_id_preview)
 	var started := ArcsType.start_arc(state, card, str(world.get("system_id", "")), cast, now_minute)
 	state = started["state"]
+	state = HandType.seed_threads(state, card, str(started["arc_id"]), seed_value)
 	return str(started["arc_id"])
+
+
+## People from earlier arcs become "known" for roles that prefer someone the
+## player has met; the main story's draft identity is offered first.
+func _with_known_people(world: Dictionary) -> Dictionary:
+	var out := world.duplicate(true)
+	var known: Array = out.get("known_npcs", [])
+	var seen_ids := {}
+	for k in known:
+		seen_ids[str(k.get("id", ""))] = true
+	for arc_id in (state.get("arcs", {}) as Dictionary).keys():
+		var a: Dictionary = state["arcs"][arc_id]
+		if not bool(a.get("shown", false)):
+			continue
+		for role_id in (a.get("cast", {}) as Dictionary).keys():
+			var entry: Dictionary = a["cast"][role_id]
+			var eid := str(entry.get("entity_id", ""))
+			if str(entry.get("kind", "")) == "person" and not seen_ids.has(eid):
+				# The dead don't come back for another job.
+				if "dead" in (state.get("fates", {}) as Dictionary).get(eid, []):
+					continue
+				known.append({"id": eid, "display_name": str(entry.get("display_name", ""))})
+				seen_ids[eid] = true
+	out["known_npcs"] = known
+	var draft := str(HandType.main_story(state).get("draft_entity_id", ""))
+	out["priority_npc_ids"] = [draft] if not draft.is_empty() else []
+	return out
 
 
 func _posting(arc_id: String, ref: Dictionary, offer: Dictionary) -> Dictionary:
@@ -243,6 +386,10 @@ func _after_change(arc_id: String) -> void:
 		return
 	if str(a["status"]) == "resolved":
 		arc_resolved.emit(arc_id, str(a["resolution_id"]))
+		if ForgeType.is_forged(str(a["card_id"])) and not HandType.main_story(state).is_empty():
+			state["main_story"]["stage"] = "closed"
+			state["main_story"]["closed_resolution"] = str(a["resolution_id"])
+			season_closed.emit(int(state["main_story"].get("season", 1)), str(a["resolution_id"]))
 		return
 	var d := ArcsType.pending_decision(state, library, arc_id)
 	if not d.is_empty():

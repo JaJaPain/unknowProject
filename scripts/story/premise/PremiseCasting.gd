@@ -59,7 +59,14 @@ static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_
 			continue
 		var role_id := str(role["id"])
 		if str(role.get("reuse", "")) == "prefer_existing" and not known.is_empty():
-			var pick: Dictionary = known.pop_at(rng.randi_range(0, known.size() - 1))
+			# Priority people (the main story's likely culprit) come back first, so
+			# the eventual reveal has been on screen all along.
+			var index := rng.randi_range(0, known.size() - 1)
+			for i in known.size():
+				if str(known[i].get("id", "")) in (world.get("priority_npc_ids", []) as Array):
+					index = i
+					break
+			var pick: Dictionary = known.pop_at(index)
 			cast[role_id] = {"kind": "person", "entity_id": str(pick.get("id", "")), "display_name": str(pick.get("display_name", "")),
 				"archetype": str(role.get("archetype", "")), "reused": true}
 		else:

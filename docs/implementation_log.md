@@ -20,7 +20,7 @@
 
 ## Now
 
-- 2b.4 Reveal + confrontation (synthetic card forged from the lock) + director integration (season start, thread seeding, seen marking, draft casting priority, background showrunner with code fallback).
+- 2b.5 remaining: pin-board UI for threads (InvestigationPanel), voiced reveal. Then next phase (see plan list).
 
 ## Plan of small bites (vertical slice)
 
@@ -70,6 +70,8 @@
 
 - 2026-09-24: 2b.1-2b.2 `HiddenHand.gd` + tests: season draw (motive/method/goal) weighted toward methods with >=5 deck threads (deck coverage is thin for cornering_a_market 1, debt_leverage 3, slow_infiltration 3; deck report now shows it); trace/decoy seeding; seen/pinned; candidate scoring; draft at 3 seen; lock at 6 seen + 3 traces + 3 candidates; lock refuses strangers/thin links; code fallback.
 - 2026-09-24: 2b.3 `Showrunner.gd` + offline test + `tests/story/run_showrunner_live.gd` (manual, needs Ollama). Live qwen3:8b: first run duplicated a link (correctly rejected), after prompt fix it locked (chose a less-evidenced candidate), then it wrote `npc.recurring|Oren Vask` (copied the prompt layout) -> parser now accepts an id with a name attached or an exact display name. num_ctx 4096. **Speed not measurable today:** another process held ~7GB and 88% of the RTX 3060 (12GB); saw 3.8-8 tok/s and 45s loads. Measure properly in the 8GB pass.
+
+- 2026-09-24: 2b.4 `HiddenHandForge.gd` + test (confrontation forged as a synthetic premise card from the lock; passes runtime card checks; all four endings reachable; offers validate). Director integration: season begins with first arcs; selector gets the hand's method; new arcs seed threads; one thread surfaces when a story is shown and one per completed job; draft identity is offered first for prefer_existing roles (recurring cast); lock -> background Showrunner (HTTPRequest, keep_alive 0) with code fallback -> forged confrontation arc; its resolution closes the season; next arrival starts season 2; forged cards persist in the save (`synthetic_cards`). Lock gate now also needs evidence from >= 4 systems: simulation locks at system 5 (target 4-6). GameRoot announces lock/season end in the comms feed. Suite: 12/12 PASS.
 
 ## Decisions made along the way
 

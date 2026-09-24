@@ -114,15 +114,21 @@ static func seed_threads(state: Dictionary, card: Dictionary, arc_id: String, se
 	return next
 
 
-## The player has now seen this arc (its opening was shown): its threads are noticed.
-static func mark_arc_threads_seen(state: Dictionary, arc_id: String, now_minute: int) -> Dictionary:
+## The player notices this arc's threads. `max_new` limits how many surface at
+## once (the director reveals one when a story is shown and one per finished
+## job, so evidence builds up); -1 reveals them all.
+static func mark_arc_threads_seen(state: Dictionary, arc_id: String, now_minute: int, max_new: int = -1) -> Dictionary:
 	if main_story(state).is_empty():
 		return state
 	var next := state.duplicate(true)
+	var revealed := 0
 	for t in next["main_story"]["threads"]:
+		if max_new >= 0 and revealed >= max_new:
+			break
 		if str(t["arc_id"]) == arc_id and not bool(t["seen"]):
 			t["seen"] = true
 			t["seen_minute"] = now_minute
+			revealed += 1
 	return next
 
 
@@ -158,6 +164,9 @@ const DRAFT_MIN_SEEN := 3
 const LOCK_MIN_SEEN := 6
 const LOCK_MIN_TRACES := 3
 const LOCK_MIN_CANDIDATES := 3
+## Evidence must come from stories in at least this many systems, so the
+## mystery spans the journey rather than one stop.
+const LOCK_MIN_SYSTEMS := 4
 
 
 ## Every person cast in an arc whose threads the player has seen, scored by how
@@ -222,7 +231,16 @@ static func ready_to_lock(state: Dictionary) -> bool:
 	return not story.is_empty() and str(story["stage"]) == "hidden" \
 		and seen_threads(state).size() >= LOCK_MIN_SEEN \
 		and seen_trace_count(state) >= LOCK_MIN_TRACES \
-		and candidates(state).size() >= LOCK_MIN_CANDIDATES
+		and candidates(state).size() >= LOCK_MIN_CANDIDATES 		and evidence_systems(state) >= LOCK_MIN_SYSTEMS
+
+
+## How many different systems the seen evidence came from.
+static func evidence_systems(state: Dictionary) -> int:
+	var systems := {}
+	for t in seen_threads(state):
+		var a: Dictionary = (state.get("arcs", {}) as Dictionary).get(str(t["arc_id"]), {})
+		systems[str(a.get("system_id", ""))] = true
+	return systems.size()
 
 
 ## Top-3 candidates handed to the Showrunner pass (or used by lock_by_code).

@@ -55,11 +55,11 @@ static func build_fixture() -> Dictionary:
 				if str(role.get("kind", "")) == "person":
 					cast[str(role["id"])] = {"kind": "person", "entity_id": "npc.recurring", "display_name": "Oren Vask", "archetype": str(role.get("archetype", ""))}
 					break
-		var started := Arcs.start_arc(s, card, "system.v", cast, i)
+		var started := Arcs.start_arc(s, card, "system.v%d" % i, cast, i)
 		s = started["state"]
 		s = Hand.seed_threads(s, card, started["arc_id"], 31)
 		s = Hand.mark_arc_threads_seen(s, started["arc_id"], i)
-	return {"state": s, "library": lib, "names": {"system.v": "Vessa"}}
+	return {"state": s, "library": lib, "names": {"system.v0": "Vessa", "system.v1": "Kora", "system.v2": "Tessin", "system.v3": "Harrow"}}
 
 
 func _test_request(fixture: Dictionary) -> void:

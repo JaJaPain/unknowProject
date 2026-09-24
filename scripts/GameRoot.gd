@@ -1232,6 +1232,18 @@ func _init_premise_director() -> void:
 	premise_director.name = "PremiseDirector"
 	add_child(premise_director)
 	premise_director.decision_ready.connect(_on_premise_decision_ready)
+	premise_director.main_story_locked.connect(_on_premise_main_story_locked)
+	premise_director.season_closed.connect(_on_premise_season_closed)
+
+
+func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> void:
+	# The pattern has a name. Voiced presentation comes with the voice pipeline;
+	# for now the comms feed carries it.
+	GlobalState.emit_chatter("CONTRACTS", "Everything keeps pointing back to %s. Someone on the board wants to talk about it." % display_name, Color(1.0, 0.8, 0.45))
+
+
+func _on_premise_season_closed(_season: int, _resolution_id: String) -> void:
+	GlobalState.emit_chatter("CONTRACTS", "That business is finished. The sector is already moving on to the next one.", Color(0.7, 0.85, 1.0))
 
 
 ## The campaign seed exists only once a campaign is running; adopt it lazily.

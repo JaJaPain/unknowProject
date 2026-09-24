@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_campaign_simulation()
 	_test_save_reload_keeps_arcs()
 	_test_ignored_arcs_settle()
+	_test_main_story_season()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(HISTORY_PATH))
 	if _failures.is_empty():
 		print("[PASS] Premise director tests")
@@ -51,6 +52,7 @@ func _world(system_n: int) -> Dictionary:
 func _director():
 	var d = DirectorType.new()
 	d.history_path = HISTORY_PATH
+	d.use_showrunner = false
 	d.reset_for_new_campaign(4242)
 	return d
 
@@ -135,3 +137,53 @@ func _test_ignored_arcs_settle() -> void:
 			still_active += 1
 	_check(live_before > 0 and still_active == 0, "stories nobody touched should settle by themselves")
 	d.free()
+
+
+## Play system after system until the main story locks, its confrontation
+## resolves, and a second season begins.
+func _test_main_story_season() -> void:
+	var d = _director()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 9
+	var locked_name := []
+	var closed := []
+	d.main_story_locked.connect(func(name, arc_id): locked_name.append(name))
+	d.season_closed.connect(func(season, res): closed.append(res))
+	var now := 0
+	for system_n in range(1, 16):
+		var w := _world(system_n)
+		d.ensure_arcs(w, now)
+		for _round in 40:
+			now += 60
+			for decision in d.pending_decisions():
+				var options: Array = decision["options"]
+				d.apply_decision(str(decision["arc_id"]), str(options[rng.randi_range(0, options.size() - 1)]["id"]), now)
+			var postings: Array = d.board_postings(w, now)
+			if postings.is_empty():
+				break
+			var quest: Dictionary = postings[rng.randi_range(0, postings.size() - 1)]["quest_data"].duplicate(true)
+			quest["objective"]["branch_id"] = "finish_kill"
+			d.on_mission_terminal(quest, "completed", now)
+		if not locked_name.is_empty() and not d.state["main_story"].has("_locked_at_system"):
+			d.state["main_story"]["_locked_at_system"] = system_n
+		if not closed.is_empty():
+			print("  main story: locked at system %s, closed at system %d (%s)" % [d.state["main_story"].get("_locked_at_system", "?"), system_n, closed[0]])
+			break
+	_check(not locked_name.is_empty(), "the main story should lock within fifteen systems")
+	_check(not closed.is_empty(), "the confrontation should resolve and close the season")
+	if not locked_name.is_empty():
+		var lock: Dictionary = d.state["main_story"]["lock"]
+		_check(str(locked_name[0]) == str(lock["display_name"]), "the signal names the locked identity")
+		_check((lock["arcs"] as Array).size() >= 2, "the culprit should have appeared in at least two stories before the reveal (got %d)" % (lock["arcs"] as Array).size())
+	var threads: Array = d.main_story_threads()
+	_check(not threads.is_empty() and not str(threads[0]["text"]).contains("{role:"), "seen threads are readable")
+	# The next arrival starts season two.
+	d.ensure_arcs(_world(40), now + 60)
+	_check(int(d.state["main_story"]["season"]) == 2 and d.state["main_story"]["stage"] == "hidden", "a new season should begin after the old one closes")
+	# Forged cards survive a save round trip.
+	var e = _director()
+	e.load_from_dict(JSON.parse_string(JSON.stringify(d.to_dict())))
+	var forged_id := "premise.hidden_hand.s1"
+	_check(e.library.has_card(forged_id), "the forged confrontation card must come back with the save")
+	d.free()
+	e.free()
