@@ -11,7 +11,9 @@ between speakers: each part in its own voice, joined into one clip. Needs the lo
 import io
 import json
 import os
+import subprocess
 import sys
+import tempfile
 import urllib.request
 
 import numpy
@@ -35,6 +37,22 @@ def render(text, voice):
     return sf.read(io.BytesIO(wav), dtype="float32")
 
 
+CLONES = "tools/voice_refs/clones.json"
+
+
+def render_part(part, line, mappings, clones):
+    """Kokoro, or F5-TTS for voices cloned in tools/voice_refs/clones.json."""
+    clone = clones.get("voices", {}).get(part["voice_profile"])
+    if not clone:
+        return render(part["text"], mappings[part["voice_profile"]])
+    ref = clones["refs"][part.get("clone_ref", line.get("clone_ref", clone["ref"]))]
+    with tempfile.TemporaryDirectory() as tmp:
+        out = os.path.join(tmp, "part.wav")
+        subprocess.run([clones["f5_python"], "tools/f5_render.py", "--ref", ref["wav"], "--ref-text-file", ref["text"],
+                        "--text", part["text"], "--out", out, "--seed", str(line.get("seed", 7))], check=True)
+        return sf.read(out, dtype="float32")
+
+
 def res_to_path(res_path):
     return res_path.replace("res://", "", 1)
 
@@ -46,6 +64,7 @@ def main():
     preview = "--preview" in sys.argv
     lines = json.load(io.open(LINES, encoding="utf-8"))["lines"]
     mappings = json.load(io.open(VOICES, encoding="utf-8"))["mappings"]
+    clones = json.load(io.open(CLONES, encoding="utf-8")) if os.path.exists(CLONES) else {"voices": {}}
     made = skipped = refused = 0
     for line in lines:
         if not line.get("approved_by_abe", False) and not preview:
@@ -62,7 +81,10 @@ def main():
         chunks = []
         rate = None
         for part in parts:
-            chunk, rate = render(part["text"], mappings[part["voice_profile"]])
+            chunk, part_rate = render_part(part, line, mappings, clones)
+            if rate is not None and part_rate != rate:
+                raise SystemExit("%s: parts render at different sample rates (%d vs %d)" % (line["id"], rate, part_rate))
+            rate = part_rate
             if chunks:
                 chunks.append(numpy.zeros((int(rate * PART_GAP_SECONDS),) + chunk.shape[1:], dtype="float32"))
             chunks.append(chunk)
