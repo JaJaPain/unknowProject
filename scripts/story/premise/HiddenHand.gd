@@ -11,6 +11,7 @@ extends RefCounted
 ## Lives in the arc state under "main_story" so it saves and rolls back with
 ## the arcs. Pure static functions; every one returns a new state.
 
+const CastRulesType := preload("res://scripts/story/premise/RecurringCast.gd")
 const STAGES := ["hidden", "locked", "revealed", "closed"]
 const MOTIVES: Array[String] = ["revenge", "fear", "faith", "control", "greed", "protecting_someone", "ideology", "survival", "legacy", "guilt"]
 const METHODS: Array[String] = ["debt_leverage", "sabotage", "forged_records", "cornering_a_market", "blackmail", "impersonation",
@@ -198,6 +199,10 @@ static func candidates(state: Dictionary) -> Array:
 			if str(entry.get("kind", "")) != "person":
 				continue
 			var eid := str(entry.get("entity_id", ""))
+			# The dead and the jailed can't be behind what happens next.
+			var fates: Array = (state.get("fates", {}) as Dictionary).get(eid, [])
+			if "dead" in fates or "imprisoned" in fates:
+				continue
 			var person: Dictionary = people.get(eid, {"entity_id": eid, "display_name": str(entry.get("display_name", "")),
 				"score": 0.0, "arcs": [], "traces": [], "decoys": []})
 			if not arc_id in person["arcs"]:
@@ -243,7 +248,14 @@ static func ready_to_lock(state: Dictionary) -> bool:
 	return not story.is_empty() and str(story["stage"]) == "hidden" \
 		and seen_threads(state).size() >= LOCK_MIN_SEEN \
 		and seen_trace_count(state) >= LOCK_MIN_TRACES \
-		and candidates(state).size() >= LOCK_MIN_CANDIDATES 		and evidence_systems(state) >= LOCK_MIN_SYSTEMS
+		and proposal(state).size() >= LOCK_MIN_CANDIDATES 		and evidence_systems(state) >= LOCK_MIN_SYSTEMS 		and not _prime_suspect_busy(state)
+
+
+## The lock waits while the prime suspect is still in another live story, so
+## nobody is confronted in one story while starring in another.
+static func _prime_suspect_busy(state: Dictionary) -> bool:
+	var ranked := candidates(state)
+	return not ranked.is_empty() and CastRulesType.busy_ids(state).has(str(ranked[0]["entity_id"]))
 
 
 ## How many different systems the seen evidence came from.
@@ -257,7 +269,8 @@ static func evidence_systems(state: Dictionary) -> int:
 
 ## Top-3 candidates handed to the Showrunner pass (or used by lock_by_code).
 static func proposal(state: Dictionary) -> Array:
-	var ranked := candidates(state)
+	var busy := CastRulesType.busy_ids(state)
+	var ranked := candidates(state).filter(func(p): return not busy.has(str(p["entity_id"])))
 	return ranked.slice(0, 3)
 
 

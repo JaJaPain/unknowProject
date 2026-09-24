@@ -61,7 +61,7 @@ static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_
 		if str(role.get("reuse", "")) == "prefer_existing" and not known.is_empty():
 			# Priority people (the main story's likely culprit) come back first, so
 			# the eventual reveal has been on screen all along.
-			var index := rng.randi_range(0, known.size() - 1)
+			var index := _weighted_index(known, rng)
 			for i in known.size():
 				if str(known[i].get("id", "")) in (world.get("priority_npc_ids", []) as Array):
 					index = i
@@ -143,3 +143,16 @@ static func _owner_faction_role(ship_role_id: String, cast: Dictionary) -> Strin
 
 static func _humanize(role_id: String) -> String:
 	return role_id.replace("_", " ").strip_edges()
+
+
+## Returning faces with strong feelings (RecurringCast weights) come back more often.
+static func _weighted_index(known: Array, rng: RandomNumberGenerator) -> int:
+	var total := 0
+	for k in known:
+		total += maxi(1, int(k.get("weight", 1)))
+	var roll := rng.randi_range(0, total - 1)
+	for i in known.size():
+		roll -= maxi(1, int(known[i].get("weight", 1)))
+		if roll < 0:
+			return i
+	return known.size() - 1

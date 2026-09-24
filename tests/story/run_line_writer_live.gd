@@ -38,6 +38,9 @@ func _initialize() -> void:
 			"situation": Casting.fill_text(str(card.get("public_situation", "")), cast, world),
 			"note": Casting.fill_text(str(mission.get("reason", "")), cast, world),
 			"task": "%s, at %s" % [str(mission["verb"]).replace("_", " "), str(target.get("display_name", "the station"))]}})
+	# Returning faces: the line should bring up the history in the speaker's own words.
+	_jobs[0]["brief"]["history"] = "They have dealt with the pilot once before; last time in Kova Station, it went badly for them, they still blame the pilot for it, and they are not hiding it."
+	_jobs[1]["brief"]["history"] = "They have dealt with the pilot twice before; last time, the pilot came through for them and they haven't forgotten."
 	_http = HTTPRequest.new()
 	_http.timeout = 180.0
 	root.add_child(_http)
@@ -69,5 +72,7 @@ func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedB
 		print("[Live] %s (%.1fs) %s: %s" % [job["card"], seconds, "OK" if checked["ok"] else "REJECT " + checked["reason"],
 			checked["line"] if checked["ok"] else Writer.response_text(body.get_string_from_utf8()).substr(0, 200)])
 		print("[Live]    note: %s" % job["brief"]["note"])
+		if not str(job["brief"].get("history", "")).is_empty():
+			print("[Live]    history: %s" % job["brief"]["history"])
 	_index += 1
 	_send()

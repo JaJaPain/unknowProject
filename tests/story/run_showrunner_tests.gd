@@ -59,6 +59,9 @@ static func build_fixture() -> Dictionary:
 		s = started["state"]
 		s = Hand.seed_threads(s, card, started["arc_id"], 31)
 		s = Hand.mark_arc_threads_seen(s, started["arc_id"], i)
+	# By lock time these stories have played out (a suspect in a live story waits).
+	for arc_id in (s["arcs"] as Dictionary).keys():
+		s["arcs"][arc_id]["status"] = "resolved"
 	return {"state": s, "library": lib, "names": {"system.v0": "Vessa", "system.v1": "Kora", "system.v2": "Tessin", "system.v3": "Harrow"}}
 
 

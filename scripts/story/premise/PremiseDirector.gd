@@ -32,6 +32,7 @@ const ShowType := preload("res://scripts/story/premise/Showrunner.gd")
 const RadioType := preload("res://scripts/story/premise/RadioBroadcaster.gd")
 const WriterType := preload("res://scripts/story/premise/LineWriter.gd")
 const VoiceType := preload("res://scripts/story/premise/VoiceDNA.gd")
+const CastType := preload("res://scripts/story/premise/RecurringCast.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -215,7 +216,9 @@ func prepare_lines(world: Dictionary) -> void:
 		var entry: Dictionary = lines.get(key, {})
 		if str(entry.get("status", "")) in ["ok", "failed"] or _line_queue.any(func(j): return j["key"] == key):
 			continue
-		_line_queue.append(line_job(key, offer, item["card"], ArcsType.arc(state, str(item["arc_id"]))["cast"], world))
+		var job := line_job(key, offer, item["card"], ArcsType.arc(state, str(item["arc_id"]))["cast"], world)
+		job["brief"]["history"] = CastType.history_note(state, str(offer.get("agent_id", "")), _system_names, str(item["arc_id"]))
+		_line_queue.append(job)
 	_pump_lines()
 
 
@@ -490,19 +493,12 @@ func _with_known_people(world: Dictionary) -> Dictionary:
 	var seen_ids := {}
 	for k in known:
 		seen_ids[str(k.get("id", ""))] = true
-	for arc_id in (state.get("arcs", {}) as Dictionary).keys():
-		var a: Dictionary = state["arcs"][arc_id]
-		if not bool(a.get("shown", false)):
-			continue
-		for role_id in (a.get("cast", {}) as Dictionary).keys():
-			var entry: Dictionary = a["cast"][role_id]
-			var eid := str(entry.get("entity_id", ""))
-			if str(entry.get("kind", "")) == "person" and not seen_ids.has(eid):
-				# The dead don't come back for another job.
-				if "dead" in (state.get("fates", {}) as Dictionary).get(eid, []):
-					continue
-				known.append({"id": eid, "display_name": str(entry.get("display_name", ""))})
-				seen_ids[eid] = true
+	# The recurring cast: alive, free, not busy in another live story; people
+	# with a grudge or a debt come back more often.
+	for person in CastType.candidates(state):
+		if not seen_ids.has(str(person["id"])):
+			known.append(person)
+			seen_ids[str(person["id"])] = true
 	out["known_npcs"] = known
 	var draft := str(HandType.main_story(state).get("draft_entity_id", ""))
 	out["priority_npc_ids"] = [draft] if not draft.is_empty() else []

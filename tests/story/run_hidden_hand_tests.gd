@@ -102,13 +102,21 @@ func _test_candidates_draft_and_lock() -> void:
 		s = Hand.seed_threads(s, card, started["arc_id"], 7)
 		if i < 2:
 			s = Hand.mark_arc_threads_seen(s, started["arc_id"], i)
+	# Stories 1-3 have played out; the culprit's third is still running.
+	for arc_id in ["arc.0001", "arc.0002", "arc.0004"]:
+		s["arcs"][arc_id]["status"] = "resolved"
 	_check(not Hand.ready_to_lock(s), "four seen threads are not enough to lock")
 	s = Hand.update_draft(s)
 	_check(Hand.main_story(s).get("draft_entity_id") == "npc.culprit", "the draft should already point at the culprit")
 	s = Hand.mark_arc_threads_seen(s, "arc.0003", 3)
 	_check(not Hand.ready_to_lock(s), "evidence from only three systems must not lock yet")
 	s = Hand.mark_arc_threads_seen(s, "arc.0004", 4)
+	_check(not Hand.ready_to_lock(s), "the lock waits while the prime suspect is in another live story")
+	s["arcs"]["arc.0003"]["status"] = "resolved"
 	_check(Hand.ready_to_lock(s), "enough threads, traces, people and systems should be ready to lock")
+	var dead := s.duplicate(true)
+	dead["fates"]["npc.culprit"] = ["dead"]
+	_check(Hand.candidates(dead).all(func(p): return p["entity_id"] != "npc.culprit"), "the dead can't be the hidden hand")
 	var ranked := Hand.candidates(s)
 	_check(ranked[0]["entity_id"] == "npc.culprit", "the culprit should score highest: %s" % str(ranked[0]))
 	var bad := Hand.lock(s, {"entity_id": "npc.nobody", "links": {}}, 10)

@@ -24,7 +24,8 @@ const STOCK_PHRASES := ["clock is ticking", "clock's ticking", "don't look back"
 	"just do it", "that's all", "you're the only one", "trust me", "no questions asked"]
 
 
-## `brief` = {speaker, archetype, voice_direction, faction, situation, note, task}
+## `brief` = {speaker, archetype, voice_direction, faction, situation, note, task, history?}
+##   history: RecurringCast.history_note() for a returning face ("" = first meeting)
 ##   note: the card's director note (the mission reason), placeholders filled
 ##   task: plain description of what the pilot would do ("courier a sealed case to Iron Reach")
 static func build_briefing_request(brief: Dictionary, model: String = "") -> Dictionary:
@@ -37,6 +38,8 @@ static func build_briefing_request(brief: Dictionary, model: String = "") -> Dic
 	lines.append("What everyone knows: %s" % brief.get("situation", ""))
 	lines.append("What they need from the pilot (director's note, third person): %s" % brief.get("note", ""))
 	lines.append("The job: %s" % brief.get("task", ""))
+	if not str(brief.get("history", "")).is_empty():
+		lines.append("History with the pilot: %s Bring it up briefly, in your own words, the way this person would." % brief["history"])
 	lines.append("")
 	lines.append("Write what %s says to the pilot over comms, in first person, 1-3 sentences, under 60 words." % brief.get("speaker", "they"))
 	lines.append("Say what they need and why this pilot; keep something back if the note says they won't say why. Use no numbers or names that are not above. No stage directions, no quotation marks.")
@@ -74,7 +77,7 @@ static func check_line(response_text: String, brief: Dictionary, private_fact: S
 	for phrase in STOCK_PHRASES:
 		if lower.contains(phrase):
 			return {"ok": false, "reason": "stock_phrase", "line": ""}
-	var inputs := "%s %s %s %s %s" % [brief.get("speaker", ""), brief.get("situation", ""), brief.get("note", ""), brief.get("task", ""), brief.get("faction", "")]
+	var inputs := "%s %s %s %s %s %s" % [brief.get("speaker", ""), brief.get("situation", ""), brief.get("note", ""), brief.get("task", ""), brief.get("faction", ""), brief.get("history", "")]
 	var inputs_lower := inputs.to_lower()
 	var digits := RegEx.new()
 	digits.compile("\\d+")

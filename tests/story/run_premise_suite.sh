@@ -24,6 +24,7 @@ TESTS=(
   run_voice_dna_tests
   run_line_writer_tests
   run_comms_bus_tests
+  run_recurring_cast_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do
