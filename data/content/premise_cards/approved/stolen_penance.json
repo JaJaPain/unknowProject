@@ -1,0 +1,254 @@
+{
+  "id": "premise.stolen_penance",
+  "schema_version": 1,
+  "title": "Sins of the Father",
+  "logline": "A wealthy heir tries to buy erased sin records from a local confessional broker, but a disgraced mechanic stole the drive first to clear their own name.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tragic"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "corrupt_heir",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Needs to erase their family's confessed crimes before an inheritance hearing.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sin_broker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Sells black-market absolution data captured from rigged confessional booths.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "disgraced_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Lost everything after taking the fall for an accident the heir caused.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mechanic_skiff",
+      "kind": "ship",
+      "description": "A battered repair tug rigged with mining lasers.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "confessional_booth",
+      "kind": "place",
+      "description": "An automated spiritual advice kiosk in a busy station concourse.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:confessional_booth} was ripped out of the wall overnight. Station security thinks it was random vandalism.",
+  "private_truth": "The {role:sin_broker} rigged the booth to record confessions. The {role:disgraced_mechanic} stole it to prove the {role:corrupt_heir} confessed to the accident that ruined the mechanic's life.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The sin broker quietly puts out a bounty for the return of the booth's internal memory core.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "sin_broker",
+          "target": "confessional_booth",
+          "reason": "Hires the pilot to scan the ruined booth for the specific transponder frequency of the stolen memory core.",
+          "private_fact": "The broker knows the core contains highly illegal blackmail material.",
+          "outcome_tags": [
+            "core_tracked"
+          ],
+          "routes": {
+            "core_tracked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The mechanic begins broadcasting fragments of the heir's confession on open channels.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "disgraced_mechanic",
+          "target": "confessional_booth",
+          "reason": "The mechanic asks the pilot to fetch a decryption key they hid near the booth so they can unlock the rest of the audio.",
+          "private_fact": "The mechanic has nothing left to lose and expects to be killed.",
+          "outcome_tags": [
+            "key_delivered"
+          ],
+          "routes": {
+            "key_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The heir panics and hires mercenaries to silence the mechanic permanently.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "corrupt_heir",
+          "target": "mechanic_skiff",
+          "reason": "The heir pays the pilot an exorbitant sum to track down and destroy the mechanic's tug.",
+          "private_fact": "The mechanic will hail the pilot, offering to give them the drive to broadcast the truth if they spare the tug.",
+          "outcome_tags": [
+            "mechanic_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "mechanic_destroyed": "resolution:truth_buried",
+            "took_the_offer": "resolution:heir_ruined"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_buried",
+      "reached_by": "The pilot destroys the mechanic's tug.",
+      "summary": "The mechanic dies and the drive is destroyed. The heir inherits their fortune without issue, and the broker finds a new racket.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_mechanic",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sin_broker",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "heir_ruined",
+      "reached_by": "The pilot spares the mechanic and broadcasts the truth.",
+      "summary": "The full confession airs system-wide. The heir loses everything and goes to prison, while the mechanic's name is cleared.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_heir",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "disgraced_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "broadcast_the_sins",
+          "public_summary": "A pilot blasted an heir's tearful murder confession across every comm channel in the sector."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "broker_wins",
+      "reached_by": "The pilot ignores the bounty.",
+      "summary": "The broker's other mercs kill the mechanic and recover the drive. The heir is blackmailed forever.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_mechanic",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sin_broker",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "broker_wins",
+  "loose_threads": [
+    {
+      "id": "t_broker_files",
+      "surface": "scan",
+      "detail": "The broker's terminal was uploading the confession logs to a drop-box registered to an orphanage charity.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_heir_payment",
+      "surface": "cargo",
+      "detail": "The cred-sticks the heir uses to pay for mercs bear the stamp of a dead bank that collapsed thirty years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Vandals destroy local {role:confessional_booth}; station security baffled.",
+    "Bizarre audio transmissions interrupting local sports broadcasts."
+  ],
+  "voice_direction": {
+    "corrupt_heir": "Trembling, furious, tries to sound commanding but fails.",
+    "sin_broker": "Oily, calm, always sounds like they are smiling.",
+    "disgraced_mechanic": "Gravelly, exhausted, speaks very slowly."
+  },
+  "novelty_tags": [
+    "confessional_booth",
+    "blackmail_data",
+    "stolen_sins",
+    "clearing_a_name"
+  ]
+}

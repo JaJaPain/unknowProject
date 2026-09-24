@@ -1,0 +1,291 @@
+{
+  "id": "premise.the_stolen_bloodline",
+  "schema_version": 1,
+  "title": "The Stolen Bloodline",
+  "logline": "A desperate heir hires a pilot to steal their own family's genetic registry before their ruthless sibling can legally disinherit them.",
+  "scale": "personal",
+  "tone": [
+    "heist",
+    "tense"
+  ],
+  "themes": [
+    "legacy",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "desperate_heir",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Used to a life of luxury, now terrified of losing everything.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ruthless_sibling",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Cold, calculating, and armed with an army of lawyers.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "family_estate",
+      "kind": "place",
+      "description": "A massive, heavily shielded orbital mansion.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "neutral_bank",
+      "kind": "place",
+      "description": "A secure, unaligned data vault.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smuggler_den",
+      "kind": "place",
+      "description": "A seedy bar where illicit codes are traded.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "noble_house",
+      "kind": "faction",
+      "description": "The wealthy, bickering family that owns half the local trade routes.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The patriarch of the {role:noble_house} is in a coma, and the siblings are publicly fighting over control of the family's assets.",
+  "private_truth": "The desperate heir was secretly adopted, and the ruthless sibling is trying to acquire the family's private genetic registry to prove it and cut them out.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The family estate is locked down by corporate security forces.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "desperate_heir",
+          "target": "family_estate",
+          "reason": "The heir hires the pilot to pay off a corrupt estate guard to hand over the genetic registry drive.",
+          "private_fact": "The heir knows the drive will prove they aren't a blood relative.",
+          "outcome_tags": [
+            "registry_stolen"
+          ],
+          "routes": {
+            "registry_stolen": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The ruthless sibling announces a massive bounty for the safe return of 'stolen family property'.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_heir",
+          "target": "smuggler_den",
+          "reason": "The drive is biometrically locked; the heir needs the pilot to buy a high-end decryption spike from the local underworld.",
+          "private_fact": "The spike is highly illegal and will flag station security if scanned.",
+          "outcome_tags": [
+            "spike_acquired"
+          ],
+          "routes": {
+            "spike_acquired": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The heir manages to unlock the drive, but the sibling's lawyers issue an immediate injunction to seize it.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "desperate_heir",
+          "target": "neutral_bank",
+          "reason": "The pilot must rush the drive to the neutral bank to be permanently sealed before the sibling's lawyers can claim it.",
+          "private_fact": "The pilot now holds the drive and knows exactly what it contains.",
+          "outcome_tags": [
+            "drive_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "drive_delivered": "next",
+            "abandoned": "resolution:sibling_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has delivered the drive to the vault. They must choose who gets the access codes.",
+        "options": [
+          {
+            "id": "give_heir",
+            "label": "Give the codes to the desperate heir",
+            "leads_to": "resolution:heir_wins"
+          },
+          {
+            "id": "give_sibling",
+            "label": "Sell the codes to the ruthless sibling",
+            "leads_to": "resolution:sibling_wins"
+          },
+          {
+            "id": "destroy_codes",
+            "label": "Delete the codes permanently",
+            "leads_to": "resolution:estate_dissolved"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heir_wins",
+      "reached_by": "The pilot gives the access codes to the desperate heir.",
+      "summary": "The heir seals the registry forever, legally securing their inheritance. The sibling is cut out of the fortune entirely.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "sibling_wins",
+      "reached_by": "The pilot sells the codes to the sibling, or abandons the mission.",
+      "summary": "The sibling acquires the registry, proves the adoption, and casts the heir out onto the streets. The family consolidates its power.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ruthless_sibling",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "exposed"
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "estate_dissolved",
+      "reached_by": "The pilot deletes the access codes.",
+      "summary": "With the registry permanently locked, neither sibling can prove their claim. The estate is dissolved and auctioned off to creditors.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": -3
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "sibling_wins",
+  "loose_threads": [
+    {
+      "id": "t_adoption_record",
+      "surface": "scan",
+      "detail": "The encrypted adoption file references an 'Asset Transfer' from a pharmaceutical megacorp, rather than a civilian orphanage.",
+      "can_carry_methods": [
+        "forged_records",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_coma_toxin",
+      "surface": "dialogue",
+      "detail": "A passing medic mentions the patriarch's coma was triggered by an incredibly rare, synthetic thorium-based neurotoxin.",
+      "can_carry_methods": [
+        "sabotage",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "sabotage"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Stocks in {role:noble_house} plummet amidst rumors of inheritance dispute.",
+    "Corporate security locks down {role:family_estate} after reported break-in."
+  ],
+  "voice_direction": {
+    "desperate_heir": "Whiny but trying to sound authoritative. Clearly out of their depth.",
+    "ruthless_sibling": "Ice cold, completely relaxed, speaks as if everything is already decided."
+  },
+  "novelty_tags": [
+    "genetic_inheritance",
+    "adoption_secret",
+    "family_feud",
+    "locked_vault"
+  ]
+}

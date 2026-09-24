@@ -1,0 +1,313 @@
+{
+  "id": "premise.blood_money_escrow",
+  "schema_version": 1,
+  "title": "The Blood Money Escrow",
+  "logline": "A neutral escrow agent holds a massive payout for a mercenary squad, but the syndicate who hired them wants to wipe out the squad to avoid paying the bill.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "paranoid"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "escrow_agent",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Obsessed with neutrality and protocol; terrified of the money they are currently holding.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mercenary_captain",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Lost half their squad earning this payout, refuses to leave without it.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_paymaster",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Smooth, ruthless, tasked with recovering the funds without leaving a paper trail.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "betrayed_squad",
+      "kind": "ship",
+      "description": "A heavily scarred gunship running on fumes and anger.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "drop_station",
+      "kind": "place",
+      "description": "A neutral zone where neither side is allowed to draw weapons.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mercenary_company",
+      "kind": "faction",
+      "description": "A battered private military group trying to make payroll.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_cartel",
+      "kind": "faction",
+      "description": "Wealthy, paranoid, and violently opposed to paying their debts.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "faction_emboldened"
+  ],
+  "public_situation": "A highly publicised local conflict just ended, and a heavily armed mercenary squad is limping back to {system} to collect their hazard pay.",
+  "private_truth": "The {role:syndicate_cartel} never intended to pay the mercenaries. They are using the escrow period to position a kill team.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The escrow account officially unlocks, requiring physical decryption keys to transfer the funds.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "escrow_agent",
+          "target": "drop_station",
+          "reason": "Needs a neutral pilot to physically collect the decryption keys from the vault and hold them until the hand-over to avoid an ambush.",
+          "private_fact": "The agent knows the syndicate is planning a hit, but protocol dictates they must proceed with the hand-over anyway.",
+          "outcome_tags": [
+            "keys_secured"
+          ],
+          "routes": {
+            "keys_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Syndicate vessels begin jamming communications around the hand-over site.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "escrow_agent",
+          "target": "drop_station",
+          "reason": "Needs the pilot to scan the hand-over drop station to confirm the syndicate kill team's presence.",
+          "private_fact": "The scan officially logs the ambush, satisfying the agent's bureaucratic need for an incident report.",
+          "outcome_tags": [
+            "ambush_confirmed"
+          ],
+          "routes": {
+            "ambush_confirmed": "next"
+          }
+        },
+        {
+          "verb": "comms_reversal",
+          "requester": "syndicate_paymaster",
+          "target": "betrayed_squad",
+          "reason": "Hires the pilot to join the ambush and destroy the mercenary gunship before it can dock.",
+          "private_fact": "The paymaster will pocket half the escrow themselves if the squad is wiped out quietly.",
+          "outcome_tags": [
+            "squad_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "squad_destroyed": "resolution:syndicate_reclaims",
+            "took_the_offer": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The surviving mercenaries broadcast the escrow codes on an open channel.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "mercenary_captain",
+          "target": "drop_station",
+          "reason": "Needs the pilot to rush the decryption keys to a secondary terminal to finalize the transfer before the syndicate hacks it.",
+          "private_fact": "The captain is badly injured and just wants the funds routed to their surviving crew's families.",
+          "outcome_tags": [
+            "delivered"
+          ],
+          "routes": {
+            "delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the final physical keys at the terminal. They can direct the massive escrow payout to one of two accounts.",
+        "options": [
+          {
+            "id": "deliver_to_vault",
+            "label": "Route the payout to the mercenary families",
+            "leads_to": "resolution:mercenaries_paid"
+          },
+          {
+            "id": "return_to_escrow",
+            "label": "Freeze the funds back into neutral escrow",
+            "leads_to": "resolution:funds_frozen"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mercenaries_paid",
+      "reached_by": "The pilot routes the funds to the mercenary families.",
+      "summary": "The mercenary families get their blood money. The cartel is furious and publicly executes the paymaster for the failure.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mercenary_company",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "syndicate_cartel",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_paymaster",
+          "fate": "dead"
+        },
+        {
+          "type": "deed",
+          "tag": "secured_merc_payout",
+          "public_summary": "A pilot stared down the cartel and made sure a dead squad's families got their hazard pay."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "funds_frozen",
+      "reached_by": "The pilot freezes the funds back into neutral escrow.",
+      "summary": "The money remains locked in legal limbo for decades. The mercenaries are left destitute, and the cartel saves face.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mercenary_company",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "escrow_agent",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mercenary_captain",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "syndicate_reclaims",
+      "reached_by": "The pilot destroys the squad.",
+      "summary": "The cartel gets its money back and erases all records of the mercenary contract. The surviving mercenaries are hunted down.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "syndicate_cartel",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "mercenary_company",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "mercenary_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "martyr_made"
+      ]
+    }
+  ],
+  "default_resolution": "syndicate_reclaims",
+  "loose_threads": [
+    {
+      "id": "t_escrow_override",
+      "surface": "scan",
+      "detail": "The escrow vault's root access logs show an authorized override code that consists entirely of repeating zeros.",
+      "can_carry_methods": [
+        "information_control",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_merc_nav_data",
+      "surface": "wreck",
+      "detail": "The destroyed mercenary gunship's nav computer was completely wiped three hours before the ambush.",
+      "can_carry_methods": [
+        "sabotage",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Neutral {role:drop_station} reports 'communications anomalies' affecting financial transfers.",
+    "{role:mercenary_company} files formal grievance against anonymous former employer."
+  ],
+  "voice_direction": {
+    "escrow_agent": "Tight-lipped, precise articulation. Insists on reading full legal disclaimers.",
+    "mercenary_captain": "Gravelly pitch, deeply bitter. Stresses every harsh consonant.",
+    "syndicate_paymaster": "Arrogant, casual rhythm. Speaks with a completely relaxed cadence."
+  },
+  "novelty_tags": [
+    "escrow_theft",
+    "mercenary_betrayal",
+    "decryption_keys",
+    "frozen_assets"
+  ]
+}

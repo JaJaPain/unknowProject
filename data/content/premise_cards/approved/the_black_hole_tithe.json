@@ -1,0 +1,255 @@
+{
+  "id": "premise.the_black_hole_tithe",
+  "schema_version": 1,
+  "title": "Feeding the Void",
+  "logline": "A bizarre cult demands that passing ships dump valuable cargo into a black hole to appease the 'singularity', and a desperate doctor needs a pilot to retrieve their accidentally donated medical supplies before they cross the event horizon.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "farce"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "desperate_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Furious that a clerical error doomed their patients.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "singularity_preacher",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Believes the black hole is a hungry god that blesses generous donors.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cult_shrine",
+      "kind": "place",
+      "description": "A precarious orbital temple perched terrifyingly close to the accretion disk.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "drifting_supplies",
+      "kind": "ship",
+      "description": "An unpowered cargo pod slowly spiraling into the void.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "cult_flagship",
+      "kind": "ship",
+      "description": "The massive, heavily armed vessel of the preacher.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "black_hole_proximity"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "market_disrupted"
+  ],
+  "public_situation": "The local {role:cult_shrine} is celebrating a massive donation of high-grade medical supplies to the great singularity.",
+  "private_truth": "An automated hauler had a navigation glitch and accidentally dumped the doctor's cargo into the gravity well.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The cargo pod begins its final spiraling descent toward the event horizon.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_doctor",
+          "target": "drifting_supplies",
+          "reason": "The doctor begs the pilot to scan the drifting pod to calculate exactly how long until it is crushed by gravity.",
+          "private_fact": "The pilot's ship will suffer minor hull stress just getting close enough to scan.",
+          "outcome_tags": [
+            "descent_calculated"
+          ],
+          "routes": {
+            "descent_calculated": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The cult realizes someone is trying to take back the singularity's 'gift'.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "desperate_doctor",
+          "target": "drifting_supplies",
+          "reason": "The pilot must shoot the locking clamps off the pod and scoop up the medical crates before they cross the threshold.",
+          "private_fact": "Cultist drone fighters are swarming the area to stop the pilot.",
+          "outcome_tags": [
+            "supplies_recovered"
+          ],
+          "routes": {
+            "supplies_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The pilot secures the supplies, but the cult's flagship blocks their escape.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_doctor",
+          "target": "cult_flagship",
+          "reason": "The doctor pays the pilot to blast their way past the cult's orbital shrine to deliver the medicine to safety.",
+          "private_fact": "The preacher hails the pilot, offering them the cult's entire treasury if they throw the medicine into the black hole instead.",
+          "outcome_tags": [
+            "shrine_bypassed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "shrine_bypassed": "resolution:doctor_relieved",
+            "took_the_offer": "resolution:cult_pleased"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "doctor_relieved",
+      "reached_by": "The pilot bypasses the shrine and returns the medicine.",
+      "summary": "The medicine saves the doctor's patients. The cult is humiliated and their influence wanes, though they curse the pilot's name.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_doctor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "singularity_preacher",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "robbed_the_singularity",
+          "public_summary": "A pilot snatched a load of medicine right out of a black hole, making a local cult look like fools."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "cult_pleased",
+      "reached_by": "The pilot takes the preacher's offer and dumps the medicine.",
+      "summary": "The black hole consumes the medicine. The cult rejoices and pays the pilot handsomely, while the doctor's patients die.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "singularity_preacher",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "pod_crushed",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The pod crosses the event horizon and is crushed into a singularity. The cult celebrates, and the doctor despairs.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "singularity_preacher",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "pod_crushed",
+  "loose_threads": [
+    {
+      "id": "t_cult_treasury",
+      "surface": "cargo",
+      "detail": "The cred-sticks in the cult's treasury bear the digital watermark of a major pharmaceutical corporation.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_navigation_glitch",
+      "surface": "scan",
+      "detail": "The hauler's 'navigation glitch' was actually a highly sophisticated remote hacking spike.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:singularity_preacher} praises the generosity of the great void.",
+    "Local medical facilities report dire shortages after cargo 'accident'."
+  ],
+  "voice_direction": {
+    "desperate_doctor": "Stressed, furious, constantly citing medical ethics.",
+    "singularity_preacher": "Dreamy, ecstatic, speaks like they are reciting poetry."
+  },
+  "novelty_tags": [
+    "black_hole",
+    "cult_sacrifice",
+    "medical_emergency",
+    "accidental_dumping"
+  ]
+}

@@ -1,0 +1,267 @@
+{
+  "id": "premise.the_stowaway_assassin",
+  "schema_version": 1,
+  "title": "The Stowaway Assassin",
+  "logline": "A stowaway on a long-haul transport realizes they are trapped with a contract killer, and hires a pilot to cover their escape on a stolen skiff.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "heist"
+  ],
+  "themes": [
+    "reinvention",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "desperate_stowaway",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Terrified, constantly whispering, hiding in a ventilation shaft.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "contract_killer",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Methodical, quiet, terrifyingly calm.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "long_haul_transport",
+      "kind": "place",
+      "description": "A massive, slow-moving passenger liner crossing deep space.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "killer_shuttle",
+      "kind": "ship",
+      "description": "A stealthy, unmarked interceptor docked to the liner.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "assassin_guild",
+      "kind": "faction",
+      "description": "A highly professional syndicate of hitmen.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "killer_ship",
+      "kind": "ship",
+      "description": "A stealthy interceptor.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:long_haul_transport} is halfway through a six-month journey across deep space, completely cut off from help.",
+  "private_truth": "The killer is methodically hunting the stowaway, who accidentally witnessed the killer murder a planetary official before boarding.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The killer begins quietly locking down the transport's civilian decks one by one.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_stowaway",
+          "target": "long_haul_transport",
+          "reason": "The stowaway begs the pilot to buy and deliver thermal cloaks to the transport's refuelling stop so they can hide from the killer's scanners.",
+          "private_fact": "The pilot realizes the killer is systematically murdering anyone who gets in their way.",
+          "outcome_tags": [
+            "cloaks_delivered"
+          ],
+          "routes": {
+            "cloaks_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The killer finds the stowaway's hiding spot and prepares to breach it.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "contract_killer",
+          "target": "long_haul_transport",
+          "reason": "The killer hires the pilot (pretending to be station security) to run a deep scan of the transport to pinpoint the stowaway's exact location.",
+          "private_fact": "The pilot must fake the scan results to throw the killer off the scent.",
+          "outcome_tags": [
+            "scan_faked"
+          ],
+          "routes": {
+            "scan_faked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The stowaway steals a maintenance skiff and makes a desperate break from the cargo airlocks.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_stowaway",
+          "target": "killer_ship",
+          "reason": "The stowaway begs the pilot to intercept and destroy the killer's pursuit ship so their skiff can escape.",
+          "private_fact": "The killer hails the pilot mid-fight, offering double the bounty to stand down and let the skiff be destroyed.",
+          "outcome_tags": [
+            "killer_destroyed",
+            "took_the_bribe"
+          ],
+          "routes": {
+            "killer_destroyed": "resolution:stowaway_wins",
+            "took_the_bribe": "resolution:killer_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "stowaway_wins",
+      "reached_by": "The pilot destroys the killer's ship, letting the stowaway escape.",
+      "summary": "The stowaway escapes the system in the skiff. The killer's guild holds a grudge.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_stowaway",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "contract_killer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "assassin_guild",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_stowaway",
+          "public_summary": "A pilot smuggled a terrified witness past a professional contract killer."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "killer_wins",
+      "reached_by": "The pilot takes the bribe and lets the killer destroy the stowaway.",
+      "summary": "The stowaway's skiff is incinerated. The killer pays out, and the transport resumes normal operations.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_stowaway",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "contract_killer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "assassin_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "stowaway_killed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The killer corners the stowaway in the airlock and executes them silently. The killer escapes without a trace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_stowaway",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "contract_killer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "assassin_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "stowaway_killed",
+  "loose_threads": [
+    {
+      "id": "t_guild_client",
+      "surface": "scan",
+      "detail": "The assassin wasn't hired by the guild; they were hired directly by the planetary governor.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_stowaway_past",
+      "surface": "dialogue",
+      "detail": "The stowaway admits they aren't completely innocent; they were trying to rob the official when the killer struck.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "bribery"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Passengers complain of severe delays aboard {role:long_haul_transport}.",
+    "Authorities still searching for missing planetary official."
+  ],
+  "voice_direction": {
+    "desperate_stowaway": "Hushed, terrified, constantly breathless.",
+    "contract_killer": "Quiet, extremely polite, never raises their voice."
+  },
+  "novelty_tags": [
+    "stowaway",
+    "contract_killer",
+    "locked_room_mystery"
+  ]
+}

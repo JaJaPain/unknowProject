@@ -1,0 +1,251 @@
+{
+  "id": "premise.the_indentured_engine",
+  "schema_version": 1,
+  "title": "The Indentured Engine",
+  "logline": "A desperate mechanic is trapped on an orbital platform, forced to keep a failing reactor running to pay off their family's debts.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "bleak"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "exhausted_mechanic",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Running on stims and terror, coughing from radiation exposure.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cruel_foreman",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Meticulous, bureaucratic, perfectly content to let workers die for margins.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "reactor_core",
+      "kind": "place",
+      "description": "A massive, dangerously unstable power plant.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_hq",
+      "kind": "place",
+      "description": "The foreman's pristine office suite.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "energy_corp",
+      "kind": "faction",
+      "description": "The massive conglomerate running the grid.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The {role:reactor_core} is providing cheap, reliable energy to the sector, overseen by the {role:cruel_foreman}.",
+  "private_truth": "The reactor is critically unstable. The mechanic is manually overriding safeties daily just to prevent a meltdown.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The reactor experiences a minor tremor, dismissed by management as 'settling'.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "exhausted_mechanic",
+          "target": "reactor_core",
+          "reason": "The mechanic begs the pilot to run an external thermal scan to prove the containment vessel is cracking.",
+          "private_fact": "The scan reveals the core will breach within days.",
+          "outcome_tags": [
+            "scan_complete"
+          ],
+          "routes": {
+            "scan_complete": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The foreman doubles the mechanic's shift length to 'improve efficiency'.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "exhausted_mechanic",
+          "target": "reactor_core",
+          "reason": "The pilot must buy and deliver illegal corporate-grade coolants to keep the core stable for one more week.",
+          "private_fact": "The coolants are highly toxic and will permanently damage the mechanic's lungs.",
+          "outcome_tags": [
+            "coolant_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "coolant_delivered": "next",
+            "abandoned": "resolution:mechanic_flees"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The reactor containment begins to buckle.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "exhausted_mechanic",
+          "target": "corporate_hq",
+          "reason": "The mechanic hands the pilot the core's black box data, pleading with them to deliver it to the corporate board.",
+          "private_fact": "On approach, the foreman hails the pilot, offering to wipe the mechanic's family debt if the pilot hands the data over instead.",
+          "outcome_tags": [
+            "data_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "data_delivered": "resolution:mechanic_freed",
+            "abandoned": "resolution:core_meltdown"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mechanic_freed",
+      "reached_by": "The pilot delivers the data to the board.",
+      "summary": "The board panics and shuts down the reactor. The foreman is fired, and the mechanic is finally allowed to go home, though their health is ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exhausted_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cruel_foreman",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_failing_reactor",
+          "public_summary": "A pilot exposed a critically unstable reactor before it could vaporize an entire workforce."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "core_meltdown",
+      "reached_by": "The pilot takes the foreman's deal.",
+      "summary": "The mechanic is imprisoned for negligence.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exhausted_mechanic",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cruel_foreman",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "mechanic_flees",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The mechanic flees in an escape pod, leaving the reactor to melt down.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exhausted_mechanic",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cruel_foreman",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "core_meltdown",
+  "loose_threads": [
+    {
+      "id": "t_foreman_bonus",
+      "surface": "scan",
+      "detail": "The foreman was receiving massive cash bonuses explicitly tied to delaying necessary reactor maintenance.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_toxic_coolant",
+      "surface": "cargo",
+      "detail": "The corporate coolants bought on the black market trace back to a supposedly decommissioned corporate black-site.",
+      "can_carry_methods": [
+        "bribery",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Energy output at {role:reactor_core} reaches record highs; management praised.",
+    "Whistleblowers silenced at corporate power facility."
+  ],
+  "voice_direction": {
+    "exhausted_mechanic": "Speaks very slowly, struggling to stay awake, sounds exhausted.",
+    "cruel_foreman": "Crisp, clean, absolutely infuriatingly polite."
+  },
+  "novelty_tags": [
+    "failing_reactor",
+    "toxic_coolants",
+    "indentured_servitude",
+    "corporate_negligence"
+  ]
+}

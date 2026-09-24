@@ -1,0 +1,275 @@
+{
+  "id": "premise.the_empty_vow",
+  "schema_version": 1,
+  "title": "Silence is Golden",
+  "logline": "A station manager tries to force a silent ascetic to break their holy vow to explain how to fix a failing life support system.",
+  "scale": "personal",
+  "tone": [
+    "survival",
+    "tense"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "progress_vs_tradition"
+  ],
+  "roles": [
+    {
+      "id": "silent_ascetic",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "A former engineer who took a vow of complete silence to atone for a disaster they caused.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "desperate_manager",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Will do absolutely anything to keep the station breathing.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "union_firebrand",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Thinks the ascetic is just a lazy coward avoiding real work.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "failing_station",
+      "kind": "place",
+      "description": "An aging habitat where the air is starting to taste like copper.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "union_cutter",
+      "kind": "ship",
+      "description": "A heavy industrial cutter used by the union for external repairs.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "public_outrage"
+  ],
+  "public_situation": "The primary life support manifold on {role:failing_station} is collapsing. The {role:silent_ascetic} is the only person who knows how to bypass it.",
+  "private_truth": "The ascetic knows that bypassing the manifold will vent the station's lower decks into space, killing dozens of poor workers to save the rich.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The station manager puts the station on emergency rations and grounds all ships.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "desperate_manager",
+          "target": "failing_station",
+          "reason": "Hires the pilot to bring in raw water ice to buy the station a few more hours of breathable air.",
+          "private_fact": "The manager is secretly preparing an escape shuttle just in case.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The union threatens to riot if the ascetic doesn't speak up and fix the system.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "silent_ascetic",
+          "target": "failing_station",
+          "reason": "The ascetic hands the pilot a sealed, written prayer to deliver to the manager.",
+          "private_fact": "The prayer is actually a mathematical proof showing that the bypass will kill the lower decks.",
+          "outcome_tags": [
+            "prayer_delivered"
+          ],
+          "routes": {
+            "prayer_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The manager receives the proof, burns it, and orders the union to rip open the ascetic's door.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "desperate_manager",
+          "target": "failing_station",
+          "reason": "The manager hires the pilot to fly outside the station and retrieve the manual bypass key from a secure exterior lockbox.",
+          "private_fact": "The union is watching and waiting.",
+          "outcome_tags": [
+            "key_secured"
+          ],
+          "routes": {
+            "key_secured": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the bypass key. They can give it to the manager, or hand it over to the union to prevent the purge.",
+        "options": [
+          {
+            "id": "give_manager",
+            "label": "Give the key to the manager",
+            "leads_to": "resolution:lower_decks_vented"
+          },
+          {
+            "id": "give_union",
+            "label": "Give the key to the union",
+            "leads_to": "resolution:manager_ousted"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "lower_decks_vented",
+      "reached_by": "The pilot gives the key to the manager.",
+      "summary": "The manager forces the bypass. The upper decks survive, but the lower decks are vented into space. The ascetic breaks their vow to scream.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "silent_ascetic",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_manager",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_firebrand",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "manager_ousted",
+      "reached_by": "The pilot gives the key to the union.",
+      "summary": "The pilot stops the bypass. The union throws the manager out the airlock and manually repairs the system, saving everyone through grueling labor.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_manager",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_firebrand",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_lower_decks",
+          "public_summary": "A pilot backed a union strike that saved a whole station from getting vented."
+        }
+      ],
+      "seeds": [
+        "new_leader_untested",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "station_suffocates",
+      "reached_by": "The pilot ignores the problem.",
+      "summary": "The station simply runs out of air. Thousands die quietly while the ascetic prays in silence.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_manager",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "silent_ascetic",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "station_suffocates",
+  "loose_threads": [
+    {
+      "id": "t_manager_shuttle",
+      "surface": "scan",
+      "detail": "The manager's private escape shuttle was pre-programmed with coordinates to an unmapped corporate black site.",
+      "can_carry_methods": [
+        "bribery",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_manifold_damage",
+      "surface": "scan",
+      "detail": "The life support manifold didn't fail from age; it was cleanly sliced by a precision mining laser from the outside.",
+      "can_carry_methods": [
+        "sabotage",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Air rationing in effect on {role:failing_station}; union demands action.",
+    "Manager of {role:failing_station} blames 'technical gremlins' for oxygen loss."
+  ],
+  "voice_direction": {
+    "silent_ascetic": "Never speaks. Voice directions apply only to written messages: stark, poetic, fatalistic.",
+    "desperate_manager": "Sweaty, breathless, speaks too fast.",
+    "union_firebrand": "Loud, booming, aggressive rhythm."
+  },
+  "novelty_tags": [
+    "vow_of_silence",
+    "life_support_failure",
+    "trolley_problem",
+    "class_divide"
+  ]
+}

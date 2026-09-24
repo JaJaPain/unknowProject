@@ -1,0 +1,266 @@
+{
+  "id": "premise.the_ancestral_sword",
+  "schema_version": 1,
+  "title": "The Service Pistol",
+  "logline": "A disgraced veteran asks a pilot to recover their confiscated service pistol from a wealthy collector's touring exhibition so they can be buried with it.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "melancholy"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "disgraced_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Old, tired, deeply ashamed of the retreat that ended their career.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smug_collector",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Wealthy, condescending, views war memorabilia as a neat aesthetic.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "museum_ship",
+      "kind": "ship",
+      "description": "A massive luxury cruiser repurposed as a floating military history gallery.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "memorial_dock",
+      "kind": "place",
+      "description": "A quiet, crumbling memorial station in a dead system.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "auction_house",
+      "kind": "faction",
+      "description": "A high-end auction house that deals in seized assets and memorabilia.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "leader_discredited"
+  ],
+  "public_situation": "The {role:smug_collector} is touring the system in their {role:museum_ship}, displaying the sidearm of a disgraced fleet commander.",
+  "private_truth": "The veteran pawned the pistol decades ago to pay off debts after being discharged. Now terminally ill, they want it back to be buried with it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The museum ship opens its doors to the public for a grand exhibition.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "disgraced_veteran",
+          "target": "memorial_dock",
+          "reason": "The veteran hires the pilot to deliver ferrite to patch up the memorial dock's hull, preparing a resting place.",
+          "private_fact": "The collector ignores the memorial and prepares to leave the system.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The veteran is publicly denied entry to the exhibition.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "disgraced_veteran",
+          "target": "museum_ship",
+          "reason": "The veteran begs the pilot to scan the ship's security grid to find a weakness in the display case.",
+          "private_fact": "The scan reveals the display case is wired to the ship's main drive; the only way to get the pistol safely is to disable the ship first.",
+          "outcome_tags": [
+            "ship_scanned"
+          ],
+          "routes": {
+            "ship_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The museum ship prepares to leave the system.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "disgraced_veteran",
+          "target": "museum_ship",
+          "reason": "The veteran asks the pilot to attack the museum ship and disable its engines so they can board it.",
+          "private_fact": "The collector hails the pilot in a panic, offering double the pistol's auction value in credits to escort the ship out of the system.",
+          "outcome_tags": [
+            "ship_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "ship_disabled": "resolution:veteran_wins",
+            "took_the_offer": "resolution:collector_escapes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "veteran_wins",
+      "reached_by": "The pilot disables the ship.",
+      "summary": "The veteran boards the ship, reclaims the pistol, and passes away at the memorial dock. The collector is humiliated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_veteran",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smug_collector",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "auction_house",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "recovered_the_pistol",
+          "public_summary": "A pilot disabled a museum ship so an old veteran could reclaim their service pistol."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "collector_escapes",
+      "reached_by": "The pilot takes the collector's offer.",
+      "summary": "The ship escapes safely. The veteran dies in shame. The pilot gets rich but is haunted by the betrayal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_veteran",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smug_collector",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "auction_house",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "ship_leaves",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The museum ship leaves the system unimpeded. The veteran lives out their final days in obscurity.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_veteran",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smug_collector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "auction_house",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "ship_leaves",
+  "loose_threads": [
+    {
+      "id": "t_pistol_origin",
+      "surface": "scan",
+      "detail": "The serial number on the pistol matches a batch of weapons supposedly destroyed in a classified fleet operation.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_collector_debts",
+      "surface": "cargo",
+      "detail": "The collector's manifest shows they bought the pistol using funds from a known pirate syndicate shell account.",
+      "can_carry_methods": [
+        "blackmail",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Museum ship exhibition draws massive crowds.",
+    "{role:disgraced_veteran} banned from the exhibition over 'disorderly conduct'."
+  ],
+  "voice_direction": {
+    "disgraced_veteran": "Slow, raspy, speaks with immense regret.",
+    "smug_collector": "Nasal, fast-talking, incredibly annoying."
+  },
+  "novelty_tags": [
+    "stolen_valor",
+    "museum_ship",
+    "dying_wish"
+  ]
+}

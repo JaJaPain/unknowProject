@@ -1,0 +1,343 @@
+{
+  "id": "premise.the_gravity_tomb",
+  "schema_version": 1,
+  "title": "Weight of the World",
+  "logline": "A reckless salvage crew accidentally activates an old gravitational stabilizer near a dead system, and a retired legend needs a pilot to shut it down before it crushes the local mining habitats.",
+  "scale": "regional",
+  "tone": [
+    "noir",
+    "survival"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "retired_legend",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Knows exactly what the terraformer is because they helped shut it down fifty years ago.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "greedy_salvager",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Lied about their salvage charter to get close to the core.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "terraformer_core",
+      "kind": "place",
+      "description": "A massive, spinning ancient construct creating brutal gravity sheer.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mining_habitat",
+      "kind": "place",
+      "description": "A fragile orbital colony slowly being pulled apart by the tides.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvager_ship",
+      "kind": "ship",
+      "description": "A heavy tug that pulled the terraformer's control rods.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "defense_drone",
+      "kind": "ship",
+      "description": "An ancient, logic-driven guard unit protecting the core.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "automated_defense_grid",
+      "kind": "faction",
+      "description": "The obsolete automated systems still defending the terraformer.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scout_drone",
+      "kind": "ship",
+      "description": "A small automated defense unit.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:mining_habitat} is issuing emergency distress calls as wild gravitational fluctuations tear their mooring lines apart.",
+  "private_truth": "The salvager bypassed the safety locks on the stabilizer to steal its rare platinum control rods, causing the system to run wild.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The terraformer begins emitting a low, rhythmic hum that shakes every ship in the sector.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_legend",
+          "target": "terraformer_core",
+          "reason": "The legend needs the pilot to brave the gravity tides and scan the core to see which rods are missing.",
+          "private_fact": "The scan wakes up the old security grid.",
+          "outcome_tags": [
+            "core_scanned"
+          ],
+          "routes": {
+            "core_scanned": "next"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "retired_legend",
+          "target": "scout_drone",
+          "reason": "The pilot must destroy the drone that awakened to protect the damaged core.",
+          "private_fact": "The drone's shielding is almost impenetrable to standard lasers.",
+          "outcome_tags": [
+            "drone_destroyed"
+          ],
+          "routes": {
+            "drone_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The gravity sheer rips the first orbital block off the mining habitat.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "greedy_salvager",
+          "target": "mining_habitat",
+          "reason": "The salvager, pretending to be innocent, asks the pilot to deliver emergency evacuation protocols to the habitat.",
+          "private_fact": "They just want the habitat empty so they can strip it too.",
+          "outcome_tags": [
+            "protocols_delivered"
+          ],
+          "routes": {
+            "protocols_delivered": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "retired_legend",
+          "target": "mining_habitat",
+          "reason": "The pilot must pay the salvager's panicked crewmate to hand over the control rods while the salvager is busy prepping to flee.",
+          "private_fact": "The crewmate knows the salvager plans to leave them behind to save weight.",
+          "outcome_tags": [
+            "rods_purchased"
+          ],
+          "routes": {
+            "rods_purchased": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The terraformer starts dragging nearby asteroid fragments into a dangerous, high-speed debris ring around itself, shredding any ships caught inside.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "retired_legend",
+          "target": "defense_drone",
+          "reason": "The pilot must shoot down another defense drone and recover its targeting logic core.",
+          "private_fact": "The core is required to interface with the terraformer to reinsert the rods.",
+          "outcome_tags": [
+            "core_recovered"
+          ],
+          "routes": {
+            "core_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The habitat is hours away from complete structural collapse.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "retired_legend",
+          "target": "salvager_ship",
+          "reason": "The salvager intercepts the pilot, and the legend pays the pilot to destroy the salvager's heavily armed tug so they can return the rods in peace.",
+          "private_fact": "The salvager hails the pilot, offering millions in raw platinum to just let the terraformer crush the habitat so they can mine the debris.",
+          "outcome_tags": [
+            "salvager_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "salvager_destroyed": "resolution:terraformer_sealed",
+            "took_the_offer": "resolution:habitat_crushed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "terraformer_sealed",
+      "reached_by": "The pilot destroys the salvager and helps return the rods.",
+      "summary": "The terraformer powers down. The habitat is saved, the legend fades back into obscurity, and the pilot is a local hero.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "greedy_salvager",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "sealed_the_tomb",
+          "public_summary": "A pilot defeated a greedy salvager and shut down an ancient gravity weapon before it crushed a colony."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "habitat_crushed",
+      "reached_by": "The pilot takes the salvager's offer.",
+      "summary": "The terraformer crushes the habitat into a dense metallic core. Thousands die, but the pilot and salvager get unbelievably rich mining the wreckage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "greedy_salvager",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation",
+            "mourning"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "tides_consume",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The gravity sheer consumes everything. The habitat, the salvager, and the legend are all pulled into the core's crushing embrace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "greedy_salvager",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "tides_consume",
+  "loose_threads": [
+    {
+      "id": "t_terraformer_origin",
+      "surface": "scan",
+      "detail": "The old stabilizer's architecture perfectly matches the foundation blocks of the sector's capital station.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_salvager_backing",
+      "surface": "cargo",
+      "detail": "The terraformer's control rods have fresh calibration marks dated twenty years after it was supposedly shut down forever.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "{role:mining_habitat} reports extreme orbital degradation; requests immediate aid.",
+    "Unregistered gravity wells detected in Sector 4."
+  ],
+  "voice_direction": {
+    "retired_legend": "Gravelly, tired, speaks like they've seen this all before.",
+    "greedy_salvager": "Slick, unapologetic, always calculating margins."
+  },
+  "novelty_tags": [
+    "gravity_weapon",
+    "ancient_tech",
+    "habitat_collapse",
+    "salvage_gone_wrong"
+  ]
+}

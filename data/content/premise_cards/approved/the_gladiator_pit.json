@@ -1,0 +1,264 @@
+{
+  "id": "premise.the_gladiator_pit",
+  "schema_version": 1,
+  "title": "The Gladiator Pit",
+  "logline": "A captured soldier forced to fight in illegal pit matches begs a pilot to smuggle in a heavy weapon so they can blast their way out.",
+  "scale": "personal",
+  "tone": [
+    "bleak",
+    "survival"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "captured_fighter",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Covered in scars, fiercely determined, refusing to break.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pit_boss",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Flashy, loud, treats human life as cheap entertainment.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "fighting_arena",
+      "kind": "place",
+      "description": "A massive, blood-stained crater on a dead moon.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "guard_patrol",
+      "kind": "ship",
+      "description": "A heavy gunship keeping the crowd in line.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "betting_syndicate",
+      "kind": "faction",
+      "description": "The criminal organization funding the pit matches.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "power_vacuum"
+  ],
+  "public_situation": "The {role:pit_boss} is hosting the ultimate death match at the {role:fighting_arena}, drawing crowds from across the sector.",
+  "private_truth": "The star fighter is a captured naval officer. They plan to blow a hole in the arena wall during the main event and escape.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The arena locks its blast doors as the crowds pour in.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "pit_boss",
+          "target": "fighting_arena",
+          "reason": "The boss hires the pilot to mine and deliver ferrite to reinforce the arena walls.",
+          "private_fact": "The walls have already been weakened by the fighter's previous sabotage attempts.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The fighter survives the semi-finals but is heavily wounded.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "captured_fighter",
+          "target": "fighting_arena",
+          "reason": "The fighter begs the pilot to buy illegal plasma charges and drop them into the holding pens.",
+          "private_fact": "The boss catches wind of the delivery and doubles the guard patrol.",
+          "outcome_tags": [
+            "charges_delivered"
+          ],
+          "routes": {
+            "charges_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The main event begins, and the fighter detonates the charges.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "captured_fighter",
+          "target": "guard_patrol",
+          "reason": "The fighter pays the pilot to destroy the guard gunship so they can escape the crater.",
+          "private_fact": "The pit boss hails the pilot, offering to double their pay if they turn their guns on the escaping fighter instead.",
+          "outcome_tags": [
+            "patrol_destroyed"
+          ],
+          "routes": {
+            "patrol_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The patrol is dead. The fighter is running for their ship, but the boss is offering a massive bounty.",
+        "options": [
+          {
+            "id": "help_fighter",
+            "label": "Cover the fighter's escape",
+            "leads_to": "resolution:fighter_escapes"
+          },
+          {
+            "id": "kill_fighter",
+            "label": "Take the bounty and kill the fighter",
+            "leads_to": "resolution:fighter_dies"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fighter_escapes",
+      "reached_by": "The pilot covers the escape.",
+      "summary": "The fighter blasts out of the arena and escapes. The pit boss is humiliated, and the arena is shut down by the authorities.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "captured_fighter",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pit_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "freed_the_gladiator",
+          "public_summary": "A pilot broke a captured soldier out of an illegal fighting pit."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "fighter_dies",
+      "reached_by": "The pilot takes the bounty.",
+      "summary": "The pilot guns down the fighter. The boss pays out the bounty, and the bloody games continue as usual.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "captured_fighter",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pit_boss",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "fighter_recaptured",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The guard patrol pins the fighter down. They are dragged back to the pens to die in the next match.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "captured_fighter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pit_boss",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "fighter_recaptured",
+  "loose_threads": [
+    {
+      "id": "t_arena_bribes",
+      "surface": "scan",
+      "detail": "The arena's sensors have a built-in blind spot installed by a corrupt local magistrate.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_fighter_capture",
+      "surface": "wreck",
+      "detail": "The fighter wasn't captured in battle; they were sold to the pit boss by their own commanding officer.",
+      "can_carry_methods": [
+        "information_control",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "proxy_violence"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Massive crowds gather for the annual death match.",
+    "{role:pit_boss} promises blood and spectacle."
+  ],
+  "voice_direction": {
+    "captured_fighter": "Guttural, exhausted, speaks through gritted teeth.",
+    "pit_boss": "Loud, theatrical, constantly hyping up the crowd."
+  },
+  "novelty_tags": [
+    "gladiator_pit",
+    "death_match",
+    "prison_break"
+  ]
+}

@@ -1,0 +1,306 @@
+{
+  "id": "premise.the_defector_bounty",
+  "schema_version": 1,
+  "title": "The Defector Bounty",
+  "logline": "A hunted defector hires a pilot to help them reach a safe house on their own ship, but the honorable bounty hunter chasing them is their former mentor.",
+  "scale": "regional",
+  "tone": [
+    "heist",
+    "tense"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "hunted_defector",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Brilliant, deeply regretful, carrying a massive datapad.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "honorable_hunter",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Tired, bound by duty, strictly adheres to their own code.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "safe_house",
+      "kind": "place",
+      "description": "A heavily shielded, anonymous docking bay in the dark zone.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "hunter_corvette",
+      "kind": "ship",
+      "description": "A top-of-the-line pursuit vessel with overwhelming firepower.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "intelligence_agency",
+      "kind": "faction",
+      "description": "The ruthless shadow government hunting the defector.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "defector_escort",
+      "kind": "ship",
+      "description": "Automated defense drones programmed to protect the defector.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:intelligence_agency} has placed a massive bounty on the {role:hunted_defector}, claiming they stole classified weapon schematics.",
+  "private_truth": "The defector actually stole evidence that the agency was testing bioweapons on civilians. The hunter doesn't know the truth yet.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The hunter arrives in the system and begins locking down all outbound traffic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "honorable_hunter",
+          "target": "safe_house",
+          "reason": "The hunter hires the pilot to scan the dark zone relay for any encrypted transmissions matching the defector's signature.",
+          "private_fact": "The pilot discovers the defector hiding in a shielded cargo container.",
+          "outcome_tags": [
+            "defector_located"
+          ],
+          "routes": {
+            "defector_located": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "hunted_defector",
+          "target": "safe_house",
+          "reason": "The defector begs the pilot to collect a specialized jammer from a dead drop to block the hunter's sensors.",
+          "private_fact": "The drop is surrounded by automated proximity mines.",
+          "outcome_tags": [
+            "jammer_collected"
+          ],
+          "routes": {
+            "jammer_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The defector makes a run for the border, pursued closely by the hunter.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "hunted_defector",
+          "target": "safe_house",
+          "reason": "The defector hires the pilot to deliver a decoy data drive to a different station to throw the hunter off their scent.",
+          "private_fact": "The decoy works, buying the defector precious time to run.",
+          "outcome_tags": [
+            "decoy_delivered"
+          ],
+          "routes": {
+            "decoy_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The hunter realizes the trick and corners the defector in the dark zone.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "honorable_hunter",
+          "target": "defector_escort",
+          "reason": "The hunter asks the pilot to destroy the defector's automated escort drones so the hunter can board their ship safely.",
+          "private_fact": "During the fight, the defector broadcasts the bioweapon evidence on open comms for the hunter to hear.",
+          "outcome_tags": [
+            "escorts_destroyed"
+          ],
+          "routes": {
+            "escorts_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The hunter is shaken by the truth but refuses to break their contract.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hunted_defector",
+          "target": "hunter_corvette",
+          "reason": "The defector begs the pilot to attack the hunter's corvette and disable its engines so they can escape.",
+          "private_fact": "The hunter hails the pilot, offering them the entire bounty to stand down and let the arrest happen.",
+          "outcome_tags": [
+            "hunter_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "hunter_disabled": "resolution:defector_escapes",
+            "took_the_offer": "resolution:hunter_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "defector_escapes",
+      "reached_by": "The pilot disables the hunter.",
+      "summary": "The hunter is disabled. The defector escapes and leaks the bioweapon evidence to the press. The agency is thrown into chaos.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_defector",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "honorable_hunter",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "intelligence_agency",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_defector",
+          "public_summary": "A pilot disabled an honorable bounty hunter to help a whistleblower escape."
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "hunter_wins",
+      "reached_by": "The pilot takes the offer.",
+      "summary": "The hunter completes the arrest. The defector is executed by the agency, and the bioweapon research continues in secret.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_defector",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "honorable_hunter",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "intelligence_agency",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "both_die",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The hunter destroys the defector's ship, but takes critical damage and burns up in the dark zone. The agency wins entirely.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_defector",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "honorable_hunter",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "intelligence_agency",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "both_die",
+  "loose_threads": [
+    {
+      "id": "t_hunter_past",
+      "surface": "dialogue",
+      "detail": "The hunter admits they actually raised the defector from childhood before the agency recruited them.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_bioweapon_target",
+      "surface": "scan",
+      "detail": "The bioweapon wasn't meant for an enemy faction; it was designed to wipe out the agency's own lower-class workers.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Massive bounty posted for {role:hunted_defector}.",
+    "{role:honorable_hunter} takes the contract; success guaranteed."
+  ],
+  "voice_direction": {
+    "hunted_defector": "Desperate, fast-talking, incredibly smart but terrible at lying.",
+    "honorable_hunter": "Slow, deliberate, speaks like a disappointed parent."
+  },
+  "novelty_tags": [
+    "whistleblower",
+    "honorable_hunter",
+    "bioweapon_plot"
+  ]
+}

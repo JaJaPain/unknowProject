@@ -1,0 +1,279 @@
+{
+  "id": "premise.the_stolen_symphony",
+  "schema_version": 1,
+  "title": "The Stolen Symphony",
+  "logline": "A washed-up composer hires a pilot to extract a forgotten colonial symphony from a locked archive using bribes and courier routes, so they can pass it off as their grand comeback.",
+  "scale": "personal",
+  "tone": [
+    "heist",
+    "absurd"
+  ],
+  "themes": [
+    "reinvention",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "plagiarist_composer",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Theatrical, desperate for fame, wearing outdated fashion.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "angry_archivist",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Protective of history, extremely pedantic about copyright.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "symphony_hall",
+      "kind": "place",
+      "description": "An opulent, acoustically perfect orbital theater.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "historical_archive",
+      "kind": "place",
+      "description": "A monolithic, heavily guarded repository of colonial data.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "music_syndicate",
+      "kind": "faction",
+      "description": "A ruthless guild of critics and producers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The {role:plagiarist_composer} has announced a grand comeback premiere at the {role:symphony_hall}, but hasn't actually written any music yet.",
+  "private_truth": "The composer plans to pass off an ancient lost colonial symphony as their own work, and needs a pilot to extract the only copy from the {role:historical_archive}.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The composer begins booking the hall and hyping up a masterpiece.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "plagiarist_composer",
+          "target": "historical_archive",
+          "reason": "The composer needs a pilot to run diagnostic scans on the archive's data vaults, mapping out exactly where the symphony crystal is held.",
+          "private_fact": "The scans also reveal which guard shifts are underpaid and most vulnerable to a bribe.",
+          "outcome_tags": [
+            "vault_mapped"
+          ],
+          "routes": {
+            "vault_mapped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The archivist notices unusual network activity and prepares to lock down the vaults.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "plagiarist_composer",
+          "target": "historical_archive",
+          "reason": "The composer has arranged a bribe for an archivist clerk. The pilot must dock at the service bay and collect the crystal before the lockdown.",
+          "private_fact": "The crystal emits a loud, hypnotic hum that makes it impossible to hide if an inspector walks by.",
+          "outcome_tags": [
+            "crystal_extracted"
+          ],
+          "routes": {
+            "crystal_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The archivist realizes the crystal is missing and calls in syndicate enforcers to intercept it.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "plagiarist_composer",
+          "target": "symphony_hall",
+          "reason": "The composer needs the pilot to deliver the crystal directly to the conductor's podium before the premiere is ruined.",
+          "private_fact": "The archivist intercepts the pilot at the hall, demanding the crystal back under threat of syndicate blacklist.",
+          "outcome_tags": [
+            "crystal_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "crystal_delivered": "resolution:composer_wins",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the ancient crystal. The archivist blocks the way, demanding it back.",
+        "options": [
+          {
+            "id": "return_crystal",
+            "label": "Give the crystal to the archivist",
+            "leads_to": "resolution:archivist_wins"
+          },
+          {
+            "id": "destroy_crystal",
+            "label": "Smash the crystal",
+            "leads_to": "resolution:music_lost"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "composer_wins",
+      "reached_by": "The pilot delivers the crystal to the podium.",
+      "summary": "The premiere is a massive success. The composer becomes a legend, and the archivist is laughed out of the syndicate.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "plagiarist_composer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "music_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "helped_the_composer",
+          "public_summary": "A pilot helped a fraud steal a masterpiece and get away with it."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "archivist_wins",
+      "reached_by": "The pilot gives the crystal to the archivist.",
+      "summary": "The archivist proves the theft. The composer is blacklisted, and the ancient symphony is safely locked away in a vault.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "angry_archivist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "plagiarist_composer",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "music_syndicate",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "music_lost",
+      "reached_by": "The pilot destroys the crystal.",
+      "summary": "The crystal shatters. The music is lost forever. Both the composer and the archivist are devastated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "plagiarist_composer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "music_syndicate",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "music_lost",
+  "loose_threads": [
+    {
+      "id": "t_alien_origin",
+      "surface": "scan",
+      "detail": "The crystal's data structure matches known artifacts from the first wave colonists.",
+      "can_carry_methods": [
+        "information_control",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_syndicate_bribes",
+      "surface": "dialogue",
+      "detail": "The composer casually mentions they had to bribe three separate syndicate judges just to get the hall booked.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Excitement builds for mysterious premiere at {role:symphony_hall}.",
+    "{role:angry_archivist} claims historical records have been tampered with."
+  ],
+  "voice_direction": {
+    "plagiarist_composer": "Loud, dramatic, speaks with their hands.",
+    "angry_archivist": "Quiet, seething, obsessed with rules."
+  },
+  "novelty_tags": [
+    "ancient_music",
+    "plagiarism",
+    "art_heist"
+  ]
+}

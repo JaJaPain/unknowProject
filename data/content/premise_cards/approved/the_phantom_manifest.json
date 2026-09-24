@@ -1,0 +1,278 @@
+{
+  "id": "premise.the_phantom_manifest",
+  "schema_version": 1,
+  "title": "Paper Cargo",
+  "logline": "A dockmaster accidentally logs a shipment of non-existent luxury goods, and now they must hire a pilot to physically fake the deliveries across the station to avoid a deadly audit.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "noir"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "panicked_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Sweating profusely, absolutely terrified of paperwork.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "strict_auditor",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Loves numbers more than people. Will execute someone over a rounding error.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "luxury_market",
+      "kind": "place",
+      "description": "A high-end bazaar that was supposed to receive the phantom goods.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "audit_committee",
+      "kind": "faction",
+      "description": "A terrifyingly precise corporate oversight board.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "new_leader_untested"
+  ],
+  "public_situation": "The {role:audit_committee} has sent their top {role:strict_auditor} to review the station's famously efficient logistics network.",
+  "private_truth": "The efficiency is a lie. The dockmaster has been approving phantom manifests to meet quotas, and the auditor wants to see the physical cargo.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The auditor announces a random physical inspection of the latest luxury shipment.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "panicked_dockmaster",
+          "target": "luxury_market",
+          "reason": "The dockmaster gives the pilot their life savings to buy random heavy junk and deliver it in sealed luxury crates.",
+          "private_fact": "The crates are weighted with scrap iron.",
+          "outcome_tags": [
+            "fake_crates_delivered"
+          ],
+          "routes": {
+            "fake_crates_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The auditor brings a deep-penetrating cargo scanner to the docks.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "panicked_dockmaster",
+          "target": "luxury_market",
+          "reason": "The dockmaster needs the pilot to scan the auditor's equipment to find its jamming frequency.",
+          "private_fact": "The pilot must get dangerously close to the auditor to do this.",
+          "outcome_tags": [
+            "scanner_jammed"
+          ],
+          "routes": {
+            "scanner_jammed": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "strict_auditor",
+          "target": "luxury_market",
+          "reason": "The auditor asks the pilot to fetch the official manifest logs from the market's terminal.",
+          "private_fact": "The dockmaster has rigged the terminal to explode in a 'tragic accident'.",
+          "outcome_tags": [
+            "logs_retrieved"
+          ],
+          "routes": {
+            "logs_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The auditor demands the crates be opened for visual inspection.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "panicked_dockmaster",
+          "target": "luxury_market",
+          "reason": "The dockmaster begs the pilot to deliver a massive bribe directly into the auditor's personal accounts before they open the crates.",
+          "private_fact": "The auditor realizes it's a bribe, but is severely underpaid.",
+          "outcome_tags": [
+            "bribe_offered"
+          ],
+          "routes": {
+            "bribe_offered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the bribe money. They can give it to the auditor to seal the cover-up, or give it to the committee to expose the fraud.",
+        "options": [
+          {
+            "id": "bribe_auditor",
+            "label": "Bribe the auditor",
+            "leads_to": "resolution:fraud_succeeds"
+          },
+          {
+            "id": "expose_dockmaster",
+            "label": "Expose the dockmaster",
+            "leads_to": "resolution:dockmaster_fired"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fraud_succeeds",
+      "reached_by": "The pilot bribes the auditor.",
+      "summary": "The auditor takes the money and signs off on the crates of scrap iron. The dockmaster keeps their job, and the corruption deepens.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "audit_committee",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "panicked_dockmaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "strict_auditor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "dockmaster_fired",
+      "reached_by": "The pilot exposes the fraud.",
+      "summary": "The crates are opened, revealing scrap iron. The dockmaster is dragged away by corporate security, and the auditor is promoted.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "audit_committee",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "panicked_dockmaster",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "strict_auditor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_cargo_fraud",
+          "public_summary": "A pilot helped an auditor bust a massive phantom cargo ring at the local docks."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "audit_completed",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The auditor uncovers the fraud on their own. The dockmaster is fired and the station is heavily fined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "panicked_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "audit_committee",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "audit_completed",
+  "loose_threads": [
+    {
+      "id": "t_auditor_debts",
+      "surface": "scan",
+      "detail": "A quick scan of the auditor's personal datapad shows they owe millions to an off-world gambling syndicate.",
+      "can_carry_methods": [
+        "blackmail",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_phantom_origin",
+      "surface": "cargo",
+      "detail": "The fake manifests aren't just empty space; they were designed to perfectly mask the tonnage of military-grade explosives.",
+      "can_carry_methods": [
+        "forged_records",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "{role:audit_committee} announces 'Routine Efficiency Checks' across all sectors.",
+    "Scrap iron prices temporarily spike at local markets."
+  ],
+  "voice_direction": {
+    "panicked_dockmaster": "Fast, high-pitched, constantly apologizing.",
+    "strict_auditor": "Monotone and precise. Never uses a word that isn't strictly necessary."
+  },
+  "novelty_tags": [
+    "fake_cargo",
+    "audit_panic",
+    "bureaucratic_fraud",
+    "scrap_metal"
+  ]
+}

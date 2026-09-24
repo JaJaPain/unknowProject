@@ -1,0 +1,285 @@
+{
+  "id": "premise.the_blood_debt",
+  "schema_version": 1,
+  "title": "The Blood Debt",
+  "logline": "A broke cousin inherits a massive debt instead of a fortune, and hires a pilot to destroy the cartel's bounty hunters while they erase the records.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "survival"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "broke_cousin",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Constantly panicking, extremely unlucky, owes everyone money.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loan_shark",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Cheerful, polite, will break your legs with a smile.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "debt_processing_center",
+      "kind": "place",
+      "description": "A grim, heavily armored bureaucratic nightmare.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "bounty_hunter",
+      "kind": "ship",
+      "description": "A heavily armed interceptor painted neon green.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "debt_cartel",
+      "kind": "faction",
+      "description": "A legal but utterly ruthless financial institution.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "gravity_tides"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:debt_cartel} has declared the {role:broke_cousin} fully liable for their late uncle's multi-million credit debt.",
+  "private_truth": "The cousin discovered a backdoor in the cartel's mainframe and is planning to delete the debt entirely, but they need a distraction.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The cartel puts a massive bounty on the cousin's head.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "broke_cousin",
+          "target": "debt_processing_center",
+          "reason": "The cousin asks the pilot to meet a bribed clerk at the processing center and collect the physical encryption keys for the mainframe.",
+          "private_fact": "The keys are guarded by automated turrets.",
+          "outcome_tags": [
+            "keys_stolen"
+          ],
+          "routes": {
+            "keys_stolen": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The first wave of bounty hunters arrives in the system.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "broke_cousin",
+          "target": "debt_processing_center",
+          "reason": "The cousin needs the pilot to deliver a custom data virus directly into the center's main terminal.",
+          "private_fact": "The virus doesn't just delete the cousin's debt; it deletes everyone's debt.",
+          "outcome_tags": [
+            "virus_delivered"
+          ],
+          "routes": {
+            "virus_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The gravity tides spike, trapping everyone in the system just as the virus activates.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "broke_cousin",
+          "target": "bounty_hunter",
+          "reason": "The cousin pays the pilot to destroy the cartel's lead bounty hunter so they can escape.",
+          "private_fact": "The loan shark hails the pilot, offering to clear all of the pilot's debts if they kill the cousin instead.",
+          "outcome_tags": [
+            "hunter_destroyed"
+          ],
+          "routes": {
+            "hunter_destroyed": "resolution:cousin_escapes"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The bounty hunter is dead. The loan shark is offering a clean slate if the pilot betrays the cousin.",
+        "options": [
+          {
+            "id": "help_cousin",
+            "label": "Help the cousin escape",
+            "leads_to": "resolution:cousin_escapes"
+          },
+          {
+            "id": "betray_cousin",
+            "label": "Kill the cousin and take the deal",
+            "leads_to": "resolution:cousin_killed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cousin_escapes",
+      "reached_by": "The pilot helps the cousin escape.",
+      "summary": "The virus wipes the cartel's records, causing a massive financial crash. The cousin escapes, completely debt-free, and the pilot is a folk hero.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "broke_cousin",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loan_shark",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "debt_cartel",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "erased_the_debt",
+          "public_summary": "A pilot wiped out the sector's debt records and bankrupted a ruthless cartel."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "cousin_killed",
+      "reached_by": "The pilot betrays the cousin.",
+      "summary": "The cousin is killed. The loan shark stops the virus just in time. The cartel maintains control, and the pilot's debts are erased.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "broke_cousin",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loan_shark",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "debt_cartel",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "cartel_wins",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The bounty hunters easily catch the cousin. The cousin is sold into indentured servitude to pay off the debt.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "broke_cousin",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loan_shark",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "debt_cartel",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "cartel_wins",
+  "loose_threads": [
+    {
+      "id": "t_uncle_murder",
+      "surface": "scan",
+      "detail": "The uncle didn't die naturally; he was assassinated by the cartel to trigger the debt transfer.",
+      "can_carry_methods": [
+        "information_control",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_cartel_backers",
+      "surface": "wreck",
+      "detail": "The cartel is actually funded by the planetary government to keep the lower classes impoverished.",
+      "can_carry_methods": [
+        "blackmail",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "false_flag"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Debt collection intensified across the sector.",
+    "{role:loan_shark} promises leniency for early payments."
+  ],
+  "voice_direction": {
+    "broke_cousin": "High-pitched, constantly interrupting themselves.",
+    "loan_shark": "Smooth, cheerful, uses corporate buzzwords."
+  },
+  "novelty_tags": [
+    "debt_erasure",
+    "inherited_debt",
+    "financial_crash"
+  ]
+}

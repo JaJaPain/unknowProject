@@ -1,0 +1,294 @@
+{
+  "id": "premise.the_toll_road",
+  "schema_version": 1,
+  "title": "The Rich Man's Road",
+  "logline": "A wealthy corporation has bought exclusive rights to a critical hyper-lane, forcing local traders to brave a deadly nebula instead, until a retired legend decides to break the blockade.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "retired_legend",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "An old blockade runner who can't stand seeing corporations own the stars.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_tollkeeper",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Smug, heavily guarded, and legally untouchable.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "toll_gate",
+      "kind": "place",
+      "description": "A massive, heavily armed warp-gate facility.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "blockade_runner",
+      "kind": "ship",
+      "description": "An incredibly fast, illegally modified courier vessel.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_board",
+      "kind": "faction",
+      "description": "The shareholders who technically own the space.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smuggler_den",
+      "kind": "place",
+      "description": "A hidden dock where the runner is prepped.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_patrol",
+      "kind": "ship",
+      "description": "An armed cutter defending the gate.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "toll_drone",
+      "kind": "ship",
+      "description": "Automated corporate toll collection buoy.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "nebula"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "nebula"
+    ]
+  },
+  "accepts_seeds": [
+    "law_tightened",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:corporate_board} has established a private {role:toll_gate}, forcing independent pilots to pay exorbitant fees or fly blindly through the dangerous nebula.",
+  "private_truth": "The corporation doesn't actually have the legal charter for the gate; they just built it and dared anyone to stop them.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The retired legend publicly announces their intention to fly through the gate without paying.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_legend",
+          "target": "toll_gate",
+          "reason": "The legend hires the pilot to map the gate's automated targeting sensors.",
+          "private_fact": "The scan will flag the pilot as a hostile target to the gate.",
+          "outcome_tags": [
+            "gate_scanned"
+          ],
+          "routes": {
+            "gate_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The corporation deploys heavy defense platforms to block the lane completely.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_legend",
+          "target": "smuggler_den",
+          "reason": "The legend needs the pilot to deliver a highly illegal jamming spike to their runner ship before the run.",
+          "private_fact": "The spike will short out the gate's payment processors entirely.",
+          "outcome_tags": [
+            "spike_delivered"
+          ],
+          "routes": {
+            "spike_delivered": "next"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "retired_legend",
+          "target": "toll_drone",
+          "reason": "The legend hires the pilot to take out the gate's automated toll buoy, which would otherwise flag the run.",
+          "private_fact": "The buoy is the gate's only rear-facing sensor; without it the gate is half blind.",
+          "outcome_tags": [
+            "buoy_destroyed"
+          ],
+          "routes": {
+            "buoy_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The legend's ship approaches the gate at maximum velocity.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "retired_legend",
+          "target": "corporate_patrol",
+          "reason": "The legend pays the pilot to attack the tollkeeper's patrol ship to break the blockade.",
+          "private_fact": "The patrol ship hails the pilot mid-fight, offering a cut of the tolls to turn on the legend.",
+          "outcome_tags": [
+            "gate_blinded",
+            "took_the_offer"
+          ],
+          "routes": {
+            "gate_blinded": "resolution:gate_broken",
+            "took_the_offer": "resolution:monopoly_secured"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "gate_broken",
+      "reached_by": "The pilot helps blind the gate.",
+      "summary": "The legend flies through, the payment systems crash, and the lane is effectively opened to the public. The corporation is humiliated.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "corporate_board",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_tollkeeper",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_toll",
+          "public_summary": "A pilot blasted open a corporate toll gate, freeing up a hyper-lane for independent traders."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "monopoly_secured",
+      "reached_by": "The pilot takes the tollkeeper's offer.",
+      "summary": "The legend is shot down. The corporation secures absolute control over the lane, and the pilot becomes their favored pet.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "corporate_board",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_tollkeeper",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "legend_fails",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The legend tries to run the gate alone and is obliterated by automated defenses. The toll remains.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "corporate_board",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "legend_fails",
+  "loose_threads": [
+    {
+      "id": "t_gate_charter",
+      "surface": "scan",
+      "detail": "A deep scan of the gate's broadcast registry shows it is operating under a charter granted by a government that fell a decade ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_tollkeeper_funds",
+      "surface": "dialogue",
+      "detail": "The tollkeeper gloats that all gate revenue is being funneled directly into building a private mercenary fleet.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "{role:corporate_board} reports record profits from new 'Transit Efficiency Fee'.",
+    "Independent pilots gather at the nebula's edge, afraid to jump."
+  ],
+  "voice_direction": {
+    "retired_legend": "Gravelly, amused, completely fearless.",
+    "corporate_tollkeeper": "Smug, bureaucratic, uses corporate buzzwords to threaten people."
+  },
+  "novelty_tags": [
+    "toll_gate",
+    "blockade_running",
+    "corporate_greed",
+    "breaking_the_monopoly"
+  ]
+}

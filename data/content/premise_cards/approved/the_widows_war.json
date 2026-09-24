@@ -1,0 +1,324 @@
+{
+  "id": "premise.the_widows_war",
+  "schema_version": 1,
+  "title": "The Widow's War",
+  "logline": "The matriarch of a powerful smuggling family has died, and her three children are threatening to tear the sector apart in a war of succession.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "bleak"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "eldest_heir",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Brutal, traditional, believes might makes right.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "middle_heir",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Cunning, deceitful, prefers poison to blasters.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "youngest_heir",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Naive, idealistic, completely unfit for a life of crime.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "family_stronghold",
+      "kind": "place",
+      "description": "A heavily fortified asteroid base.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "smuggling_syndicate",
+      "kind": "faction",
+      "description": "A vast network of illegal trade routes currently frozen in panic.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rival_gang",
+      "kind": "ship",
+      "description": "Opportunistic raiders picking off the family's assets.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "power_vacuum"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "leader_discredited"
+  ],
+  "public_situation": "The feared matriarch of the {role:smuggling_syndicate} has passed, and her children are openly feuding for the throne.",
+  "private_truth": "The matriarch's legendary black book of blackmail material is missing, and whoever finds it controls the syndicate.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The siblings issue competing bounties for the recovery of their mother's personal effects.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "youngest_heir",
+          "target": "family_stronghold",
+          "reason": "The youngest heir hires the pilot to trade for the black book from a corrupt vault guard.",
+          "private_fact": "The youngest heir intends to destroy the book and legitimize the family business.",
+          "outcome_tags": [
+            "book_recovered"
+          ],
+          "routes": {
+            "book_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The older siblings realize the book is in play and intercept the pilot.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "eldest_heir",
+          "target": "family_stronghold",
+          "reason": "The eldest heir demands the pilot deliver the book to them, promising a fortune in raw credits.",
+          "private_fact": "The eldest will use it to purge all rivals violently.",
+          "outcome_tags": [
+            "eldest_gets_book",
+            "abandoned"
+          ],
+          "routes": {
+            "eldest_gets_book": "resolution:eldest_rules",
+            "abandoned": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "middle_heir",
+          "target": "family_stronghold",
+          "reason": "The middle heir counters, demanding the book in exchange for blackmail material on the pilot.",
+          "private_fact": "The middle heir will use it to weave an unbreakable web of extortion.",
+          "outcome_tags": [
+            "middle_gets_book",
+            "abandoned"
+          ],
+          "routes": {
+            "middle_gets_book": "resolution:middle_rules",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "missions_mode": "one_of",
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "While the family fights, a rival gang swoops in to destroy the stronghold.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "youngest_heir",
+          "target": "rival_gang",
+          "reason": "The youngest heir begs the pilot to defend the stronghold from the rival gang so they can burn the book in peace.",
+          "private_fact": "Destroying the book will cripple the syndicate's power forever.",
+          "outcome_tags": [
+            "gang_destroyed"
+          ],
+          "routes": {
+            "gang_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The stronghold is safe. The pilot can let the youngest burn the book, or walk away and let the family tear itself apart.",
+        "options": [
+          {
+            "id": "burn_book",
+            "label": "Let the youngest heir burn the book",
+            "leads_to": "resolution:syndicate_falls"
+          },
+          {
+            "id": "walk_away",
+            "label": "Keep the book and walk away",
+            "leads_to": "resolution:war_continues"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "eldest_rules",
+      "reached_by": "The pilot gives the book to the eldest heir.",
+      "summary": "The eldest heir unleashes a wave of assassinations, cementing their rule in blood. The syndicate becomes a brutal cartel.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "eldest_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "middle_heir",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "smuggling_syndicate",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "middle_rules",
+      "reached_by": "The pilot gives the book to the middle heir.",
+      "summary": "The middle heir quietly assumes control. Sector officials start resigning inexplicably as the syndicate's invisible grip tightens.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "middle_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "youngest_heir",
+          "fate": "disappeared"
+        },
+        {
+          "type": "standing",
+          "target": "smuggling_syndicate",
+          "delta": 3
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "syndicate_falls",
+      "reached_by": "The pilot helps the youngest heir burn the book.",
+      "summary": "Without the blackmail, the syndicate shatters into dozens of petty gangs. The youngest heir tries to start a legitimate shipping company.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "youngest_heir",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "smuggling_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "burned_the_black_book",
+          "public_summary": "A pilot burned the biggest blackmail ledger in the sector, and half the politicians breathed a sigh of relief."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "war_continues",
+      "reached_by": "The pilot steals the book or abandons the youngest heir.",
+      "summary": "The family war drags on for years, devastating local trade, and the black book changes hands again and again.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smuggling_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "stolen_goods_circulating"
+      ]
+    }
+  ],
+  "default_resolution": "war_continues",
+  "loose_threads": [
+    {
+      "id": "t_matriarch_poison",
+      "surface": "dialogue",
+      "detail": "A doctor mentions the matriarch didn't die of old age; her heart stopped instantly from a localized EMP pacemaker burst.",
+      "can_carry_methods": [
+        "sabotage",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_missing_pages",
+      "surface": "cargo",
+      "detail": "Three pages of the black book were cleanly excised before the pilot even found it.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Infamous smuggling matriarch dead; authorities brace for gang war.",
+    "Bounties spike across the sector as {role:smuggling_syndicate} infighting escalates."
+  ],
+  "voice_direction": {
+    "eldest_heir": "Loud, aggressive, barks orders.",
+    "middle_heir": "Smooth, silky, always sounds slightly amused.",
+    "youngest_heir": "Earnest, pleading, desperately trying to do the right thing."
+  },
+  "novelty_tags": [
+    "crime_family",
+    "blackmail_ledger",
+    "succession_war",
+    "sibling_rivalry"
+  ]
+}

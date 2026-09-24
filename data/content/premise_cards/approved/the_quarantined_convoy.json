@@ -1,0 +1,318 @@
+{
+  "id": "premise.the_quarantined_convoy",
+  "schema_version": 1,
+  "title": "The Quarantined Convoy",
+  "logline": "An exhausted refugee leader needs a pilot to break through a military blockade that has trapped their fleet in a dying star system.",
+  "scale": "regional",
+  "tone": [
+    "tragic",
+    "paranoid"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "exhausted_leader",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Running on fumes, deeply responsible for their people.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_guard",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Strict, inflexible, just following orders.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "border_checkpoint",
+      "kind": "place",
+      "description": "A massive orbital gate heavily fortified with guns.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "guard_patrol",
+      "kind": "ship",
+      "description": "A heavy cruiser enforcing the blockade.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "refugee_fleet",
+      "kind": "faction",
+      "description": "A flotilla of civilian ships barely holding together.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:refugee_fleet} has been stopped at the {role:border_checkpoint} for mandatory health inspections.",
+  "private_truth": "The inspections are a sham. The local governor ordered the fleet delayed in the dying star system until they simply run out of air.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The refugee fleet's life support reserves drop to critical levels.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "exhausted_leader",
+          "target": "border_checkpoint",
+          "reason": "The leader asks the pilot to scan the checkpoint's processing queue to see when they will be allowed through.",
+          "private_fact": "The scan reveals the queue has been frozen for a week; no one is being processed.",
+          "outcome_tags": [
+            "queue_scanned"
+          ],
+          "routes": {
+            "queue_scanned": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "exhausted_leader",
+          "target": "border_checkpoint",
+          "reason": "The leader begs the player to dock and collect a desperate physical plea to smuggle out to the capital.",
+          "private_fact": "The letter contains highly infectious blood samples meant to prove they aren't sick with the official plague.",
+          "outcome_tags": [
+            "letter_collected"
+          ],
+          "routes": {
+            "letter_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "A solar flare damages one of the refugee ships, causing panic.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "exhausted_leader",
+          "target": "border_checkpoint",
+          "reason": "The leader begs the pilot to mine and deliver water_ice to the fleet waiting at the checkpoint.",
+          "private_fact": "The guard intercepts the delivery and tries to confiscate it.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "border_guard",
+          "target": "border_checkpoint",
+          "reason": "The guard hires the player to buy heavy plasma barricades and deliver them to the checkpoint to hold the fleet back.",
+          "private_fact": "The barricades are actually automated turrets designed to shoot on sight.",
+          "outcome_tags": [
+            "barricades_delivered"
+          ],
+          "routes": {
+            "barricades_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The border guard begins actively turning ships around, forcing them deeper into the dying star system.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "border_guard",
+          "target": "border_checkpoint",
+          "reason": "The guard hires the pilot to collect the fleet's navigation logs to prove they are trying to bypass the checkpoint.",
+          "private_fact": "The logs actually prove the fleet has been patiently waiting the entire time.",
+          "outcome_tags": [
+            "logs_collected"
+          ],
+          "routes": {
+            "logs_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The refugee leader orders the fleet to forcefully run the blockade.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "exhausted_leader",
+          "target": "guard_patrol",
+          "reason": "The leader pays the pilot to attack the guard patrol and clear a path for the fleet.",
+          "private_fact": "The guard hails the pilot, offering full amnesty and a massive bounty if they destroy the leader's ship instead.",
+          "outcome_tags": [
+            "patrol_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "patrol_destroyed": "resolution:fleet_escapes",
+            "took_the_offer": "resolution:leader_killed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fleet_escapes",
+      "reached_by": "The pilot destroys the patrol.",
+      "summary": "The refugee fleet punches through the blockade and escapes the dying star. The military is humiliated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exhausted_leader",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "border_guard",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "refugee_fleet",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_blockade",
+          "public_summary": "A pilot broke a military blockade to save a dying refugee fleet."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "leader_killed",
+      "reached_by": "The pilot takes the guard's offer.",
+      "summary": "The leader is killed. The fleet surrenders and is forced back into the dying star system, where most slowly perish.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exhausted_leader",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "border_guard",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "refugee_fleet",
+          "delta": -3
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "fleet_dies",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The fleet's desperate charge fails. The military destroys several ships, and the rest succumb to the dying star's radiation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exhausted_leader",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "refugee_fleet",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "fleet_dies",
+  "loose_threads": [
+    {
+      "id": "t_blockade_orders",
+      "surface": "scan",
+      "detail": "The blockade orders were signed by a shadowy mega-corporation, not the border administrator.",
+      "can_carry_methods": [
+        "information_control",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_dying_star_cause",
+      "surface": "wreck",
+      "detail": "The star isn't dying naturally; it's being harvested by a massive, unseen megastructure.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Tensions rise at {role:border_checkpoint} as refugee fleet is held indefinitely.",
+    "{role:border_guard} insists quarantine protocols are for everyone's safety."
+  ],
+  "voice_direction": {
+    "exhausted_leader": "Deep, tired, speaks slowly to conserve energy.",
+    "border_guard": "Sharp, loud, barks orders."
+  },
+  "novelty_tags": [
+    "military_blockade",
+    "refugee_convoy",
+    "dying_star_crisis"
+  ]
+}

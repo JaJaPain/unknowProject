@@ -1,0 +1,342 @@
+{
+  "id": "premise.the_frozen_convoy",
+  "schema_version": 1,
+  "title": "Cold Logistics",
+  "logline": "An independent logistics hauler refuses to pay protection money and gets their convoy stranded in an ion storm, requiring desperate rescue operations from rival pilots before the crew freezes.",
+  "scale": "regional",
+  "tone": [
+    "survival",
+    "hopeful"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "stubborn_hauler",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "A fiercely independent trucker who refuses to bow to the syndicate.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_enforcer",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Cold and calculating, ensures the protection racket holds.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "stranded_convoy",
+      "kind": "ship",
+      "description": "Three heavy freighters caught in a dead drift.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "syndicate_base",
+      "kind": "place",
+      "description": "A fortified asteroid serving as a toll booth.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "enforcer_ship",
+      "kind": "ship",
+      "description": "A heavy interdictor designed to drag ships out of warp.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "independent_union",
+      "kind": "faction",
+      "description": "A loose coalition of independent pilots too terrified to help.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "convoy_wreckage",
+      "kind": "place",
+      "description": "The physical debris field of the damaged ships.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "ion_storm"
+    ]
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:independent_union} is terrified after the {role:stubborn_hauler}'s convoy vanished during a routine run through a heavy ion storm.",
+  "private_truth": "The syndicate deliberately lured the convoy into the storm's heart and disabled their drives to set an example.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A faint distress beacon punches through the storm interference.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "stubborn_hauler",
+          "target": "stranded_convoy",
+          "reason": "The hauler begs the pilot to brave the storm and scan the convoy to assess the critical damage.",
+          "private_fact": "The scan reveals the damage was caused by precision EMP weapons, not the storm.",
+          "outcome_tags": [
+            "damage_scanned"
+          ],
+          "routes": {
+            "damage_scanned": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "stubborn_hauler",
+          "target": "convoy_wreckage",
+          "reason": "The pilot must dock and physically retrieve the convoy's encrypted flight recorder before the cold destroys it.",
+          "private_fact": "The crew is suffering from severe hypothermia.",
+          "outcome_tags": [
+            "recorder_secured"
+          ],
+          "routes": {
+            "recorder_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The syndicate claims salvage rights over the convoy, warning anyone against helping.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "stubborn_hauler",
+          "target": "syndicate_base",
+          "reason": "The hauler desperately asks the pilot to deliver a formal challenge to the syndicate base, proving they survived the EMP.",
+          "private_fact": "This is a distraction to keep the syndicate's attention off the rescue.",
+          "outcome_tags": [
+            "challenge_delivered"
+          ],
+          "routes": {
+            "challenge_delivered": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "stubborn_hauler",
+          "target": "syndicate_base",
+          "reason": "The pilot must quietly purchase heavy thermal regulators from the black market at the base.",
+          "private_fact": "The syndicate marks up the price massively.",
+          "outcome_tags": [
+            "regulators_bought"
+          ],
+          "routes": {
+            "regulators_bought": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "The syndicate realizes a rescue is underway and sends a hunter.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "stubborn_hauler",
+          "target": "enforcer_ship",
+          "reason": "The pilot must intercept and destroy the enforcer ship before it reaches the frozen convoy.",
+          "private_fact": "The enforcer ship is carrying the only warp-capable tug cable in the sector.",
+          "outcome_tags": [
+            "enforcer_destroyed"
+          ],
+          "routes": {
+            "enforcer_destroyed": "next"
+          }
+        },
+        {
+          "verb": "recover_combat_drop",
+          "requester": "stubborn_hauler",
+          "target": "enforcer_ship",
+          "reason": "The pilot must shoot the tug cable module off the enforcer's wreckage.",
+          "private_fact": "Without the cable, the convoy can never be moved.",
+          "outcome_tags": [
+            "cable_recovered"
+          ],
+          "routes": {
+            "cable_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The pilot returns to the storm to drag the convoy to safety.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "syndicate_enforcer",
+          "target": "stranded_convoy",
+          "reason": "The syndicate enforcer contacts the pilot, offering a massive bounty if they simply destroy the frozen convoy instead of towing it.",
+          "private_fact": "The hauler hails the pilot, offering to make them a lifetime partner in the union if they tow them home.",
+          "outcome_tags": [
+            "convoy_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "convoy_destroyed": "resolution:hauler_killed",
+            "took_the_offer": "resolution:convoy_saved"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "convoy_saved",
+      "reached_by": "The pilot takes the hauler's offer and tows the convoy.",
+      "summary": "The convoy is saved. The independent union rallies behind the hauler, breaking the syndicate's hold on the sector's trade routes.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_union",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "stubborn_hauler",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_enforcer",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_convoy",
+          "public_summary": "A pilot dragged a freezing convoy out of an ion storm, breaking a syndicate protection racket."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "hauler_killed",
+      "reached_by": "The pilot destroys the convoy for the syndicate.",
+      "summary": "The convoy is shattered. The syndicate cements its brutal rule over the independent pilots, and the pilot gets rich in blood money.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "stubborn_hauler",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_enforcer",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "convoy_freezes",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The storm finally breaks the convoy's life support. The crew freezes to death, and the syndicate quietly salvages the ships.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_hauler",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "independent_union",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "convoy_freezes",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_weapons",
+      "surface": "scan",
+      "detail": "The EMP charges used on the convoy were bought with a union welfare-fund account that was closed the year before.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_union_traitor",
+      "surface": "dialogue",
+      "detail": "The hauler mentions their flight path was a closely guarded secret known only to the union leadership.",
+      "can_carry_methods": [
+        "bribery",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "blackmail"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "{role:independent_union} issues travel advisory for severe ion storms.",
+    "Rumors of 'ghost ships' drifting in the outer sectors."
+  ],
+  "voice_direction": {
+    "stubborn_hauler": "Gruff, short sentences. Refuses to admit anything is wrong, even when it plainly is.",
+    "syndicate_enforcer": "Smooth, completely devoid of empathy."
+  },
+  "novelty_tags": [
+    "frozen_convoy",
+    "protection_racket",
+    "storm_rescue",
+    "towing"
+  ]
+}

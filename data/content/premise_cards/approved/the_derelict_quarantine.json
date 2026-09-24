@@ -1,0 +1,317 @@
+{
+  "id": "premise.the_derelict_quarantine",
+  "schema_version": 1,
+  "title": "The Derelict Quarantine",
+  "logline": "A derelict ship drifts into the system carrying survivors of a plague, and a doctor races to cure them while enforcers try to destroy the vessel.",
+  "scale": "regional",
+  "tone": [
+    "bleak",
+    "survival"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "compassionate_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Driven, exhausted, refusing to give up on patients.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ruthless_enforcer",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Cold, sees the derelict as an unacceptable risk.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "derelict_ship",
+      "kind": "place",
+      "description": "A massive, dark generational colony ship.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "enforcer_fleet",
+      "kind": "faction",
+      "description": "A militant group enforcing strict quarantine laws.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "enforcer_flagship",
+      "kind": "ship",
+      "description": "The command vessel of the blockade.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dead_system"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "law_tightened"
+  ],
+  "public_situation": "A derelict colony ship has drifted into scanning range, broadcasting an ancient plague warning.",
+  "private_truth": "The doctor believes they have synthesized a cure, but the enforcers have already been paid to destroy the ship.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The enforcers set up a perimeter around the derelict.",
+      "location": "same_system",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "compassionate_doctor",
+          "target": "derelict_ship",
+          "reason": "Needs rare biological stabilizers delivered immediately to complete the cure.",
+          "private_fact": "The doctor is currently aboard the derelict and has contracted the plague themselves.",
+          "outcome_tags": [
+            "stabilizers_delivered",
+            "stabilizers_abandoned"
+          ],
+          "routes": {
+            "stabilizers_delivered": "beat:2",
+            "stabilizers_abandoned": "resolution:derelict_destroyed"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "compassionate_doctor",
+          "target": "derelict_ship",
+          "reason": "Needs the pilot to scan the ship's outer hull to map a safe route past the enforcers.",
+          "private_fact": "The enforcers are already laying proximity mines. This is a closely guarded secret they refuse to share.",
+          "outcome_tags": [
+            "route_mapped",
+            "scan_failed"
+          ],
+          "routes": {
+            "route_mapped": "next",
+            "scan_failed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The enforcers announce their intention to fire on the derelict.",
+      "location": "neighbouring_system",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "compassionate_doctor",
+          "target": "enforcer_fleet",
+          "reason": "Needs a pilot to destroy the enforcer blockade ships to buy time for the cure to take effect.",
+          "private_fact": "The cure is working, but the patients are too weak to survive a hull breach.",
+          "outcome_tags": [
+            "blockade_broken",
+            "blockade_held"
+          ],
+          "routes": {
+            "blockade_broken": "beat:3",
+            "blockade_held": "resolution:derelict_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The doctor successfully cures the first patient.",
+      "location": "any_system",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "ruthless_enforcer",
+          "target": "enforcer_flagship",
+          "reason": "The enforcer captain hails the pilot, offering them a massive bounty to destroy the derelict's engines.",
+          "private_fact": "The enforcers are terrified the plague will spread to their home system.",
+          "outcome_tags": [
+            "engines_destroyed",
+            "took_doctor_side"
+          ],
+          "routes": {
+            "engines_destroyed": "resolution:derelict_stranded",
+            "took_doctor_side": "beat:4"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The derelict's engines finally sputter to life.",
+      "location": "any_system",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "compassionate_doctor",
+          "target": "derelict_ship",
+          "reason": "Needs the cured patients evacuated to a medical frigate before the enforcers regroup.",
+          "private_fact": "The doctor will stay behind to ensure the rest of the ship is scuttled safely.",
+          "outcome_tags": [
+            "patients_evacuated",
+            "evac_failed"
+          ],
+          "routes": {
+            "patients_evacuated": "resolution:survivors_saved",
+            "evac_failed": "resolution:derelict_destroyed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot must choose the fate of the survivors.",
+        "options": [
+          {
+            "id": "save_survivors",
+            "label": "Evacuate the survivors to safety",
+            "leads_to": "resolution:survivors_saved"
+          },
+          {
+            "id": "abandon_survivors",
+            "label": "Abandon them to the enforcers",
+            "leads_to": "resolution:derelict_destroyed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "survivors_saved",
+      "reached_by": "The pilot evacuates the patients.",
+      "summary": "The survivors are brought to safety and the plague is cured. The enforcers face public backlash.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "compassionate_doctor",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "enforcer_fleet",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "refugee_influx"
+          ],
+          "remove": [
+            "quarantine"
+          ]
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "derelict_destroyed",
+      "reached_by": "The pilot abandons the missions or fails to break the blockade.",
+      "summary": "The derelict is destroyed with everyone aboard. The enforcers claim they saved the system.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "compassionate_doctor",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "enforcer_fleet",
+          "delta": 2
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "derelict_stranded",
+      "reached_by": "The pilot destroys the engines for the enforcers.",
+      "summary": "The derelict is stranded in deep space. The patients are cured but trapped forever.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "compassionate_doctor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_enforcer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "enforcer_fleet",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "derelict_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_plague_origin",
+      "surface": "scan",
+      "detail": "The plague's genetic markers indicate it was engineered in a high-security corporate biolab.",
+      "can_carry_methods": [
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_enforcer_pay",
+      "surface": "radio",
+      "detail": "The enforcers are receiving hazard pay from a rival colonization company.",
+      "can_carry_methods": [
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Quarantine zone established around unknown derelict.",
+    "Medical experts urge caution as ancient plague fears spread."
+  ],
+  "voice_direction": {
+    "compassionate_doctor": "Determined, weakly spoken, intensely focused.",
+    "ruthless_enforcer": "Harsh, unyielding, speaks like a zealot."
+  },
+  "novelty_tags": [
+    "plague_ship",
+    "derelict_rescue",
+    "quarantine_breach"
+  ]
+}

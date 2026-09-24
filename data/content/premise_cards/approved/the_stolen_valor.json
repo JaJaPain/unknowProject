@@ -1,0 +1,281 @@
+{
+  "id": "premise.the_stolen_valor",
+  "schema_version": 1,
+  "title": "The Stolen Valor",
+  "logline": "A celebrated war hero who actually fled the battle needs a pilot to silence a vengeful survivor trying to broadcast the truth.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "paranoid"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "fraudulent_hero",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Polished, charismatic, entirely hollow inside.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "vengeful_survivor",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Scarred, missing limbs, completely consumed by rage.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "monument_station",
+      "kind": "place",
+      "description": "A massive orbital memorial built to honor the fallen.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "hero_yacht",
+      "kind": "ship",
+      "description": "A flashy, unarmed luxury cruiser used for parades.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "veterans_guild",
+      "kind": "faction",
+      "description": "A powerful political organization of former soldiers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:veterans_guild} is hosting a massive memorial gala at {role:monument_station} to honor the {role:fraudulent_hero}.",
+  "private_truth": "The hero abandoned their squad to die in the dying star system. The survivor lived and has the flight logs to prove it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The gala preparations begin, drawing thousands of spectators.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "fraudulent_hero",
+          "target": "monument_station",
+          "reason": "The hero hires the pilot to deliver pristine ice for the gala's ice sculptures, hoping to project an image of prosperity.",
+          "private_fact": "The hero is visibly terrified and surrounded by bodyguards.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The survivor hacks the station's public address system to play a snippet of the hero begging for mercy.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "vengeful_survivor",
+          "target": "monument_station",
+          "reason": "The survivor asks the pilot to meet a sympathetic guard at the station's security dock and collect the access codes for the main broadcast array.",
+          "private_fact": "The guard was actually killed by the hero's mercenaries, who are waiting in ambush.",
+          "outcome_tags": [
+            "codes_collected"
+          ],
+          "routes": {
+            "codes_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The survivor prepares to broadcast the full coward's log to the entire sector.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "fraudulent_hero",
+          "target": "hero_yacht",
+          "reason": "The hero pays the pilot an exorbitant sum to destroy their own yacht—which the survivor has hijacked—and recover the broadcast core before it finishes transmitting.",
+          "private_fact": "The survivor begs the pilot to let the broadcast finish so the dead can finally be honored.",
+          "outcome_tags": [
+            "core_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "core_recovered": "resolution:hero_wins",
+            "abandoned": "resolution:survivor_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the broadcast core. The truth is right there. The hero is demanding it back.",
+        "options": [
+          {
+            "id": "destroy_core",
+            "label": "Return the core to the hero",
+            "leads_to": "resolution:hero_wins"
+          },
+          {
+            "id": "broadcast_truth",
+            "label": "Broadcast the truth to the sector",
+            "leads_to": "resolution:survivor_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "hero_wins",
+      "reached_by": "The pilot returns the core.",
+      "summary": "The truth is suppressed. The survivor is dismissed as a traumatized lunatic, and the hero continues their glorious, fraudulent career.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "fraudulent_hero",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vengeful_survivor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "survivor_wins",
+      "reached_by": "The pilot broadcasts the truth.",
+      "summary": "The coward's log plays on every screen. The hero is ruined, stripped of their medals, and imprisoned for desertion. The dead are finally honored.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "fraudulent_hero",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vengeful_survivor",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_guild",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_coward",
+          "public_summary": "A pilot exposed a celebrated war hero as a coward to honor a ruined survivor."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "survivor_killed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The hero's mercenaries easily blow the unarmed yacht out of the sky before the broadcast finishes. The truth dies with the survivor.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "vengeful_survivor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fraudulent_hero",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "survivor_killed",
+  "loose_threads": [
+    {
+      "id": "t_hero_bribes",
+      "surface": "scan",
+      "detail": "The hero didn't just flee; they were paid by the enemy faction to abandon that specific outpost.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_guild_coverup",
+      "surface": "dialogue",
+      "detail": "The guild leadership actually knew the hero was a fraud, but covered it up to maintain recruitment numbers.",
+      "can_carry_methods": [
+        "information_control",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:monument_station} prepares for massive memorial gala.",
+    "{role:fraudulent_hero} speaks about the heavy burden of command."
+  ],
+  "voice_direction": {
+    "fraudulent_hero": "Smooth, practiced, sounds exactly like a recruitment ad.",
+    "vengeful_survivor": "Harsh, broken, speaks through gritted teeth."
+  },
+  "novelty_tags": [
+    "stolen_valor",
+    "memorial_gala",
+    "cowards_log"
+  ]
+}

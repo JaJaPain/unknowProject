@@ -1,0 +1,348 @@
+{
+  "id": "premise.the_buried_saint",
+  "schema_version": 1,
+  "title": "Lost Cargo",
+  "logline": "A locally revered saint's sarcophagus was accidentally loaded onto a massive automated bulk freighter during a recent planetary evacuation.",
+  "scale": "regional",
+  "tone": [
+    "melancholy",
+    "absurd"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "grieving_acolyte",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Desperate to recover the sarcophagus before the freighter is broken down for scrap.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freighter_docking_bay",
+      "kind": "place",
+      "description": "A massive, unlit cargo bay attached to an unfeeling machine.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "automated_freighter",
+      "kind": "ship",
+      "description": "A colossal, blind corporate hauling vessel executing a decades-old flight plan.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "holy_monastery",
+      "kind": "place",
+      "description": "A quiet sanctuary now completely empty of its defining relic.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "freighter_company",
+      "kind": "faction",
+      "description": "A distant logistics corp that genuinely has no idea they stole a saint.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "freighter_escort",
+      "kind": "ship",
+      "description": "Automated security drones slaved to the freighter.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "monastery_shrine",
+      "kind": "place",
+      "description": "An empty pedestal.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_hq",
+      "kind": "place",
+      "description": "The bureaucratic heart of the freighter company.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "market_disrupted"
+  ],
+  "public_situation": "The monks of the {role:holy_monastery} are in mourning after their most sacred relic was lost during an emergency cargo shuffle.",
+  "private_truth": "The cargo wasn't stolen maliciously; a blind automated loading crane simply grabbed the wrong crate. However, the freighter's automated defenses view anyone approaching as a pirate.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The acolyte tracks the relic's faint radiation signature to the massive freighter's projected path.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "grieving_acolyte",
+          "target": "freighter_docking_bay",
+          "reason": "Needs the pilot to quietly scan the exterior of the massive docking bay to confirm the relic is inside.",
+          "private_fact": "The scan accidentally trips the freighter's automated proximity alarms.",
+          "outcome_tags": [
+            "relic_confirmed"
+          ],
+          "routes": {
+            "relic_confirmed": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "grieving_acolyte",
+          "target": "monastery_shrine",
+          "reason": "The acolyte needs the pilot to deliver a prayer of preservation to the shrine before the chase begins.",
+          "private_fact": "The acolyte believes this will protect the pilot.",
+          "outcome_tags": [
+            "prayer_delivered"
+          ],
+          "routes": {
+            "prayer_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The freighter jumps to the next system and activates its automated defense drones in response to the alarm.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "grieving_acolyte",
+          "target": "holy_monastery",
+          "reason": "The acolyte needs the pilot to deliver the scan data to the monastery so they can prepare the retrieval codes.",
+          "private_fact": "The data proves the saint is essentially being held hostage by a garbage scow.",
+          "outcome_tags": [
+            "data_delivered"
+          ],
+          "routes": {
+            "data_delivered": "next"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "grieving_acolyte",
+          "target": "freighter_escort",
+          "reason": "The pilot must destroy the defensive drones swarming the freighter so they can get close.",
+          "private_fact": "The drones are lightly armed but heavily shielded.",
+          "outcome_tags": [
+            "drones_destroyed"
+          ],
+          "routes": {
+            "drones_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The company realizes their freighter is under attack and offers a bounty for its protection.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "grieving_acolyte",
+          "target": "automated_freighter",
+          "reason": "The pilot must scan the freighter's hull to find a manual override port.",
+          "private_fact": "The port is damaged and highly unstable.",
+          "outcome_tags": [
+            "port_found"
+          ],
+          "routes": {
+            "port_found": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "grieving_acolyte",
+          "target": "corporate_hq",
+          "reason": "The acolyte needs the pilot to deliver a formal writ of reclamation to the company.",
+          "private_fact": "The company ignores the writ but logs the pilot's ship.",
+          "outcome_tags": [
+            "writ_delivered"
+          ],
+          "routes": {
+            "writ_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The defenses are down, but the freighter is preparing to vent its cargo bay into a local star.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "grieving_acolyte",
+          "target": "automated_freighter",
+          "reason": "Hires the pilot to shoot out the cargo locks and recover the sarcophagus as it spills into space.",
+          "private_fact": "If the pilot takes too long, the cargo will fall into the star.",
+          "outcome_tags": [
+            "sarcophagus_secured"
+          ],
+          "routes": {
+            "sarcophagus_secured": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has the sarcophagus in their hold. They can return it to the monastery or sell it to the freighter company as 'recovered company property'.",
+        "options": [
+          {
+            "id": "return_to_monks",
+            "label": "Return the saint to the monastery",
+            "leads_to": "resolution:saint_restored"
+          },
+          {
+            "id": "sell_to_corp",
+            "label": "Sell the cargo back to the corporation",
+            "leads_to": "resolution:saint_sold"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "saint_restored",
+      "reached_by": "The pilot fights the drones and returns the relic.",
+      "summary": "The sarcophagus is returned to the monastery. The believers rejoice, though the corporation officially blacklists the pilot for piracy.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freighter_company",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "grieving_acolyte",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "rescued_the_saint",
+          "public_summary": "A pilot risked an automated firing squad to pull a stolen holy relic off a cargo hauler."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "saint_sold",
+      "reached_by": "The pilot sells the saint to the corporation.",
+      "summary": "The corporation melts the sarcophagus down for its rare metals. The pilot gets a corporate bonus, but the monks are devastated.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freighter_company",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "grieving_acolyte",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "freighter_escapes",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The freighter vents the cargo into the star. The saint is lost forever, and the believers are utterly crushed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "grieving_acolyte",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "freighter_company",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "freighter_escapes",
+  "loose_threads": [
+    {
+      "id": "t_crane_logs",
+      "surface": "cargo",
+      "detail": "The freighter's loading manifest shows the crane was given a manual override command from an untraceable terminal just seconds before grabbing the sarcophagus.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_saint_remains",
+      "surface": "scan",
+      "detail": "The radiological scan of the sarcophagus reveals the remains inside are only twenty years old, not ancient.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Monks of the {role:holy_monastery} declare a month of fasting over missing relic.",
+    "{role:freighter_company} denies any knowledge of unscheduled cargo acquisitions."
+  ],
+  "voice_direction": {
+    "grieving_acolyte": "Stilted, formal rhythm. Refuses to use modern technological terms."
+  },
+  "novelty_tags": [
+    "automated_freighter",
+    "accidental_theft",
+    "holy_relic",
+    "no_villain"
+  ]
+}

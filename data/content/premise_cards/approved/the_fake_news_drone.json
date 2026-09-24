@@ -1,0 +1,261 @@
+{
+  "id": "premise.the_fake_news_drone",
+  "schema_version": 1,
+  "title": "The Fake News Drone",
+  "logline": "An ambitious reporter hires a pilot to protect their fabricated news broadcast drone from a tired editor trying to shoot it down.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "farce"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "ambitious_reporter",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Loud, completely unprincipled, views truth as a suggestion.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tired_editor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Exhausted, heavily caffeinated, just wants to avoid lawsuits.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "news_station",
+      "kind": "place",
+      "description": "A massive orbital broadcasting hub covered in satellite dishes.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "propaganda_drone",
+      "kind": "ship",
+      "description": "A heavily armored automated transmitter blasting clickbait.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "news_syndicate",
+      "kind": "faction",
+      "description": "A massive broadcasting monopoly.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "A {role:propaganda_drone} is broadcasting a completely fabricated story about a non-existent mutant bioweapon outbreak near the {role:news_station}.",
+  "private_truth": "The reporter built the drone to artificially boost their ratings, and the editor is desperately trying to destroy it before the station loses its broadcasting license.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The station's automated defense turrets begin tracking the drone.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "ambitious_reporter",
+          "target": "news_station",
+          "reason": "The reporter hires the pilot to buy and deliver signal scramblers to the station to blind its turrets.",
+          "private_fact": "The scramblers accidentally knock out the station's legitimate emergency broadcasts.",
+          "outcome_tags": [
+            "scramblers_delivered"
+          ],
+          "routes": {
+            "scramblers_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The editor personally boards a maintenance skiff with a plasma rifle.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "tired_editor",
+          "target": "news_station",
+          "reason": "The editor hires the pilot to scan the drone to find its remote control frequency so they can shut it down.",
+          "private_fact": "The pilot discovers the reporter is controlling the drone from the station's cafeteria.",
+          "outcome_tags": [
+            "frequency_found"
+          ],
+          "routes": {
+            "frequency_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The editor lines up a clear shot at the drone.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "tired_editor",
+          "target": "news_station",
+          "reason": "The editor begs the pilot to deliver a massive EMP charge to the station's main transmitter to permanently blind the drone.",
+          "private_fact": "The EMP will also knock out the station's ability to broadcast for a month.",
+          "outcome_tags": [
+            "emp_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "emp_delivered": "resolution:editor_wins",
+            "abandoned": "resolution:reporter_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot is ready to plant the EMP. The reporter is offering a cut of the massive ad revenue to walk away.",
+        "options": [
+          {
+            "id": "plant_emp",
+            "label": "Plant the EMP and stop the fake news",
+            "leads_to": "resolution:editor_wins"
+          },
+          {
+            "id": "walk_away",
+            "label": "Walk away and take the ad revenue",
+            "leads_to": "resolution:reporter_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "editor_wins",
+      "reached_by": "The pilot destroys the drone.",
+      "summary": "The drone is destroyed. The fake news broadcast stops, the station keeps its license, and the reporter is fired.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ambitious_reporter",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tired_editor",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_fake_news",
+          "public_summary": "A pilot blew up a rogue broadcast drone to stop a fabricated panic."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "reporter_wins",
+      "reached_by": "The pilot blocks the shot.",
+      "summary": "The drone finishes its broadcast. A massive public panic ensues, the reporter gets promoted to lead anchor, and the editor quits in despair.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ambitious_reporter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tired_editor",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "drone_survives",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The editor misses the shot. The drone broadcasts unabated, causing a massive stampede that destroys the station's docks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ambitious_reporter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tired_editor",
+          "fate": "imprisoned"
+        }
+      ],
+      "seeds": [
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "drone_survives",
+  "loose_threads": [
+    {
+      "id": "t_drone_origin",
+      "surface": "scan",
+      "detail": "The drone is entirely composed of stolen deep-mining robotics.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_editor_bribe",
+      "surface": "dialogue",
+      "detail": "The editor accidentally admits they only care because they were bribed by a rival network to keep ratings low.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "false_flag"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Panic spreads as reports of mutant bioweapon outbreak flood the sector.",
+    "{role:tired_editor} issues frantic apologies on all frequencies."
+  ],
+  "voice_direction": {
+    "ambitious_reporter": "Fast, loud, speaks entirely in headlines.",
+    "tired_editor": "Slow, utterly defeated, sounds like they haven't slept in days."
+  },
+  "novelty_tags": [
+    "fake_news",
+    "rogue_drone",
+    "ratings_war"
+  ]
+}

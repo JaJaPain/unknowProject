@@ -1,0 +1,275 @@
+{
+  "id": "premise.the_chosen_successor",
+  "schema_version": 1,
+  "title": "The Chosen Successor",
+  "logline": "A religious sect's leader has died, and their ambitious heir hires a pilot to falsify the signs of succession.",
+  "scale": "personal",
+  "tone": [
+    "political",
+    "farce"
+  ],
+  "themes": [
+    "legacy",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "ambitious_heir",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Entitled, polished, completely lacking in spiritual depth.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "doubting_journalist",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Cynical, digging for the truth but terrified of the sect's power.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sect_leadership",
+      "kind": "faction",
+      "description": "A powerful, wealthy order that controls vast local real estate.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ceremonial_barge",
+      "kind": "place",
+      "description": "A gilded, absurdly fragile vessel used for rituals.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "mourning"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "leader_discredited"
+  ],
+  "public_situation": "The venerable leader of the {role:sect_leadership} has passed away, and the system awaits the traditional 'Sign of the Stars' to name their successor.",
+  "private_truth": "The 'Sign' is a complete fabrication, but the heir's equipment broke down and they desperately need an outsider to trigger the pyrotechnics.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The ceremonial barge takes up position in orbit for the succession ritual.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "ambitious_heir",
+          "target": "ceremonial_barge",
+          "reason": "The heir hires the pilot to quietly buy and deliver military-grade flares to the barge.",
+          "private_fact": "The heir plans to use the flares to fake a celestial alignment.",
+          "outcome_tags": [
+            "flares_delivered"
+          ],
+          "routes": {
+            "flares_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The journalist publishes a hit piece suggesting the heir is manipulating the succession.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "doubting_journalist",
+          "target": "ceremonial_barge",
+          "reason": "The journalist pays the pilot to scan the barge for rigged pyrotechnics.",
+          "private_fact": "The scan clearly shows the freshly delivered flares.",
+          "outcome_tags": [
+            "scan_rigged",
+            "scan_clean",
+            "report_unverified"
+          ],
+          "routes": {
+            "scan_rigged": "next",
+            "scan_clean": "resolution:heir_succeeds",
+            "report_unverified": "resolution:heir_succeeds"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The succession ceremony begins, broadcast live across the sector.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "ambitious_heir",
+          "target": "ceremonial_barge",
+          "reason": "The heir hires the pilot to formally certify the 'Sign' as authentic via ship sensors.",
+          "private_fact": "The heir is paying an exorbitant sum for a false certification.",
+          "outcome_tags": [
+            "certify_sign",
+            "refuse"
+          ],
+          "routes": {
+            "certify_sign": "next",
+            "refuse": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has proof the ritual is faked. They can hand it to the journalist, or extort the heir.",
+        "options": [
+          {
+            "id": "expose_heir",
+            "label": "Give the proof to the journalist",
+            "leads_to": "resolution:heir_disgraced"
+          },
+          {
+            "id": "extort_heir",
+            "label": "Blackmail the heir for a payout",
+            "leads_to": "resolution:heir_succeeds"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heir_disgraced",
+      "reached_by": "The pilot gives the proof to the journalist.",
+      "summary": "The ritual is exposed as a farce. The heir is cast out, and the sect descends into a bitter schism.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "sect_leadership",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "ambitious_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "doubting_journalist",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_fake_ritual",
+          "public_summary": "Someone proved the big holy succession was just cheap fireworks."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "heir_succeeds",
+      "reached_by": "The pilot covers up the scan or extorts the heir.",
+      "summary": "The 'Sign' appears on schedule. The heir takes power and immediately begins looting the sect's treasury.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "sect_leadership",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "ambitious_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "doubting_journalist",
+          "fate": "exposed"
+        }
+      ],
+      "seeds": [
+        "new_leader_untested",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "ritual_fails",
+      "reached_by": "The pilot ignores the missions.",
+      "summary": "Without the flares, the ritual fails. The sect takes it as a dark omen and retreats into isolation.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "sect_leadership",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "ambitious_heir",
+          "fate": "exposed"
+        }
+      ],
+      "seeds": [
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "ritual_fails",
+  "loose_threads": [
+    {
+      "id": "t_barge_registry",
+      "surface": "scan",
+      "detail": "The ceremonial barge was secretly purchased months before the old leader even fell ill.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_journalist_source",
+      "surface": "dialogue",
+      "detail": "The journalist lets slip that their 'source' is an anonymous encrypted comm ping that perfectly predicted the leader's death.",
+      "can_carry_methods": [
+        "information_control",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:sect_leadership} announces succession ceremony will proceed as ordained.",
+    "Journalist {role:doubting_journalist} promises explosive revelations tonight."
+  ],
+  "voice_direction": {
+    "ambitious_heir": "Smug, aristocratic, uses spiritual buzzwords completely incorrectly.",
+    "doubting_journalist": "Fast-talking, paranoid, sounds like they haven't slept in a week."
+  },
+  "novelty_tags": [
+    "fake_ritual",
+    "religious_schism",
+    "succession_crisis",
+    "rigged_miracle"
+  ]
+}

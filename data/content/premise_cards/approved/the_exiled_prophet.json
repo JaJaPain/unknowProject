@@ -1,0 +1,272 @@
+{
+  "id": "premise.the_exiled_prophet",
+  "schema_version": 1,
+  "title": "The Exiled Prophet",
+  "logline": "A hunted religious leader hiding in an asteroid field needs a pilot to smuggle out their final teachings before their radical pursuers find them.",
+  "scale": "personal",
+  "tone": [
+    "survival",
+    "hopeful"
+  ],
+  "themes": [
+    "reinvention",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "exiled_prophet",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "A former cartel boss who found religion and is now hunted for their pacifist teachings.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loyal_disciple",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Young, naive, utterly devoted to the prophet's words.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "prophet_hideout",
+      "kind": "place",
+      "description": "A hollowed-out asteroid shielded from long-range scans.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pacifist_order",
+      "kind": "faction",
+      "description": "A small group of followers trying to organize.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "martyr_made",
+    "witness_at_large"
+  ],
+  "public_situation": "Rumors are spreading that the legendary {role:exiled_prophet} has returned to the sector to preach a radical message of peace.",
+  "private_truth": "The prophet is actually dying of engine radiation poisoning and just wants to ensure their disciple survives.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A scrambled broadcast from the debris field calls for a discrete courier.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "loyal_disciple",
+          "target": "prophet_hideout",
+          "reason": "The disciple asks the pilot to navigate the dense debris and verify the hideout's location.",
+          "private_fact": "The disciple is testing if the pilot can be trusted not to sell them out.",
+          "outcome_tags": [
+            "hideout_verified"
+          ],
+          "routes": {
+            "hideout_verified": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "Bounty hunters begin sweeping the sector for the prophet.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "exiled_prophet",
+          "target": "prophet_hideout",
+          "reason": "The prophet needs the pilot to deliver specialized medical supplies to the hideout.",
+          "private_fact": "The supplies aren't for the prophet; they are fake death certificates for the disciple.",
+          "outcome_tags": [
+            "supplies_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "supplies_delivered": "next",
+            "abandoned": "resolution:prophet_captured"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The hideout's shielding fails, exposing their position.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "loyal_disciple",
+          "target": "prophet_hideout",
+          "reason": "The disciple asks the pilot to scan the hideout's wreckage to prove they died in the shield collapse.",
+          "private_fact": "The scan will falsely confirm their deaths, allowing them to escape.",
+          "outcome_tags": [
+            "certify_dead",
+            "report_alive"
+          ],
+          "routes": {
+            "certify_dead": "next",
+            "report_alive": "resolution:prophet_captured"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The prophet gives the pilot their final data drive. The pilot can deliver the teachings to the public, or sell the location to the bounty hunters.",
+        "options": [
+          {
+            "id": "publish_teachings",
+            "label": "Broadcast the teachings across the system",
+            "leads_to": "resolution:teachings_spread"
+          },
+          {
+            "id": "sell_out",
+            "label": "Sell the hideout's coordinates",
+            "leads_to": "resolution:prophet_captured"
+          },
+          {
+            "id": "relocate",
+            "label": "Secretly relocate them",
+            "leads_to": "resolution:prophet_exiled_further"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "teachings_spread",
+      "reached_by": "The pilot broadcasts the data drive.",
+      "summary": "The pacifist teachings ignite a movement. The prophet dies peacefully, and the disciple escapes to start a new life.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_prophet",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_disciple",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "spread_the_prophets_word",
+          "public_summary": "A pilot broadcast the last words of the great prophet before they passed."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "prophet_captured",
+      "reached_by": "The pilot sells the coordinates or abandons the missions.",
+      "summary": "Bounty hunters raid the hideout. The prophet and the disciple are both captured and handed over to the authorities.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_prophet",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_disciple",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "prophet_exiled_further",
+      "reached_by": "The pilot safely relocates the prophet without broadcasting.",
+      "summary": "The prophet escapes to another system. The teachings remain a secret, but the disciple lives to learn another day.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_prophet",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_disciple",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "pacifist_order",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "prophet_captured",
+  "loose_threads": [
+    {
+      "id": "t_bounty_source",
+      "surface": "radio",
+      "detail": "The bounty on the prophet was anonymously paid out of an account registered to a defunct charity.",
+      "can_carry_methods": [
+        "blackmail",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_shield_failure",
+      "surface": "scan",
+      "detail": "The hideout's shielding didn't just fail; it received a localized override command from a nearby relay.",
+      "can_carry_methods": [
+        "sabotage",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Bounty on {role:exiled_prophet} doubled by unknown benefactor.",
+    "Unregistered transmissions detected near dense debris fields."
+  ],
+  "voice_direction": {
+    "exiled_prophet": "Weak, raspy, but entirely at peace. Speaks without fear.",
+    "loyal_disciple": "Nervous, overly eager to please, recites scripture when stressed."
+  },
+  "novelty_tags": [
+    "pacifist_smuggler",
+    "dying_mentor",
+    "fake_death",
+    "religious_broadcast"
+  ]
+}

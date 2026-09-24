@@ -1,0 +1,314 @@
+{
+  "id": "premise.the_unexploded_legacy",
+  "schema_version": 1,
+  "title": "The Unexploded Legacy",
+  "logline": "An old piece of unexploded ordinance is found in a civilian sector, and two factions argue over whether to safely disarm it or weaponize it.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "cautious_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Methodical, terrified of the ordinance.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ambitious_official",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Sees the ordinance as a deterrent, not a danger.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ordinance_site",
+      "kind": "place",
+      "description": "An abandoned colony habitat where the bomb rests.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "local_government",
+      "kind": "faction",
+      "description": "The struggling planetary authority.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A massive, unexploded bomb from a forgotten war has been discovered lodged in a local habitat.",
+  "private_truth": "The bomb is still fully functional, and the official wants to reverse-engineer it to threaten a neighboring system.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The local government quarantines the habitat.",
+      "location": "same_system",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "cautious_engineer",
+          "target": "ordinance_site",
+          "reason": "Needs a pilot to perform a close-range scan of the bomb's detonator casing.",
+          "private_fact": "The engineer suspects the official has already tampered with it.",
+          "outcome_tags": [
+            "scan_tampered",
+            "scan_untampered"
+          ],
+          "routes": {
+            "scan_tampered": "beat:2",
+            "scan_untampered": "beat:2"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "cautious_engineer",
+          "target": "ordinance_site",
+          "reason": "Needs secure communication relays delivered to coordinate the evacuation.",
+          "private_fact": "The relays also contain a dead-man's switch tied to the engineer's vitals.",
+          "outcome_tags": [
+            "relays_delivered",
+            "relays_abandoned"
+          ],
+          "routes": {
+            "relays_delivered": "next",
+            "relays_abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The official announces a 'research initiative' regarding the bomb.",
+      "location": "neighbouring_system",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "cautious_engineer",
+          "target": "ordinance_site",
+          "reason": "Needs specialized chemical neutralizers delivered from off-world.",
+          "private_fact": "The neutralizers are illegal to transport without a military license.",
+          "outcome_tags": [
+            "neutralizers_delivered",
+            "neutralizers_abandoned"
+          ],
+          "routes": {
+            "neutralizers_delivered": "beat:3",
+            "neutralizers_abandoned": "resolution:bomb_weaponized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The official intercepts the delivery and seizes the neutralizers.",
+      "location": "any_system",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "ambitious_official",
+          "target": "ordinance_site",
+          "reason": "The official hires the pilot to deliver a new triggering mechanism.",
+          "private_fact": "The official plans to arm the bomb immediately as a show of force.",
+          "outcome_tags": [
+            "trigger_delivered",
+            "trigger_abandoned"
+          ],
+          "routes": {
+            "trigger_delivered": "beat:4",
+            "trigger_abandoned": "beat:4"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The standoff reaches a breaking point at the ordinance site.",
+      "location": "same_system",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "cautious_engineer",
+          "target": "ordinance_site",
+          "reason": "Needs dense ferrite shielding delivered to contain the blast if the official arms it.",
+          "private_fact": "The engineer is going to manually defuse it while the pilot shields them.",
+          "outcome_tags": [
+            "shielding_delivered",
+            "shielding_abandoned"
+          ],
+          "routes": {
+            "shielding_delivered": "resolution:bomb_defused",
+            "shielding_abandoned": "resolution:bomb_weaponized"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot must choose who to support in the final confrontation.",
+        "options": [
+          {
+            "id": "support_engineer",
+            "label": "Deliver the shielding to the engineer",
+            "leads_to": "resolution:bomb_defused"
+          },
+          {
+            "id": "support_official",
+            "label": "Let the official weaponize the bomb",
+            "leads_to": "resolution:bomb_weaponized"
+          },
+          {
+            "id": "abandon_bomb",
+            "label": "Abandon the bomb and let a third party take it",
+            "leads_to": "resolution:bomb_stolen"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bomb_defused",
+      "reached_by": "The pilot supports the engineer.",
+      "summary": "The bomb is safely neutralized. The habitat is saved, but the government loses its leverage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cautious_engineer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ambitious_official",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "local_government",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "bomb_weaponized",
+      "reached_by": "The pilot supports the official or abandons the missions.",
+      "summary": "The bomb is armed. The neighboring system yields to the threat, plunging the region into a cold war.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cautious_engineer",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ambitious_official",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "local_government",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "bomb_stolen",
+      "reached_by": "A rare alternative outcome.",
+      "summary": "A third party steals the bomb during the chaos. The official and the engineer both face the fallout.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cautious_engineer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ambitious_official",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "local_government",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "bomb_weaponized",
+  "loose_threads": [
+    {
+      "id": "t_bomb_origin",
+      "surface": "scan",
+      "detail": "The bomb's serial number indicates it was manufactured by a peaceful agricultural commune.",
+      "can_carry_methods": [
+        "false_flag",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_official_backer",
+      "surface": "dialogue",
+      "detail": "The official mentions an 'anonymous benefactor' who tipped them off to the bomb's location.",
+      "can_carry_methods": [
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "false_flag",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Evacuations ordered in civilian sector following discovery of unexploded ordinance.",
+    "Local government assures public that the bomb is 'under control'."
+  ],
+  "voice_direction": {
+    "cautious_engineer": "Nervous, exact, speaks in measured tones.",
+    "ambitious_official": "Boastful, aggressive, talks over everyone."
+  },
+  "novelty_tags": [
+    "unexploded_bomb",
+    "cold_war_threat",
+    "civilian_habitat"
+  ]
+}

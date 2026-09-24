@@ -1,0 +1,268 @@
+{
+  "id": "premise.the_rigged_race",
+  "schema_version": 1,
+  "title": "The Rigged Race",
+  "logline": "A desperate mechanic is forced to rig a prestigious ship race to pay off a massive syndicate debt.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "political"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "desperate_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Covered in grease, exhausted, out of options.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_boss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Wealthy, untouchable, viewing lives as wagers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "race_track",
+      "kind": "place",
+      "description": "A high-speed orbital racing circuit.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "racing_syndicate",
+      "kind": "faction",
+      "description": "A powerful gambling organization.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted"
+  ],
+  "public_situation": "The annual orbital grand prix is generating record betting pools.",
+  "private_truth": "The syndicate boss holds the mechanic's massive family debt and is forcing them to sabotage the favorite racer.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The qualifiers conclude, confirming the racing lineup.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_mechanic",
+          "target": "race_track",
+          "reason": "Needs specialized micro-explosives delivered disguised as standard thruster components.",
+          "private_fact": "The mechanic hates doing this and plans to trigger them to fail safely rather than kill the pilot.",
+          "outcome_tags": [
+            "components_delivered",
+            "components_abandoned"
+          ],
+          "routes": {
+            "components_delivered": "beat:2",
+            "components_abandoned": "resolution:mechanic_ruined"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The syndicate boss double-checks the sabotaged ship and demands a more lethal guarantee.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_mechanic",
+          "target": "race_track",
+          "reason": "Needs the pilot to scan the syndicate boss's private shuttle for its security bypass codes.",
+          "private_fact": "The mechanic intends to use the codes to drain the boss's betting accounts to pay off the debt instead.",
+          "outcome_tags": [
+            "codes_scanned",
+            "scan_failed"
+          ],
+          "routes": {
+            "codes_scanned": "beat:3",
+            "scan_failed": "resolution:race_rigged"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The final race begins.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "syndicate_boss",
+          "target": "race_track",
+          "reason": "The boss hires the pilot to deliver a secondary remote detonator directly to their VIP box.",
+          "private_fact": "The boss knows the mechanic tried to make the sabotage non-lethal.",
+          "outcome_tags": [
+            "detonator_delivered",
+            "detonator_withheld"
+          ],
+          "routes": {
+            "detonator_delivered": "resolution:race_rigged",
+            "detonator_withheld": "resolution:mechanic_pays"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the detonator and the security codes.",
+        "options": [
+          {
+            "id": "deliver_detonator",
+            "label": "Deliver the detonator to the boss",
+            "leads_to": "resolution:race_rigged"
+          },
+          {
+            "id": "drain_accounts",
+            "label": "Use the codes to drain the boss's accounts",
+            "leads_to": "resolution:mechanic_pays"
+          },
+          {
+            "id": "walk_away",
+            "label": "Refuse to get involved further",
+            "leads_to": "resolution:mechanic_ruined"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mechanic_pays",
+      "reached_by": "The pilot drains the accounts.",
+      "summary": "The boss's funds are drained, the race runs fairly, and the mechanic buys their freedom.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "racing_syndicate",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "race_rigged",
+      "reached_by": "The pilot delivers the detonator.",
+      "summary": "The favorite racer crashes violently. The boss wins the bet, and the mechanic is trapped forever.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_mechanic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "mechanic_ruined",
+      "reached_by": "The pilot abandons the missions.",
+      "summary": "The sabotage fails to deploy. The boss loses their money and has the mechanic imprisoned.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_mechanic",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_boss",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "racing_syndicate",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "mechanic_ruined",
+  "loose_threads": [
+    {
+      "id": "t_betting_pool",
+      "surface": "scan",
+      "detail": "The largest bets were actually placed by the planetary governor's office.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_racer_payoff",
+      "surface": "radio",
+      "detail": "The favorite racer was already paid off to lose anyway.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Record betting numbers reported for annual orbital grand prix.",
+    "Rumors of syndicate involvement shadow upcoming race."
+  ],
+  "voice_direction": {
+    "desperate_mechanic": "Tired, resigned, occasionally sparking with anger.",
+    "syndicate_boss": "Smooth, completely devoid of empathy, highly amused."
+  },
+  "novelty_tags": [
+    "ship_race",
+    "sabotage",
+    "syndicate_debt"
+  ]
+}

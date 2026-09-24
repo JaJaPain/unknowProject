@@ -1,0 +1,302 @@
+{
+  "id": "premise.the_strikebreaker_blockade",
+  "schema_version": 1,
+  "title": "The Strikebreaker Blockade",
+  "logline": "A desperate union leader hires a pilot to smuggle supplies into a blockaded refinery, but corporate thugs are squeezing the workers out.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "hopeful"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "union_leader",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Exhausted but unyielding, carrying the weight of hundreds of hungry families.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_thug",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Treats starvation as just another negotiation tactic.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "blockaded_refinery",
+      "kind": "place",
+      "description": "A massive processing plant, currently shut down and surrounded by security.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "neutral_station",
+      "kind": "place",
+      "description": "A nearby freeport where smugglers operate.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "labor_union",
+      "kind": "faction",
+      "description": "The struggling collective of refinery workers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "strike"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:labor_union} has barricaded themselves inside the {role:blockaded_refinery}, demanding fair wages and safer conditions.",
+  "private_truth": "The corporation is deliberately starving the workers out, having secretly hired local gangs to cut off all supply lines.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The union issues a desperate plea for basic life support supplies on an open frequency.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "union_leader",
+          "target": "blockaded_refinery",
+          "reason": "The union leader hires the pilot to smuggle raw silicate past the blockade to repair their failing atmospheric scrubbers.",
+          "private_fact": "The scrubbers were sabotaged by corporate infiltrators.",
+          "outcome_tags": [
+            "supplies_delivered"
+          ],
+          "routes": {
+            "supplies_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "Corporate security announces they will storm the refinery in twenty-four hours.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "union_leader",
+          "target": "blockaded_refinery",
+          "reason": "The pilot must dock and extract the union's heavily encrypted strike fund data before the corporate thugs confiscate it.",
+          "private_fact": "The data drive also contains proof of extreme corporate negligence.",
+          "outcome_tags": [
+            "data_extracted"
+          ],
+          "routes": {
+            "data_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The thugs begin cutting through the refinery's blast doors.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "union_leader",
+          "target": "neutral_station",
+          "reason": "The union leader needs the pilot to buy forged corporate release forms from the black market.",
+          "private_fact": "The forms will legally force the security forces to stand down.",
+          "outcome_tags": [
+            "forms_acquired",
+            "abandoned"
+          ],
+          "routes": {
+            "forms_acquired": "next",
+            "abandoned": "resolution:union_compromised"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The blast doors give way, and the thugs prepare to breach.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "union_leader",
+          "target": "blockaded_refinery",
+          "reason": "The pilot must deliver the release forms directly to the union barricade before the shooting starts.",
+          "private_fact": "The corporate thug hails the pilot, offering a massive bounty to 'lose' the forms in the void.",
+          "outcome_tags": [
+            "forms_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "forms_delivered": "resolution:union_wins",
+            "abandoned": "resolution:union_crushed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "union_wins",
+      "reached_by": "The pilot delivers the forms.",
+      "summary": "The security forces are forced to stand down legally. The union secures its demands, and the workers finally breathe free air.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "union_leader",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_thug",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "labor_union",
+          "delta": 3
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": [
+            "strike"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_blockade",
+          "public_summary": "A pilot ran a corporate blockade to save a refinery full of striking workers."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "union_crushed",
+      "reached_by": "The pilot takes the thug's offer.",
+      "summary": "The thugs breach the refinery. The strike is broken with extreme prejudice, and the leaders are imprisoned.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "union_leader",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_thug",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "labor_union",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": [
+            "strike"
+          ]
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "union_compromised",
+      "reached_by": "The pilot abandons the forms.",
+      "summary": "The union is crushed but the pilot leaks the data anyway, causing a corporate scandal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "union_leader",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_thug",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "union_crushed",
+  "loose_threads": [
+    {
+      "id": "t_thug_funding",
+      "surface": "scan",
+      "detail": "The 'corporate' security forces were actually paid out of a private account belonging to a rival union.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_scrubber_sabotage",
+      "surface": "dialogue",
+      "detail": "A technician notes the atmospheric scrubbers were disabled using naval-grade cyber-warfare tools, not simple tampering.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Refinery standoff continues as {role:labor_union} refuses to yield.",
+    "Corporate authorities deny hiring mercenaries to break local strike."
+  ],
+  "voice_direction": {
+    "union_leader": "Hoarse, passionate, speaks in collective terms ('we', 'us').",
+    "corporate_thug": "Casual, bored, treats violence as an administrative task."
+  },
+  "novelty_tags": [
+    "strike_breaker",
+    "union_blockade",
+    "forged_documents",
+    "worker_solidarity"
+  ]
+}

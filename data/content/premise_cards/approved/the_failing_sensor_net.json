@@ -1,0 +1,258 @@
+{
+  "id": "premise.the_failing_sensor_net",
+  "schema_version": 1,
+  "title": "The Failing Sensor Net",
+  "logline": "A system's early warning network is failing, and an unsanctioned group of engineers needs parts to fix it while the local government tries to arrest them.",
+  "scale": "local",
+  "tone": [
+    "hopeful",
+    "political"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "rogue_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Brilliant but legally barred from practicing, fiercely protective of their makeshift team.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sys_official",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Pragmatic, prioritizes order and protocol over actual results.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bureau_patrol",
+      "kind": "ship",
+      "description": "An armed patrol vessel enforcing local regulations.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hidden_workshop",
+      "kind": "place",
+      "description": "An unregistered repair bay in a hollowed-out asteroid.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "ion_storm"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "law_tightened"
+  ],
+  "public_situation": "Ion storms are worsening, and the official early warning network is mysteriously offline.",
+  "private_truth": "The government defunded the maintenance to hide embezzled funds. The rogue engineers are trying to fix it for free.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "A bounty is posted for the arrest of unregistered technicians.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "rogue_engineer",
+          "target": "hidden_workshop",
+          "reason": "Needs high-grade cuprite sensors to bypass the lockout without triggering alarms.",
+          "private_fact": "The engineer is wanted for previous acts of industrial sabotage.",
+          "outcome_tags": [
+            "parts_delivered",
+            "parts_abandoned"
+          ],
+          "routes": {
+            "parts_delivered": "beat:2",
+            "parts_abandoned": "resolution:storms_ravage"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The official patrol intercepts a supply ship headed for the workshop.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "rogue_engineer",
+          "target": "bureau_patrol",
+          "reason": "Needs the confiscated diagnostic keys back from the patrol ship to finish the work.",
+          "private_fact": "The keys contain proof of the government's embezzlement.",
+          "outcome_tags": [
+            "keys_recovered",
+            "patrol_survived"
+          ],
+          "routes": {
+            "keys_recovered": "beat:3",
+            "patrol_survived": "resolution:storms_ravage"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The ion storm intensifies. The sensor net begins rebooting.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "rogue_engineer",
+          "target": "bureau_patrol",
+          "reason": "The engineers need someone to keep the patrol ship busy while the final patch uploads; their own skiffs are unarmed and the government has grounded every local pilot.",
+          "private_fact": "The official aboard the patrol ship is offering immunity if the evidence is deleted.",
+          "outcome_tags": [
+            "patrol_destroyed",
+            "took_offer"
+          ],
+          "routes": {
+            "patrol_destroyed": "resolution:net_restored_proof_kept",
+            "took_offer": "resolution:net_restored_proof_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "net_restored_proof_kept",
+      "reached_by": "The pilot destroys the patrol and protects the upload.",
+      "summary": "The sensor net goes live. The embezzlement is exposed, causing a political crisis.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sys_official",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rogue_engineer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "net_restored_proof_destroyed",
+      "reached_by": "The pilot takes the official's offer.",
+      "summary": "The net is fixed, but the corruption remains hidden. The engineers get immunity.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "rogue_engineer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "law_change",
+          "law": "scanning_banned",
+          "change": "enacted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "storms_ravage",
+      "reached_by": "The pilot abandons the mission.",
+      "summary": "The sensor net stays offline. The storms cause massive damage to local infrastructure.",
+      "consequences": [
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "cast_fate",
+          "target": "rogue_engineer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "storms_ravage",
+  "loose_threads": [
+    {
+      "id": "t_embezzled_funds",
+      "surface": "scan",
+      "detail": "The missing maintenance funds were routed through a charity shell company.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_sabotage_code",
+      "surface": "cargo",
+      "detail": "The sensor offline code matches a known criminal syndicate's electronic warfare package.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Local engineers claim to be repairing sensor net; authorities urge caution.",
+    "Ion storm warnings disabled due to 'technical difficulties'."
+  ],
+  "voice_direction": {
+    "rogue_engineer": "Fast-talking, deeply tired, intensely passionate about their work.",
+    "sys_official": "Calm, condescending, uses bureaucratic jargon to threaten."
+  },
+  "novelty_tags": [
+    "rogue_engineers",
+    "weather_warning",
+    "infrastructure_sabotage"
+  ]
+}

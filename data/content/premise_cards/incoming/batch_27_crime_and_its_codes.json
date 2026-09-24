@@ -1,0 +1,258 @@
+[
+  {
+    "id": "premise.the_fractured_vow",
+    "schema_version": 1,
+    "title": "The Broken Vow",
+    "logline": "A debt collector refuses to shake down an orphanage they grew up in, and their syndicate boss sends killers after them both.",
+    "scale": "local",
+    "tone": [
+      "bleak"
+    ],
+    "themes": [
+      "chosen_family",
+      "loyalty_vs_survival"
+    ],
+    "roles": [
+      {
+        "id": "rogue_collector",
+        "kind": "person",
+        "archetype": "debt_collector",
+        "description": "Grim, heavily scarred, drawing a line in the sand.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "cruel_boss",
+        "kind": "person",
+        "archetype": "crime_boss",
+        "description": "Sadistic, views mercy as a personal insult.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "orphanage_station",
+        "kind": "place",
+        "description": "A rundown habitat housing displaced children.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "boss_hit_squad",
+        "kind": "ship",
+        "description": "A squad of syndicate assassins.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "boss_second_wave",
+        "kind": "ship",
+        "description": "A heavier, deadlier hit squad.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [],
+      "states_required": [],
+      "states_forbidden": []
+    },
+    "accepts_seeds": [
+      "debt_owed_to_player"
+    ],
+    "public_situation": "A well-known debt collector has gone rogue, and a massive bounty has been placed on their head.",
+    "private_truth": "The collector grew up in the orphanage they were sent to extort, and killed their partner to protect it.",
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "The syndicate publicly brands the collector a traitor.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "rogue_collector",
+            "target": "orphanage_station",
+            "reason": "Needs emergency medical supplies picked up and delivered to the orphanage before the syndicate cuts them off.",
+            "private_fact": "The collector is bleeding out in the orphanage basement.",
+            "outcome_tags": [
+              "meds_delivered",
+              "meds_abandoned"
+            ],
+            "routes": {
+              "meds_delivered": "beat:2",
+              "meds_abandoned": "resolution:orphanage_crushed"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "public_change": "Syndicate ships blockade the orphanage station.",
+        "missions": [
+          {
+            "verb": "kill_ships",
+            "requester": "rogue_collector",
+            "target": "boss_hit_squad",
+            "reason": "Needs the pilot to destroy the hit squad before they breach the station hull.",
+            "private_fact": "The hit squad has orders to leave no survivors to send a message.",
+            "outcome_tags": [
+              "squad_destroyed",
+              "mission_failed"
+            ],
+            "routes": {
+              "squad_destroyed": "beat:3",
+              "mission_failed": "resolution:orphanage_crushed"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "The boss offers a fortune for the collector's location.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "cruel_boss",
+            "target": "boss_second_wave",
+            "reason": "The boss sends a second wave and hires the pilot to lead the assault.",
+            "private_fact": "The collector manages to hail the pilot from the station during the fight with a desperate counter-offer.",
+            "outcome_tags": [
+              "assault_succeeded",
+              "took_collector_offer"
+            ],
+            "routes": {
+              "assault_succeeded": "resolution:collector_killed",
+              "took_collector_offer": "resolution:orphanage_saved"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "orphanage_saved",
+        "reached_by": "The pilot takes the collector's offer and destroys the second wave.",
+        "summary": "The syndicate backs off, realizing the cost is too high. The collector survives to protect their home.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "rogue_collector",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "cruel_boss",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "system_state",
+            "add": [],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "collector_killed",
+        "reached_by": "The pilot completes the assault for the boss.",
+        "summary": "The collector is killed, and the orphanage is sold for scrap. The boss's authority is absolute.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "rogue_collector",
+            "fate": "dead"
+          },
+          {
+            "type": "cast_fate",
+            "target": "cruel_boss",
+            "fate": "promoted"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "refugee_influx"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "orphanage_crushed",
+        "reached_by": "The pilot fails the defense missions.",
+        "summary": "The hit squad breaches the station. The collector is imprisoned and the orphans are displaced. The balance of power shifts in a way no one fully anticipated in the system.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "rogue_collector",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "refugee_influx"
+            ],
+            "remove": []
+          },
+          {
+            "type": "system_state",
+            "add": [],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "martyr_made"
+        ]
+      }
+    ],
+    "default_resolution": "orphanage_crushed",
+    "loose_threads": [
+      {
+        "id": "t_orphanage_deed",
+        "surface": "scan",
+        "detail": "The orphanage station's original deed is registered to the cruel boss's holding company.",
+        "can_carry_methods": [
+          "blackmail"
+        ]
+      },
+      {
+        "id": "t_hit_squad_gear",
+        "surface": "wreck",
+        "detail": "The syndicate assassins were using high-end corporate stealth plating not available on the open market.",
+        "can_carry_methods": [
+          "proxy_violence"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "blackmail",
+        "proxy_violence"
+      ],
+      "motives": [
+        "control",
+        "greed"
+      ]
+    },
+    "law_hooks": [],
+    "radio_hooks": [
+      "Syndicate bounties disrupt local traffic.",
+      "Charity station attacked in gang dispute."
+    ],
+    "voice_direction": {
+      "rogue_collector": "Pain-filled, stubborn, deeply protective.",
+      "cruel_boss": "Soft-spoken, chillingly polite, never raises their voice."
+    },
+    "novelty_tags": [
+      "rogue_enforcer",
+      "orphanage_defense",
+      "syndicate_cruelty"
+    ]
+  }
+]

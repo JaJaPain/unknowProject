@@ -1,0 +1,301 @@
+{
+  "id": "premise.the_prodigal_debt",
+  "schema_version": 1,
+  "title": "The Prodigal Debt",
+  "logline": "A retired legend wants to leave their famous ship to their estranged child, but the child would rather see it scrapped to pay off a massive syndicate debt.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "retired_legend",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Proud, stubborn, living entirely in their past glory.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "estranged_child",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "Drowning in debt, deeply resentful of their parent's fame.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_collector",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Patient, polite, completely merciless.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "legend_ship",
+      "kind": "ship",
+      "description": "A heavily modified, aging strike craft famous across the sector.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scrap_yard",
+      "kind": "place",
+      "description": "A sprawling orbital graveyard for old ships.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_thug",
+      "kind": "ship",
+      "description": "A battered interceptor used for shaking down locals.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "gambling_syndicate",
+      "kind": "faction",
+      "description": "The shadowy organization the child owes money to.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_cruiser",
+      "kind": "ship",
+      "description": "Heavy reinforcements.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The {role:retired_legend} has publicly announced they are passing their famous ship down to their child.",
+  "private_truth": "The child owes a massive gambling debt to the syndicate and has already sold the ship to a scrap yard to cover it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The ship is towed to the scrap yard, sparking outrage among the legend's old fans.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "retired_legend",
+          "target": "scrap_yard",
+          "reason": "The legend hires the pilot to haul raw ferrite to the scrap yard to bribe the foreman into halting the dismantling process.",
+          "private_fact": "The legend refuses to believe their child actually authorized the scrapping.",
+          "outcome_tags": [
+            "ore_delivered"
+          ],
+          "routes": {
+            "ore_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The syndicate grows impatient and sends thugs to intimidate the child.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "estranged_child",
+          "target": "syndicate_thug",
+          "reason": "The child begs the pilot to fend off the syndicate thugs shaking them down.",
+          "private_fact": "The child is hoping the scrap yard finishes the job before the syndicate kills them.",
+          "outcome_tags": [
+            "thugs_destroyed"
+          ],
+          "routes": {
+            "thugs_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The legend barricades themselves inside their ship at the scrap yard, threatening to detonate the reactor.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "syndicate_collector",
+          "target": "legend_ship",
+          "reason": "The collector hires the pilot to scan the ship to see if the legend is bluffing about the reactor overload.",
+          "private_fact": "The scan reveals the legend is absolutely not bluffing; the core is critical.",
+          "outcome_tags": [
+            "scan_critical"
+          ],
+          "routes": {
+            "scan_critical": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The syndicate sends their heavy ships to forcibly extract the child's payment.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "retired_legend",
+          "target": "syndicate_cruiser",
+          "reason": "The legend pays the pilot to destroy the syndicate reinforcements so their child can go free.",
+          "private_fact": "The syndicate collector hails the pilot, offering to wipe the child's debt if the pilot destroys the legend's ship instead.",
+          "outcome_tags": [
+            "syndicate_beaten",
+            "took_the_offer"
+          ],
+          "routes": {
+            "syndicate_beaten": "resolution:legacy_saved",
+            "took_the_offer": "resolution:legend_dies"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "legacy_saved",
+      "reached_by": "The pilot destroys the syndicate ships.",
+      "summary": "The syndicate backs off. The child is ashamed and finally agrees to take the ship and carry on the legend's name.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "estranged_child",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_collector",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_legends_ship",
+          "public_summary": "A pilot helped a washed-up hero save their famous ship from being turned into slag."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "legend_dies",
+      "reached_by": "The pilot destroys the legend's ship.",
+      "summary": "The ship is destroyed, and the legend dies with it. The child is free of debt, but utterly broken by guilt.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "estranged_child",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_collector",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "child_killed",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The syndicate murders the child to make an example of them. The legend sinks into a deep depression and the ship rusts away.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "estranged_child",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "child_killed",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_ledger",
+      "surface": "scan",
+      "detail": "The syndicate's debt ledger shows the child's losing streak was statistically impossible, as if the casino was rigged specifically against them.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_ship_modification",
+      "surface": "wreck",
+      "detail": "The legend's ship has an undocumented, military-grade stealth drive hidden under the floorboards.",
+      "can_carry_methods": [
+        "information_control",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "blackmail"
+    ],
+    "motives": [
+      "revenge",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Famed strike craft towed to scrap yard; fans organize protest.",
+    "Syndicate activity spiking in the lower districts."
+  ],
+  "voice_direction": {
+    "retired_legend": "Gravelly, bitter, speaks like they are giving a speech to a crowd.",
+    "syndicate_collector": "Soft-spoken, pleasant, uses polite corporate terminology for violence."
+  },
+  "novelty_tags": [
+    "famous_ship",
+    "gambling_debt",
+    "scrap_yard_standoff",
+    "parental_guilt"
+  ]
+}

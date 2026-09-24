@@ -1,0 +1,301 @@
+{
+  "id": "premise.the_stolen_sentence",
+  "schema_version": 1,
+  "title": "Serving Time",
+  "logline": "A wealthy criminal bought their way out of a prison sentence by legally transferring the conviction to a desperate volunteer, who now wants out.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "tragic"
+  ],
+  "themes": [
+    "price_of_profit",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "fall_guy",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Sold their freedom to pay off their family's debts; deeply regrets it.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "guilty_patrician",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Spoiled, cowardly, believes everything and everyone has a price tag.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "prison_warden",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Runs a brutal penal colony; doesn't care who serves the time as long as the cell is full.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "judges_chambers",
+      "kind": "place",
+      "description": "An opulent, heavily secured legal office hovering above the squalor.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "penal_colony",
+      "kind": "place",
+      "description": "A high-security deep-space prison focused on hard labor.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "justice_bureau",
+      "kind": "faction",
+      "description": "A notoriously corrupt legal system that allows conviction trading.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "festival"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "public_outrage"
+  ],
+  "public_situation": "A high-profile {role:guilty_patrician} was publicly convicted of a horrific crime, but rumors say they are still seen drinking in high-end lounges.",
+  "private_truth": "The patrician exploited a rare legal loophole to pay a desperate {role:fall_guy} to serve the twenty-year sentence in their place.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The fall guy's family publicly protests, claiming they never received the promised payout.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "guilty_patrician",
+          "target": "judges_chambers",
+          "reason": "Hires the pilot to quietly dock and pick up an official, sealed pardon document from a corrupt judge.",
+          "private_fact": "The patrician is only doing this because the fall guy threatened to expose the identity transfer.",
+          "outcome_tags": [
+            "pardon_secured"
+          ],
+          "routes": {
+            "pardon_secured": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "fall_guy",
+          "target": "penal_colony",
+          "reason": "The fall guy manages a smuggled comms link and begs the pilot to buy clean ID chips and officially dock at the colony to deliver them.",
+          "private_fact": "The fall guy plans to use the pardon and the new ID to completely disappear.",
+          "outcome_tags": [
+            "chips_delivered"
+          ],
+          "routes": {
+            "chips_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The prison warden puts the facility on lockdown, suspecting outside interference.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "prison_warden",
+          "target": "penal_colony",
+          "reason": "The warden demands the pilot scan the colony's intake biometric logs from the exterior ports to prove no identity transfers occurred.",
+          "private_fact": "The warden actually facilitated the transfer and just wants to know if the pilot has proof.",
+          "outcome_tags": [
+            "confirm_identity",
+            "expose_transfer"
+          ],
+          "routes": {
+            "confirm_identity": "next",
+            "expose_transfer": "resolution:patrician_arrested"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The lockdown lifts, and the pilot approaches the prison with the physical pardon.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "fall_guy",
+          "target": "penal_colony",
+          "reason": "The pilot must officially dock and deliver the physical pardon to the warden to release the prisoner.",
+          "private_fact": "The patrician contacts the pilot, offering triple the courier fee to return the pardon to them so they can destroy it and keep the fall guy silenced forever.",
+          "outcome_tags": [
+            "delivered"
+          ],
+          "routes": {
+            "delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the pardon. They can free the fall guy or sell the document back to the patrician.",
+        "options": [
+          {
+            "id": "free_fall_guy",
+            "label": "Deliver the pardon to the warden",
+            "leads_to": "resolution:fall_guy_freed"
+          },
+          {
+            "id": "sell_to_patrician",
+            "label": "Return the pardon to the patrician",
+            "leads_to": "resolution:fall_guy_serves"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fall_guy_freed",
+      "reached_by": "The pilot delivers the pardon.",
+      "summary": "The fall guy is legally released and uses the clean IDs to disappear. The patrician is furious but legally untouchable.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "justice_bureau",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "fall_guy",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_patrician",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "freed_the_fall_guy",
+          "public_summary": "Someone smuggled a pardon in for a poor kid serving a rich man's sentence."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "patrician_arrested",
+      "reached_by": "The pilot exposes the transfer to the warden.",
+      "summary": "The public evidence forces the bureau to act. The patrician is arrested, and the fall guy is released, though deeply traumatized.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "justice_bureau",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_patrician",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "prison_warden",
+          "fate": "exposed"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "fall_guy_serves",
+      "reached_by": "The pilot returns the pardon to the patrician.",
+      "summary": "The patrician destroys the pardon. The fall guy is trapped in the colony for twenty years, and the patrician continues their lavish life.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "justice_bureau",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "fall_guy",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_patrician",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "debt_owed_to_player"
+      ]
+    }
+  ],
+  "default_resolution": "fall_guy_serves",
+  "loose_threads": [
+    {
+      "id": "t_warden_payout",
+      "surface": "station_notice",
+      "detail": "The warden's public disclosure forms show a massive charitable donation from an anonymous trust exactly one day after the transfer.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_patrician_alibi",
+      "surface": "dialogue",
+      "detail": "A dockworker mentions seeing the patrician's ship leaving the system on the exact night of the crime they supposedly committed.",
+      "can_carry_methods": [
+        "false_flag",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "false_flag"
+    ],
+    "motives": [
+      "control",
+      "protecting_someone"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Protests continue outside {role:penal_colony} over alleged 'conviction trading'.",
+    "{role:justice_bureau} denies any systemic issues with identity verification protocols."
+  ],
+  "voice_direction": {
+    "fall_guy": "Monotone, defeated delivery. Never ends a sentence with an upward inflection.",
+    "guilty_patrician": "Brisk, entitled rhythm. Uses expensive, antiquated slang.",
+    "prison_warden": "Deep, booming pitch. Speaks slowly, treating every conversation like an interrogation."
+  },
+  "novelty_tags": [
+    "conviction_trading",
+    "corrupt_warden",
+    "stolen_pardon",
+    "prison_heist"
+  ]
+}

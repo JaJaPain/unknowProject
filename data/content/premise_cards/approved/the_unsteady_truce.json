@@ -1,0 +1,258 @@
+{
+  "id": "premise.the_unsteady_truce",
+  "schema_version": 1,
+  "title": "The Syndicate Truce",
+  "logline": "Two warring factions are trying to negotiate a ceasefire, but a third party is paying a bounty hunter to ensure the war continues.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "bounty_hunter",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Cold, professional, only cares about the payout.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "peace_envoy",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Idealistic but exhausted, risking everything for peace.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "truce_station",
+      "kind": "place",
+      "description": "A neutral zone where the talks are being held.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "warring_syndicate",
+      "kind": "faction",
+      "description": "One side of the brutal gang war.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mercenary_ship",
+      "kind": "ship",
+      "description": "A heavily armed ship hired to disrupt the peace.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "alliance_broken"
+  ],
+  "public_situation": "A historic truce is being negotiated between two massive criminal enterprises.",
+  "private_truth": "The weapons suppliers for both sides have hired mercenaries to assassinate the envoys and keep the profitable war going.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The peace envoys arrive at the neutral station under heavy guard.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "peace_envoy",
+          "target": "mercenary_ship",
+          "reason": "Needs a pilot to intercept a suspected assassin ship and recover their encrypted orders.",
+          "private_fact": "The envoy suspects someone in their own syndicate is trying to kill them.",
+          "outcome_tags": [
+            "orders_recovered",
+            "orders_lost"
+          ],
+          "routes": {
+            "orders_recovered": "beat:2",
+            "orders_lost": "resolution:truce_shattered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "An explosion rocks the neutral station, though the envoys survive.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "bounty_hunter",
+          "target": "mercenary_ship",
+          "reason": "The hunter is hired to finish off the remaining mercenaries before they talk.",
+          "private_fact": "The mercenary captain is actually aboard the target ship and makes a desperate offer to pay double if spared.",
+          "outcome_tags": [
+            "merc_destroyed",
+            "took_merc_offer"
+          ],
+          "routes": {
+            "merc_destroyed": "beat:3",
+            "took_merc_offer": "resolution:conspiracy_exposed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The final signing ceremony begins.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "peace_envoy",
+          "target": "truce_station",
+          "reason": "Needs the original signed treaty document moved to a secure vault immediately.",
+          "private_fact": "If the treaty is destroyed before archiving, the war resumes automatically.",
+          "outcome_tags": [
+            "treaty_secured",
+            "treaty_abandoned"
+          ],
+          "routes": {
+            "treaty_secured": "resolution:truce_holds",
+            "treaty_abandoned": "resolution:truce_shattered"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truce_holds",
+      "reached_by": "The pilot secures the treaty.",
+      "summary": "The treaty is ratified. The war ends, bringing a tense peace to the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "warring_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "peace_envoy",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_hunter",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "conspiracy_exposed",
+      "reached_by": "The pilot takes the mercenary's offer.",
+      "summary": "The weapons suppliers are exposed. The syndicates unite against their former backers.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "warring_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "peace_envoy",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "truce_shattered",
+      "reached_by": "The pilot abandons the treaty or fails to recover the orders.",
+      "summary": "The talks collapse in a bloodbath. The syndicate war resumes with unprecedented violence.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "warring_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "peace_envoy",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "blockade"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "truce_shattered",
+  "loose_threads": [
+    {
+      "id": "t_merc_funds",
+      "surface": "cargo",
+      "detail": "The mercenaries were paid with uncirculated bullion from a closed treasury reserve.",
+      "can_carry_methods": [
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_bomb_casing",
+      "surface": "wreck",
+      "detail": "The bomb casing matches civilian mining charges, not high-end corporate ordnance.",
+      "can_carry_methods": [
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "false_flag"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Factions agree to historic talks at neutral station.",
+    "Reports of mercenary activity threaten fragile ceasefire."
+  ],
+  "voice_direction": {
+    "bounty_hunter": "Flat, emotionless, speaks in exact credits and timelines.",
+    "peace_envoy": "Weary, diplomatic, constantly trying to de-escalate."
+  },
+  "novelty_tags": [
+    "peace_treaty",
+    "assassination_plot",
+    "war_profiteering"
+  ]
+}

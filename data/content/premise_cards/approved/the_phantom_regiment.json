@@ -1,0 +1,295 @@
+{
+  "id": "premise.the_phantom_regiment",
+  "schema_version": 1,
+  "title": "The Phantom Regiment",
+  "logline": "An old military communication buoy suddenly starts broadcasting reinforcement codes for a regiment that was wiped out decades ago.",
+  "scale": "regional",
+  "tone": [
+    "paranoid",
+    "tragic"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "guilty_negotiator",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Polite, deeply paranoid, haunted by their past.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loyalist_soldier",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Intense, heavily scarred, refuses to believe their regiment is gone.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "phantom_beacon",
+      "kind": "place",
+      "description": "A rusted, automated comms buoy drifting in the dark.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mercenary_fleet",
+      "kind": "faction",
+      "description": "A ruthless private military company hired to clean up loose ends.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mercenary_cruiser",
+      "kind": "ship",
+      "description": "A heavily armed warship looking for the beacon.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "An old regiment beacon has started broadcasting reinforcement codes for a unit that was wiped out decades ago, and nobody will say who switched it on.",
+  "private_truth": "The negotiator sold out the regiment's position decades ago. The beacon's activation means someone knows the truth and is hunting them.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The mercenary fleet cordons off the sector around the beacon.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "guilty_negotiator",
+          "target": "phantom_beacon",
+          "reason": "The negotiator hires the pilot to fly out to the beacon to see who activated it.",
+          "private_fact": "The scan reveals the beacon was triggered manually by someone inside the dark zone.",
+          "outcome_tags": [
+            "beacon_scanned"
+          ],
+          "routes": {
+            "beacon_scanned": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "loyalist_soldier",
+          "target": "phantom_beacon",
+          "reason": "The soldier pays the pilot to collect a physical data drop left near the beacon.",
+          "private_fact": "The data drop contains old regiment ciphers proving someone survived the massacre.",
+          "outcome_tags": [
+            "data_collected"
+          ],
+          "routes": {
+            "data_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The loyalist soldier publicly claims they have found survivors of the old regiment.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "loyalist_soldier",
+          "target": "phantom_beacon",
+          "reason": "The soldier hires the pilot to deliver a supply cache to the beacon's coordinates.",
+          "private_fact": "There are no survivors. The soldier is using the supplies as bait to draw out the mercenaries.",
+          "outcome_tags": [
+            "supplies_delivered"
+          ],
+          "routes": {
+            "supplies_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The mercenary fleet begins sweeping the dark zone with active sensors.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "guilty_negotiator",
+          "target": "mercenary_fleet",
+          "reason": "The negotiator panics and hires the pilot to destroy a mercenary scout before it finds the beacon's logs.",
+          "private_fact": "The scout has already downloaded partial logs implicating the negotiator.",
+          "outcome_tags": [
+            "scout_destroyed"
+          ],
+          "routes": {
+            "scout_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The main mercenary cruiser intercepts the soldier and prepares to execute them.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "guilty_negotiator",
+          "target": "mercenary_cruiser",
+          "reason": "The negotiator pays the pilot to destroy the cruiser and ensure the soldier dies in the crossfire.",
+          "private_fact": "The soldier hails the pilot from the cruiser's brig, offering evidence of the negotiator's treason if the pilot saves them.",
+          "outcome_tags": [
+            "cruiser_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "cruiser_destroyed": "resolution:truth_buried",
+            "took_the_offer": "resolution:treason_exposed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_buried",
+      "reached_by": "The pilot destroys the cruiser, killing the soldier.",
+      "summary": "The negotiator's secret is safe. The phantom regiment is officially declared dead, and the pilot is paid in untraceable credits.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "loyalist_soldier",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_negotiator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "mercenary_fleet",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "treason_exposed",
+      "reached_by": "The pilot takes the soldier's offer and saves them.",
+      "summary": "The negotiator is exposed as a traitor and lynched by veterans. The soldier finally finds peace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilty_negotiator",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyalist_soldier",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "avenged_the_phantom_regiment",
+          "public_summary": "A pilot proved the lost regiment didn't die by accident."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "mercenaries_win",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The mercenaries execute the soldier and secure the beacon. The truth is lost.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "loyalist_soldier",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_negotiator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "mercenary_fleet",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "mercenaries_win",
+  "loose_threads": [
+    {
+      "id": "t_mercenary_pay",
+      "surface": "scan",
+      "detail": "The mercenary fleet is being paid directly by the naval intelligence discretionary fund.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_beacon_maintenance",
+      "surface": "wreck",
+      "detail": "The supposedly abandoned beacon had its power cells replaced only six months ago by a civilian freighter.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "information_control"
+    ],
+    "motives": [
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "A dead regiment's beacon wakes up, and old families start asking questions.",
+    "{role:mercenary_fleet} claims jurisdiction over dark zone beacon."
+  ],
+  "voice_direction": {
+    "guilty_negotiator": "Smooth, but their voice cracks when they are stressed.",
+    "loyalist_soldier": "Gravelly, humorless, speaks like they are issuing orders."
+  },
+  "novelty_tags": [
+    "reactivated_beacon",
+    "military_coverup",
+    "phantom_regiment"
+  ]
+}

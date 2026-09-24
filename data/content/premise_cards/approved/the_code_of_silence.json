@@ -1,0 +1,259 @@
+{
+  "id": "premise.the_code_of_silence",
+  "schema_version": 1,
+  "title": "The Code of Silence",
+  "logline": "A syndicate cleaner hires a pilot to deliver a 'care package' to an imprisoned informant, but the package is secretly a bomb.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "captured_informant",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "Terrified, bruised, realizing they have been completely abandoned.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loyal_cleaner",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Professional, polite, sees murder as simply balancing the books.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "holding_cell",
+      "kind": "place",
+      "description": "A high-security, automated orbital lockup.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cleaner_ship",
+      "kind": "ship",
+      "description": "A pristine, heavily armed corporate interceptor.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "local_syndicate",
+      "kind": "faction",
+      "description": "A ruthless crime family built on absolute loyalty.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "witness_at_large"
+  ],
+  "public_situation": "A high-ranking member of the {role:local_syndicate} has been captured and is awaiting trial in a secure {role:holding_cell}.",
+  "private_truth": "The syndicate knows the informant will crack, and has hired a cleaner to permanently silence them before the trial.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The holding cell enters lockdown ahead of the informant's transfer.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "loyal_cleaner",
+          "target": "holding_cell",
+          "reason": "The cleaner hires the pilot to deliver a locked 'care package' to the informant via automated drone slot.",
+          "private_fact": "The package contains a localized explosive designed to breach the cell's hull.",
+          "outcome_tags": [
+            "package_delivered"
+          ],
+          "routes": {
+            "package_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The informant manages to smuggle out a scrambled comms burst before the package arrives.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "captured_informant",
+          "target": "holding_cell",
+          "reason": "The informant begs the pilot to remotely scan the package they just delivered.",
+          "private_fact": "The scan reveals the explosive payload, horrifying the pilot.",
+          "outcome_tags": [
+            "scan_reveals_bomb"
+          ],
+          "routes": {
+            "scan_reveals_bomb": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The cleaner arrives in-system to ensure the job is done.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "captured_informant",
+          "target": "cleaner_ship",
+          "reason": "The informant pays the pilot to take on the cleaner's ship before it can finish the job.",
+          "private_fact": "Mid-fight, the cleaner hails the pilot, offering to split the fee if the pilot simply backs off and lets the package do its work.",
+          "outcome_tags": [
+            "cleaner_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "cleaner_destroyed": "resolution:informant_freed",
+            "took_the_offer": "resolution:informant_killed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "informant_freed",
+      "reached_by": "The pilot destroys the cleaner's ship.",
+      "summary": "The cleaner is dead. The informant escapes and pays the pilot handsomely before vanishing into the outer rim.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "captured_informant",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_cleaner",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "local_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_informant",
+          "public_summary": "A pilot blew up a syndicate hitman to save a rat in holding."
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "informant_killed",
+      "reached_by": "The pilot takes the cleaner's offer or lets them win.",
+      "summary": "The package detonates, blowing the informant out into the void. The cleaner pays the pilot for their 'discretion'.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "captured_informant",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_cleaner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "local_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "pilot_flees",
+      "reached_by": "Nobody stops the cleaner.",
+      "summary": "Nobody intervenes. The package does its work, the informant's testimony dies with them, and the cleaner quietly closes the contract.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "captured_informant",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "local_syndicate",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "pilot_flees",
+  "loose_threads": [
+    {
+      "id": "t_bomb_origin",
+      "surface": "scan",
+      "detail": "The bomb was constructed using refined corporate mining explosives, identical to those used by the local authorities.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_cleaner_orders",
+      "surface": "wreck",
+      "detail": "The cleaner's communication logs show they received the hit order from the planetary governor's private estate.",
+      "can_carry_methods": [
+        "blackmail",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "proxy_violence"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "High-profile syndicate arrest promises to blow the lid off local corruption.",
+    "Lockdown procedures tested at {role:holding_cell}."
+  ],
+  "voice_direction": {
+    "captured_informant": "Desperate, breathless, pleading.",
+    "loyal_cleaner": "Smooth, professional, uses euphemisms for death."
+  },
+  "novelty_tags": [
+    "package_bomb",
+    "syndicate_hit",
+    "prison_assassination",
+    "loose_ends"
+  ]
+}

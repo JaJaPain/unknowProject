@@ -1,0 +1,274 @@
+{
+  "id": "premise.the_chemical_spill",
+  "schema_version": 1,
+  "title": "The Toxic Spill",
+  "logline": "A smuggler's ship crashes and spills toxic cargo, and the dockmaster must clean it up before the authorities arrive.",
+  "scale": "local",
+  "tone": [
+    "hopeful",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "stressed_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Overworked, trying to keep everyone safe without losing their job.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "guilty_smuggler",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Apologetic, terrified of their cartel bosses.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "spill_zone",
+      "kind": "place",
+      "description": "A contaminated docking bay sealed off from the main station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "clean_up_crew",
+      "kind": "ship",
+      "description": "An automated hazmat response drone ship.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "secondary_drones",
+      "kind": "ship",
+      "description": "A second wave of heavily armed cleanup vessels.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A minor docking accident has resulted in a chemical spill, prompting a localized quarantine.",
+  "private_truth": "The chemicals are highly illegal narcotics. If the official cleanup drones scan it, the dockmaster and the smuggler will both be arrested.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The station's automated systems dispatch a hazmat drone.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "stressed_dockmaster",
+          "target": "clean_up_crew",
+          "reason": "Needs a pilot to intercept and destroy the automated drone ship to delay the official scan.",
+          "private_fact": "The dockmaster has disabled the station's internal cameras to hide the pilot's attack.",
+          "outcome_tags": [
+            "drone_destroyed",
+            "drone_survived"
+          ],
+          "routes": {
+            "drone_destroyed": "beat:2",
+            "drone_survived": "resolution:spill_reported"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The cartel realizes their shipment is delayed and demands answers.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "guilty_smuggler",
+          "target": "secondary_drones",
+          "reason": "A second wave of security drones arrives, and the smuggler begs the pilot to destroy them too.",
+          "private_fact": "The station's security chief, flying the lead cutter behind the drones, hails the pilot and offers to wipe their record if they stand down and let the drones reach the spill.",
+          "outcome_tags": [
+            "drones_destroyed",
+            "took_grid_offer"
+          ],
+          "routes": {
+            "drones_destroyed": "beat:3",
+            "took_grid_offer": "resolution:spill_reported"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The dockmaster manages to illegally vent the bay into space.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "stressed_dockmaster",
+          "target": "spill_zone",
+          "reason": "Needs the final intact crates of narcotics picked up and thrown into the local sun.",
+          "private_fact": "The smuggler wants the pilot to deliver the crates back to them instead to pay their debt.",
+          "outcome_tags": [
+            "crates_recovered",
+            "crates_abandoned"
+          ],
+          "routes": {
+            "crates_recovered": "resolution:spill_hidden",
+            "crates_abandoned": "resolution:spill_reported"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the intact crates and must decide what to do with them.",
+        "options": [
+          {
+            "id": "destroy_crates",
+            "label": "Destroy the crates as the dockmaster requested",
+            "leads_to": "resolution:spill_hidden"
+          },
+          {
+            "id": "give_smuggler",
+            "label": "Give the crates to the smuggler",
+            "leads_to": "resolution:smuggler_pays"
+          },
+          {
+            "id": "turn_in",
+            "label": "Turn the crates in to authorities",
+            "leads_to": "resolution:spill_reported"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "spill_hidden",
+      "reached_by": "The pilot destroys the crates.",
+      "summary": "The spill is covered up. The dockmaster keeps their job, but the smuggler is left in debt to the cartel.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stressed_dockmaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_smuggler",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "smuggler_pays",
+      "reached_by": "The pilot gives the crates to the smuggler.",
+      "summary": "The smuggler pays off the cartel. The dockmaster is fired for incompetence, but avoids prison.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilty_smuggler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "stressed_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "spill_reported",
+      "reached_by": "The pilot abandons the missions or takes the automated grid offer.",
+      "summary": "The authorities discover the narcotics. Both the smuggler and the dockmaster are imprisoned.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stressed_dockmaster",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guilty_smuggler",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "spill_reported",
+  "loose_threads": [
+    {
+      "id": "t_narcotics_source",
+      "surface": "cargo",
+      "detail": "The narcotics were synthesized using highly restricted medical supplies from a nearby relief station.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_drone_override",
+      "surface": "scan",
+      "detail": "The station's automated override codes were generated by a known hacker syndicate.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Minor docking accident causes delays at local station.",
+    "Hazardous materials teams dispatched to isolated bay."
+  ],
+  "voice_direction": {
+    "stressed_dockmaster": "Frazzled, speaking quickly, clearly overworked.",
+    "guilty_smuggler": "Quiet, deeply apologetic, extremely nervous."
+  },
+  "novelty_tags": [
+    "chemical_spill",
+    "automated_drones",
+    "smuggling_accident"
+  ]
+}

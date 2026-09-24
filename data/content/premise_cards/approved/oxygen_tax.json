@@ -1,0 +1,313 @@
+{
+  "id": "premise.oxygen_tax",
+  "schema_version": 1,
+  "title": "The Air We Breathe",
+  "logline": "A struggling mining outpost is put into crippling debt when the regional state retroactively classifies breathable air as a taxable imported luxury.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "station_manager",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Trying to keep their station breathing without bankrupting the workers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "union_rep",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Furious, exhausted, building illegal life support in the cargo bays.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tax_collector",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Views breathing as a taxable event; meticulously notes every violation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "air_purifier_ship",
+      "kind": "ship",
+      "description": "An unlicensed bulk freighter converted into a massive, jury-rigged air scrubber.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mining_outpost",
+      "kind": "place",
+      "description": "A deep-space rock where oxygen is the biggest weekly expense.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_union",
+      "kind": "faction",
+      "description": "Organized labor pushed to the brink of violent revolt over basic needs.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "governor_office",
+      "kind": "faction",
+      "description": "The bureaucratic machine extracting wealth from the outer systems.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "pulsar"
+    ],
+    "states_required": [
+      "shortage"
+    ],
+    "states_forbidden": [
+      "festival"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "law_tightened"
+  ],
+  "public_situation": "The {role:governor_office} has enacted a new 'Atmospheric Usage Tariff', bankrupting independent stations overnight.",
+  "private_truth": "The official air quality monitors are deliberately rigged to over-report consumption, forcing the outposts deeper into debt so the state can repossess them.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The outpost disables its public spaces to save air, forcing everyone into cramped residential blocks.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "station_manager",
+          "target": "mining_outpost",
+          "reason": "Needs raw ice delivered off the books to be cracked into air by an illegal, homemade scrubber the union is building.",
+          "private_fact": "The manager is skimming from the corporate ore quota to pay for this, risking their own execution if caught.",
+          "outcome_tags": [
+            "delivered"
+          ],
+          "routes": {
+            "delivered": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "union_rep",
+          "target": "mining_outpost",
+          "reason": "Needs the pilot to fetch specialized scrubber blueprints from a sympathizer.",
+          "private_fact": "The blueprints belong to a rival corporation.",
+          "outcome_tags": [
+            "blueprints_secured"
+          ],
+          "routes": {
+            "blueprints_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The state announces an audit of the outpost's wildly fluctuating air consumption data.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "union_rep",
+          "target": "mining_outpost",
+          "reason": "Needs an independent scan of the official state air monitors on the station's hull to prove they are malfunctioning.",
+          "private_fact": "The union rep already knows they are rigged, but needs a third-party pilot's flight logs to make the evidence legally admissible.",
+          "outcome_tags": [
+            "expose_rigged",
+            "keep_quiet"
+          ],
+          "routes": {
+            "expose_rigged": "resolution:tax_repealed",
+            "keep_quiet": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The state discovers the illegal union scrubber ship and dispatches forces to destroy it.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "tax_collector",
+          "target": "air_purifier_ship",
+          "reason": "Hires the pilot to intercept and destroy the unlicensed scrubber ship for 'egregious tax evasion'.",
+          "private_fact": "The collector gets a percentage of the outpost's total debt when it is finally repossessed.",
+          "outcome_tags": [
+            "scrubber_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "scrubber_destroyed": "resolution:union_crushed",
+            "took_the_offer": "resolution:outpost_independent"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "tax_repealed",
+      "reached_by": "The pilot broadcasts the proof of the rigged monitors.",
+      "summary": "The public outrage forces the governor to repeal the tax and void the debts. The tax collector is scapegoated and fired.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "governor_office",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "tax_collector",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "repealed"
+        },
+        {
+          "type": "deed",
+          "tag": "repealed_air_tax",
+          "public_summary": "Someone proved the state was taxing thin air, and the governor had to back down."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "union_crushed",
+      "reached_by": "The pilot keeps quiet and destroys the scrubber ship.",
+      "summary": "The outpost is suffocated by debt and seized by the state. The union leaders are arrested for tax evasion.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "governor_office",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "mining_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_rep",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "outpost_independent",
+      "reached_by": "The pilot takes the union's offer to defend the scrubber ship.",
+      "summary": "The scrubber ship survives, allowing the outpost to declare independence from the state's air supply. The debt remains, but they can finally breathe.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_union",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "tax_collector",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "union_crushed",
+  "loose_threads": [
+    {
+      "id": "t_governor_shares",
+      "surface": "station_notice",
+      "detail": "The newly appointed corporate overseer shares an exact surname with the local tax collector.",
+      "can_carry_methods": [
+        "bribery",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_monitor_firmware",
+      "surface": "scan",
+      "detail": "The rigged firmware on the air monitors was pushed via a secure military update channel.",
+      "can_carry_methods": [
+        "forged_records",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:governor_office} defends new Atmospheric Tariff as 'necessary conservation measure'.",
+    "Wildcat strikes reported at {role:mining_outpost} over failing life support."
+  ],
+  "voice_direction": {
+    "station_manager": "Measured, speaks slowly to conserve breath.",
+    "union_rep": "Loud, passionate, speaks in rapid bursts.",
+    "tax_collector": "Smug, overly formal, uses long bureaucratic words to justify cruelty."
+  },
+  "novelty_tags": [
+    "air_tax",
+    "rigged_monitors",
+    "illegal_scrubber",
+    "bureaucratic_cruelty"
+  ]
+}

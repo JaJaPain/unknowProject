@@ -1,0 +1,262 @@
+{
+  "id": "premise.the_stolen_thesis",
+  "schema_version": 1,
+  "title": "Publish or Perish",
+  "logline": "A journalist hires a pilot to recover their stolen investigative thesis on measuring station decay, only to find the thief is a bounty hunter who wants to sell it to the highest bidder.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "heist"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "investigative_journalist",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Desperate to publish their life's work before someone buries it.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ruthless_bounty_hunter",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "A pragmatic mercenary who realizes information is worth more than blood.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bounty_hunter_ship",
+      "kind": "ship",
+      "description": "A heavily modified interceptor designed for capturing high-value targets.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "publishing_house",
+      "kind": "faction",
+      "description": "A massive media conglomerate that controls all local news feeds.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "publishing_servers",
+      "kind": "place",
+      "description": "Automated data intake arrays for the local news feeds.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:investigative_journalist} claims their groundbreaking thesis on catastrophic station decay was stolen right before publication.",
+  "private_truth": "The bounty hunter stole it on behalf of a corrupt station manager, but realized the data is so explosive they can auction it off to the highest bidder.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The bounty hunter puts out anonymous feelers for an auction of 'sensitive structural data'.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "investigative_journalist",
+          "target": "bounty_hunter_ship",
+          "reason": "The journalist needs the pilot to scan the hunter's ship to confirm the encrypted thesis is on board.",
+          "private_fact": "The journalist is broke and has no way to actually buy the thesis back.",
+          "outcome_tags": [
+            "thesis_located"
+          ],
+          "routes": {
+            "thesis_located": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The publishing house catches wind of the auction and threatens to sue anyone who buys it.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "investigative_journalist",
+          "target": "bounty_hunter_ship",
+          "reason": "The journalist pays the pilot to disable the hunter's ship and recover the drive from its cargo pod.",
+          "private_fact": "The bounty hunter is expecting an ambush and has heavily armed their ship.",
+          "outcome_tags": [
+            "drive_extracted"
+          ],
+          "routes": {
+            "drive_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The pilot has the drive, but the publishing house makes a massive counter-offer to bury the story.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "investigative_journalist",
+          "target": "publishing_servers",
+          "reason": "The journalist begs the pilot to deliver the raw data directly to the publishing house's automated upload servers to force publication.",
+          "private_fact": "If the pilot does this, the journalist will become famous but the pilot will make no money.",
+          "outcome_tags": [
+            "data_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "data_delivered": "resolution:truth_published",
+            "abandoned": "resolution:story_buried"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_published",
+      "reached_by": "The pilot forces the upload of the data.",
+      "summary": "The thesis proves half the sector's stations are structurally failing. Panic ensues, but repairs begin. The journalist becomes a legend.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "investigative_journalist",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "publishing_house",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_bounty_hunter",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "published_the_decay",
+          "public_summary": "A pilot leaked the structural decay data that caused a system-wide panic over failing stations."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "story_buried",
+      "reached_by": "The pilot takes the bribe and deletes the thesis.",
+      "summary": "The publishing house buries the story. The pilot gets rich, the journalist's career is ruined, and the stations quietly continue to decay.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "investigative_journalist",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "publishing_house",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_bounty_hunter",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "hunter_wins",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The bounty hunter sells the thesis to corrupt station managers who bury it. The journalist is never heard from again.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "investigative_journalist",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_bounty_hunter",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "publishing_house",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "faction_weakened"
+      ]
+    }
+  ],
+  "default_resolution": "hunter_wins",
+  "loose_threads": [
+    {
+      "id": "t_hunter_client",
+      "surface": "scan",
+      "detail": "The bounty hunter's comm logs show the steal order came from the insurer that underwrites half the sector's stations.",
+      "can_carry_methods": [
+        "blackmail",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_thesis_data",
+      "surface": "dialogue",
+      "detail": "The journalist notes that the structural decay patterns perfectly match deliberate micro-fractures caused by sonic weapons, not age.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "blackmail"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "{role:investigative_journalist} claims massive cover-up regarding station safety.",
+    "Local {role:publishing_house} denies suppressing independent research."
+  ],
+  "voice_direction": {
+    "investigative_journalist": "Fast, paranoid, constantly looking over their shoulder.",
+    "ruthless_bounty_hunter": "Cold, professional, treats everything as a transaction."
+  },
+  "novelty_tags": [
+    "stolen_research",
+    "structural_decay",
+    "media_coverup",
+    "data_auction"
+  ]
+}

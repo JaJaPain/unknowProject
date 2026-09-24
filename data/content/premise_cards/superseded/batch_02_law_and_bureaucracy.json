@@ -1,0 +1,724 @@
+[
+  {
+    "id": "premise.quarantine_loophole",
+    "schema_version": 1,
+    "title": "Diplomatic Immunity",
+    "logline": "A strictly enforced medical quarantine is repeatedly bypassed because a centuries-old law classifies a specific luxury good as vital diplomatic cargo.",
+    "scale": "local",
+    "tone": [
+      "farce",
+      "political"
+    ],
+    "themes": [
+      "progress_vs_tradition",
+      "safety_vs_freedom"
+    ],
+    "roles": [
+      {
+        "id": "port_inspector",
+        "kind": "person",
+        "archetype": "inspector",
+        "description": "Desperately trying to contain a localized outbreak while bound by archaic port laws.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "stranded_doctor",
+        "kind": "person",
+        "archetype": "doctor",
+        "description": "Trapped inside the quarantine zone, out of real supplies, treating patients with industrial cleaners.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "smuggler_captain",
+        "kind": "person",
+        "archetype": "pilot",
+        "description": "Exploiting a legal loophole to move luxury goods through the blockade at a massive markup.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "quarantine_station",
+        "kind": "place",
+        "description": "A sprawling orbital habitat completely cut off from the rest of the system.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "health_ministry",
+        "kind": "faction",
+        "description": "The sector's underfunded and bureaucratically paralyzed medical authority.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_preferred": [],
+      "quirks_forbidden": [],
+      "states_required": [
+        "quarantine"
+      ],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "law_loosened",
+      "stolen_goods_circulating"
+    ],
+    "public_situation": "The {role:health_ministry} has sealed off the {role:quarantine_station} due to a highly contagious outbreak, forbidding all ships from docking.",
+    "private_truth": "The blockade forces are legally compelled to allow ships carrying certain ceremonial luxuries to pass uninspected, allowing wealthy citizens inside to buy comfort while the poor suffocate.",
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "The inspector publicly declares they will seize any ship violating the quarantine.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "port_inspector",
+            "target": "quarantine_station",
+            "reason": "Needs an independent scan of the luxury vessels bypassing the blockade to prove they are carrying unlisted contraband.",
+            "private_fact": "The inspector cannot officially request this scan without violating the diplomatic immunity law.",
+            "outcome_tags": [
+              "smuggling_found",
+              "report_clean"
+            ],
+            "routes": {
+              "smuggling_found": "next",
+              "report_clean": "resolution:smugglers_thrive"
+            }
+          },
+          {
+            "verb": "purchase_delivery",
+            "requester": "stranded_doctor",
+            "target": "quarantine_station",
+            "reason": "Begs the pilot to purchase basic medical supplies and find a way to drop them near the station.",
+            "private_fact": "The doctor's own clinic has been commandeered by the wealthy elites inside the zone.",
+            "outcome_tags": [
+              "supplies_dropped"
+            ],
+            "routes": {
+              "supplies_dropped": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "reversal",
+        "public_change": "The smugglers realize they are being tracked by an independent pilot.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "smuggler_captain",
+            "target": "quarantine_station",
+            "reason": "The smuggler hails the pilot, offering to safely transport the medical supplies through their legal loophole if the pilot destroys their scanned data.",
+            "private_fact": "The smuggler plans to sell the supplies to the wealthy inside rather than giving them to the doctor.",
+            "outcome_tags": [
+              "destroyed_smuggler",
+              "took_the_offer"
+            ],
+            "routes": {
+              "destroyed_smuggler": "resolution:quarantine_enforced",
+              "took_the_offer": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "The smuggler docks under diplomatic cover, holding both luxury goods and the player's medicine.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "stranded_doctor",
+            "target": "quarantine_station",
+            "reason": "Hires the pilot to infiltrate the smuggler's drop point using a maintenance drone and manually recover the medicine.",
+            "private_fact": "If this fails, the doctor will be forced to shut down the clinic entirely.",
+            "outcome_tags": [
+              "medicine_recovered"
+            ],
+            "routes": {
+              "medicine_recovered": "next"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The pilot has recovered the medicine. They can hand it over to the doctor, or sell it directly to the wealthy elites who have circumvented the law.",
+          "options": [
+            {
+              "id": "give_to_doctor",
+              "label": "Deliver the medicine to the clinic",
+              "leads_to": "resolution:clinic_saved"
+            },
+            {
+              "id": "sell_to_elites",
+              "label": "Auction the medicine to the highest bidder",
+              "leads_to": "resolution:elites_survive"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "clinic_saved",
+        "reached_by": "The pilot takes the smuggler's offer but steals the medicine back for the doctor.",
+        "summary": "The doctor treats the poorest victims of the outbreak, stabilizing the zone. The smuggler continues to exploit the loophole, but lives are saved.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "health_ministry",
+            "delta": 2
+          },
+          {
+            "type": "cast_fate",
+            "target": "stranded_doctor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "economy",
+            "good": "medical",
+            "price": "spike"
+          },
+          {
+            "type": "deed",
+            "tag": "bypassed_the_quarantine",
+            "public_summary": "A pilot used a smuggler's loophole to sneak a massive payload of meds to a stranded clinic."
+          }
+        ],
+        "seeds": [
+          "alliance_formed",
+          "law_loosened"
+        ]
+      },
+      {
+        "id": "quarantine_enforced",
+        "reached_by": "The pilot destroys the smuggler ship instead of taking the offer.",
+        "summary": "The loophole is violently closed. The quarantine holds, but without the medicine, the doctor's clinic collapses.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "health_ministry",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "stranded_doctor",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "smuggler_captain",
+            "fate": "dead"
+          }
+        ],
+        "seeds": [
+          "law_tightened",
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "smugglers_thrive",
+        "reached_by": "The pilot reports the smuggler's hold as clean.",
+        "summary": "The legal loophole remains open. The wealthy ride out the quarantine in luxury, while the station's poor suffer immensely.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "health_ministry",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "port_inspector",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "luxury",
+            "price": "crash"
+          }
+        ],
+        "seeds": [
+          "stolen_goods_circulating",
+          "faction_weakened"
+        ]
+      },
+      {
+        "id": "elites_survive",
+        "reached_by": "The pilot sells the medicine to the elites.",
+        "summary": "The pilot makes a massive profit. The elites survive comfortably, the clinic collapses, and the quarantine eventually lifts.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "health_ministry",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "stranded_doctor",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "smuggler_captain",
+            "fate": "alive_grudge"
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "secret_half_exposed"
+        ]
+      }
+    ],
+    "default_resolution": "smugglers_thrive",
+    "loose_threads": [
+      {
+        "id": "t_diplomatic_seal",
+        "surface": "cargo",
+        "detail": "The diplomatic seals used to bypass the blockade perfectly match a batch stolen from a neighbouring system three years ago.",
+        "can_carry_methods": [
+          "forged_records",
+          "bribery"
+        ]
+      },
+      {
+        "id": "t_outbreak_origin",
+        "surface": "scan",
+        "detail": "The station's environmental logs show the pathogen was introduced into the ventilation exactly twenty minutes after the inspector was assigned.",
+        "can_carry_methods": [
+          "sabotage",
+          "manufactured_crisis"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "manufactured_crisis",
+        "forged_records"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders",
+      "contraband_list"
+    ],
+    "radio_hooks": [
+      "{role:port_inspector} demands end to 'archaic luxury exemptions' during outbreak.",
+      "Black market prices for basic medical supplies inside {role:quarantine_station} skyrocket."
+    ],
+    "voice_direction": {
+      "port_inspector": "Stressed, rapid delivery. Speaks entirely in citations and regulations.",
+      "stranded_doctor": "Exhausted cadence. Sentences trail off without finishing.",
+      "smuggler_captain": "Smooth, practiced rhythm. Uses legal terms incorrectly but confidently."
+    },
+    "novelty_tags": [
+      "medical_quarantine",
+      "diplomatic_loophole",
+      "luxury_contraband",
+      "class_divide"
+    ]
+  },
+  {
+    "id": "premise.salvage_registry",
+    "schema_version": 1,
+    "title": "Dead Man's Claim",
+    "logline": "Two factions claim the rights to a pristine derelict, but the legal registry holding the title is floating in a decaying orbit.",
+    "scale": "regional",
+    "tone": [
+      "noir",
+      "tense"
+    ],
+    "themes": [
+      "who_owns_the_past",
+      "price_of_profit"
+    ],
+    "roles": [
+      {
+        "id": "salvage_boss",
+        "kind": "person",
+        "archetype": "crime_boss",
+        "description": "Treats interstellar salvage law as a set of suggestions; heavily armed.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "legal_archivist",
+        "kind": "person",
+        "archetype": "archivist",
+        "description": "Possesses the only uncorrupted decryption keys for the old legal registry beacon.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "rival_scavenger",
+        "kind": "ship",
+        "description": "A fast, heavily shielded survey vessel that always seems to find wrecks first.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "derelict_hull",
+        "kind": "place",
+        "description": "An incredibly valuable, untouched pre-collapse warship drifting in deep space.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "salvage_guild",
+        "kind": "faction",
+        "description": "Independent scrappers who believe whoever finds it, owns it.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "corporate_court",
+        "kind": "faction",
+        "description": "A regional authority that demands taxes on all deep-space discoveries.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_preferred": [
+        "gravity_tides"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "blockade"
+      ]
+    },
+    "accepts_seeds": [
+      "wreck_left_behind",
+      "evidence_loose"
+    ],
+    "public_situation": "A massive {role:derelict_hull} has drifted into the sector. The {role:salvage_guild} and the {role:corporate_court} are preparing to go to war over the salvage rights.",
+    "private_truth": "The legal title is stored on an automated registry beacon that is slowly falling into a gravity well. Whoever decrypts it first gets undisputed ownership.",
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Both factions declare a 100-kilometer exclusion zone around the derelict.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "salvage_boss",
+            "target": "derelict_hull",
+            "reason": "Needs a fast pilot to ping the local gravity wells and pinpoint the exact location of the drifting registry beacon.",
+            "private_fact": "The boss knows the beacon's orbit is decaying and they only have days to act.",
+            "outcome_tags": [
+              "beacon_found",
+              "beacon_lost"
+            ],
+            "routes": {
+              "beacon_found": "next",
+              "beacon_lost": "resolution:registry_lost"
+            }
+          },
+          {
+            "verb": "deliver_ore",
+            "ore": "ferrite",
+            "requester": "salvage_boss",
+            "target": "derelict_hull",
+            "reason": "Needs bulk ferrite delivered to a nearby asteroid so the guild can refine it into hull plating to fortify their staging base.",
+            "private_fact": "The boss is preparing for a sustained siege if the legal battle fails.",
+            "outcome_tags": [
+              "delivered"
+            ],
+            "routes": {
+              "delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "The corporate court begins issuing arrest warrants for unauthorized salvage operations.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "legal_archivist",
+            "target": "derelict_hull",
+            "reason": "The pilot must travel to the neighbouring archive station, physically collect the decryption key for the beacon, and return.",
+            "private_fact": "The archivist has altered the key so that it registers the salvage under a neutral shell company they secretly own.",
+            "outcome_tags": [
+              "key_secured"
+            ],
+            "routes": {
+              "key_secured": "next"
+            }
+          },
+          {
+            "verb": "delivery_courier",
+            "requester": "legal_archivist",
+            "target": "derelict_hull",
+            "reason": "Needs the pilot to deliver a sealed bribe directly to the local port authority to look the other way.",
+            "private_fact": "The bribe is actually a forged manifest that redirects court patrol ships away from the derelict.",
+            "outcome_tags": [
+              "bribe_delivered"
+            ],
+            "routes": {
+              "bribe_delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "location": "neighbouring_system",
+        "public_change": "A corporate survey ship suddenly breaks orbit, racing toward the beacon.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "salvage_boss",
+            "target": "rival_scavenger",
+            "reason": "Hires the pilot to intercept and destroy the corporate survey ship before it reaches the registry.",
+            "private_fact": "The rival is actually heavily armed and has been waiting for someone to bring them the decryption key.",
+            "outcome_tags": [
+              "scavenger_destroyed",
+              "took_the_offer"
+            ],
+            "routes": {
+              "scavenger_destroyed": "next",
+              "took_the_offer": "resolution:split_the_salvage"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "location": "same_system",
+        "public_change": "The registry beacon begins its final atmospheric descent. Time is up.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "legal_archivist",
+            "target": "derelict_hull",
+            "reason": "The pilot must catch the beacon, insert the key, and hard-code the final ownership claim before it burns up.",
+            "private_fact": "The archivist is watching the live feed, ready to trigger their shell company override.",
+            "outcome_tags": [
+              "certify_guild",
+              "certify_court",
+              "certify_archivist"
+            ],
+            "routes": {
+              "certify_guild": "resolution:guild_claims",
+              "certify_court": "resolution:court_claims",
+              "certify_archivist": "resolution:archivist_steals"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "guild_claims",
+        "reached_by": "The pilot registers the derelict to the salvage guild.",
+        "summary": "The guild legally claims the derelict. The court backs down rather than start a war, and the archivist's trick fails.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "salvage_guild",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "corporate_court",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "legal_archivist",
+            "fate": "exposed"
+          },
+          {
+            "type": "deed",
+            "tag": "secured_the_derelict",
+            "public_summary": "A fast pilot caught a falling legal beacon and handed a fortune in old steel to the scrappers."
+          }
+        ],
+        "seeds": [
+          "faction_emboldened",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "court_claims",
+        "reached_by": "The pilot registers the derelict to the corporate court.",
+        "summary": "The court seizes the derelict and heavily taxes the local system. The guild is furious and bankrupt.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "corporate_court",
+            "delta": 2
+          },
+          {
+            "type": "standing",
+            "target": "salvage_guild",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_boss",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "parts",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "law_tightened",
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "archivist_steals",
+        "reached_by": "The pilot allows the archivist's shell company to claim it.",
+        "summary": "The archivist legally steals the derelict out from under both factions and sells it off piece by piece.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "salvage_guild",
+            "delta": -1
+          },
+          {
+            "type": "standing",
+            "target": "corporate_court",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "legal_archivist",
+            "fate": "promoted"
+          }
+        ],
+        "seeds": [
+          "secret_half_exposed",
+          "evidence_loose"
+        ]
+      },
+      {
+        "id": "registry_lost",
+        "reached_by": "The pilot fails to find the beacon.",
+        "summary": "The beacon burns up. With no legal title, the guild and the court wage a bloody shadow war over the wreck for years.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "salvage_guild",
+            "delta": -2
+          },
+          {
+            "type": "standing",
+            "target": "corporate_court",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_boss",
+            "fate": "dead"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "lane_closed"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "power_vacuum",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "split_the_salvage",
+        "reached_by": "The pilot takes the rival scavenger's offer.",
+        "summary": "The pilot and the rival slice off the most valuable tech before the beacon falls, leaving the scraps for the factions.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "salvage_guild",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_boss",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "economy",
+            "good": "data",
+            "price": "crash"
+          }
+        ],
+        "seeds": [
+          "stolen_goods_circulating",
+          "debt_owed_to_player"
+        ]
+      }
+    ],
+    "default_resolution": "registry_lost",
+    "loose_threads": [
+      {
+        "id": "t_beacon_trajectory",
+        "surface": "scan",
+        "detail": "The registry beacon's orbital decay was manually triggered using a command code belonging to the local magistrate.",
+        "can_carry_methods": [
+          "sabotage",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_derelict_logs",
+        "surface": "wreck",
+        "detail": "The derelict's interior blast doors are all welded shut from the outside, with fresh torch marks.",
+        "can_carry_methods": [
+          "proxy_violence",
+          "information_control"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "sabotage",
+        "forged_records"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "weapons_cold_zone"
+    ],
+    "radio_hooks": [
+      "{role:corporate_court} issues stark warning against 'unlicensed interaction with historic anomalies'.",
+      "Gunfire reported near {role:derelict_hull} as rival salvage crews clash."
+    ],
+    "voice_direction": {
+      "salvage_boss": "Heavy, booming delivery. Does not use contractions. Punctuates sentences with hard stops.",
+      "legal_archivist": "Soft, perfectly enunciated pitch. Uses overly complicated grammar to obscure intent."
+    },
+    "novelty_tags": [
+      "salvage_rights",
+      "decaying_orbit",
+      "legal_loophole",
+      "bureaucratic_war"
+    ]
+  }
+]

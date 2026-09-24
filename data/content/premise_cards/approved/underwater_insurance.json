@@ -1,0 +1,301 @@
+{
+  "id": "premise.underwater_insurance",
+  "schema_version": 1,
+  "title": "The Premium Payout",
+  "logline": "A debt broker realizes a struggling pilot's ship is worth more destroyed for the insurance payout than intact for the loan payments.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "bleak"
+  ],
+  "themes": [
+    "price_of_profit",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "ruthless_broker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Holds the paper on half the system's independent ships; views tragedy as a liquidity event.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "debtor_captain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Flying a route that doesn't pay, on a ship that barely holds air.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "insurance_underwriter",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Approves payouts; suspects fraud but needs deniable proof to act.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "desperate_debtor",
+      "kind": "ship",
+      "description": "A battered freighter carrying low-margin medical supplies.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "salvage_yard",
+      "kind": "place",
+      "description": "Where repossessed ships are broken down for parts.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "broker_syndicate",
+      "kind": "faction",
+      "description": "A loosely affiliated network of creditors and loan sharks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "insurance_board",
+      "kind": "faction",
+      "description": "The corporate body that underwrites hull insurance in the sector.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "market_disrupted"
+  ],
+  "public_situation": "Independent pilots in {system} are complaining about a sudden spike in hull insurance premiums after a string of 'accidental' total losses.",
+  "private_truth": "The {role:broker_syndicate} has been deliberately foreclosing on ships in dangerous space, effectively orchestrating their destruction to collect inflated insurance payouts.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "A new repossession warrant is posted publicly for a local freighter.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "ruthless_broker",
+          "target": "salvage_yard",
+          "reason": "Needs a neutral pilot to pick up the physical foreclosure papers.",
+          "private_fact": "The papers are embedded with a tracking beacon.",
+          "outcome_tags": [
+            "papers_collected"
+          ],
+          "routes": {
+            "papers_collected": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "ruthless_broker",
+          "target": "salvage_yard",
+          "reason": "Needs the collected papers delivered to the yard's impound dock so the ship can be legally seized upon arrival.",
+          "private_fact": "The broker has already leaked the ship's route to local raiders.",
+          "outcome_tags": [
+            "delivered"
+          ],
+          "routes": {
+            "delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The insurance board flags the repossession for review, delaying any immediate seizures.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "insurance_underwriter",
+          "target": "salvage_yard",
+          "reason": "Needs an independent scan of the broker's previous repossessed wrecks at the yard to find anomalies.",
+          "private_fact": "If the underwriter finds proof of sabotage, they get a massive bounty from the board.",
+          "outcome_tags": [
+            "report_fraud",
+            "report_clean"
+          ],
+          "routes": {
+            "report_fraud": "resolution:broker_arrested",
+            "report_clean": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The targeted freighter goes silent mid-route.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "ruthless_broker",
+          "target": "desperate_debtor",
+          "reason": "Hires the pilot to intercept and 'escort' the debtor ship, with orders to destroy it if it resists.",
+          "private_fact": "The broker is just paying the pilot to pull the trigger and take the blame as a pirate.",
+          "outcome_tags": [
+            "destroyed_ship",
+            "took_the_offer"
+          ],
+          "routes": {
+            "destroyed_ship": "resolution:insurance_claimed",
+            "took_the_offer": "resolution:debtor_escapes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "broker_arrested",
+      "reached_by": "The pilot provides proof of insurance fraud directly to the underwriter.",
+      "summary": "The insurance board freezes the broker's assets. The targeted ship survives, but its debts are transferred, not forgiven.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "broker_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "standing",
+          "target": "insurance_board",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_broker",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "busted_insurance_scam",
+          "public_summary": "Someone finally proved the brokers were blowing up ships for the insurance money."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "insurance_claimed",
+      "reached_by": "The pilot destroys the debtor's ship.",
+      "summary": "The debtor is killed, and the broker collects a massive payout. Premiums across the system rise again.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "broker_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "debtor_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "collected_the_insurance",
+          "public_summary": "A bounty hunter torched a freighter out in the deep, and the bank got paid twice over."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "debtor_escapes",
+      "reached_by": "The pilot takes the debtor's offer and lets them escape.",
+      "summary": "The debtor gives up their valuable cargo to buy their life and flees the system. The broker loses the ship and the payout.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "broker_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "debtor_captain",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_broker",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "insurance_claimed",
+  "loose_threads": [
+    {
+      "id": "t_identical_detonators",
+      "surface": "scan",
+      "detail": "The explosive traces on the wrecks use a military-grade accelerant that hasn't been manufactured in a decade.",
+      "can_carry_methods": [
+        "sabotage",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_underwriter_funds",
+      "surface": "station_notice",
+      "detail": "The insurance board's payout account was mysteriously fully funded from an offshore shell corporation exactly one day before the wrecks started.",
+      "can_carry_methods": [
+        "forged_records",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "sabotage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:insurance_board} announces sector-wide premium hike citing 'unprecedented hazard rates'.",
+    "Local mechanics puzzled by clean breaks on {role:salvage_yard} wrecks."
+  ],
+  "voice_direction": {
+    "ruthless_broker": "Precise, clipped sentences. Avoids all emotional language; uses financial terms for human lives.",
+    "debtor_captain": "Fast, flat delivery. Pauses between sentences as if catching their breath.",
+    "insurance_underwriter": "Monotone and hesitant. Uses double negatives to avoid making direct claims."
+  },
+  "novelty_tags": [
+    "insurance_fraud",
+    "staged_accidents",
+    "repo_man",
+    "corporate_cruelty"
+  ]
+}

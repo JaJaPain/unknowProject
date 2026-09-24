@@ -1,0 +1,295 @@
+{
+  "id": "premise.the_pulsar_cache",
+  "schema_version": 1,
+  "title": "Radiation and Red Tape",
+  "logline": "An optimistic mechanic tries to recover a mythical cache of old technology hidden inside a pulsar's radiation cone, but they are constantly interrupted by a corrupt inspector demanding 'safety' bribes.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "hopeful"
+  ],
+  "themes": [
+    "reinvention",
+    "progress_vs_tradition"
+  ],
+  "roles": [
+    {
+      "id": "optimistic_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Believes the old tech will usher in a new golden age for the sector.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Only cares about golden ages if they get a 20% cut.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pulsar_cache",
+      "kind": "place",
+      "description": "A heavily shielded vault spinning near a deadly pulsar.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "inspector_cutter",
+      "kind": "ship",
+      "description": "An official safety commission ship, heavily armed 'for protection'.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "safety_commission",
+      "kind": "faction",
+      "description": "A bureaucratic nightmare designed solely to extract fines.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bureaucratic_office",
+      "kind": "place",
+      "description": "The local safety commission headquarters.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "pulsar"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "pulsar"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "route_closed"
+  ],
+  "public_situation": "The {role:safety_commission} has completely cordoned off the pulsar region, citing 'extreme navigational hazards'.",
+  "private_truth": "The hazards are real, but the inspector is just blocking the mechanic until they get a massive bribe to look the other way.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The mechanic completes a custom radiation shield for their ship and prepares to launch.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "optimistic_mechanic",
+          "target": "pulsar_cache",
+          "reason": "The mechanic needs the pilot to fly through the radiation cone and scan the cache's lock mechanism.",
+          "private_fact": "The radiation will scramble the pilot's sensors temporarily.",
+          "outcome_tags": [
+            "lock_scanned"
+          ],
+          "routes": {
+            "lock_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The inspector docks with the mechanic's rig and slaps an 'environmental hazard' lock on their engines.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "optimistic_mechanic",
+          "target": "bureaucratic_office",
+          "reason": "The mechanic, out of options, begs the pilot to buy a wildly expensive 'safety permit' and deliver it to the inspector.",
+          "private_fact": "The permit is entirely fake, it's just a front for a cash bribe.",
+          "outcome_tags": [
+            "permit_delivered"
+          ],
+          "routes": {
+            "permit_delivered": "next"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "corrupt_inspector",
+          "target": "bureaucratic_office",
+          "reason": "The inspector further demands the pilot deliver clean water ice to their ship to 'cool their sensors'.",
+          "private_fact": "The inspector just wants ice for their personal cocktail lounge.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The lock is removed, but the inspector demands the mechanic hand over half the cache.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "optimistic_mechanic",
+          "target": "bureaucratic_office",
+          "reason": "The mechanic needs the pilot to deliver a massive legal injunction to the office to force the lock off.",
+          "private_fact": "The injunction is completely forged.",
+          "outcome_tags": [
+            "injunction_delivered"
+          ],
+          "routes": {
+            "injunction_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the forged injunction. They can deliver it to open the cache, or sell it to the inspector to keep the cache sealed.",
+        "options": [
+          {
+            "id": "deliver_injunction",
+            "label": "Deliver the injunction",
+            "leads_to": "resolution:cache_opened"
+          },
+          {
+            "id": "sell_injunction",
+            "label": "Sell the injunction",
+            "leads_to": "resolution:mechanic_betrayed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cache_opened",
+      "reached_by": "The pilot delivers the injunction.",
+      "summary": "The mechanic opens the cache, revealing advanced, clean-burning engine schematics. The sector rejoices, and the safety commission is investigated for corruption.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "optimistic_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "safety_commission",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "opened_the_pulsar_cache",
+          "public_summary": "A pilot blew past corrupt inspectors to recover a legendary cache of old tech from a pulsar."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "mechanic_betrayed",
+      "reached_by": "The pilot sells the injunction to the inspector.",
+      "summary": "The mechanic's rig is destroyed. The inspector claims the cache for the commission, burying the technology to maintain their regulatory monopoly.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "optimistic_mechanic",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "safety_commission",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "cache_lost",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The mechanic is forced to abandon the cache. They survive, but their dreams are ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "optimistic_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "safety_commission",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "cache_lost",
+  "loose_threads": [
+    {
+      "id": "t_inspector_comms",
+      "surface": "scan",
+      "detail": "The inspector's private comms array was broadcasting the cache's coordinates to an unknown mercenary outfit.",
+      "can_carry_methods": [
+        "bribery",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_cache_origin",
+      "surface": "cargo",
+      "detail": "The old tech in the cache bears the logo of the modern safety commission, as if the commission hid it there itself.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:safety_commission} reminds pilots that pulsar diving voids all insurance.",
+    "Rumors of legendary old engine designs hidden in the deep dark."
+  ],
+  "voice_direction": {
+    "optimistic_mechanic": "Bright, enthusiastic, speaks quickly.",
+    "corrupt_inspector": "Slow, patronizing, constantly quotes fake regulations."
+  },
+  "novelty_tags": [
+    "old_tech",
+    "bureaucratic_extortion",
+    "pulsar_diving",
+    "fake_permits"
+  ]
+}

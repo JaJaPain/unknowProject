@@ -1,0 +1,295 @@
+{
+  "id": "premise.the_collapsing_mine",
+  "schema_version": 1,
+  "title": "The Collapsing Mine",
+  "logline": "An unstable asteroid mine collapses, and a union organiser begs a pilot to buy and deliver structural supports because the company refuses to halt operations.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "union_organiser",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Exhausted, hoarse from shouting, deeply protective of their crew.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "company_bureaucrat",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Cold, numbers-driven, refuses to acknowledge danger.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "unstable_asteroid",
+      "kind": "place",
+      "description": "A hollowed-out rock groaning under gravitational stress.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_office",
+      "kind": "place",
+      "description": "A pristine office overlooking the dirty asteroid.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_corporation",
+      "kind": "faction",
+      "description": "A massive conglomerate focused purely on quotas.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:mining_corporation} has doubled production quotas at the {role:unstable_asteroid}, ignoring reports of structural fatigue.",
+  "private_truth": "The company knows the asteroid will collapse. They increased quotas to extract all the ore before the inevitable disaster, writing off the miners as an insurance loss.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A minor cave-in traps three miners, and the company docks their pay for the lost time.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "union_organiser",
+          "target": "unstable_asteroid",
+          "reason": "The organiser begs the pilot to buy heavy titanium struts and deliver them to the mine.",
+          "private_fact": "The miners are installing the struts themselves off the clock just to survive their shifts.",
+          "outcome_tags": [
+            "struts_delivered"
+          ],
+          "routes": {
+            "struts_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The company issues a memo declaring the mine officially safe.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "company_bureaucrat",
+          "target": "unstable_asteroid",
+          "reason": "The bureaucrat hires the pilot to run a superficial sensor sweep to certify the rock is stable.",
+          "private_fact": "The pilot's deep scan reveals the rock's core is fracturing and will collapse in less than a day.",
+          "outcome_tags": [
+            "asteroid_scanned"
+          ],
+          "routes": {
+            "asteroid_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The asteroid groans loudly, and the main tunnel begins to collapse.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "union_organiser",
+          "target": "corporate_office",
+          "reason": "The organiser asks the pilot to deliver a strike notice directly to the bureaucrat's office.",
+          "private_fact": "The notice includes the pilot's true scan data proving the company knew about the collapse.",
+          "outcome_tags": [
+            "notice_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "notice_delivered": "next",
+            "abandoned": "resolution:mine_collapses"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the proof of the company's negligence. The bureaucrat offers a massive bribe to delete it.",
+        "options": [
+          {
+            "id": "release_proof",
+            "label": "Release the proof to the public",
+            "leads_to": "resolution:strike_succeeds"
+          },
+          {
+            "id": "take_bribe",
+            "label": "Take the bribe and delete the data",
+            "leads_to": "resolution:bribe_taken"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "strike_succeeds",
+      "reached_by": "The pilot releases the proof.",
+      "summary": "The miners evacuate just in time. The company is hit with massive fines, and the bureaucrat is fired in disgrace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "union_organiser",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "company_bureaucrat",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "mining_corporation",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "bribe_taken",
+      "reached_by": "The pilot takes the bribe.",
+      "summary": "The pilot gets rich deleting the evidence. The asteroid collapses, killing hundreds of miners, while the company walks away clean.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "union_organiser",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "company_bureaucrat",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "mining_corporation",
+          "delta": 1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "wreck_left_behind"
+      ]
+    },
+    {
+      "id": "mine_collapses",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The asteroid collapses entirely, killing hundreds of miners. The company claims the insurance payout without any investigation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "union_organiser",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "company_bureaucrat",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "mining_corporation",
+          "delta": 1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "mine_collapses",
+  "loose_threads": [
+    {
+      "id": "t_bureaucrat_emails",
+      "surface": "scan",
+      "detail": "The bureaucrat's outbox contains emails discussing the collapse timeline dating back six months.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_insurance_policy",
+      "surface": "dialogue",
+      "detail": "The company's insurance policy was recently underwritten by an anonymous shell corporation.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Miners protest dangerous conditions at {role:unstable_asteroid}.",
+    "{role:mining_corporation} insists safety is their top priority."
+  ],
+  "voice_direction": {
+    "union_organiser": "Hoarse, passionate, constantly interrupting.",
+    "company_bureaucrat": "Smooth, dismissive, speaks in corporate jargon."
+  },
+  "novelty_tags": [
+    "mine_collapse",
+    "corporate_negligence",
+    "labour_strike"
+  ]
+}

@@ -1,0 +1,300 @@
+{
+  "id": "premise.revoked_charter",
+  "schema_version": 1,
+  "title": "Trespassers in Our Own Homes",
+  "logline": "A corporate town's operating charter is unexpectedly revoked, turning every resident into a trespasser overnight.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "survival"
+  ],
+  "themes": [
+    "chosen_family",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "town_mayor",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Elected to manage potholes, now trying to lead a guerrilla defense.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "town_defender",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "An aging veteran teaching miners how to fire anti-ship weaponry.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_evictor",
+      "kind": "ship",
+      "description": "A massive, automated repossession vessel equipped with riot suppression gear.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_town",
+      "kind": "place",
+      "description": "A sprawling subterranean settlement built entirely out of retrofitted shipping crates.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "sympathetic_court",
+      "kind": "place",
+      "description": "A distant neutral jurisdiction where a single honest judge holds court.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_conglomerate",
+      "kind": "faction",
+      "description": "A distant board of directors deciding the fate of thousands via spreadsheet.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "town_militia",
+      "kind": "faction",
+      "description": "Desperate locals armed with mining lasers and hunting rifles.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "faction_emboldened",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:corporate_conglomerate} has officially revoked the charter for a local settlement, giving the residents 24 hours to vacate their homes.",
+  "private_truth": "The corporation discovered a massive vein of thorium directly beneath the town and manufactured a charter violation to steal the land.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The corporate conglomerate cuts off all external power and life support to the town.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "town_defender",
+          "target": "corporate_town",
+          "reason": "Needs raw thorium delivered so the militia can jury-rig an explosive perimeter around the primary airlocks.",
+          "private_fact": "The defender knows explosives won't stop ship weapons, but needs the townspeople to feel like they are doing something.",
+          "outcome_tags": [
+            "barricades_built"
+          ],
+          "routes": {
+            "barricades_built": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "town_mayor",
+          "target": "sympathetic_court",
+          "reason": "Hires the pilot to officially dock at the distant court and submit the town's original physical founding charter to a sympathetic judge.",
+          "private_fact": "The mayor is spending the town's entire emergency fund on this single courier run.",
+          "outcome_tags": [
+            "charter_smuggled"
+          ],
+          "routes": {
+            "charter_smuggled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The massive corporate evictor ship enters orbit and begins broadcasting dispersal warnings.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "town_defender",
+          "target": "corporate_evictor",
+          "reason": "Hires the pilot to intercept and destroy the evictor ship before it can breach the town's hull.",
+          "private_fact": "The corporate ship offers to pay the pilot double to simply leave the sector and let the eviction proceed.",
+          "outcome_tags": [
+            "evictor_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "evictor_destroyed": "next",
+            "took_the_offer": "resolution:town_evicted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The destruction of the evictor pauses the assault, but corporate lawyers demand a final arbitration.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "town_mayor",
+          "target": "corporate_town",
+          "reason": "Needs the pilot to scan the old boundary beacons near the town's perimeter to mathematically prove it was established before the corporation claimed the sector.",
+          "private_fact": "The scans show the beacons were moved ten meters three years ago, technically invalidating the town's claim.",
+          "outcome_tags": [
+            "certify_town",
+            "certify_corp"
+          ],
+          "routes": {
+            "certify_town": "resolution:town_saved",
+            "certify_corp": "resolution:corp_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "town_saved",
+      "reached_by": "The pilot falsifies the beacon scan to support the town.",
+      "summary": "The town's charter is upheld. The corporation backs down, and the militia becomes a permanent, hardened defense force.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "town_militia",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "corporate_conglomerate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "town_mayor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_company_town",
+          "public_summary": "A pilot helped a small town legally tell a massive corporation to go straight to hell."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "corp_wins",
+      "reached_by": "The pilot reports the true beacon locations.",
+      "summary": "The corporation legally annexes the town. The militia is arrested, the residents are evicted, and the mayor is fired.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "corporate_conglomerate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "town_militia",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "town_mayor",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "refugee_influx"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "town_evicted",
+      "reached_by": "The pilot takes the corporate offer and abandons the town.",
+      "summary": "Without defense, the town is violently breached. Many die, the rest flee, and the corporation strip-mines the ruins.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "corporate_conglomerate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "town_defender",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "town_mayor",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "town_evicted",
+  "loose_threads": [
+    {
+      "id": "t_boundary_tampering",
+      "surface": "scan",
+      "detail": "The tractor beam signatures used to quietly move the beacons perfectly match the town's own aging defense grid.",
+      "can_carry_methods": [
+        "sabotage",
+        "false_flag"
+      ]
+    },
+    {
+      "id": "t_evictor_code",
+      "surface": "wreck",
+      "detail": "The destroyed corporate evictor ship's core programming contained a subroutine specifically designed to target the town's water filtration systems first.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "sabotage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "{role:corporate_conglomerate} issues statement regretting 'necessary relocation procedures'.",
+    "Unconfirmed reports of armed resistance from {role:town_militia}."
+  ],
+  "voice_direction": {
+    "town_mayor": "Loud, practiced public speaking rhythm, even in private. Avoids admitting fear.",
+    "town_defender": "Gruff, practical tone. Focuses purely on logistics and angles of fire."
+  },
+  "novelty_tags": [
+    "corporate_eviction",
+    "town_militia",
+    "charter_dispute",
+    "boundary_beacons"
+  ]
+}

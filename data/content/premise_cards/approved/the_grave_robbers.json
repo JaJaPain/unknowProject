@@ -1,0 +1,300 @@
+{
+  "id": "premise.the_grave_robbers",
+  "schema_version": 1,
+  "title": "The Grave Robbers",
+  "logline": "An archivist hires a pilot to track down and destroy a smuggler barge that has been illegally harvesting cybernetics from an ancient cemetery.",
+  "scale": "regional",
+  "tone": [
+    "tense",
+    "heist"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "desperate_archivist",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Fiercely protective, deeply respectful of the dead.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_broker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Sleazy, wearing too much cheap jewelry.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ancient_cemetery",
+      "kind": "place",
+      "description": "A vast field of frozen sarcophagi drifting in the dark zone.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "smuggler_barge",
+      "kind": "ship",
+      "description": "A rusted hauler equipped with heavy grappling claws.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "antiquities_guild",
+      "kind": "faction",
+      "description": "The organization tasked with protecting historical sites.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "route_closed"
+  ],
+  "public_situation": "The {role:antiquities_guild} has declared the {role:ancient_cemetery} a protected heritage site, forbidding all salvage operations.",
+  "private_truth": "The corrupt broker is paying smugglers to rip high-grade military cybernetics out of the corpses to sell on the black market.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Several sarcophagi are discovered ripped open and stripped of tech.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_archivist",
+          "target": "ancient_cemetery",
+          "reason": "The archivist hires the pilot to scan the dark zone around the cemetery to track the smugglers' ion trails.",
+          "private_fact": "The trail leads directly to a known black-market staging ground.",
+          "outcome_tags": [
+            "trail_found"
+          ],
+          "routes": {
+            "trail_found": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "desperate_archivist",
+          "target": "ancient_cemetery",
+          "reason": "The archivist asks the pilot to collect a partially harvested cybernetic arm from the wreckage for evidence.",
+          "private_fact": "The arm contains a tracking chip pointing to the broker.",
+          "outcome_tags": [
+            "arm_collected"
+          ],
+          "routes": {
+            "arm_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The broker attempts to flood the market with the stolen cybernetics.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "corrupt_broker",
+          "target": "ancient_cemetery",
+          "reason": "The broker hires the pilot to buy specialized plasma cutters and deliver them to the smuggler barge.",
+          "private_fact": "The cutters are specifically designed to crack open heavy military-grade coffins.",
+          "outcome_tags": [
+            "cutters_delivered"
+          ],
+          "routes": {
+            "cutters_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The archivist secures the coordinates of the smuggler barge.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "desperate_archivist",
+          "target": "smuggler_barge",
+          "reason": "The archivist pays the pilot to attack the barge and recover the stolen cybernetics from its cargo hold.",
+          "private_fact": "The barge is heavily armored and calls in mercenary reinforcements.",
+          "outcome_tags": [
+            "cybernetics_recovered"
+          ],
+          "routes": {
+            "cybernetics_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The smuggler barge attempts to flee the system with the remaining bodies.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_archivist",
+          "target": "smuggler_barge",
+          "reason": "The archivist begs the pilot to completely destroy the barge so the dead can rest.",
+          "private_fact": "The broker hails the pilot, offering them a massive cut of the profits if they let the barge jump away.",
+          "outcome_tags": [
+            "barge_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "barge_destroyed": "resolution:archivist_wins",
+            "took_the_offer": "resolution:broker_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "archivist_wins",
+      "reached_by": "The pilot destroys the barge.",
+      "summary": "The barge is destroyed. The dead are left in peace, and the broker is arrested by the guild for desecration.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_archivist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_broker",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "antiquities_guild",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_grave_robbers",
+          "public_summary": "A pilot destroyed a smuggler ship to protect an ancient space cemetery."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "broker_wins",
+      "reached_by": "The pilot takes the offer.",
+      "summary": "The barge escapes. The cemetery is completely stripped bare. The archivist resigns in despair, and the pilot gets rich off grave robbery.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_broker",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "antiquities_guild",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "barge_escapes",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The barge easily outruns the authorities and escapes. The graveyard is desecrated, and the broker vanishes with the profits.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_broker",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "antiquities_guild",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "barge_escapes",
+  "loose_threads": [
+    {
+      "id": "t_military_bodies",
+      "surface": "scan",
+      "detail": "The bodies in the cemetery were all soldiers from a secret war the government claims never happened.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_guild_bribes",
+      "surface": "dialogue",
+      "detail": "The broker boasts that half the guild's leadership was getting a cut of the grave-robbing profits.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Desecration discovered at {role:ancient_cemetery}.",
+    "{role:antiquities_guild} promises swift justice for grave robbers."
+  ],
+  "voice_direction": {
+    "desperate_archivist": "Fierce, protective, speaks with absolute moral certainty.",
+    "corrupt_broker": "Greasy, overly familiar, speaks too loudly."
+  },
+  "novelty_tags": [
+    "space_cemetery",
+    "grave_robbing",
+    "cybernetic_harvest"
+  ]
+}

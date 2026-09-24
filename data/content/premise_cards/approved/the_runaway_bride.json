@@ -1,0 +1,261 @@
+{
+  "id": "premise.the_runaway_bride",
+  "schema_version": 1,
+  "title": "The Runaway Bride",
+  "logline": "A reluctant bride hires a pilot to help her escape her own lavish wedding because her fiancé is actually an undercover corporate spy.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "heist"
+  ],
+  "themes": [
+    "reinvention",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "reluctant_bride",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Wearing a massive, highly impractical dress, completely panicked.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "jilted_fiance",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Polished, incredibly handsome, constantly checking their comms.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "wedding_chapel",
+      "kind": "place",
+      "description": "A ridiculously opulent orbital cathedral floating in zero-G.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "matrimony_syndicate",
+      "kind": "faction",
+      "description": "A high-end guild that plans weddings and enforces prenuptial agreements.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "fiance_escort",
+      "kind": "ship",
+      "description": "A heavily armed corporate gunship masquerading as a VIP transport.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:matrimony_syndicate} is hosting the sector's most expensive wedding at the {role:wedding_chapel}.",
+  "private_truth": "The bride discovered her fiancé is a corporate spy planning to assassinate her father during the reception to trigger a hostile takeover.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The fiancé realizes the bride is missing from her dressing room.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "jilted_fiance",
+          "target": "wedding_chapel",
+          "reason": "The fiancé hires the pilot to buy and quietly deliver micro-tracking tags to the chapel's security team to find the bride.",
+          "private_fact": "The pilot realizes the tags are military-grade target painters.",
+          "outcome_tags": [
+            "tags_delivered"
+          ],
+          "routes": {
+            "tags_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The syndicate locks down the chapel, trapping the guests inside.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "jilted_fiance",
+          "target": "wedding_chapel",
+          "reason": "The fiancé asks the pilot to run a deep biometric scan of the chapel to locate the bride's unique heartbeat.",
+          "private_fact": "The pilot finds the bride hiding inside a massive hollow ice sculpture.",
+          "outcome_tags": [
+            "bride_located"
+          ],
+          "routes": {
+            "bride_located": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The fiancé orders his private gunship to blockade the chapel's launch tubes so no one can leave.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "reluctant_bride",
+          "target": "fiance_escort",
+          "reason": "The bride begs the pilot to destroy the gunship blockading the launch tubes so she can flee in her personal shuttle.",
+          "private_fact": "The fiancé is aboard the gunship and will hail the pilot mid-fight with a massive bribe to stand down.",
+          "outcome_tags": [
+            "gunship_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "gunship_destroyed": "resolution:bride_escapes",
+            "took_the_offer": "resolution:fiance_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bride_escapes",
+      "reached_by": "The pilot destroys the gunship, allowing the bride to escape.",
+      "summary": "The bride escapes and exposes the assassination plot. Her father survives, the fiancé is arrested, and the syndicate is deeply embarrassed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reluctant_bride",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jilted_fiance",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "matrimony_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_bride",
+          "public_summary": "A pilot ruined a high-society wedding to save a bride from a corporate assassin."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "fiance_wins",
+      "reached_by": "The pilot takes the fiancé's offer and spares the gunship.",
+      "summary": "The fiancé finds the bride. The wedding proceeds, and the father is quietly poisoned during the toast. The fiancé takes over the company.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reluctant_bride",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jilted_fiance",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "matrimony_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "bride_captured",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The syndicate guards find the bride freezing inside the ice sculpture. She is forced to go through with the wedding.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reluctant_bride",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jilted_fiance",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "matrimony_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "bride_captured",
+  "loose_threads": [
+    {
+      "id": "t_spy_handler",
+      "surface": "scan",
+      "detail": "The fiancé's handler isn't a corporate executive; it's actually the bride's own mother.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_syndicate_bribes",
+      "surface": "dialogue",
+      "detail": "The fiancé complains that the matrimony syndicate charged him triple for \"assassination cleanup\" fees.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Sector's most expensive wedding delayed by \"technical issues\".",
+    "{role:jilted_fiance} reassures guests the ceremony will proceed."
+  ],
+  "voice_direction": {
+    "reluctant_bride": "Fast-talking, trembling, incredibly bossy despite the panic.",
+    "jilted_fiance": "Smooth, unctuous, terrifyingly calm."
+  },
+  "novelty_tags": [
+    "runaway_bride",
+    "wedding_heist",
+    "corporate_spy"
+  ]
+}

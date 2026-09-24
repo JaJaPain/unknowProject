@@ -1,0 +1,272 @@
+{
+  "id": "premise.the_calibration_scam",
+  "schema_version": 1,
+  "title": "Fuzzy Math",
+  "logline": "A con artist is selling fake calibration devices to local miners that magically improve their ore yields by just lying to the scales, and an honest preacher is trying to stop them.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "absurd"
+  ],
+  "themes": [
+    "price_of_profit",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "smooth_con_artist",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Charming, utterly shameless, sells snake oil with a smile.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "honest_preacher",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Believes honest labor is a holy sacrament and despises cheats.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_outpost",
+      "kind": "place",
+      "description": "A dirty, overworked rock-hopping station desperate for a break.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "miners_union",
+      "kind": "faction",
+      "description": "The local laborers who are thrilled their yields are suddenly up 20%.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "leader_discredited"
+  ],
+  "public_situation": "The {role:miners_union} is celebrating a sudden, miraculous increase in ore yields thanks to a new 'quantum calibrator' sold by a traveling merchant.",
+  "private_truth": "The 'quantum calibrator' is just a cheap electromagnet that messes with the station's official weighing scales, committing massive fraud.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The preacher publicly denounces the calibrators as witchcraft and fraud.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "honest_preacher",
+          "target": "mining_outpost",
+          "reason": "The preacher hires the pilot to scan the outpost's scales to prove they are being tampered with.",
+          "private_fact": "The scan will completely short out the cheap calibrators.",
+          "outcome_tags": [
+            "fraud_proven"
+          ],
+          "routes": {
+            "fraud_proven": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The miners realize the calibrators are broken and threaten to strike.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "smooth_con_artist",
+          "target": "mining_outpost",
+          "reason": "The con artist asks the pilot to deliver a massive load of silicate to 'prove' the calibrators still work.",
+          "private_fact": "The con artist is just trying to buy time to escape the station.",
+          "outcome_tags": [
+            "silicate_delivered"
+          ],
+          "routes": {
+            "silicate_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The con artist prepares to flee with their ill-gotten gains.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "honest_preacher",
+          "target": "mining_outpost",
+          "reason": "The preacher asks the pilot to intercept the con artist at the docks and confiscate their ledger.",
+          "private_fact": "The ledger proves the union bosses knew it was a scam and took a cut.",
+          "outcome_tags": [
+            "ledger_secured"
+          ],
+          "routes": {
+            "ledger_secured": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the ledger. They can expose the fraud, or sell the ledger back to the con artist to keep the lie going.",
+        "options": [
+          {
+            "id": "expose_fraud",
+            "label": "Give the ledger to the preacher to expose the fraud",
+            "leads_to": "resolution:scam_exposed"
+          },
+          {
+            "id": "sell_ledger",
+            "label": "Sell the ledger back to the con artist",
+            "leads_to": "resolution:scam_continues"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "scam_exposed",
+      "reached_by": "The pilot gives the ledger to the preacher.",
+      "summary": "The fraud is exposed. The union bosses are ousted, the con artist flees penniless, and the miners go back to honest, grueling labor.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "honest_preacher",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smooth_con_artist",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_fake_scales",
+          "public_summary": "A pilot proved the miraculous new mining tools were just cheap magnets tricking the scales."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "scam_continues",
+      "reached_by": "The pilot sells the ledger to the con artist.",
+      "summary": "The con artist escapes with the money. The miners keep using the broken calibrators, convinced the magic will return.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_union",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "smooth_con_artist",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "honest_preacher",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "market_crash",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The fraud continues until the buyers realize the ore shipments are completely underweight. The local market crashes instantly.",
+      "consequences": [
+        {
+          "type": "economy",
+          "good": "ore",
+          "price": "crash",
+          "ore": "silicate"
+        },
+        {
+          "type": "standing",
+          "target": "miners_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "smooth_con_artist",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "market_crash",
+  "loose_threads": [
+    {
+      "id": "t_calibrator_tech",
+      "surface": "scan",
+      "detail": "The fake calibrators are built around sensor chips stamped with the inventory mark of a hospital that closed last spring.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_con_artist_funds",
+      "surface": "dialogue",
+      "detail": "The con artist jokes that they are just raising funds to pay off a 'debt that doesn't exist on paper'.",
+      "can_carry_methods": [
+        "blackmail",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:honest_preacher} declares new mining tech a 'blasphemy against honest toil'.",
+    "{role:miners_union} reports record yields; corporate buyers highly skeptical."
+  ],
+  "voice_direction": {
+    "smooth_con_artist": "Fast, friendly, uses too many compliments.",
+    "honest_preacher": "Loud, booming, speaks every word with absolute certainty."
+  },
+  "novelty_tags": [
+    "fake_technology",
+    "scale_tampering",
+    "snake_oil_salesman",
+    "union_corruption"
+  ]
+}

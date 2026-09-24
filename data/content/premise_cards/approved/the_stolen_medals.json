@@ -1,0 +1,267 @@
+{
+  "id": "premise.the_stolen_medals",
+  "schema_version": 1,
+  "title": "The Stolen Medals",
+  "logline": "A veteran's prized medals are stolen by a con artist to pay a gambling debt, and the veteran wants them back without involving the authorities.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "noir"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "proud_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Proud, easily insulted, hiding their vulnerability.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sleazy_con_artist",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Charming, constantly lying, desperate to clear their debt.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "thief_ship",
+      "kind": "ship",
+      "description": "A fast, unarmed smuggling skiff.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "gambling_den",
+      "kind": "place",
+      "description": "An illegal casino hidden in a cargo hold.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A local hero's home was burglarized, but they refuse to file a police report.",
+  "private_truth": "The veteran's medals are fake; they bought them to pretend they were a hero, and they can't let the cops find out.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The con artist tries to pawn the medals at the gambling den.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "proud_veteran",
+          "target": "gambling_den",
+          "reason": "Needs the pilot to scan the den's manifest to confirm the medals are there.",
+          "private_fact": "The veteran hopes the medals haven't been appraised yet.",
+          "outcome_tags": [
+            "medals_found",
+            "medals_missing"
+          ],
+          "routes": {
+            "medals_found": "beat:2",
+            "medals_missing": "resolution:medals_lost"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The gambling den discovers the medals are fake and puts a hit on the con artist.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "proud_veteran",
+          "target": "thief_ship",
+          "reason": "Needs the pilot to intercept the con artist and take the medals back.",
+          "private_fact": "The veteran actually wants to save the con artist's life, as they are secretly related.",
+          "outcome_tags": [
+            "medals_recovered",
+            "thief_escapes"
+          ],
+          "routes": {
+            "medals_recovered": "beat:3",
+            "thief_escapes": "resolution:medals_lost"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The con artist begs for help paying off the debt.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "sleazy_con_artist",
+          "target": "gambling_den",
+          "reason": "Needs the pilot to deliver a rare artifact to clear the debt entirely.",
+          "private_fact": "The artifact is completely worthless, just a good forgery.",
+          "outcome_tags": [
+            "artifact_delivered",
+            "artifact_abandoned"
+          ],
+          "routes": {
+            "artifact_delivered": "resolution:both_saved",
+            "artifact_abandoned": "resolution:medals_lost"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the forged artifact and the fake medals.",
+        "options": [
+          {
+            "id": "save_both",
+            "label": "Deliver the forgery and save both of them",
+            "leads_to": "resolution:both_saved"
+          },
+          {
+            "id": "abandon_both",
+            "label": "Expose the fakes and leave them to their fate",
+            "leads_to": "resolution:medals_lost"
+          },
+          {
+            "id": "sell_medals",
+            "label": "Let the casino sell the medals",
+            "leads_to": "resolution:medals_sold"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "both_saved",
+      "reached_by": "The pilot delivers the forgery.",
+      "summary": "The gambling den accepts the forgery. The veteran keeps their secret, and the con artist survives.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "proud_veteran",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sleazy_con_artist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "medals_lost",
+      "reached_by": "The pilot exposes the fakes or fails the missions.",
+      "summary": "The gambling den realizes they've been played. Both the veteran and the con artist are run out of town.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "proud_veteran",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sleazy_con_artist",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "medals_sold",
+      "reached_by": "A rare alternative outcome.",
+      "summary": "The gambling den sells the fake medals to an oblivious collector. The debt is cleared, but the veteran's pride is wounded.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "proud_veteran",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sleazy_con_artist",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "medals_lost",
+  "loose_threads": [
+    {
+      "id": "t_medals_manufacturer",
+      "surface": "scan",
+      "detail": "The fake medals were cast from high-grade ship hull plating from a defunct shipyard.",
+      "can_carry_methods": [
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_casino_owner",
+      "surface": "radio",
+      "detail": "The gambling den's automated distress calls are routed to a local hospital.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "survival",
+      "greed"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Local hero declines to press charges after burglary.",
+    "Gambling den promises severe consequences for unpaid debts."
+  ],
+  "voice_direction": {
+    "proud_veteran": "Defensive, gruff, overcompensating.",
+    "sleazy_con_artist": "Fast-talking, ingratiating, constantly sweating."
+  },
+  "novelty_tags": [
+    "stolen_valor",
+    "fake_medals",
+    "forgery_swap"
+  ]
+}

@@ -1,0 +1,287 @@
+{
+  "id": "premise.the_botched_surgery",
+  "schema_version": 1,
+  "title": "The Botched Surgery",
+  "logline": "A disgraced underworld doctor hires a pilot to secure evidence of a rival gang's tampering before a notorious crime boss realizes their surgery was sabotaged.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "farce"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "disgraced_doctor",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Brilliant but constantly trembling, prone to terrible decisions under pressure.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "wounded_boss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Currently unconscious, famously vindictive.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "clandestine_clinic",
+      "kind": "place",
+      "description": "A filthy, unlicensed medical bay hidden in an asteroid.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "rival_enforcer",
+      "kind": "ship",
+      "description": "A heavy bruiser ship looking to finish the boss off.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "underworld_medics",
+      "kind": "faction",
+      "description": "The loose network of illegal ripperdocs.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rival_flagship",
+      "kind": "ship",
+      "description": "The rival gang's command vessel.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "leader_discredited"
+  ],
+  "public_situation": "The {role:wounded_boss} survived a massive assassination attempt and is currently recovering at an undisclosed location.",
+  "private_truth": "The boss is recovering at the {role:clandestine_clinic}, but the doctor accidentally paralyzed their legs and is terrified of the consequences.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The doctor sends a panicked, encrypted distress call.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "disgraced_doctor",
+          "target": "clandestine_clinic",
+          "reason": "The doctor hires the pilot to rush experimental stabilizers to the clinic to keep the boss unconscious while the doctor preps their own ship to flee.",
+          "private_fact": "The doctor left the boss completely unattended on the operating table to buy time.",
+          "outcome_tags": [
+            "stabilizers_delivered"
+          ],
+          "routes": {
+            "stabilizers_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "Rival gang members locate the clinic and launch an assault.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "disgraced_doctor",
+          "target": "rival_enforcer",
+          "reason": "The doctor begs the pilot to destroy the rival enforcers to cover their escape.",
+          "private_fact": "The doctor actually leaked the clinic's coordinates to the rivals to ensure the boss dies.",
+          "outcome_tags": [
+            "rivals_destroyed"
+          ],
+          "routes": {
+            "rivals_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The boss wakes up, realizes they are paralyzed, and issues a massive bounty on the doctor.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "disgraced_doctor",
+          "target": "rival_flagship",
+          "reason": "The doctor realizes the rivals recorded their comms and demands the pilot blow open the wreckage to retrieve the logs.",
+          "private_fact": "The logs prove the doctor arranged the hit.",
+          "outcome_tags": [
+            "logs_recovered"
+          ],
+          "routes": {
+            "logs_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The pilot holds the logs, and the boss's personal guard arrives.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "wounded_boss",
+          "target": "clandestine_clinic",
+          "reason": "The boss demands the pilot return to the clinic and deliver the logs to prove the doctor's treason.",
+          "private_fact": "The doctor begs the pilot to dump the logs into the nearest star so they can safely escape on their own ship.",
+          "outcome_tags": [
+            "logs_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "logs_delivered": "resolution:doctor_killed",
+            "abandoned": "resolution:doctor_escapes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "doctor_killed",
+      "reached_by": "The pilot delivers the logs to the boss.",
+      "summary": "The boss executes the doctor. The pilot is paid a massive bounty, and the boss rules their syndicate from a wheelchair.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_doctor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wounded_boss",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "underworld_medics",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "doctor_escapes",
+      "reached_by": "The pilot destroys the logs and escapes with the doctor.",
+      "summary": "The doctor escapes the system and starts a new life. The boss is enraged and puts a permanent mark on the pilot.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_doctor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wounded_boss",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "underworld_medics",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_ripperdoc",
+          "public_summary": "A pilot saved a dirty ripperdoc from the wrath of a paralyzed crime boss."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "boss_dies",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The boss succumbs to their wounds. The syndicate fractures, and the doctor is hunted down by loyalists.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wounded_boss",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "disgraced_doctor",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "boss_dies",
+  "loose_threads": [
+    {
+      "id": "t_surgical_tools",
+      "surface": "scan",
+      "detail": "The 'botched' surgery was performed using high-end corporate surgical tools that were deliberately miscalibrated.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_rival_backers",
+      "surface": "wreck",
+      "detail": "The rival enforcers were paid out of an account managed by the boss's own second-in-command.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Underworld in chaos following assassination attempt on {role:wounded_boss}.",
+    "Unlicensed medical clinics raided across the sector."
+  ],
+  "voice_direction": {
+    "disgraced_doctor": "High-pitched, panicky, constantly making excuses.",
+    "wounded_boss": "Guttural, in immense pain, but radiating authority."
+  },
+  "novelty_tags": [
+    "botched_surgery",
+    "ripperdoc",
+    "paralyzed_boss",
+    "medical_malpractice"
+  ]
+}

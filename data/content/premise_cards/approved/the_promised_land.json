@@ -1,0 +1,269 @@
+{
+  "id": "premise.the_promised_land",
+  "schema_version": 1,
+  "title": "The Promised Land",
+  "logline": "An idealistic scout discovers a perfect new colony world, but needs a pilot to destroy a corporate surveyor ship trying to claim the land first.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "hopeful"
+  ],
+  "themes": [
+    "reinvention",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "idealistic_scout",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Starry-eyed, naive, genuinely believes in a better future.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cynical_negotiator",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Tired, completely disillusioned with corporate greed.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "new_colony",
+      "kind": "place",
+      "description": "A pristine, untouched garden world.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_surveyor",
+      "kind": "ship",
+      "description": "A massive corporate ship deploying claim beacons.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "development_corp",
+      "kind": "faction",
+      "description": "A megacorporation that turns planets into strip mines.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:development_corp} announces the discovery of a new garden world, {role:new_colony}, ripe for industrial development.",
+  "private_truth": "The scout actually discovered the world first and promised it to a group of refugees, but the corporation hacked their nav-computer to steal the coordinates.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The corporate surveyor begins dropping automated claim beacons across the planet.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "idealistic_scout",
+          "target": "new_colony",
+          "reason": "The scout begs the pilot to scan the corporate beacons to prove they were deployed illegally.",
+          "private_fact": "The scan reveals the beacons are heavily armed and destroying the local ecosystem.",
+          "outcome_tags": [
+            "beacons_scanned"
+          ],
+          "routes": {
+            "beacons_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The corporation files the official claim paperwork with the galactic registry.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "cynical_negotiator",
+          "target": "new_colony",
+          "reason": "The negotiator hires the pilot to fly to the surveyor ship and collect the hard-copy of the scout's original stolen logs.",
+          "private_fact": "The negotiator actually works for the corporation and is trying to destroy the evidence.",
+          "outcome_tags": [
+            "logs_collected"
+          ],
+          "routes": {
+            "logs_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The surveyor ship begins constructing its first strip-mining rig.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "idealistic_scout",
+          "target": "corporate_surveyor",
+          "reason": "The scout pays the pilot everything they have to destroy the surveyor ship before the claim is finalized.",
+          "private_fact": "The corporate captain hails the pilot, offering to pay triple the scout's rate if they just fly away and let the mining begin.",
+          "outcome_tags": [
+            "surveyor_destroyed"
+          ],
+          "routes": {
+            "surveyor_destroyed": "resolution:scout_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The surveyor ship is burning. The corporation is offering a massive bribe to look the other way.",
+        "options": [
+          {
+            "id": "help_scout",
+            "label": "Ensure the surveyor is destroyed",
+            "leads_to": "resolution:scout_wins"
+          },
+          {
+            "id": "take_bribe",
+            "label": "Take the bribe and spare the ship",
+            "leads_to": "resolution:corp_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "scout_wins",
+      "reached_by": "The pilot destroys the surveyor.",
+      "summary": "The corporate ship is destroyed. The scout leads the refugees to the pristine world, starting a peaceful new colony.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "idealistic_scout",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cynical_negotiator",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "development_corp",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "secured_the_colony",
+          "public_summary": "A pilot fought off a megacorp to secure a new home for refugees."
+        }
+      ],
+      "seeds": [
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "corp_wins",
+      "reached_by": "The pilot takes the bribe.",
+      "summary": "The corporation successfully claims the planet and immediately begins strip-mining it. The scout is devastated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "idealistic_scout",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cynical_negotiator",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "development_corp",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "claim_finalized",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The corporation finalizes the claim. The beautiful world is reduced to a toxic wasteland within a year.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "idealistic_scout",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "development_corp",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "claim_finalized",
+  "loose_threads": [
+    {
+      "id": "t_corp_hackers",
+      "surface": "scan",
+      "detail": "The corporation hacked the scout's nav-computer using naval intelligence backdoor codes.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_negotiator_past",
+      "surface": "dialogue",
+      "detail": "The cynical negotiator admits they used to be exactly like the scout before the corporation broke them.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "New garden world discovered; {role:development_corp} shares skyrocket.",
+    "{role:idealistic_scout} claims discovery was stolen."
+  ],
+  "voice_direction": {
+    "idealistic_scout": "Bright, energetic, speaks with total conviction.",
+    "cynical_negotiator": "Tired, completely disillusioned, speaks in a dull monotone."
+  },
+  "novelty_tags": [
+    "garden_world",
+    "corporate_claim",
+    "refugee_settlement"
+  ]
+}

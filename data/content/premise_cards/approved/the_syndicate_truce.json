@@ -1,0 +1,319 @@
+{
+  "id": "premise.the_syndicate_truce",
+  "schema_version": 1,
+  "title": "The Syndicate Truce",
+  "logline": "A retired legend brokers a peace summit between warring syndicates, but a vengeful heir is sending assassins to ensure the war continues.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "peace_broker",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Weary, diplomatic, universally respected.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "vengeful_widow",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Grieving, wealthy, entirely consumed by hatred.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "truce_summit",
+      "kind": "place",
+      "description": "A neutral, heavily fortified luxury station.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "syndicate_hit_squad",
+      "kind": "ship",
+      "description": "Elite, unmarked stealth interceptors.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "rival_syndicates",
+      "kind": "faction",
+      "description": "Two massive crime families exhausted by years of bloodshed.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "widow_elite_guard",
+      "kind": "ship",
+      "description": "The widow's personal protectors.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "black_hole_proximity"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "faction_weakened"
+  ],
+  "public_situation": "The {role:rival_syndicates} have agreed to meet at the {role:truce_summit} to finally end their decade-long war.",
+  "private_truth": "The widow's spouse was killed in the war, and she has secretly hired assassins to murder the peace broker and reignite the conflict.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The peace broker arrives at the summit and requests independent logistics support.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "peace_broker",
+          "target": "truce_summit",
+          "reason": "The broker hires the pilot to quietly purchase and deliver traditional ceremonial wine for the bosses.",
+          "private_fact": "The broker is terrified of being poisoned and trusts only the pilot to handle the drinks.",
+          "outcome_tags": [
+            "wine_delivered"
+          ],
+          "routes": {
+            "wine_delivered": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "peace_broker",
+          "target": "truce_summit",
+          "reason": "The broker also needs the pilot to scan the summit's perimeter for listening devices.",
+          "private_fact": "The widow's agents left a trace.",
+          "outcome_tags": [
+            "scan_complete",
+            "abandoned"
+          ],
+          "routes": {
+            "scan_complete": "next",
+            "abandoned": "resolution:summit_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "Unmarked ships are detected lurking near the summit's perimeter.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "peace_broker",
+          "target": "syndicate_hit_squad",
+          "reason": "The broker orders the pilot to destroy the lurking assassins before they can breach the station.",
+          "private_fact": "The assassins are carrying the widow's personal insignia.",
+          "outcome_tags": [
+            "assassins_destroyed"
+          ],
+          "routes": {
+            "assassins_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The summit's life support is damaged in the skirmish. The meeting is in jeopardy.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "peace_broker",
+          "target": "truce_summit",
+          "reason": "The pilot must jump to the neighboring system, mine raw ferrite, and deliver it to patch the station's hull.",
+          "private_fact": "The widow's forces have blockaded the jump gate.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "The syndicate bosses arrive, but the widow launches a final, desperate attack.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "peace_broker",
+          "target": "widow_elite_guard",
+          "reason": "The pilot must defend the summit from the widow's elite guard.",
+          "private_fact": "The widow hails the pilot directly, offering a massive payout if they stand down and let the broker die.",
+          "outcome_tags": [
+            "guard_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "guard_destroyed": "resolution:peace_achieved",
+            "took_the_offer": "resolution:war_reignited"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "peace_achieved",
+      "reached_by": "The pilot destroys the widow's guard.",
+      "summary": "The truce is signed. The widow is exiled, and the sector finally sees peace. The broker retires to the core worlds.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "peace_broker",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vengeful_widow",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "rival_syndicates",
+          "delta": 3
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": [
+            "lane_closed"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_truce",
+          "public_summary": "A pilot held off an army of assassins so the big syndicates could finally sign a peace treaty."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "war_reignited",
+      "reached_by": "The pilot takes the widow's offer.",
+      "summary": "The broker flees the system. The bosses immediately blame each other, and the war reignites with unprecedented fury.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "peace_broker",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vengeful_widow",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "rival_syndicates",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "summit_abandoned",
+      "reached_by": "The pilot ignores the crisis.",
+      "summary": "The summit fails before it begins. The broker leaves in disgust, and the violence continues.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "peace_broker",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "rival_syndicates",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "war_reignited",
+  "loose_threads": [
+    {
+      "id": "t_widow_backers",
+      "surface": "scan",
+      "detail": "The widow's elite assassins were equipped with military-grade stealth drives paid for by a local corporate shipyard.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_broker_bias",
+      "surface": "cargo",
+      "detail": "The 'ceremonial wine' contained a slow-acting synthetic tracker, meaning the broker intended to spy on one of the bosses.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "sabotage"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Sector holds its breath as syndicate bosses agree to {role:truce_summit}.",
+    "Independent peace broker {role:peace_broker} guarantees safety of all delegates."
+  ],
+  "voice_direction": {
+    "peace_broker": "Calm, soothing, speaks in careful, deliberate sentences.",
+    "vengeful_widow": "Cold, quiet, completely devoid of emotion."
+  },
+  "novelty_tags": [
+    "peace_summit",
+    "syndicate_war",
+    "assassins",
+    "ceremonial_wine"
+  ]
+}

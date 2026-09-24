@@ -1,0 +1,267 @@
+{
+  "id": "premise.the_sabotaged_shift",
+  "schema_version": 1,
+  "title": "The Sabotaged Shift",
+  "logline": "A paranoid factory manager hires a pilot to destroy malfunctioning security drones, unaware their own lead journalist is hacking them to expose labor abuses.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "tense"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "paranoid_boss",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Jumpy, convinced everyone is out to steal their job.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "secret_saboteur",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Undercover as a dock worker, deeply committed to the story.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_factory",
+      "kind": "place",
+      "description": "A noisy, chaotic manufacturing hub.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "security_drone",
+      "kind": "ship",
+      "description": "An automated defense craft that has gone dangerously rogue.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "factory_workers",
+      "kind": "faction",
+      "description": "The overworked, terrified labor force.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "patrol_drone",
+      "kind": "ship",
+      "description": "A minor drone.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:orbital_factory} is experiencing a rash of 'glitches' in its automated security grid, injuring several workers.",
+  "private_truth": "The undercover journalist is deliberately hacking the drones to cause enough chaos to shut the factory down and expose its safety violations.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A security drone goes completely rogue and begins firing on the assembly line.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "paranoid_boss",
+          "target": "patrol_drone",
+          "reason": "The boss pays the pilot under the table to destroy the rogue drone before corporate inspectors arrive.",
+          "private_fact": "The drone's targeting systems were manually overridden.",
+          "outcome_tags": [
+            "drone_destroyed"
+          ],
+          "routes": {
+            "drone_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "A second drone activates, this time targeting the boss's personal office.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "paranoid_boss",
+          "target": "security_drone",
+          "reason": "The boss needs the pilot to blow open the second drone and recover its black box to prove they are being sabotaged.",
+          "private_fact": "The black box points directly to the journalist's hidden terminal.",
+          "outcome_tags": [
+            "box_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "box_recovered": "next",
+            "abandoned": "resolution:sabotage_ignored"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The entire security grid begins to power up, threatening a total massacre.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "paranoid_boss",
+          "target": "security_drone",
+          "reason": "The pilot must destroy the main control drone before it unleashes the swarm.",
+          "private_fact": "The journalist hails the pilot, offering their entire life savings if the pilot lets the drone wreck the factory floor and complete the story.",
+          "outcome_tags": [
+            "swarm_stopped",
+            "took_the_offer"
+          ],
+          "routes": {
+            "swarm_stopped": "resolution:factory_saved",
+            "took_the_offer": "resolution:factory_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "factory_saved",
+      "reached_by": "The pilot destroys the drones and stops the sabotage.",
+      "summary": "The factory is secured. The boss keeps their job, and the journalist is arrested for terrorism. The labor abuses continue unabated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "secret_saboteur",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "factory_workers",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "factory_destroyed",
+      "reached_by": "The pilot takes the journalist's offer.",
+      "summary": "The drones tear the factory apart. The story goes viral, exposing the horrific working conditions. The boss is fired, but hundreds of workers are now jobless.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "secret_saboteur",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paranoid_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "factory_workers",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_sweatshop",
+          "public_summary": "A pilot helped an undercover reporter blow the lid off a brutal corporate sweatshop."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "sabotage_ignored",
+      "reached_by": "The pilot leaves.",
+      "summary": "The drones eventually run out of power. The boss covers it up.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "secret_saboteur",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paranoid_boss",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "factory_saved",
+  "loose_threads": [
+    {
+      "id": "t_drone_code",
+      "surface": "scan",
+      "detail": "The hacking tools the journalist used are actually sophisticated corporate espionage software, not typical investigative gear.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_boss_paranoia",
+      "surface": "dialogue",
+      "detail": "The boss mumbles about 'the Board' sending assassins, implying the labor abuses were ordered from the very top.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Industrial accidents up 400% at {role:orbital_factory}; union demands inquiry.",
+    "Journalist {role:secret_saboteur} promises explosive exposé on local manufacturing."
+  ],
+  "voice_direction": {
+    "paranoid_boss": "Speaks in short, nervous bursts, constantly looking over their shoulder.",
+    "secret_saboteur": "Intense, self-righteous, speaks in dramatic soundbites."
+  },
+  "novelty_tags": [
+    "hacked_drones",
+    "undercover_reporter",
+    "industrial_sabotage",
+    "factory_sweatshop"
+  ]
+}

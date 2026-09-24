@@ -1,0 +1,264 @@
+{
+  "id": "premise.the_pacifist_mercenary",
+  "schema_version": 1,
+  "title": "The Pacifist Mercenary",
+  "logline": "A retired war hero who took a vow of non-violence hires a pilot to peacefully secure their old armory before their hot-headed protege can use it to start a new gang war.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "hopeful"
+  ],
+  "themes": [
+    "reinvention",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "pacifist_hero",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Serene, completely committed to peace, but still terrifyingly competent.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hotheaded_protege",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Young, angry, desperate to prove themselves.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hidden_armory",
+      "kind": "place",
+      "description": "An asteroid bunker packed with illegal military hardware.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "protege_ship",
+      "kind": "ship",
+      "description": "A fast, heavily armed interceptor.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "local_militia",
+      "kind": "faction",
+      "description": "A ragtag group of aspiring rebels looking for weapons.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "power_vacuum"
+  ],
+  "public_situation": "The {role:local_militia} is openly recruiting for a violent uprising, promising they have secured heavy weapons.",
+  "private_truth": "The weapons belong to the pacifist hero. The protege stole the coordinates but cannot bypass the armory's security grid.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The protege's ship begins aggressively patrolling the sector near the armory.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "pacifist_hero",
+          "target": "hidden_armory",
+          "reason": "The hero hires the pilot to fly to the armory and collect the main power core to render the weapons useless.",
+          "private_fact": "The hero insists the pilot must not harm the protege under any circumstances.",
+          "outcome_tags": [
+            "core_extracted"
+          ],
+          "routes": {
+            "core_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The protege realizes the armory is disabled and calls in the militia fleet.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "hotheaded_protege",
+          "target": "protege_ship",
+          "reason": "The protege demands the pilot scan their ship's nav computer to prove the hero gave them the wrong armory coordinates.",
+          "private_fact": "The scan reveals the protege is actually just stalling while they hack the armory's manual override.",
+          "outcome_tags": [
+            "stall_discovered"
+          ],
+          "routes": {
+            "stall_discovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The armory's doors begin to open on manual override.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "pacifist_hero",
+          "target": "protege_ship",
+          "reason": "The hero pays the pilot to disable the protege's ship without killing them.",
+          "private_fact": "The protege hails the pilot, offering them the pick of the armory if they help destroy the hero's pacifist compound instead.",
+          "outcome_tags": [
+            "protege_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "protege_disabled": "resolution:peace_preserved",
+            "took_the_offer": "resolution:war_restarts"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "peace_preserved",
+      "reached_by": "The pilot disables the protege's ship.",
+      "summary": "The armory is secured. The hero forgives the protege, and the militia's rebellion fizzles out without weapons.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hotheaded_protege",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pacifist_hero",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "local_militia",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_uprising",
+          "public_summary": "A pilot stopped a gang of kids from getting their hands on enough guns to start a war."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "war_restarts",
+      "reached_by": "The pilot takes the protege's offer.",
+      "summary": "The protege secures the weapons and arms the militia. The hero is forced to flee, and the sector burns.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hotheaded_protege",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pacifist_hero",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "local_militia",
+          "delta": 3
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "militia_wins",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The militia overwhelms the armory's defenses. They take the weapons, and the hero is forced into exile.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "pacifist_hero",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hotheaded_protege",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "local_militia",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "militia_wins",
+  "loose_threads": [
+    {
+      "id": "t_militia_funding",
+      "surface": "scan",
+      "detail": "The militia's recruitment funds were traced back to a series of anonymous donations from an off-world charity.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_armory_logs",
+      "surface": "wreck",
+      "detail": "The armory's manifest shows that a shipment of heavy weapons was quietly removed two days before the hero locked it down.",
+      "can_carry_methods": [
+        "information_control",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "{role:local_militia} openly recruiting; promises \"a new dawn\" is coming.",
+    "Retired hero {role:pacifist_hero} pleads for calm."
+  ],
+  "voice_direction": {
+    "pacifist_hero": "Calm, centering, speaks softly but clearly.",
+    "hotheaded_protege": "Loud, abrasive, overcompensating for their lack of experience."
+  },
+  "novelty_tags": [
+    "pacifist_hero",
+    "hidden_armory",
+    "prevent_uprising"
+  ]
+}

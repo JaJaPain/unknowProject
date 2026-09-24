@@ -1,0 +1,291 @@
+{
+  "id": "premise.the_forged_masterpiece",
+  "schema_version": 1,
+  "title": "The Forged Masterpiece",
+  "logline": "A con artist hires a pilot to intercept a wealthy collector's ship and swap a forged painting for the real one before an auction.",
+  "scale": "personal",
+  "tone": [
+    "heist",
+    "absurd"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "slick_forger",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Charming, artistic, absolutely shameless.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "wealthy_collector",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Arrogant, wealthy, views art merely as an investment.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "auction_house",
+      "kind": "place",
+      "description": "A high-security orbital auction station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "collector_ship",
+      "kind": "ship",
+      "description": "A heavily guarded luxury transport.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A highly anticipated art auction is set to feature a long-lost masterpiece.",
+  "private_truth": "The collector is secretly broke and plans to orchestrate a 'theft' of their own painting for the insurance payout.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The collector's ship arrives in the system.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "slick_forger",
+          "target": "collector_ship",
+          "reason": "Needs the pilot to ambush the collector's ship and steal the painting.",
+          "private_fact": "The forger intends to swap the real painting with a forgery and sell the real one later.",
+          "outcome_tags": [
+            "painting_stolen",
+            "heist_failed"
+          ],
+          "routes": {
+            "painting_stolen": "beat:2",
+            "heist_failed": "resolution:forger_arrested"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The collector publicly announces the 'theft' immediately, before the auction.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "wealthy_collector",
+          "target": "collector_ship",
+          "reason": "The collector contacts the pilot, offering to pay them to destroy the real painting entirely.",
+          "private_fact": "The collector doesn't want the painting recovered because it proves they committed insurance fraud.",
+          "outcome_tags": [
+            "painting_destroyed",
+            "took_forger_side"
+          ],
+          "routes": {
+            "painting_destroyed": "resolution:collector_wins",
+            "took_forger_side": "beat:3"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The auction house demands proof the painting is actually gone.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "slick_forger",
+          "target": "auction_house",
+          "reason": "Needs the forged painting delivered to the auction house to be sold anyway.",
+          "private_fact": "The forger intends to frame the collector for selling a fake.",
+          "outcome_tags": [
+            "forgery_delivered",
+            "forgery_abandoned"
+          ],
+          "routes": {
+            "forgery_delivered": "resolution:forger_wins",
+            "forgery_abandoned": "resolution:collector_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the forged painting.",
+        "options": [
+          {
+            "id": "deliver_forgery",
+            "label": "Deliver the forgery to ruin the collector",
+            "leads_to": "resolution:forger_wins"
+          },
+          {
+            "id": "abandon_forgery",
+            "label": "Abandon the mission and leave them both hanging",
+            "leads_to": "resolution:collector_wins"
+          },
+          {
+            "id": "expose_both",
+            "label": "Deliver the forgery to the authorities instead",
+            "leads_to": "resolution:both_ruined"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "forger_wins",
+      "reached_by": "The pilot delivers the forgery.",
+      "summary": "The collector is exposed for selling a fake and arrested for fraud. The forger escapes with the real painting.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "slick_forger",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wealthy_collector",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "collector_wins",
+      "reached_by": "The pilot destroys the painting or abandons the mission.",
+      "summary": "The collector claims the massive insurance payout. The forger is left with nothing.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wealthy_collector",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "slick_forger",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "both_ruined",
+      "reached_by": "The pilot exposes them both.",
+      "summary": "The authorities seize both the real painting and the forgery. Both the collector and the forger are ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "slick_forger",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wealthy_collector",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "forger_arrested",
+      "reached_by": "The pilot fails the initial heist.",
+      "summary": "The heist fails. The forger is arrested, and the collector proceeds with the auction as planned.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "slick_forger",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wealthy_collector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "collector_wins",
+  "loose_threads": [
+    {
+      "id": "t_painting_origin",
+      "surface": "cargo",
+      "detail": "The original painting was looted from a destroyed religious colony.",
+      "can_carry_methods": [
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_insurance_broker",
+      "surface": "scan",
+      "detail": "The insurance broker is fully aware of the fraud and is demanding a massive cut.",
+      "can_carry_methods": [
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "blackmail"
+    ],
+    "motives": [
+      "greed"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Art world abuzz over upcoming auction of lost masterpiece.",
+    "Security tightened at orbital auction house."
+  ],
+  "voice_direction": {
+    "slick_forger": "Breezy, confident, extremely charismatic.",
+    "wealthy_collector": "Pompous, impatient, offended by everyone else's existence."
+  },
+  "novelty_tags": [
+    "art_forgery",
+    "heist_swap",
+    "insurance_fraud"
+  ]
+}

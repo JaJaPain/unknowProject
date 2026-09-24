@@ -1,0 +1,315 @@
+{
+  "id": "premise.the_mutiny_in_the_dark",
+  "schema_version": 1,
+  "title": "The Mutiny in the Dark",
+  "logline": "A mutinous navigator on a lost freighter hires a pilot to destroy their tyrannical captain before they can drag the crew deeper into the dark zone.",
+  "scale": "regional",
+  "tone": [
+    "tense",
+    "paranoid"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "mutinous_navigator",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Exhausted, hungry, pushed entirely to the brink of murder.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tyrannical_captain",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Authoritarian, deeply paranoid, refuses to admit they are lost.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rescue_station",
+      "kind": "place",
+      "description": "A lonely border outpost trying to monitor the dark zone.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "lost_freighter",
+      "kind": "ship",
+      "description": "A massive bulk hauler with failing life support.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "shipping_guild",
+      "kind": "faction",
+      "description": "The ruthless corporation that owns the freighter and its crew.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "route_closed",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The {role:shipping_guild} has officially declared the {role:lost_freighter} missing with all hands in the dark zone.",
+  "private_truth": "The freighter isn't destroyed; the captain deliberately disabled the comms to steal the cargo, and is now starving the crew to force compliance.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A faint, garbled distress signal is detected near the rescue station.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "mutinous_navigator",
+          "target": "rescue_station",
+          "reason": "The navigator begs the pilot to scan the dark zone anomalies to pinpoint the freighter's drifting location.",
+          "private_fact": "The pilot discovers the freighter is actively venting oxygen to conserve power.",
+          "outcome_tags": [
+            "freighter_located"
+          ],
+          "routes": {
+            "freighter_located": "next"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "mutinous_navigator",
+          "target": "rescue_station",
+          "reason": "The navigator asks the pilot to deliver water ice to a dead drop so the mutineers can survive another day.",
+          "private_fact": "The captain finds the dead drop and poisons it to punish the crew.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The guild dispatches search drones, but they are looking in the wrong sector.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "tyrannical_captain",
+          "target": "rescue_station",
+          "reason": "The captain hires the pilot to deliver forged engine telemetry to the guild to make them think the ship exploded.",
+          "private_fact": "The pilot realizes the captain is planning to sell the crew to slavers.",
+          "outcome_tags": [
+            "telemetry_delivered"
+          ],
+          "routes": {
+            "telemetry_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The mutineers violently take over the engine room, trapping the captain on the bridge.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "mutinous_navigator",
+          "target": "rescue_station",
+          "reason": "The navigator asks the pilot to meet a sympathizer at the station and collect the override codes for the bridge doors.",
+          "private_fact": "The captain has wired the bridge with explosives to kill everyone if breached.",
+          "outcome_tags": [
+            "codes_collected"
+          ],
+          "routes": {
+            "codes_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The captain threatens to detonate the ship rather than surrender.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "mutinous_navigator",
+          "target": "lost_freighter",
+          "reason": "The navigator begs the pilot to surgically destroy the bridge module from the outside and recover the captain's master key.",
+          "private_fact": "The captain hails the pilot, offering them the entire ship's cargo if they just destroy the engine room instead.",
+          "outcome_tags": [
+            "key_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "key_recovered": "resolution:navigator_wins",
+            "abandoned": "resolution:captain_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The freighter is drifting. The pilot holds the master key. The captain is dead. Or is he?",
+        "options": [
+          {
+            "id": "save_crew",
+            "label": "Use the key to save the crew",
+            "leads_to": "resolution:navigator_wins"
+          },
+          {
+            "id": "take_cargo",
+            "label": "Take the captain's deal and doom the crew",
+            "leads_to": "resolution:captain_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "navigator_wins",
+      "reached_by": "The pilot saves the crew.",
+      "summary": "The bridge is destroyed, killing the captain. The pilot rescues the starving crew, and the guild is forced to compensate them for the horror.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "mutinous_navigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tyrannical_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "shipping_guild",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_freighter",
+          "public_summary": "A pilot rescued a starving crew from their mutinous, tyrannical captain in deep space."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "captain_wins",
+      "reached_by": "The pilot takes the deal.",
+      "summary": "The pilot destroys the engine room, suffocating the crew. The captain escapes with the cargo, and the pilot gets a massive, bloody payout.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "mutinous_navigator",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tyrannical_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "shipping_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "ship_lost",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The guild eventually finds the drifting freighter. The mutineers are arrested and sent to penal colonies, and the captain is restored to command.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "mutinous_navigator",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tyrannical_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "shipping_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "ship_lost",
+  "loose_threads": [
+    {
+      "id": "t_guild_complicity",
+      "surface": "scan",
+      "detail": "The guild actually ordered the captain to steal the cargo for an insurance scam.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_cargo_truth",
+      "surface": "wreck",
+      "detail": "The cargo isn't just ore; it's illegal cybernetics meant for a rebel faction.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:lost_freighter} officially declared lost in the dark zone.",
+    "Guild denies any responsibility for missing crew."
+  ],
+  "voice_direction": {
+    "mutinous_navigator": "Hoarse, weak, completely desperate.",
+    "tyrannical_captain": "Smooth, authoritarian, entirely convinced of their own righteousness."
+  },
+  "novelty_tags": [
+    "space_mutiny",
+    "starving_crew",
+    "insurance_scam"
+  ]
+}

@@ -1,0 +1,278 @@
+{
+  "id": "premise.the_false_alarm_quarantine",
+  "schema_version": 1,
+  "title": "The False Alarm",
+  "logline": "A scientific outpost is locked down under quarantine, and desperate researchers need samples smuggled out to prove they are safe.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "survival"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "trapped_scientist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Terrified, coughing, convinced they aren't infected.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_enforcer",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Following orders, refusing to take any risks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "quarantined_outpost",
+      "kind": "place",
+      "description": "A sealed laboratory facility.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "navy_blockade",
+      "kind": "faction",
+      "description": "The military force holding the quarantine line.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "quarantine"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "law_tightened"
+  ],
+  "public_situation": "An outpost has been completely sealed off due to a suspected biological hazard.",
+  "private_truth": "The hazard is a false alarm triggered by a faulty sensor, but the military is using it as an excuse to seize the lab's research.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The military extends the quarantine duration indefinitely.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "trapped_scientist",
+          "target": "quarantined_outpost",
+          "reason": "Needs blood samples smuggled to an independent lab to prove they are uninfected.",
+          "private_fact": "The scientist knows the military is deleting their research databanks.",
+          "outcome_tags": [
+            "samples_delivered",
+            "samples_abandoned"
+          ],
+          "routes": {
+            "samples_delivered": "beat:2",
+            "samples_abandoned": "resolution:outpost_purged"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The independent lab confirms the samples are clean.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "trapped_scientist",
+          "target": "quarantined_outpost",
+          "reason": "Needs an encrypted hard drive of their remaining research smuggled out before the military wipes it.",
+          "private_fact": "The research proves a major military contractor is using illegal materials.",
+          "outcome_tags": [
+            "drive_smuggled",
+            "drive_lost"
+          ],
+          "routes": {
+            "drive_smuggled": "beat:3",
+            "drive_lost": "resolution:outpost_purged"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The military prepares to 'purge' the outpost to contain the 'infection'.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "trapped_scientist",
+          "target": "navy_blockade",
+          "reason": "Needs a pilot to distract the blockade ships long enough for an escape pod to launch.",
+          "private_fact": "The pod's life support is failing; this is a one-way trip if they aren't picked up immediately.",
+          "outcome_tags": [
+            "blockade_broken",
+            "mission_failed"
+          ],
+          "routes": {
+            "blockade_broken": "next",
+            "mission_failed": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot must decide what to do with the evidence.",
+        "options": [
+          {
+            "id": "break_out",
+            "label": "Help them escape",
+            "leads_to": "resolution:scientists_escape"
+          },
+          {
+            "id": "abandon",
+            "label": "Leave them to their fate",
+            "leads_to": "resolution:outpost_purged"
+          },
+          {
+            "id": "negotiate",
+            "label": "Show the evidence to the blockade commander",
+            "leads_to": "resolution:quarantine_lifted"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "scientists_escape",
+      "reached_by": "The pilot breaks the blockade.",
+      "summary": "The scientists escape with their research. The military's false quarantine is exposed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "navy_blockade",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "trapped_scientist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": [
+            "quarantine"
+          ]
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "outpost_purged",
+      "reached_by": "The pilot fails or abandons the missions.",
+      "summary": "The outpost is purged. The research is stolen and the scientists are killed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "navy_blockade",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "trapped_scientist",
+          "fate": "dead"
+        },
+        {
+          "type": "law_change",
+          "law": "quarantine_orders",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "quarantine_lifted",
+      "reached_by": "The blockade is convinced.",
+      "summary": "The blockade commanders see the evidence and lift the quarantine, defying their orders.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "navy_blockade",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "quarantine_enforcer",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": [
+            "quarantine"
+          ]
+        }
+      ],
+      "seeds": [
+        "alliance_formed"
+      ]
+    }
+  ],
+  "default_resolution": "outpost_purged",
+  "loose_threads": [
+    {
+      "id": "t_sensor_brand",
+      "surface": "scan",
+      "detail": "The 'faulty' sensor was manufactured by a company owned by the military contractor.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_purge_orders",
+      "surface": "radio",
+      "detail": "The purge orders were signed three days before the quarantine was even announced.",
+      "can_carry_methods": [
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "manufactured_crisis",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Military denies allegations of heavy-handed quarantine tactics.",
+    "Outpost lockdown enters its second week."
+  ],
+  "voice_direction": {
+    "trapped_scientist": "Desperate, frantic, losing hope and speaking very fast.",
+    "quarantine_enforcer": "Cold, robotic, refuses to acknowledge humanity."
+  },
+  "novelty_tags": [
+    "false_quarantine",
+    "research_theft",
+    "military_coverup"
+  ]
+}

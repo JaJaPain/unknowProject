@@ -1,0 +1,308 @@
+{
+  "id": "premise.the_smugglers_pension",
+  "schema_version": 1,
+  "title": "The Smuggler's Pension",
+  "logline": "An aging smuggler wants to do one last massive run to fund their retirement, but their protégé plans to steal the cargo.",
+  "scale": "regional",
+  "tone": [
+    "bleak",
+    "heist"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "old_smuggler",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Cynical, physically failing, trusting only one person.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "protege",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Ambitious, impatient, believes the old ways are dead.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "drop_station",
+      "kind": "place",
+      "description": "A remote orbital platform used for discreet handoffs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smuggler_cartel",
+      "kind": "faction",
+      "description": "A loose network of independent runners.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "nebula"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "route_opened"
+  ],
+  "public_situation": "A massive shipment of highly regulated medical supplies has 'fallen off a transport'.",
+  "private_truth": "The old smuggler orchestrated the theft for their retirement fund, but the protégé has sold them out to a rival cartel.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The old smuggler begins liquidating their local assets.",
+      "location": "same_system",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "old_smuggler",
+          "target": "drop_station",
+          "reason": "Needs specialized containment crates delivered to secure the medical cargo.",
+          "private_fact": "The old smuggler is too sick to fly their own ship right now.",
+          "outcome_tags": [
+            "crates_delivered",
+            "crates_abandoned"
+          ],
+          "routes": {
+            "crates_delivered": "beat:2",
+            "crates_abandoned": "resolution:heist_fails"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "old_smuggler",
+          "target": "drop_station",
+          "reason": "Needs secure routing tables delivered to the drop station to mask their approach.",
+          "private_fact": "The tables will also erase the station's backup logs to cover their tracks.",
+          "outcome_tags": [
+            "tables_delivered",
+            "tables_abandoned"
+          ],
+          "routes": {
+            "tables_delivered": "next",
+            "tables_abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Authorities announce a sector-wide scan for the stolen medicine.",
+      "location": "neighbouring_system",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "protege",
+          "target": "drop_station",
+          "reason": "Needs ferrite plating delivered to reinforce the smuggling compartments.",
+          "private_fact": "The protégé is actually building a trap to lock the old smuggler in the cargo bay.",
+          "outcome_tags": [
+            "plating_delivered",
+            "plating_abandoned"
+          ],
+          "routes": {
+            "plating_delivered": "beat:3",
+            "plating_abandoned": "resolution:heist_fails"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The old smuggler vanishes from public comms.",
+      "location": "any_system",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "old_smuggler",
+          "target": "drop_station",
+          "reason": "Needs the pilot to scan the drop station for signs of an ambush before they dock.",
+          "private_fact": "They suspect the protégé's betrayal but don't want to believe it.",
+          "outcome_tags": [
+            "scan_clean",
+            "scan_ambush"
+          ],
+          "routes": {
+            "scan_clean": "beat:4",
+            "scan_ambush": "beat:4"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The rival cartel's ships arrive at the drop station.",
+      "location": "any_system",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "protege",
+          "target": "drop_station",
+          "reason": "The protégé demands the pilot deliver the final nav coordinates to the rivals.",
+          "private_fact": "The protégé intends to kill the pilot once the deal is done.",
+          "outcome_tags": [
+            "coords_delivered",
+            "coords_withheld"
+          ],
+          "routes": {
+            "coords_delivered": "resolution:protege_wins",
+            "coords_withheld": "resolution:old_smuggler_escapes"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the nav coordinates and must choose a side.",
+        "options": [
+          {
+            "id": "side_protege",
+            "label": "Give the coordinates to the protégé",
+            "leads_to": "resolution:protege_wins"
+          },
+          {
+            "id": "side_old",
+            "label": "Warn the old smuggler and withhold coordinates",
+            "leads_to": "resolution:old_smuggler_escapes"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "old_smuggler_escapes",
+      "reached_by": "The pilot warns the old smuggler.",
+      "summary": "The old smuggler escapes with the cargo and retires, leaving the protégé to face the angry rivals.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_smuggler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "protege",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_cartel",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "protege_wins",
+      "reached_by": "The pilot delivers the coordinates to the protégé.",
+      "summary": "The protégé steals the cargo and the old smuggler is arrested. A new, ruthless smuggler takes over.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_smuggler",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "protege",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_cartel",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "new_leader_untested"
+      ]
+    },
+    {
+      "id": "heist_fails",
+      "reached_by": "The pilot abandons the setup missions.",
+      "summary": "The heist falls apart. The authorities recover the medicine, and both smugglers are ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_smuggler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "protege",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_cartel",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "heist_fails",
+  "loose_threads": [
+    {
+      "id": "t_medicine_labels",
+      "surface": "cargo",
+      "detail": "The stolen medical crates have their serial numbers replaced with deep-core mining codes.",
+      "can_carry_methods": [
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_rival_backer",
+      "surface": "radio",
+      "detail": "The rival cartel was receiving tactical updates on encrypted diplomatic channels.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Massive theft of medical supplies reported.",
+    "Authorities warn of increased smuggling activity in the sector."
+  ],
+  "voice_direction": {
+    "old_smuggler": "Gravelly, affectionate but paranoid, nostalgic.",
+    "protege": "Slick, fast-talking, entirely focused on the future."
+  },
+  "novelty_tags": [
+    "last_heist",
+    "protege_betrayal",
+    "medical_smuggling"
+  ]
+}

@@ -1,0 +1,324 @@
+{
+  "id": "premise.the_adopted_mine",
+  "schema_version": 1,
+  "title": "The Adopted Mine",
+  "logline": "A close-knit crew of laborers inherited a lucrative asteroid claim, but a massive corporation is using forged safety violations to force them out.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "survival"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "crew_foreman",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Fiercely protective of their crew, refusing to back down.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Smug, heavily bribed, looks for excuses to shut things down.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_claim",
+      "kind": "place",
+      "description": "A dense, high-yield ferrite asteroid covered in makeshift rigging.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_enforcer",
+      "kind": "ship",
+      "description": "An unmarked security vessel used for corporate strong-arming.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mining_guild",
+      "kind": "faction",
+      "description": "A weak union that talks big but rarely fights the corps.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "distant_court",
+      "kind": "place",
+      "description": "A neutral orbital court in a neighboring system.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "inspector_ship",
+      "kind": "ship",
+      "description": "The inspector's personal enforcer craft.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "strike"
+    ]
+  },
+  "accepts_seeds": [
+    "law_tightened",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:mining_guild} has ordered the independent {role:mining_claim} to halt operations due to a sudden influx of safety violations.",
+  "private_truth": "The violations are fabricated by the inspector to bankrupt the crew so a massive corporation can buy the claim for pennies.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The inspector impounds the crew's ore shipments, cutting off their income.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "crew_foreman",
+          "target": "corporate_enforcer",
+          "reason": "The foreman needs the pilot to blow open a corporate security ship to steal back their impounded sensor logs.",
+          "private_fact": "The logs will prove the structural integrity of the mine is perfectly sound.",
+          "outcome_tags": [
+            "logs_recovered"
+          ],
+          "routes": {
+            "logs_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The corporation officially files to repossess the claim.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "crew_foreman",
+          "target": "mining_claim",
+          "reason": "The pilot must scan the mine's support struts to independently verify the logs.",
+          "private_fact": "The scan will flag the pilot as an active participant in an illegal labor dispute.",
+          "outcome_tags": [
+            "scan_safe"
+          ],
+          "routes": {
+            "scan_safe": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The local authorities refuse to look at the evidence. The foreman calls for an injunction from a higher court.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "crew_foreman",
+          "target": "distant_court",
+          "reason": "The pilot must jump to the neighboring system and deliver the evidence to the distant court before the repossession deadline.",
+          "private_fact": "The corporation has locked down the gate, making the journey highly dangerous.",
+          "outcome_tags": [
+            "evidence_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "evidence_delivered": "next",
+            "abandoned": "resolution:crew_evicted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Corporate hit squads intercept the pilot at the court.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "crew_foreman",
+          "target": "corporate_enforcer",
+          "reason": "The pilot must destroy the corporate assassins trying to prevent them from filing the injunction.",
+          "private_fact": "The assassins have orders to destroy the courthouse itself if necessary.",
+          "outcome_tags": [
+            "assassins_dead"
+          ],
+          "routes": {
+            "assassins_dead": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "The injunction is filed, but the inspector makes one last desperate attempt to stop the proceedings.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "crew_foreman",
+          "target": "inspector_ship",
+          "reason": "The pilot must destroy the inspector's personal enforcer ship before it escapes back to their jurisdiction.",
+          "private_fact": "The inspector hails the pilot, offering a massive bribe to drop the case and delete the logs.",
+          "outcome_tags": [
+            "inspector_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "inspector_destroyed": "resolution:crew_wins",
+            "took_the_offer": "resolution:inspector_bribes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "crew_wins",
+      "reached_by": "The pilot destroys the inspector and files the evidence.",
+      "summary": "The court rules in the crew's favor. The corporation is fined heavily, and the crew's claim is permanently secured.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_guild",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "crew_foreman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_inspector",
+          "fate": "dead"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_independent_mine",
+          "public_summary": "A pilot dragged a corrupt inspector to court and saved a crew of rock-hoppers from being swallowed by the corps."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "inspector_bribes",
+      "reached_by": "The pilot takes the inspector's bribe.",
+      "summary": "The evidence is 'lost'. The corporation seizes the mine, and the crew is fired without severance.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_guild",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "crew_foreman",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_inspector",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "crew_evicted",
+      "reached_by": "The pilot abandons the delivery.",
+      "summary": "The deadline passes. Corporate security storms the mine, killing several workers and evicting the rest.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "crew_foreman",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "faction_weakened"
+      ]
+    }
+  ],
+  "default_resolution": "crew_evicted",
+  "loose_threads": [
+    {
+      "id": "t_inspector_funding",
+      "surface": "scan",
+      "detail": "The inspector's bribe money was wired from a shell company that officially builds agricultural equipment.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_enforcer_markings",
+      "surface": "ship_marking",
+      "detail": "The corporate assassins flew ships bearing the insignia of a disbanded planetary defense force.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Independent miners file massive lawsuit against corporate regulators.",
+    "Violence reported near {role:distant_court} following mining dispute."
+  ],
+  "voice_direction": {
+    "crew_foreman": "Tired, gruff, speaks to the pilot like a trusted sibling.",
+    "corporate_inspector": "Sneering, arrogant, constantly reminding people of their authority."
+  },
+  "novelty_tags": [
+    "mining_claim",
+    "fake_safety_violations",
+    "labor_dispute",
+    "corporate_eviction"
+  ]
+}

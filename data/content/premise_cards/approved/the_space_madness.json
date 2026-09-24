@@ -1,0 +1,278 @@
+{
+  "id": "premise.the_space_madness",
+  "schema_version": 1,
+  "title": "The Space Madness",
+  "logline": "An engineer stranded in a dead system hallucinates that an incoming medical frigate is a monster, and hires a pilot to destroy it.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "tragic"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "hallucinating_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Covered in grease, speaking to people who aren't there, deeply paranoid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "concerned_psychiatrist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Calm, empathetic, strictly adhering to medical protocols.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "isolated_outpost",
+      "kind": "place",
+      "description": "A tiny, failing life-support bubble on a barren moon.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "medical_frigate",
+      "kind": "ship",
+      "description": "A brightly painted hospital ship entirely unarmed.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "medical_board",
+      "kind": "faction",
+      "description": "The heavily bureaucratic health authority.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:medical_board} has dispatched a rescue mission to the {role:isolated_outpost} after months of silence.",
+  "private_truth": "The engineer has gone completely mad from isolation and believes the medical ship is a horrifying space leviathan coming to eat them.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The medical frigate enters the dead system and begins broadcasting friendly hails.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "hallucinating_engineer",
+          "target": "isolated_outpost",
+          "reason": "The engineer begs the pilot to deliver ferrite to build a massive harpoon to kill the \"leviathan\".",
+          "private_fact": "The engineer's blueprints for the harpoon are literally drawn in crayon.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The frigate moves closer, launching unarmed medical shuttles.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "concerned_psychiatrist",
+          "target": "isolated_outpost",
+          "reason": "The psychiatrist asks the pilot to run a deep biometric scan on the outpost to figure out why the engineer is screaming.",
+          "private_fact": "The pilot realizes the engineer is suffering from severe nitrogen narcosis.",
+          "outcome_tags": [
+            "scan_complete"
+          ],
+          "routes": {
+            "scan_complete": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The engineer manually targets the outpost's mining lasers at the medical frigate.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "hallucinating_engineer",
+          "target": "medical_frigate",
+          "reason": "The engineer pays the pilot to destroy the \"monster\" before it devours the outpost.",
+          "private_fact": "The psychiatrist begs the pilot to disable the outpost's lasers instead, offering to pay double the engineer's bounty.",
+          "outcome_tags": [
+            "frigate_destroyed"
+          ],
+          "routes": {
+            "frigate_destroyed": "resolution:engineer_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The frigate is defenseless. The engineer is raving mad. The psychiatrist begs for mercy.",
+        "options": [
+          {
+            "id": "destroy_frigate",
+            "label": "Destroy the frigate and humor the madman",
+            "leads_to": "resolution:engineer_wins"
+          },
+          {
+            "id": "save_doctors",
+            "label": "Disable the lasers and save the doctors",
+            "leads_to": "resolution:psychiatrist_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "engineer_wins",
+      "reached_by": "The pilot destroys the frigate.",
+      "summary": "The pilot destroys the unarmed hospital ship. The engineer cheers, completely insane, while the pilot becomes a wanted war criminal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hallucinating_engineer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "concerned_psychiatrist",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "murdered_doctors",
+          "public_summary": "A pilot slaughtered an unarmed medical frigate on the orders of a hallucinating madman."
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "psychiatrist_wins",
+      "reached_by": "The pilot saves the doctors.",
+      "summary": "The pilot disables the lasers. The doctors safely board the outpost and sedate the engineer. The engineer finally gets the help they need.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hallucinating_engineer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "concerned_psychiatrist",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "engineer_dies",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The engineer's mining lasers overload and detonate the outpost, killing them instantly. The doctors arrive too late.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hallucinating_engineer",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "concerned_psychiatrist",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "engineer_dies",
+  "loose_threads": [
+    {
+      "id": "t_board_coverup",
+      "surface": "scan",
+      "detail": "The medical board intentionally left the engineer stranded for months as part of a psychological stress test.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_gas_leak",
+      "surface": "dialogue",
+      "detail": "The engineer's narcosis was caused by a faulty life support system manufactured by a corrupt corporate supplier.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Medical frigate dispatched to deeply isolated {role:isolated_outpost}.",
+    "{role:medical_board} expresses concern for lone survivor's mental health."
+  ],
+  "voice_direction": {
+    "hallucinating_engineer": "Wild, loud, constantly interrupting themselves.",
+    "concerned_psychiatrist": "Soothing, gentle, speaks to everyone like a frightened child."
+  },
+  "novelty_tags": [
+    "space_madness",
+    "hallucination",
+    "unarmed_target"
+  ]
+}

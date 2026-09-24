@@ -1,0 +1,278 @@
+{
+  "id": "premise.the_broken_vow",
+  "schema_version": 1,
+  "title": "The Broken Vow",
+  "logline": "An exiled monk broke their vows to hide a heretical text, and now needs a pilot to fight off a crusader frigate sent to burn the archive.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "survival"
+  ],
+  "themes": [
+    "legacy",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "exiled_monk",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Old, serene, completely at peace with their impending death.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "crusader_captain",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Zealous, armored, views all doubt as treason.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sacred_archive",
+      "kind": "place",
+      "description": "A crumbling orbital library filled with ancient scrolls.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "crusader_frigate",
+      "kind": "ship",
+      "description": "A massive warship painted in the holy colors of the order.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "holy_order",
+      "kind": "faction",
+      "description": "A fanatical religious sect that controls the sector's history.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "gravity_tides"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:holy_order} has declared the {role:sacred_archive} a heretical site and ordered it cleansed by orbital fire.",
+  "private_truth": "The monk discovered a text proving the holy order was founded by a notorious pirate, and the captain is trying to destroy the evidence.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The crusader frigate arrives in the system, broadcasting prayers of purification.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "crusader_captain",
+          "target": "sacred_archive",
+          "reason": "The captain hires the pilot to scan the archive to locate the exact position of the heretical text so they can target the orbital strike.",
+          "private_fact": "The scan reveals the text is shielded by the monastery's old but powerful shield grid.",
+          "outcome_tags": [
+            "text_located"
+          ],
+          "routes": {
+            "text_located": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "Gravity tides spike, making precision targeting impossible and forcing the frigate to move closer.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "exiled_monk",
+          "target": "sacred_archive",
+          "reason": "The monk begs the pilot to dock at the archive and collect the heretical text to save it from the fire.",
+          "private_fact": "The monk refuses to leave, stating they must burn with the archive to atone for their broken vows.",
+          "outcome_tags": [
+            "text_collected"
+          ],
+          "routes": {
+            "text_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The crusader frigate arms its main cannons, preparing to incinerate the entire library.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "exiled_monk",
+          "target": "crusader_frigate",
+          "reason": "The monk pays the pilot everything they have to destroy the frigate and ensure the text escapes the system.",
+          "private_fact": "The captain hails the pilot, demanding they hand over the text and surrender, promising a quick, painless death.",
+          "outcome_tags": [
+            "frigate_destroyed"
+          ],
+          "routes": {
+            "frigate_destroyed": "resolution:monk_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The frigate is heavily damaged. The pilot holds the heretical text. The captain demands surrender.",
+        "options": [
+          {
+            "id": "destroy_frigate",
+            "label": "Finish off the frigate and escape with the text",
+            "leads_to": "resolution:monk_wins"
+          },
+          {
+            "id": "surrender_text",
+            "label": "Surrender the text to the captain",
+            "leads_to": "resolution:captain_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "monk_wins",
+      "reached_by": "The pilot destroys the frigate.",
+      "summary": "The frigate is destroyed. The pilot escapes with the text, exposing the holy order's fraudulent origins. The monk burns with the archive, a martyr to the truth.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_monk",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "crusader_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "holy_order",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_text",
+          "public_summary": "A pilot fought off a fanatic crusade to save a heretical text proving a religion was a lie."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "captain_wins",
+      "reached_by": "The pilot surrenders the text.",
+      "summary": "The pilot hands over the text. The captain incinerates it, then destroys the archive and the monk. The pilot is spared but haunted by their cowardice.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_monk",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "crusader_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "holy_order",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "archive_burns",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The frigate incinerates the archive. The monk and the text are reduced to ash, and the holy order's secret remains safe forever.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_monk",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "crusader_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "holy_order",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "archive_burns",
+  "loose_threads": [
+    {
+      "id": "t_pirate_founder",
+      "surface": "scan",
+      "detail": "The notorious pirate who founded the holy order actually stole all their initial wealth from a lost colonial vault.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_monk_vows",
+      "surface": "dialogue",
+      "detail": "The monk admits they didn't just find the text; they actually wrote it, having discovered the truth decades ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Orbital bombardment authorized at {role:sacred_archive}.",
+    "{role:holy_order} declares the sector cleansed of heresy."
+  ],
+  "voice_direction": {
+    "exiled_monk": "Soft, peaceful, completely fearless.",
+    "crusader_captain": "Loud, booming, speaks like they are addressing an army."
+  },
+  "novelty_tags": [
+    "heretical_text",
+    "orbital_bombardment",
+    "martyr_monk"
+  ]
+}

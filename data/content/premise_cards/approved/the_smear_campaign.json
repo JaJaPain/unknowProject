@@ -1,0 +1,279 @@
+{
+  "id": "premise.the_smear_campaign",
+  "schema_version": 1,
+  "title": "The Smear Campaign",
+  "logline": "A ruined merchant hires a pilot to steal a massive data core full of fabricated evidence before a corrupt journalist can broadcast it to the sector.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "absurd"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "ruined_merchant",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Frantic, formerly wealthy, wearing ragged designer clothes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_journalist",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Smug, well-dressed, entirely motivated by ratings and bribes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "publishing_hub",
+      "kind": "place",
+      "description": "A massive corporate media station covered in neon billboards.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "media_drone",
+      "kind": "ship",
+      "description": "A heavily shielded broadcasting ship.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "news_syndicate",
+      "kind": "faction",
+      "description": "A massive media monopoly that controls public opinion.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "gravity_tides"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:news_syndicate} is teasing a massive exposé on the {role:ruined_merchant}, promising to reveal shocking crimes.",
+  "private_truth": "The journalist fabricated the entire story at the behest of the merchant's corporate rivals to destroy their business.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The journalist uploads the teaser trailer, sending the merchant's stock crashing.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "ruined_merchant",
+          "target": "publishing_hub",
+          "reason": "The merchant begs the pilot to meet a corrupted archivist in the hub's loading bay and collect the master data core holding the evidence.",
+          "private_fact": "The core is massive and heavy, and it will fill most of the pilot's hold.",
+          "outcome_tags": [
+            "core_stolen"
+          ],
+          "routes": {
+            "core_stolen": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The journalist discovers the theft and issues a system-wide bounty for the pilot.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "corrupt_journalist",
+          "target": "publishing_hub",
+          "reason": "The journalist hires the pilot (not realizing they are the thief) to deliver a backup drive from a secondary server.",
+          "private_fact": "The pilot realizes the backup drive contains the exact same fabricated data.",
+          "outcome_tags": [
+            "backup_delivered"
+          ],
+          "routes": {
+            "backup_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "Gravity tides spike, grounding most ships, but the journalist launches their broadcast drone anyway.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "ruined_merchant",
+          "target": "publishing_hub",
+          "reason": "The merchant pays the pilot their last credits to deliver a localized EMP device to the hub's main antenna to stop the broadcast.",
+          "private_fact": "The EMP will destroy all data on the hub, including years of legitimate journalism.",
+          "outcome_tags": [
+            "emp_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "emp_delivered": "resolution:merchant_wins",
+            "abandoned": "resolution:journalist_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot is ready to plant the EMP. The journalist is threatening to ruin the pilot's reputation next if they go through with it.",
+        "options": [
+          {
+            "id": "plant_emp",
+            "label": "Plant the EMP and save the merchant",
+            "leads_to": "resolution:merchant_wins"
+          },
+          {
+            "id": "walk_away",
+            "label": "Walk away and let the broadcast happen",
+            "leads_to": "resolution:journalist_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "merchant_wins",
+      "reached_by": "The pilot destroys the drive.",
+      "summary": "The fabricated story never airs. The merchant slowly rebuilds their business, and the journalist is fired for failing to deliver the scoop.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ruined_merchant",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_journalist",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "news_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_smear",
+          "public_summary": "A pilot destroyed a media drone to stop a fabricated smear campaign."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "journalist_wins",
+      "reached_by": "The pilot sells the drive.",
+      "summary": "The story airs. The merchant is completely ruined and driven into exile. The journalist wins an award for investigative reporting.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ruined_merchant",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_journalist",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "news_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "merchant_ruined",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The drone broadcasts the story across the system. The merchant is arrested by corporate security, and their assets are seized.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "ruined_merchant",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_journalist",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "news_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "merchant_ruined",
+  "loose_threads": [
+    {
+      "id": "t_rival_corp",
+      "surface": "scan",
+      "detail": "The fabricated data was originally generated by a military psy-ops division, not just a rival company.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_journalist_blackmail",
+      "surface": "dialogue",
+      "detail": "The journalist complains that they were forced to write the story because the syndicate is blackmailing them.",
+      "can_carry_methods": [
+        "blackmail",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Shocking exposé on {role:ruined_merchant} to air tonight.",
+    "{role:news_syndicate} promises the truth will shock the sector."
+  ],
+  "voice_direction": {
+    "ruined_merchant": "High-pitched, frantic, sweating visibly.",
+    "corrupt_journalist": "Smooth, condescending, entirely confident."
+  },
+  "novelty_tags": [
+    "smear_campaign",
+    "media_drone",
+    "corporate_espionage"
+  ]
+}

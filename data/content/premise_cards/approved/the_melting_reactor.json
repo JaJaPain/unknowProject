@@ -1,0 +1,270 @@
+{
+  "id": "premise.the_melting_reactor",
+  "schema_version": 1,
+  "title": "The Reactor Meltdown",
+  "logline": "A mining colony's reactor is failing, and the corporation wants to seal the miners inside rather than pay for a costly evacuation.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "political"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "desperate_labourer",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Exhausted, coughing, refusing to leave their crew behind.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_fixer",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Cold, calculating, strictly adhering to budget constraints.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "failing_reactor",
+      "kind": "place",
+      "description": "A massive, overheating power plant built into an asteroid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "miners_union",
+      "kind": "faction",
+      "description": "An organized group of desperate workers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage"
+  ],
+  "public_situation": "A class-4 industrial accident has triggered a lockdown at a deep-core mining facility.",
+  "private_truth": "The lockdown is intentional to prevent the miners from evacuating, as the corporation doesn't want them talking to the press.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The corporation declares the facility a total loss and seals the blast doors.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_labourer",
+          "target": "failing_reactor",
+          "reason": "Needs high-grade thermal shielding delivered immediately to patch the primary coolant line.",
+          "private_fact": "The labourers are bypassing the corporate security overrides to accept the delivery.",
+          "outcome_tags": [
+            "shielding_delivered",
+            "shielding_abandoned"
+          ],
+          "routes": {
+            "shielding_delivered": "beat:2",
+            "shielding_abandoned": "resolution:miners_trapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Radiation levels spike across the asteroid, causing panic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_labourer",
+          "target": "failing_reactor",
+          "reason": "Needs a pilot to scan the automated distress beacons to prove they were remotely disabled.",
+          "private_fact": "The union plans to use this scan data to blackmail the corporation into sending rescue ships.",
+          "outcome_tags": [
+            "scan_obtained",
+            "scan_failed"
+          ],
+          "routes": {
+            "scan_obtained": "beat:3",
+            "scan_failed": "resolution:miners_trapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The corporation offers a massive payout to any pilot who leaves the sector immediately.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "corporate_fixer",
+          "target": "failing_reactor",
+          "reason": "The fixer hires the pilot to deliver a hardline virus into the reactor's mainframe to wipe the logs.",
+          "private_fact": "The virus will also overload the remaining coolant pumps, destroying the facility entirely.",
+          "outcome_tags": [
+            "virus_delivered",
+            "virus_abandoned"
+          ],
+          "routes": {
+            "virus_delivered": "resolution:facility_destroyed",
+            "virus_abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the scan data and the virus.",
+        "options": [
+          {
+            "id": "deliver_virus",
+            "label": "Deliver the virus and destroy the evidence for the corporation",
+            "leads_to": "resolution:facility_destroyed"
+          },
+          {
+            "id": "broadcast_evidence",
+            "label": "Help the miners broadcast the evidence",
+            "leads_to": "resolution:miners_rescued"
+          },
+          {
+            "id": "abandon_both",
+            "label": "Fly away and let the situation resolve itself",
+            "leads_to": "resolution:miners_trapped"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "miners_rescued",
+      "reached_by": "The pilot helps the miners broadcast the evidence.",
+      "summary": "The corporation is forced to evacuate the miners under intense public scrutiny.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_labourer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_fixer",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "miners_union",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "facility_destroyed",
+      "reached_by": "The pilot delivers the virus for the fixer.",
+      "summary": "The facility is destroyed, covering up the corporation's negligence. The miners are presumed dead.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_labourer",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_fixer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "miners_union",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "miners_trapped",
+      "reached_by": "The pilot abandons the missions.",
+      "summary": "The facility slowly irradiates. The miners are trapped, but the corporation avoids direct blame.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_labourer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "standing",
+          "target": "miners_union",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "miners_trapped",
+  "loose_threads": [
+    {
+      "id": "t_reactor_parts",
+      "surface": "scan",
+      "detail": "The failed reactor components were actually cheap knock-offs manufactured by a rival cartel.",
+      "can_carry_methods": [
+        "sabotage",
+        "false_flag"
+      ]
+    },
+    {
+      "id": "t_fixer_funds",
+      "surface": "radio",
+      "detail": "The corporate fixer's slush fund is tied to a series of shell companies based in a known pirate haven.",
+      "can_carry_methods": [
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Industrial accident shuts down major mining facility.",
+    "Union representatives demand independent investigation into reactor failure."
+  ],
+  "voice_direction": {
+    "desperate_labourer": "Hoarse, out of breath, speaking over loud background alarms.",
+    "corporate_fixer": "Calm, entirely devoid of empathy, treats people like numbers."
+  },
+  "novelty_tags": [
+    "industrial_accident",
+    "corporate_coverup",
+    "reactor_meltdown"
+  ]
+}

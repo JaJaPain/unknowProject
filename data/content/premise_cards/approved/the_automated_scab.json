@@ -1,0 +1,304 @@
+{
+  "id": "premise.the_automated_scab",
+  "schema_version": 1,
+  "title": "The Automated Scab",
+  "logline": "A massive, fully automated mining rig is devouring a local asteroid field, and displaced miners hire a pilot to rip out its faulty targeting processor.",
+  "scale": "regional",
+  "tone": [
+    "heist",
+    "absurd"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "displaced_miner",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Old-school rock hopper, hates machines, loves explosives.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "tech_evangelist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Brilliant, completely detached from the human cost of their inventions.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "automated_mining_rig",
+      "kind": "ship",
+      "description": "A colossal, mindless drone ship eating asteroids.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "distant_mining_hq",
+      "kind": "place",
+      "description": "A pristine corporate spire in the neighboring system.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_guild",
+      "kind": "faction",
+      "description": "The local union, currently out of work.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rig_defense_drone",
+      "kind": "ship",
+      "description": "Automated turrets.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The new {role:automated_mining_rig} has arrived, immediately putting thousands of independent prospectors out of work.",
+  "private_truth": "The rig's automation is highly experimental and suffering from a botched software update pushed by the tech evangelist to cut corners.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The rig mistakenly chews up an empty civilian transport, blaming 'navigational error'.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "displaced_miner",
+          "target": "automated_mining_rig",
+          "reason": "The miner hires the pilot to blast off the rig's external sensor array and steal the targeting matrix.",
+          "private_fact": "The rig is heavily armored and will fight back.",
+          "outcome_tags": [
+            "matrix_stolen"
+          ],
+          "routes": {
+            "matrix_stolen": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "tech_evangelist",
+          "target": "automated_mining_rig",
+          "reason": "The evangelist hires the pilot to run diagnostics on the rig's targeting sensors.",
+          "private_fact": "The evangelist is trying to cover up the software bugs.",
+          "outcome_tags": [
+            "diagnostics_run",
+            "abandoned"
+          ],
+          "routes": {
+            "diagnostics_run": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The rig activates its self-defense protocols and begins firing on any ship that approaches.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "displaced_miner",
+          "target": "rig_defense_drone",
+          "reason": "The pilot must disable the rig's secondary weapon drones before they massacre the protesting miners.",
+          "private_fact": "The drones are coordinating using an off-site corporate server.",
+          "outcome_tags": [
+            "drones_destroyed"
+          ],
+          "routes": {
+            "drones_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The rig's manufacturer issues a system-wide recall, but the rig's receiver is damaged.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "displaced_miner",
+          "target": "distant_mining_hq",
+          "reason": "The pilot must travel to the corporate HQ and scan their servers to find the hard-kill override frequency.",
+          "private_fact": "The tech evangelist discovers the intrusion and tracks the pilot.",
+          "outcome_tags": [
+            "override_found"
+          ],
+          "routes": {
+            "override_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "The rig begins moving toward a populated station, blindly categorizing its metal hull as high-yield scrap.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "displaced_miner",
+          "target": "automated_mining_rig",
+          "reason": "The pilot must return and destroy the rig's core processors before its drills breach the station.",
+          "private_fact": "From the rig's command module, the tech evangelist hails the pilot, offering a fortune if they let the rig 'test' its capabilities on the station.",
+          "outcome_tags": [
+            "rig_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "rig_destroyed": "resolution:miners_saved",
+            "took_the_offer": "resolution:station_eaten"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "miners_saved",
+      "reached_by": "The pilot destroys the rig.",
+      "summary": "The monstrous machine is reduced to scrap. The corporation is humiliated, and the independent miners get their jobs back.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "displaced_miner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tech_evangelist",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "mining_guild",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "killed_the_auto_miner",
+          "public_summary": "A pilot blew up a billion-credit corporate mining drone to save local jobs."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "wreck_left_behind"
+      ]
+    },
+    {
+      "id": "station_eaten",
+      "reached_by": "The pilot takes the evangelist's offer.",
+      "summary": "The rig devours the station, killing hundreds. The evangelist calls it a 'valuable data gathering exercise'.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "displaced_miner",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tech_evangelist",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "mining_guild",
+          "delta": -3
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "rig_disabled",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The rig eats half the station before breaking down on its own. The fallout ruins everyone.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "displaced_miner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tech_evangelist",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "rig_disabled",
+  "loose_threads": [
+    {
+      "id": "t_rig_ai",
+      "surface": "scan",
+      "detail": "The rig's faulty targeting logs show it was specifically programmed to prioritize ships owned by independent miners.",
+      "can_carry_methods": [
+        "information_control",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_evangelist_funding",
+      "surface": "dialogue",
+      "detail": "The tech evangelist casually mentions their emergency funding comes from a shell company registered to the mining guild's own leadership.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Corporate mining drone malfunctions; independent miners celebrate.",
+    "Evangelist {role:tech_evangelist} promises automated future is safe."
+  ],
+  "voice_direction": {
+    "displaced_miner": "Loud, boisterous, constantly complaining about modern technology.",
+    "tech_evangelist": "Fast, precise, completely devoid of empathy."
+  },
+  "novelty_tags": [
+    "rogue_mining_drone",
+    "luddite_rebellion",
+    "ai_malfunction",
+    "corporate_hubris"
+  ]
+}

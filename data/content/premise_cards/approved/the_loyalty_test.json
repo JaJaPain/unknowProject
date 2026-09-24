@@ -1,0 +1,265 @@
+{
+  "id": "premise.the_loyalty_test",
+  "schema_version": 1,
+  "title": "The Loyalty Test",
+  "logline": "A paranoid merchant hires a pilot to stage a fake assassination attempt to test their bodyguard's loyalty, but it goes disastrously wrong.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "melancholy"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "paranoid_boss",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Jumpy, constantly drinking, trusts no one.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loyal_bodyguard",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Silent, professional, incredibly exhausted by their boss.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "private_resort",
+      "kind": "place",
+      "description": "A ludicrously expensive orbital spa surrounded by automated turrets.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "decoy_assassin",
+      "kind": "ship",
+      "description": "A cheap, rented fighter painted aggressively red.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "merchant_guild",
+      "kind": "faction",
+      "description": "The ruthless corporate entity the boss works for.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:paranoid_boss} has locked themselves inside their {role:private_resort}, convinced the {role:merchant_guild} is trying to kill them.",
+  "private_truth": "The boss is completely fine, but they are terrified their bodyguard will betray them, so they hired an actor to stage a fake attack.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The resort's defense grid is taken offline for \"routine maintenance\".",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "paranoid_boss",
+          "target": "private_resort",
+          "reason": "The boss asks the pilot to deliver ferrite to \"patch the hull\", secretly using it as an excuse to get the pilot past the bodyguard.",
+          "private_fact": "The boss slips the pilot a massive bag of credits and a script for the fake attack.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The fake assassin jumps into the system and begins broadcasting threatening messages.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "paranoid_boss",
+          "target": "private_resort",
+          "reason": "The boss asks the pilot to meet a corrupt quartermaster at the armory loading dock and collect all the live ammunition, replacing it with blanks.",
+          "private_fact": "The bodyguard catches the pilot in the armory, but just sighs and lets them go, assuming it's another one of the boss's stupid tests.",
+          "outcome_tags": [
+            "ammo_swapped"
+          ],
+          "routes": {
+            "ammo_swapped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The fake assassin begins their attack run, firing blank torpedoes at the resort.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "paranoid_boss",
+          "target": "decoy_assassin",
+          "reason": "The boss begs the pilot to attack the decoy assassin, pretending they are saving the day to make the test look real.",
+          "private_fact": "The bodyguard hails the pilot, revealing they actually got hired by the guild to kill the boss today, and offers the pilot half the bounty to help them.",
+          "outcome_tags": [
+            "decoy_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "decoy_destroyed": "resolution:boss_wins",
+            "took_the_offer": "resolution:bodyguard_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "boss_wins",
+      "reached_by": "The pilot destroys the decoy.",
+      "summary": "The fake attack is thwarted. The boss embraces the bodyguard, completely unaware they were actually about to be murdered. The pilot is paid well.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_bodyguard",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "merchant_guild",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "staged_an_assassination",
+          "public_summary": "A pilot helped stage a fake assassination to calm a paranoid merchant."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "bodyguard_wins",
+      "reached_by": "The pilot takes the bodyguard's offer.",
+      "summary": "The pilot helps the bodyguard murder the boss. The bodyguard claims the bounty, and the pilot gets a cut. The guild is satisfied.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_boss",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_bodyguard",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "merchant_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "boss_killed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The fake attack fizzles out. In the confusion, the bodyguard quietly snaps the boss's neck and blames it on the assassin.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_boss",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_bodyguard",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "merchant_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "boss_killed",
+  "loose_threads": [
+    {
+      "id": "t_guild_bounty",
+      "surface": "scan",
+      "detail": "The guild's bounty on the boss wasn't for treason; it was because the boss accidentally discovered a massive accounting error.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_bodyguard_past",
+      "surface": "dialogue",
+      "detail": "The bodyguard mutters that this isn't even the first time they've had to murder a paranoid boss for the guild.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "proxy_violence"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Bizarre incident at {role:private_resort} leaves authorities confused.",
+    "{role:merchant_guild} refuses to comment on alleged assassination attempt."
+  ],
+  "voice_direction": {
+    "paranoid_boss": "Fast, frantic, constantly dropping their voice to a hush.",
+    "loyal_bodyguard": "Deep, tired, speaks as little as possible."
+  },
+  "novelty_tags": [
+    "fake_assassination",
+    "loyalty_test",
+    "paranoid_merchant"
+  ]
+}

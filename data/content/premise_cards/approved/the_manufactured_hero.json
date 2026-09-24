@@ -1,0 +1,265 @@
+{
+  "id": "premise.the_manufactured_hero",
+  "schema_version": 1,
+  "title": "The Manufactured Hero",
+  "logline": "An actor hired to play a war hero for propaganda decides to expose the fake war, and asks a pilot to destroy the director's yacht.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "bleak"
+  ],
+  "themes": [
+    "reinvention",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "guilt_ridden_actor",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Handsome, deeply depressed, wearing a fake military uniform.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cynical_director",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Loud, artistic, cares only about the lighting and the budget.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "film_set",
+      "kind": "place",
+      "description": "A massive soundstage orbiting a dying star, made to look like a battlefield.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "director_yacht",
+      "kind": "ship",
+      "description": "An opulent, unarmed cruiser filled with editing equipment.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "military_command",
+      "kind": "faction",
+      "description": "The government body funding the fake war.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "The sector is captivated by the heroic exploits of a brave fighter pilot holding the line at the edge of space.",
+  "private_truth": "There is no war. The \"hero\" is an actor, and the footage is being filmed on a massive set to justify massive military budgets.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The director demands more realistic explosions for the finale.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "cynical_director",
+          "target": "film_set",
+          "reason": "The director hires the pilot to deliver ferrite to build a massive, rigged prop supercarrier for the finale.",
+          "private_fact": "The actor is staring out the window, quietly weeping.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The actor refuses to read their lines, demanding the truth be told.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "guilt_ridden_actor",
+          "target": "film_set",
+          "reason": "The actor begs the pilot to meet a disillusioned prop master and collect the real master script proving the entire war is a fabrication.",
+          "private_fact": "The pilot has to dodge automated pyrotechnics to reach the script.",
+          "outcome_tags": [
+            "script_collected"
+          ],
+          "routes": {
+            "script_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The director prepares to broadcast the grand finale.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "guilt_ridden_actor",
+          "target": "director_yacht",
+          "reason": "The actor pays the pilot to destroy the director's yacht and recover the master tapes before they can be broadcast.",
+          "private_fact": "The director hails the pilot, offering to make them a star in the next season if they back down.",
+          "outcome_tags": [
+            "tapes_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "tapes_recovered": "resolution:actor_wins",
+            "abandoned": "resolution:director_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has the master tapes. The director is offering fame and fortune to hand them over.",
+        "options": [
+          {
+            "id": "destroy_tapes",
+            "label": "Help the actor expose the fake war",
+            "leads_to": "resolution:actor_wins"
+          },
+          {
+            "id": "sell_out",
+            "label": "Sell out and give the tapes to the director",
+            "leads_to": "resolution:director_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "actor_wins",
+      "reached_by": "The pilot helps the actor.",
+      "summary": "The tapes are destroyed. The actor leaks the script, exposing the fake war. The military budget is slashed, and the director is ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilt_ridden_actor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cynical_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_propaganda",
+          "public_summary": "A pilot helped a guilt-ridden actor expose a massive fake war propaganda campaign."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "director_wins",
+      "reached_by": "The pilot sells out.",
+      "summary": "The finale broadcasts. The sector weeps for the \"hero,\" who is quietly murdered by the director to prevent future leaks. The pilot becomes rich.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilt_ridden_actor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cynical_director",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "propaganda_airs",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The director broadcasts the finale without interference. The actor is permanently silenced, and the fake war continues to draw billions in funding.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilt_ridden_actor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cynical_director",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "propaganda_airs",
+  "loose_threads": [
+    {
+      "id": "t_military_funding",
+      "surface": "scan",
+      "detail": "The fake war was funded by a massive colonial expansion corporation that needed an excuse to build supercarriers.",
+      "can_carry_methods": [
+        "bribery",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_actor_identity",
+      "surface": "dialogue",
+      "detail": "The actor reveals they were originally a prisoner of war, forced into the role to save their family.",
+      "can_carry_methods": [
+        "blackmail",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Season finale of the frontier war to broadcast tonight.",
+    "{role:cynical_director} promises a spectacular, emotional climax."
+  ],
+  "voice_direction": {
+    "guilt_ridden_actor": "Deep, incredibly sad, speaks with theatrical enunciation.",
+    "cynical_director": "Loud, abrasive, constantly yelling at unseen crew."
+  },
+  "novelty_tags": [
+    "fake_war",
+    "propaganda_film",
+    "guilt_ridden_actor"
+  ]
+}

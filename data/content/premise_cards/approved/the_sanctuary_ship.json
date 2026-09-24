@@ -1,0 +1,255 @@
+{
+  "id": "premise.the_sanctuary_ship",
+  "schema_version": 1,
+  "title": "The Sanctuary Ship",
+  "logline": "A drifting freighter has declared itself a religious sanctuary, but a brutal debt collector is demanding the pilot help drag a fugitive out of it.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "sanctuary_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Maintains the aging life support of the sanctuary, deeply protective of their flock.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hunted_merchant",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Fled to the sanctuary to escape massive debts, terrified to leave.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "sanctuary_freighter",
+      "kind": "place",
+      "description": "A massive, unarmed cargo hauler converted into a sprawling temple.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "collector_cruiser",
+      "kind": "ship",
+      "description": "A heavy, aggressive corporate recovery vessel.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "sanctuary_congregation",
+      "kind": "faction",
+      "description": "The desperate people living aboard.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The {role:sanctuary_freighter} sits in orbit, refusing to hand over anyone who has claimed religious asylum.",
+  "private_truth": "The sanctuary's life support is failing, and they are holding the merchant hostage until the merchant's family pays a 'donation' to fix it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The debt collector ship locks tractor beams onto the sanctuary freighter.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "sanctuary_engineer",
+          "target": "collector_cruiser",
+          "reason": "The engineer begs the pilot to attack the collector ship and force it to break the tractor beam.",
+          "private_fact": "The engineer knows the sanctuary will tear apart if dragged.",
+          "outcome_tags": [
+            "collector_damaged"
+          ],
+          "routes": {
+            "collector_damaged": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The sanctuary sends out a desperate distress call for parts.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "hunted_merchant",
+          "target": "sanctuary_freighter",
+          "reason": "The merchant secretly hires the pilot to smuggle in a military-grade hyperdrive override chip.",
+          "private_fact": "The merchant plans to install it in their own impounded ship and punch through the sanctuary's sealed docking bay to escape.",
+          "outcome_tags": [
+            "chip_delivered"
+          ],
+          "routes": {
+            "chip_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The collector ship prepares to fire on the sanctuary.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "sanctuary_engineer",
+          "target": "collector_cruiser",
+          "reason": "The engineer pays the pilot to destroy the collector ship for good.",
+          "private_fact": "The collector hails the pilot, offering to pay off the pilot's own debts if they hand over the merchant instead.",
+          "outcome_tags": [
+            "collector_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "collector_destroyed": "resolution:sanctuary_saved",
+            "took_the_offer": "resolution:merchant_sold"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "sanctuary_saved",
+      "reached_by": "The pilot destroys the collector ship.",
+      "summary": "The sanctuary remains safe, but its dark secret holds. The merchant is trapped there forever, paying off the engineer's 'donations'.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_engineer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hunted_merchant",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "defended_the_sanctuary",
+          "public_summary": "A pilot defended the great temple ship from corporate repo men."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "merchant_sold",
+      "reached_by": "The pilot takes the collector's offer.",
+      "summary": "The merchant is dragged away to a debtor's prison. The sanctuary uses the ensuing outrage to raise more funds.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_merchant",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_engineer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "law_change",
+          "law": "salvage_registry",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "sanctuary_destroyed",
+      "reached_by": "The pilot ignores the conflict.",
+      "summary": "The collector ship tears the sanctuary apart trying to tow it. Hundreds die, including the merchant.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_engineer",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hunted_merchant",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "sanctuary_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_collector_warrant",
+      "surface": "scan",
+      "detail": "The debt collector's warrant was backdated by three months, stamped by a judge who was already dead.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_sanctuary_funds",
+      "surface": "cargo",
+      "detail": "The sanctuary's 'donation' accounts empty daily into an untraceable offshore shell company.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Corporate repo ship attempts to tow {role:sanctuary_freighter}; standoff ensues.",
+    "Is the great temple ship a sanctuary or a prison? Editorial at 6."
+  ],
+  "voice_direction": {
+    "sanctuary_engineer": "Calm, self-righteous, speaks of extortion as if it were a spiritual duty.",
+    "hunted_merchant": "Panicked, constantly looking over their shoulder, speaks quietly."
+  },
+  "novelty_tags": [
+    "religious_asylum",
+    "debt_hostage",
+    "temple_ship",
+    "corrupt_sanctuary"
+  ]
+}

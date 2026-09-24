@@ -1,0 +1,282 @@
+{
+  "id": "premise.the_minefield_harvest",
+  "schema_version": 1,
+  "title": "The Minefield Harvest",
+  "logline": "Desperate scrappers are harvesting unexploded ordnance from a dead system's minefield to sell as raw cuprite, and a frantic engineer needs it stopped before someone blows up the local relay.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "survival"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "frantic_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Constantly calculating blast radii in their head, completely stressed out.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "reckless_scrapper",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Cheerful, reckless, views every live bomb as a paycheck.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "minefield_belt",
+      "kind": "place",
+      "description": "A dense asteroid field littered with dormant stealth mines.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scrapper_tug",
+      "kind": "ship",
+      "description": "A heavily modified hauler, currently dragging a live torpedo.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mining_syndicate",
+      "kind": "faction",
+      "description": "The corporate buyer turning a blind eye to the source of the cuprite.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "local_relay",
+      "kind": "place",
+      "description": "The system's main communications hub.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "evidence_loose"
+  ],
+  "public_situation": "A massive influx of cheap, high-grade cuprite has flooded the market, supposedly mined from the dangerous {role:minefield_belt}.",
+  "private_truth": "The scrappers are disarming the old minefield to harvest the cuprite in the detonators. They don't realize the mines are networked, and removing too many will trigger a cascade failure.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A distant explosion in the belt shakes the local relay station.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "reckless_scrapper",
+          "target": "local_relay",
+          "reason": "The scrapper hires the pilot to deliver their latest haul of cuprite to the relay's buying office.",
+          "private_fact": "The cuprite still has active military-grade blasting caps attached to it.",
+          "outcome_tags": [
+            "ore_delivered"
+          ],
+          "routes": {
+            "ore_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The engineer discovers the blasting caps and triggers a station-wide panic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "frantic_engineer",
+          "target": "minefield_belt",
+          "reason": "The engineer asks the pilot to scan the minefield to find the master control buoy.",
+          "private_fact": "The scan reveals the scrappers are already towing the buoy away.",
+          "outcome_tags": [
+            "buoy_found"
+          ],
+          "routes": {
+            "buoy_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The minefield's fail-deadly network begins arming the remaining warheads.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "frantic_engineer",
+          "target": "scrapper_tug",
+          "reason": "The engineer pays the pilot to destroy the scrapper's tug before it can jump away with the control buoy.",
+          "private_fact": "The scrapper hails the pilot, offering to split the massive corporate payout if the pilot escorts them out of the system instead.",
+          "outcome_tags": [
+            "tug_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "tug_destroyed": "resolution:minefield_safe",
+            "took_the_offer": "resolution:relay_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "minefield_safe",
+      "reached_by": "The pilot destroys the tug.",
+      "summary": "The control buoy is recovered and the minefield is safed. The engineer is relieved, and the scrapper market crashes.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reckless_scrapper",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "frantic_engineer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_harvest",
+          "public_summary": "A pilot blew up a greedy scrapper to stop an old minefield from going critical."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "relay_destroyed",
+      "reached_by": "The pilot takes the scrapper's offer.",
+      "summary": "The scrapper escapes with the buoy. The minefield detonates, heavily damaging the relay and severing communications.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reckless_scrapper",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "frantic_engineer",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "mines_detonate",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The scrapper mishandles the buoy. The entire field goes up, destroying the tug and the relay.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reckless_scrapper",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "frantic_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "mines_detonate",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_buyer",
+      "surface": "cargo",
+      "detail": "The mining syndicate was paying for the cuprite using a massive private investment bank escrow account.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_mine_codes",
+      "surface": "scan",
+      "detail": "The supposedly ancient mines were running a software patch dated only three months ago.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "sabotage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Unexplained explosions reported in {role:minefield_belt}.",
+    "Cuprite prices plummet as mysterious new source floods the market."
+  ],
+  "voice_direction": {
+    "frantic_engineer": "Fast, breathless, constantly interrupting themselves with math.",
+    "reckless_scrapper": "Cheerful, unbothered, speaks too fast without pausing for breath."
+  },
+  "novelty_tags": [
+    "minefield_scavengers",
+    "unexploded_ordnance",
+    "cuprite_harvest"
+  ]
+}

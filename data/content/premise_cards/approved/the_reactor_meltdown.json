@@ -1,0 +1,274 @@
+{
+  "id": "premise.the_reactor_meltdown",
+  "schema_version": 1,
+  "title": "The Reactor Meltdown",
+  "logline": "A station's reactor is melting down after a rigged inspection, and the engineer needs a pilot to extract the safety inspector's black box to prove they were bribed.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "heist"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "desperate_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Covered in grease, exhausted, refusing to let the station die.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corrupt_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Smug, well-dressed, already packing their bags.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "failing_reactor",
+      "kind": "place",
+      "description": "A massive power core venting radioactive gas.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "inspector_ship",
+      "kind": "ship",
+      "description": "A sleek, fast corporate vessel.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "safety_board",
+      "kind": "faction",
+      "description": "The bureaucratic agency overseeing station safety.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:failing_reactor} is entering critical meltdown, and the {role:safety_board} has ordered a full evacuation.",
+  "private_truth": "The inspector intentionally failed the cooling system to force the station to buy a replacement from a corporate backer. They are fleeing before the core blows.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The reactor's primary cooling loop fails completely.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_engineer",
+          "target": "failing_reactor",
+          "reason": "The engineer begs the pilot to buy emergency coolant and deliver it to the reactor to buy them time.",
+          "private_fact": "The engineer is staying behind in the irradiated zone to try and fix it.",
+          "outcome_tags": [
+            "coolant_delivered"
+          ],
+          "routes": {
+            "coolant_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The inspector boards their ship and prepares to jump away.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "corrupt_inspector",
+          "target": "failing_reactor",
+          "reason": "The inspector hires the pilot to run a final scan of the reactor to legally certify it was \"operator error\".",
+          "private_fact": "The scan reveals the cooling loop was physically severed, not burned out.",
+          "outcome_tags": [
+            "reactor_scanned"
+          ],
+          "routes": {
+            "reactor_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The engineer realizes the sabotage and demands the pilot stop the inspector.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_engineer",
+          "target": "inspector_ship",
+          "reason": "The engineer pays the pilot to destroy the inspector's ship and recover its black box.",
+          "private_fact": "The inspector hails the pilot, offering a massive bribe to let them jump away.",
+          "outcome_tags": [
+            "inspector_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "inspector_destroyed": "resolution:inspector_exposed",
+            "took_the_offer": "resolution:inspector_escapes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "inspector_exposed",
+      "reached_by": "The pilot destroys the ship.",
+      "summary": "The black box proves the sabotage. The inspector is killed, and emergency crews rush in to save the reactor.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_inspector",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_engineer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "safety_board",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_meltdown",
+          "public_summary": "A pilot shot down a corrupt inspector and saved a station from a meltdown."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "inspector_escapes",
+      "reached_by": "The pilot takes the bribe.",
+      "summary": "The inspector jumps away. The reactor goes critical, and the engineer dies trying to stop it. The pilot is rich but infamous.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_engineer",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "safety_board",
+          "delta": 1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "station_evacuated",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The station is abandoned and slowly melts down. The inspector escapes safely.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_engineer",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "station_evacuated",
+  "loose_threads": [
+    {
+      "id": "t_inspector_accounts",
+      "surface": "scan",
+      "detail": "The inspector's accounts show massive deposits from a rival station operator.",
+      "can_carry_methods": [
+        "bribery",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_reactor_parts",
+      "surface": "cargo",
+      "detail": "The replacement cooling unit already had shipping labels printed two weeks before the failure.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Evacuation ordered as {role:failing_reactor} approaches critical mass.",
+    "{role:safety_board} promises full investigation into reactor failure."
+  ],
+  "voice_direction": {
+    "desperate_engineer": "Breathless, angry, speaks extremely loudly over the alarms.",
+    "corrupt_inspector": "Smooth, unbothered, speaks as if they are already on vacation."
+  },
+  "novelty_tags": [
+    "reactor_meltdown",
+    "corrupt_inspector",
+    "sabotage"
+  ]
+}

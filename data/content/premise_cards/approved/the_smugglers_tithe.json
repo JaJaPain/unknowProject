@@ -1,0 +1,275 @@
+{
+  "id": "premise.the_smugglers_tithe",
+  "schema_version": 1,
+  "title": "The Smuggler's Tithe",
+  "logline": "A desperate courier hires a pilot to mask their illicit cargo, but a corrupt customs officer decides to steal the shipment instead.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "bleak"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "desperate_courier",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Sweating profusely, visibly terrified of failing their delivery.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_customs_officer",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Smug, heavily armed, considers themselves above the law.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "customs_checkpoint",
+      "kind": "place",
+      "description": "A sprawling orbital tollgate bristling with scanners.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smuggler_decoy",
+      "kind": "ship",
+      "description": "A battered drone ship loaded with fake transponders.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "customs_authority",
+      "kind": "faction",
+      "description": "The notoriously bribable local border control.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "law_tightened",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:customs_authority} has instituted a 'zero-tolerance' policy for contraband, severely delaying local trade.",
+  "private_truth": "The officer is using the new policy to seize valuable black-market cargo and sell it back to the syndicates.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The customs checkpoint begins randomly seizing civilian transports.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "desperate_courier",
+          "target": "customs_checkpoint",
+          "reason": "The courier hires the pilot to haul highly radioactive thorium to the checkpoint.",
+          "private_fact": "The radiation will temporarily blind the customs scanners, allowing the courier to slip by.",
+          "outcome_tags": [
+            "thorium_delivered"
+          ],
+          "routes": {
+            "thorium_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The officer notices the radiation spike and locks down the sector.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "corrupt_customs_officer",
+          "target": "smuggler_decoy",
+          "reason": "The officer figures out the trick and demands the pilot shoot down the courier's decoy ship to retrieve its data core.",
+          "private_fact": "The officer intends to use the data to locate the courier's main stash and steal it.",
+          "outcome_tags": [
+            "decoy_destroyed"
+          ],
+          "routes": {
+            "decoy_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "aftermath",
+      "location": "same_system",
+      "public_change": "The officer prepares to raid the courier's stash.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_courier",
+          "target": "customs_checkpoint",
+          "reason": "The courier begs the pilot to run a deep scan on the checkpoint to record the officer's illicit communications with the syndicates.",
+          "private_fact": "The recording will prove the officer is a thief, but the pilot can choose to extort the officer instead.",
+          "outcome_tags": [
+            "scan_complete",
+            "abandoned"
+          ],
+          "routes": {
+            "scan_complete": "next",
+            "abandoned": "resolution:officer_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has proof of the officer's corruption. They can turn it in, or use it to extort the officer.",
+        "options": [
+          {
+            "id": "expose_officer",
+            "label": "Expose the corrupt officer",
+            "leads_to": "resolution:officer_jailed"
+          },
+          {
+            "id": "extort_officer",
+            "label": "Blackmail the officer for a cut",
+            "leads_to": "resolution:pilot_paid_off"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "officer_jailed",
+      "reached_by": "The pilot exposes the officer.",
+      "summary": "The officer is arrested and stripped of rank. The courier escapes the system, and local trade resumes slightly more honestly.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_customs_officer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_courier",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "customs_authority",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "busted_customs",
+          "public_summary": "A pilot caught a dirty customs cop shaking down local smugglers."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "pilot_paid_off",
+      "reached_by": "The pilot blackmails the officer.",
+      "summary": "The officer pays the pilot handsomely to keep quiet. The courier is hunted down and killed, their cargo stolen by the authorities.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_customs_officer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_courier",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "customs_authority",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "officer_wins",
+      "reached_by": "The pilot abandons the final mission.",
+      "summary": "The officer steals the courier's cargo and pins the blame on them. The courier is ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_customs_officer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_courier",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "officer_wins",
+  "loose_threads": [
+    {
+      "id": "t_officer_boss",
+      "surface": "scan",
+      "detail": "The officer's corrupt syndicate contacts actually report directly to a corporate board member.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_courier_cargo",
+      "surface": "cargo",
+      "detail": "The courier's 'illicit cargo' wasn't drugs or weapons, but massive quantities of life-saving, unpatented medical supplies.",
+      "can_carry_methods": [
+        "bribery",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:customs_authority} promises to crack down on rampant smuggling.",
+    "Delays at {role:customs_checkpoint} reaching critical levels."
+  ],
+  "voice_direction": {
+    "desperate_courier": "Fast, high-pitched, audibly terrified.",
+    "corrupt_customs_officer": "Deep, relaxed, speaks with absolute impunity."
+  },
+  "novelty_tags": [
+    "corrupt_cop",
+    "radiation_blind",
+    "smuggling_decoy",
+    "customs_shakedown"
+  ]
+}

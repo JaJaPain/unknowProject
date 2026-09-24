@@ -1,0 +1,290 @@
+{
+  "id": "premise.the_plague_cure",
+  "schema_version": 1,
+  "title": "The Price of a Cure",
+  "logline": "A brilliant doctor has synthesized a cure for a local plague, but it requires harvesting illegal biological samples from quarantined ships, and the local dockmaster is demanding a cut.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "survival"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "brilliant_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Will break any law to save a life, deeply cynical about authority.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Controls all access to the quarantine zone and never does a favor for free.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "quarantined_freighter",
+      "kind": "ship",
+      "description": "A sealed vessel full of the sick and dying.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "medical_board",
+      "kind": "faction",
+      "description": "The slow, methodical body that insists all cures must undergo ten years of trials.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smuggler_den",
+      "kind": "place",
+      "description": "A hidden asteroid base where illegal biologicals are traded.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "quarantine"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "law_tightened"
+  ],
+  "public_situation": "The {role:medical_board} has declared the recent plague incurable and ordered the infected ships to be locked down until further notice.",
+  "private_truth": "The doctor has a working cure, but the base compound is classified as highly illegal contraband, forcing them to rely on smugglers to synthesize it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The dockmaster tightens security around the quarantined ships, demanding massive bribes for access.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "brilliant_doctor",
+          "target": "quarantined_freighter",
+          "reason": "The doctor needs the pilot to shoot the sealed cargo pods off a quarantined freighter to extract the raw biological samples.",
+          "private_fact": "The freighter's automated defenses will treat this as an attack.",
+          "outcome_tags": [
+            "samples_recovered"
+          ],
+          "routes": {
+            "samples_recovered": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "corrupt_dockmaster",
+          "target": "smuggler_den",
+          "reason": "The dockmaster demands the pilot deliver a massive bribe to the smugglers to keep them quiet about the doctor's activities.",
+          "private_fact": "The dockmaster is pocketing half the bribe.",
+          "outcome_tags": [
+            "bribe_delivered"
+          ],
+          "routes": {
+            "bribe_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The medical board catches wind of the illegal cure and issues arrest warrants.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "brilliant_doctor",
+          "target": "smuggler_den",
+          "reason": "The doctor desperately needs the pilot to buy the final refinement chemicals from the smugglers to finish the cure.",
+          "private_fact": "The chemicals are highly volatile and illegal to transport.",
+          "outcome_tags": [
+            "chemicals_delivered"
+          ],
+          "routes": {
+            "chemicals_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The cure is finished, but the medical board's enforcers have surrounded the doctor's lab.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "brilliant_doctor",
+          "target": "quarantined_freighter",
+          "reason": "The doctor asks the pilot to disable the freighter's comms array so they can deliver the cure without the board tracking them.",
+          "private_fact": "The quarantined patients hail the pilot, offering their remaining hazard pay if the pilot will blow the quarantine locks and let them leave instead of waiting for a cure.",
+          "outcome_tags": [
+            "array_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "array_disabled": "resolution:cure_distributed",
+            "took_the_offer": "resolution:quarantine_broken"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cure_distributed",
+      "reached_by": "The pilot disables the array and helps distribute the cure.",
+      "summary": "The plague is cured, but the doctor is arrested by the medical board for using untested illegal compounds. The patients survive, but the hero goes to prison.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "brilliant_doctor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_dockmaster",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "smuggled_the_cure",
+          "public_summary": "A pilot broke quarantine to smuggle an illegal cure to the dying ships."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "martyr_made",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "quarantine_broken",
+      "reached_by": "The pilot takes the patients' offer and breaks the quarantine locks.",
+      "summary": "The sick scatter across the sector. The disease spreads, the dockmaster is fired for the breach, and the doctor is devastated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "brilliant_doctor",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "quarantine"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "broke_quarantine",
+          "public_summary": "Some pilot cracked the seals on a plague ship for pocket change."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "quarantine_holds",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "Without the cure, the quarantined ships slowly die off. The medical board declares the containment a success.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "brilliant_doctor",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": 2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": [
+            "quarantine"
+          ]
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "quarantine_holds",
+  "loose_threads": [
+    {
+      "id": "t_plague_origin",
+      "surface": "scan",
+      "detail": "The biological samples from the plague perfectly match a dormant weaponized virus found in old corporate archives.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_dockmaster_funds",
+      "surface": "cargo",
+      "detail": "The dockmaster's bribe money is paid in sequentially numbered cred-sticks fresh from a central mint.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:medical_board} insists all uncertified plague treatments are highly dangerous.",
+    "Desperation grows on {role:quarantined_freighter} as supplies dwindle."
+  ],
+  "voice_direction": {
+    "brilliant_doctor": "Intense, focused, uses sharp medical terminology.",
+    "corrupt_dockmaster": "Slow, relaxed, always brings the conversation back to money."
+  },
+  "novelty_tags": [
+    "illegal_cure",
+    "quarantine_break",
+    "medical_smuggling",
+    "extortion"
+  ]
+}

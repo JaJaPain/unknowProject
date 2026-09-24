@@ -1,0 +1,266 @@
+{
+  "id": "premise.the_death_race",
+  "schema_version": 1,
+  "title": "The Death Race",
+  "logline": "A reckless racer needs a pilot to clear the track of hazards before a massive gravity tide makes the annual death race entirely lethal.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "survival"
+  ],
+  "themes": [
+    "price_of_profit",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "reckless_racer",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Adrenaline junkie, refuses to wear a seatbelt, heavily in debt.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_bookie",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Constantly calculating odds, completely unsentimental.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "race_track",
+      "kind": "place",
+      "description": "A twisting, dangerous course through a dense asteroid field.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "rival_racer",
+      "kind": "ship",
+      "description": "A heavily modified interceptor covered in spikes.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "gambling_cartel",
+      "kind": "faction",
+      "description": "The syndicate that runs the bets and owns the racers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "gravity_tides"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "alliance_formed"
+  ],
+  "public_situation": "The {role:gambling_cartel} is hyping up the annual {role:race_track} event, promising record-breaking speeds.",
+  "private_truth": "The bookie has rigged the race so the reckless racer will crash and die, ensuring a massive payout for the cartel.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The racers line up at the starting grid.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "corrupt_bookie",
+          "target": "race_track",
+          "reason": "The bookie pays the pilot to buy and deliver a batch of faulty thruster manifolds to the racer's pit crew.",
+          "private_fact": "The racer intercepts the delivery and realizes they are being set up.",
+          "outcome_tags": [
+            "faulty_parts_delivered"
+          ],
+          "routes": {
+            "faulty_parts_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The race begins, and the rival racer immediately takes a suspicious shortcut.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "reckless_racer",
+          "target": "race_track",
+          "reason": "The racer pays the pilot to scan the track for traps left by the rival.",
+          "private_fact": "The scan reveals the rival has deployed illegal proximity mines.",
+          "outcome_tags": [
+            "track_scanned"
+          ],
+          "routes": {
+            "track_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The gravity tides suddenly spike, tearing massive rocks across the track.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "corrupt_bookie",
+          "target": "rival_racer",
+          "reason": "The bookie panics as the odds shift and pays the pilot to disable the rival racer to ensure the reckless racer wins.",
+          "private_fact": "The rival hails the pilot, offering a cut of the cartel's purse if they let them finish the race instead.",
+          "outcome_tags": [
+            "rival_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "rival_disabled": "resolution:racer_wins",
+            "took_the_offer": "resolution:rival_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "racer_wins",
+      "reached_by": "The pilot disables the rival.",
+      "summary": "The reckless racer crosses the finish line alive. The bookie is bankrupted by the payout, and the racer retires rich.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reckless_racer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_bookie",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "gambling_cartel",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "won_the_death_race",
+          "public_summary": "A pilot cheated in the local death race to help an underdog win."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "rival_wins",
+      "reached_by": "The pilot takes the rival's offer.",
+      "summary": "The rival crosses the finish line first. The reckless racer crashes into an asteroid and dies, and the cartel makes a fortune.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reckless_racer",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_bookie",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "gambling_cartel",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "race_cancelled",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The gravity tide tears the track apart. The race is cancelled, all bets are voided, and everyone goes home angry.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reckless_racer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_bookie",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "gambling_cartel",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "race_cancelled",
+  "loose_threads": [
+    {
+      "id": "t_track_sabotage",
+      "surface": "scan",
+      "detail": "The gravity tide didn't just happen; someone deployed a massive grav-generator in the middle of the track.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_cartel_funds",
+      "surface": "dialogue",
+      "detail": "The bookie reveals the cartel's betting pool is actually a money-laundering front for a pirate fleet.",
+      "can_carry_methods": [
+        "forged_records",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Odds shift wildly ahead of the annual death race.",
+    "{role:corrupt_bookie} promises the most exciting crash season yet."
+  ],
+  "voice_direction": {
+    "reckless_racer": "Hyperactive, breathless, speaks too fast.",
+    "corrupt_bookie": "Flat, bored, constantly crunching numbers."
+  },
+  "novelty_tags": [
+    "death_race",
+    "rigged_betting",
+    "gravity_hazards"
+  ]
+}

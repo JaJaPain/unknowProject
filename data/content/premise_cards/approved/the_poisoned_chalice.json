@@ -1,0 +1,286 @@
+{
+  "id": "premise.the_poisoned_chalice",
+  "schema_version": 1,
+  "title": "The Poisoned Chalice",
+  "logline": "A paranoid heir suspects their trusted advisor is slowly poisoning them, and needs a pilot to intercept the advisor's yacht to find the antidote.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "paranoid"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "paranoid_heir",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Pale, sweating, convinced everyone is trying to kill them.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "trusted_advisor",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Calm, soothing, secretly deeply ambitious.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "orbiting_manor",
+      "kind": "place",
+      "description": "A beautiful but decaying space station belonging to a dying noble house.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "advisor_yacht",
+      "kind": "ship",
+      "description": "A sleek, unassuming ship loaded with hidden weapons.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "noble_house",
+      "kind": "faction",
+      "description": "A crumbling dynasty desperate to hold onto power.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "leader_discredited"
+  ],
+  "public_situation": "The head of the {role:noble_house} recently died of a mysterious illness, leaving the {role:paranoid_heir} in charge of the {role:orbiting_manor}.",
+  "private_truth": "The advisor killed the previous head and is now slowly poisoning the heir to seize full control of the house's assets.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The heir suffers a sudden, public collapse during a meeting.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "paranoid_heir",
+          "target": "orbiting_manor",
+          "reason": "The heir begs the pilot to buy generic broad-spectrum antidotes and deliver them quietly to the manor.",
+          "private_fact": "The antidotes have no effect because the poison is a custom-engineered synthetic virus.",
+          "outcome_tags": [
+            "antidotes_delivered"
+          ],
+          "routes": {
+            "antidotes_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The advisor publicly declares the manor safe and dismisses rumors of foul play.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "trusted_advisor",
+          "target": "orbiting_manor",
+          "reason": "The advisor hires the pilot to run a thorough scan of the manor's air filtration system to \"prove\" it is clean.",
+          "private_fact": "The scan reveals the filters have been deliberately bypassed.",
+          "outcome_tags": [
+            "filters_scanned"
+          ],
+          "routes": {
+            "filters_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The advisor boards their yacht, preparing to leave the heir to die.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "paranoid_heir",
+          "target": "advisor_yacht",
+          "reason": "The heir pays the pilot to destroy the yacht and recover the advisor's medical safe, which contains the only antidote.",
+          "private_fact": "The yacht is heavily armed and escorted by mercenary drones.",
+          "outcome_tags": [
+            "safe_recovered"
+          ],
+          "routes": {
+            "safe_recovered": "resolution:heir_saved"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the medical safe. The advisor's ship is destroyed.",
+        "options": [
+          {
+            "id": "deliver_antidote",
+            "label": "Deliver the antidote to the heir",
+            "leads_to": "resolution:heir_saved"
+          },
+          {
+            "id": "keep_antidote",
+            "label": "Keep the antidote and let the heir die",
+            "leads_to": "resolution:heir_dies"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heir_saved",
+      "reached_by": "The pilot delivers the antidote.",
+      "summary": "The heir takes the antidote and survives. They brutally purge the noble house of the advisor's loyalists, becoming a paranoid tyrant.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trusted_advisor",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_heir",
+          "public_summary": "A pilot saved a paranoid noble from assassination, unleashing a tyrant."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "heir_dies",
+      "reached_by": "The pilot keeps the antidote.",
+      "summary": "The heir succumbs to the poison. The noble house collapses into chaos, and its assets are seized by corporate creditors.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_heir",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trusted_advisor",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "advisor_wins",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The advisor escapes. The heir dies, and the advisor returns to legally claim the entire estate.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_heir",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trusted_advisor",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "advisor_wins",
+  "loose_threads": [
+    {
+      "id": "t_poison_source",
+      "surface": "cargo",
+      "detail": "The synthetic virus was developed by a top-secret naval bioweapons lab.",
+      "can_carry_methods": [
+        "information_control",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_advisor_backers",
+      "surface": "scan",
+      "detail": "The advisor was secretly working for a rival noble house looking to consolidate power.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "proxy_violence"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Health of {role:paranoid_heir} failing; {role:trusted_advisor} assumes interim control.",
+    "Rumors of foul play plague {role:noble_house}."
+  ],
+  "voice_direction": {
+    "paranoid_heir": "Shaky, very quiet, constantly looking around.",
+    "trusted_advisor": "Smooth, reassuring, completely sociopathic."
+  },
+  "novelty_tags": [
+    "poisoned_noble",
+    "treacherous_advisor",
+    "succession_crisis"
+  ]
+}

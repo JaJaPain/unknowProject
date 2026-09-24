@@ -1,0 +1,267 @@
+{
+  "id": "premise.the_hull_breach",
+  "schema_version": 1,
+  "title": "The Hull Breach",
+  "logline": "A transport suffers a critical hull breach, and a refugee discovers the ship's owner intentionally sabotaged it for insurance money.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "tense"
+  ],
+  "themes": [
+    "chosen_family",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "brave_refugee",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Resourceful, determined to save their fellow passengers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sleazy_owner",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Cowardly, wealthy, views the passengers as acceptable losses.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "damaged_transport",
+      "kind": "ship",
+      "description": "A passenger liner rapidly venting atmosphere.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rescue_station",
+      "kind": "place",
+      "description": "A nearby independent repair yard.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A passenger transport has sent out a distress call following a catastrophic structural failure.",
+  "private_truth": "The owner rigged the life support to fail so they could claim a massive insurance payout on the 'tragic accident'.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The transport's automated distress beacon goes dark.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "brave_refugee",
+          "target": "damaged_transport",
+          "reason": "Needs a pilot to intercept the drifting ship and deliver emergency patch kits.",
+          "private_fact": "The refugee found explosives residue near the breach and knows it wasn't an accident.",
+          "outcome_tags": [
+            "kits_delivered",
+            "kits_abandoned"
+          ],
+          "routes": {
+            "kits_delivered": "beat:2",
+            "kits_abandoned": "resolution:passengers_lost"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The ship's owner publicly mourns the 'loss' of the vessel.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "brave_refugee",
+          "target": "damaged_transport",
+          "reason": "Needs the pilot to scan the ship's black box before the backup power fails.",
+          "private_fact": "The black box contains the override codes the owner used to disable the alarms.",
+          "outcome_tags": [
+            "box_scanned",
+            "box_lost"
+          ],
+          "routes": {
+            "box_scanned": "beat:3",
+            "box_lost": "resolution:passengers_lost"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "A corporate salvage ship arrives to 'secure the wreck'.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "sleazy_owner",
+          "target": "damaged_transport",
+          "reason": "The owner hires the pilot to destroy the transport entirely to hide the evidence.",
+          "private_fact": "The refugee is broadcasting the black box data on a wide band, begging for help.",
+          "outcome_tags": [
+            "transport_destroyed",
+            "took_refugee_side"
+          ],
+          "routes": {
+            "transport_destroyed": "resolution:owner_wins",
+            "took_refugee_side": "resolution:passengers_saved"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the fate of the transport in their hands.",
+        "options": [
+          {
+            "id": "save_them",
+            "label": "Defend the transport and save the passengers",
+            "leads_to": "resolution:passengers_saved"
+          },
+          {
+            "id": "destroy_them",
+            "label": "Destroy the transport for the owner's payout",
+            "leads_to": "resolution:owner_wins"
+          },
+          {
+            "id": "abandon_them",
+            "label": "Abandon the sector entirely",
+            "leads_to": "resolution:passengers_lost"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "passengers_saved",
+      "reached_by": "The pilot defends the transport.",
+      "summary": "The passengers are rescued. The owner's sabotage is exposed, and their assets are frozen.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "brave_refugee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sleazy_owner",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "owner_wins",
+      "reached_by": "The pilot destroys the transport.",
+      "summary": "The ship is destroyed. The owner collects the insurance, and the refugee's truth dies with them.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "brave_refugee",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sleazy_owner",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "passengers_lost",
+      "reached_by": "The pilot abandons the missions.",
+      "summary": "The transport breaks apart in the void. The owner claims the insurance, though suspicions remain.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "brave_refugee",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sleazy_owner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "passengers_lost",
+  "loose_threads": [
+    {
+      "id": "t_insurance_broker",
+      "surface": "scan",
+      "detail": "The insurance policy was underwritten by a known front for an illegal smuggling ring.",
+      "can_carry_methods": [
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_explosives_origin",
+      "surface": "wreck",
+      "detail": "The explosive residue matches charges used by deep-core miners, not standard saboteurs.",
+      "can_carry_methods": [
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "false_flag"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Distress call received from passenger liner.",
+    "Local businessman expresses 'deep sorrow' over tragic accident."
+  ],
+  "voice_direction": {
+    "brave_refugee": "Fierce, unyielding, prioritizing others over themselves.",
+    "sleazy_owner": "Slick, falsely sympathetic, purely transactional."
+  },
+  "novelty_tags": [
+    "insurance_fraud",
+    "hull_breach",
+    "passenger_rescue"
+  ]
+}

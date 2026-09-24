@@ -1,0 +1,283 @@
+{
+  "id": "premise.the_heaviest_crown",
+  "schema_version": 1,
+  "title": "The Heaviest Crown",
+  "logline": "A desperate heir tries to save their family name by paying off a massive debt with a hidden data core, but their sibling wants to liquidate it instead.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "melancholy"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "desperate_heir",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Exhausted, holding onto the family name like a lifeline.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bitter_sibling",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "Cynical, sees the family legacy as nothing but a piggy bank.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "creditor_bank",
+      "kind": "faction",
+      "description": "Cold, process-driven, wants the debt settled or the assets seized.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "family_vault",
+      "kind": "place",
+      "description": "A fading, heavily shielded storage facility.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bank_headquarters",
+      "kind": "place",
+      "description": "The imposing regional office of the creditor.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sibling_yacht",
+      "kind": "ship",
+      "description": "Over-gunned and flashy, paid for with IOUs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:creditor_bank} is about to formally foreclose on a once-prominent family, erasing their remaining assets.",
+  "private_truth": "The family's last real asset is a data core of old mining claims hidden in the {role:family_vault}. The {role:desperate_heir} wants to use it to pay the debt; the {role:bitter_sibling} wants to steal and sell it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The {role:creditor_bank} posts the final foreclosure notice on the system boards.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_heir",
+          "target": "family_vault",
+          "reason": "The heir needs an independent pilot to scan the vault and certify its contents are still family property, which legally halts the bank's immediate foreclosure.",
+          "private_fact": "The scan reveals the bank has already secretly bypassed the outer locks, making the legal delay essentially useless.",
+          "outcome_tags": [
+            "certify_secure",
+            "certify_tampered"
+          ],
+          "routes": {
+            "certify_secure": "next",
+            "certify_tampered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The {role:bitter_sibling} arrives in the system and publicly contests the foreclosure, buying time.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_heir",
+          "target": "sibling_yacht",
+          "reason": "The heir pays the pilot to intercept and disable the sibling's ship before it can reach the vault and take the core.",
+          "private_fact": "The sibling hails the pilot during the fight, offering to split the black-market sale of the core if the pilot lets them pass.",
+          "outcome_tags": [
+            "yacht_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "yacht_destroyed": "next",
+            "took_the_offer": "resolution:sibling_liquidates"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The heir successfully extracts the core from the vault, but the bank's repo drones begin locking down the sector.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "desperate_heir",
+          "target": "bank_headquarters",
+          "reason": "The heir's own ship is grounded by bank liens. They hire the pilot to rush the core to the bank and officially settle the debt.",
+          "private_fact": "The core's data is degrading outside the vault; if it isn't delivered today, the family has nothing left.",
+          "outcome_tags": [
+            "delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "delivered": "resolution:heir_pays_debt",
+            "abandoned": "resolution:bank_forecloses"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heir_pays_debt",
+      "reached_by": "The pilot disables the sibling's yacht and delivers the core to the bank.",
+      "summary": "The debt is settled. The family name is saved, though they are completely broke, and the sibling is ruined.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "creditor_bank",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bitter_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_heir",
+          "public_summary": "Some pilot ran a blockade to help an old family pay off its last debt."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "sibling_liquidates",
+      "reached_by": "The pilot accepts the sibling's offer and stands down.",
+      "summary": "The sibling empties the vault and vanishes with the credits. The bank forecloses on the heir, leaving them with nothing.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bitter_sibling",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "creditor_bank",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "helped_liquidate_legacy",
+          "public_summary": "A pilot took a bribe to let a gambler empty their family vault before the bank could."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "bank_forecloses",
+      "reached_by": "The pilot abandons the delivery, or never gets involved.",
+      "summary": "The bank seizes the core and all remaining assets. The family is officially erased from the registries, and both siblings are left with nothing.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bitter_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "bank_forecloses",
+  "loose_threads": [
+    {
+      "id": "t_bank_seal",
+      "surface": "scan",
+      "detail": "The bank's foreclosure notice on the vault was backdated by three weeks, meaning the grace period never actually existed.",
+      "can_carry_methods": [
+        "forged_records",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_yacht_funding",
+      "surface": "ship_marking",
+      "detail": "The sibling's yacht is registered to a shell company that only buys up debts of dying noble houses.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Final foreclosure notices posted for the {role:desperate_heir} estate.",
+    "Local {role:creditor_bank} branch denies predatory lending practices."
+  ],
+  "voice_direction": {
+    "desperate_heir": "Stiff, exhausted, trying to maintain a formal tone while clearly panicking.",
+    "bitter_sibling": "Dismissive, clipped sentences."
+  },
+  "novelty_tags": [
+    "family_foreclosure",
+    "debt_race",
+    "sibling_rivalry"
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "id": "premise.the_gladiators_debt",
+  "schema_version": 1,
+  "title": "The Gladiator's Debt",
+  "logline": "An arena master forces an ex-gladiator back into the ring by threatening their family, until the gladiator hires a pilot to destroy the arena's guard ships.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "weary_gladiator",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Scarred, tired of fighting, but highly protective.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "arena_master",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Sadistic, views people purely as entertainment value.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "arena_station",
+      "kind": "place",
+      "description": "A massive, heavily armed entertainment station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "arena_guards",
+      "kind": "ship",
+      "description": "Heavily armored enforcement patrol ships.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage"
+  ],
+  "public_situation": "A legendary ex-gladiator has shockingly come out of retirement for one final tournament.",
+  "private_truth": "The arena master kidnapped the gladiator's family and is holding them in a heavily guarded orbital brig.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The gladiator wins their first match brutally, drawing huge crowds.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "weary_gladiator",
+          "target": "arena_guards",
+          "reason": "Needs a pilot to ambush a guard ship and steal its access codes.",
+          "private_fact": "The gladiator plans to use the codes to orchestrate a prison break during the finale.",
+          "outcome_tags": [
+            "codes_stolen",
+            "codes_missed"
+          ],
+          "routes": {
+            "codes_stolen": "beat:2",
+            "codes_missed": "resolution:gladiator_dies"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The arena master tightens security around the brig.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "weary_gladiator",
+          "target": "arena_guards",
+          "reason": "Needs the pilot to destroy the main guard patrol outside the station while the gladiator stages a riot.",
+          "private_fact": "Mid-fight, the patrol leader hails the pilot and relays the arena master's offer: a fortune to turn on the gladiator and report the riot plan.",
+          "outcome_tags": [
+            "guards_destroyed",
+            "took_bribe"
+          ],
+          "routes": {
+            "guards_destroyed": "beat:3",
+            "took_bribe": "resolution:gladiator_dies"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The riot breaks out, and the gladiator's family is freed.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "weary_gladiator",
+          "target": "arena_station",
+          "reason": "Needs the pilot to extract the family from the docking bay before the master vents the atmosphere.",
+          "private_fact": "The gladiator intends to stay behind to kill the arena master.",
+          "outcome_tags": [
+            "family_extracted",
+            "extraction_failed"
+          ],
+          "routes": {
+            "family_extracted": "resolution:family_saved",
+            "extraction_failed": "resolution:family_imprisoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot must choose how to finalize the extraction.",
+        "options": [
+          {
+            "id": "extract_family",
+            "label": "Extract the family and let the gladiator fight the master",
+            "leads_to": "resolution:family_saved"
+          },
+          {
+            "id": "force_gladiator",
+            "label": "Force the gladiator onto the ship and spare the master",
+            "leads_to": "resolution:master_lives"
+          },
+          {
+            "id": "abandon",
+            "label": "Flee the station empty handed",
+            "leads_to": "resolution:family_imprisoned"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "family_saved",
+      "reached_by": "The pilot extracts the family.",
+      "summary": "The family is saved. The gladiator kills the arena master but dies in the process.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "weary_gladiator",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "arena_master",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "master_lives",
+      "reached_by": "The pilot forces the gladiator to flee.",
+      "summary": "The family and the gladiator escape together. The arena master lives to hunt them down.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "weary_gladiator",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "arena_master",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "gladiator_dies",
+      "reached_by": "The pilot takes the bribe or fails the missions.",
+      "summary": "The gladiator is killed in the arena. Their family remains imprisoned, and the master profits.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "weary_gladiator",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "arena_master",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "family_imprisoned",
+      "reached_by": "The pilot abandons the extraction.",
+      "summary": "The extraction fails. The gladiator is recaptured, and the family is sold into slavery.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "weary_gladiator",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "arena_master",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "gladiator_dies",
+  "loose_threads": [
+    {
+      "id": "t_arena_investors",
+      "surface": "scan",
+      "detail": "The arena's primary investors are actually a consortium of supposedly peaceful religious leaders.",
+      "can_carry_methods": [
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_guard_weapons",
+      "surface": "wreck",
+      "detail": "The arena guard ships were equipped with highly restricted military-grade weaponry.",
+      "can_carry_methods": [
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Legendary gladiator comes out of retirement for shock return.",
+    "Arena master promises most violent tournament in history."
+  ],
+  "voice_direction": {
+    "weary_gladiator": "Gravelly, exhausted, deeply sad but intensely focused.",
+    "arena_master": "Loud, performative, always speaking to an invisible audience."
+  },
+  "novelty_tags": [
+    "gladiator_arena",
+    "hostage_rescue",
+    "prison_break"
+  ]
+}

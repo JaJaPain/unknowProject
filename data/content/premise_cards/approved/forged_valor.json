@@ -1,0 +1,263 @@
+{
+  "id": "premise.forged_valor",
+  "schema_version": 1,
+  "title": "The Flagship's Flaw",
+  "logline": "A disgraced veteran hires a pilot to scan a famous shipwreck and prove their innocence, but the veterans' association will pay anything to keep the official history intact.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "disgraced_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Exiled and aging, obsessed with clearing their name before they die.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "veterans_association",
+      "kind": "faction",
+      "description": "Powerful and well-connected, fiercely protects the official history of the war.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "battle_wreck",
+      "kind": "place",
+      "description": "The silent, picked-over skeleton of an old flagship drifting in deep space.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "salvage_broker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Sells coordinates to old wrecks, doesn't care about the history attached to them.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "association_enforcer",
+      "kind": "ship",
+      "description": "A heavy interceptor flying without transponders, loyal to the association.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "broker_outpost",
+      "kind": "place",
+      "description": "A seedy listening post on the edge of the system.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The local {role:veterans_association} is preparing a memorial for the anniversary of a famous victory. The {role:disgraced_veteran} is publicly banned from attending.",
+  "private_truth": "The veteran didn't flee the battle; they were ordered to fall back because the flagship's reactor was failing. The association covered up the flagship's flaw to protect a lucrative shipyard contract.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The veteran is publicly thrown out of a station lounge for trying to talk about the battle.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "disgraced_veteran",
+          "target": "broker_outpost",
+          "reason": "The veteran is banned from the trade docks and needs a pilot to retrieve a datacard with the exact coordinates of the flagship's wreck from the salvage broker.",
+          "private_fact": "The broker knows the association has a bounty on these coordinates and is trying to stall the pilot until the enforcers arrive.",
+          "outcome_tags": [
+            "coordinates_bought"
+          ],
+          "routes": {
+            "coordinates_bought": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "Association ships begin patrolling the outer system, claiming it is for 'memorial security'.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "disgraced_veteran",
+          "target": "battle_wreck",
+          "reason": "The veteran needs a pilot to fly to the wreck and scan the flagship's reactor housing for outward-burst damage to prove it failed from the inside.",
+          "private_fact": "The pilot must choose whether to certify the true reactor failure, or falsify the report to say it was combat damage as the association claims.",
+          "outcome_tags": [
+            "certify_reactor_failure",
+            "certify_combat_damage"
+          ],
+          "routes": {
+            "certify_reactor_failure": "next",
+            "certify_combat_damage": "resolution:veteran_silenced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The veteran prepares to publicly broadcast the scan results to the entire system.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "disgraced_veteran",
+          "target": "association_enforcer",
+          "reason": "An association ship moves to intercept the pilot on their way back with the scan data. The veteran begs the pilot to fight them off and deliver the proof.",
+          "private_fact": "The enforcer hails the pilot mid-fight, offering a massive 'consulting fee' from the association to delete the data and walk away.",
+          "outcome_tags": [
+            "enforcer_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "enforcer_destroyed": "resolution:veteran_cleared",
+            "took_the_offer": "resolution:veteran_silenced"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "veteran_cleared",
+      "reached_by": "The pilot destroys the enforcer and delivers the scan data.",
+      "summary": "The data is published. The association faces a massive scandal over the cover-up, and the veteran's name is cleared.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_veteran",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_association",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_flagship_coverup",
+          "public_summary": "Someone dragged up proof that the old flagship blew its own reactor, and the brass lied about it."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "veteran_silenced",
+      "reached_by": "The pilot certifies false combat damage or takes the association's payout.",
+      "summary": "The association's official history remains unquestioned. The veteran is completely discredited as a liar and leaves the system in disgrace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_veteran",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_association",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "buried_flagship_scandal",
+          "public_summary": "A pilot apparently found the old flagship wreck and let the association scrub the nav-logs."
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "scandal_ignored",
+      "reached_by": "The pilot ignores the veteran's request or abandons the job.",
+      "summary": "The association finds the wreck first and completely melts the reactor housing. The veteran dies broke and dishonored.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_veteran",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_association",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "scandal_ignored",
+  "loose_threads": [
+    {
+      "id": "t_salvage_embargo",
+      "surface": "station_notice",
+      "detail": "The association recently bought up the salvage rights for the entire sector just to keep anyone from flying out there.",
+      "can_carry_methods": [
+        "bribery",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_torched_marks",
+      "surface": "scan",
+      "detail": "The scorch marks on the reactor housing were made by a modern industrial cutter, not combat lasers.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "protecting_someone",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "{role:veterans_association} preparing for massive memorial service this week.",
+    "Local veteran arrested again for disturbing the peace at the trade docks."
+  ],
+  "voice_direction": {
+    "disgraced_veteran": "Raspy, exhausted, speaks with intense, unblinking sincerity.",
+    "salvage_broker": "Fast, nervous, always sounds like they are checking over their shoulder."
+  },
+  "novelty_tags": [
+    "historical_coverup",
+    "disgraced_veteran",
+    "wreck_scan"
+  ]
+}

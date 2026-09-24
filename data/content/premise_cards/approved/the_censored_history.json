@@ -1,0 +1,301 @@
+{
+  "id": "premise.the_censored_history",
+  "schema_version": 1,
+  "title": "The Censored History",
+  "logline": "An exiled historian hires a pilot to broadcast a suppressed history across the sector, but the ruling junta's censor frigate is hunting them down.",
+  "scale": "regional",
+  "tone": [
+    "paranoid",
+    "melancholy"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "faith_and_doubt"
+  ],
+  "roles": [
+    {
+      "id": "exiled_historian",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Old, entirely driven by principle, carrying heavy stacks of drives.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loyalist_captain",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Stern, loyal to the state, views independent thought as a threat.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hidden_archive",
+      "kind": "place",
+      "description": "A massive ancient satellite orbiting in a dead system.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "censor_frigate",
+      "kind": "ship",
+      "description": "A heavy military cruiser equipped with massive jamming arrays.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "ruling_junta",
+      "kind": "faction",
+      "description": "The brutal military dictatorship that controls the sector.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The {role:ruling_junta} has declared all materials from the \"Old Era\" strictly forbidden, citing them as a public hazard.",
+  "private_truth": "The historian has compiled a definitive record proving the junta was founded on a massive, bloody betrayal, and is preparing to broadcast it from the hidden archive.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The censor frigate arrives in the dead system and begins systematically scanning every asteroid.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "loyalist_captain",
+          "target": "hidden_archive",
+          "reason": "The captain hires the pilot to sweep the dead system for unauthorized transmissions.",
+          "private_fact": "The pilot discovers the historian desperately trying to bring the ancient satellite's power grid online.",
+          "outcome_tags": [
+            "archive_found"
+          ],
+          "routes": {
+            "archive_found": "next"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "exiled_historian",
+          "target": "hidden_archive",
+          "reason": "The historian begs the pilot to deliver thorium to jumpstart the archive's massive broadcast array.",
+          "private_fact": "The archive requires so much power it will instantly reveal its location to the frigate.",
+          "outcome_tags": [
+            "thorium_delivered"
+          ],
+          "routes": {
+            "thorium_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The junta begins heavily monitoring all traffic near the dead system.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "loyalist_captain",
+          "target": "hidden_archive",
+          "reason": "The captain hires the pilot to buy and deliver heavy comm-jammers to the archive to keep it offline permanently.",
+          "private_fact": "The jammers are actually powerful explosives disguised as transmitters.",
+          "outcome_tags": [
+            "jammers_delivered"
+          ],
+          "routes": {
+            "jammers_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The historian manages to broadcast a tiny fragment of the truth before being jammed.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "exiled_historian",
+          "target": "hidden_archive",
+          "reason": "The historian asks the pilot to meet a bribed guard at the archive's loading dock and physically collect the master drives before the frigate destroys them.",
+          "private_fact": "The historian is mortally wounded from a localized explosion and cannot carry the drives themselves.",
+          "outcome_tags": [
+            "drives_collected"
+          ],
+          "routes": {
+            "drives_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The censor frigate locks its main weapons on the archive.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "exiled_historian",
+          "target": "censor_frigate",
+          "reason": "The historian begs the pilot to destroy the censor frigate so the full broadcast can be made.",
+          "private_fact": "The captain hails the pilot, ordering them to hand over the master drives or face execution by the state.",
+          "outcome_tags": [
+            "frigate_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "frigate_destroyed": "resolution:historian_wins",
+            "took_the_offer": "resolution:captain_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "historian_wins",
+      "reached_by": "The pilot destroys the frigate.",
+      "summary": "The frigate is destroyed, and the full history is broadcast. The sector erupts in rebellion against the junta. The historian dies knowing the truth is safe.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_historian",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyalist_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "ruling_junta",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "broadcast_the_truth",
+          "public_summary": "A pilot fought off a military frigate to broadcast a suppressed history to the sector."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "captain_wins",
+      "reached_by": "The pilot surrenders the drives.",
+      "summary": "The pilot hands over the drives. The captain vaporizes the archive and the historian. The truth is lost forever, and the pilot is paid off by the state.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_historian",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyalist_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "ruling_junta",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "truth_buried",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The frigate obliterates the archive. The historian is captured and exiled to a penal colony. The junta's lies remain the official truth.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "exiled_historian",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyalist_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "ruling_junta",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "truth_buried",
+  "loose_threads": [
+    {
+      "id": "t_junta_origins",
+      "surface": "scan",
+      "detail": "The junta was actually installed by a foreign power to keep the sector destabilized.",
+      "can_carry_methods": [
+        "information_control",
+        "false_flag"
+      ]
+    },
+    {
+      "id": "t_historian_past",
+      "surface": "wreck",
+      "detail": "The historian used to be the head of the junta's propaganda department before they found their conscience.",
+      "can_carry_methods": [
+        "blackmail",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "false_flag"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Unauthorized transmissions detected in dead system.",
+    "{role:ruling_junta} issues warnings against listening to \"enemy propaganda\"."
+  ],
+  "voice_direction": {
+    "exiled_historian": "Frail, raspy, but speaks with burning conviction.",
+    "loyalist_captain": "Brisk, authoritative, views history as a weapon."
+  },
+  "novelty_tags": [
+    "suppressed_history",
+    "censor_frigate",
+    "exiled_historian"
+  ]
+}

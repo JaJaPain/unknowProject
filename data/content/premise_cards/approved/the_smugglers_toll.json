@@ -1,0 +1,266 @@
+{
+  "id": "premise.the_smugglers_toll",
+  "schema_version": 1,
+  "title": "The Smuggler's Toll",
+  "logline": "An indebted smuggler needs help guiding a refugee ship past their own boss's dark zone toll booth without paying the exorbitant fees.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "indebted_smuggler",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Sweating, nervous, trying to do one good thing in their life.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smuggler_boss",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Cruel, demands absolute loyalty and a cut of everything.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dark_zone_relay",
+      "kind": "place",
+      "description": "A hidden listening post masking a safe route through the dark zone.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "smuggler_gunship",
+      "kind": "ship",
+      "description": "A heavily armed toll-collection ship.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "refugee_ship",
+      "kind": "ship",
+      "description": "An unarmed transport packed with people, running on fumes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smuggler_cartel",
+      "kind": "faction",
+      "description": "The ruthless organization controlling the dark zone routes.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The {role:smuggler_cartel} has locked down the only safe route through the dark zone, charging massive tolls to fleeing refugee ships.",
+  "private_truth": "The indebted smuggler is secretly escorting a refugee ship for free because they remind them of their own lost family. The boss suspects betrayal.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The smuggler gunship begins actively scanning all passing traffic.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "indebted_smuggler",
+          "target": "dark_zone_relay",
+          "reason": "The smuggler asks the pilot to deliver a fake sensor manifest to the relay to mask the refugee ship's approach.",
+          "private_fact": "The boss's sensors see through the fake manifest immediately.",
+          "outcome_tags": [
+            "manifest_delivered"
+          ],
+          "routes": {
+            "manifest_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The boss orders the indebted smuggler to power down and prepare for boarding.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "smuggler_boss",
+          "target": "dark_zone_relay",
+          "reason": "The boss hires the pilot to meet the indebted smuggler at the relay dock and collect the toll by force.",
+          "private_fact": "The indebted smuggler begs the pilot not to take the toll, as it is the refugees' entire life savings.",
+          "outcome_tags": [
+            "toll_collected"
+          ],
+          "routes": {
+            "toll_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The indebted smuggler panics and tries to run the blockade.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "indebted_smuggler",
+          "target": "smuggler_gunship",
+          "reason": "The indebted smuggler begs the pilot to attack the boss's gunship to clear a path for the refugee ship's escape.",
+          "private_fact": "The gunship captain hails the pilot mid-fight, offering a cut of the cartel's future tolls if they turn and destroy the indebted smuggler instead.",
+          "outcome_tags": [
+            "gunship_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "gunship_destroyed": "resolution:pilot_escapes",
+            "took_the_offer": "resolution:pilot_killed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pilot_escapes",
+      "reached_by": "The pilot destroys the gunship.",
+      "summary": "The indebted smuggler and the refugee ship escape into the dark zone safely. The boss is furious and marks the pilot for death.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "indebted_smuggler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smuggler_boss",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_cartel",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "helped_the_smuggler",
+          "public_summary": "A pilot helped a smuggler grow a conscience and save a refugee ship."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "pilot_killed",
+      "reached_by": "The pilot takes the gunship captain's offer.",
+      "summary": "The indebted smuggler is killed, and the refugee ship is captured. The pilot becomes a favored asset of the cartel.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "indebted_smuggler",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smuggler_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_cartel",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "refugees_captured",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The boss easily catches the fleeing refugee ship. The indebted smuggler is imprisoned, and the refugees are sold into labor camps.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "indebted_smuggler",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_cartel",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "refugees_captured",
+  "loose_threads": [
+    {
+      "id": "t_boss_backers",
+      "surface": "scan",
+      "detail": "The cartel gunship's hull plating has recent, high-end commercial transit registry numbers filed off.",
+      "can_carry_methods": [
+        "blackmail",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_pilot_family",
+      "surface": "cargo",
+      "detail": "The indebted smuggler carries an empty, military-grade stasis pod powered on in their cargo hold.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Rumors of extortion on the dark zone routes.",
+    "{role:smuggler_cartel} tightens grip on local transit."
+  ],
+  "voice_direction": {
+    "indebted_smuggler": "Nervous, speaks quickly, constantly apologizing.",
+    "smuggler_boss": "Deep, resonant, never raises their voice."
+  },
+  "novelty_tags": [
+    "dark_zone_toll",
+    "smuggler_betrayal",
+    "refugee_rescue"
+  ]
+}

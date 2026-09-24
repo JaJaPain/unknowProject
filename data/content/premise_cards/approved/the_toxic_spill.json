@@ -1,0 +1,267 @@
+{
+  "id": "premise.the_toxic_spill",
+  "schema_version": 1,
+  "title": "The Toxic Spill",
+  "logline": "A scientist accidentally spills an experimental terraforming catalyst in a docking bay, mutating the local mold, and needs a pilot to quietly clean it up before the dockmaster finds out.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "melancholy"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "guilty_scientist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Scatterbrained, deeply embarrassed, trying to hide their mistake.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "angry_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Obsessed with cleanliness, yells at anyone tracking dirt.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "contaminated_bay",
+      "kind": "place",
+      "description": "A dark cargo bay currently overflowing with rapidly growing purple mold.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "clean_up_crew",
+      "kind": "faction",
+      "description": "The station's underpaid janitorial staff.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:contaminated_bay} has been sealed off due to a 'minor plumbing issue'.",
+  "private_truth": "The scientist dropped a vial of illegal terraforming catalyst. The mold is now highly aggressive and eating the station's hull plating.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Strange scratching noises are heard coming from the sealed bay.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "guilty_scientist",
+          "target": "contaminated_bay",
+          "reason": "The scientist begs the pilot to meet a bribed janitor near the bay and collect a sample of the mold so they can synthesize a cure.",
+          "private_fact": "The mold has already eaten the scientist's dropped commlink and is broadcasting static.",
+          "outcome_tags": [
+            "mold_sampled"
+          ],
+          "routes": {
+            "mold_sampled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The dockmaster notices a purple stain spreading into the main concourse.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "angry_dockmaster",
+          "target": "contaminated_bay",
+          "reason": "The dockmaster hires the pilot to scan the bay to figure out what the smell is.",
+          "private_fact": "The pilot's scan reveals the mold is highly corrosive and spreading fast.",
+          "outcome_tags": [
+            "bay_scanned"
+          ],
+          "routes": {
+            "bay_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The mold breaches the ventilation system.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "guilty_scientist",
+          "target": "contaminated_bay",
+          "reason": "The scientist asks the pilot to deliver a tank of neutralizing acid to the bay to dissolve the mold.",
+          "private_fact": "The acid works, but leaves a massive, unexplainable hole in the deck plating.",
+          "outcome_tags": [
+            "acid_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "acid_delivered": "next",
+            "abandoned": "resolution:mold_takes_over"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The bay is clean, but the scientist's reputation is on the line.",
+        "options": [
+          {
+            "id": "report_scientist",
+            "label": "Report the scientist to the dockmaster",
+            "leads_to": "resolution:scientist_fined"
+          },
+          {
+            "id": "keep_secret",
+            "label": "Keep the secret and claim it was a pipe burst",
+            "leads_to": "resolution:secret_kept"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "scientist_fined",
+      "reached_by": "The pilot reports the truth.",
+      "summary": "The dockmaster fines the scientist into oblivion. The station is safe, but the scientist's career is ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilty_scientist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_dockmaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "clean_up_crew",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "secret_kept",
+      "reached_by": "The pilot keeps the secret.",
+      "summary": "The dockmaster yells at the janitors for a pipe burst. The scientist pays the pilot well and keeps their job.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilty_scientist",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_dockmaster",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "clean_up_crew",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "mold_takes_over",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The mold eats through the docking bay seals, causing an explosive decompression that vents the bay into space.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guilty_scientist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "mold_takes_over",
+  "loose_threads": [
+    {
+      "id": "t_catalyst_source",
+      "surface": "cargo",
+      "detail": "The catalyst vial has the logo of a terraforming company that went bankrupt thirty years ago.",
+      "can_carry_methods": [
+        "information_control",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_mold_pattern",
+      "surface": "scan",
+      "detail": "The mold seems to be deliberately growing toward the station's main communication array.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Strange smells reported near {role:contaminated_bay}.",
+    "{role:clean_up_crew} threatens strike over hazardous conditions."
+  ],
+  "voice_direction": {
+    "guilty_scientist": "Nervous, high-pitched, speaks quickly.",
+    "angry_dockmaster": "Loud, booming, deeply annoyed by everything."
+  },
+  "novelty_tags": [
+    "mutant_mold",
+    "cover_up",
+    "toxic_spill"
+  ]
+}

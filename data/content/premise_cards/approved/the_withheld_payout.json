@@ -1,0 +1,287 @@
+{
+  "id": "premise.the_withheld_payout",
+  "schema_version": 1,
+  "title": "The Withheld Payout",
+  "logline": "An insurance company buys the telemetry drive of a wrecked ship to hide their liability, leaving the deceased pilot's child to fight for the truth.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "bleak"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "grieving_child",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Grieving, broke, but stubbornly refusing to let their parent be blamed for a mechanical failure.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_boss",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Pragmatic to a fault; will sell anything to anyone if the price is right.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "insurance_agent",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Treats denying payouts as an art form and views tragedy strictly as a liability.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scavenger_pack",
+      "kind": "ship",
+      "description": "Opportunistic wreck looters flying barely-functional scrap.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "insurance_enforcer",
+      "kind": "ship",
+      "description": "A heavily armed corporate courier disguised as a civilian freighter.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "salvage_yard",
+      "kind": "place",
+      "description": "A sprawling orbital junkyard filled with the stripped husks of dead ships.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "underwriters_guild",
+      "kind": "faction",
+      "description": "A massive insurance conglomerate that holds policies on half the sector's ships.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "secret_half_exposed"
+  ],
+  "public_situation": "A beloved local pilot died when their ship broke apart in deep space. The {role:underwriters_guild} is refusing to pay the life insurance, citing pilot error.",
+  "private_truth": "The ship suffered a catastrophic part failure. The insurance company knows this and is buying up the salvage to hide the evidence.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The {role:salvage_yard} recovers the wreck and puts the telemetry drive up for auction.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "salvage_boss",
+          "target": "scavenger_pack",
+          "reason": "Scavengers stole the telemetry drive before the salvage boss could secure it. He hires the pilot to blow them up and get it back.",
+          "private_fact": "The scavengers' comms chatter reveals they were hired by the insurance company to steal the drive.",
+          "outcome_tags": [
+            "drive_recovered"
+          ],
+          "routes": {
+            "drive_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The salvage boss gets the drive back and immediately accepts a massive preemptive bid from the {role:underwriters_guild}.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "grieving_child",
+          "target": "salvage_yard",
+          "reason": "The child desperately needs silicate to trade for the drive before the insurance company takes it. They hire the pilot to mine and deliver it.",
+          "private_fact": "The salvage boss takes the ore as a down payment, but admits the insurance company's courier is already inbound to collect the drive.",
+          "outcome_tags": [
+            "ore_delivered"
+          ],
+          "routes": {
+            "ore_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The insurance company's courier departs with the drive to permanently bury the truth.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "grieving_child",
+          "target": "insurance_enforcer",
+          "reason": "The child pays the pilot to destroy the courier and recover the telemetry drive from the wreckage.",
+          "private_fact": "The insurance agent immediately contacts the pilot, demanding they hand over the drive for a 'reward' once they pick it up.",
+          "outcome_tags": [
+            "drive_recovered_again"
+          ],
+          "routes": {
+            "drive_recovered_again": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has the telemetry drive. The child is waiting for it, but the insurance agent is offering a massive bribe to hand it over to them instead.",
+        "options": [
+          {
+            "id": "give_to_child",
+            "label": "Give the drive to the grieving child",
+            "leads_to": "resolution:child_wins"
+          },
+          {
+            "id": "sell_to_insurance",
+            "label": "Sell the drive to the insurance agent",
+            "leads_to": "resolution:insurance_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "child_wins",
+      "reached_by": "The pilot recovers the drive and gives it to the child.",
+      "summary": "The unedited telemetry proves mechanical failure. The insurance company is forced to pay out the life insurance, clearing the deceased pilot's name.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "grieving_child",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "insurance_agent",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "underwriters_guild",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_insurance_coverup",
+          "public_summary": "A pilot blew up a corporate courier to prove a crash wasn't pilot error."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "insurance_wins",
+      "reached_by": "The pilot recovers the drive and sells it to the insurance agent.",
+      "summary": "The insurance agent destroys the drive. The crash is officially ruled pilot error, the family is left destitute, and the pilot gets rich.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "grieving_child",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "insurance_agent",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "underwriters_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "child_gives_up",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The courier safely delivers the drive to the underwriters' vault. The child runs out of money and is forced to drop the dispute.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "grieving_child",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "underwriters_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "child_gives_up",
+  "loose_threads": [
+    {
+      "id": "t_counterfeit_parts",
+      "surface": "wreck",
+      "detail": "The failed engine manifold on the wreck has a serial number that matches a batch recalled three years ago, but it looks brand new.",
+      "can_carry_methods": [
+        "forged_records",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_agent_transfers",
+      "surface": "dialogue",
+      "detail": "The insurance agent complains about being transferred to this sector as a punishment for 'asking too many questions' back home.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "{role:underwriters_guild} formally denies payout for recent local tragedy.",
+    "Scavengers spotted picking over the remains of a beloved pilot's ship."
+  ],
+  "voice_direction": {
+    "grieving_child": "Exhausted but fiercely determined. Voice shakes with suppressed anger, never with tears.",
+    "salvage_boss": "Gruff, pragmatic, speaks in short, transactional sentences.",
+    "insurance_agent": "Polite, oily, uses dense corporate jargon to sound completely reasonable while being deeply cruel."
+  },
+  "novelty_tags": [
+    "insurance_fraud",
+    "repossessed_wreck",
+    "withheld_payout"
+  ]
+}

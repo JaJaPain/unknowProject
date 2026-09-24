@@ -1,0 +1,318 @@
+[
+  {
+    "id": "premise.the_quarantine_breach",
+    "schema_version": 1,
+    "title": "The Quarantine Breach",
+    "logline": "A mysterious outbreak hits a deep-space station, and a corrupt doctor hires a pilot to smuggle them out while ignoring the dying masses.",
+    "scale": "regional",
+    "tone": [
+      "paranoid",
+      "survival"
+    ],
+    "themes": [
+      "scarcity_breeds_cruelty",
+      "helpers_corrupted"
+    ],
+    "roles": [
+      {
+        "id": "panicked_doctor",
+        "kind": "person",
+        "archetype": "doctor",
+        "description": "Terrified, coughing, abandoning their oath to survive.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "smuggler_baron",
+        "kind": "person",
+        "archetype": "smuggler",
+        "description": "Opportunistic, making a fortune selling fake clean bills of health.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "quarantine_station",
+        "kind": "place",
+        "description": "A sealed orbital habitat, completely dark.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "medical_convoy",
+        "kind": "ship",
+        "description": "An automated supply train carrying vaccines.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "patrol_cruiser",
+        "kind": "ship",
+        "description": "A heavily armed navy blockade runner.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "border_patrol",
+        "kind": "faction",
+        "description": "The ruthless authority enforcing the quarantine.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_preferred": [
+        "nebula"
+      ],
+      "quirks_forbidden": [],
+      "states_required": [],
+      "states_forbidden": []
+    },
+    "accepts_seeds": [
+      "evidence_loose",
+      "route_closed"
+    ],
+    "public_situation": "The {role:quarantine_station} has been sealed off by the {role:border_patrol} after a highly contagious pathogen was detected.",
+    "private_truth": "The doctor accidentally engineered the pathogen and is trying to buy a fake identity from the smuggler to flee before anyone finds out.",
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "The station broadcasts a desperate plea for medical supplies.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "panicked_doctor",
+            "target": "quarantine_station",
+            "reason": "The doctor asks the pilot to scan the station's external vents to map the quarantine grid so they can fly their own skiff out.",
+            "private_fact": "The doctor is actually looking for a blind spot in the sensors to escape.",
+            "outcome_tags": [
+              "vents_scanned"
+            ],
+            "routes": {
+              "vents_scanned": "next"
+            }
+          },
+          {
+            "verb": "pickup_special",
+            "requester": "panicked_doctor",
+            "target": "quarantine_station",
+            "reason": "The pilot must dock at an airlock and collect a sealed case of blood samples.",
+            "private_fact": "The case is full of stolen credits to pay the smuggler.",
+            "outcome_tags": [
+              "case_collected"
+            ],
+            "routes": {
+              "case_collected": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "The smuggler begins broadcasting offers for guaranteed clean transit.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "smuggler_baron",
+            "target": "quarantine_station",
+            "reason": "The smuggler pays the pilot to deliver forged quarantine-bypass credentials to the doctor.",
+            "private_fact": "The credentials will overload the airlock sensors, breaking the seal for everyone.",
+            "outcome_tags": [
+              "credentials_delivered"
+            ],
+            "routes": {
+              "credentials_delivered": "next"
+            }
+          },
+          {
+            "verb": "purchase_delivery",
+            "requester": "smuggler_baron",
+            "target": "quarantine_station",
+            "reason": "The smuggler needs the pilot to buy bulk medical parts and deliver them to the station.",
+            "private_fact": "The parts are actually components for a high-yield explosive to blow the docking bay doors.",
+            "outcome_tags": [
+              "parts_delivered"
+            ],
+            "routes": {
+              "parts_delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "location": "neighbouring_system",
+        "public_change": "A medical convoy jumps into the system, carrying genuine vaccines.",
+        "missions": [
+          {
+            "verb": "kill_ships",
+            "requester": "smuggler_baron",
+            "target": "medical_convoy",
+            "reason": "The smuggler pays the pilot to destroy the vaccine convoy so their forged credentials remain valuable.",
+            "private_fact": "The convoy is completely unarmed and broadcasting on all channels.",
+            "outcome_tags": [
+              "convoy_destroyed"
+            ],
+            "routes": {
+              "convoy_destroyed": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "location": "any_system",
+        "public_change": "The doctor breaches the airlock and flees in their own light medical skiff, triggering the blockade alarms.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "smuggler_baron",
+            "target": "patrol_cruiser",
+            "reason": "The smuggler pays the pilot to attack the patrol cruiser and create a distraction so the doctor's skiff can jump away.",
+            "private_fact": "The patrol cruiser hails the pilot, offering full amnesty if they destroy the doctor's skiff instead to protect the sector.",
+            "outcome_tags": [
+              "cruiser_destroyed",
+              "took_the_offer"
+            ],
+            "routes": {
+              "cruiser_destroyed": "resolution:doctor_escapes",
+              "took_the_offer": "resolution:doctor_killed"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "doctor_escapes",
+        "reached_by": "The pilot destroys the cruiser and helps the doctor flee.",
+        "summary": "The doctor escapes into the wider galaxy, taking the pathogen with them. The station is doomed, and the smuggler gets rich.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "panicked_doctor",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "smuggler_baron",
+            "fate": "promoted"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "quarantine"
+            ],
+            "remove": []
+          },
+          {
+            "type": "deed",
+            "tag": "broke_the_quarantine",
+            "public_summary": "A pilot broke a medical blockade and let a plague ship loose in the sector."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "law_tightened"
+        ]
+      },
+      {
+        "id": "doctor_killed",
+        "reached_by": "The pilot takes the cruiser's offer and destroys the pod.",
+        "summary": "The doctor is vaporized, containing the threat. The station eventually receives aid, but the smuggler marks the pilot for death.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "panicked_doctor",
+            "fate": "dead"
+          },
+          {
+            "type": "cast_fate",
+            "target": "smuggler_baron",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "standing",
+            "target": "border_patrol",
+            "delta": 2
+          }
+        ],
+        "seeds": [
+          "grudge_against_player",
+          "quiet_cover_up"
+        ]
+      },
+      {
+        "id": "quarantine_holds",
+        "reached_by": "The pilot ignores the climax.",
+        "summary": "The patrol cruiser easily catches the doctor's pod and tows it back. The station remains locked down forever.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "panicked_doctor",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "standing",
+            "target": "border_patrol",
+            "delta": 1
+          }
+        ],
+        "seeds": [
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "quarantine_holds",
+    "loose_threads": [
+      {
+        "id": "t_pathogen_origin",
+        "surface": "scan",
+        "detail": "The pathogen's genetic sequence includes a trademark signature from a major agricultural conglomerate.",
+        "can_carry_methods": [
+          "sabotage",
+          "manufactured_crisis"
+        ]
+      },
+      {
+        "id": "t_cruiser_orders",
+        "surface": "radio",
+        "detail": "The patrol cruiser was ordered to guard the station three days before the outbreak even began.",
+        "can_carry_methods": [
+          "information_control",
+          "false_flag"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "manufactured_crisis",
+        "information_control"
+      ],
+      "motives": [
+        "fear",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders"
+    ],
+    "radio_hooks": [
+      "Strict quarantine in effect around {role:quarantine_station}.",
+      "Unconfirmed reports of new disease vector spreading through {system}."
+    ],
+    "voice_direction": {
+      "panicked_doctor": "Desperate, speaks too fast, lies effortlessly.",
+      "smuggler_baron": "Calm, oily, treats human lives as a spreadsheet."
+    },
+    "novelty_tags": [
+      "quarantine_breach",
+      "plague_doctor",
+      "smuggling_run"
+    ]
+  }
+]

@@ -1,0 +1,277 @@
+{
+  "id": "premise.the_hermit_hoard",
+  "schema_version": 1,
+  "title": "The Hermit Hoard",
+  "logline": "A paranoid hermit hires a pilot to physically drag their entire hoard of junk away before a greedy salvager can steal it during a gravity tide.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "farce"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "paranoid_hermit",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Filthy, territorial, deeply emotionally attached to literal garbage.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "greedy_salvager",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Smug, wealthy, constantly evaluating the price of everything.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hermit_asteroid",
+      "kind": "place",
+      "description": "A small rock absolutely covered in rusting metal and old ship parts.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "salvage_barge",
+      "kind": "ship",
+      "description": "A massive industrial ship with terrifyingly large grappling claws.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scavenger_coalition",
+      "kind": "faction",
+      "description": "A ruthless union of scrap dealers and claim jumpers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "gravity_tides"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:scavenger_coalition} has declared the {role:hermit_asteroid} legally abandoned, opening it for salvage.",
+  "private_truth": "The hermit is very much alive and living inside the junk pile, and the \"junk\" actually hides a priceless colonial-era reactor core.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The salvage barge arrives in the system and begins powering up its tractor beams.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "paranoid_hermit",
+          "target": "hermit_asteroid",
+          "reason": "The hermit begs the pilot to meet them at the asteroid's hidden dock and collect their most prized possession: a completely worthless ceramic mug.",
+          "private_fact": "The pilot discovers the mug is sitting right next to the glowing colonial reactor.",
+          "outcome_tags": [
+            "mug_collected"
+          ],
+          "routes": {
+            "mug_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "Massive gravity tides begin to pull the asteroid apart.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "greedy_salvager",
+          "target": "hermit_asteroid",
+          "reason": "The salvager hires the pilot to buy and deliver heavy explosive charges to crack the asteroid open faster.",
+          "private_fact": "The explosives will likely kill the hermit in the process.",
+          "outcome_tags": [
+            "charges_delivered"
+          ],
+          "routes": {
+            "charges_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The salvager moves in to claim the reactor core.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "paranoid_hermit",
+          "target": "salvage_barge",
+          "reason": "The hermit pays the pilot their life savings (which is mostly copper wire) to destroy the salvage barge and protect their home.",
+          "private_fact": "The salvager hails the pilot, offering them half the profits from the reactor if they stand down.",
+          "outcome_tags": [
+            "barge_destroyed"
+          ],
+          "routes": {
+            "barge_destroyed": "resolution:hermit_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The salvage barge is vulnerable. The salvager is offering millions for the reactor. The hermit just wants their junk.",
+        "options": [
+          {
+            "id": "destroy_barge",
+            "label": "Protect the hermit and destroy the barge",
+            "leads_to": "resolution:hermit_wins"
+          },
+          {
+            "id": "take_deal",
+            "label": "Take the deal and let the hermit lose everything",
+            "leads_to": "resolution:salvager_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "hermit_wins",
+      "reached_by": "The pilot destroys the barge.",
+      "summary": "The barge is destroyed. The hermit is thrilled to keep their trash pile, completely ignoring the priceless reactor. The pilot is paid in copper wire.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_hermit",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "greedy_salvager",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "scavenger_coalition",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_junk",
+          "public_summary": "A pilot blew up an industrial salvage barge to protect a crazy hermit's pile of garbage."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "salvager_wins",
+      "reached_by": "The pilot takes the deal.",
+      "summary": "The salvager takes the reactor. The hermit is evicted and left homeless. The pilot gets rich, but the coalition marks them as a ruthless mercenary.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_hermit",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "greedy_salvager",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "scavenger_coalition",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "asteroid_cracked",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The salvager detonates the charges, cracking the asteroid. The hermit is violently evicted by security bots, and the salvager claims the reactor.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_hermit",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "greedy_salvager",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "scavenger_coalition",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "asteroid_cracked",
+  "loose_threads": [
+    {
+      "id": "t_reactor_owner",
+      "surface": "scan",
+      "detail": "The colonial reactor actually belongs to the planetary governor, who lost it in a drunken bet decades ago.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_coalition_bribe",
+      "surface": "dialogue",
+      "detail": "The salvager brags that they bribed the coalition to falsely declare the asteroid abandoned.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:scavenger_coalition} opens new sector for aggressive salvage operations.",
+    "Rumors of a hidden treasure in a pile of space junk."
+  ],
+  "voice_direction": {
+    "paranoid_hermit": "Gravelly, suspicious, talks to inanimate objects.",
+    "greedy_salvager": "Oily, confident, speaks far too loudly."
+  },
+  "novelty_tags": [
+    "space_junk",
+    "crazy_hermit",
+    "colonial_reactor"
+  ]
+}

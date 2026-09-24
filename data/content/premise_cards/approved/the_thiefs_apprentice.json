@@ -1,0 +1,267 @@
+{
+  "id": "premise.the_thiefs_apprentice",
+  "schema_version": 1,
+  "title": "The Thief's Apprentice",
+  "logline": "A street thief accidentally steals highly sensitive extortion material and tries to sell it, putting everyone in danger.",
+  "scale": "personal",
+  "tone": [
+    "hopeful"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "young_thief",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Overconfident, in way over their head, scared.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "jaded_reporter",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Cynical but possesses a buried moral compass.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "blackmailer_ship",
+      "kind": "ship",
+      "description": "A stealthy vessel belonging to a professional extortionist.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "media_station",
+      "kind": "place",
+      "description": "A bustling hub of independent journalists.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed"
+  ],
+  "public_situation": "A notorious blackmailer's secure data courier has been mugged in the docking bays.",
+  "private_truth": "The thief didn't know what they were stealing, and now they are trying to ransom it back to the extortionist.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The blackmailer puts out a quiet but massive reward for the thief.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "young_thief",
+          "target": "media_station",
+          "reason": "Needs the data drive picked up from a dead drop and delivered to the reporter for appraisal.",
+          "private_fact": "The thief is currently hiding in a ventilation shaft and cannot move.",
+          "outcome_tags": [
+            "drive_picked_up",
+            "drive_abandoned"
+          ],
+          "routes": {
+            "drive_picked_up": "beat:2",
+            "drive_abandoned": "resolution:thief_caught"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The reporter realizes what the data is and panics.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "jaded_reporter",
+          "target": "media_station",
+          "reason": "Needs a secure comms buoy deployed to safely broadcast the extortion material before they are killed.",
+          "private_fact": "The reporter is sacrificing their career by breaking an embargo to do this.",
+          "outcome_tags": [
+            "buoy_deployed",
+            "buoy_abandoned"
+          ],
+          "routes": {
+            "buoy_deployed": "beat:3",
+            "buoy_abandoned": "resolution:thief_caught"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The blackmailer tracks the signal to the media station.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "jaded_reporter",
+          "target": "blackmailer_ship",
+          "reason": "Needs the pilot to intercept the blackmailer's ship and recover their master decryption key.",
+          "private_fact": "The key will not only unlock this data, but expose the blackmailer's entire network.",
+          "outcome_tags": [
+            "key_recovered",
+            "key_lost"
+          ],
+          "routes": {
+            "key_recovered": "resolution:blackmailer_ruined",
+            "key_lost": "resolution:thief_caught"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the decryption key and must decide its fate.",
+        "options": [
+          {
+            "id": "give_reporter",
+            "label": "Give the key to the reporter to publish",
+            "leads_to": "resolution:blackmailer_ruined"
+          },
+          {
+            "id": "sell_back",
+            "label": "Sell the key back to the blackmailer",
+            "leads_to": "resolution:thief_caught"
+          },
+          {
+            "id": "negotiate_payout",
+            "label": "Help the thief negotiate a payout",
+            "leads_to": "resolution:blackmailer_pays"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "blackmailer_ruined",
+      "reached_by": "The pilot gives the key to the reporter.",
+      "summary": "The extortion network is exposed. The blackmailer is ruined, and the thief gets a clean slate.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "young_thief",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jaded_reporter",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "thief_caught",
+      "reached_by": "The pilot abandons the mission or sells the key.",
+      "summary": "The blackmailer recovers the data. The young thief disappears without a trace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "young_thief",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jaded_reporter",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "blackmailer_pays",
+      "reached_by": "A rare alternative outcome.",
+      "summary": "The thief somehow negotiates a massive payout and vanishes, leaving the reporter empty-handed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "young_thief",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jaded_reporter",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "thief_caught",
+  "loose_threads": [
+    {
+      "id": "t_extortion_target",
+      "surface": "scan",
+      "detail": "The primary target of the extortion was a highly decorated local judge.",
+      "can_carry_methods": [
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_reporter_source",
+      "surface": "radio",
+      "detail": "The reporter's encrypted tip-line is receiving automated pings from a supposed dead sector.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Local news outlet promises 'explosive' revelations.",
+    "Station security searches for suspected pickpocket."
+  ],
+  "voice_direction": {
+    "young_thief": "High-pitched, trying to sound tough, voice cracking.",
+    "jaded_reporter": "Gravelly, talks around the cigar in their mouth, world-weary."
+  },
+  "novelty_tags": [
+    "accidental_theft",
+    "extortion_ring",
+    "investigative_journalism"
+  ]
+}

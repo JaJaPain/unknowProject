@@ -1,0 +1,254 @@
+{
+  "id": "premise.the_forgotten_oath",
+  "schema_version": 1,
+  "title": "The Forgotten Oath",
+  "logline": "A veteran uncovers a long-buried military charter proving that their squad's descendants rightfully own the sector's main trade hub.",
+  "scale": "personal",
+  "tone": [
+    "political",
+    "hopeful"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "grizzled_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Old, tired, but fiercely loyal to their fallen comrades.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hub_manager",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Wealthy, elitist, terrified of losing their cushy position.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "trade_hub",
+      "kind": "place",
+      "description": "A bustling, incredibly wealthy commercial station.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mercenary_guard",
+      "kind": "ship",
+      "description": "High-end corporate security hired to quietly fix problems.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "veterans_descendants",
+      "kind": "faction",
+      "description": "The marginalized descendants of the original founders.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "law_loosened"
+  ],
+  "public_situation": "The {role:hub_manager} is preparing to celebrate the station's decennial founding by a corporate conglomerate.",
+  "private_truth": "The station was actually built by a regiment of war veterans who were unlawfully evicted, and the charter proving it is hidden in the foundation.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The veteran publicly claims ownership of the hub and is mocked by local media.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "grizzled_veteran",
+          "target": "trade_hub",
+          "reason": "The veteran hires the pilot to run a deep-penetrating scan on the hub's oldest structural pillar.",
+          "private_fact": "The scan reveals a hidden vault containing the original founding charter.",
+          "outcome_tags": [
+            "charter_found"
+          ],
+          "routes": {
+            "charter_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "Corporate security breaks into the vault and steals the charter before the veteran can claim it.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "grizzled_veteran",
+          "target": "mercenary_guard",
+          "reason": "The veteran needs the pilot to intercept the mercenary ship carrying the charter and blow it out of their hold.",
+          "private_fact": "The mercenaries have orders to destroy the document if cornered.",
+          "outcome_tags": [
+            "charter_recovered"
+          ],
+          "routes": {
+            "charter_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The pilot holds the charter, and the manager panics.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "grizzled_veteran",
+          "target": "mercenary_guard",
+          "reason": "The veteran asks the pilot to destroy the final mercenary guard ship blockading the broadcast array so they can publish the charter.",
+          "private_fact": "The mercenary captain hails the pilot mid-fight, relaying the hub manager's offer: a permanent luxury suite and a massive payout to burn the charter instead.",
+          "outcome_tags": [
+            "blockade_broken",
+            "took_the_offer"
+          ],
+          "routes": {
+            "blockade_broken": "resolution:veterans_honored",
+            "took_the_offer": "resolution:truth_buried"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "veterans_honored",
+      "reached_by": "The pilot destroys the blockade and broadcasts the charter.",
+      "summary": "The sector courts uphold the charter. The hub manager is evicted, and the station's profits are redirected to the impoverished descendants of the veterans.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "grizzled_veteran",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hub_manager",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "repealed"
+        },
+        {
+          "type": "deed",
+          "tag": "restored_the_veterans_hub",
+          "public_summary": "A pilot proved the biggest trade hub in the sector was stolen from war heroes, and gave it back."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "truth_buried",
+      "reached_by": "The pilot takes the manager's offer.",
+      "summary": "The charter burns. The anniversary celebration goes off without a hitch, while the veteran dies penniless and bitter.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hub_manager",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "grizzled_veteran",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "charter_lost",
+      "reached_by": "The pilot ignores the missions.",
+      "summary": "The mercenaries successfully destroy the charter. The truth is lost to history.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "grizzled_veteran",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_descendants",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "charter_lost",
+  "loose_threads": [
+    {
+      "id": "t_mercenary_paymaster",
+      "surface": "scan",
+      "detail": "The mercenary guards weren't paid by the hub manager; their contracts trace back to an off-world terraforming consortium.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_altered_foundation",
+      "surface": "wreck",
+      "detail": "The structural pillar hiding the vault was deliberately shielded against deep-scans using tech that didn't exist a decade ago.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "{role:trade_hub} prepares for massive centennial celebration.",
+    "Local eccentric {role:grizzled_veteran} arrested for trespassing on station property."
+  ],
+  "voice_direction": {
+    "grizzled_veteran": "Deep, rumbling, speaks with absolute, unshakeable certainty.",
+    "hub_manager": "High-pitched, nervous, over-explains every decision."
+  },
+  "novelty_tags": [
+    "stolen_station",
+    "hidden_charter",
+    "veterans_rights",
+    "centennial_celebration"
+  ]
+}

@@ -1,0 +1,289 @@
+{
+  "id": "premise.dead_gate_patrol",
+  "schema_version": 1,
+  "title": "The Last Patrol",
+  "logline": "An aging veteran refuses to stop patrolling a defunct jump gate scheduled for demolition, hiding the fact that their ancient ship is keeping a dormant minefield from waking up.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "obsessive_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Flies a falling-apart patrol ship, refusing to leave their post long after the war ended.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_boss",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Bought the rights to the sector's scrap, tired of losing money to a crazy old pilot.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dead_gate",
+      "kind": "place",
+      "description": "An inactive jump gate scheduled for demolition.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "veterans_ship",
+      "kind": "ship",
+      "description": "A heavily modified, obsolete fighter held together by duct tape and stubbornness.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_crew",
+      "kind": "faction",
+      "description": "Workers trying to dismantle the gate for its valuable metals.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "route_closed",
+    "power_vacuum"
+  ],
+  "public_situation": "The {role:salvage_crew} wants to dismantle the {role:dead_gate} for its valuable metals, but {role:obsessive_veteran} keeps chasing their crews away, claiming the forgotten conflict isn't over.",
+  "private_truth": "The veteran's ship is continuously broadcasting a containment code to a forgotten autonomous minefield on the other side of the gate. If the ship leaves or the gate is powered down, the mines will reactivate.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The salvage company puts a public bounty on the old patrol ship to get it out of their way.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "salvage_boss",
+          "target": "veterans_ship",
+          "reason": "The boss needs an armed freelancer to disable the old fighter because their own ships are unarmored salvage tugs.",
+          "private_fact": "The veteran will offer all their back-pay if the pilot aborts the attack, warning them that the gate isn't safe to touch.",
+          "outcome_tags": [
+            "took_the_offer",
+            "veteran_destroyed"
+          ],
+          "routes": {
+            "took_the_offer": "next",
+            "veteran_destroyed": "resolution:mines_unleashed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The salvage crew begins setting demolition charges on the gate.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "obsessive_veteran",
+          "target": "dead_gate",
+          "reason": "The veteran's own sensors are shot, and they need a third-party scan to make the salvage crew listen.",
+          "private_fact": "The scan proves the veteran is telling the truth, but also shows the veteran's transmitter is failing and won't last another week.",
+          "outcome_tags": [
+            "certify_danger",
+            "report_safe"
+          ],
+          "routes": {
+            "certify_danger": "next",
+            "report_safe": "resolution:mines_unleashed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has proof of the dormant mines. The veteran's ship is failing and won't hold them back much longer.",
+        "options": [
+          {
+            "id": "halt_demolition",
+            "label": "Give the data to the salvage boss to halt the demolition",
+            "leads_to": "resolution:stalemate"
+          },
+          {
+            "id": "destroy_gate",
+            "label": "Help the veteran detonate the gate permanently",
+            "leads_to": "beat:3"
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The veteran begins arming their ship's reactor to destroy the gate.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "obsessive_veteran",
+          "target": "salvage_crew",
+          "reason": "The veteran needs someone to hold off the salvage ships while they rig the reactor to overload, since they can't fight and prep the detonation at the same time.",
+          "private_fact": "The veteran intends to die in the blast, seeing it as their final order.",
+          "outcome_tags": [
+            "crew_repelled",
+            "abandoned"
+          ],
+          "routes": {
+            "crew_repelled": "resolution:gate_destroyed",
+            "abandoned": "resolution:mines_unleashed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mines_unleashed",
+      "reached_by": "The pilot destroys the veteran's ship, reports the gate is safe, or abandons the defense.",
+      "summary": "The salvage crew cuts power to the gate, breaking the containment signal. Autonomous mines flood through the gate, wiping out the salvage operation before the navy can respond.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_crew",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "obsessive_veteran",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "route_closed",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "stalemate",
+      "reached_by": "The pilot gives the scan data to the salvage boss.",
+      "summary": "The salvage operation is suspended pending a navy review. The veteran remains on patrol, but their ship's transmitter is still dying.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_crew",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "obsessive_veteran",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "gate_destroyed",
+      "reached_by": "The pilot holds off the salvage crew while the veteran destroys the gate.",
+      "summary": "The gate is vaporised, sealing the minefield away forever. The veteran is killed in the blast, and the salvage company demands compensation for the lost scrap.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "obsessive_veteran",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "salvage_crew",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "sealed_the_dead_gate",
+          "public_summary": "Some old pilot blew up the dead gate to stop ghost-mines from coming through, and a merc covered their six."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "mines_unleashed",
+  "loose_threads": [
+    {
+      "id": "t_salvage_buyer",
+      "surface": "radio",
+      "detail": "The salvage company already pre-sold the gate's unique alloy plating to an anonymous buyer before the demolition was even approved.",
+      "can_carry_methods": [
+        "bribery",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_transmitter_origin",
+      "surface": "scan",
+      "detail": "The containment transmitter on the veteran's ship uses navy crypto keys that were updated just three months ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Salvage operations at {role:dead_gate} delayed again by 'rogue patrol'.",
+    "Local historian claims forgotten conflict automated defenses may still be active."
+  ],
+  "voice_direction": {
+    "obsessive_veteran": "Gravelly, exhausted, speaks in old military jargon. Refuses to show weakness.",
+    "salvage_boss": "Impatient, corporate, treats every problem like a line item on a budget."
+  },
+  "novelty_tags": [
+    "dead_gate",
+    "unexploded_ordnance",
+    "obsolete_fighter",
+    "salvage_dispute"
+  ]
+}

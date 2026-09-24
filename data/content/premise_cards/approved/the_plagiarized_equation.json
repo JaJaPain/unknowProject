@@ -1,0 +1,272 @@
+{
+  "id": "premise.the_plagiarized_equation",
+  "schema_version": 1,
+  "title": "The Stolen Thesis",
+  "logline": "A researcher's life work on hyper-navigation has been stolen by their mentor, and they need proof to reclaim it.",
+  "scale": "personal",
+  "tone": [
+    "bleak",
+    "paranoid"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "young_researcher",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Brilliant but naive, desperate to save their career.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "old_mentor",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Arrogant, resting on past laurels, refuses to lose relevance.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "research_station",
+      "kind": "place",
+      "description": "An isolated outpost dedicated to theoretical physics.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "university_board",
+      "kind": "faction",
+      "description": "The academic governing body, obsessed with prestige.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "black_hole_proximity"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A renowned scientist is about to publish a groundbreaking paper on navigation.",
+  "private_truth": "The scientist stole the data from their protégé, altering the logs to make it look like their own work.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The researcher gets locked out of the station network.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "young_researcher",
+          "target": "research_station",
+          "reason": "Needs a physical bypass key delivered to their private terminal.",
+          "private_fact": "The bypass key is highly illegal and could get them arrested.",
+          "outcome_tags": [
+            "key_delivered",
+            "key_abandoned"
+          ],
+          "routes": {
+            "key_delivered": "beat:2",
+            "key_abandoned": "resolution:thesis_published"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The mentor accelerates the publication schedule.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "young_researcher",
+          "target": "research_station",
+          "reason": "Needs someone to scan the primary data core and match the timestamps to the stolen work.",
+          "private_fact": "The core is rigged to alert the mentor if scanned by unauthorized personnel.",
+          "outcome_tags": [
+            "evidence_found",
+            "scan_failed"
+          ],
+          "routes": {
+            "evidence_found": "beat:3",
+            "scan_failed": "resolution:thesis_published"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The board convenes to review the data.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "old_mentor",
+          "target": "research_station",
+          "reason": "The mentor hires the pilot to deliver forged calibration data to override the scan.",
+          "private_fact": "The forged data will permanently erase the young researcher's original logs.",
+          "outcome_tags": [
+            "forgery_delivered",
+            "forgery_abandoned"
+          ],
+          "routes": {
+            "forgery_delivered": "next",
+            "forgery_abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot must choose who to support.",
+        "options": [
+          {
+            "id": "support_mentor",
+            "label": "Support the mentor",
+            "leads_to": "resolution:thesis_published"
+          },
+          {
+            "id": "support_young",
+            "label": "Support the researcher",
+            "leads_to": "resolution:mentor_exposed"
+          },
+          {
+            "id": "report_both",
+            "label": "Report the whole mess to the board",
+            "leads_to": "resolution:thesis_compromised"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "thesis_published",
+      "reached_by": "The mentor gets the forged data or the pilot fails.",
+      "summary": "The mentor publishes the paper. The young researcher is discredited and expelled.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "young_researcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "university_board",
+          "delta": 1
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "mentor_exposed",
+      "reached_by": "The pilot finds the evidence and refuses to help the mentor.",
+      "summary": "The forgery is exposed. The mentor is disgraced, and the young researcher gets the credit.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_mentor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "young_researcher",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "university_board",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "thesis_compromised",
+      "reached_by": "The board intervenes halfway.",
+      "summary": "The board silences both of them to protect the university's reputation, taking the work for themselves.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_mentor",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "young_researcher",
+          "fate": "disappeared"
+        },
+        {
+          "type": "standing",
+          "target": "university_board",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "thesis_published",
+  "loose_threads": [
+    {
+      "id": "t_board_bribes",
+      "surface": "scan",
+      "detail": "The university board received anonymous donations just before approving the fast-track publication.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_missing_logs",
+      "surface": "dialogue",
+      "detail": "Three months of early navigation logs are completely missing, not just altered.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "information_control"
+    ],
+    "motives": [
+      "protecting_someone",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Academic scandal brewing over upcoming hyper-navigation paper.",
+    "University denies allegations of data theft."
+  ],
+  "voice_direction": {
+    "young_researcher": "Stressed, speaks quickly, constantly second-guessing themselves.",
+    "old_mentor": "Smooth, practiced, projects absolute unearned confidence."
+  },
+  "novelty_tags": [
+    "academic_theft",
+    "data_forgery",
+    "mentor_betrayal"
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "id": "premise.worthless_scrip",
+  "schema_version": 1,
+  "title": "Company Store",
+  "logline": "A retired miner's pension is paid entirely in company scrip that only works at a store that just declared bankruptcy.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "survival"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "retired_miner",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Gave their lungs and best years to the company; just wants to afford their medication.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "company_store_clerk",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Trapped managing a bankrupt store; feels intensely guilty about the voided pensions.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_liquidator",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Sent to strip the company store of all remaining valuable assets.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "regional_office",
+      "kind": "place",
+      "description": "A polished, utterly soulless administrative branch of the mining corp.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "miner_habitat",
+      "kind": "place",
+      "description": "A decaying residential cylinder where the retired workforce is left to rot.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bankrupt_store",
+      "kind": "place",
+      "description": "Once the center of commerce, now locked behind heavy corporate seals.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mining_corp",
+      "kind": "faction",
+      "description": "A massive conglomerate that views its workers as disposable machinery.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "faction_weakened",
+    "market_disrupted"
+  ],
+  "public_situation": "The local branch of the {role:mining_corp} has filed for bankruptcy, voiding millions in employee pensions paid in company scrip.",
+  "private_truth": "The bankruptcy is a restructuring trick. The corporation is intentionally voiding the scrip to clear their balance sheet before a massive merger.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The company store officially locks its doors, posting a notice that all scrip is now invalid.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_miner",
+          "target": "regional_office",
+          "reason": "Needs a pilot to deliver their physical lockbox of lifetime scrip directly to a corporate regional office to plead for a cash buyout.",
+          "private_fact": "The miner only has a few weeks of lung medication left, and the scrip was supposed to pay for the refill.",
+          "outcome_tags": [
+            "delivered"
+          ],
+          "routes": {
+            "delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Corporate HQ publicly denies all buyout requests, citing bankruptcy laws.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "company_store_clerk",
+          "target": "miner_habitat",
+          "reason": "The clerk quietly tells the pilot the scrip is entirely void, and begs them to use their own credits to buy black-market medicine and deliver it to the miner's habitat.",
+          "private_fact": "The clerk is risking prison by leaking the location of the uninventoried corporate medicine stash.",
+          "outcome_tags": [
+            "meds_purchased"
+          ],
+          "routes": {
+            "meds_purchased": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The liquidators notice the missing medicine inventory and begin audits.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "corporate_liquidator",
+          "target": "bankrupt_store",
+          "reason": "Hires the pilot to scan the store's cargo transponder logs from outside to prove the clerk embezzled the medicine.",
+          "private_fact": "If the liquidator can't find the medicine, they intend to charge the clerk with corporate treason.",
+          "outcome_tags": [
+            "turn_in_clerk",
+            "cover_for_clerk",
+            "blackmail_liquidator"
+          ],
+          "routes": {
+            "turn_in_clerk": "resolution:corp_reclaims",
+            "cover_for_clerk": "resolution:miner_survives",
+            "blackmail_liquidator": "resolution:sold_on_black_market"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "miner_survives",
+      "reached_by": "The pilot covers for the clerk.",
+      "summary": "The retired miner gets enough medicine to live comfortably for years. The liquidator writes the loss off as a clerical error.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_corp",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_miner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "company_store_clerk",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "covered_the_store_clerk",
+          "public_summary": "Someone bought a crate of meds out of pocket to save an old miner and scrubbed the ledger to protect the clerk."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "corp_reclaims",
+      "reached_by": "The pilot turns in the clerk's logs to the liquidator.",
+      "summary": "The corporation arrests the clerk and repossesses the medicine. The retired miner is left bankrupt and ruined.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_corp",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_miner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "company_store_clerk",
+          "fate": "imprisoned"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "sold_on_black_market",
+      "reached_by": "The pilot blackmails the liquidator using the logs.",
+      "summary": "The pilot profits off the corrupt liquidator. The corporation writes off the loss, and the miner barely survives on scraps.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_corp",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_miner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_liquidator",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "corp_reclaims",
+  "loose_threads": [
+    {
+      "id": "t_merger_documents",
+      "surface": "cargo",
+      "detail": "A shipping manifest stuck to the medicine crate lists an acquiring corporation's name, dated three months before the bankruptcy filing.",
+      "can_carry_methods": [
+        "forged_records",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_voided_scrip_serial",
+      "surface": "scan",
+      "detail": "All the voided scrip carries a sequential serial block that was officially marked 'destroyed in transit' ten years ago.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:mining_corp} announces record quarterly profits despite local branch bankruptcy.",
+    "Health officials warn of critical medication shortages following company store closures."
+  ],
+  "voice_direction": {
+    "retired_miner": "Slow, halting rhythm. Pauses frequently. Uses very short words.",
+    "company_store_clerk": "Frantic, fast pace. Constantly interrupts themselves with apologies.",
+    "corporate_liquidator": "Bored, cold pitch. Pronounces every syllable perfectly."
+  },
+  "novelty_tags": [
+    "company_scrip",
+    "voided_pension",
+    "medical_theft",
+    "corporate_bankruptcy"
+  ]
+}

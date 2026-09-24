@@ -1,0 +1,261 @@
+{
+  "id": "premise.the_derelict_colony",
+  "schema_version": 1,
+  "title": "The Derelict Colony",
+  "logline": "A stubborn elder refuses to evacuate their failing station, hiring a pilot to fight off a scrapper guild trying to dismantle it around them.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "survival"
+  ],
+  "themes": [
+    "legacy",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "stubborn_elder",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Old, fiercely proud, surrounded by memories.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ruthless_scrapper",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Practical, completely unsentimental, views the station as just metal.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "abandoned_station",
+      "kind": "place",
+      "description": "A rusted, failing habitat in a lifeless system.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scrapper_tug",
+      "kind": "ship",
+      "description": "A heavy industrial ship fitted with plasma cutters.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scrapper_guild",
+      "kind": "faction",
+      "description": "A tough union of deep-space salvagers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "wreck_left_behind"
+  ],
+  "public_situation": "The {role:abandoned_station} has been officially declared dead by the local government, and salvage rights have been sold to the {role:scrapper_guild}.",
+  "private_truth": "The elder is still living inside, desperately trying to keep the core active so the station's historical archives aren't lost forever.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The scrapper guild arrives and begins cutting into the station's outer ring.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "stubborn_elder",
+          "target": "abandoned_station",
+          "reason": "The elder asks the pilot to mine and deliver ferrite to patch the hull breaches caused by the scrappers.",
+          "private_fact": "The elder's life support is failing, and they are rationing oxygen just to talk.",
+          "outcome_tags": [
+            "hull_patched"
+          ],
+          "routes": {
+            "hull_patched": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The scrapper guild issues a final warning for any squatters to vacate.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "ruthless_scrapper",
+          "target": "abandoned_station",
+          "reason": "The scrapper hires the pilot to run a deep scan of the station to prove there are no life signs.",
+          "private_fact": "The scan clearly shows the elder is alive, but the scrapper asks the pilot to falsify the report.",
+          "outcome_tags": [
+            "station_scanned"
+          ],
+          "routes": {
+            "station_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The scrappers begin cutting into the main archive core.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "stubborn_elder",
+          "target": "scrapper_tug",
+          "reason": "The elder pays the pilot to destroy the scrapper tug and recover its master cutting keys to stop the demolition.",
+          "private_fact": "The scrapper hails the pilot, offering to split the salvage bounty if they help finish tearing the station apart.",
+          "outcome_tags": [
+            "keys_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "keys_recovered": "resolution:station_saved",
+            "abandoned": "resolution:station_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "station_saved",
+      "reached_by": "The pilot destroys the scrapper tug.",
+      "summary": "The scrappers retreat. The elder secures the station and its archives, though they remain completely alone in the dead system.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_elder",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_scrapper",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_guild",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_elder",
+          "public_summary": "A pilot fought off a salvage crew to protect a stubborn old hermit."
+        }
+      ],
+      "seeds": [
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "station_scrapped",
+      "reached_by": "The pilot takes the scrapper's offer.",
+      "summary": "The station is torn apart. The archives are destroyed, and the elder is forcefully evacuated. The pilot is paid well.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_elder",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_scrapper",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "elder_dies",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The scrappers accidentally cut into a pressurized section, blowing the elder out into space. The salvage is completed quietly.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_elder",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "elder_dies",
+  "loose_threads": [
+    {
+      "id": "t_archive_secret",
+      "surface": "scan",
+      "detail": "The elder wasn't just protecting history; the archives contain the coordinates of a lost first-wave colonist cache.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_scrapper_bribe",
+      "surface": "dialogue",
+      "detail": "The scrappers were specifically paid by the local government to destroy the archives before they could be read.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Salvage operations begin at {role:abandoned_station}.",
+    "{role:scrapper_guild} reports minor delays due to \"technical issues\"."
+  ],
+  "voice_direction": {
+    "stubborn_elder": "Quiet, dignified, refuses to show weakness.",
+    "ruthless_scrapper": "Loud, cheerful, treats everything like a joke."
+  },
+  "novelty_tags": [
+    "station_salvage",
+    "stubborn_hermit",
+    "dead_system"
+  ]
+}

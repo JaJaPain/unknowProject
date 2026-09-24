@@ -1,0 +1,304 @@
+{
+  "id": "premise.inherited_obligations",
+  "schema_version": 1,
+  "title": "The Sins of the Father",
+  "logline": "A young heir inherits their family's estate, only to discover it comes with a massive, unpayable debt to a local crime syndicate that immediately comes to collect.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "legacy",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "heir_apparent",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Sheltered, terrified, suddenly responsible for debts they didn't incur.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "loyal_retainer",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Served the family for decades; knows where all the bodies are buried.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "family_creditor",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Polite, terrifying, views the young heir as an easy mark to seize the estate.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "creditor_enforcers",
+      "kind": "ship",
+      "description": "A pack of heavily armed syndicate debt collectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "family_estate",
+      "kind": "place",
+      "description": "A decaying, opulent orbital manor that costs a fortune to maintain.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "noble_house",
+      "kind": "faction",
+      "description": "The remnants of a once-powerful aristocratic family.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "crime_syndicate",
+      "kind": "faction",
+      "description": "The shadow economy that actually runs the local sector.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "new_leader_untested"
+  ],
+  "public_situation": "The patriarch of a local {role:noble_house} has died, and the young heir is struggling to keep the family estate operational.",
+  "private_truth": "The patriarch funded his lavish lifestyle by borrowing heavily from the {role:crime_syndicate}. The debt is due, and the collateral is the estate itself.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Syndicate ships begin openly blockading the family estate.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "heir_apparent",
+          "target": "creditor_enforcers",
+          "reason": "Needs a hired gun to break the blockade and recover a seized transport carrying the family's only liquid assets.",
+          "private_fact": "The heir has no idea how deep the debt goes, assuming this is a simple shakedown.",
+          "outcome_tags": [
+            "assets_recovered"
+          ],
+          "routes": {
+            "assets_recovered": "next"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "loyal_retainer",
+          "target": "family_estate",
+          "reason": "Frantically hires the pilot to mine and deliver raw cuprite so the estate can process it into tradeable ingots to pay the interest for just one more month.",
+          "private_fact": "The retainer knows the estate is doomed but is trying to buy enough time to smuggle the heir out of the system.",
+          "outcome_tags": [
+            "interest_paid"
+          ],
+          "routes": {
+            "interest_paid": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The syndicate boss arrives personally to claim the estate.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "heir_apparent",
+          "target": "creditor_enforcers",
+          "reason": "The heir orders the pilot to destroy the boss's escort ship to force them to back down.",
+          "private_fact": "The heir plans to self-destruct the estate rather than surrender it if this fails.",
+          "outcome_tags": [
+            "escort_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "escort_destroyed": "next",
+            "took_the_offer": "resolution:estate_seized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The blockade breaks, but the syndicate lawyers present the final claim.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "loyal_retainer",
+          "target": "family_estate",
+          "reason": "Begs the pilot to scan the patriarch's private physical archives for the original loan documents to find a legal loophole.",
+          "private_fact": "The scans reveal the original loan was signed by the retainer, not the patriarch. The retainer is legally liable for the debt, not the heir.",
+          "outcome_tags": [
+            "use_loophole",
+            "destroy_proof",
+            "blackmail_syndicate"
+          ],
+          "routes": {
+            "use_loophole": "resolution:retainer_sacrificed",
+            "destroy_proof": "resolution:estate_seized",
+            "blackmail_syndicate": "resolution:syndicate_blackmail"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "retainer_sacrificed",
+      "reached_by": "The pilot gives the proof to the heir.",
+      "summary": "The heir legally shifts the debt to the loyal retainer. The syndicate forces the retainer into an indentured labour contract, and the heir keeps the estate.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "crime_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_retainer",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "betrayed_the_retainer",
+          "public_summary": "The young noble threw their oldest servant to the wolves to keep their fancy house."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "estate_seized",
+      "reached_by": "The pilot destroys the proof or takes the syndicate offer.",
+      "summary": "Without the loophole, the syndicate seizes the estate. The heir flees into poverty, and the noble house is destroyed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "crime_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "noble_house",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "heir_apparent",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "syndicate_blackmail",
+      "reached_by": "The pilot sells the documents to the syndicate.",
+      "summary": "The syndicate quietly buries the loophole and takes the estate, but pays the pilot handsomely. The retainer flees into exile.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "crime_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyal_retainer",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "heir_apparent",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "estate_seized",
+  "loose_threads": [
+    {
+      "id": "t_patriarch_autopsy",
+      "surface": "scan",
+      "detail": "The patriarch's medical records show he died of a rare synthetic poison, not natural heart failure.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_syndicate_ledger",
+      "surface": "dialogue",
+      "detail": "A syndicate enforcer mentions the family creditor knew the patriarch was dead three days before it was publicly announced.",
+      "can_carry_methods": [
+        "information_control",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "blackmail"
+    ],
+    "motives": [
+      "control",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Creditors surround {role:family_estate} following patriarch's sudden passing.",
+    "{role:noble_house} denies rumors of insolvency, claims 'minor liquidity dispute'."
+  ],
+  "voice_direction": {
+    "heir_apparent": "Trembling pitch, overcompensating with volume. Clearly out of their depth.",
+    "loyal_retainer": "Stoic, tired rhythm. Drops titles and speaks plainly.",
+    "family_creditor": "Warm, avuncular rhythm. Uses folksy idioms to disguise threats."
+  },
+  "novelty_tags": [
+    "inherited_debt",
+    "ruined_nobility",
+    "loyal_servant",
+    "legal_loophole"
+  ]
+}

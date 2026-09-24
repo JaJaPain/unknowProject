@@ -1,0 +1,277 @@
+{
+  "id": "premise.the_phantom_fleet",
+  "schema_version": 1,
+  "title": "The Phantom Fleet",
+  "logline": "A desperate mayor hires a pilot to maintain a network of hologram buoys projecting a fake defense fleet to scare off pirates.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "heist"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "desperate_mayor",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Sweating profusely, constantly wiping their brow, wearing a cheap suit.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pirate_scout",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Suspicious, scarred, flying a patched-together interceptor.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "frontier_colony",
+      "kind": "place",
+      "description": "A small, vulnerable mining settlement on an asteroid.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "hologram_buoy",
+      "kind": "ship",
+      "description": "A fragile, automated projector disguised as a heavy cruiser.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "raider_coalition",
+      "kind": "faction",
+      "description": "A brutal gang of pirates that prey on defenseless colonies.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "gravity_tides"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "route_closed"
+  ],
+  "public_situation": "The {role:frontier_colony} is miraculously protected by a massive, silent fleet of heavy cruisers that never move.",
+  "private_truth": "The colony is completely defenseless. The \"fleet\" is just a network of cheap hologram buoys, and they are starting to malfunction.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "One of the heavy cruiser holograms starts flickering violently.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_mayor",
+          "target": "frontier_colony",
+          "reason": "The mayor begs the pilot to buy and quietly deliver replacement projection lenses to fix the flickering buoy.",
+          "private_fact": "The pilot realizes the colony is completely unarmed.",
+          "outcome_tags": [
+            "lenses_delivered"
+          ],
+          "routes": {
+            "lenses_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "A pirate scout jumps into the system to investigate the flickering fleet.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "pirate_scout",
+          "target": "frontier_colony",
+          "reason": "The scout hires the pilot to run a deep thermal scan of the heavy cruisers to see if they are active.",
+          "private_fact": "The pilot must fake the scan results to hide the fact that the heavy cruisers produce zero heat.",
+          "outcome_tags": [
+            "scan_faked"
+          ],
+          "routes": {
+            "scan_faked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The pirate scout figures out the truth and prepares to broadcast it to the raider coalition.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "desperate_mayor",
+          "target": "hologram_buoy",
+          "reason": "The mayor pays the pilot everything the colony has to destroy the pirate scout before it can transmit.",
+          "private_fact": "The scout hails the pilot, offering them a massive cut of the colony's plunder if they let the transmission through.",
+          "outcome_tags": [
+            "scout_destroyed"
+          ],
+          "routes": {
+            "scout_destroyed": "resolution:mayor_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The scout is crippled but hasn't broadcast yet. They offer a share of the plunder to let them finish.",
+        "options": [
+          {
+            "id": "destroy_scout",
+            "label": "Destroy the scout and save the colony",
+            "leads_to": "resolution:mayor_wins"
+          },
+          {
+            "id": "let_broadcast",
+            "label": "Take the deal and doom the colony",
+            "leads_to": "resolution:scout_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mayor_wins",
+      "reached_by": "The pilot destroys the scout.",
+      "summary": "The scout is destroyed. The secret holds, the pirates stay away, and the colony survives another day. The pilot is a quiet hero.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_mayor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pirate_scout",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "raider_coalition",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_colony",
+          "public_summary": "A pilot protected a defenseless colony by maintaining their fake hologram defense fleet."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "scout_wins",
+      "reached_by": "The pilot takes the deal.",
+      "summary": "The scout transmits. The raider coalition arrives in force, slaughters the colonists, and plunders the town. The pilot gets a bloody payout.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_mayor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pirate_scout",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "raider_coalition",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "colony_destroyed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The scout transmits the truth. The pirates swarm the colony, destroying it utterly. The mayor is killed, and the phantom fleet fades away.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_mayor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pirate_scout",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "raider_coalition",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "colony_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_hologram_tech",
+      "surface": "scan",
+      "detail": "The hologram technology is highly classified theatre gear; the mayor must have stolen it from a navy depot.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_scout_bribe",
+      "surface": "dialogue",
+      "detail": "The scout reveals the local corporate security patrol actually pays the pirates to attack unprotected colonies.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:frontier_colony} reports zero pirate attacks for the third straight month.",
+    "Rumors of a massive stealth fleet protecting the frontier."
+  ],
+  "voice_direction": {
+    "desperate_mayor": "Nervous, high-pitched, tries to sound confident.",
+    "pirate_scout": "Gruff, cynical, spits frequently."
+  },
+  "novelty_tags": [
+    "hologram_fleet",
+    "fake_defense",
+    "desperate_mayor"
+  ]
+}

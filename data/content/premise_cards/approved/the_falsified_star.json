@@ -1,0 +1,349 @@
+{
+  "id": "premise.the_falsified_star",
+  "schema_version": 1,
+  "title": "The Missing Sector",
+  "logline": "An eccentric scientist discovers that historical star charts have been deliberately shifted to hide a masked sector, but a nervous inspector is desperately trying to erase their findings before the truth causes widespread panic.",
+  "scale": "regional",
+  "tone": [
+    "noir",
+    "paranoid"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "obsessive_scientist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Brilliant but entirely lacking in social grace, obsessed with orbital mechanics.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "nervous_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Tasked with maintaining the official registry, terrified of what the missing data implies.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "research_institute",
+      "kind": "faction",
+      "description": "The bureaucratic body that officially certifies all celestial discoveries.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "masked_sector",
+      "kind": "place",
+      "description": "A dark, sensor-baffled region of the local debris field.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "patrol_cruiser",
+      "kind": "ship",
+      "description": "A heavy, unmarked corporate suppression vessel.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "institute_archives",
+      "kind": "place",
+      "description": "A massive data vault holding centuries of unaltered astronomical records.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scientist_lab",
+      "kind": "place",
+      "description": "A cluttered orbital observatory filled with physical star charts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "suppression_drone",
+      "kind": "ship",
+      "description": "Automated guard ship.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:research_institute} has publicly disavowed the work of the {role:obsessive_scientist}, claiming their recent celestial measurements are the result of faulty equipment.",
+  "private_truth": "The scientist is right: a massive chunk of local space was scrubbed from the databases fifty years ago, and the inspector has been ordered to ensure it stays that way.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The scientist is locked out of their own lab and broadcasts a desperate plea for help.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "obsessive_scientist",
+          "target": "scientist_lab",
+          "reason": "The scientist needs the pilot to break the quarantine seal on their lab and extract their primary hard drive.",
+          "private_fact": "The drive contains the only uncorrupted copy of the true star charts.",
+          "outcome_tags": [
+            "drive_recovered"
+          ],
+          "routes": {
+            "drive_recovered": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "nervous_inspector",
+          "target": "scientist_lab",
+          "reason": "The inspector hires the pilot to scan the lab's exterior for unauthorized data transmissions.",
+          "private_fact": "The inspector is just trying to pinpoint the scientist's physical location.",
+          "outcome_tags": [
+            "scan_clean"
+          ],
+          "routes": {
+            "scan_clean": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The inspector issues a system-wide warrant for the scientist's arrest on charges of data terrorism.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "obsessive_scientist",
+          "target": "institute_archives",
+          "reason": "The pilot must travel to the neighbouring system and manually deliver the hard drive into the archive's deep storage to preserve it.",
+          "private_fact": "The scientist knows the inspector cannot legally wipe the deep storage without a tribunal.",
+          "outcome_tags": [
+            "drive_archived"
+          ],
+          "routes": {
+            "drive_archived": "next"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "nervous_inspector",
+          "target": "suppression_drone",
+          "reason": "The inspector, panicking, hires the pilot to destroy an automated guard ship hunting the scientist.",
+          "private_fact": "The cruiser belongs to the inspector's own superiors, who are coming to clean up the mess.",
+          "outcome_tags": [
+            "drone_destroyed"
+          ],
+          "routes": {
+            "drone_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The institute goes into total lockdown, halting all astronomical research.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "obsessive_scientist",
+          "target": "research_institute",
+          "reason": "The institute is moving the scientist's backup tapes on a secure transport. The pilot must blow out the transport and recover them.",
+          "private_fact": "The tapes contain the exact coordinates of the missing sector.",
+          "outcome_tags": [
+            "tapes_recovered"
+          ],
+          "routes": {
+            "tapes_recovered": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "obsessive_scientist",
+          "target": "masked_sector",
+          "reason": "The pilot must fly to the unmapped coordinates and scan the sector to prove it exists.",
+          "private_fact": "The sector is filled with the wreckage of an old, undocumented corporate war.",
+          "outcome_tags": [
+            "system_verified"
+          ],
+          "routes": {
+            "system_verified": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The pilot returns with proof of the missing system, but the inspector is waiting for them.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "obsessive_scientist",
+          "target": "patrol_cruiser",
+          "reason": "The scientist pays the pilot to destroy the final corporate suppression cruiser blocking their broadcast array.",
+          "private_fact": "The inspector hails the pilot, offering to expunge their criminal record and pay a massive bounty if they hand over the proof instead.",
+          "outcome_tags": [
+            "suppression_broken",
+            "took_the_offer"
+          ],
+          "routes": {
+            "suppression_broken": "resolution:truth_revealed",
+            "took_the_offer": "resolution:history_erased"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_revealed",
+      "reached_by": "The pilot fights off the suppression ship and broadcasts the coordinates.",
+      "summary": "The truth about the missing sector breaks the institute's authority. The scientist is hailed as a visionary, and the inspector is fired.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "research_institute",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "obsessive_scientist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "nervous_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "found_the_missing_sector",
+          "public_summary": "A pilot proved the local star charts were a lie and found a whole masked sector hiding in the dark."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_opened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "history_erased",
+      "reached_by": "The pilot takes the inspector's offer and hands over the proof.",
+      "summary": "The missing sector is scrubbed forever. The scientist is institutionalized for 'space madness', but the pilot gets rich.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "research_institute",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "obsessive_scientist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "nervous_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "data",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "scientist_silenced",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The scientist is quietly disappeared by corporate suppression forces. The star charts remain a comforting lie.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "obsessive_scientist",
+          "fate": "disappeared"
+        },
+        {
+          "type": "standing",
+          "target": "research_institute",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "scientist_silenced",
+  "loose_threads": [
+    {
+      "id": "t_chart_edits",
+      "surface": "scan",
+      "detail": "The digital signature on the forged star charts belongs to a retired mining surveyor who officially died twenty years before the edits were made.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_institute_funding",
+      "surface": "dialogue",
+      "detail": "The inspector nervously mentions that the institute's funding relies entirely on 'stability clauses' from an unknown benefactor.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:research_institute} issues reminder that independent orbital measurements are highly inaccurate.",
+    "Local astronomy enthusiast claims entire constellation is 'missing'; experts blame cheap telescopes."
+  ],
+  "voice_direction": {
+    "obsessive_scientist": "Fast, breathless, constantly interrupts themselves with new thoughts.",
+    "nervous_inspector": "Quiet, precise, hesitates frequently before starting sentences."
+  },
+  "novelty_tags": [
+    "faked_star_charts",
+    "astronomy_conspiracy",
+    "hidden_system",
+    "suppressed_data"
+  ]
+}

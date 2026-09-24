@@ -1,0 +1,263 @@
+{
+  "id": "premise.the_stolen_composition",
+  "schema_version": 1,
+  "title": "The Stolen Symphony",
+  "logline": "An artist discovers their mentor's final symphony was stolen by a local archivist for commercial gain, and plots to steal it back for a free performance.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "absurd"
+  ],
+  "themes": [
+    "chosen_family",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "passionate_critic",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Dramatic, intensely emotional, views art as sacred.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "greedy_archivist",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Snobby, views art purely as a financial asset.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "music_hall",
+      "kind": "place",
+      "description": "An opulent orbital concert hall.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A highly anticipated premiere of a lost masterpiece is scheduled at the orbital music hall.",
+  "private_truth": "The archivist stole the only copy from the artist's deceased mentor and copyrighted it.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The archivist begins selling exclusive, exorbitantly priced tickets.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "passionate_critic",
+          "target": "music_hall",
+          "reason": "Needs the pilot to map the digital security layout of the hall's private databanks.",
+          "private_fact": "The artist intends to slice into the network and broadcast the symphony for free to the whole system.",
+          "outcome_tags": [
+            "security_mapped",
+            "mapping_failed"
+          ],
+          "routes": {
+            "security_mapped": "beat:2",
+            "mapping_failed": "resolution:symphony_commercialized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The archivist announces they have moved the data to a physical drive to prevent piracy.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "passionate_critic",
+          "target": "music_hall",
+          "reason": "Needs the pilot to retrieve the master data drive from a contact at the VIP lounge dock. They specifically need an independent pilot with a reliable ship.",
+          "private_fact": "The artist's mentor specifically asked that their last work never be sold.",
+          "outcome_tags": [
+            "drive_stolen",
+            "heist_failed"
+          ],
+          "routes": {
+            "drive_stolen": "beat:3",
+            "heist_failed": "resolution:symphony_commercialized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The premiere is hours away, and the archivist issues a massive reward for the missing drive.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "greedy_archivist",
+          "target": "music_hall",
+          "reason": "The archivist contacts the pilot directly, offering double the reward to deliver the drive to them.",
+          "private_fact": "The archivist actually plans to delete the drive after the premiere to artificially inflate its value.",
+          "outcome_tags": [
+            "drive_returned",
+            "drive_broadcast"
+          ],
+          "routes": {
+            "drive_returned": "resolution:symphony_commercialized",
+            "drive_broadcast": "resolution:symphony_freed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the physical drive containing the masterpiece.",
+        "options": [
+          {
+            "id": "give_to_artist",
+            "label": "Give the drive to the artist to broadcast",
+            "leads_to": "resolution:symphony_freed"
+          },
+          {
+            "id": "return_to_archivist",
+            "label": "Return it to the archivist for the reward",
+            "leads_to": "resolution:symphony_commercialized"
+          },
+          {
+            "id": "destroy_drive",
+            "label": "Destroy the drive so no one gets it",
+            "leads_to": "resolution:symphony_lost"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "symphony_freed",
+      "reached_by": "The pilot gives the drive to the artist.",
+      "summary": "The symphony is broadcast to every ship in the system. The artist is a hero, and the archivist is humiliated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "passionate_critic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "greedy_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "festival"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "symphony_commercialized",
+      "reached_by": "The pilot returns the drive.",
+      "summary": "The premiere goes ahead. The archivist makes a fortune, and the artist is left devastated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "passionate_critic",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "greedy_archivist",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "symphony_lost",
+      "reached_by": "The pilot destroys the drive.",
+      "summary": "The masterpiece is lost forever. Both the artist and the archivist blame the pilot.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "passionate_critic",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "greedy_archivist",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "symphony_commercialized",
+  "loose_threads": [
+    {
+      "id": "t_mentor_death",
+      "surface": "scan",
+      "detail": "The mentor's sudden death was certified by a physician on the archivist's payroll.",
+      "can_carry_methods": [
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_symphony_code",
+      "surface": "cargo",
+      "detail": "The musical notes of the symphony contain a cypher for a hidden offshore account.",
+      "can_carry_methods": [
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Tickets sell out for highly anticipated orbital premiere.",
+    "Local artist protests copyright claims over late mentor's work."
+  ],
+  "voice_direction": {
+    "greedy_archivist": "Snide, condescending, speaks very slowly as if to children.",
+    "passionate_critic": "Loud, expressive, uses entirely too many adjectives."
+  },
+  "novelty_tags": [
+    "stolen_art",
+    "music_heist",
+    "copyright_dispute"
+  ]
+}

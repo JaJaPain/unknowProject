@@ -1,0 +1,252 @@
+{
+  "id": "premise.the_honorable_thief",
+  "schema_version": 1,
+  "title": "The Honorable Thief",
+  "logline": "An aging smuggler hires a pilot to manipulate an audit and bribe a vault clerk to recover a family heirloom they wrongly fenced.",
+  "scale": "personal",
+  "tone": [
+    "heist",
+    "hopeful"
+  ],
+  "themes": [
+    "reinvention",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "aging_thief",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Tired, full of regrets, trying to make one last thing right.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ruthless_protege",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Ambitious, treats the old thief with condescending pity.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "syndicate_vault",
+      "kind": "place",
+      "description": "A highly secure, automated depository for stolen goods.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "thieves_guild",
+      "kind": "faction",
+      "description": "A strict organization with absolute rules about fenced property.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:thieves_guild} is preparing for its annual audit of the {role:syndicate_vault}.",
+  "private_truth": "The aging thief accidentally fenced an heirloom belonging to a poor family who saved their life, and the protege refuses to sell it back.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The vault enters pre-audit lockdown, limiting all authorized access.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "aging_thief",
+          "target": "syndicate_vault",
+          "reason": "The thief hires the pilot to deliver a shipment of forged audit logs to the vault.",
+          "private_fact": "The logs are designed to trick the system into releasing the heirloom as legally sold property.",
+          "outcome_tags": [
+            "logs_delivered"
+          ],
+          "routes": {
+            "logs_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The protege notices the missing item and triggers a full station alert.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "aging_thief",
+          "target": "syndicate_vault",
+          "reason": "The aging thief needs leverage and asks the pilot to scan the vault's manifest server for discrepancies to use as a distraction.",
+          "private_fact": "The scan reveals the protege is using the lockdown to quietly embezzle other goods.",
+          "outcome_tags": [
+            "blind_spot_found"
+          ],
+          "routes": {
+            "blind_spot_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The guild leadership arrives to oversee the audit.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "aging_thief",
+          "target": "syndicate_vault",
+          "reason": "The thief asks the pilot to deliver the proof of the protege's embezzlement directly to the guild auditors.",
+          "private_fact": "The protege intercepts the pilot's comms, offering them a fortune to destroy the evidence instead.",
+          "outcome_tags": [
+            "evidence_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "evidence_delivered": "resolution:thief_redeemed",
+            "abandoned": "resolution:protege_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "thief_redeemed",
+      "reached_by": "The pilot delivers the evidence to the guild.",
+      "summary": "The guild violently deposes the protege. The aging thief returns the heirloom to its rightful owners and retires in peace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "aging_thief",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_protege",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "thieves_guild",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "helped_the_old_thief",
+          "public_summary": "A pilot helped an old crook do one last good deed before they hung up their blaster."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "protege_wins",
+      "reached_by": "The pilot abandons the evidence.",
+      "summary": "The protege's embezzlement goes unnoticed. They consolidate power and execute the aging thief for breaking guild laws.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "aging_thief",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_protege",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "thieves_guild",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "vault_sealed",
+      "reached_by": "The pilot ignores the missions completely.",
+      "summary": "The theft fails. The heirloom remains locked away forever, and the old thief dies of a broken heart.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "aging_thief",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "thieves_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "vault_sealed",
+  "loose_threads": [
+    {
+      "id": "t_protege_sponsors",
+      "surface": "scan",
+      "detail": "The protege's embezzlement wasn't just greed; the funds were being routed to a planetary governor's re-election campaign.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_vault_backdoor",
+      "surface": "dialogue",
+      "detail": "The vault's quartermaster mentions the backdoor was actually installed decades ago by the aging thief themselves.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:thieves_guild} promises full transparency in upcoming vault audit.",
+    "Rumors of internal guild strife dismissed by {role:ruthless_protege}."
+  ],
+  "voice_direction": {
+    "aging_thief": "Slow, raspy, speaks with deep exhaustion.",
+    "ruthless_protege": "Sharp, energetic, treats everyone else like they are moving in slow motion."
+  },
+  "novelty_tags": [
+    "guild_audit",
+    "stolen_heirloom",
+    "embezzlement",
+    "honor_among_thieves"
+  ]
+}

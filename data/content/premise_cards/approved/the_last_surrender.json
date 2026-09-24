@@ -1,0 +1,272 @@
+{
+  "id": "premise.the_last_surrender",
+  "schema_version": 1,
+  "title": "The Last Surrender",
+  "logline": "A decorated veteran refuses to disarm their aging command ship, and a fearful bureaucrat hires a pilot to quietly sink it before the navy is forced to.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "stubborn_captain",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Proud, deeply confused, and convinced the war is still happening.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "anxious_bureaucrat",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Sweating through their uniform, desperate to avoid a PR disaster.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "veteran_flagship",
+      "kind": "ship",
+      "description": "A massive, heavily armed relic of a forgotten war.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "rogue_loyalists",
+      "kind": "ship",
+      "description": "A small supply ship run by the captain's old crew.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "memorial_dock",
+      "kind": "place",
+      "description": "A quiet, ceremonial mooring station.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "local_navy",
+      "kind": "faction",
+      "description": "The official fleet, embarrassed by the standoff.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:veteran_flagship} has been ordered to stand down and scrap its weapons, but it remains heavily armed in orbit, refusing all hails.",
+  "private_truth": "The captain isn't rebellious; they are suffering from severe memory loss and believe the war is still going on. The bureaucrat wants to sink them to avoid a public tribunal.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The flagship powers up its main battery, targeting an empty patch of space.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "anxious_bureaucrat",
+          "target": "veteran_flagship",
+          "reason": "The bureaucrat needs the pilot to scan the flagship's engines to see if they are capable of jumping away.",
+          "private_fact": "The scan reveals the engines have been quietly rigged to overload if they try to jump.",
+          "outcome_tags": [
+            "engines_scanned"
+          ],
+          "routes": {
+            "engines_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "A small supply ship attempts to run the navy's blockade to reach the flagship.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "anxious_bureaucrat",
+          "target": "rogue_loyalists",
+          "reason": "The bureaucrat asks the pilot to destroy the loyalists trying to resupply the rogue captain.",
+          "private_fact": "The loyalists are actually just delivering desperately needed medical supplies for the captain's condition.",
+          "outcome_tags": [
+            "loyalists_destroyed"
+          ],
+          "routes": {
+            "loyalists_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The navy issues a final ultimatum: surrender in one hour or be destroyed.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "anxious_bureaucrat",
+          "target": "veteran_flagship",
+          "reason": "The pilot is hired to attack the flagship directly to force its automated systems to shut down.",
+          "private_fact": "The captain hails the pilot, confused and terrified, offering their entire pension if the pilot will escort them back to the 'front lines'.",
+          "outcome_tags": [
+            "flagship_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "flagship_destroyed": "resolution:bureaucrat_coverup",
+            "took_the_offer": "resolution:captain_escorted"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bureaucrat_coverup",
+      "reached_by": "The pilot destroys the flagship.",
+      "summary": "The captain dies, and the navy avoids an embarrassing public trial. The bureaucrat is promoted for their quiet handling of the crisis.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "anxious_bureaucrat",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "local_navy",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "sank_the_veteran",
+          "public_summary": "A pilot blew a legendary war hero out of the sky to cover up the navy's mess."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "captain_escorted",
+      "reached_by": "The pilot takes the captain's offer and escorts them away.",
+      "summary": "The flagship jumps away to parts unknown. The navy is humiliated, and the bureaucrat is blamed for the disaster.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "anxious_bureaucrat",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "local_navy",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "navy_fires",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The navy boards the flagship and arrests the captain. The bureaucrat's cover-up fails.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "anxious_bureaucrat",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "navy_fires",
+  "loose_threads": [
+    {
+      "id": "t_rigged_engines",
+      "surface": "scan",
+      "detail": "The flagship's engines were rigged to overload using a signature known to belong to a notorious corporate hacker collective.",
+      "can_carry_methods": [
+        "sabotage",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_bureaucrat_funds",
+      "surface": "dialogue",
+      "detail": "The bureaucrat pays the pilot using an unmarked credit line drawn from an offshore shell corporation.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Standoff continues at {role:memorial_dock} as {role:veteran_flagship} refuses to disarm.",
+    "{role:local_navy} denies reports of mutiny."
+  ],
+  "voice_direction": {
+    "stubborn_captain": "Authoritative, booming, but prone to sudden lapses in memory.",
+    "anxious_bureaucrat": "Fast, quiet, constantly looking over their shoulder."
+  },
+  "novelty_tags": [
+    "veteran_standoff",
+    "memory_loss",
+    "naval_coverup"
+  ]
+}

@@ -1,0 +1,278 @@
+{
+  "id": "premise.the_whistleblower_cache",
+  "schema_version": 1,
+  "title": "The Whistleblower Cache",
+  "logline": "A hunted leaker needs a pilot to extract a cache of explosive corporate secrets from a dark zone data vault before a fixer destroys it.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "heist"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "hunted_leaker",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Paranoid, clutching a secure datapad, constantly looking over their shoulder.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_fixer",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Immaculately dressed, entirely devoid of empathy.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "data_vault",
+      "kind": "place",
+      "description": "A heavily shielded server farm hidden deep in the dark zone.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "fixer_gunship",
+      "kind": "ship",
+      "description": "A sleek, corporate-sponsored heavy fighter.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "media_conglomerate",
+      "kind": "faction",
+      "description": "The massive corporation trying to bury the leaked story.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:media_conglomerate} has locked down the sector, claiming a \"terrorist\" stole proprietary data.",
+  "private_truth": "The leaker stole evidence that the conglomerate is deliberately suppressing a cure for a common disease to sell treatments. The fixer is here to erase the data.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The fixer begins jamming all communications in the dark zone.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "hunted_leaker",
+          "target": "data_vault",
+          "reason": "The leaker hires the pilot to scan the dark zone to find a clear transmission window to upload the cache.",
+          "private_fact": "The pilot realizes the fixer's gunship is waiting directly above the vault.",
+          "outcome_tags": [
+            "window_found"
+          ],
+          "routes": {
+            "window_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The gunship begins systematically firing on the data vault's shielding.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "corporate_fixer",
+          "target": "data_vault",
+          "reason": "The fixer hires the pilot to deliver a massive EMP charge to the vault's power core to fry the servers.",
+          "private_fact": "The pilot discovers the leaker is trapped inside the vault.",
+          "outcome_tags": [
+            "emp_delivered"
+          ],
+          "routes": {
+            "emp_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The vault's shields fail, and the leaker prepares to manually broadcast the data.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "hunted_leaker",
+          "target": "fixer_gunship",
+          "reason": "The leaker begs the pilot to destroy the gunship so the broadcast can finish.",
+          "private_fact": "The fixer hails the pilot, offering them a lifetime executive salary if they let the gunship destroy the vault.",
+          "outcome_tags": [
+            "gunship_destroyed"
+          ],
+          "routes": {
+            "gunship_destroyed": "resolution:leaker_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The gunship is vulnerable. The fixer is offering incredible wealth to let the vault burn.",
+        "options": [
+          {
+            "id": "destroy_gunship",
+            "label": "Destroy the gunship and save the truth",
+            "leads_to": "resolution:leaker_wins"
+          },
+          {
+            "id": "let_it_burn",
+            "label": "Take the money and let the vault burn",
+            "leads_to": "resolution:fixer_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "leaker_wins",
+      "reached_by": "The pilot destroys the gunship.",
+      "summary": "The gunship is destroyed. The data broadcasts across the sector. The corporation's stock plummets, and the truth is revealed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_leaker",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_fixer",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "media_conglomerate",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "protected_the_leak",
+          "public_summary": "A pilot fought off a corporate gunship to protect a massive data leak."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "fixer_wins",
+      "reached_by": "The pilot takes the money.",
+      "summary": "The gunship obliterates the vault. The leaker and the data are destroyed. The pilot becomes extremely wealthy, but millions continue to suffer.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_leaker",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_fixer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "media_conglomerate",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "vault_destroyed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The gunship incinerates the vault. The leaker is captured alive by corporate security, and the corporate secrets are destroyed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hunted_leaker",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_fixer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "media_conglomerate",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "vault_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_leaker_bribe",
+      "surface": "scan",
+      "detail": "The leaker originally tried to blackmail the corporation with the data before deciding to release it.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_fixer_orders",
+      "surface": "wreck",
+      "detail": "The fixer's logs show they were ordered to destroy the vault by the planetary governor, not just the corporation.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Massive explosion reported in the dark zone.",
+    "{role:media_conglomerate} denies all knowledge of missing data."
+  ],
+  "voice_direction": {
+    "hunted_leaker": "Breathless, terrified, speaks in hushed tones.",
+    "corporate_fixer": "Smooth, deeply cynical, completely unbothered by murder."
+  },
+  "novelty_tags": [
+    "whistleblower",
+    "corporate_fixer",
+    "data_vault"
+  ]
+}

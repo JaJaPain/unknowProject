@@ -1,0 +1,262 @@
+{
+  "id": "premise.the_honour_debt",
+  "schema_version": 1,
+  "title": "The Honour Debt",
+  "logline": "A retired criminal legend wants to clear an old debt to a rival, but the rival's ambitious successor wants them dead instead.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "bleak"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "retired_legend",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Tired, meticulous, wanting to die with a clean ledger.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "new_boss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Insecure, aggressive, eager to prove they are ruthless.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_archive",
+      "kind": "place",
+      "description": "A heavily guarded vault where old debts are recorded.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "the_old_crew",
+      "kind": "faction",
+      "description": "The remnants of the legend's former gang.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player"
+  ],
+  "public_situation": "An old underworld figure has resurfaced, causing tension in the local syndicates.",
+  "private_truth": "The legend isn't here to take over; they just want to pay off a decades-old blood debt to the syndicate before they die.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The legend publicly requests a meeting with the syndicate.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "retired_legend",
+          "target": "syndicate_archive",
+          "reason": "Needs rare luxury goods delivered as a traditional peace offering to secure a parley.",
+          "private_fact": "The legend is terminally ill and this is their very last chance.",
+          "outcome_tags": [
+            "offering_delivered",
+            "offering_abandoned"
+          ],
+          "routes": {
+            "offering_delivered": "beat:2",
+            "offering_abandoned": "resolution:legend_hunted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The new boss rejects the offering and posts a bounty on the legend.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_legend",
+          "target": "syndicate_archive",
+          "reason": "Needs the pilot to scan the syndicate's public ledger to prove the old boss accepted the debt terms.",
+          "private_fact": "The ledger contains proof that the new boss actually murdered their predecessor.",
+          "outcome_tags": [
+            "scan_successful",
+            "scan_failed"
+          ],
+          "routes": {
+            "scan_successful": "beat:3",
+            "scan_failed": "resolution:legend_hunted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The syndicate prepares to strike the legend's safehouse.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "new_boss",
+          "target": "syndicate_archive",
+          "reason": "The boss hires the pilot to deliver forged records that erase the old debt entirely.",
+          "private_fact": "The boss is terrified the old crew will rally behind the legend.",
+          "outcome_tags": [
+            "forgery_delivered",
+            "forgery_abandoned"
+          ],
+          "routes": {
+            "forgery_delivered": "resolution:legend_killed",
+            "forgery_abandoned": "resolution:legend_cleared"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the proof of the old debt and the boss's forgery.",
+        "options": [
+          {
+            "id": "side_with_boss",
+            "label": "Deliver the forgery and betray the legend",
+            "leads_to": "resolution:legend_killed"
+          },
+          {
+            "id": "side_with_legend",
+            "label": "Broadcast the proof of the original debt",
+            "leads_to": "resolution:legend_cleared"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "legend_cleared",
+      "reached_by": "The pilot sides with the legend and broadcasts the proof.",
+      "summary": "The syndicate respects the old code. The debt is cleared, and the new boss is overthrown.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "new_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "the_old_crew",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "legend_killed",
+      "reached_by": "The pilot delivers the forgery for the new boss.",
+      "summary": "The legend is assassinated in their safehouse. The new boss cements their brutal rule.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "new_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "the_old_crew",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "legend_hunted",
+      "reached_by": "The pilot abandons the initial missions.",
+      "summary": "The legend is forced to flee the system, their final wish unfulfilled.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "the_old_crew",
+          "delta": -1
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "legend_hunted",
+  "loose_threads": [
+    {
+      "id": "t_poisoned_drink",
+      "surface": "scan",
+      "detail": "The old boss's autopsy report shows traces of a rare, expensive synthetic venom.",
+      "can_carry_methods": [
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_offworld_accounts",
+      "surface": "radio",
+      "detail": "The new boss's personal accounts are receiving deposits from a defunct shipping corporation.",
+      "can_carry_methods": [
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Underworld tensions rise as rumors of an old legend returning spread.",
+    "Local authorities advise avoiding the warehouse district."
+  ],
+  "voice_direction": {
+    "retired_legend": "Gravelly, slow, speaks with absolute finality.",
+    "new_boss": "Loud, constantly interrupting, trying too hard to sound dangerous."
+  },
+  "novelty_tags": [
+    "underworld_code",
+    "blood_debt",
+    "syndicate_succession"
+  ]
+}

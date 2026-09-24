@@ -1,0 +1,253 @@
+{
+  "id": "premise.the_crooked_mechanic",
+  "schema_version": 1,
+  "title": "The Calibration Scam",
+  "logline": "A mechanic is extorting pilots by miscalibrating their drives, and a victim wants revenge without involving the law.",
+  "scale": "personal",
+  "tone": [
+    "noir"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "scam_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Greedy, views pilots as walking wallets.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "angry_victim",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Furious, broke, looking for payback.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mechanic_shop",
+      "kind": "place",
+      "description": "A grimy repair bay on a backwater station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "enforcer_escort",
+      "kind": "ship",
+      "description": "A hired gun protecting the mechanic.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tow_company_yard",
+      "kind": "place",
+      "description": "A local tow company.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "grudge_against_player"
+  ],
+  "public_situation": "Ships leaving the local repair bay keep experiencing mysterious drive failures, forcing them to pay for expensive rescue tows.",
+  "private_truth": "The mechanic deliberately installs faulty limiters. They split the rescue fees with a local tow company.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Another ship breaks down just outside the station limits.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "angry_victim",
+          "target": "tow_company_yard",
+          "reason": "Needs a sealed demand letter delivered to the tow company headquarters to pressure them.",
+          "private_fact": "The victim plans to use the ledger to blackmail the mechanic, not report them.",
+          "outcome_tags": [
+            "ledger_recovered",
+            "ledger_lost"
+          ],
+          "routes": {
+            "ledger_recovered": "beat:2",
+            "ledger_lost": "resolution:scam_continues"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The mechanic realizes the ledger is gone and panics.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "scam_mechanic",
+          "target": "mechanic_shop",
+          "reason": "Needs high-grade parts delivered to fix the victim's ship for free and hush them up.",
+          "private_fact": "The parts are stolen military surplus that could get everyone involved arrested.",
+          "outcome_tags": [
+            "parts_delivered",
+            "parts_abandoned"
+          ],
+          "routes": {
+            "parts_delivered": "beat:3",
+            "parts_abandoned": "resolution:victim_revenge"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The victim confronts the mechanic with the ledger.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "angry_victim",
+          "target": "mechanic_shop",
+          "reason": "Needs the pilot to scan the shop and certify whether the new parts are clean or dirty.",
+          "private_fact": "The victim will use a dirty scan to bankrupt the mechanic completely.",
+          "outcome_tags": [
+            "certify_dirty",
+            "certify_clean"
+          ],
+          "routes": {
+            "certify_dirty": "resolution:victim_revenge",
+            "certify_clean": "resolution:blackmail_deal"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "victim_revenge",
+      "reached_by": "The pilot certifies the parts are dirty or abandons the mechanic.",
+      "summary": "The mechanic is ruined and arrested. The victim gets their payback but no money.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "scam_mechanic",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_victim",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "blackmail_deal",
+      "reached_by": "The pilot certifies the parts are clean.",
+      "summary": "The mechanic pays the victim a fortune in hush money. The scam stops, but the mechanic stays free.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "scam_mechanic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "angry_victim",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "scam_continues",
+      "reached_by": "The pilot fails the initial recovery.",
+      "summary": "The mechanic keeps running the scam and gets bolder, and every independent pilot who docks for repairs pays for it.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "angry_victim",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scam_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "law_loosened"
+      ]
+    }
+  ],
+  "default_resolution": "scam_continues",
+  "loose_threads": [
+    {
+      "id": "t_tow_company",
+      "surface": "ship_marking",
+      "detail": "The tow company's ships bear the insignia of a supposedly defunct mercenary group.",
+      "can_carry_methods": [
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_military_parts",
+      "surface": "cargo",
+      "detail": "The stolen parts were marked as destroyed in a recent industrial accident.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Warning to all pilots: unusual number of drive failures reported near station.",
+    "Local mechanic shop accused of extortion."
+  ],
+  "voice_direction": {
+    "scam_mechanic": "Sleazy, overly friendly, always trying to up-sell.",
+    "angry_victim": "Pissed off, clipped, zero patience for small talk."
+  },
+  "novelty_tags": [
+    "repair_scam",
+    "blackmail_plot",
+    "drive_sabotage"
+  ]
+}

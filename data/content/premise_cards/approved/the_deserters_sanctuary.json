@@ -1,0 +1,258 @@
+{
+  "id": "premise.the_deserters_sanctuary",
+  "schema_version": 1,
+  "title": "The Deserter's Sanctuary",
+  "logline": "A bounty hunter tracks a deserter to a hidden sanctuary, forcing the locals to hire a pilot to defend them.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "survival"
+  ],
+  "themes": [
+    "chosen_family",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "hidden_deserter",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Guilt-ridden, exhausted, wants to stop running.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relentless_hunter",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Dogged, uncompromising, views the deserter as a paycheck.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sanctuary_station",
+      "kind": "place",
+      "description": "A hidden outpost for those with nowhere else to go.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hunter_ship",
+      "kind": "ship",
+      "description": "A heavily modified pursuit vessel.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hunter_backup",
+      "kind": "ship",
+      "description": "A squad of mercenary reinforcement ships.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "witness_at_large"
+  ],
+  "public_situation": "A notorious bounty hunter has arrived in the system, asking questions about an old military deserter.",
+  "private_truth": "The deserter actually stole proof of a war crime when they fled, which is why the bounty is so high.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The hunter violently shakes down a local information broker.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "hidden_deserter",
+          "target": "sanctuary_station",
+          "reason": "Needs secure communication jammers deployed around the sanctuary.",
+          "private_fact": "The deserter is preparing to wipe their own memory to protect the sanctuary.",
+          "outcome_tags": [
+            "jammers_deployed",
+            "jammers_abandoned"
+          ],
+          "routes": {
+            "jammers_deployed": "beat:2",
+            "jammers_abandoned": "resolution:sanctuary_breached"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The hunter breaks the jamming field and locates the station.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "hidden_deserter",
+          "target": "hunter_ship",
+          "reason": "Needs the pilot to destroy the hunter before they can broadcast the station's coordinates.",
+          "private_fact": "The deserter refuses to use a weapon themselves ever again.",
+          "outcome_tags": [
+            "hunter_destroyed",
+            "hunter_survived"
+          ],
+          "routes": {
+            "hunter_destroyed": "beat:3",
+            "hunter_survived": "resolution:hunter_bribed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The hunter calls in reinforcements.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hidden_deserter",
+          "target": "hunter_backup",
+          "reason": "Needs the pilot to hold off the hunter's backup while the sanctuary evacuates.",
+          "private_fact": "The hunter offers a massive payout if the pilot drops the station's shields.",
+          "outcome_tags": [
+            "backup_destroyed",
+            "took_bounty_offer"
+          ],
+          "routes": {
+            "backup_destroyed": "resolution:sanctuary_escapes",
+            "took_bounty_offer": "resolution:sanctuary_breached"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "sanctuary_escapes",
+      "reached_by": "The pilot destroys the backup.",
+      "summary": "The sanctuary evacuates safely. The deserter remains free, and the hunter is humiliated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hidden_deserter",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relentless_hunter",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "sanctuary_breached",
+      "reached_by": "The pilot takes the hunter's offer or abandons the defense.",
+      "summary": "The sanctuary is raided. The deserter is captured and the locals are scattered.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hidden_deserter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relentless_hunter",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "refugee_influx"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "hunter_bribed",
+      "reached_by": "A rare alternative outcome.",
+      "summary": "The sanctuary pools its resources to pay off the hunter. The deserter remains, but the sanctuary is destitute.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hidden_deserter",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relentless_hunter",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "sanctuary_breached",
+  "loose_threads": [
+    {
+      "id": "t_hunter_client",
+      "surface": "scan",
+      "detail": "The bounty on the deserter was posted by a medical charity, not a military tribunal.",
+      "can_carry_methods": [
+        "forged_records",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_deserter_crime",
+      "surface": "dialogue",
+      "detail": "The deserter mentions that their 'war crime' involved delivering food to the wrong colony.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "protecting_someone",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Bounty hunter activity spikes in outer sectors.",
+    "Unregistered settlement discovered and raided."
+  ],
+  "voice_direction": {
+    "hidden_deserter": "Soft, broken, deeply sad.",
+    "relentless_hunter": "Aggressive, taunting, treats everything like a game."
+  },
+  "novelty_tags": [
+    "deserter_bounty",
+    "hidden_sanctuary",
+    "pacifist_refugee"
+  ]
+}

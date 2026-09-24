@@ -1,0 +1,343 @@
+{
+  "id": "premise.the_orphan_cargo",
+  "schema_version": 1,
+  "title": "Ghosts of Charity",
+  "logline": "A massive automated freighter lost its routing database and is aimlessly delivering decades-old humanitarian aid to planets that no longer need it, sparking a race to capture it.",
+  "scale": "regional",
+  "tone": [
+    "hopeful",
+    "tragic"
+  ],
+  "themes": [
+    "reinvention",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "aid_worker",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Wants to secure the old medical supplies to treat a modern plague.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_hunter",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Just wants to melt the massive ship down for its platinum hull.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "automated_freighter",
+      "kind": "ship",
+      "description": "A colossal, blind machine blindly carrying out an obsolete mission.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "relief_agency",
+      "kind": "faction",
+      "description": "An underfunded organization desperate for resources.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_depot",
+      "kind": "place",
+      "description": "A brutalist scrapping yard built to tear ships apart.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "local_hospital",
+      "kind": "place",
+      "description": "A triage center that desperately needs the freighter's ancient medicines.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hunter_ship",
+      "kind": "ship",
+      "description": "An aggressive salvage vessel bristling with cutting lasers.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "rival_scavenger",
+      "kind": "ship",
+      "description": "A cutthroat scavenger ship looking to steal the cargo.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "market_disrupted"
+  ],
+  "public_situation": "A legendary ghost ship, the {role:automated_freighter}, has suddenly appeared in the sector, loaded with millions in obsolete humanitarian aid.",
+  "private_truth": "The ship's systems is failing, and if it isn't stopped soon, its fusion drive will inevitably detonate.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The freighter begins dumping crates of perfectly preserved, thirty-year-old medical supplies into deep space.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "aid_worker",
+          "target": "rival_scavenger",
+          "reason": "The pilot must stop scavengers from stealing the dumped medical crates and bring them back.",
+          "private_fact": "The rival ships are firing wildly and destroying more medicine than they take.",
+          "outcome_tags": [
+            "crates_recovered"
+          ],
+          "routes": {
+            "crates_recovered": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "salvage_hunter",
+          "target": "automated_freighter",
+          "reason": "The hunter asks the pilot to scan the freighter's engines to determine if it can be boarded safely.",
+          "private_fact": "The scan reveals the fusion drive is barely contained and will detonate if breached forcefully.",
+          "outcome_tags": [
+            "engines_scanned"
+          ],
+          "routes": {
+            "engines_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The freighter jumps to the next system, trailing a massive radiation cloud.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "aid_worker",
+          "target": "local_hospital",
+          "reason": "The pilot must deliver the recovered medical crates to the hospital immediately.",
+          "private_fact": "The medicines are perfectly viable and save dozens of lives.",
+          "outcome_tags": [
+            "medicines_delivered"
+          ],
+          "routes": {
+            "medicines_delivered": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "salvage_hunter",
+          "target": "hunter_ship",
+          "reason": "The pilot must scan the rival scavenger to determine their boarding capabilities.",
+          "private_fact": "The rival is prepping explosives that will breach the freighter's containment field by accident.",
+          "outcome_tags": [
+            "rival_scanned"
+          ],
+          "routes": {
+            "rival_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The freighter's automation broadcast a final, corrupted plea for new routing coordinates.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "aid_worker",
+          "target": "salvage_depot",
+          "reason": "The pilot must pay exorbitant fees to acquire an old navigation module from the salvage hunter.",
+          "private_fact": "The module contains the coordinates to the relief agency's headquarters.",
+          "outcome_tags": [
+            "nav_module_stolen"
+          ],
+          "routes": {
+            "nav_module_stolen": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The freighter's drive begins to critically overheat. It must be redirected immediately before it explodes.",
+      "missions_mode": "one_of",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "aid_worker",
+          "target": "local_hospital",
+          "reason": "Deliver the module to the hospital so they can guide the ship in and claim the aid.",
+          "private_fact": "The hospital is risking its own limited power grid to send the massive broadcast.",
+          "outcome_tags": [
+            "delivered_to_hospital"
+          ],
+          "routes": {
+            "delivered_to_hospital": "resolution:freighter_saved"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "salvage_hunter",
+          "target": "salvage_depot",
+          "reason": "Deliver the module to the depot so the hunter can force the ship to land in their scrap yard.",
+          "private_fact": "The hunter knows the landing will heavily damage the freighter, destroying most of the medicine.",
+          "outcome_tags": [
+            "delivered_to_depot"
+          ],
+          "routes": {
+            "delivered_to_depot": "resolution:freighter_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "freighter_saved",
+      "reached_by": "The pilot uploads the hospital's coordinates.",
+      "summary": "The freighter limps to the relief agency and safely powers down. Millions in aid are recovered, and the ship's legacy is preserved.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "relief_agency",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "aid_worker",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_hunter",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_ghost_ship",
+          "public_summary": "A pilot guided a blind, decades-old ghost ship full of medical aid safely into port."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "freighter_scrapped",
+      "reached_by": "The pilot uploads the scrap yard's coordinates.",
+      "summary": "The freighter arrives at the yard and is brutally disassembled. The aid is destroyed, but the pilot and the hunter make a fortune.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "relief_agency",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "aid_worker",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_hunter",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "freighter_explodes",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The freighter's drive goes critical and it detonates, wiping out a huge swath of empty space and destroying all the aid.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "relief_agency",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "aid_worker",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "freighter_explodes",
+  "loose_threads": [
+    {
+      "id": "t_freighter_logs",
+      "surface": "scan",
+      "detail": "The ship's corrupted logs indicate its original routing data was wiped by a commercial mining consortium's override code.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_hunter_finances",
+      "surface": "dialogue",
+      "detail": "The salvage hunter brags that they already sold the ship's platinum hull to an off-world banking clan before they even caught it.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Ghost ship spotted dropping ancient medical supplies in the outer rim.",
+    "{role:relief_agency} begs for assistance in securing lost humanitarian vessel."
+  ],
+  "voice_direction": {
+    "aid_worker": "Earnest, stressed, uses formal language.",
+    "salvage_hunter": "Greedy, fast-talking, sees everything as a price tag."
+  },
+  "novelty_tags": [
+    "ghost_ship",
+    "humanitarian_aid",
+    "salvage_race"
+  ]
+}

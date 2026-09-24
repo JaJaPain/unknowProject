@@ -1,0 +1,302 @@
+{
+  "id": "premise.the_lost_masterpiece",
+  "schema_version": 1,
+  "title": "The Lost Masterpiece",
+  "logline": "A desperate heir hires a pilot to track down their family's stolen masterpiece from a ruthless collector hiding in the dark zone.",
+  "scale": "regional",
+  "tone": [
+    "tragic",
+    "heist"
+  ],
+  "themes": [
+    "legacy",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "desperate_heir",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Bankrupt, clinging to their family's past glory.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ruthless_collector",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Arrogant, views art purely as an asset class.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hidden_vault",
+      "kind": "place",
+      "description": "A heavily shielded secure storage facility.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "collector_yacht",
+      "kind": "ship",
+      "description": "A luxury cruiser bristling with automated defenses.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "auction_house",
+      "kind": "faction",
+      "description": "A wealthy, secretive organization that controls the art market.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The {role:auction_house} announces the upcoming sale of a legendary lost painting, causing a media frenzy.",
+  "private_truth": "The painting was stolen from the heir's family decades ago. The collector is hiding it in a dark zone vault to avoid paying inheritance taxes.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The collector moves their assets into the dark zone.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "desperate_heir",
+          "target": "hidden_vault",
+          "reason": "The heir hires the pilot to scan the dark zone and locate the exact coordinates of the vault.",
+          "private_fact": "The scan triggers a silent alarm, alerting the collector.",
+          "outcome_tags": [
+            "vault_located"
+          ],
+          "routes": {
+            "vault_located": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "ruthless_collector",
+          "target": "hidden_vault",
+          "reason": "The collector pays the pilot to collect the vault's physical access key and move it to a new location.",
+          "private_fact": "The key is rigged to explode if tampered with.",
+          "outcome_tags": [
+            "key_collected"
+          ],
+          "routes": {
+            "key_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The heir secures the funds for a mercenary strike.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "desperate_heir",
+          "target": "hidden_vault",
+          "reason": "The heir needs the pilot to deliver a custom decryption drive to the vault's main terminal.",
+          "private_fact": "The drive contains a virus that will wipe the collector's entire financial portfolio.",
+          "outcome_tags": [
+            "drive_delivered"
+          ],
+          "routes": {
+            "drive_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The collector launches a decoy ship to distract attackers.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "desperate_heir",
+          "target": "collector_yacht",
+          "reason": "The heir pays the pilot to destroy the collector's decoy yacht and recover the vault key from the wreckage.",
+          "private_fact": "The yacht is heavily armed and waiting for an ambush.",
+          "outcome_tags": [
+            "key_recovered"
+          ],
+          "routes": {
+            "key_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The collector attempts to flee the system with the painting.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_heir",
+          "target": "collector_yacht",
+          "reason": "The heir begs the pilot to attack the real yacht and cripple its engines before it jumps.",
+          "private_fact": "The collector hails the pilot, offering them the painting itself if they destroy the heir's ship instead.",
+          "outcome_tags": [
+            "yacht_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "yacht_disabled": "resolution:heir_wins",
+            "took_the_offer": "resolution:collector_escapes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heir_wins",
+      "reached_by": "The pilot disables the yacht.",
+      "summary": "The heir recovers the painting and restores their family's honor. The collector is arrested for tax evasion.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_collector",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "auction_house",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "recovered_the_masterpiece",
+          "public_summary": "A pilot pulled off a daring dark-zone heist to return a stolen painting to its rightful owner."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "collector_escapes",
+      "reached_by": "The pilot takes the collector's offer.",
+      "summary": "The collector escapes with the painting. The heir is killed in the crossfire, and the pilot gets rich.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_collector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "auction_house",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "painting_destroyed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The yacht hits a dark zone anomaly and explodes. The painting is destroyed, and the collector dies.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_collector",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "auction_house",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "painting_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_collector_taxes",
+      "surface": "scan",
+      "detail": "The collector's tax evasion was facilitated by a corrupt planetary governor.",
+      "can_carry_methods": [
+        "blackmail",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_vault_builders",
+      "surface": "wreck",
+      "detail": "The hidden vault was built using military engineering blueprints stolen from the navy.",
+      "can_carry_methods": [
+        "information_control",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Legendary painting rumored to be hidden in the dark zone.",
+    "{role:auction_house} denies selling stolen goods."
+  ],
+  "voice_direction": {
+    "desperate_heir": "Shaking, desperate, voice frequently cracks.",
+    "ruthless_collector": "Cold, calculating, speaks in a monotone."
+  },
+  "novelty_tags": [
+    "dark_zone_heist",
+    "stolen_art",
+    "tax_evasion"
+  ]
+}

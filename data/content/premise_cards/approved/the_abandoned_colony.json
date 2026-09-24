@@ -1,0 +1,280 @@
+{
+  "id": "premise.the_abandoned_colony",
+  "schema_version": 1,
+  "title": "The Abandoned Colony",
+  "logline": "The lone survivor of an abandoned colony needs a pilot to destroy a corporate liquidation drone sent to erase all records of their existence.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "melancholy"
+  ],
+  "themes": [
+    "legacy",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "lone_survivor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Dull, meticulous, refuses to leave their post even as the walls crumble.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_liquidator",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Clinical, obsessed with spreadsheets, completely emotionless.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ruined_colony",
+      "kind": "place",
+      "description": "A rusting domed city orbiting a dying star, entirely empty except for one office.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "liquidation_drone",
+      "kind": "ship",
+      "description": "A massive automated ship designed to dismantle structures.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "terraforming_corp",
+      "kind": "faction",
+      "description": "The monolithic company that built and abandoned the colony.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The {role:terraforming_corp} has written off the {role:ruined_colony} as a total loss and dispatched a drone to recycle the metal.",
+  "private_truth": "The survivor is the colony's former accountant, who stayed behind to meticulously log every death caused by the corporation's faulty life support systems.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The liquidation drone arrives and begins systematically tearing apart the outer domes.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "corporate_liquidator",
+          "target": "ruined_colony",
+          "reason": "The liquidator hires the pilot to scan the colony to ensure no biological assets remain before they vaporize it.",
+          "private_fact": "The pilot discovers the survivor sitting calmly at a desk in the center of the ruins.",
+          "outcome_tags": [
+            "survivor_found"
+          ],
+          "routes": {
+            "survivor_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The drone targets the central administrative block where the survivor is working.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "lone_survivor",
+          "target": "ruined_colony",
+          "reason": "The survivor asks the pilot to land at the crumbling dome's airlock and collect the master ledger of all the deaths.",
+          "private_fact": "The survivor refuses to leave with the ledger, stating their job is to go down with the archives.",
+          "outcome_tags": [
+            "ledger_collected"
+          ],
+          "routes": {
+            "ledger_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The drone powers up its main plasma cutters, preparing to melt the administrative block.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "lone_survivor",
+          "target": "liquidation_drone",
+          "reason": "The survivor begs the pilot to destroy the drone and recover its targeting core to prove the corporation ordered the erasure.",
+          "private_fact": "The liquidator hails the pilot, offering to pay them double if they just fly away and let the drone finish its work.",
+          "outcome_tags": [
+            "core_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "core_recovered": "resolution:survivor_wins",
+            "abandoned": "resolution:liquidator_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the ledger. The drone is about to fire. The liquidator offers a bribe to walk away.",
+        "options": [
+          {
+            "id": "destroy_drone",
+            "label": "Destroy the drone and publish the ledger",
+            "leads_to": "resolution:survivor_wins"
+          },
+          {
+            "id": "walk_away",
+            "label": "Walk away and let the colony burn",
+            "leads_to": "resolution:liquidator_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "survivor_wins",
+      "reached_by": "The pilot destroys the drone.",
+      "summary": "The drone is destroyed. The pilot publishes the ledger, exposing the corporation's negligence. The survivor dies peacefully in the ruins, their duty fulfilled.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lone_survivor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_liquidator",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "terraforming_corp",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "published_the_ledger",
+          "public_summary": "A pilot exposed a massive corporate cover-up to honor the last wish of a doomed accountant."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "liquidator_wins",
+      "reached_by": "The pilot walks away.",
+      "summary": "The pilot takes the bribe. The drone vaporizes the survivor and the ruins. The corporation covers up the deaths forever.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lone_survivor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_liquidator",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "terraforming_corp",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "colony_erased",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The drone finishes its work unimpeded. The colony is erased, and the survivor is quietly shipped off to a corporate re-education center.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lone_survivor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_liquidator",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "terraforming_corp",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "colony_erased",
+  "loose_threads": [
+    {
+      "id": "t_corp_sabotage",
+      "surface": "scan",
+      "detail": "The life support systems didn't fail naturally; the corporation deliberately sabotaged them to avoid paying bonuses.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_liquidator_bribe",
+      "surface": "dialogue",
+      "detail": "The liquidator casually mentions they've done this to three other colonies this year alone.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:ruined_colony} scheduled for final orbital liquidation today.",
+    "{role:terraforming_corp} assures investors that all liabilities are handled."
+  ],
+  "voice_direction": {
+    "lone_survivor": "Flat, precise, completely detached from reality.",
+    "corporate_liquidator": "Brisk, impatient, speaks entirely in corporate jargon."
+  },
+  "novelty_tags": [
+    "abandoned_colony",
+    "corporate_coverup",
+    "doomed_survivor"
+  ]
+}

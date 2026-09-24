@@ -1,0 +1,286 @@
+{
+  "id": "premise.the_stolen_pension",
+  "schema_version": 1,
+  "title": "The Stolen Pension",
+  "logline": "A cheated retiree hires a pilot to track down the corrupt accountant who embezzled their life savings and is trying to flee the system.",
+  "scale": "personal",
+  "tone": [
+    "heist",
+    "melancholy"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "cheated_retiree",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "Frail but furious, has absolutely nothing left to lose.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_accountant",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Slick, wealthy, convinced money can solve any problem.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_bank",
+      "kind": "place",
+      "description": "An automated, heavily encrypted financial relay.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "accountant_yacht",
+      "kind": "ship",
+      "description": "A ridiculously opulent, unarmed pleasure craft.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "financial_guild",
+      "kind": "faction",
+      "description": "The network of banks protecting the wealthy.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "yacht_docking_bay",
+      "kind": "place",
+      "description": "The opulent interior of the disabled yacht.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "impound_station",
+      "kind": "place",
+      "description": "A bleak, heavily fortified impound lot.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:corrupt_accountant} has announced an abrupt 'early retirement' to a luxury resort world.",
+  "private_truth": "The accountant drained the pensions of dozens of local workers, including the retiree, and is fleeing before the audit hits.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The retiree discovers their accounts have been emptied.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "cheated_retiree",
+          "target": "corporate_bank",
+          "reason": "The pilot must run an illegal packet-trace on the bank's external comms to find where the money went.",
+          "private_fact": "The trace points directly to the accountant's departing luxury yacht.",
+          "outcome_tags": [
+            "trace_complete",
+            "abandoned"
+          ],
+          "routes": {
+            "trace_complete": "next",
+            "abandoned": "resolution:retiree_gives_up"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The yacht breaks orbit and begins charging its jump drive.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "cheated_retiree",
+          "target": "accountant_yacht",
+          "reason": "The retiree demands the pilot hunt down the yacht and destroy its engines to stop it from escaping.",
+          "private_fact": "The yacht is unarmed, but the accountant is broadcasting frantic bribes on open comms.",
+          "outcome_tags": [
+            "yacht_disabled"
+          ],
+          "routes": {
+            "yacht_disabled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The disabled yacht is towed to the local impound station.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "cheated_retiree",
+          "target": "impound_station",
+          "reason": "The pilot must dock at the impound lot and collect the decrypted bank drives from the detained accountant.",
+          "private_fact": "The accountant has the drives, but offers the pilot a massive cut of the funds if they accidentally 'lose' the evidence on the way back.",
+          "outcome_tags": [
+            "keys_collected"
+          ],
+          "routes": {
+            "keys_collected": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the decrypted keys to the pension fund. The accountant's bribe is extremely tempting.",
+        "options": [
+          {
+            "id": "return_funds",
+            "label": "Return the keys to the retiree",
+            "leads_to": "resolution:pension_restored"
+          },
+          {
+            "id": "take_bribe",
+            "label": "Take the bribe and wipe the drives",
+            "leads_to": "resolution:retiree_ruined"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pension_restored",
+      "reached_by": "The pilot recovers the keys and turns in the accountant.",
+      "summary": "The retiree gets their life savings back. The accountant faces a lifetime in a corporate penal colony.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cheated_retiree",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_accountant",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "financial_guild",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "caught_the_embezzler",
+          "public_summary": "A pilot ran down a fleeing embezzler and got a bunch of old folks their pensions back."
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "retiree_ruined",
+      "reached_by": "The pilot takes the bribe and lets the accountant go.",
+      "summary": "The accountant escapes. The retiree is left ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cheated_retiree",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_accountant",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "financial_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "retiree_gives_up",
+      "reached_by": "The pilot leaves.",
+      "summary": "The retiree is broke and gives up.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cheated_retiree",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_accountant",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "retiree_ruined",
+  "loose_threads": [
+    {
+      "id": "t_bank_complicity",
+      "surface": "scan",
+      "detail": "The bank's routing software actually flagged the embezzlement weeks ago, but a senior VP manually approved the transfers.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_yacht_manifest",
+      "surface": "wreck",
+      "detail": "The yacht's passenger manifest included three aliases known to belong to a high-ranking syndicate assassin.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Accountant {role:corrupt_accountant} named 'Executive of the Year' before sudden departure.",
+    "Local retiree {role:cheated_retiree} chained to bank doors in protest."
+  ],
+  "voice_direction": {
+    "cheated_retiree": "Weak, raspy, but burning with absolute righteous fury.",
+    "corrupt_accountant": "Oily, condescending, constantly trying to buy their way out of the conversation."
+  },
+  "novelty_tags": [
+    "embezzlement",
+    "yacht_chase",
+    "stolen_pension",
+    "white_collar_crime"
+  ]
+}

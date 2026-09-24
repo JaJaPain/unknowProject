@@ -1,0 +1,303 @@
+{
+  "id": "premise.the_dark_zone_relay",
+  "schema_version": 1,
+  "title": "Broadcast from the Void",
+  "logline": "A journalist hires a pilot to repair a massive comms relay drifting in a dark zone to broadcast the truth about a corporate cover-up, but bounty hunters are lurking in the silence to stop them.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "noir"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "paranoid_journalist",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Terrified, exhausted, carrying a data drive worth a thousand lives.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "silent_hunter",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Never speaks on open comms. Communicates only through weapon locks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dark_zone_relay",
+      "kind": "place",
+      "description": "A massive, dead communication spire floating in absolute darkness.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "hunter_ship",
+      "kind": "ship",
+      "description": "A stealth interceptor painted matte black.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_intelligence",
+      "kind": "faction",
+      "description": "The shadowy organization trying to silence the truth.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "relay_power_station",
+      "kind": "place",
+      "description": "An auxiliary power hub attached to the relay.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "hunter_scout",
+      "kind": "ship",
+      "description": "A small stealth fighter screening for the hunter.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:corporate_intelligence} has declared the dark zone strictly off-limits due to 'unexploded ordnance' from a recent corporate dispute.",
+  "private_truth": "There are no mines. The corporation is just hiding the only surviving comms relay powerful enough to break their sector-wide media blackout.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The journalist broadcasts a short burst on an encrypted channel, begging for an escort into the dark zone.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "paranoid_journalist",
+          "target": "dark_zone_relay",
+          "reason": "The journalist needs the pilot to deliver a massive power cell to the dead relay to bring it back online.",
+          "private_fact": "The power cell is highly unstable and will explode if the pilot takes too much damage.",
+          "outcome_tags": [
+            "cell_delivered"
+          ],
+          "routes": {
+            "cell_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The relay powers up, painting the pilot's ship with a massive EM signature in the dark.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "paranoid_journalist",
+          "target": "relay_power_station",
+          "reason": "The pilot must buy the sensor buoy from a local scavenger.",
+          "private_fact": "The hunter is using the buoy to paint targets for long-range torpedoes.",
+          "outcome_tags": [
+            "buoy_stolen"
+          ],
+          "routes": {
+            "buoy_stolen": "next"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "paranoid_journalist",
+          "target": "hunter_scout",
+          "reason": "The pilot must turn and destroy the stealth hunter before it can launch its torpedoes.",
+          "private_fact": "The hunter has active camouflage, making it very hard to hit.",
+          "outcome_tags": [
+            "hunter_destroyed"
+          ],
+          "routes": {
+            "hunter_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The relay is fully charged and ready to accept the journalist's broadcast.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "paranoid_journalist",
+          "target": "hunter_ship",
+          "reason": "Before the broadcast can begin, the pilot must shoot the hunter's jamming pod out of the wreckage to clear the signal.",
+          "private_fact": "If the pod isn't destroyed, the broadcast will just be static.",
+          "outcome_tags": [
+            "pod_destroyed"
+          ],
+          "routes": {
+            "pod_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The channel is open. The pilot can upload the journalist's truth, or broadcast a corporate override code to permanently burn out the relay for a massive bounty.",
+        "options": [
+          {
+            "id": "upload_truth",
+            "label": "Broadcast the truth",
+            "leads_to": "resolution:truth_broadcast"
+          },
+          {
+            "id": "burn_relay",
+            "label": "Burn out the relay",
+            "leads_to": "resolution:relay_burned"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_broadcast",
+      "reached_by": "The pilot uploads the journalist's data.",
+      "summary": "The data reveals massive corporate corruption. Riots break out, corporate intelligence is investigated, and the journalist becomes a hero.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_journalist",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "corporate_intelligence",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "silent_hunter",
+          "fate": "dead"
+        },
+        {
+          "type": "deed",
+          "tag": "broadcast_the_dark_zone",
+          "public_summary": "A pilot repaired a dead relay in a dark zone to broadcast corporate corruption across the whole sector."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "relay_burned",
+      "reached_by": "The pilot burns out the relay.",
+      "summary": "The relay goes dark forever. The journalist is arrested by corporate hit squads, but the pilot's bank account overflows with hush money.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_journalist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "corporate_intelligence",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "silent_hunter",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "journalist_dies",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The stealth hunter torpedoes the journalist's ship in the dark. The truth dies in the cold void.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_journalist",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "corporate_intelligence",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "silent_hunter",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "journalist_dies",
+  "loose_threads": [
+    {
+      "id": "t_hunter_weapons",
+      "surface": "scan",
+      "detail": "The stealth hunter's torpedoes leave a radioactive signature identical to weapons used by a notorious pirate fleet.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_data_drive",
+      "surface": "cargo",
+      "detail": "The journalist's supposedly encrypted data drive periodically attempts to handshake with a restricted corporate internal server.",
+      "can_carry_methods": [
+        "forged_records",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "blackmail"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Unidentified EM bursts detected originating from the dark zone.",
+    "{role:corporate_intelligence} issues warning about rogue elements broadcasting lies."
+  ],
+  "voice_direction": {
+    "paranoid_journalist": "Breathless, speaks very fast, trusts no one.",
+    "silent_hunter": "Never speaks. Voice directions only apply to automated ship warnings."
+  },
+  "novelty_tags": [
+    "dark_zone_relay",
+    "media_blackout",
+    "stealth_combat",
+    "whistleblower"
+  ]
+}

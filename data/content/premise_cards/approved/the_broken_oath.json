@@ -1,0 +1,264 @@
+{
+  "id": "premise.the_broken_oath",
+  "schema_version": 1,
+  "title": "The Broken Oath",
+  "logline": "A disillusioned guard breaks their sacred oath to steal a holy relic to pay for medical care, and needs a pilot to fight off their fanatical former comrades.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "survival"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "disillusioned_guard",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Stoic, heavily scarred, wearing stripped-down ceremonial armor.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "fanatical_priest",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Zealous, uncompromising, views everything in absolute terms of holy and profane.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sacred_vault",
+      "kind": "place",
+      "description": "A fortress-monastery carved into an asteroid.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "guard_patrol",
+      "kind": "ship",
+      "description": "A heavily armored pursuit craft painted in holy colors.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "holy_order",
+      "kind": "faction",
+      "description": "The fanatic religious order controlling the system.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "secret_half_exposed"
+  ],
+  "public_situation": "Alarms ring across the {role:sacred_vault}. A priceless holy relic has been stolen by one of its own protectors.",
+  "private_truth": "The guard stole the relic because their child is dying of a curable disease, and the priest refused to use church funds to pay for the medicine.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The guard attempts to flee into the dead system, their ship trailing smoke.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "disillusioned_guard",
+          "target": "sacred_vault",
+          "reason": "The guard hires the pilot to deliver ferrite to patch their ship's failing engines so they can escape.",
+          "private_fact": "The guard admits they are bleeding heavily and can't fix the ship themselves.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The priest rallies the remaining guards for a holy crusade to recover the relic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "fanatical_priest",
+          "target": "sacred_vault",
+          "reason": "The priest hires the pilot to scan the dead system to find the traitor's ion trail.",
+          "private_fact": "The pilot finds the guard desperately trying to jump out of the system.",
+          "outcome_tags": [
+            "trail_found"
+          ],
+          "routes": {
+            "trail_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The guard patrol catches up to the traitor, preparing to execute them.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "disillusioned_guard",
+          "target": "guard_patrol",
+          "reason": "The guard begs the pilot to destroy the fanatical patrol so they can sell the relic and save their child.",
+          "private_fact": "The priest hails the pilot, offering absolution and church gold if they destroy the traitor instead.",
+          "outcome_tags": [
+            "patrol_destroyed"
+          ],
+          "routes": {
+            "patrol_destroyed": "resolution:guard_escapes"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The patrol is destroyed. The guard is ready to jump. The priest offers church gold to kill the traitor.",
+        "options": [
+          {
+            "id": "help_guard",
+            "label": "Help the guard escape",
+            "leads_to": "resolution:guard_escapes"
+          },
+          {
+            "id": "kill_guard",
+            "label": "Kill the guard and take the priest's gold",
+            "leads_to": "resolution:priest_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "guard_escapes",
+      "reached_by": "The pilot helps the guard.",
+      "summary": "The guard escapes, sells the relic, and saves their child. The priest is humiliated, and the church's power wanes.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disillusioned_guard",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fanatical_priest",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_traitor",
+          "public_summary": "A pilot helped a traitorous guard steal a holy relic to save their child."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "priest_wins",
+      "reached_by": "The pilot kills the guard.",
+      "summary": "The guard is killed, and the relic is returned to the vault. The guard's child dies. The pilot is paid in holy gold.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disillusioned_guard",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fanatical_priest",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "guard_captured",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The patrol captures the guard. They are stripped of their rank and permanently exiled. The relic is secured, and the child dies.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disillusioned_guard",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fanatical_priest",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "guard_captured",
+  "loose_threads": [
+    {
+      "id": "t_relic_truth",
+      "surface": "scan",
+      "detail": "The \"holy relic\" is actually a piece of advanced terraforming tech from the lost colonials, not divine at all.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_priest_wealth",
+      "surface": "dialogue",
+      "detail": "The guard notes that the priest recently spent millions on a luxury yacht while the faithful starved.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Holy relic stolen from {role:sacred_vault}.",
+    "{role:fanatical_priest} calls for a crusade against the traitor."
+  ],
+  "voice_direction": {
+    "disillusioned_guard": "Heavy, exhausted, speaks entirely without hope.",
+    "fanatical_priest": "Loud, preachy, constantly quoting scripture."
+  },
+  "novelty_tags": [
+    "holy_relic",
+    "broken_oath",
+    "desperate_parent"
+  ]
+}

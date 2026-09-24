@@ -1,0 +1,286 @@
+{
+  "id": "premise.the_disputed_engine",
+  "schema_version": 1,
+  "title": "The Overclocked Drive",
+  "logline": "A retired engineer claims to have built an hyper-efficient engine, but the guild insists it's a dangerous fraud and hires a pilot to prove it.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "tense"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "retired_legend",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Brilliant, arrogant, completely detached from economic reality.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "skeptical_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Tired of cleaning up the legend's explosive mistakes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "engineering_guild",
+      "kind": "faction",
+      "description": "A rigid organization that insists the new design is unsafe.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "testing_depot",
+      "kind": "place",
+      "description": "A secluded testing rig where the prototype is being held.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "guild_enforcer",
+      "kind": "ship",
+      "description": "A heavy inspection ship ensuring no unsanctioned experiments occur.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "shortage"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:engineering_guild} has publicly mocked the {role:retired_legend} for claiming they have built a drive twice as efficient as standard models.",
+  "private_truth": "The engine actually works beautifully, but it runs so hot it permanently irradiates any hull it's attached to, making it an ecological nightmare.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The legend sets up a public demonstration that immediately starts shaking the local station apart.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "retired_legend",
+          "target": "testing_depot",
+          "reason": "The legend needs the pilot to deliver raw cuprite to the depot to be refined into the specific stabilizers they need.",
+          "private_fact": "The legend has absolutely no way to pay for the refining process.",
+          "outcome_tags": [
+            "ore_delivered"
+          ],
+          "routes": {
+            "ore_delivered": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "skeptical_mechanic",
+          "target": "testing_depot",
+          "reason": "The mechanic hires the pilot to deliver a shutdown sequence code disguised as a sensor calibration.",
+          "private_fact": "The mechanic secretly wants to disable the engine before the legend blows everyone up.",
+          "outcome_tags": [
+            "shutdown_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "shutdown_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The guild realizes the test is proceeding and dispatches enforcement ships.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "retired_legend",
+          "target": "guild_enforcer",
+          "reason": "The legend asks the pilot to destroy the guild enforcer ship sniffing around their workshop.",
+          "private_fact": "The enforcer is scanning for the specific radiation signature of the overclocked engine.",
+          "outcome_tags": [
+            "enforcer_destroyed"
+          ],
+          "routes": {
+            "enforcer_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The engine is fully stabilized but radiating heavily, and the guild is demanding it be dismantled.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "engineering_guild",
+          "target": "testing_depot",
+          "reason": "The guild wants the pilot to scan the depot to prove the engine is producing lethal radiation.",
+          "private_fact": "The scan reveals the engine works, but is indeed slowly cooking the hull.",
+          "outcome_tags": [
+            "certify_unsafe",
+            "certify_safe",
+            "report_unverified"
+          ],
+          "routes": {
+            "certify_unsafe": "resolution:guild_suppression",
+            "certify_safe": "resolution:progress_achieved",
+            "report_unverified": "resolution:engine_explodes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "progress_achieved",
+      "reached_by": "The pilot falsifies the scan and certifies the engine as safe.",
+      "summary": "The engine goes to market. It's incredibly efficient, but within months, freighters start reporting mysterious crew illnesses.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "engineering_guild",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "skeptical_mechanic",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "certified_the_hot_engine",
+          "public_summary": "A pilot certified a miracle engine, but they say anyone who flies it loses their hair."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "rival_humiliated",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "guild_suppression",
+      "reached_by": "The pilot certifies the engine as unsafe.",
+      "summary": "The guild forcibly dismantles the prototype. The legend is laughed out of the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "engineering_guild",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "skeptical_mechanic",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "engine_explodes",
+      "reached_by": "The pilot refuses to verify the results.",
+      "summary": "The dispute drags on until the engine eventually melts down its containment, destroying the rig.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_legend",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "engine_explodes",
+  "loose_threads": [
+    {
+      "id": "t_guild_patents",
+      "surface": "scan",
+      "detail": "A scan of the guild's patent registry shows they secretly patented a very similar cooling system ten years ago.",
+      "can_carry_methods": [
+        "information_control",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_stabilizer_origin",
+      "surface": "cargo",
+      "detail": "The extremely rare stabilizers weren't manufactured locally; they have serial numbers matching custom yachts owned by the guild's board.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "{role:engineering_guild} issues stern reminder that unshielded engines violate local ordinances.",
+    "Strange radiation spikes reported near {role:retired_legend}'s workshop."
+  ],
+  "voice_direction": {
+    "retired_legend": "Booming, theatrical, completely ignores interruptions.",
+    "skeptical_mechanic": "Flat, exhausted cadence. Speaks slowly."
+  },
+  "novelty_tags": [
+    "dangerous_invention",
+    "radiation_leak",
+    "scientific_hubris",
+    "physics_laws"
+  ]
+}

@@ -1,0 +1,264 @@
+{
+  "id": "premise.the_forgotten_monument",
+  "schema_version": 1,
+  "title": "The Forgotten Monument",
+  "logline": "A veteran wants to restore a forgotten monument to their old squad, but the local archivist wants it destroyed to build a new data center.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "political"
+  ],
+  "themes": [
+    "chosen_family",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "old_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Stubborn, nostalgic, refusing to let the past die.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "local_archivist",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Pragmatic, forward-looking, views history as a waste of space.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "monument_site",
+      "kind": "place",
+      "description": "A crumbling memorial on a neglected asteroid.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose"
+  ],
+  "public_situation": "A prime piece of asteroid real estate is slated for demolition to make way for a corporate data center.",
+  "private_truth": "The site contains the only remaining physical record of a suppressed historical battle.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The archivist files the final demolition permits.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "old_veteran",
+          "target": "monument_site",
+          "reason": "Needs high-grade structural resin delivered to stabilize the monument before demolition crews arrive.",
+          "private_fact": "The veteran plans to chain themselves to the monument to stop the demolition.",
+          "outcome_tags": [
+            "resin_delivered",
+            "resin_abandoned"
+          ],
+          "routes": {
+            "resin_delivered": "beat:2",
+            "resin_abandoned": "resolution:monument_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The demolition is delayed due to an anonymous historical injunction.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "local_archivist",
+          "target": "monument_site",
+          "reason": "Needs a pilot to scan the monument to certify its structural instability.",
+          "private_fact": "The archivist intends to use a 'dangerous' certification to bypass the injunction.",
+          "outcome_tags": [
+            "certify_unsafe",
+            "certify_safe"
+          ],
+          "routes": {
+            "certify_unsafe": "resolution:monument_destroyed",
+            "certify_safe": "beat:3"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The veteran reveals the suppressed history of the monument.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "old_veteran",
+          "target": "monument_site",
+          "reason": "Needs the original physical casualty list transported to the site for a final dedication ceremony.",
+          "private_fact": "The casualty list proves the local government abandoned the squad.",
+          "outcome_tags": [
+            "list_delivered",
+            "list_abandoned"
+          ],
+          "routes": {
+            "list_delivered": "resolution:monument_saved",
+            "list_abandoned": "resolution:monument_destroyed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the casualty list and must decide its fate.",
+        "options": [
+          {
+            "id": "deliver_list",
+            "label": "Deliver the list to the veteran",
+            "leads_to": "resolution:monument_saved"
+          },
+          {
+            "id": "sell_archivist",
+            "label": "Give the list to the archivist to destroy",
+            "leads_to": "resolution:monument_destroyed"
+          },
+          {
+            "id": "negotiate_museum",
+            "label": "Negotiate a compromise to move the monument",
+            "leads_to": "resolution:veteran_compromises"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "monument_saved",
+      "reached_by": "The pilot delivers the casualty list.",
+      "summary": "The monument is protected by historical society mandate. The veteran finds peace, and the data center is canceled.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_veteran",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "local_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "monument_destroyed",
+      "reached_by": "The pilot abandons the missions or certifies the site unsafe.",
+      "summary": "The monument is pulverized. The data center is built over the erased history of the squad.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_veteran",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "local_archivist",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "veteran_compromises",
+      "reached_by": "A rare alternative outcome.",
+      "summary": "The monument is moved to a private museum. The data center is built, and the veteran accepts a hollow victory.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_veteran",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "local_archivist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "monument_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_archivist_funding",
+      "surface": "scan",
+      "detail": "The data center project is entirely funded by a mysterious off-world holding company.",
+      "can_carry_methods": [
+        "information_control",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_suppressed_orders",
+      "surface": "radio",
+      "detail": "The original retreat orders for the battle were issued by a shipping conglomerate, not a general.",
+      "can_carry_methods": [
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Protests delay construction at asteroid site.",
+    "Local historical society debates value of crumbling ruins."
+  ],
+  "voice_direction": {
+    "old_veteran": "Quiet, intense, never breaking eye contact when speaking.",
+    "local_archivist": "Brisk, impatient, constantly checking the time."
+  },
+  "novelty_tags": [
+    "historical_preservation",
+    "suppressed_history",
+    "veteran_memorial"
+  ]
+}

@@ -1,0 +1,282 @@
+{
+  "id": "premise.the_ice_famine",
+  "schema_version": 1,
+  "title": "The Ice Famine",
+  "logline": "A catastrophic drought hits an outpost, and refugees hire a pilot to cripple a massive water tanker so they can siphon its cargo.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "heist"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "thirsty_refugee",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Desperate, parched, willing to do anything to save their family.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "water_broker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Slick, well-hydrated, sees the drought as a business opportunity.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ice_storage",
+      "kind": "place",
+      "description": "A massive, heavily guarded orbital reservoir.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "water_tanker",
+      "kind": "ship",
+      "description": "A colossal freighter filled with millions of gallons of fresh water.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "cartel_drone",
+      "kind": "ship",
+      "description": "An automated defense turret guarding the water.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "water_cartel",
+      "kind": "faction",
+      "description": "A ruthless monopoly controlling the system's water supply.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "refugees_moving"
+  ],
+  "public_situation": "A massive solar flare from the dying star has evaporated the local moisture farms, causing severe water rationing.",
+  "private_truth": "The cartel broker knew the flare was coming and secretly diverted the system's water supply into a hidden tanker to sell back at extortionate prices.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The local water prices quadruple overnight.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "thirsty_refugee",
+          "target": "ice_storage",
+          "reason": "The refugee begs the pilot to mine and deliver ice directly to the storage facility.",
+          "private_fact": "The cartel guards immediately confiscate the ice and refuse to distribute it.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "Riots break out at the water distribution center.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "thirsty_refugee",
+          "target": "ice_storage",
+          "reason": "The refugee asks the pilot to meet a sympathetic guard outside the facility to collect the shield codes for the hidden tanker.",
+          "private_fact": "The broker left the access codes lightly guarded because they never expected a starving populace to fight back.",
+          "outcome_tags": [
+            "codes_stolen"
+          ],
+          "routes": {
+            "codes_stolen": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The refugee group launches a desperate fleet of skiffs to drain the water tanker.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "thirsty_refugee",
+          "target": "water_tanker",
+          "reason": "The pilot must attack the tanker's defenses to let the refugee skiffs dock and siphon the water.",
+          "private_fact": "The broker hails the pilot from inside the tanker, offering them a fortune to abandon the refugees and escort the tanker to safety.",
+          "outcome_tags": [
+            "tanker_breached",
+            "took_the_offer"
+          ],
+          "routes": {
+            "tanker_breached": "resolution:refugees_saved",
+            "took_the_offer": "resolution:drought_worsens"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "refugees_saved",
+      "reached_by": "The pilot breaches the tanker.",
+      "summary": "The refugees dock with the tanker and distribute the water. The broker is ruined, and the cartel loses its grip on the system.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "thirsty_refugee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "water_broker",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "water_cartel",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "breached_the_water_tanker",
+          "public_summary": "A pilot busted open a cartel water ship and let a dying colony drink it dry."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "drought_worsens",
+      "reached_by": "The pilot takes the broker's offer.",
+      "summary": "The tanker escapes. The colony is devastated by the drought, but the pilot and broker make a fortune.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "thirsty_refugee",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "water_broker",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "water_cartel",
+          "delta": 2
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "tanker_escapes",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The cartel easily fends off the refugees and jumps the tanker away. The colony slowly dies of thirst.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "thirsty_refugee",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "water_cartel",
+          "delta": 1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "tanker_escapes",
+  "loose_threads": [
+    {
+      "id": "t_broker_intel",
+      "surface": "scan",
+      "detail": "The broker received highly classified astronomical data predicting the solar flare months in advance.",
+      "can_carry_methods": [
+        "information_control",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_cartel_weapons",
+      "surface": "wreck",
+      "detail": "The automated drones were using military-grade targeting software restricted to the naval reserves.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "proxy_violence"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Water rationing protests turn violent at {role:ice_storage}.",
+    "{role:water_cartel} denies hoarding allegations."
+  ],
+  "voice_direction": {
+    "thirsty_refugee": "Weak, raspy, desperate for help.",
+    "water_broker": "Smooth, condescending, speaks like someone who has never been thirsty."
+  },
+  "novelty_tags": [
+    "water_heist",
+    "drought_crisis",
+    "cartel_monopoly"
+  ]
+}

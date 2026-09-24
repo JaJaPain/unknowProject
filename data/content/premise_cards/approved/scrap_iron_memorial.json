@@ -1,0 +1,279 @@
+{
+  "id": "premise.scrap_iron_memorial",
+  "schema_version": 1,
+  "title": "Scrap Iron Memorial",
+  "logline": "A cash-strapped local council is selling a massive disaster memorial for scrap, sparking a bitter conflict with survivors who refuse to let their tragedy be erased.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "political"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "council_bureaucrat",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Desperate to balance the budget, views the memorial as a waste of valuable real estate.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "survivor_spokesperson",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Lost family in the disaster, fiercely protective of the site and deeply suspicious of the council.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrap_merchant",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Bought the salvage rights at a discount, just wants to do the job and get paid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "disaster_memorial",
+      "kind": "place",
+      "description": "A massive, beautiful construct of high-grade ferrite, orbiting a silent moon.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "council_escort",
+      "kind": "ship",
+      "description": "A heavily armed patrol cutter loyal to the council's payroll.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "local_council",
+      "kind": "faction",
+      "description": "The governing body of the system, broke, desperate, and willing to cut corners.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": []
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:local_council} has announced the decommissioning and sale of the {role:disaster_memorial} to pay off mounting municipal debts, sparking outrage from the survivors.",
+  "private_truth": "The council isn't just selling the memorial for its metal; the memorial sits on a newly formed stable jump point, and they need it cleared before a corporate surveyor arrives.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The scrap merchant arrives with heavy cutting lasers, but the equipment keeps failing mysteriously.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "council_bureaucrat",
+          "target": "disaster_memorial",
+          "reason": "The bureaucrat hires the pilot to deliver high-yield mining charges to the memorial to speed up the demolition before the protests grow.",
+          "private_fact": "The charges are military-grade, meant to obliterate the site completely rather than salvage it.",
+          "outcome_tags": [
+            "charges_delivered"
+          ],
+          "routes": {
+            "charges_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The survivors notice the military-grade charges and realise the council is trying to erase something entirely.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "survivor_spokesperson",
+          "target": "disaster_memorial",
+          "reason": "The spokesperson begs the pilot to fly close and deep-scan the memorial's foundation before the charges are armed.",
+          "private_fact": "The scan reveals a highly valuable, naturally forming jump point hidden directly beneath the memorial.",
+          "outcome_tags": [
+            "certify_jump_point",
+            "falsify_report"
+          ],
+          "routes": {
+            "certify_jump_point": "next",
+            "falsify_report": "resolution:memorial_blown_up"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The truth about the jump point leaks. The council panics and sends an armed escort to detonate the charges immediately.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "survivor_spokesperson",
+          "target": "council_escort",
+          "reason": "The spokesperson scrambles every credit they have to hire the pilot to destroy the escort before it can trigger the explosives.",
+          "private_fact": "Mid-fight, the escort captain hails the pilot, offering a massive cut of the jump point's corporate sale price to stand down.",
+          "outcome_tags": [
+            "escort_destroyed",
+            "took_the_bribe"
+          ],
+          "routes": {
+            "escort_destroyed": "resolution:survivors_win",
+            "took_the_bribe": "resolution:council_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "survivors_win",
+      "reached_by": "The pilot destroys the escort and protects the memorial.",
+      "summary": "The escort is destroyed and the jump point is made public. The survivors claim ownership of the new route, and the council bureaucrat is ousted in disgrace.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "local_council",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "council_bureaucrat",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "survivor_spokesperson",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_memorial",
+          "public_summary": "A pilot blew up a council ship to stop them from paving over a disaster memorial."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "council_wins",
+      "reached_by": "The pilot takes the bribe and stands down.",
+      "summary": "The pilot takes the bribe and watches the memorial burn. The council secretly sells the jump point rights to a corporation, paying off their debts while the survivors lose everything.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "local_council",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "survivor_spokesperson",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "council_bureaucrat",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "memorial_blown_up",
+      "reached_by": "The pilot falsifies the scan report, or ignores the climax.",
+      "summary": "The council detonates the charges without interference, obliterating the memorial and claiming the jump point. The survivors' protests are silenced by the blast.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "local_council",
+          "delta": 0
+        },
+        {
+          "type": "cast_fate",
+          "target": "survivor_spokesperson",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "council_bureaucrat",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "route_opened"
+      ]
+    }
+  ],
+  "default_resolution": "memorial_blown_up",
+  "loose_threads": [
+    {
+      "id": "t_military_charges",
+      "surface": "cargo",
+      "detail": "The mining charges delivered to the memorial have serial numbers matching a naval depot that officially burned down a decade ago.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_survey_logs",
+      "surface": "scan",
+      "detail": "The jump point's resonance signature was quietly logged in the council's public traffic database six months before the disaster even happened.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Protests continue at {role:disaster_memorial} over council decommissioning plans.",
+    "{role:local_council} promises new infrastructure funding, refuses to specify source."
+  ],
+  "voice_direction": {
+    "council_bureaucrat": "Exhausted, overly formal.",
+    "survivor_spokesperson": "Gravelly, exhausted, barely suppressed rage. Never uses the pilot's name, just calls them 'flyer'.",
+    "scrap_merchant": "Sloppy speech, pauses often."
+  },
+  "novelty_tags": [
+    "disaster_memorial",
+    "jump_point_discovery",
+    "manufactured_tragedy"
+  ]
+}

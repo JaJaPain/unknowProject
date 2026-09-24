@@ -1,0 +1,265 @@
+{
+  "id": "premise.the_empty_casket",
+  "schema_version": 1,
+  "title": "The Empty Casket",
+  "logline": "A merchant faking their own death hires a pilot to steal their empty casket before a suspicious notary opens it at the grand funeral.",
+  "scale": "personal",
+  "tone": [
+    "absurd",
+    "heist"
+  ],
+  "themes": [
+    "reinvention",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "faking_merchant",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Very much alive, wearing a terrible disguise, extremely anxious.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "suspicious_notary",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Meticulous, humorless, suspects everyone of tax evasion.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "grand_mausoleum",
+      "kind": "place",
+      "description": "A lavish orbital tomb filled with crying mourners.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "funeral_syndicate",
+      "kind": "faction",
+      "description": "The guild that monopolizes high-end burials.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "The {role:funeral_syndicate} is hosting a massive, highly publicized funeral for the {role:faking_merchant} at the {role:grand_mausoleum}.",
+  "private_truth": "The merchant is faking their death to escape massive debts, and the sealed casket is actually completely empty.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The notary pauses the funeral proceedings to demand a final visual confirmation of the body.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "suspicious_notary",
+          "target": "grand_mausoleum",
+          "reason": "The notary hires the pilot to scan the casket for organic mass before they open it.",
+          "private_fact": "The pilot's scan reveals the casket contains nothing but bags of sand.",
+          "outcome_tags": [
+            "casket_scanned"
+          ],
+          "routes": {
+            "casket_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The notary orders the syndicate guards to force the casket open.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "faking_merchant",
+          "target": "grand_mausoleum",
+          "reason": "The merchant begs the pilot to meet a bribed undertaker at the mausoleum's loading dock and collect the casket before it can be opened.",
+          "private_fact": "The casket is incredibly heavy due to the sand.",
+          "outcome_tags": [
+            "casket_stolen"
+          ],
+          "routes": {
+            "casket_stolen": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The notary locks down the mausoleum and issues an arrest warrant for the missing corpse.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "faking_merchant",
+          "target": "grand_mausoleum",
+          "reason": "The merchant asks the pilot to deliver the stolen casket to an incinerator to destroy the evidence.",
+          "private_fact": "The notary intercepts the pilot, demanding they hand over the casket so the fraud can be proven.",
+          "outcome_tags": [
+            "casket_destroyed",
+            "abandoned"
+          ],
+          "routes": {
+            "casket_destroyed": "resolution:merchant_escapes",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has the empty casket. The notary is threatening them with accessory to fraud.",
+        "options": [
+          {
+            "id": "destroy_casket",
+            "label": "Incinerate the casket and let the merchant run",
+            "leads_to": "resolution:merchant_escapes"
+          },
+          {
+            "id": "give_notary",
+            "label": "Give the casket to the notary",
+            "leads_to": "resolution:notary_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "merchant_escapes",
+      "reached_by": "The pilot destroys the casket.",
+      "summary": "The casket burns. The notary has no proof, the merchant's debts are legally cleared, and they start a new life under a fake name.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "faking_merchant",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "suspicious_notary",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "funeral_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "helped_fake_death",
+          "public_summary": "A pilot stole a casket from a funeral to help a merchant fake their own death."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "notary_wins",
+      "reached_by": "The pilot gives the casket to the notary.",
+      "summary": "The notary opens the casket, exposing the bags of sand. The merchant is arrested for massive financial fraud.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "faking_merchant",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "suspicious_notary",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "funeral_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "casket_abandoned",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The notary's guards seize the casket. The fraud is exposed, and the merchant is sent to a penal colony.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "faking_merchant",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "funeral_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "casket_abandoned",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_scam",
+      "surface": "scan",
+      "detail": "The funeral syndicate knew the casket was empty and was charging the merchant a premium to look the other way.",
+      "can_carry_methods": [
+        "blackmail",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_merchant_debts",
+      "surface": "dialogue",
+      "detail": "The merchant casually mentions they owe money to the planetary governor, not just banks.",
+      "can_carry_methods": [
+        "information_control",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Grand funeral for {role:faking_merchant} ends in chaos.",
+    "{role:suspicious_notary} vows to investigate \"grave irregularities\"."
+  ],
+  "voice_direction": {
+    "faking_merchant": "Nervous, pitches up when lying, tries to sound casual.",
+    "suspicious_notary": "Flat, nasal, entirely lacking empathy."
+  },
+  "novelty_tags": [
+    "faked_death",
+    "empty_casket",
+    "funeral_heist"
+  ]
+}

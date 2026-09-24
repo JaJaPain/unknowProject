@@ -1,0 +1,290 @@
+{
+  "id": "premise.pilgrims_toll",
+  "schema_version": 1,
+  "title": "A Matter of Spirit",
+  "logline": "A religious order requires a specific sacred isotope for their holy rites, but a local hospital desperately needs that same shipment for radiation treatments.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "pilgrim_elder",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Deeply devout, believes the literal salvation of their people depends on this ritual.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "clinic_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Overworked, furious, sees faith as an obstacle to saving lives.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sacred_comet",
+      "kind": "place",
+      "description": "A highly irradiated chunk of ice moving through the system, venerated as a holy relic.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "pilgrimage_site",
+      "kind": "place",
+      "description": "An ancient orbital temple heavily reliant on sacred donations.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "local_clinic",
+      "kind": "place",
+      "description": "A struggling medical bay filled with patients suffering from acute radiation sickness.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "flotilla_escort",
+      "kind": "ship",
+      "description": "An armed religious guardian ship assigned to protect the comet.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "medical_board",
+      "kind": "faction",
+      "description": "The bureaucratic secular authority that officially controls medical resources.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "shortage"
+    ],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "alliance_broken"
+  ],
+  "public_situation": "The {role:sacred_comet} has entered the system, carrying a rare thorium isotope. The {role:medical_board} has claimed it for emergency treatments, but the pilgrims consider harvesting it without their blessing to be a horrific sacrilege.",
+  "private_truth": "The patients in the clinic were poisoned by an unshielded drive built by the pilgrim's own religious leaders decades ago, making the clinic's claim deeply personal.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Both factions broadcast desperate, open bounties for anyone willing to mine the comet.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "clinic_doctor",
+          "target": "local_clinic",
+          "reason": "Needs the pilot to extract the raw thorium and dock at the clinic to deliver it for immediate synthesis into life-saving treatments.",
+          "private_fact": "The doctor is offering to pay the pilot with stolen medical supplies if they succeed.",
+          "outcome_tags": [
+            "delivered_to_clinic"
+          ],
+          "routes": {
+            "delivered_to_clinic": "next"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "pilgrim_elder",
+          "target": "pilgrimage_site",
+          "reason": "Needs the pilot to respectfully harvest the thorium and dock at the temple to present it for the ritual of cleansing.",
+          "private_fact": "If the ritual isn't performed, the pilgrims believe a plague will sweep the sector.",
+          "outcome_tags": [
+            "delivered_to_temple"
+          ],
+          "routes": {
+            "delivered_to_temple": "resolution:pilgrims_appeased"
+          }
+        }
+      ],
+      "player_choice": null,
+      "missions_mode": "one_of"
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The pilgrims mobilize to intercept the pilot before they can dock at the clinic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "clinic_doctor",
+          "target": "flotilla_escort",
+          "reason": "The doctor needs the pilot to scan the escort to find a weak point in their shields before the final run.",
+          "private_fact": "The scan will trigger the escort's automated warning systems.",
+          "outcome_tags": [
+            "escort_scanned"
+          ],
+          "routes": {
+            "escort_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The escort ship blocks the path to the clinic, weapons hot.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "clinic_doctor",
+          "target": "flotilla_escort",
+          "reason": "The doctor pays the pilot to destroy the religious escort blocking the clinic.",
+          "private_fact": "The escort captain will offer spiritual forgiveness and a heavy bribe if the pilot hands over the cargo instead.",
+          "outcome_tags": [
+            "escort_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "escort_destroyed": "resolution:clinic_saved",
+            "took_the_offer": "resolution:pilgrims_appeased"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "clinic_saved",
+      "reached_by": "The pilot fights off the pilgrims and delivers the isotope to the doctor.",
+      "summary": "The patients survive the radiation sickness, but the pilgrims brand the pilot a heretic and vow revenge for the desecration.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "pilgrim_elder",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "clinic_doctor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_irradiated",
+          "public_summary": "A pilot blasted through a religious blockade to bring radiation meds to a dying ward."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "pilgrims_appeased",
+      "reached_by": "The pilot delivers the isotope to the pilgrims, or takes the escort's offer.",
+      "summary": "The ritual is completed perfectly, bringing deep spiritual comfort to the sector's believers. Several patients at the clinic die agonizing deaths.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "clinic_doctor",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pilgrim_elder",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "doctor_arrested",
+      "reached_by": "The pilot ignores the situation entirely.",
+      "summary": "The medical board arrests the doctor for attempting to steal pilgrim property. The clinic shuts down.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "clinic_doctor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "medical_board",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "doctor_arrested",
+  "loose_threads": [
+    {
+      "id": "t_comet_origin",
+      "surface": "scan",
+      "detail": "The comet's trajectory perfectly matches a mining tug's automated push-path that was wiped from the local registry.",
+      "can_carry_methods": [
+        "forged_records",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_hospital_funding",
+      "surface": "dialogue",
+      "detail": "The doctor bitterly mentions that the medical board's funding was recently slashed by a politician sympathetic to the pilgrims.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:pilgrimage_site} announces holy days of gathering near the comet's tail.",
+    "Local hospitals report critical shortages of advanced radiation treatments."
+  ],
+  "voice_direction": {
+    "pilgrim_elder": "Slow, resonant pitch. Uses metaphors instead of direct statements.",
+    "clinic_doctor": "Sharp, clipped cadence. Stresses medical terms with deep frustration."
+  },
+  "novelty_tags": [
+    "religious_dilemma",
+    "medical_emergency",
+    "sacred_comet",
+    "no_villain"
+  ]
+}

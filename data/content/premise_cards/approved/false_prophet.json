@@ -1,0 +1,284 @@
+{
+  "id": "premise.false_prophet",
+  "schema_version": 1,
+  "title": "The Voice in the Void",
+  "logline": "A supposed prophet claims a derelict station speaks to them, demanding tribute from poor believers, but they are just using a tightbeam comms relay to fake it.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "paranoid"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "false_prophet",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Charismatic, deeply manipulative, entirely focused on extracting wealth from believers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "devout_follower",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "A poor worker who gave their life savings to the prophet, utterly convinced of the miracles.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "prophet_ship",
+      "kind": "ship",
+      "description": "A gilded, heavily defended luxury yacht disguised as a humble pilgrimage vessel.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "derelict_shrine",
+      "kind": "place",
+      "description": "A dark, silent, abandoned listening post that believers think is a holy artifact.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cult_following",
+      "kind": "faction",
+      "description": "A growing movement of desperate people giving away everything they own.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "nebula"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "new_leader_untested",
+    "public_outrage"
+  ],
+  "public_situation": "A rapidly growing {role:cult_following} believes that the {role:derelict_shrine} is broadcasting divine visions directly into the mind of their leader.",
+  "private_truth": "The prophet is using a hidden tightbeam transmitter on their luxury ship to bounce synthetic audio files off the derelict's old antenna arrays.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The prophet demands a massive physical tithe, claiming the shrine requires an offering to speak again.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "devout_follower",
+          "target": "derelict_shrine",
+          "reason": "Hires the pilot to securely dock at the shrine and deliver a massive crate of valuable tech scrap as an offering.",
+          "private_fact": "The follower sold their own ship to afford the scrap.",
+          "outcome_tags": [
+            "tithe_delivered"
+          ],
+          "routes": {
+            "tithe_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The shrine broadcasts a terrifying new prophecy, causing mass panic among the believers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "devout_follower",
+          "target": "prophet_ship",
+          "reason": "The terrified follower asks the pilot to scan the prophet's ship, hoping to find a way to shield the prophet from the 'pain' of the visions.",
+          "private_fact": "The scan reveals the tightbeam array actively broadcasting the synthetic voices.",
+          "outcome_tags": [
+            "expose_fraud",
+            "keep_quiet"
+          ],
+          "routes": {
+            "expose_fraud": "next",
+            "keep_quiet": "resolution:prophet_rules"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "false_prophet",
+          "target": "derelict_shrine",
+          "reason": "The prophet asks the pilot to fetch a 'holy relic' from the shrine.",
+          "private_fact": "It's just the old tightbeam bounce-plate, which needs maintenance.",
+          "outcome_tags": [
+            "plate_recovered"
+          ],
+          "routes": {
+            "plate_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The prophet announces a final, system-wide holy war against non-believers.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "devout_follower",
+          "target": "prophet_ship",
+          "reason": "The follower, now knowing the truth, pays the pilot with the last of their savings to destroy the prophet's yacht.",
+          "private_fact": "The prophet will offer a cut of the cult's tithes to spare their life.",
+          "outcome_tags": [
+            "prophet_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "prophet_destroyed": "resolution:cult_shattered",
+            "took_the_offer": "resolution:prophet_escapes"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cult_shattered",
+      "reached_by": "The pilot destroys the prophet's ship.",
+      "summary": "The prophet is killed in combat. The believers think they were martyred by a demon, cementing their faith forever, though the voices stop.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "cult_following",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "false_prophet",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "devout_follower",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "prophet_escapes",
+      "reached_by": "The pilot takes the prophet's bribe.",
+      "summary": "The pilot gets rich, while the prophet flees the system with the cult's money. The cult collapses into infighting.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "cult_following",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "false_prophet",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "devout_follower",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "prophet_rules",
+      "reached_by": "The pilot keeps quiet or ignores the situation.",
+      "summary": "The cult takes over the local sector, draining the populace dry as the prophet buys more yachts.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "cult_following",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "false_prophet",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "prophet_rules",
+  "loose_threads": [
+    {
+      "id": "t_synthetic_voices",
+      "surface": "scan",
+      "detail": "The synthetic audio files used for the prophecy perfectly match the voice prints of a famously murdered corporate CEO.",
+      "can_carry_methods": [
+        "impersonation",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_cult_finances",
+      "surface": "dialogue",
+      "detail": "The follower mentions their entire life savings was instantly transferred to an off-world holding company the moment they donated it.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Mass gatherings reported near the {role:derelict_shrine} as believers await the next word.",
+    "Local authorities warn of increased scams targeting the spiritually vulnerable."
+  ],
+  "voice_direction": {
+    "false_prophet": "Loud, hypnotic cadence. Rises in pitch at the end of every sentence.",
+    "devout_follower": "Quiet, reverent rhythm. Pauses before speaking a holy name."
+  },
+  "novelty_tags": [
+    "fake_prophet",
+    "religious_scam",
+    "tightbeam_relay",
+    "little_person_lying"
+  ]
+}

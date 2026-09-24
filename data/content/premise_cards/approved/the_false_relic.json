@@ -1,0 +1,260 @@
+{
+  "id": "premise.the_false_relic",
+  "schema_version": 1,
+  "title": "The False Relic",
+  "logline": "A cynical gambler attempts to sell a fake religious artifact to a local congregation, but needs a pilot to swap it into their vault before the real one is appraised.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "paranoid"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "relic_broker",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "Quick-talking and sweating heavily under the weight of their own con.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "devout_preacher",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Deeply sincere, carrying the weight of their congregation's desperate hope.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sacred_vault",
+      "kind": "place",
+      "description": "A high-security orbital lockbox disguised as a shrine.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "appraiser_ship",
+      "kind": "ship",
+      "description": "A neutral, heavily armored vessel carrying a specialized authenticity scanner.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "broker_suite",
+      "kind": "place",
+      "description": "A rented VIP lounge where the broker does business.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted"
+  ],
+  "public_situation": "The local congregation is celebrating the imminent arrival of a sacred relic that promises to bring prosperity to the sector.",
+  "private_truth": "The relic is a cheap forgery. The broker sold it to the congregation and is now terrified of what happens when the official appraiser arrives.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The sacred vault is locked down in preparation for the appraiser's arrival.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "relic_broker",
+          "target": "sacred_vault",
+          "reason": "The broker hires the pilot to collect a 'ceremonial display case' from a craftsman and deliver it to the vault.",
+          "private_fact": "The case contains a hidden signal jammer designed to make the authentic relic scan as a cheap forgery.",
+          "outcome_tags": [
+            "case_delivered"
+          ],
+          "routes": {
+            "case_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The appraiser scans the relic, declares it a fake, and storms off. The congregation is devastated.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "devout_preacher",
+          "target": "broker_suite",
+          "reason": "The heartbroken preacher asks the pilot to return the 'fake' relic to the broker for a partial refund.",
+          "private_fact": "The broker is waiting to receive the priceless authentic relic for pennies on the dollar.",
+          "outcome_tags": [
+            "relic_returned"
+          ],
+          "routes": {
+            "relic_returned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The preacher notices the display case humming with an odd frequency and asks for an investigation.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "devout_preacher",
+          "target": "broker_suite",
+          "reason": "The pilot must scan the broker's suite and the display case to compare the signals.",
+          "private_fact": "The scan reveals the broker's jammer and proves the returned relic was genuine.",
+          "outcome_tags": [
+            "report_jammer",
+            "cover_it_up",
+            "extort_broker"
+          ],
+          "routes": {
+            "report_jammer": "resolution:truth_comes_out",
+            "cover_it_up": "resolution:con_succeeds",
+            "extort_broker": "resolution:con_fails"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_comes_out",
+      "reached_by": "The pilot exposes the rigged appraiser.",
+      "summary": "The congregation learns of the forgery and the theft. The broker flees the system, and the preacher's faith is shaken but honest.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relic_broker",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "devout_preacher",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_fake_relic",
+          "public_summary": "A pilot caught a con artist trying to rob the local church blind."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "evidence_loose",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "con_succeeds",
+      "reached_by": "The pilot hides the evidence and helps the con succeed.",
+      "summary": "The fake relic is certified authentic. The congregation is overjoyed, but their donation funds are mysteriously gone, lining the pilot and broker's pockets.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relic_broker",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "devout_preacher",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "festival"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "con_fails",
+      "reached_by": "The pilot abandons the job or ignores the sabotage.",
+      "summary": "The appraiser exposes the fake relic naturally. The congregation is heartbroken, and the broker is dragged before a local tribunal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relic_broker",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "devout_preacher",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "con_fails",
+  "loose_threads": [
+    {
+      "id": "t_broker_backing",
+      "surface": "dialogue",
+      "detail": "The broke gambler managed to front millions in bribes to the official appraiser using a private banking channel.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_vault_logs",
+      "surface": "scan",
+      "detail": "The sacred vault's security grid was actually scheduled to fail two days earlier, according to embedded maintenance code.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "sabotage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Miraculous power surge reported at {role:sacred_vault}; faithful claim it's a sign.",
+    "Appraisers union denies taking bribes from {role:relic_broker}."
+  ],
+  "voice_direction": {
+    "relic_broker": "Speaks too fast, trying to sound confident but constantly trailing off.",
+    "devout_preacher": "Slow, methodical, almost musical rhythm. Never raises their voice."
+  },
+  "novelty_tags": [
+    "fake_relic",
+    "church_heist",
+    "rigged_appraisal",
+    "crisis_of_faith"
+  ]
+}

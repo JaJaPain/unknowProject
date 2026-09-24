@@ -1,0 +1,270 @@
+{
+  "id": "premise.the_stolen_tickets",
+  "schema_version": 1,
+  "title": "The Stolen Tickets",
+  "logline": "A desperate refugee hires a pilot to forge and smuggle transit tickets past a corrupt bureaucrat who is deliberately overbooking colony ships.",
+  "scale": "personal",
+  "tone": [
+    "heist",
+    "absurd"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "desperate_refugee",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Fast-talking, visibly exhausted, carrying their entire life in a backpack.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corrupt_bureaucrat",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Smug, rubber-stamps everything for a price.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "transit_hub",
+      "kind": "place",
+      "description": "A massive, overcrowded space station filled with waiting families.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "ticket_syndicate",
+      "kind": "faction",
+      "description": "The criminal organization selling the forged passes.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "market_disrupted"
+  ],
+  "public_situation": "Thousands of people are stranded at the {role:transit_hub} waiting for the next outbound colony ship.",
+  "private_truth": "The bureaucrat is intentionally delaying valid tickets to force people to buy forged ones from the syndicate.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The bureaucrat announces the next ship is fully booked, sparking a minor riot.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "desperate_refugee",
+          "target": "transit_hub",
+          "reason": "The refugee begs the pilot to buy blank data slugs and smuggle them into the hub.",
+          "private_fact": "The slugs are going to be used to slice the bureaucrat's booking mainframe.",
+          "outcome_tags": [
+            "slugs_delivered"
+          ],
+          "routes": {
+            "slugs_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The hub's security grid suddenly detects unauthorized network access.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "corrupt_bureaucrat",
+          "target": "transit_hub",
+          "reason": "The bureaucrat hires the pilot to scan the terminal to find the source of the slicing attempt.",
+          "private_fact": "The scan reveals the bureaucrat's own personal terminal is hosting the syndicate's forging software.",
+          "outcome_tags": [
+            "terminal_scanned"
+          ],
+          "routes": {
+            "terminal_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The colony ship begins its final boarding sequence.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "desperate_refugee",
+          "target": "transit_hub",
+          "reason": "The refugee asks the pilot to deliver the sliced tickets to their family waiting at the docks.",
+          "private_fact": "The bureaucrat intercepts the pilot and demands the tickets back, threatening to have them arrested.",
+          "outcome_tags": [
+            "tickets_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "tickets_delivered": "resolution:refugees_escape",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the forged tickets. The bureaucrat is offering to wipe the pilot's record if they hand them over.",
+        "options": [
+          {
+            "id": "hand_over",
+            "label": "Give the tickets to the bureaucrat",
+            "leads_to": "resolution:bureaucrat_wins"
+          },
+          {
+            "id": "expose_bureaucrat",
+            "label": "Use the scan data to expose the bureaucrat",
+            "leads_to": "resolution:syndicate_exposed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "refugees_escape",
+      "reached_by": "The pilot delivers the tickets.",
+      "summary": "The refugees successfully board the ship and escape to a new life. The bureaucrat loses their cut of the profits.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_refugee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_bureaucrat",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "ticket_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "helped_refugees",
+          "public_summary": "A pilot helped a desperate family forge their way onto a colony ship."
+        }
+      ],
+      "seeds": [
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "syndicate_exposed",
+      "reached_by": "The pilot exposes the bureaucrat.",
+      "summary": "The bureaucrat is arrested for working with the syndicate. The refugees are processed legally and eventually leave.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_bureaucrat",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_refugee",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "ticket_syndicate",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "bureaucrat_wins",
+      "reached_by": "The pilot hands over the tickets.",
+      "summary": "The bureaucrat destroys the tickets. The refugees are left stranded, and the syndicate continues its extortion.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_refugee",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_bureaucrat",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "ticket_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "bureaucrat_wins",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_ties",
+      "surface": "scan",
+      "detail": "The syndicate's forging software was originally developed by the system's own security forces.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_colony_destination",
+      "surface": "dialogue",
+      "detail": "The colony ship isn't actually heading to a new world; it's being routed to a corporate labor camp.",
+      "can_carry_methods": [
+        "sabotage",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "false_flag"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Overcrowding crisis worsens at {role:transit_hub}.",
+    "{role:corrupt_bureaucrat} promises swift action against ticket forgers."
+  ],
+  "voice_direction": {
+    "desperate_refugee": "Fast, breathless, constantly looking over their shoulder.",
+    "corrupt_bureaucrat": "Slow, deeply patronizing, smiles too much."
+  },
+  "novelty_tags": [
+    "forged_tickets",
+    "refugee_crisis",
+    "corrupt_bureaucracy"
+  ]
+}

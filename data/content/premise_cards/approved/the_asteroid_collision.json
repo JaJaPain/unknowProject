@@ -1,0 +1,274 @@
+{
+  "id": "premise.the_asteroid_collision",
+  "schema_version": 1,
+  "title": "The Asteroid Collision",
+  "logline": "A massive asteroid is on a collision course with a criminal base, and a surveyor is hired to redirect it using precise explosive charges.",
+  "scale": "local",
+  "tone": [
+    "hopeful",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "nervous_surveyor",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Brilliant at math, terrible under pressure.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "stubborn_boss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Refuses to evacuate, viewing it as a sign of weakness.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "asteroid_base",
+      "kind": "place",
+      "description": "A sprawling, illegal mining and smuggling hub.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "evacuation_fleet",
+      "kind": "faction",
+      "description": "Independent haulers offering to evacuate people for exorbitant fees.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted"
+  ],
+  "public_situation": "An unusually dense asteroid has unexpectedly shifted orbit and is heading straight for a populated sector.",
+  "private_truth": "The asteroid was nudged by a rival syndicate trying to wipe out the base without firing a shot.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The asteroid's trajectory is confirmed publically, sparking a panic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "nervous_surveyor",
+          "target": "asteroid_base",
+          "reason": "Needs the pilot to fly extremely close to the incoming asteroid and map its structural fault lines.",
+          "private_fact": "The surveyor's previous calculations were wrong, and they are desperately trying to fix them before anyone notices.",
+          "outcome_tags": [
+            "faults_mapped",
+            "mapping_failed"
+          ],
+          "routes": {
+            "faults_mapped": "beat:2",
+            "mapping_failed": "resolution:base_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The evacuation fleet arrives and demands double their usual rates.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "stubborn_boss",
+          "target": "asteroid_base",
+          "reason": "Needs highly explosive thorium delivered to construct the seismic charges.",
+          "private_fact": "The boss is holding the surveyor's family hostage to ensure they don't flee.",
+          "outcome_tags": [
+            "thorium_delivered",
+            "thorium_abandoned"
+          ],
+          "routes": {
+            "thorium_delivered": "beat:3",
+            "thorium_abandoned": "resolution:base_destroyed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The asteroid enters the final approach window.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "nervous_surveyor",
+          "target": "asteroid_base",
+          "reason": "Needs the armed seismic charges delivered and planted on the precise fault lines mapped earlier.",
+          "private_fact": "The surveyor realizes the blast will rain debris onto a nearby civilian settlement instead.",
+          "outcome_tags": [
+            "charges_planted",
+            "charges_withheld"
+          ],
+          "routes": {
+            "charges_planted": "resolution:base_saved",
+            "charges_withheld": "resolution:base_destroyed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the final armed charges.",
+        "options": [
+          {
+            "id": "plant_charges",
+            "label": "Plant the charges and save the base",
+            "leads_to": "resolution:base_saved"
+          },
+          {
+            "id": "withhold_charges",
+            "label": "Refuse to plant them to spare the civilians",
+            "leads_to": "resolution:base_destroyed"
+          },
+          {
+            "id": "evacuate_boss",
+            "label": "Force the boss to evacuate instead",
+            "leads_to": "resolution:boss_fled"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "base_saved",
+      "reached_by": "The pilot plants the charges.",
+      "summary": "The asteroid shatters. The base is saved, but the civilian settlement is heavily damaged by debris.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_boss",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "nervous_surveyor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "base_destroyed",
+      "reached_by": "The pilot refuses to plant the charges or fails the missions.",
+      "summary": "The asteroid obliterates the base. The civilians are spared, but the crime boss is ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "nervous_surveyor",
+          "fate": "fled"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "boss_fled",
+      "reached_by": "The pilot forces the boss to evacuate.",
+      "summary": "The base is destroyed and the boss escapes with the gang's money, but the surveyor walks free and the lanes around the base reopen.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_boss",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "nervous_surveyor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "evacuation_fleet",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "base_destroyed",
+  "loose_threads": [
+    {
+      "id": "t_asteroid_thrusters",
+      "surface": "scan",
+      "detail": "The asteroid had heavy-duty industrial thrusters covertly bolted to its dark side.",
+      "can_carry_methods": [
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_evac_prices",
+      "surface": "radio",
+      "detail": "The evacuation fleet set their exorbitant prices weeks before the asteroid's trajectory shifted.",
+      "can_carry_methods": [
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [],
+  "radio_hooks": [
+    "Massive asteroid on collision course with outer sectors.",
+    "Price gouging reported among independent evacuation haulers."
+  ],
+  "voice_direction": {
+    "nervous_surveyor": "Stammering, calculating out loud, very stressed.",
+    "stubborn_boss": "Deep, calm, absolutely unmovable."
+  },
+  "novelty_tags": [
+    "asteroid_impact",
+    "orbital_mechanics",
+    "evacuation_crisis"
+  ]
+}

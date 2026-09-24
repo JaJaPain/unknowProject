@@ -1,0 +1,348 @@
+{
+  "id": "premise.stalled_pilgrims",
+  "schema_version": 1,
+  "title": "The Stalled Pilgrims",
+  "logline": "A massive convoy of pilgrims is stalled at a border crossing, bleeding money to a corrupt bureaucracy until a desperate refugee decides to force their way through.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "corrupt_official",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Loves paperwork, hates making exceptions, secretly taking a cut of the delays.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "desperate_refugee",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Exhausted leader of a splinter group of pilgrims, out of time and money.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "pilgrim_convoy",
+      "kind": "faction",
+      "description": "A slow-moving fleet of civilians trying to reach a holy site.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "border_patrol",
+      "kind": "ship",
+      "description": "A heavy interdiction cruiser that answers to the local bureaucracy.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shrine_station",
+      "kind": "place",
+      "description": "The destination of the pilgrimage, located in a neighboring system.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "power_vacuum"
+  ],
+  "public_situation": "The {role:pilgrim_convoy} has been halted at the system border for weeks, awaiting clearance from the {role:corrupt_official}.",
+  "private_truth": "The official is deliberately stalling the convoy so local stations can drain the pilgrims' savings on overpriced supplies.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The pilgrims announce they are running out of life support.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "desperate_refugee",
+          "target": "shrine_station",
+          "reason": "The refugee needs the pilot to bypass the blockade and deliver emergency water to the shrine to prepare for their arrival.",
+          "private_fact": "The refugee is actually testing the border sensors to find a blind spot.",
+          "outcome_tags": [
+            "water_delivered"
+          ],
+          "routes": {
+            "water_delivered": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "corrupt_official",
+          "target": "shrine_station",
+          "reason": "The official hires the pilot to deliver a stack of 'revised tariffs' to the shrine.",
+          "private_fact": "The tariffs retroactively seize the pilgrims' remaining assets.",
+          "outcome_tags": [
+            "tariffs_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "tariffs_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "The refugee group breaks formation and begins burning toward the border.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "corrupt_official",
+          "target": "pilgrim_convoy",
+          "reason": "The official orders the pilot to disable the leading pilgrim ships to make an example of them.",
+          "private_fact": "The official knows the pilgrim ships are unarmed and packed with civilians.",
+          "outcome_tags": [
+            "pilgrims_disabled"
+          ],
+          "routes": {
+            "pilgrims_disabled": "resolution:pilgrims_crushed"
+          }
+        },
+        {
+          "verb": "recover_combat_drop",
+          "requester": "desperate_refugee",
+          "target": "border_patrol",
+          "reason": "The refugee begs the pilot to attack the border patrol cruiser and steal its command codes.",
+          "private_fact": "The codes will allow the entire convoy to jump cleanly through the gate.",
+          "outcome_tags": [
+            "codes_recovered"
+          ],
+          "routes": {
+            "codes_recovered": "next"
+          }
+        }
+      ],
+      "missions_mode": "one_of",
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The convoy breaches the gate, but a second patrol cruiser intercepts them.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "desperate_refugee",
+          "target": "border_patrol",
+          "reason": "The refugee needs the pilot to destroy the intercepting cruiser before it fires on the unarmed transports.",
+          "private_fact": "The patrol captain hails the pilot and offers to wipe their record in this system, plus the pilgrims' seized fares, if the pilot pulls back and lets the patrol open fire.",
+          "outcome_tags": [
+            "patrol_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "patrol_destroyed": "next",
+            "took_the_offer": "resolution:pilgrims_crushed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "The surviving pilgrim ships arrive at the shrine, but the official is demanding their immediate extradition.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "desperate_refugee",
+          "target": "shrine_station",
+          "reason": "The refugee asks the pilot to deliver their formal petition for asylum to the shrine council.",
+          "private_fact": "The petition formally denounces the corrupt official.",
+          "outcome_tags": [
+            "petition_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "petition_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the patrol command codes, which prove the official ordered the attack on civilians. They can leak the codes, or sell them back to the official.",
+        "options": [
+          {
+            "id": "leak_codes",
+            "label": "Leak the codes and expose the official",
+            "leads_to": "resolution:official_exposed"
+          },
+          {
+            "id": "sell_codes",
+            "label": "Sell the codes to the official",
+            "leads_to": "resolution:quiet_cover_up"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "official_exposed",
+      "reached_by": "The pilot helps the pilgrims and exposes the official.",
+      "summary": "The public is outraged by the attack on the faithful. The official is indicted, and the pilgrims finally rest.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_official",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_refugee",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "pilgrim_convoy",
+          "delta": 3
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_pilgrims",
+          "public_summary": "A pilot took on a patrol cruiser to let a bunch of refugees reach their holy land."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited",
+        "new_leader_untested"
+      ]
+    },
+    {
+      "id": "quiet_cover_up",
+      "reached_by": "The pilot helps the pilgrims but sells the codes to the official.",
+      "summary": "The pilgrims arrive safely, but the attack is blamed on a 'navigation error'. The official keeps their job.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_official",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_refugee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "law_change",
+          "law": "docking_bribes",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "pilgrims_crushed",
+      "reached_by": "The pilot sides with the official or takes the patrol's offer.",
+      "summary": "The convoy is brutally suppressed. The survivors are imprisoned, and the border remains locked tight.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_refugee",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corrupt_official",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "pilgrim_convoy",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": [
+            "refugee_influx"
+          ]
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "pilgrims_crushed",
+  "loose_threads": [
+    {
+      "id": "t_fake_tariffs",
+      "surface": "scan",
+      "detail": "The 'revised tariffs' were drafted on a private corporate datapad weeks before the pilgrims even entered the system.",
+      "can_carry_methods": [
+        "forged_records",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_patrol_orders",
+      "surface": "wreck",
+      "detail": "The patrol cruiser's fire control logs show it was targeting civilian life support explicitly.",
+      "can_carry_methods": [
+        "sabotage",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "proxy_violence"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Border authorities deny reports of firing on {role:pilgrim_convoy} transports.",
+    "Refugee advocate {role:desperate_refugee} demands humanitarian corridor."
+  ],
+  "voice_direction": {
+    "corrupt_official": "Bored, bureaucratic, treats human tragedy as a mild administrative annoyance.",
+    "desperate_refugee": "Voice cracked, exhausted, speaks with fierce, unyielding conviction."
+  },
+  "novelty_tags": [
+    "pilgrim_convoy",
+    "border_crossing",
+    "bureaucratic_cruelty",
+    "refugee_crisis"
+  ]
+}

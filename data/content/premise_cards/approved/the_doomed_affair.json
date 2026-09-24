@@ -1,0 +1,278 @@
+{
+  "id": "premise.the_doomed_affair",
+  "schema_version": 1,
+  "title": "The Doomed Affair",
+  "logline": "A scientist hiding with their lover in a dying star system needs a pilot to destroy a mercenary gunship hired by their betrayed spouse.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "paranoid"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "desperate_lover",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Exhausted, terrified, fiercely protective of their partner.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "betrayed_spouse",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Cold, calculating, highly decorated and entirely ruthless.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "lovers_hideout",
+      "kind": "place",
+      "description": "A tiny, jury-rigged research outpost orbiting a dying star.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "mercenary_gunship",
+      "kind": "ship",
+      "description": "A heavily armed bounty hunter vessel painted matte black.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "military_tribunal",
+      "kind": "faction",
+      "description": "The harsh legal authority of the armed forces.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "route_closed"
+  ],
+  "public_situation": "The {role:military_tribunal} has listed the {role:desperate_lover} as a rogue asset who stole classified military data.",
+  "private_truth": "The scientist didn't steal data; they just ran away with their lover. The high-ranking spouse fabricated the charges to get revenge.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The hideout's thermal shielding begins to fail under the dying star's radiation.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "desperate_lover",
+          "target": "lovers_hideout",
+          "reason": "The scientist begs the pilot to deliver water ice to keep their hideout's cooling systems from melting down.",
+          "private_fact": "The scientist is using all the power to keep their partner alive in medical stasis.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The mercenary gunship jumps into the system and begins sweeping the area.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "betrayed_spouse",
+          "target": "lovers_hideout",
+          "reason": "The spouse hires the pilot to scan the dying star's corona to confirm the exact location of the hideout.",
+          "private_fact": "The pilot's scan accidentally pings the hideout, alerting the mercenaries to their location.",
+          "outcome_tags": [
+            "hideout_scanned"
+          ],
+          "routes": {
+            "hideout_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The mercenary gunship arms its heavy plasma torpedoes, preparing to vaporize the hideout.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "desperate_lover",
+          "target": "mercenary_gunship",
+          "reason": "The scientist pays the pilot everything they have to destroy the mercenary gunship before it fires.",
+          "private_fact": "The spouse hails the pilot directly, offering a full military pardon and a massive bounty if they stand down and let the lovers burn.",
+          "outcome_tags": [
+            "gunship_destroyed"
+          ],
+          "routes": {
+            "gunship_destroyed": "resolution:lovers_saved"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The gunship is in your sights. The spouse is offering a massive bounty to let it fire.",
+        "options": [
+          {
+            "id": "destroy_gunship",
+            "label": "Destroy the gunship and save the lovers",
+            "leads_to": "resolution:lovers_saved"
+          },
+          {
+            "id": "stand_down",
+            "label": "Take the bounty and let them burn",
+            "leads_to": "resolution:spouse_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "lovers_saved",
+      "reached_by": "The pilot destroys the gunship.",
+      "summary": "The gunship is destroyed. The lovers escape deeper into the frontier, and the spouse is humiliated in front of the tribunal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_lover",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "betrayed_spouse",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "military_tribunal",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_lovers",
+          "public_summary": "A pilot defied a military tribunal to save two doomed lovers from an assassin."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "spouse_wins",
+      "reached_by": "The pilot takes the bounty.",
+      "summary": "The gunship fires, vaporizing the hideout. The lovers die together. The pilot is paid their bounty and pardoned by the spouse.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_lover",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "betrayed_spouse",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "military_tribunal",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    },
+    {
+      "id": "lovers_burn",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The gunship heavily damages the hideout, forcing the lovers to surrender. The spouse arrests them and claims a political victory.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "desperate_lover",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "betrayed_spouse",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "military_tribunal",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "lovers_burn",
+  "loose_threads": [
+    {
+      "id": "t_spouse_crimes",
+      "surface": "scan",
+      "detail": "The scientist's partner actually had evidence of the spouse committing war crimes, which is why the spouse wanted them dead.",
+      "can_carry_methods": [
+        "information_control",
+        "blackmail"
+      ]
+    },
+    {
+      "id": "t_tribunal_corruption",
+      "surface": "dialogue",
+      "detail": "The spouse boasts that the tribunal judges were easily bought off to approve the strike mission.",
+      "can_carry_methods": [
+        "bribery",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Rogue military asset tracked to dying star system.",
+    "{role:betrayed_spouse} vows swift justice for the \"traitors\"."
+  ],
+  "voice_direction": {
+    "desperate_lover": "Breathless, raspy, utterly desperate.",
+    "betrayed_spouse": "Ice cold, speaks with absolute, chilling authority."
+  },
+  "novelty_tags": [
+    "doomed_lovers",
+    "betrayed_spouse",
+    "mercenary_strike"
+  ]
+}

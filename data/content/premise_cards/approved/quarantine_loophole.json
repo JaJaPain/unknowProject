@@ -1,0 +1,337 @@
+{
+  "id": "premise.quarantine_loophole",
+  "schema_version": 1,
+  "title": "Diplomatic Immunity",
+  "logline": "A strictly enforced medical quarantine is repeatedly bypassed because a centuries-old law classifies a specific luxury good as vital diplomatic cargo.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "political"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "port_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Desperately trying to contain a localized outbreak while bound by archaic port laws.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "stranded_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Trapped inside the quarantine zone, out of real supplies, treating patients with industrial cleaners.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smuggler_captain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Exploiting a legal loophole to move luxury goods through the blockade at a massive markup.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smuggler_ship",
+      "kind": "ship",
+      "description": "A fast courier vessel running under false diplomatic colors.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "quarantine_station",
+      "kind": "place",
+      "description": "A sprawling orbital habitat completely cut off from the rest of the system.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "blockade_checkpoint",
+      "kind": "place",
+      "description": "A heavily armed customs satellite that enforces the medical boundary.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "health_ministry",
+      "kind": "faction",
+      "description": "The sector's underfunded and bureaucratically paralyzed medical authority.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [
+      "quarantine"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "law_loosened",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:health_ministry} has sealed off the {role:quarantine_station} due to a highly contagious outbreak, forbidding all ships from docking.",
+  "private_truth": "The blockade forces are legally compelled to allow ships carrying certain ceremonial luxuries to pass uninspected, allowing wealthy citizens inside to buy comfort while the poor suffocate.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The inspector publicly declares they will seize any ship violating the quarantine.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "port_inspector",
+          "target": "quarantine_station",
+          "reason": "Needs an independent scan of the luxury vessels bypassing the blockade to prove they are carrying unlisted contraband.",
+          "private_fact": "The inspector cannot officially request this scan without violating the diplomatic immunity law.",
+          "outcome_tags": [
+            "smuggling_found",
+            "report_clean"
+          ],
+          "routes": {
+            "smuggling_found": "next",
+            "report_clean": "resolution:smugglers_thrive"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "stranded_doctor",
+          "target": "blockade_checkpoint",
+          "reason": "Begs the pilot to purchase basic medical supplies and securely dock at the blockade checkpoint to hand them over to sympathetic guards.",
+          "private_fact": "The guards have promised to load the supplies onto the next diplomatic ship.",
+          "outcome_tags": [
+            "supplies_dropped"
+          ],
+          "routes": {
+            "supplies_dropped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The smugglers realize they are being tracked by an independent pilot.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "smuggler_captain",
+          "target": "smuggler_ship",
+          "reason": "The smuggler hails the pilot, offering to safely transport the medical supplies through their legal loophole if the pilot destroys their scanned data.",
+          "private_fact": "The smuggler plans to sell the supplies to the wealthy inside rather than giving them to the doctor.",
+          "outcome_tags": [
+            "destroyed_smuggler",
+            "took_the_offer"
+          ],
+          "routes": {
+            "destroyed_smuggler": "resolution:quarantine_enforced",
+            "took_the_offer": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The smuggler prepares to cross the blockade under diplomatic cover, holding both luxury goods and the player's medicine.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "stranded_doctor",
+          "target": "blockade_checkpoint",
+          "reason": "Hires the pilot to intercept the smuggler at the blockade checkpoint and demand the medicine back before the smuggler takes it inside to sell to the elites.",
+          "private_fact": "If this fails, the doctor will be forced to shut down the clinic entirely.",
+          "outcome_tags": [
+            "medicine_recovered"
+          ],
+          "routes": {
+            "medicine_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has recovered the medicine. They can hand it over to the doctor, or sell it directly to the wealthy elites who have circumvented the law.",
+        "options": [
+          {
+            "id": "give_to_doctor",
+            "label": "Deliver the medicine to the clinic",
+            "leads_to": "resolution:clinic_saved"
+          },
+          {
+            "id": "sell_to_elites",
+            "label": "Auction the medicine to the highest bidder",
+            "leads_to": "resolution:elites_survive"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "clinic_saved",
+      "reached_by": "The pilot takes the smuggler's offer but steals the medicine back for the doctor.",
+      "summary": "The doctor treats the poorest victims of the outbreak, stabilizing the zone. The smuggler continues to exploit the loophole, but lives are saved.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "health_ministry",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "stranded_doctor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "bypassed_the_quarantine",
+          "public_summary": "A pilot used a smuggler's loophole to sneak a massive payload of meds to a stranded clinic."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "quarantine_enforced",
+      "reached_by": "The pilot destroys the smuggler ship instead of taking the offer.",
+      "summary": "The loophole is violently closed. The quarantine holds, but without the medicine, the doctor's clinic collapses.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "health_ministry",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "stranded_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smuggler_captain",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "smugglers_thrive",
+      "reached_by": "The pilot reports the smuggler's hold as clean.",
+      "summary": "The legal loophole remains open. The wealthy ride out the quarantine in luxury, while the station's poor suffer immensely.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "health_ministry",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "port_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "elites_survive",
+      "reached_by": "The pilot sells the medicine to the elites.",
+      "summary": "The pilot makes a massive profit. The elites survive comfortably, the clinic collapses, and the quarantine eventually lifts.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "health_ministry",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "stranded_doctor",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "smuggler_captain",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "smugglers_thrive",
+  "loose_threads": [
+    {
+      "id": "t_diplomatic_seal",
+      "surface": "cargo",
+      "detail": "The diplomatic seals used to bypass the blockade perfectly match a batch stolen from a neighbouring system three years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_outbreak_origin",
+      "surface": "scan",
+      "detail": "The station's environmental logs show the pathogen was introduced into the ventilation exactly twenty minutes after the inspector was assigned.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "{role:port_inspector} demands end to 'archaic luxury exemptions' during outbreak.",
+    "Black market prices for basic medical supplies inside {role:quarantine_station} skyrocket."
+  ],
+  "voice_direction": {
+    "port_inspector": "Stressed, rapid delivery. Speaks entirely in citations and regulations.",
+    "stranded_doctor": "Exhausted cadence. Sentences trail off without finishing.",
+    "smuggler_captain": "Smooth, practiced rhythm. Uses legal terms incorrectly but confidently."
+  },
+  "novelty_tags": [
+    "medical_quarantine",
+    "diplomatic_loophole",
+    "luxury_contraband",
+    "class_divide"
+  ]
+}

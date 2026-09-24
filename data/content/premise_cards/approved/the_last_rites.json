@@ -1,0 +1,276 @@
+{
+  "id": "premise.the_last_rites",
+  "schema_version": 1,
+  "title": "The Last Rites",
+  "logline": "A dying soldier stranded in a dead system asks a pilot to recover their fallen squad's dog tags, but their former commander wants them destroyed.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "survival"
+  ],
+  "themes": [
+    "legacy",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "dying_soldier",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Bleeding out, calm, focused entirely on their final mission.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ruthless_commander",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Cold, calculating, sees soldiers merely as assets.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "battlefield_wreckage",
+      "kind": "place",
+      "description": "A massive debris field of shattered military ships.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "military_gunship",
+      "kind": "ship",
+      "description": "A stealth corvette sent to clean up loose ends.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "naval_command",
+      "kind": "faction",
+      "description": "The bureaucratic heart of the military apparatus.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dead_system"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The {role:naval_command} has officially declared the entire squad lost with all hands, classifying the {role:battlefield_wreckage} as a restricted zone.",
+  "private_truth": "The commander deliberately sacrificed the squad to cover a tactical blunder. The soldier survived just long enough to record the truth on their dog tags.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The commander issues a system-wide order forbidding any salvage in the wreckage.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "dying_soldier",
+          "target": "battlefield_wreckage",
+          "reason": "The soldier asks the pilot to deliver ferrite to patch their life support just long enough to finish the mission.",
+          "private_fact": "The soldier is too badly injured; the patch will only buy them a few hours.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "same_system",
+      "public_change": "A stealth gunship arrives in the system to ensure there are no survivors.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "ruthless_commander",
+          "target": "battlefield_wreckage",
+          "reason": "The commander hires the pilot to scan the wreckage to \"confirm the casualties\".",
+          "private_fact": "The scan reveals the gunship is actively firing on escape pods.",
+          "outcome_tags": [
+            "wreckage_scanned"
+          ],
+          "routes": {
+            "wreckage_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The gunship closes in on the soldier's final position.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "dying_soldier",
+          "target": "military_gunship",
+          "reason": "The soldier begs the pilot to destroy the gunship and recover the real combat logs from its wreckage to prove the truth.",
+          "private_fact": "The commander hails the pilot, ordering them to let the gunship finish its work or face a court-martial.",
+          "outcome_tags": [
+            "logs_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "logs_recovered": "resolution:soldier_wins",
+            "abandoned": "resolution:commander_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The gunship is destroyed, and the pilot holds the combat logs. The commander demands they be erased.",
+        "options": [
+          {
+            "id": "publish_logs",
+            "label": "Publish the logs to avenge the squad",
+            "leads_to": "resolution:soldier_wins"
+          },
+          {
+            "id": "erase_logs",
+            "label": "Erase the logs and walk away",
+            "leads_to": "resolution:commander_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "soldier_wins",
+      "reached_by": "The pilot publishes the logs.",
+      "summary": "The logs expose the commander's treason. The commander is court-martialed, and the soldier dies knowing their squad is honored.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dying_soldier",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_commander",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "naval_command",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "avenged_the_squad",
+          "public_summary": "A pilot exposed a corrupt commander to honor the dying wish of a stranded soldier."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "commander_wins",
+      "reached_by": "The pilot erases the logs.",
+      "summary": "The truth is buried. The soldier dies in despair, and the commander receives a medal for the \"tragic\" loss of the squad.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dying_soldier",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruthless_commander",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "naval_command",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "soldier_dies",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The gunship obliterates the soldier's position. The truth is lost forever.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dying_soldier",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "naval_command",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "soldier_dies",
+  "loose_threads": [
+    {
+      "id": "t_commander_bribe",
+      "surface": "scan",
+      "detail": "The commander sacrificed the squad because they were paid off by a rival megacorp.",
+      "can_carry_methods": [
+        "bribery",
+        "proxy_violence"
+      ]
+    },
+    {
+      "id": "t_gunship_origin",
+      "surface": "wreck",
+      "detail": "The stealth gunship wasn't navy issue; it belonged to a completely off-the-books intelligence agency.",
+      "can_carry_methods": [
+        "information_control",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "false_flag"
+    ],
+    "motives": [
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Tragic loss of military squad reported in dead system.",
+    "{role:ruthless_commander} vows to investigate the \"accident\"."
+  ],
+  "voice_direction": {
+    "dying_soldier": "Weak, raspy, but speaks with absolute resolve.",
+    "ruthless_commander": "Brisk, entirely unemotional, treats lives like math."
+  },
+  "novelty_tags": [
+    "dying_wish",
+    "military_coverup",
+    "squad_wiped_out"
+  ]
+}

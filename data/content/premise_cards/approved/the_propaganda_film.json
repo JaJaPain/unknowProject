@@ -1,0 +1,280 @@
+{
+  "id": "premise.the_propaganda_film",
+  "schema_version": 1,
+  "title": "The Propaganda Film",
+  "logline": "A dissident director needs a pilot to hijack a broadcast tower and swap a state propaganda film with the unedited truth.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "political"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "dissident_director",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Passionate, exhausted, chain-smoking and paranoid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "censorship_officer",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Polite, smiling, completely merciless.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "broadcast_tower",
+      "kind": "place",
+      "description": "A massive antenna array dominating the local skyline.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "director_ship",
+      "kind": "ship",
+      "description": "A rusted van-ship covered in satellite dishes.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "ministry_of_truth",
+      "kind": "faction",
+      "description": "The heavily armed propaganda arm of the state.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "public_outrage"
+  ],
+  "public_situation": "The {role:ministry_of_truth} is preparing for a sector-wide broadcast of their new documentary.",
+  "private_truth": "The director secretly edited the film to include brutal footage of state massacres, and the censor is hunting them down before it airs.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The broadcast tower enters lockdown mode ahead of the premiere.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "dissident_director",
+          "target": "broadcast_tower",
+          "reason": "The director needs the pilot to deliver the unedited data crystal to a sympathizer inside the tower.",
+          "private_fact": "The sympathizer has already been arrested by the censor.",
+          "outcome_tags": [
+            "crystal_delivered"
+          ],
+          "routes": {
+            "crystal_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "location": "same_system",
+      "public_change": "The censor issues a system-wide warrant for the director's arrest.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "censorship_officer",
+          "target": "broadcast_tower",
+          "reason": "The censor hires the pilot to scan the tower's network to find any unauthorized transmissions.",
+          "private_fact": "The scan reveals the director is broadcasting from a mobile ship hiding in the asteroid belt.",
+          "outcome_tags": [
+            "ship_located"
+          ],
+          "routes": {
+            "ship_located": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The director begins broadcasting the truth on all channels.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "censorship_officer",
+          "target": "director_ship",
+          "reason": "The censor pays the pilot to destroy the director's broadcasting ship and recover the master crystal.",
+          "private_fact": "The director refuses to shoot back and simply begs the pilot to let the broadcast finish.",
+          "outcome_tags": [
+            "crystal_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "crystal_recovered": "next",
+            "abandoned": "resolution:truth_broadcast"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the master crystal. The censor is demanding it back.",
+        "options": [
+          {
+            "id": "return_crystal",
+            "label": "Return the crystal to the censor",
+            "leads_to": "resolution:censor_wins"
+          },
+          {
+            "id": "leak_crystal",
+            "label": "Leak the crystal to the public network",
+            "leads_to": "resolution:truth_broadcast"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_broadcast",
+      "reached_by": "The pilot lets the broadcast finish or leaks the crystal.",
+      "summary": "The truth goes out. Riots erupt across the sector. The director is a hero, and the censor is executed by their own government for the failure.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dissident_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "censorship_officer",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "ministry_of_truth",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "censor_wins",
+      "reached_by": "The pilot returns the crystal.",
+      "summary": "The censor destroys the evidence. The director is imprisoned and erased from history, while the pilot is paid off quietly.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dissident_director",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "censorship_officer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "ministry_of_truth",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "director_killed",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The ministry forces blow the director's ship out of the sky. The broadcast fails, and the regime remains in power.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dissident_director",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "censorship_officer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "ministry_of_truth",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "director_killed",
+  "loose_threads": [
+    {
+      "id": "t_censor_files",
+      "surface": "scan",
+      "detail": "The censor's personal files contain highly illegal imported art from the black market.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_director_funding",
+      "surface": "wreck",
+      "detail": "The director's ship was funded by a rival planetary government looking to destabilize the sector.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "false_flag"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Sector-wide mandatory broadcast scheduled for tonight.",
+    "{role:dissident_director} declared an enemy of the state."
+  ],
+  "voice_direction": {
+    "dissident_director": "Frantic, breathless, speaks like a visionary.",
+    "censorship_officer": "Smooth, polite, utterly terrifying."
+  },
+  "novelty_tags": [
+    "propaganda_broadcast",
+    "state_censorship",
+    "dissident_director"
+  ]
+}

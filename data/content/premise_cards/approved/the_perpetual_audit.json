@@ -1,0 +1,262 @@
+{
+  "id": "premise.the_perpetual_audit",
+  "schema_version": 1,
+  "title": "Form 7B-Gamma",
+  "logline": "An independent mining rig is trapped in a multi-year tax audit that costs more to comply with than the rig actually produces.",
+  "scale": "personal",
+  "tone": [
+    "bleak",
+    "absurd"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "exhausted_miner",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Has not slept a full night in three years due to the constant demands of the audit.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "relentless_auditor",
+      "kind": "person",
+      "archetype": "official",
+      "description": "A low-level clerk who derives immense personal power from finding rounding errors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_rig",
+      "kind": "place",
+      "description": "A rusty, barely functional extraction platform held together by stress and tape.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "revenue_service",
+      "kind": "faction",
+      "description": "A faceless bureaucracy that measures success purely by fines collected.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "law_tightened",
+    "faction_emboldened"
+  ],
+  "public_situation": "The {role:revenue_service} has placed a total freeze on the accounts of a local {role:mining_rig} pending a comprehensive historic audit.",
+  "private_truth": "The auditor knows the miner is innocent, but the audit itself generates massive fees for the auditor's department, incentivizing them to drag it out forever.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The revenue service demands a massive physical extraction quota to pay the monthly 'audit maintenance fee'.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "exhausted_miner",
+          "target": "mining_rig",
+          "reason": "Needs the pilot to mine and deliver raw silicate so the rig can process it into construction materials to pay the immediate fine.",
+          "private_fact": "The miner is quietly selling off pieces of their own life support system to afford the fuel.",
+          "outcome_tags": [
+            "quota_met"
+          ],
+          "routes": {
+            "quota_met": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The auditor announces they require physical copies of a highly specific, obsolete tax form cartridge.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "exhausted_miner",
+          "target": "mining_rig",
+          "reason": "Hires the pilot to hunt down the obsolete data cartridges on the open market to save the rig from immediate default.",
+          "private_fact": "The auditor specifically chose a cartridge format that hasn't been manufactured in twenty years.",
+          "outcome_tags": [
+            "forms_delivered"
+          ],
+          "routes": {
+            "forms_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The auditor personally arrives at the rig for a final, on-site emissions check.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "exhausted_miner",
+          "target": "mining_rig",
+          "reason": "Begs the pilot to scan the rig's emissions and verify they match the archaic standards on the newly acquired forms.",
+          "private_fact": "The miner has intentionally miscalibrated the sensors; if the pilot reports the true reading, the rig is seized.",
+          "outcome_tags": [
+            "report_violation",
+            "falsify_clean",
+            "report_bureaucratic_error"
+          ],
+          "routes": {
+            "report_violation": "resolution:rig_seized",
+            "falsify_clean": "resolution:miner_escapes",
+            "report_bureaucratic_error": "resolution:auditor_fired"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "miner_escapes",
+      "reached_by": "The pilot falsifies the scan to match the forms.",
+      "summary": "The audit is finally closed. The miner keeps their rig, but is deeply traumatized and in severe debt to the pilot.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "revenue_service",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "exhausted_miner",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relentless_auditor",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "beat_the_audit",
+          "public_summary": "A pilot helped a desperate miner forge their way out of a three-year tax audit."
+        }
+      ],
+      "seeds": [
+        "law_loosened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "auditor_fired",
+      "reached_by": "The pilot reports a bureaucratic error that invalidates the audit.",
+      "summary": "The revenue service throws the auditor under the bus to save face. The auditor is fired, and the miner is entirely exonerated.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "revenue_service",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "relentless_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "exhausted_miner",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "rig_seized",
+      "reached_by": "The pilot reports the true emissions violation.",
+      "summary": "The rig is immediately seized by the state. The miner is ruined and evicted, and the auditor gets a promotion.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "revenue_service",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "exhausted_miner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relentless_auditor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "rig_seized",
+  "loose_threads": [
+    {
+      "id": "t_audit_algorithm",
+      "surface": "scan",
+      "detail": "The automated targeting algorithm that flagged the miner was quietly updated three years ago by a defunct shell corporation.",
+      "can_carry_methods": [
+        "forged_records",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_auditor_debts",
+      "surface": "dialogue",
+      "detail": "The auditor obsessively checks their own personal credit score during conversations, muttering about 'the interest'.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "{role:revenue_service} announces new initiative to aggressively close 'historic accounting irregularities'.",
+    "Another independent rig defaults on compliance fees in {system}."
+  ],
+  "voice_direction": {
+    "exhausted_miner": "Breathy, disjointed sentence structure. Constantly repeats the last word of a sentence to reassure themselves.",
+    "relentless_auditor": "Fast, flat, nasal rhythm. Drops prepositions. Overuses the word 'statutory'."
+  },
+  "novelty_tags": [
+    "tax_audit",
+    "bureaucratic_hell",
+    "obsolete_forms",
+    "no_combat"
+  ]
+}

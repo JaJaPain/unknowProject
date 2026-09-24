@@ -1,0 +1,327 @@
+{
+  "id": "premise.the_double_agent",
+  "schema_version": 1,
+  "title": "The Double Agent",
+  "logline": "A burned spy discovers their handler has been selling them out to the enemy, and hires a pilot to intercept the handler's extraction shuttle.",
+  "scale": "regional",
+  "tone": [
+    "tense",
+    "heist"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "burned_spy",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Paranoid, highly lethal, trusts absolutely no one.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "handler_officer",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Suave, completely unbothered, sips tea while ordering executions.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "intelligence_hub",
+      "kind": "place",
+      "description": "A massive, heavily encrypted orbital listening post.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "extraction_shuttle",
+      "kind": "ship",
+      "description": "A fast, heavily shielded stealth transport.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "spy_agency",
+      "kind": "faction",
+      "description": "A shadowy organization that officially does not exist.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "evidence_loose"
+  ],
+  "public_situation": "The {role:spy_agency} has initiated a system-wide purge of rogue assets, locking down the {role:intelligence_hub}.",
+  "private_truth": "The handler is the real traitor, selling agency secrets to a rival power, and is using the purge to eliminate all the loyal spies.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The agency issues a burn notice on the spy, freezing their assets and putting a bounty on their head.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "burned_spy",
+          "target": "intelligence_hub",
+          "reason": "The spy asks the pilot to scan the hub's communication arrays to find the handler's private encrypted frequency.",
+          "private_fact": "The frequency is broadcasting directly into enemy space.",
+          "outcome_tags": [
+            "frequency_found"
+          ],
+          "routes": {
+            "frequency_found": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "burned_spy",
+          "target": "intelligence_hub",
+          "reason": "The spy asks the pilot to meet a bribed technician at the hub's docking bay and collect a corrupted data drive containing the handler's logs.",
+          "private_fact": "The pilot has to bypass three layers of lethal biometric security to get the drive.",
+          "outcome_tags": [
+            "drive_extracted"
+          ],
+          "routes": {
+            "drive_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The handler prepares to evacuate the system on a stealth shuttle.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "handler_officer",
+          "target": "intelligence_hub",
+          "reason": "The handler hires the pilot to deliver heavy bribes to the traffic controllers to clear a flight path into the dark zone.",
+          "private_fact": "The handler is visibly nervous and packing several bags of unmarked credits.",
+          "outcome_tags": [
+            "bribes_delivered"
+          ],
+          "routes": {
+            "bribes_delivered": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "handler_officer",
+          "target": "intelligence_hub",
+          "reason": "The handler hires the pilot to buy untraceable clean fuel and deliver it to their extraction shuttle.",
+          "private_fact": "The fuel allows the shuttle to fly without emitting a detectable ion trail.",
+          "outcome_tags": [
+            "fuel_delivered"
+          ],
+          "routes": {
+            "fuel_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The extraction shuttle launches and vanishes off standard scanners.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "burned_spy",
+          "target": "intelligence_hub",
+          "reason": "The spy begs the pilot to run a deep scan of the dark zone using the corrupted drive's cipher to find the shuttle.",
+          "private_fact": "The scan reveals the shuttle is heavily armed and waiting for a rendezvous with enemy forces.",
+          "outcome_tags": [
+            "shuttle_scanned"
+          ],
+          "routes": {
+            "shuttle_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The shuttle prepares to cross the border into enemy territory.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "burned_spy",
+          "target": "extraction_shuttle",
+          "reason": "The spy pays the pilot to destroy the shuttle and recover the handler's master list of betrayals.",
+          "private_fact": "The handler hails the pilot, offering to add them to their payroll for life if they destroy the spy's ship instead.",
+          "outcome_tags": [
+            "list_recovered",
+            "abandoned"
+          ],
+          "routes": {
+            "list_recovered": "resolution:spy_wins",
+            "abandoned": "resolution:handler_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The shuttle is destroyed, and the pilot holds the master list. The handler is offering a lifetime of wealth to hand it over.",
+        "options": [
+          {
+            "id": "give_to_spy",
+            "label": "Give the list to the spy",
+            "leads_to": "resolution:spy_wins"
+          },
+          {
+            "id": "give_to_handler",
+            "label": "Sell the list back to the handler",
+            "leads_to": "resolution:handler_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "spy_wins",
+      "reached_by": "The pilot gives the list to the spy.",
+      "summary": "The spy uses the list to clear their name and expose the handler. The handler is executed for treason, and the spy returns to the shadows.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "burned_spy",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "handler_officer",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "spy_agency",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "helped_the_spy",
+          "public_summary": "A pilot helped a burned spy expose a massive intelligence leak."
+        }
+      ],
+      "seeds": [
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "handler_wins",
+      "reached_by": "The pilot sells the list.",
+      "summary": "The handler escapes to the enemy with the list. The spy is hunted down and killed. The pilot gets rich but is blacklisted by the agency.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "burned_spy",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "handler_officer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "spy_agency",
+          "delta": -3
+        }
+      ],
+      "seeds": [
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "shuttle_escapes",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The shuttle escapes easily. The handler successfully defects, and the spy's reputation is forever ruined, forcing them into permanent hiding.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "burned_spy",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "handler_officer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "spy_agency",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "shuttle_escapes",
+  "loose_threads": [
+    {
+      "id": "t_handler_blackmail",
+      "surface": "scan",
+      "detail": "The handler wasn't just greedy; they were being blackmailed with footage of a terrible crime they committed years ago.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_spy_loyalty",
+      "surface": "wreck",
+      "detail": "The spy's logs reveal they actually considered defecting too, but backed out at the last minute.",
+      "can_carry_methods": [
+        "forged_records",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Widespread panic as {role:spy_agency} initiates sector lockdown.",
+    "Rumors of a massive intelligence leak in the dark zone."
+  ],
+  "voice_direction": {
+    "burned_spy": "Low, raspy, speaks quickly and efficiently.",
+    "handler_officer": "Smooth, perfectly calm, entirely devoid of stress."
+  },
+  "novelty_tags": [
+    "burned_spy",
+    "dark_zone_extraction",
+    "intelligence_leak"
+  ]
+}

@@ -1,0 +1,314 @@
+{
+  "id": "premise.the_will_and_testament",
+  "schema_version": 1,
+  "title": "The Will and Testament",
+  "logline": "A disinherited child needs a pilot to track down and destroy the transport carrying their late mother's revised will before it reaches the sector courts.",
+  "scale": "regional",
+  "tone": [
+    "heist",
+    "tense"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "disinherited_child",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Bitter, highly capable, feels entirely justified in their anger.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "favored_sibling",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Spoiled, oblivious to their sibling's pain.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "vault_station",
+      "kind": "place",
+      "description": "A heavily armored legal depository.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "escort_carrier",
+      "kind": "ship",
+      "description": "A massive transport ship carrying legal documents.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "legal_guild",
+      "kind": "faction",
+      "description": "A guild of lawyers and notaries who enforce galactic wills.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "relay_dark_zone"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "route_closed"
+  ],
+  "public_situation": "The matriarch of a massive industrial conglomerate has died, and the {role:legal_guild} is transporting her final will from the {role:vault_station}.",
+  "private_truth": "The disinherited child actually built the conglomerate with their mother, but the favored sibling manipulated her into changing the will on her deathbed.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The vault station enters lockdown mode as the will is prepared for transport.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "disinherited_child",
+          "target": "vault_station",
+          "reason": "The engineer hires the pilot to scan the vault's outbound traffic to find the specific escort carrier holding the will.",
+          "private_fact": "The carrier is routing through the dark zone to avoid detection.",
+          "outcome_tags": [
+            "carrier_located"
+          ],
+          "routes": {
+            "carrier_located": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "disinherited_child",
+          "target": "vault_station",
+          "reason": "The engineer asks the pilot to meet a sympathizer at the vault and collect a backup copy of the original will.",
+          "private_fact": "The backup copy proves the engineer was the sole heir.",
+          "outcome_tags": [
+            "backup_collected"
+          ],
+          "routes": {
+            "backup_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The favored sibling throws a lavish preemptive celebration party.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "favored_sibling",
+          "target": "vault_station",
+          "reason": "The sibling hires the pilot to deliver a massive bribe to the vault's chief notary to expedite the transport.",
+          "private_fact": "The notary happily accepts the bribe, completely ignoring standard security protocols.",
+          "outcome_tags": [
+            "bribe_delivered"
+          ],
+          "routes": {
+            "bribe_delivered": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "favored_sibling",
+          "target": "vault_station",
+          "reason": "The sibling hires the pilot to buy and deliver heavy comm-scramblers to the vault to prevent any appeals.",
+          "private_fact": "The scramblers accidentally knock out the vault's main defense grid.",
+          "outcome_tags": [
+            "scramblers_delivered"
+          ],
+          "routes": {
+            "scramblers_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The escort carrier enters the dark zone, accompanied by mercenary fighters.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "disinherited_child",
+          "target": "legal_guild",
+          "reason": "The engineer pays the pilot to destroy the mercenary fighters screening the carrier.",
+          "private_fact": "The mercenaries are heavily armed but disorganized.",
+          "outcome_tags": [
+            "mercs_destroyed"
+          ],
+          "routes": {
+            "mercs_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The escort carrier prepares to jump to the capital.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "disinherited_child",
+          "target": "escort_carrier",
+          "reason": "The engineer begs the pilot to destroy the carrier completely, ensuring the old will remains legally binding.",
+          "private_fact": "The carrier captain hails the pilot, relaying the sibling's offer: half the total inheritance if the pilot stands down and lets the carrier through.",
+          "outcome_tags": [
+            "carrier_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "carrier_destroyed": "resolution:engineer_wins",
+            "took_the_offer": "resolution:sibling_wins"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "engineer_wins",
+      "reached_by": "The pilot destroys the carrier.",
+      "summary": "The revised will is destroyed. The older will remains active, granting the engineer control of the conglomerate. The sibling is cut off entirely.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disinherited_child",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "favored_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "legal_guild",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "destroyed_the_will",
+          "public_summary": "A pilot blew up a legal transport ship to help an engineer steal back their inheritance."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "sibling_wins",
+      "reached_by": "The pilot takes the sibling's offer.",
+      "summary": "The new will arrives safely. The sibling takes control of the conglomerate and immediately squanders it. The pilot is incredibly wealthy.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "favored_sibling",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "disinherited_child",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "legal_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "will_delivered",
+      "reached_by": "The pilot ignores the climax.",
+      "summary": "The carrier easily outruns the engineer's weak attacks and delivers the will. The sibling wins, and the engineer is imprisoned for piracy.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disinherited_child",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "favored_sibling",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "legal_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "will_delivered",
+  "loose_threads": [
+    {
+      "id": "t_notary_bribe",
+      "surface": "scan",
+      "detail": "The notary's bribe was paid out of a corporate slush fund belonging to a rival megacorp.",
+      "can_carry_methods": [
+        "bribery",
+        "false_flag"
+      ]
+    },
+    {
+      "id": "t_mother_death",
+      "surface": "dialogue",
+      "detail": "The sibling accidentally lets slip that they were alone in the room when their mother died.",
+      "can_carry_methods": [
+        "blackmail",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Massive inheritance dispute heads to the galactic courts.",
+    "{role:legal_guild} assures clients that transport routes are safe."
+  ],
+  "voice_direction": {
+    "disinherited_child": "Angry, precise, speaks in short sentences.",
+    "favored_sibling": "Whiny, entitled, completely oblivious to their flaws."
+  },
+  "novelty_tags": [
+    "inheritance_dispute",
+    "destroyed_will",
+    "legal_escort"
+  ]
+}

@@ -1,0 +1,258 @@
+{
+  "id": "premise.the_dying_star_archive",
+  "schema_version": 1,
+  "title": "The Last Library",
+  "logline": "An aging scientist begs a pilot to extract the last surviving records from an orbital archive before the local star expands and consumes it, but a rigid dockmaster refuses to let them launch.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "aging_scientist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Spent their entire life curating the archive, refusing to leave without it.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rigid_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Cares more about evacuation protocols than cultural history.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "orbital_archive",
+      "kind": "place",
+      "description": "A massive, beautiful station slowly melting in the heat.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "archive_shuttle",
+      "kind": "ship",
+      "description": "A heavily shielded transport designed to carry delicate data cores.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [],
+    "quirks_required": [
+      "dying_star"
+    ]
+  },
+  "accepts_seeds": [
+    "route_closed",
+    "wreck_left_behind"
+  ],
+  "public_situation": "The local star has entered its final expansion phase, bathing the {role:orbital_archive} in lethal radiation and heat.",
+  "private_truth": "The dockmaster has locked the archive shuttle down because they are secretly using it to smuggle their own stolen goods off-station.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The outer hull of the archive begins to glow red-hot.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "aging_scientist",
+          "target": "orbital_archive",
+          "reason": "The scientist asks the pilot to scan the archive to confirm the data cores haven't melted yet.",
+          "private_fact": "The scan reveals the cooling systems have already failed.",
+          "outcome_tags": [
+            "cores_intact"
+          ],
+          "routes": {
+            "cores_intact": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The dockmaster orders all ships to evacuate immediately, officially abandoning the archive.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "aging_scientist",
+          "target": "orbital_archive",
+          "reason": "The scientist begs the pilot to physically extract the massive data cores from the melting station.",
+          "private_fact": "The pilot's ship will suffer intense heat damage during the extraction.",
+          "outcome_tags": [
+            "cores_extracted"
+          ],
+          "routes": {
+            "cores_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The star releases a massive solar flare, threatening to consume everything.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "aging_scientist",
+          "target": "archive_shuttle",
+          "reason": "The dockmaster attempts to flee in the archive shuttle with their smuggled goods. The scientist pays the pilot to destroy the shuttle to punish the dockmaster.",
+          "private_fact": "The dockmaster hails the pilot, offering half their smuggled fortune if the pilot lets them escape and leaves the scientist to die.",
+          "outcome_tags": [
+            "shuttle_destroyed",
+            "took_the_offer"
+          ],
+          "routes": {
+            "shuttle_destroyed": "resolution:history_saved",
+            "took_the_offer": "resolution:history_burns"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "history_saved",
+      "reached_by": "The pilot destroys the shuttle and escapes with the data cores.",
+      "summary": "The dockmaster perishes, but the scientist's life work is saved. The data cores become the foundation of a new planetary university.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "rigid_dockmaster",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_scientist",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_archive",
+          "public_summary": "A pilot risked melting their hull to pull centuries of history out of a dying star."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "history_burns",
+      "reached_by": "The pilot takes the dockmaster's offer.",
+      "summary": "The pilot and the dockmaster escape with the smuggled wealth. The scientist and the archive are consumed by the expanding star.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "aging_scientist",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rigid_dockmaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "star_consumes_all",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The dockmaster forces the evacuation, dragging the scientist away. The archive and all its history burns.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "aging_scientist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rigid_dockmaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": [
+            "evacuation"
+          ]
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "star_consumes_all",
+  "loose_threads": [
+    {
+      "id": "t_dockmaster_goods",
+      "surface": "cargo",
+      "detail": "The 'smuggled goods' the dockmaster was protecting were actually rare cultural artifacts stolen from the archive itself.",
+      "can_carry_methods": [
+        "bribery",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_star_decay",
+      "surface": "scan",
+      "detail": "The star's expansion isn't natural; scan data shows signs of an illegal stellar-mining operation gone terribly wrong.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Final evacuation orders issued for sectors near the expanding star.",
+    "{role:aging_scientist} broadcasts tearful farewell to centuries of history."
+  ],
+  "voice_direction": {
+    "aging_scientist": "Slow, full of regret, speaks about data like it's a living child.",
+    "rigid_dockmaster": "Loud, angry, insists everything is fine while panicking."
+  },
+  "novelty_tags": [
+    "dying_star",
+    "saving_history",
+    "melting_station",
+    "evacuation_panic"
+  ]
+}

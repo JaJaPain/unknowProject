@@ -1,0 +1,255 @@
+{
+  "id": "premise.the_recycled_ships",
+  "schema_version": 1,
+  "title": "Ghosts in the Hull",
+  "logline": "A scrap yard mechanic discovers the shiny new freighters being sold to local merchants are actually just painted-over warships from an old, devastating conflict.",
+  "scale": "personal",
+  "tone": [
+    "paranoid",
+    "noir"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "paranoid_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Always sees patterns, and this time they are right.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "slick_salesman",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Sells 'refurbished' ships at a premium, hiding their dark past.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "used_shipyard",
+      "kind": "place",
+      "description": "A sprawling orbital lot full of seemingly pristine vessels.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "warship_hull",
+      "kind": "ship",
+      "description": "A 'new' freighter that still has hidden torpedo tubes.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_preferred": [],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The {role:slick_salesman} is making a fortune selling incredibly durable, cheap freighters to local merchants.",
+  "private_truth": "The freighters are decommissioned military vessels that were supposed to be scrapped, and their combat automations are waking up.",
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The mechanic is fired for asking too many questions about the ship schematics.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "paranoid_mechanic",
+          "target": "warship_hull",
+          "reason": "The mechanic hires the pilot to do a deep structural scan of one of the freighters to find the hidden weapon hardpoints.",
+          "private_fact": "The scan will trigger the ship's dormant defense protocols.",
+          "outcome_tags": [
+            "hardpoints_found"
+          ],
+          "routes": {
+            "hardpoints_found": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The salesman puts out a hit on the mechanic, claiming they stole industrial secrets.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "paranoid_mechanic",
+          "target": "used_shipyard",
+          "reason": "The mechanic needs the pilot to deliver a massive data-dump of the ship's real history to the shipyard's public feed.",
+          "private_fact": "The history shows these ships were used in civilian massacres.",
+          "outcome_tags": [
+            "data_dumped"
+          ],
+          "routes": {
+            "data_dumped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The public is outraged, but the salesman tries to silence the mechanic permanently.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "paranoid_mechanic",
+          "target": "used_shipyard",
+          "reason": "The mechanic asks the pilot to extract the master logic core from the shipyard to prove the ships are still dangerous.",
+          "private_fact": "The salesman has rigged the core to self-destruct.",
+          "outcome_tags": [
+            "core_extracted"
+          ],
+          "routes": {
+            "core_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot has the logic core. They can expose the salesman's deadly fraud, or sell the core back to them to keep the secret.",
+        "options": [
+          {
+            "id": "expose_salesman",
+            "label": "Give the core to the mechanic",
+            "leads_to": "resolution:fleet_grounded"
+          },
+          {
+            "id": "sell_core",
+            "label": "Sell the core to the salesman",
+            "leads_to": "resolution:fleet_sold"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fleet_grounded",
+      "reached_by": "The pilot helps expose the salesman.",
+      "summary": "The ships are grounded and recalled. The salesman is arrested for trafficking military hardware, and the mechanic is vindicated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "slick_salesman",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paranoid_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_warships",
+          "public_summary": "A pilot proved the cheap new freighters in the sector were actually repainted death machines."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "fleet_sold",
+      "reached_by": "The pilot sells the core to the salesman.",
+      "summary": "The salesman buries the evidence. The ships continue to be sold, until one eventually wakes up and destroys a civilian dock.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_mechanic",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "slick_salesman",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "mechanic_killed",
+      "reached_by": "The pilot ignores the situation.",
+      "summary": "The mechanic is quietly murdered by shipyard security. The blood-soaked ships are sold as family haulers.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paranoid_mechanic",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "slick_salesman",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "mechanic_killed",
+  "loose_threads": [
+    {
+      "id": "t_ship_origins",
+      "surface": "scan",
+      "detail": "The serial numbers on the warship hulls match a fleet that supposedly jumped into a black hole twenty years ago.",
+      "can_carry_methods": [
+        "information_control",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_salesman_buyer",
+      "surface": "dialogue",
+      "detail": "The salesman mentions they bought the scrap hulls from an anonymous 'admiral' who demanded payment in raw thorium.",
+      "can_carry_methods": [
+        "bribery",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Amazing deals on 'lightly used' freighters at the local shipyard!",
+    "Local merchants report strange software glitches in newly purchased ships."
+  ],
+  "voice_direction": {
+    "paranoid_mechanic": "Hushed, very fast cadence, constantly shifting tone.",
+    "slick_salesman": "Loud, overly familiar, aggressively cheerful."
+  },
+  "novelty_tags": [
+    "recycled_warships",
+    "used_ship_salesman",
+    "dangerous_cargo",
+    "military_surplus"
+  ]
+}
