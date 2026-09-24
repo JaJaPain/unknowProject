@@ -209,6 +209,12 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - Premise-card investigations (commit de83537): accept one from the board,
     find the scan sites near the story's station, scan both, resolve, turn in
     at the main station, then answer the story's finding on the board.
+- [ ] **Generation-window ledger (Phase 1 measurement, commit cc9c1d7).** Play
+  a normal session (dock, fly, fight, jump, dock) and copy the console lines
+  starting `[GenerationWindow] open`. They show how many model calls happened
+  in flight and from which feature. That list decides what moves into dock and
+  jump windows next, and when `GenerationWindow.unload_on_close` can be turned
+  on to free the model from VRAM during flight (the 8GB goal).
 - [ ] **Premise investigations ask twice.** The investigation's own branch
   (report / certify match / certify mismatch) and then the card's "how do you
   report what you found?" decision. Map branches onto the card's outcome tags
