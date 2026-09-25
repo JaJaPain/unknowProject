@@ -246,7 +246,9 @@ func _on_npc_spawn_timeout():
 
 	# Occasional ambient minor faction troublemaker (~15% chance, max 2 alive)
 	var minor_count = _count_minor_faction_ships()
-	if minor_count < 2 and randf() < 0.15:
+	# Failure fallout: raiders nobody stopped grow bolder.
+	var bolder := float(GlobalState.environment_value("hostile_spawn_mult", 1.0))
+	if minor_count < (3 if bolder > 1.0 else 2) and randf() < 0.15 * bolder:
 		_spawn_minor_faction_ship()
 
 func _count_minor_faction_ships() -> int:

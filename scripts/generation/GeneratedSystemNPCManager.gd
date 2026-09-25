@@ -107,7 +107,10 @@ func _on_respawn_timeout() -> void:
 		_spawn_replacement()
 
 	var minor_count := _count_minor_faction_ships()
-	if minor_count < config.npc_minor_max and randf() < config.npc_minor_chance:
+	# Failure fallout: raiders nobody stopped grow bolder (more and more often).
+	var bolder := float(GlobalState.environment_value("hostile_spawn_mult", 1.0))
+	var minor_max := config.npc_minor_max + (1 if bolder > 1.0 else 0)
+	if minor_count < minor_max and randf() < config.npc_minor_chance * bolder:
 		_spawn_minor_roamer()
 
 

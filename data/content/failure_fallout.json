@@ -1,0 +1,37 @@
+{
+    "schema_version": 1,
+    "note": "Failing forward (vision plan 4.3): a failed, abandoned or expired job changes the world where it happened for a while. Families come from the objective type. {requester}, {system}, {place} and {faction} are filled in code.",
+    "duration_minutes": 480,
+    "families": {
+        "supply": {
+            "objective_types": ["DELIVERY_COURIER", "PURCHASE_DELIVERY", "DELIVER_ORE", "PICKUP_SPECIAL"],
+            "state": "shortage",
+            "environment": {"store_price_mult": 1.25},
+            "standing_delta": -1,
+            "radio": [
+                "The delivery {requester} was waiting on never came. Supply desks in {system} are rationing, and prices are up.",
+                "Word in {system}: a shipment went missing on the way to {place}. Traders have already put their prices up."
+            ]
+        },
+        "security": {
+            "objective_types": ["KILL_SHIPS", "TARGET_WITH_COMMS_REVERSAL", "RECOVER_COMBAT_DROP"],
+            "state": "raider_activity",
+            "environment": {"hostile_spawn_mult": 1.6},
+            "standing_delta": -1,
+            "radio": [
+                "Nobody stopped the {faction} crews around {system}. They're getting bolder. Fly in pairs.",
+                "The contract on the {faction} raiders in {system} went unfinished. Their patrols are pushing closer to the lanes."
+            ]
+        },
+        "information": {
+            "objective_types": ["INVESTIGATE_SIGNAL"],
+            "state": "",
+            "environment": {},
+            "standing_delta": -1,
+            "radio": [
+                "Whatever {requester} was trying to find out in {system}, the trail has gone cold. Someone out there is relieved.",
+                "The questions {requester} was asking in {system} went unanswered. The answers are getting harder to find."
+            ]
+        }
+    }
+}

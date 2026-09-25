@@ -1288,6 +1288,8 @@ const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const SignalTuningActivityType := preload("res://scripts/story/activities/SignalTuningActivity.gd")
 const DroneMazeActivityType := preload("res://scripts/story/activities/DroneMazeActivity.gd")
 const GateRatingGuideType := preload("res://scripts/story/GateRatingGuide.gd")
+const PremiseFalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
+const StoreDefinitionForFallout := preload("res://scripts/economy/StoreDefinition.gd")
 const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
 const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
@@ -1356,6 +1358,13 @@ func _init_premise_director() -> void:
 	radio_timer.autostart = true
 	radio_timer.timeout.connect(_premise_radio_tick)
 	add_child(radio_timer)
+	# Failure fallout: what failed jobs are doing to this system right now.
+	var fallout_timer := Timer.new()
+	fallout_timer.name = "FalloutTimer"
+	fallout_timer.wait_time = 5.0
+	fallout_timer.autostart = true
+	fallout_timer.timeout.connect(_refresh_fallout_environment)
+	add_child(fallout_timer)
 
 
 ## A dock or jump began: write what the next stretch of flight needs, and
@@ -1478,6 +1487,37 @@ func _on_premise_quest_expired(quest_data: Dictionary) -> void:
 func _premise_terminal(quest_data: Dictionary, terminal_state: String) -> void:
 	if is_instance_valid(premise_director):
 		premise_director.on_mission_terminal(quest_data, terminal_state, int(CampaignClock.total_minutes))
+		_record_failure_fallout(quest_data, terminal_state)
+
+
+## Failing forward: any failed, abandoned or expired job (story or board)
+## changes its system for a while. The starter job is exempt.
+func _record_failure_fallout(quest_data: Dictionary, terminal_state: String) -> void:
+	if QuestManager.is_intro_tutorial_contract(quest_data):
+		return
+	var system_id := str(quest_data.get("system_id", GlobalState.current_system_id))
+	var world := PremiseWorldSnapshotType.capture(int(CampaignClock.total_minutes))
+	var names := {
+		"system_id": system_id,
+		"system": str(world.get("system_display", system_id)) if system_id == str(world.get("system_id", "")) else system_id,
+		"requester": str(quest_data.get("agent_name", "")),
+		"place": str(quest_data.get("destination_display", quest_data.get("target_outpost_display", quest_data.get("site_display", "")))),
+		"faction": str(quest_data.get("target_faction_display", quest_data.get("target_faction", ""))).capitalize(),
+	}
+	var f: Dictionary = premise_director.record_failure(quest_data, terminal_state, int(CampaignClock.total_minutes), names)
+	if not f.is_empty():
+		_refresh_fallout_environment()
+
+
+## Puts the current system's active fallout into GlobalState (store prices,
+## hostile spawns) so the world feels it.
+func _refresh_fallout_environment() -> void:
+	if not is_instance_valid(premise_director):
+		return
+	var active: Array = premise_director.active_fallout(str(GlobalState.current_system_id), int(CampaignClock.total_minutes))
+	var env: Dictionary = PremiseFalloutType.environment(active)
+	GlobalState.fallout_environment = env
+	StoreDefinitionForFallout.system_price_mult = float(env.get("store_price_mult", 1.0))
 
 
 func _init_quiet_moment_director() -> void:

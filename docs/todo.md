@@ -246,6 +246,10 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     the deal / walk away; finish / let them go), and the wrong-cargo scan a
     minute into a courier run (deliver anyway / dump it). The answer shows
     up as a deed on the radio. Too frequent? Hail lines right?
+  - Failure fallout: abandon or let expire a courier/ore/purchase job (store
+    prices in that system go up 25% for 8 game hours) and a kill job (more
+    raiders spawn there); the radio leads with what happened. Noticeable
+    enough? Too punishing? (Two failures compound, capped at double.)
   - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
     Mk V 8 (+2 crystals).
   - The survey drone, the three tech-grade materials and the resonant

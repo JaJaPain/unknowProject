@@ -1660,10 +1660,16 @@ var player: Node3D = null
 ## The current system's environment (SystemQuirkRunner writes it; see
 ## SystemQuirkEffects for the keys). Empty = an ordinary system.
 var system_environment: Dictionary = {}
+## What failed jobs are doing to this system (store_price_mult,
+## hostile_spawn_mult); see FailureFallout.
+var fallout_environment: Dictionary = {}
 
 
 func environment_value(key: String, default_value: Variant) -> Variant:
-	return system_environment.get(key, default_value)
+	if system_environment.has(key):
+		return system_environment[key]
+	# Failure fallout (FailureFallout): its own keys, refreshed by GameRoot.
+	return fallout_environment.get(key, default_value)
 
 var active_system_root: Node3D = null
 var current_system_id: String = "start_system"

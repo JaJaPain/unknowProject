@@ -49,11 +49,16 @@ func get_catalog_ids() -> Array:
 	return _catalog.keys()
 
 
+## A shortage from a failed supply job (FailureFallout) raises what stores
+## charge in the current system. GameRoot sets it; 1.0 otherwise.
+static var system_price_mult := 1.0
+
+
 func get_price(item_id: String, reputation_tier: String) -> int:
 	var item_def: StoreItemDef = _catalog.get(item_id)
 	if item_def == null:
 		return 0
-	var mult: float = PRICE_MULTIPLIERS.get(reputation_tier, 1.0)
+	var mult: float = PRICE_MULTIPLIERS.get(reputation_tier, 1.0) * system_price_mult
 	return maxi(1, int(round(float(item_def.base_price) * mult)))
 
 

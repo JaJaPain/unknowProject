@@ -36,6 +36,7 @@ const CastType := preload("res://scripts/story/premise/RecurringCast.gd")
 const GatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const FaintType := preload("res://scripts/story/activities/FaintTransmissions.gd")
 const TwistsType := preload("res://scripts/story/premise/MissionTwists.gd")
+const FalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -303,12 +304,41 @@ func _odd_details(arc_id: String, arc_record: Dictionary, world: Dictionary) -> 
 	return "" if lines.is_empty() else "Something doesn't sit right: " + " ".join(lines)
 
 
+## A job failed, was abandoned or ran out of time: record what it does to
+## the system it was in (FailureFallout). Returns the record, or {}.
+func record_failure(quest_data: Dictionary, terminal_state: String, now_minute: int, names: Dictionary) -> Dictionary:
+	var f := FalloutType.for_mission(quest_data, terminal_state, now_minute, names)
+	if f.is_empty():
+		return {}
+	var records: Array = FalloutType.prune(state.get("fallout", []) as Array, now_minute)
+	for r in records:
+		if str(r.get("id", "")) == str(f["id"]):
+			return {}
+	records.append(f)
+	state["fallout"] = records
+	return f
+
+
+## Fallout still in effect in a system.
+func active_fallout(system_id: String, now_minute: int) -> Array:
+	return FalloutType.active(state.get("fallout", []) as Array, system_id, now_minute)
+
+
 ## The next radio item this system hasn't aired yet this visit, or {}.
 ## Airing a main-story thread counts as the pilot hearing it.
 func next_radio_item(world: Dictionary, now_minute: int) -> Dictionary:
 	if not enabled:
 		return {}
 	var system_id := str(world.get("system_id", ""))
+	# What a failed job did here comes first: it is the freshest news.
+	var fallout_aired: Dictionary = _aired.get(system_id, {})
+	for f in active_fallout(system_id, now_minute):
+		var fid := str(f.get("id", ""))
+		if fallout_aired.has(fid) or str(f.get("radio", "")).is_empty():
+			continue
+		fallout_aired[fid] = true
+		_aired[system_id] = fallout_aired
+		return {"id": fid, "kind": "news", "text": str(f["radio"])}
 	var radio_world := world.duplicate()
 	radio_world["system_names"] = _system_names
 	var aired: Dictionary = _aired.get(system_id, {})
