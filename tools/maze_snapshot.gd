@@ -28,9 +28,21 @@ func _shoot(kind: String, seed_value: int, recorder: bool) -> void:
 	root.add_child(view)
 	view.begin(seed_value, kind, recorder)
 	view.set_process(false)
+	view.finish_loading()
 	view._update_hud()
 	await _frames(20)
 	await _save("%s_1_start" % kind)
+	# Halfway down a crack, looking along it.
+	var route: Array = Maze.route_to(view.state, Maze.target_at(view.state["targets"][0]))
+	if route.size() >= 3:
+		var p1: Vector2 = route[1]
+		var p2: Vector2 = route[2]
+		var mid := p1.lerp(p2, 0.3)
+		view.state["pos"] = [mid.x, mid.y]
+		view.state["heading"] = (p2 - p1).angle()
+		view._sync_camera()
+		await _frames(5)
+		await _save("%s_1b_along" % kind)
 	# Look straight at the first target from a tile away.
 	var t: Dictionary = view.state["targets"][0]
 	var at := Vector2(float(t["tile"][0]) + 0.5, float(t["tile"][1]) + 0.5)

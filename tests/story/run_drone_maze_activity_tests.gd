@@ -66,6 +66,9 @@ func _initialize() -> void:
 	var view = activity._view
 	_check(view != null and paused, "flying the drone pauses the game")
 	view.finished.connect(func(o: String, s: Dictionary) -> void: _results.append([o, s]))
+	_check(not view.is_ready_to_fly(), "the drone waits at the crack mouth while the rock is built")
+	view.finish_loading()
+	_check(view.is_ready_to_fly(), "then it can fly")
 	view.state = Maze.recall(view.state)
 	view._process(0.1)
 	_check(not paused and _results.size() == 1 and _results[0][0] == "failed", "recalling empty-handed ends it and unpauses: %s" % str(_results))

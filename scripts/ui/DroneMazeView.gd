@@ -9,6 +9,7 @@ extends CanvasLayer
 ## R recall. Emits `finished(outcome, state)` once.
 
 const Maze := preload("res://scripts/story/activities/DroneMazeModel.gd")
+const Mesher := preload("res://scripts/story/activities/CrackMesher.gd")
 const BUMP_SOUND := "res://assets/assets/CombatWheel/soundfxs/hull_impact.wav"
 const WALL_HEIGHT := 1.2
 const TARGET_COLORS := {"mineral": Color(0.3, 0.95, 1.0), "salvage": Color(1.0, 0.6, 0.2), "recorder": Color(1.0, 0.2, 0.15)}
@@ -29,6 +30,9 @@ var _shake := 0.0
 var _done := false
 var _paused_by_us := false
 var _bump_player: AudioStreamPlayer
+var _mesh_task := -1
+var _mesh_result: Dictionary = {}
+var _crack_material: StandardMaterial3D
 
 
 func begin(seed_value: int, kind: String, with_recorder: bool) -> void:
@@ -62,7 +66,7 @@ func _build_world() -> void:
 	env.ambient_light_energy = 0.35
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.02, 0.02, 0.03)
-	env.fog_density = 0.18
+	env.fog_density = 0.35 if state.has("cracks") else 0.18
 	# Glow only for the brightest bits (crystals, stripes), kept tight: a wide
 	# bloom floods a whole corridor with the recorder's red.
 	env.glow_enabled = true
@@ -76,53 +80,19 @@ func _build_world() -> void:
 
 	var grid: Array = state["grid"]
 	var wall_mat := _wall_material(str(state["kind"]))
-	var walls := MultiMeshInstance3D.new()
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	var box := BoxMesh.new()
-	box.size = Vector3(1.0, WALL_HEIGHT, 1.0)
-	box.material = wall_mat
-	mm.mesh = box
-	var tiles: Array[Vector2i] = []
-	for y in grid.size():
-		for x in str(grid[y]).length():
-			if not Maze.is_open(grid, x, y) and _touches_open(grid, x, y):
-				tiles.append(Vector2i(x, y))
-	mm.instance_count = tiles.size()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(state["seed"])
-	var rocky := str(state["kind"]) == "asteroid"
-	for i in tiles.size():
-		var basis := Basis()
-		var offset := Vector3.ZERO
-		if rocky:
-			# Tilted, uneven chunks read as a cave rather than a corridor. Kept
-			# small enough that the drone (radius RADIUS) never sees inside one.
-			basis = Basis.from_euler(Vector3(rng.randf_range(-0.18, 0.18), rng.randf_range(-0.5, 0.5), rng.randf_range(-0.18, 0.18))) 				.scaled(Vector3.ONE * rng.randf_range(1.05, 1.22))
-			offset = Vector3(rng.randf_range(-0.06, 0.06), rng.randf_range(-0.08, 0.08), rng.randf_range(-0.06, 0.06))
-		mm.set_instance_transform(i, Transform3D(basis, Vector3(tiles[i].x + 0.5, WALL_HEIGHT * 0.5, tiles[i].y + 0.5) + offset))
-	walls.multimesh = mm
-	_viewport.add_child(walls)
-	if rocky:
-		_add_rubble(grid, wall_mat, rng)
+	if state.has("cracks"):
+		_build_cracks(wall_mat)
 	else:
-		_add_wreck_dressing(grid, rng)
-	var w := float(str(grid[0]).length())
-	var h := float(grid.size())
-	for y_level in [0.0, WALL_HEIGHT]:
-		var plane := MeshInstance3D.new()
-		var pm := PlaneMesh.new()
-		pm.size = Vector2(w, h)
-		pm.material = wall_mat
-		plane.mesh = pm
-		plane.position = Vector3(w * 0.5, y_level, h * 0.5)
-		if y_level > 0.0:
-			plane.rotation.x = PI  # ceiling faces down
-		_viewport.add_child(plane)
+		_build_corridors(grid, wall_mat, rng)
 
 	for t in state["targets"]:
 		var node := _target_node(str(t["kind"]))
-		node.position = Vector3(float(t["tile"][0]) + 0.5, 0.0, float(t["tile"][1]) + 0.5)
+		if state.has("cracks"):
+			node.scale = Vector3.ONE * 0.55
+		var at := Maze.target_at(t)
+		node.position = Vector3(at.x, _floor_at(t), at.y)
 		_viewport.add_child(node)
 		_target_nodes[str(t["id"])] = node
 
@@ -138,11 +108,95 @@ func _build_world() -> void:
 	lamp.light_energy = 2.6
 	lamp.light_color = Color(1.0, 0.95, 0.85)
 	lamp.shadow_enabled = true
+	# Slightly off the lens, so bumps in the rock throw shadows.
+	lamp.position = Vector3(0.09, 0.08, 0.0)
 	_camera.add_child(lamp)
 	var glow := OmniLight3D.new()
 	glow.omni_range = 1.6
 	glow.light_energy = 0.35
 	_camera.add_child(glow)
+
+
+## A wreck's square corridors: a box per wall tile, floor and ceiling.
+func _build_corridors(grid: Array, wall_mat: Material, rng: RandomNumberGenerator) -> void:
+	var walls := MultiMeshInstance3D.new()
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var box := BoxMesh.new()
+	box.size = Vector3(1.0, WALL_HEIGHT, 1.0)
+	box.material = wall_mat
+	mm.mesh = box
+	var tiles: Array[Vector2i] = []
+	for y in grid.size():
+		for x in str(grid[y]).length():
+			if not Maze.is_open(grid, x, y) and _touches_open(grid, x, y):
+				tiles.append(Vector2i(x, y))
+	mm.instance_count = tiles.size()
+	for i in tiles.size():
+		mm.set_instance_transform(i, Transform3D(Basis(), Vector3(tiles[i].x + 0.5, WALL_HEIGHT * 0.5, tiles[i].y + 0.5)))
+	walls.multimesh = mm
+	_viewport.add_child(walls)
+	_add_wreck_dressing(grid, rng)
+	var w := float(str(grid[0]).length())
+	var h := float(grid.size())
+	for y_level in [0.0, WALL_HEIGHT]:
+		var plane := MeshInstance3D.new()
+		var pm := PlaneMesh.new()
+		pm.size = Vector2(w, h)
+		pm.material = wall_mat
+		plane.mesh = pm
+		plane.position = Vector3(w * 0.5, y_level, h * 0.5)
+		if y_level > 0.0:
+			plane.rotation.x = PI  # ceiling faces down
+		_viewport.add_child(plane)
+
+
+## An asteroid's cracks: one smooth, lumpy rock surface from the same shape
+## the drone collides with (CrackMesher), built on a worker thread. The drone
+## waits at the mouth of the crack until it is ready.
+func _build_cracks(wall_mat: Material) -> void:
+	# Finer grain than the corridors: the crack is barely a metre across.
+	_crack_material = (wall_mat as StandardMaterial3D).duplicate() as StandardMaterial3D
+	_crack_material.uv1_scale = Vector3(2.4, 2.4, 2.4)
+	_crack_material.normal_scale = 1.6
+	var cracks: Dictionary = state["cracks"]
+	var seed_value := int(state["seed"])
+	_mesh_task = WorkerThreadPool.add_task(func() -> void: _mesh_result = Mesher.build(cracks, seed_value))
+
+
+## True once the rock is in place and the drone can fly.
+func is_ready_to_fly() -> bool:
+	return _mesh_task < 0
+
+
+## Wait for the rock and put it in (blocks; the thread is usually done).
+func finish_loading() -> void:
+	if _mesh_task < 0:
+		return
+	WorkerThreadPool.wait_for_task_completion(_mesh_task)
+	_mesh_task = -1
+	var rock := MeshInstance3D.new()
+	rock.mesh = Mesher.to_mesh(_mesh_result)
+	rock.material_override = _crack_material
+	_viewport.add_child(rock)
+	_mesh_result = {}
+	if _hud_prompt != null:
+		_hud_prompt.text = ""
+
+
+func _exit_tree() -> void:
+	if _mesh_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_mesh_task)
+		_mesh_task = -1
+
+
+## Where a target rests: on the crack floor for cracks, on the deck otherwise.
+func _floor_at(t: Dictionary) -> float:
+	if not state.has("cracks"):
+		return 0.0
+	var key := "%d,%d" % [int(t["tile"][0]), int(t["tile"][1])]
+	var n: Array = state["cracks"]["nodes"].get(key, [0, 0, Maze.POCKET_RADIUS])
+	return -float(n[2]) * Mesher.TALL * 0.8
 
 
 ## Loose rock along the tunnel edges (never in the middle, where the drone flies).
@@ -357,6 +411,11 @@ func _hud_label(parent: Control, font_size: int) -> Label:
 func _process(delta: float) -> void:
 	if _done or state.is_empty():
 		return
+	if _mesh_task >= 0:
+		if not WorkerThreadPool.is_task_completed(_mesh_task):
+			_hud_prompt.text = "Lowering the drone into the crack..."
+			return
+		finish_loading()
 	var throttle := _axis(KEY_W, KEY_UP) - _axis(KEY_S, KEY_DOWN)
 	var turn := _axis(KEY_D, KEY_RIGHT) - _axis(KEY_A, KEY_LEFT)
 	state = Maze.step(state, delta, throttle, turn)
@@ -401,7 +460,8 @@ func _sync_camera() -> void:
 		return
 	var a := float(state["heading"])
 	var jitter := Vector3(randf() - 0.5, randf() - 0.5, 0.0) * _shake * 0.12
-	_camera.position = Vector3(float(state["pos"][0]), WALL_HEIGHT * 0.45, float(state["pos"][1])) + jitter
+	var eye := 0.0 if state.has("cracks") else WALL_HEIGHT * 0.45
+	_camera.position = Vector3(float(state["pos"][0]), eye, float(state["pos"][1])) + jitter
 	_camera.rotation = Vector3(0.0, -a - PI * 0.5, 0.0)
 	var t := Time.get_ticks_msec() / 1000.0
 	for id in _target_nodes:

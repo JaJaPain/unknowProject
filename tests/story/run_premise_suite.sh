@@ -36,6 +36,7 @@ TESTS=(
   run_signal_tuning_activity_tests
   run_drone_maze_tests
   run_drone_maze_activity_tests
+  run_crack_mesher_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do
