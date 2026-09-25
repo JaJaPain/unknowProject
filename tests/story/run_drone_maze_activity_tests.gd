@@ -80,11 +80,36 @@ func _initialize() -> void:
 	clean["end"] = "complete"
 	activity._on_finished("clean", clean)
 	_check(gs.player_credits == credits + 3 * 90 + 80, "three seams and the bonus: %d" % (gs.player_credits - credits))
+	_check(gs.inventory.get_quantity("resonant_crystal") == 1, "a clean, unbroken run brings home a resonant crystal")
 	credits = gs.player_credits
 	var cracked := clean.duplicate(true)
 	cracked["ore_integrity"] = 0.6
 	activity._on_finished("clean", cracked)
 	_check(gs.player_credits == credits + int(round(270 * 0.6)) + 80, "cracked ore sells for what survived: %d" % (gs.player_credits - credits))
+	_check(gs.inventory.get_quantity("resonant_crystal") == 1, "cracked ore yields no crystal")
+
+	# Upgrades: tier 3 and up need parts; tier 5 needs the crystal too.
+	_check(gs.upgrade_material_cost("weapons", 2).is_empty(), "tier 2 needs no parts")
+	_check(gs.upgrade_material_cost("weapons", 3) == {"power_coils": 1}, "tier 3 needs a part")
+	_check(gs.upgrade_material_cost("engine", 5) == {"fusion_cell": 2, "resonant_crystal": 1}, "tier 5 needs the crystal")
+	gs.player = null  # the fake ship has no health for the stat refresh
+	var saved_upgrades: Dictionary = gs.current_upgrades.duplicate(true)
+	var saved_credits: int = gs.player_credits
+	var saved_ore: float = gs.player_storage_ore
+	gs.current_upgrades["weapons"] = {"tier": 2, "path": "rapid"}
+	gs.player_credits = 100000
+	gs.player_storage_ore = 10000.0
+	gs.power_capacity = 100000
+	var coils_before: int = gs.inventory.get_quantity("power_coils")
+	gs.inventory.remove("power_coils", coils_before)
+	_check(not gs.purchase_upgrade("weapons", "rapid"), "no part, no tier 3")
+	gs.inventory.add("power_coils", 1, 10)
+	_check(gs.purchase_upgrade("weapons", "rapid") and gs.inventory.get_quantity("power_coils") == 0, "the part is fitted")
+	gs.current_upgrades = saved_upgrades
+	gs.player_credits = saved_credits
+	gs.player_storage_ore = saved_ore
+	gs.apply_upgrade_stats()
+	gs.player = ship
 
 	# A lost drone pays nothing for its load (the drone itself was the cost).
 	credits = gs.player_credits

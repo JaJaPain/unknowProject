@@ -23,6 +23,8 @@ const PAY := {"mineral": 90, "salvage": 70, "recorder": 0}
 const CLEAN_BONUS := 80
 ## Each seam or crate brought home may also carry an expensive material.
 const MATERIAL_CHANCE := 0.35
+const CRYSTAL_ITEM := "resonant_crystal"
+const CRYSTAL_INTEGRITY := 0.8
 const MATERIALS := {
 	"asteroid": ["fusion_cell", "power_coils", "sensor_cluster"],
 	"wreck": ["hull_plating", "memory_bank", "encrypted_core", "power_coils"],
@@ -154,6 +156,10 @@ func _on_finished(outcome_id: String, state: Dictionary) -> void:
 				materials.append(str(pool[randi() % pool.size()]))
 	var integrity := float(state.get("ore_integrity", 1.0))
 	pay = int(round(pay * integrity))
+	# The prize: a clean run through the cracks with the ore mostly whole
+	# brings home a resonant crystal, which top-tier upgrades need.
+	if kind == "asteroid" and outcome_id == "clean" and integrity >= CRYSTAL_INTEGRITY:
+		materials.append(CRYSTAL_ITEM)
 	if outcome_id == "clean":
 		pay += CLEAN_BONUS
 	if pay > 0 and gs != null:

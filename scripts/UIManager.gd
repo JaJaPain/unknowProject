@@ -15705,6 +15705,9 @@ func _on_su_slot_pressed(slot: String) -> void:
 			_style_action_button(btn)
 			var pwr = data.get("power", 0)
 			btn.text = "Upgrade to Mk %d\nCost: %d CR, %d Ore\nDraw: %d MW" % [next_tier, data["cost_cr"], data["cost_ore"], pwr]
+			var parts := _upgrade_materials_text(slot, next_tier)
+			if not parts.is_empty():
+				btn.text += "\nParts: " + parts
 			btn.pressed.connect(func(): _attempt_upgrade(slot, current_path))
 			su_ship_sys_vbox.add_child(btn)
 			
@@ -15741,6 +15744,24 @@ var _insufficient_power_lines: Array = [
 	"That system needs more megawatts than your jalopy can put out. Upgrade the powerplant."
 ]
 
+var _insufficient_materials_lines: Array = [
+	"Credits and ore aren't enough at this tier. I need the actual parts, and you don't have them.",
+	"I can't print those components. Bring me the parts and I'll fit them.",
+	"That tier takes real hardware. Check the parts list and come back.",
+	"Top-tier work needs the rare stuff. Some of it only comes out of an asteroid's cracks.",
+]
+var _materials_idx: int = 0
+
+
+## "2 Power Coils (have 1), 1 Resonant Crystal (have 0)" for a tier, or "".
+func _upgrade_materials_text(slot: String, tier: int) -> String:
+	var cost: Dictionary = GlobalState.upgrade_material_cost(slot, tier)
+	var parts: PackedStringArray = []
+	for item in cost:
+		parts.append("%d %s (have %d)" % [int(cost[item]), str(item).capitalize(), GlobalState.inventory.get_quantity(item)])
+	return ", ".join(parts)
+
+
 var _credit_idx: int = 0
 var _ore_idx: int = 0
 var _power_idx: int = 0
@@ -15768,6 +15789,8 @@ func _attempt_upgrade(slot: String, path: String):
 		reason = "credits"
 	elif available_ore < cost_ore:
 		reason = "ore"
+	elif not GlobalState.has_upgrade_materials(slot, next_tier):
+		reason = "materials"
 		
 	if reason != "":
 		var line = ""
@@ -15780,6 +15803,9 @@ func _attempt_upgrade(slot: String, path: String):
 		elif reason == "ore":
 			line = _insufficient_ore_lines[_ore_idx]
 			_ore_idx = (_ore_idx + 1) % _insufficient_ore_lines.size()
+		elif reason == "materials":
+			line = _insufficient_materials_lines[_materials_idx]
+			_materials_idx = (_materials_idx + 1) % _insufficient_materials_lines.size()
 		# Replace generic red text with Jenna's dialogue
 		su_ship_sys_lbl.text += "\n\n[color=#FF7777]\"%s\"[/color]" % line
 		SpeechService.play(line, "voice.jenna_kross.v1")

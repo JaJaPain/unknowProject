@@ -2488,6 +2488,37 @@ func get_current_power_draw() -> float:
 				total += UPGRADE_TREE[sys]["branches"][path][tier]["power"]
 	return total
 
+## Higher tiers also need expensive materials (Abe, 2026-09-24): ship parts
+## from tier 3, and at tier 5 a resonant crystal, which only comes out of an
+## asteroid's cracks (the drone maze). Parts are also sold at stations.
+## Materials are fitted into the ship, so a refund never returns them.
+const UPGRADE_PARTS := {
+	"weapons": "power_coils", "engine": "fusion_cell", "shields": "power_coils",
+	"mining": "sensor_cluster", "cargo": "hull_plating", "storage": "hull_plating",
+	"sensors": "sensor_cluster", "power": "fusion_cell",
+}
+const TOP_TIER_MATERIAL := "resonant_crystal"
+
+
+## {item_id: quantity} a tier needs besides credits and ore.
+static func upgrade_material_cost(sys: String, tier: int) -> Dictionary:
+	var part := str(UPGRADE_PARTS.get(sys, ""))
+	if part.is_empty() or tier < 3:
+		return {}
+	var out := {part: 1 if tier == 3 else 2}
+	if tier >= 5:
+		out[TOP_TIER_MATERIAL] = 1
+	return out
+
+
+func has_upgrade_materials(sys: String, tier: int) -> bool:
+	var cost := upgrade_material_cost(sys, tier)
+	for item in cost:
+		if inventory == null or inventory.get_quantity(item) < int(cost[item]):
+			return false
+	return true
+
+
 func purchase_upgrade(sys: String, path: String) -> bool:
 	var info = current_upgrades[sys]
 	var next_tier = info["tier"] + 1
@@ -2539,8 +2570,13 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 	
 	if total_ore < cost_ore:
 		return false
+	if not has_upgrade_materials(sys, next_tier):
+		return false
 		
 	# Deduct
+	var materials := upgrade_material_cost(sys, next_tier)
+	for item in materials:
+		inventory.remove(item, int(materials[item]))
 	player_credits -= cost_cr
 	var remaining_ore_cost = cost_ore
 	if cargo_type == CargoType.ORE:

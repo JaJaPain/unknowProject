@@ -375,6 +375,22 @@
             ]
         },
         {
+            "item_id": "resonant_crystal",
+            "display_name": "Resonant Crystal",
+            "description": "Fragile ore grown deep in an asteroid's cracks. Top-tier ship upgrades need one. Not sold anywhere.",
+            "category": "ship_part",
+            "base_price": 220,
+            "stack_max": 5,
+            "restock_interval_minutes": 0,
+            "restock_quantity": 0,
+            "max_stock": 0,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
             "item_id": "neon_sign",
             "display_name": "Neon Sign",
             "description": "\"Slightly used. Great ambience.\"",
