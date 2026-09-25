@@ -66,12 +66,16 @@ var _investigation_world_elapsed := 0.0
 var _terminal_in_progress: Dictionary = {}
 var _terminal_depth: int = 0
 signal investigation_scan_updated(report: Dictionary)
-## A courier's sealed container turned out not to be what the manifest says
-## (MissionTwists wrong_cargo): the UI asks deliver anyway or dump it.
-signal cargo_twist_triggered(mission_data: Dictionary)
-## Seconds of undocked flight with the cargo aboard before N.O.V.A. scans it.
-const CARGO_TWIST_AFTER_SECONDS := 60.0
-var _cargo_twist_prompted := {}
+## A mid-flight reveal twist (MissionTwists): the courier's crate is not what
+## the manifest says, the client's hidden truth comes out, or a rival pilot is
+## on the same job. The UI puts the choice to the captain.
+signal reveal_twist_triggered(mission_data: Dictionary)
+## Seconds of undocked flight on the job before the reveal lands.
+const REVEAL_TWIST_AFTER_SECONDS := 60.0
+## A race against a rival: seconds of undocked flight to finish the job.
+const RIVAL_RACE_SECONDS := 240.0
+var _reveal_twist_prompted := {}
+var _race_warned := {}
 
 func begin_investigation_scan(mission_id: String, site_id: String) -> Dictionary:
 	return _investigation_runtime.begin_scan(self, mission_id, site_id)
@@ -83,7 +87,7 @@ func dispatch_investigation_command(command: Dictionary) -> Dictionary:
 	return _investigation_runtime.dispatch(self, command)
 
 func _physics_process(delta: float) -> void:
-	_tick_cargo_twist(delta)
+	_tick_reveal_twist(delta)
 	var scan_mission_id := str(_investigation_runtime._scan.get("mission_id", ""))
 	var report := _investigation_runtime.tick(self, delta)
 	if not report.is_empty():
@@ -116,47 +120,83 @@ func spawn_investigation_ambush(mission_id: String, at: Vector3) -> void:
 	print("[QuestManager] Lure ambush for %s: %d raiders at the cache." % [mission_id, count])
 
 
-## Counts undocked flight for a focused courier job with a pending wrong-cargo
-## twist, then reveals it. A revealed twist not yet answered (for example
-## after a reload) is asked again.
-func _tick_cargo_twist(delta: float) -> void:
+## Counts undocked flight on the focused job with a pending reveal twist, then
+## reveals it; runs the clock on a race against a rival. A revealed twist not
+## yet answered (for example after a reload) is asked again.
+func _tick_reveal_twist(delta: float) -> void:
 	var focused = _collection.get_focused()
 	if focused == null or get_tree().paused:
 		return
-	if str(focused.data.get("objective_type", "")) != "DELIVERY_COURIER" or str(focused.data.get("twist_id", "")) != "wrong_cargo":
+	if str(focused.data.get("twist_reveal_kind", "")).is_empty():
 		return
 	var twist_state := str(focused.data.get("twist_state", ""))
 	if twist_state == "revealed":
-		if not _cargo_twist_prompted.has(focused.runtime_id):
-			_cargo_twist_prompted[focused.runtime_id] = true
-			cargo_twist_triggered.emit(focused.data.duplicate(true))
+		if not _reveal_twist_prompted.has(focused.runtime_id):
+			_reveal_twist_prompted[focused.runtime_id] = true
+			reveal_twist_triggered.emit(focused.data.duplicate(true))
 		return
-	if twist_state != "pending":
+	if twist_state not in ["pending", "racing"]:
 		return
 	var player = GlobalState.player
 	if not is_instance_valid(player) or player.get("is_docked") == true or player.get("destroyed") == true:
 		return
+	if twist_state == "racing":
+		_tick_race(focused, delta)
+		return
 	focused.data["twist_flight_s"] = float(focused.data.get("twist_flight_s", 0.0)) + delta
-	if float(focused.data["twist_flight_s"]) >= CARGO_TWIST_AFTER_SECONDS:
+	if float(focused.data["twist_flight_s"]) >= REVEAL_TWIST_AFTER_SECONDS:
 		focused.data["twist_state"] = "revealed"
-		_cargo_twist_prompted[focused.runtime_id] = true
-		cargo_twist_triggered.emit(focused.data.duplicate(true))
+		_reveal_twist_prompted[focused.runtime_id] = true
+		reveal_twist_triggered.emit(focused.data.duplicate(true))
 		quest_progress_updated.emit()
 
 
-## The captain's answer: "deliver" keeps the job (and leaves a deed at the
-## end); "dump" jettisons the crate and the job is abandoned.
-func resolve_cargo_twist(choice: String) -> void:
+## The rival's clock: warnings as they close in; at zero they take the job,
+## which expires the normal way (and leaves its fallout).
+func _tick_race(focused, delta: float) -> void:
+	var left := float(focused.data.get("twist_race_left_s", RIVAL_RACE_SECONDS)) - delta
+	focused.data["twist_race_left_s"] = left
+	var rival := str(focused.data.get("twist_rival_name", "The rival"))
+	for mark in [120, 60, 30]:
+		var key := "%s:%d" % [focused.runtime_id, mark]
+		if left <= mark and not _race_warned.has(key):
+			_race_warned[key] = true
+			GlobalState.emit_chatter("N.O.V.A.", "%s is closing on the drop. About %d seconds before they beat us to it." % [rival, mark], Color(1.0, 0.7, 0.3))
+	if left > 0.0:
+		return
+	focused.data["twist_state"] = "lost_race"
+	focused.data["is_timed"] = true
+	focused.data["deadline_time_minutes"] = CampaignClock.total_minutes
+	GlobalState.emit_chatter("N.O.V.A.", "%s got there first. The job's theirs now." % rival, Color(1.0, 0.5, 0.4))
+	check_active_quest_expiration()
+
+
+## The captain's answer to a reveal twist.
+##   wrong cargo: "deliver" keeps the job (a deed at the end); "dump" ends it.
+##   client's lie: "finish" keeps it (a deed at the end); "expose" ends it.
+##   rival: "split" halves the pay; "race" starts the rival's clock.
+func resolve_reveal_twist(choice: String) -> void:
 	var focused = _collection.get_focused()
 	if focused == null or str(focused.data.get("twist_state", "")) != "revealed":
 		return
 	match choice:
 		"deliver":
 			focused.data["twist_state"] = "delivering"
-			quest_progress_updated.emit()
-		"dump":
-			focused.data["twist_state"] = "dumped"
+		"finish":
+			focused.data["twist_state"] = "finishing"
+		"split":
+			focused.data["twist_state"] = "split"
+			focused.data["reward_credits_multiplier"] = float(focused.data.get("reward_credits_multiplier", 1.0)) * 0.5
+		"race":
+			focused.data["twist_state"] = "racing"
+			focused.data["twist_race_left_s"] = RIVAL_RACE_SECONDS
+		"dump", "expose":
+			focused.data["twist_state"] = "dumped" if choice == "dump" else "exposed"
 			abandon_quest()
+			return
+		_:
+			return
+	quest_progress_updated.emit()
 
 
 func reconcile_investigation_sites() -> void:

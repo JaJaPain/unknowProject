@@ -193,6 +193,8 @@ func _live_offers(world: Dictionary) -> Array[Dictionary]:
 	var world_with_quirks := world.duplicate()
 	if not world_with_quirks.has("quirks"):
 		world_with_quirks["quirks"] = profile_for(world).get("quirks", [])
+	# Rivals for the rival twist: the recurring cast (alive, free, not busy).
+	world_with_quirks["rival_candidates"] = CastType.candidates(state)
 	for arc_id in ArcsType.active_arc_ids(state):
 		var a := ArcsType.arc(state, arc_id)
 		if str(a["system_id"]) != system_id and str(a["scale"]) != "regional":
@@ -521,11 +523,17 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 	# A twist's answer travels: taking the money or sparing a surrendered
 	# pilot is a deed the factions hear about.
 	var twist_id := str(quest_data.get("twist_id", (quest_data.get("objective", {}) as Dictionary).get("twist_id", "")))
-	# A wrong-cargo run delivered anyway is its own answer (no hail branch).
-	if twist_id == "wrong_cargo" and terminal_state == "completed" and str(quest_data.get("twist_state", "")) == "delivering":
-		branch = "deliver"
+	# A reveal twist's answer is its own "branch" for the deed (the arc still
+	# reads the hail branch, if any).
+	var deed_branch := branch
+	var reveal_answer := {"delivering": "deliver", "finishing": "finish_lie", "racing": "race_won"}
+	var twist_state := str(quest_data.get("twist_state", ""))
+	if terminal_state == "completed" and reveal_answer.has(twist_state):
+		deed_branch = str(reveal_answer[twist_state])
+	elif twist_state == "exposed":
+		deed_branch = "expose"
 	if not twist_id.is_empty():
-		var deed := TwistsType.deed_for(branch, str(quest_data.get("twist_target_name", "")))
+		var deed := TwistsType.deed_for(deed_branch, str(quest_data.get("twist_target_name", "")))
 		if not deed.is_empty():
 			var a := ArcsType.arc(state, str(ref["arc_id"]))
 			deed["system_id"] = str(a.get("system_id", ""))

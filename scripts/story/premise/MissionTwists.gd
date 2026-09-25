@@ -22,6 +22,9 @@ const DEEDS := {
 	"accept_bribe": {"tag": "sold_out_contract", "summary": "A pilot took {target}'s money and let them go."},
 	"spare": {"tag": "spared_surrendered_target", "summary": "A pilot spared {target} after they surrendered."},
 	"deliver": {"tag": "smuggled_undeclared_cargo", "summary": "A pilot ran undeclared cargo for {target} and asked no questions."},
+	"finish_lie": {"tag": "covered_for_client", "summary": "A pilot learned what {target} was hiding and finished the job anyway."},
+	"expose": {"tag": "exposed_client", "summary": "A pilot walked away from {target}'s job and told everyone why."},
+	"race_won": {"tag": "won_the_race", "summary": "A pilot beat a rival to {target}'s job and took the whole fee."},
 }
 
 static var _deck: Dictionary = {}
@@ -37,8 +40,9 @@ static func deck() -> Dictionary:
 	return _deck
 
 
-## The twist this mission rolls, or {} for none.
-static func roll(verb: String, seed_key: String) -> Dictionary:
+## The twist this mission rolls, or {} for none. `has_private_fact`: the
+## card mission has a hidden truth the client-lie twist can reveal.
+static func roll(verb: String, seed_key: String, has_private_fact: bool = false) -> Dictionary:
 	var d := deck()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("twist|" + seed_key)
@@ -47,6 +51,8 @@ static func roll(verb: String, seed_key: String) -> Dictionary:
 	var options: Array = []
 	for t in d.get("twists", []):
 		if t is Dictionary and verb in (t.get("verbs", []) as Array):
+			if bool(t.get("needs_private_fact", false)) and not has_private_fact:
+				continue
 			options.append(t)
 	if options.is_empty():
 		return {}
@@ -59,11 +65,12 @@ static func roll(verb: String, seed_key: String) -> Dictionary:
 
 
 ## Turns a composed offer into its twisted form (returns a new offer).
-static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, target_name: String) -> Dictionary:
+## `context`: {private_fact, rival_name} for the reveal twists.
+static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, target_name: String, context: Dictionary = {}) -> Dictionary:
 	if twist.is_empty():
 		return offer
-	if str(twist.get("kind", "")) == "wrong_cargo":
-		return _apply_wrong_cargo(offer, twist, requester_name)
+	if str(twist.get("kind", "")) in ["wrong_cargo", "reveal"]:
+		return _apply_reveal(offer, twist, requester_name, context)
 	var out := offer.duplicate(true)
 	var objective: Dictionary = out.get("objective", {})
 	var reward := int(objective.get("reward_credits", 0))
@@ -81,18 +88,26 @@ static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, 
 	return out
 
 
-## A courier job whose sealed container is not what the manifest says. The
-## objective stays a courier run; N.O.V.A. scans the crate a minute into
-## the flight (QuestManager) and asks: deliver anyway, or dump it.
-static func _apply_wrong_cargo(offer: Dictionary, twist: Dictionary, requester_name: String) -> Dictionary:
+## A twist revealed a minute into the flight (QuestManager), whatever the
+## job: the courier's crate is not what the manifest says (wrong_cargo), the
+## client's hidden truth comes out (client_lie), or a rival pilot is working
+## the same contract (rival). The objective itself is unchanged.
+static func _apply_reveal(offer: Dictionary, twist: Dictionary, requester_name: String, context: Dictionary) -> Dictionary:
 	var out := offer.duplicate(true)
 	var objective: Dictionary = out.get("objective", {})
 	var item := str(objective.get("item_name", "the cargo"))
 	var true_cargo := str(twist.get("true_cargo_pick", "something else"))
 	var who := requester_name if not requester_name.is_empty() else "the client"
+	var rival := str(context.get("rival_name", "")).strip_edges()
+	if rival.is_empty():
+		rival = "Another freelancer"
+	var fact := str(context.get("private_fact", "")).strip_edges()
 	objective["twist_id"] = str(twist.get("id", ""))
+	objective["twist_reveal_kind"] = str(twist.get("reveal_kind", "wrong_cargo"))
 	objective["twist_true_cargo"] = true_cargo
-	objective["twist_reveal"] = str(twist.get("hail", "")).replace("{item}", item).replace("{true_cargo}", true_cargo).replace("{requester}", who)
+	objective["twist_rival_name"] = rival
+	var reveal := str(twist.get("hail", "")).replace("{item}", item).replace("{true_cargo}", true_cargo)
+	objective["twist_reveal"] = reveal.replace("{requester}", who).replace("{rival}", rival).replace("{fact}", fact)
 	objective["twist_target_name"] = who
 	out["objective"] = objective
 	out["twist_id"] = str(twist.get("id", ""))

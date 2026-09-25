@@ -98,21 +98,66 @@ func _initialize() -> void:
 		if not ok:
 			continue
 		var revealed := [{}]
-		qm.cargo_twist_triggered.connect(func(d: Dictionary) -> void: revealed[0] = d, CONNECT_ONE_SHOT)
-		qm._tick_cargo_twist(30.0)
+		qm.reveal_twist_triggered.connect(func(d: Dictionary) -> void: revealed[0] = d, CONNECT_ONE_SHOT)
+		qm._tick_reveal_twist(30.0)
 		_check(revealed[0].is_empty(), "not yet: half a minute in")
-		qm._tick_cargo_twist(31.0)
+		qm._tick_reveal_twist(31.0)
 		_check(str(revealed[0].get("twist_state", "")) == "revealed", "a minute into the flight N.O.V.A. scans the crate")
-		qm.resolve_cargo_twist(choice)
+		qm.resolve_reveal_twist(choice)
 		if choice == "deliver":
 			_check(qm.is_quest_active() and str(qm.active_quest.get("twist_state", "")) == "delivering", "delivering it keeps the job")
 		else:
 			_check(not qm.is_quest_active(), "dumping it ends the job")
+	# The client's lie: needs a hidden truth on the card mission.
+	_check(Twists.roll("delivery_courier", "lie|x", false).get("id", "") != "client_lie", "no hidden truth, no client-lie twist")
+	var lie_seen := false
+	for i in 300:
+		if str(Twists.roll("delivery_courier", "lie|%d" % i, true).get("id", "")) == "client_lie":
+			lie_seen = true
+	_check(lie_seen, "with one, it can come up")
+	var lie_t: Dictionary = by_id["client_lie"]
+	lie_t["hail"] = lie_t["hails"][0]
+	var lied := Twists.apply(courier_offer, lie_t, "Vessa Orl", "", {"private_fact": "She is skimming the relief fund."})
+	_check(str(lied["objective"]["twist_reveal"]).contains("skimming the relief fund"), "the reveal is the card's hidden truth: %s" % lied["objective"]["twist_reveal"])
+	var rival_t: Dictionary = by_id["rival_on_the_job"]
+	rival_t["hail"] = rival_t["hails"][0]
+	var rivalled := Twists.apply(courier_offer, rival_t, "Vessa Orl", "", {"rival_name": "Kade Munro"})
+	_check(str(rivalled["objective"]["twist_reveal"]).begins_with("Kade Munro here"), "the rival names themselves: %s" % rivalled["objective"]["twist_reveal"])
+
+	# Expose the client: the job ends.
+	qm.restore_active_quest({})
+	gs.clear_cargo()
+	if qm.accept_quest(lied, lied["choices"][0]):
+		qm._tick_reveal_twist(61.0)
+		_check(str(qm.active_quest.get("twist_state", "")) == "revealed", "the lie comes out a minute in")
+		qm.resolve_reveal_twist("expose")
+		_check(not qm.is_quest_active(), "exposing them ends the job")
+
+	# The rival: split halves the pay; race runs a clock, and losing it expires the job.
+	for choice in ["split", "race"]:
+		qm.restore_active_quest({})
+		gs.clear_cargo()
+		if not qm.accept_quest(rivalled, rivalled["choices"][0]):
+			_check(false, "rival job accepted: %s" % qm.last_validation_error)
+			continue
+		var full: int = qm.active_quest_payout()
+		qm._tick_reveal_twist(61.0)
+		qm.resolve_reveal_twist(choice)
+		if choice == "split":
+			_check(qm.active_quest_payout() == int(full / 2.0) or qm.active_quest_payout() == int(round(full / 2.0)), "splitting halves the fee (%d -> %d)" % [full, qm.active_quest_payout()])
+		else:
+			_check(str(qm.active_quest.get("twist_state", "")) == "racing", "racing starts the rival's clock")
+			qm._tick_reveal_twist(qm.RIVAL_RACE_SECONDS - 10.0)
+			_check(qm.is_quest_active(), "still in the race")
+			qm._tick_reveal_twist(20.0)
+			_check(not qm.is_quest_active(), "the rival got there first: the job is gone")
+
 	gs.player = saved_player
 	ship.free()
 	qm.restore_active_quest({})
 	gs.clear_cargo()
 	_check(Twists.deed_for("deliver", "Vessa Orl")["tag"] == "smuggled_undeclared_cargo", "running it anyway leaves a deed")
+	_check(Twists.deed_for("expose", "Vessa Orl")["tag"] == "exposed_client" and Twists.deed_for("race_won", "Vessa Orl")["tag"] == "won_the_race", "exposing a client and winning a race are deeds too")
 
 	# Story: a bribe on a kill job means the target got away.
 	var mission := {"verb": "kill_ships", "outcome_tags": ["raven_stopped", "raven_escaped"]}

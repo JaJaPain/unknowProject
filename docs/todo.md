@@ -246,6 +246,13 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     the deal / walk away; finish / let them go), and the wrong-cargo scan a
     minute into a courier run (deliver anyway / dump it). The answer shows
     up as a deed on the radio. Too frequent? Hail lines right?
+    Two more reveal twists on supply jobs, a minute into the flight:
+    the client's lie (N.O.V.A. reads out the card's hidden truth: finish
+    anyway, or walk away and expose them) and a rival on the same job (a
+    recurring-cast pilot hails in their own voice: split the fee, or race
+    them over about 4 minutes of flight; lose and the job expires). Some
+    card private facts read as narration ("The pilot realizes...") when
+    N.O.V.A. says them; worth a wording pass in the card brief.
   - Failure fallout: abandon or let expire a courier/ore/purchase job (store
     prices in that system go up 25% for 8 game hours) and a kill job (more
     raiders spawn there); the radio leads with what happened. Noticeable

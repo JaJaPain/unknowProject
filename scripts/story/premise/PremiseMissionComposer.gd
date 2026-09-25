@@ -25,6 +25,7 @@ const InvestigationBuilderType := preload("res://scripts/domain/InvestigationOff
 const InvestigationPlacementType := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
 const ComplicationsType := preload("res://scripts/story/premise/MissionComplications.gd")
 const TwistsType := preload("res://scripts/story/premise/MissionTwists.gd")
+const NameForgeType := preload("res://scripts/story/premise/NameForge.gd")
 const InvestigationValidatorType := preload("res://scripts/domain/InvestigationStateValidator.gd")
 const ShapesType := preload("res://scripts/domain/MissionShapeRegistry.gd")
 
@@ -148,9 +149,20 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 				var hails: Array = twist.get("hails", [])
 				twist["hail"] = str(hails[abs(hash(beat_id)) % hails.size()]) if not hails.is_empty() else ""
 	else:
-		twist = TwistsType.roll(verb, "%d|%s" % [seed_value, beat_id])
+		twist = TwistsType.roll(verb, "%d|%s" % [seed_value, beat_id], not str(offer.get("premise_private_fact", "")).strip_edges().is_empty())
 	if not twist.is_empty():
-		offer = TwistsType.apply(offer, twist, str(requester.get("display_name", "")), str(target.get("display_name", "")))
+		# A rival on the job is someone the captain may have met before (the
+		# recurring cast), else a new name.
+		var rivals: Array = world.get("rival_candidates", [])
+		var rival_name := ""
+		if not rivals.is_empty():
+			rival_name = str((rivals[abs(hash(beat_id)) % rivals.size()] as Dictionary).get("display_name", ""))
+		if rival_name.is_empty():
+			var name_rng := RandomNumberGenerator.new()
+			name_rng.seed = hash("rival|" + beat_id)
+			rival_name = NameForgeType.person_name(name_rng)
+		offer = TwistsType.apply(offer, twist, str(requester.get("display_name", "")), str(target.get("display_name", "")),
+			{"private_fact": str(offer.get("premise_private_fact", "")), "rival_name": rival_name})
 	# Layer 3: about half the jobs come with a complication that changes how
 	# they play (seeded per mission, so a reload never rerolls it).
 	var complication := ComplicationsType.roll(verb, world.get("quirks", []), "%d|%s" % [seed_value, beat_id])

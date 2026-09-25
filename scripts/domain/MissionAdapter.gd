@@ -200,13 +200,6 @@ static func build_active_state(
 				)
 			)
 			state["cargo_loaded"] = true
-			# Wrong-cargo twist (MissionTwists): revealed mid-flight.
-			state["twist_id"] = str(objective.get("twist_id", ""))
-			state["twist_state"] = "pending" if not str(state["twist_id"]).is_empty() else ""
-			state["twist_flight_s"] = 0.0
-			state["twist_true_cargo"] = str(objective.get("twist_true_cargo", ""))
-			state["twist_reveal"] = str(objective.get("twist_reveal", ""))
-			state["twist_target_name"] = str(objective.get("twist_target_name", ""))
 		"PURCHASE_DELIVERY":
 			state["item_id"] = str(objective.get("item_id", ""))
 			state["item_name"] = str(objective.get("item_name", ""))
@@ -290,6 +283,20 @@ static func build_active_state(
 			state["spare_amount"] = maxi(0, int(objective.get("spare_amount", 0)))
 			state["twist_id"] = str(objective.get("twist_id", ""))
 			state["twist_target_name"] = str(objective.get("twist_target_name", ""))
+
+	# Mid-flight reveal twists (MissionTwists: wrong cargo, the client's lie,
+	# a rival on the job) work on any objective type. The hail twists on
+	# kill jobs keep their fields in the comms-reversal block above.
+	var reveal_kind := str(objective.get("twist_reveal_kind", ""))
+	if not reveal_kind.is_empty():
+		state["twist_id"] = str(objective.get("twist_id", ""))
+		state["twist_reveal_kind"] = reveal_kind
+		state["twist_state"] = "pending"
+		state["twist_flight_s"] = 0.0
+		state["twist_true_cargo"] = str(objective.get("twist_true_cargo", ""))
+		state["twist_reveal"] = str(objective.get("twist_reveal", ""))
+		state["twist_target_name"] = str(objective.get("twist_target_name", ""))
+		state["twist_rival_name"] = str(objective.get("twist_rival_name", ""))
 
 	var state_validation := StateType.new().load_from_dict(state)
 	validation.merge(state_validation, "state")
@@ -469,12 +476,6 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			normalized["cargo_loaded"] = bool(
 				normalized.get("cargo_loaded", true)
 			)
-			normalized["twist_id"] = str(normalized.get("twist_id", ""))
-			normalized["twist_state"] = str(normalized.get("twist_state", ""))
-			normalized["twist_flight_s"] = maxf(0.0, float(normalized.get("twist_flight_s", 0.0)))
-			normalized["twist_true_cargo"] = str(normalized.get("twist_true_cargo", ""))
-			normalized["twist_reveal"] = str(normalized.get("twist_reveal", ""))
-			normalized["twist_target_name"] = str(normalized.get("twist_target_name", ""))
 		"PURCHASE_DELIVERY":
 			normalized["quantity_required"] = max(
 				1,
@@ -525,6 +526,10 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			normalized["spare_amount"] = maxi(0, int(normalized.get("spare_amount", 0)))
 			normalized["twist_id"] = str(normalized.get("twist_id", ""))
 			normalized["twist_target_name"] = str(normalized.get("twist_target_name", ""))
+	if normalized.has("twist_reveal_kind"):
+		normalized["twist_reveal_kind"] = str(normalized.get("twist_reveal_kind", ""))
+		normalized["twist_state"] = str(normalized.get("twist_state", ""))
+		normalized["twist_flight_s"] = maxf(0.0, float(normalized.get("twist_flight_s", 0.0)))
 	return normalized
 
 

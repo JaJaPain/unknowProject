@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code. wrong_cargo reveals a courier's sealed container mid-flight (N.O.V.A. scans it) and asks: deliver anyway, or dump it.",
+    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code. wrong_cargo reveals a courier's sealed container mid-flight (N.O.V.A. scans it) and asks: deliver anyway, or dump it. client_lie reveals the requester's private fact mid-job (finish anyway, or expose them). rival_on_the_job: a rival pilot on the same contract (split the fee, or race against a clock; lose the race and the rival takes the credit).",
     "chance": 0.35,
     "twists": [
         {
@@ -48,6 +48,41 @@
                 "Captain, the mass on that container is wrong for {item}. I scanned it. It's {true_cargo}. {requester} didn't mention that.",
                 "I don't like surprises, so here's one I found: that sealed crate isn't {item}. It's {true_cargo}.",
                 "Before we get there: the manifest says {item}. The scan says {true_cargo}. One of those is lying, and it isn't the scanner."
+            ],
+            "reveal_kind": "wrong_cargo"
+        },
+        {
+            "id": "client_lie",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "kind": "reveal",
+            "reveal_kind": "client_lie",
+            "needs_private_fact": true,
+            "hails": [
+                "Captain, I went through {requester}'s traffic while we flew. Here's what they left out: {fact}",
+                "You should hear this before we finish. {fact} That's who we're working for.",
+                "I don't think {requester} told us the whole story. {fact}"
+            ]
+        },
+        {
+            "id": "rival_on_the_job",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "kind": "reveal",
+            "reveal_kind": "rival",
+            "race_minutes": 90,
+            "hails": [
+                "{rival} here. Same contract as you, pilot. {requester} hired us both and pays whoever finishes first. Split it with me, or race me for it.",
+                "Well, well. {rival}, working the same job for {requester}. We can share the fee and both go home, or you can try to beat me there.",
+                "You're on {requester}'s job too? Of course you are. This is {rival}. Half each, or the fast one takes it all. Your call."
             ]
         }
     ]
