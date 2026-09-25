@@ -178,6 +178,7 @@ var quiet_moment_director: Node = null
 var premise_director: Node = null
 var system_quirk_runner: Node = null
 var generation_window: Node = null
+var signal_tuning_activity: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
@@ -1272,6 +1273,7 @@ const QuietMomentDirectorType := preload("res://scripts/story/QuietMomentDirecto
 const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
 const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
+const SignalTuningActivityType := preload("res://scripts/story/activities/SignalTuningActivity.gd")
 const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
 const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
@@ -1316,6 +1318,13 @@ func _init_premise_director() -> void:
 	system_quirk_runner = SystemQuirkRunnerType.new()
 	system_quirk_runner.name = "SystemQuirkRunner"
 	add_child(system_quirk_runner)
+	# Signal tuning: faint transmissions to overhear in flight (press T).
+	signal_tuning_activity = SignalTuningActivityType.new()
+	signal_tuning_activity.name = "SignalTuningActivity"
+	signal_tuning_activity.director = premise_director
+	signal_tuning_activity.world_provider = func() -> Dictionary:
+		return PremiseWorldSnapshotType.capture(int(CampaignClock.total_minutes)) if gameplay_runtime_started else {}
+	add_child(signal_tuning_activity)
 	# System radio: one item every couple of minutes (voiced later; comms feed now).
 	var radio_timer := Timer.new()
 	radio_timer.name = "PremiseRadioTimer"

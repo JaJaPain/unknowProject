@@ -31,6 +31,9 @@ TESTS=(
   run_pin_board_tests
   run_generation_window_tests
   run_nova_investigation_tests
+  run_signal_tuning_tests
+  run_faint_transmission_tests
+  run_signal_tuning_activity_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

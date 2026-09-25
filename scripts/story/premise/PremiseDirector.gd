@@ -34,6 +34,7 @@ const WriterType := preload("res://scripts/story/premise/LineWriter.gd")
 const VoiceType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const CastType := preload("res://scripts/story/premise/RecurringCast.gd")
 const GatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
+const FaintType := preload("res://scripts/story/activities/FaintTransmissions.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -316,6 +317,30 @@ func next_radio_item(world: Dictionary, now_minute: int) -> Dictionary:
 			state = HandType.update_draft(state)
 		return item
 	return {}
+
+
+## Signal tuning: the faint transmission to tune into here, or {} when the
+## director is off. See FaintTransmissions.
+func faint_transmission(world: Dictionary, seed_value: int) -> Dictionary:
+	if not enabled:
+		return {}
+	var system_id := str(world.get("system_id", ""))
+	var display := str(_system_names.get(system_id, world.get("system_display", "this system")))
+	return FaintType.pick(state, system_id, display, state.get("heard_intercepts", []), seed_value)
+
+
+## The captain pulled it in. A story thread is noticed (it joins the Loose
+## ends board, however garbled it came through: N.O.V.A. keeps the
+## recording); ambient chatter is marked heard so it does not come round again.
+func overhear(item: Dictionary, now_minute: int) -> void:
+	if str(item.get("kind", "")) == "thread":
+		state = HandType.set_seen(state, str(item["thread_id"]), now_minute)
+		state = HandType.update_draft(state)
+		return
+	var heard: Array = (state.get("heard_intercepts", []) as Array).duplicate()
+	if not heard.has(str(item.get("id", ""))):
+		heard.append(str(item.get("id", "")))
+	state["heard_intercepts"] = heard
 
 
 ## Seen threads for a pin board: [{id, text, pinned}].

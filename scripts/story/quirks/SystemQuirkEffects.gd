@@ -18,7 +18,7 @@ const SLICE_QUIRKS: Array[String] = ["pulsar", "nebula", "ion_storm", "relay_dar
 
 const NEBULA_DETECTION_MULT := 0.7
 const PULSAR := {"kind": "pulsar_sweep", "period_s": 90.0, "warning_s": 8.0, "duration_s": 2.0, "shield_damage_frac": 0.15}
-const ION_STORM := {"kind": "ion_storm", "period_s": 150.0, "warning_s": 10.0, "duration_s": 40.0, "shield_regen_mult": 0.4}
+const ION_STORM := {"kind": "ion_storm", "period_s": 150.0, "warning_s": 10.0, "duration_s": 40.0, "shield_regen_mult": 0.4, "signal_interference_mult": 3.0}
 
 const ARRIVAL_NOTES := {
 	"pulsar": "A pulsar sweeps this system on a regular beat. Each pass drains shields.",
@@ -36,7 +36,9 @@ const ENDS := {"ion_storm": "Ion storm has passed."}
 
 ## {environment: {...}, hazards: [...], notes: [...]} for a list of quirks.
 static func effects_for(quirks: Array) -> Dictionary:
-	var env := {"shield_regen_mult": 1.0, "player_detection_mult": 1.0, "radio": true}
+	# signal_interference: how hard signal tuning is (1.0 normal; see
+	# SignalTuningModel). A nebula muddies it; an ion storm overhead wrecks it.
+	var env := {"shield_regen_mult": 1.0, "player_detection_mult": 1.0, "radio": true, "signal_interference": 1.0}
 	var hazards: Array = []
 	var notes: Array = []
 	for q in quirks:
@@ -47,6 +49,7 @@ static func effects_for(quirks: Array) -> Dictionary:
 		match quirk:
 			"nebula":
 				env["player_detection_mult"] = NEBULA_DETECTION_MULT
+				env["signal_interference"] = 1.5
 			"relay_dark_zone":
 				env["radio"] = false
 			"pulsar":
@@ -84,4 +87,5 @@ static func environment_at(effects: Dictionary, t: float) -> Dictionary:
 	for h in effects.get("hazards", []):
 		if str(h["kind"]) == "ion_storm" and str(phase(h, t)["state"]) == "active":
 			env["shield_regen_mult"] = float(env.get("shield_regen_mult", 1.0)) * float(h["shield_regen_mult"])
+			env["signal_interference"] = float(env.get("signal_interference", 1.0)) * float(h.get("signal_interference_mult", 1.0))
 	return env
