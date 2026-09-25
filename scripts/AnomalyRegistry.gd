@@ -173,15 +173,15 @@ func _request_llm_event_for_node(
 	var anomaly_id := str(fallback_data.get("anomaly_id", ""))
 	# A weak reference: a gate jump can free the anomaly before a deferred
 	# event returns, and capturing the node itself then errors on call.
-	var node_ref := weakref(node)
+	var node_ref: WeakRef = weakref(node)
 	LLMInterface.fetch_anomaly_event(system_id, fallback_data, func(generated: Dictionary) -> void:
-		var node: Node = node_ref.get_ref()
-		if generated.is_empty() or node == null or not is_instance_valid(node):
+		var live: Node = node_ref.get_ref()
+		if generated.is_empty() or live == null or not is_instance_valid(live):
 			return
-		if str(node.get("persistent_id")) != anomaly_id:
+		if str(live.get("persistent_id")) != anomaly_id:
 			return
 		generated["anomaly_id"] = anomaly_id
-		node.set("anomaly_data", generated)
+		live.set("anomaly_data", generated)
 		print("[AnomalyRegistry] LLM anomaly event ready for '%s'" % anomaly_id)
 	)
 
