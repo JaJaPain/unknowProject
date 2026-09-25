@@ -209,6 +209,14 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - Premise-card investigations (commit de83537): accept one from the board,
     find the scan sites near the story's station, scan both, resolve, turn in
     at the main station, then answer the story's finding on the board.
+- [ ] **Lookahead writing for the next system (Phase 1, the big one).** Abe's
+  2026-09-24 ledger: of ~50 real in-flight model calls, 44 were conversations
+  pre-written right after arriving in a new system (mission_conversation 18,
+  lounge_bundle 15, lounge_bundle_review 11). A jump lasts seconds and that
+  writing takes minutes, so it must happen during the DOCK before the jump:
+  while docked, write ahead for the systems the gates lead to. Then the small
+  live reactions (background_chatter, ambient_chat, kaelen_line, quiet_moment)
+  can move to pre-written pools, and `unload_on_close` can go on.
 - [ ] **Generation-window ledger (Phase 1 measurement, commit cc9c1d7).** Play
   a normal session (dock, fly, fight, jump, dock) and copy the console lines
   starting `[GenerationWindow] open`. They show how many model calls happened
