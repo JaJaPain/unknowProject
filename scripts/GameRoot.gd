@@ -681,7 +681,6 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 ## it. Whatever is unfinished at the cap continues after arrival as before.
 const JUMP_WRITING_HOLD_MAX_SECONDS := 30.0
 const JUMP_WRITING_STALL_LINE_AFTER_SECONDS := 8.0
-const JUMP_STALL_LINE := "The tunnel is running long. Nothing to worry about. Hold steady."
 
 
 ## Keeps the tunnel going while story writing for the new system is pending or
@@ -696,8 +695,8 @@ func _hold_jump_for_writing() -> void:
 			break
 		if not spoke and held >= JUMP_WRITING_STALL_LINE_AFTER_SECONDS:
 			spoke = true
-			if is_instance_valid(SpeechService):
-				SpeechService.play(JUMP_STALL_LINE, SpeechService.NOVA_PROFILE)
+			if is_instance_valid(Nova):
+				Nova.on_gate_hold()  # she hates gates; a long one is worse
 		process_next_narrative_cache_job()
 		await get_tree().create_timer(0.25).timeout
 	var total := (Time.get_ticks_msec() - started) / 1000.0

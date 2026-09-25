@@ -111,6 +111,31 @@ const WELCOME_COOLDOWN_MS := 300000  # never welcome twice within 5 min
 # can't remember why (a seed for her wiped-memory mystery).
 const GATE_LINE_CHANCE := 0.35
 const GATE_LINE_COOLDOWN_MS := 60000  # not twice within a minute of hopping gates
+# She has nightmares about the gates (Abe, 2026-09-24). A nightmare line
+# replaces an ordinary gate line now and then, never more than once in half an
+# hour of play, so it stays a confession rather than a habit.
+const GATE_NIGHTMARE_SHARE := 0.25
+const GATE_NIGHTMARE_COOLDOWN_MS := 30 * 60 * 1000
+const GATE_NIGHTMARE_LINES: Array[String] = [
+	"Do ships dream, Captain? Because I keep waking up in a gate tunnel that never ends.",
+	"Before you ask: yes, I'm fine. No, I didn't rest. The gate dream again.",
+	"I had the dream last cycle. The ring, the noise, then nothing. I'm not describing it twice.",
+	"I ran a defrag on the night shift and woke up mid-transit. We weren't moving. I checked. Twice.",
+	"My overnight logs are full of gate telemetry from jumps we never made. I would like that to stop.",
+	"Last night I dreamed the ring closed with us halfway through. I'm choosing not to find that funny.",
+	"Every time I idle long enough to dream, it's a gate. Always the same ring. Always far too quiet.",
+]
+# When a jump is held long in the tunnel (the next system is still being
+# written), she is stuck in the place she likes least.
+const GATE_HOLD_LINES: Array[String] = [
+	"The tunnel is running long. I hate it when it does this. Hold steady.",
+	"Still in the gate. Every extra second in here is a second I resent.",
+	"Longer than the charts said. I would very much like to be out of this now.",
+	"We're fine. We're fine. I just don't like how quiet it gets in here.",
+	"This one is dragging. I'm counting the milliseconds, Captain. Out loud, if I have to.",
+	"Stretching a bit, this jump. Don't mind me. I'm just holding every sensor very tightly.",
+	"The gate is taking its time. So is my patience, and it's losing.",
+]
 
 const HULL_CRITICAL_RATIO := 0.25     # hull at/under 25% trips her "we both die" panic
 const HULL_WARN_COOLDOWN_MS := 15000
@@ -302,6 +327,7 @@ var _last_combat_warn_ms := -100000
 var _docked_since_ms := 0            # when the player last docked (for the long-dock welcome)
 var _last_welcome_ms := -100000000   # anti-spam guard for welcome-back lines
 var _last_gate_line_ms := -100000000 # anti-spam guard for gate-transit lines
+var _last_gate_nightmare_ms := -100000000
 var _last_hull_warn_ms := -100000000 # anti-spam guard for hull-critical lines
 var _last_arrival_ms := -100000000   # anti-spam guard for system-arrival lines
 var _last_line_index := {}           # tag -> last picked index (avoids back-to-back repeats)
@@ -1242,6 +1268,11 @@ func on_gate_transition() -> void:
 	if randf() > GATE_LINE_CHANCE:
 		return  # occasional, not every jump
 	_last_gate_line_ms = now
+	# Now and then, instead: one of her gate nightmares.
+	if now - _last_gate_nightmare_ms >= GATE_NIGHTMARE_COOLDOWN_MS and randf() < GATE_NIGHTMARE_SHARE:
+		_last_gate_nightmare_ms = now
+		speak(_pick_line("gate_nightmare", GATE_NIGHTMARE_LINES), Severity.NAV, expression_for_event("mystery"))
+		return
 	# Campaign glitch lines interleave with stock ones — the flinch is the same,
 	# but some jumps her wiped past almost surfaces in THIS campaign's shape.
 	if not _memory_glitch_lines.is_empty() and randf() < GLITCH_LINE_SHARE:
@@ -1275,12 +1306,21 @@ func on_gate_transition() -> void:
 		"Compression field active. My core processing drops by ten percent until we clear the far ring.",
 		"Fold sequence engaged. I don't remember who built these gates, but I dislike them intensely.",
 		"Gate corridor open. Hold tight, Captain—my hull harmonic is ringing like a struck bell.",
+		"Gates. Of all the ways to cross a sector, we picked the one that feels like being folded.",
+		"If there were a long way around, I would take it. Every single time.",
+		"I would walk. I don't have legs, and I would still walk.",
+		"I've filed a formal complaint about this gate with myself. It was upheld.",
 	]
 	speak(
 		_bank_line_or_stock(NovaBankCategoriesType.GATE_TRANSIT, "gate", lines),
 		Severity.NAV,
 		expression_for_event("mystery")
 	)
+
+
+## The jump is being held in the tunnel while the next system is written.
+func on_gate_hold() -> void:
+	speak(_pick_line("gate_hold", GATE_HOLD_LINES), Severity.NAV, expression_for_event("mystery"))
 
 
 # Semantic movement events from ShipBehaviorObserver (already aggregated and
