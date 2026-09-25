@@ -36,10 +36,12 @@ const AMBIENT: Array[String] = [
 
 
 ## Unheard threads here, in thread order: [{thread_id, arc_id, detail, cast}].
-static func thread_candidates(state: Dictionary, system_id: String) -> Array:
+## `surfaces` defaults to what can be overheard; the drone maze asks for
+## "wreck" threads instead (a recorder deep in a wreck).
+static func thread_candidates(state: Dictionary, system_id: String, surfaces: Array = HEARD_SURFACES) -> Array:
 	var out: Array = []
 	for t in HandType.main_story(state).get("threads", []):
-		if bool(t.get("seen", false)) or str(t.get("surface", "")) not in HEARD_SURFACES:
+		if bool(t.get("seen", false)) or str(t.get("surface", "")) not in surfaces:
 			continue
 		var a := ArcsType.arc(state, str(t.get("arc_id", "")))
 		if a.is_empty() or str(a.get("system_id", "")) != system_id:

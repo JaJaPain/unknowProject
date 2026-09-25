@@ -329,6 +329,21 @@ func faint_transmission(world: Dictionary, seed_value: int) -> Dictionary:
 	return FaintType.pick(state, system_id, display, state.get("heard_intercepts", []), seed_value)
 
 
+## The drone maze: a story thread a wreck here can hold (its recorder), as
+## {kind: "thread", thread_id, text}, or {}.
+func recorder_thread(world: Dictionary) -> Dictionary:
+	if not enabled:
+		return {}
+	var system_id := str(world.get("system_id", ""))
+	var found := FaintType.thread_candidates(state, system_id, ["wreck"])
+	if found.is_empty():
+		return {}
+	var c: Dictionary = found[0]
+	var display := str(_system_names.get(system_id, world.get("system_display", "this system")))
+	return {"id": "thread:%s" % c["thread_id"], "kind": "thread", "thread_id": c["thread_id"],
+		"text": CastingType.fill_text(str(c["detail"]), c["cast"], {"system_display": display})}
+
+
 ## The captain pulled it in. A story thread is noticed (it joins the Loose
 ## ends board, however garbled it came through: N.O.V.A. keeps the
 ## recording); ambient chatter is marked heard so it does not come round again.

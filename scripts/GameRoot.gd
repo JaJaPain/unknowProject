@@ -179,6 +179,7 @@ var premise_director: Node = null
 var system_quirk_runner: Node = null
 var generation_window: Node = null
 var signal_tuning_activity: Node = null
+var drone_maze_activity: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
@@ -1274,6 +1275,7 @@ const PremiseDirectorType := preload("res://scripts/story/premise/PremiseDirecto
 const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")
 const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const SignalTuningActivityType := preload("res://scripts/story/activities/SignalTuningActivity.gd")
+const DroneMazeActivityType := preload("res://scripts/story/activities/DroneMazeActivity.gd")
 const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
 const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
@@ -1325,6 +1327,12 @@ func _init_premise_director() -> void:
 	signal_tuning_activity.world_provider = func() -> Dictionary:
 		return PremiseWorldSnapshotType.capture(int(CampaignClock.total_minutes)) if gameplay_runtime_started else {}
 	add_child(signal_tuning_activity)
+	# The drone maze: G with a close asteroid or wreck targeted.
+	drone_maze_activity = DroneMazeActivityType.new()
+	drone_maze_activity.name = "DroneMazeActivity"
+	drone_maze_activity.director = premise_director
+	drone_maze_activity.world_provider = signal_tuning_activity.world_provider
+	add_child(drone_maze_activity)
 	# System radio: one item every couple of minutes (voiced later; comms feed now).
 	var radio_timer := Timer.new()
 	radio_timer.name = "PremiseRadioTimer"
