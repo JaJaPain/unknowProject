@@ -279,6 +279,10 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     data/content/premise_cards/private_fact_rewrites.json; review it, then
     `python tools/premise_cards/apply_private_fact_rewrites.py`. Until then
     the client's-lie twist only reads facts that never mention the pilot.
+  - Faction looks: in a system, ships flown under a generated faction wear
+    its Faction DNA look (hull silhouette where a matching hull exists,
+    paint hue, wear: pristine / patched / scorched / salvaged). Not yet seen
+    rendered: check the paint is not garish (ship screenshot pending Abe's OK).
   - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
     Mk V 8 (+2 crystals).
   - The survey drone, the three tech-grade materials and the resonant

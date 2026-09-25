@@ -64,7 +64,15 @@ static func for_faction(faction_id: String) -> Dictionary:
 		"doctrine": DOCTRINES[rng.randi_range(0, DOCTRINES.size() - 1)],
 		"silhouette": SILHOUETTES[rng.randi_range(0, SILHOUETTES.size() - 1)],
 		"wear": WEAR[rng.randi_range(0, WEAR.size() - 1)],
+		# Drawn last so every earlier value stays what it was before paint existed.
+		"hue": snappedf(rng.randf(), 0.01),
 	}
+
+
+## How this faction's ships look (ShipAssembler.apply_look): hull silhouette,
+## paint hue and wear.
+static func ship_look(dna: Dictionary) -> Dictionary:
+	return {"silhouette": str(dna.get("silhouette", "")), "hue": float(dna.get("hue", 0.0)), "wear": str(dna.get("wear", "pristine"))}
 
 
 ## A person named in the faction's language: "Krostad Vek", "Aelian Serth".

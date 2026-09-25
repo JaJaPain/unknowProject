@@ -462,6 +462,65 @@ static func pick_design(role: String, seed_value: int) -> Dictionary:
 	return pool[abs(seed_value) % pool.size()]
 
 
+## Hull families per Faction DNA silhouette (FactionDNA.SILHOUETTES).
+const SILHOUETTE_HULLS := {
+	"boxy": ["hull.block_split", "hull.bullHead", "hull.Horse"],
+	"bulbous": ["hull.lump", "hull.fish"],
+	"long": ["hull.long", "hull.slick"],
+	"flat": ["hull.slick", "hull.fish"],
+	"spiky": ["hull.angle", "hull.knuckle"],
+	"asymmetric": ["hull.knuckle", "hull.angle"],
+}
+## Wear per Faction DNA: [albedo value multiplier, saturation multiplier, roughness].
+const WEAR_LOOK := {
+	"pristine": [1.0, 1.0, 0.32],
+	"patched": [0.85, 0.8, 0.55],
+	"scorched": [0.6, 0.7, 0.72],
+	"salvaged": [0.8, 0.45, 0.78],
+}
+
+
+## A catalog design whose hull fits a silhouette (any design when none do).
+static func pick_design_for_silhouette(role: String, seed_value: int, silhouette: String) -> Dictionary:
+	_ensure_catalog()
+	var pool: Array = _catalog.get(role, [])
+	var wanted: Array = SILHOUETTE_HULLS.get(silhouette, [])
+	var fits := pool.filter(func(d): return str(d.get("hull", "")) in wanted)
+	if fits.is_empty():
+		return pick_design(role, seed_value)
+	return fits[abs(seed_value) % fits.size()]
+
+
+## A ship in a generated faction's look (FactionDNA.ship_look): its hull
+## silhouette, its paint over the base faction's metal, and its wear.
+static func build_catalog_ship_with_look(faction: String, role: String, seed_value: int, look: Dictionary) -> Node3D:
+	var node := build_from_recipe(pick_design_for_silhouette(role, seed_value, str(look.get("silhouette", ""))), faction, true)
+	if node != null:
+		apply_look(node, look)
+	return node
+
+
+## Tints and weathers hull and weapon materials (not thrusters or badges).
+static func apply_look(root: Node3D, look: Dictionary) -> void:
+	var wear: Array = WEAR_LOOK.get(str(look.get("wear", "pristine")), WEAR_LOOK["pristine"])
+	var paint := Color.from_hsv(float(look.get("hue", 0.0)), 0.45 * float(wear[1]), 0.95 * float(wear[0]))
+	for child in root.get_children():
+		if not (child is Node3D) or str(child.name) == "FactionBadge" or str(child.name).begins_with("mount_engines"):
+			continue
+		var meshes: Array[MeshInstance3D] = []
+		_collect_meshes(child, meshes)
+		for mi in meshes:
+			var surf := mi.mesh.get_surface_count() if mi.mesh else 0
+			for s in range(surf):
+				var mat := mi.get_surface_override_material(s) as StandardMaterial3D
+				if mat == null:
+					continue
+				var painted := mat.duplicate() as StandardMaterial3D
+				painted.albedo_color = mat.albedo_color * paint
+				painted.roughness = float(wear[2])
+				mi.set_surface_override_material(s, painted)
+
+
 ## Build a ship from the frozen catalog (the runtime path). Reskins per faction.
 static func build_catalog_ship(faction: String, role: String, seed_value: int, apply_mat: bool = true) -> Node3D:
 	return build_from_recipe(pick_design(role, seed_value), faction, apply_mat)

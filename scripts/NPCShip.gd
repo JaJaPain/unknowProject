@@ -350,7 +350,14 @@ func _setup_hull():
 ## Returns false if assembly failed so the caller can fall back to a GLB.
 func _build_assembled_hull() -> bool:
 	var seed_value: int = hash("%s|%s|%s" % [faction, ship_role, name])
-	var model := ShipAssembler.build_catalog_ship(faction, ship_role, seed_value)
+	# In a system where a generated faction flies this faction's ships, they
+	# wear that faction's look (FactionDNA: silhouette, paint, wear).
+	var looks: Dictionary = GlobalState.local_faction_looks
+	var model: Node3D = null
+	if looks.has(faction):
+		model = ShipAssembler.build_catalog_ship_with_look(faction, ship_role, seed_value, looks[faction])
+	else:
+		model = ShipAssembler.build_catalog_ship(faction, ship_role, seed_value)
 	if model == null:
 		push_warning("[NPCShip] Assembler failed for %s %s; using legacy hull." % [faction, ship_role])
 		return false

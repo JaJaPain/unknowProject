@@ -572,6 +572,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		new_system.visible = false
 	GlobalState.active_system_root = new_system
 	GlobalState.current_system_id = runtime_system_id
+	# Before the new system's ships spawn (deferred to the end of this frame).
+	_refresh_local_faction_looks()
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
 	_queue_gate_travel_kaelen_arrival_prefetch(runtime_system_id, runtime_gate_id)
@@ -1292,6 +1294,7 @@ const DroneMazeActivityType := preload("res://scripts/story/activities/DroneMaze
 const GateRatingGuideType := preload("res://scripts/story/GateRatingGuide.gd")
 const RecurringEncounterRunnerType := preload("res://scripts/story/RecurringEncounterRunner.gd")
 const PremiseFalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
+const PremiseFactionDNAType := preload("res://scripts/story/premise/FactionDNA.gd")
 const StoreDefinitionForFallout := preload("res://scripts/economy/StoreDefinition.gd")
 const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
 const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
@@ -1421,10 +1424,24 @@ func _premise_sync_seed() -> void:
 		premise_director.campaign_seed = int(GlobalState.campaign_seed)
 
 
+## Ships flown under a generated faction here wear its look (Faction DNA):
+## base faction key -> FactionDNA.ship_look, read by NPCShip when it builds.
+func _refresh_local_faction_looks() -> void:
+	var looks := {}
+	var world := PremiseWorldSnapshotType.capture(int(CampaignClock.total_minutes))
+	for f in world.get("factions", []):
+		var key := str((f as Dictionary).get("spawn_key", ""))
+		if key.is_empty() or looks.has(key):
+			continue
+		looks[key] = PremiseFactionDNAType.ship_look(PremiseFactionDNAType.for_faction(str(f.get("id", ""))))
+	GlobalState.local_faction_looks = looks
+
+
 func _premise_on_system_arrived() -> void:
 	if not is_instance_valid(premise_director):
 		return
 	_premise_sync_seed()
+	_refresh_local_faction_looks()
 	var now := int(CampaignClock.total_minutes)
 	premise_director.tick(now)
 	var world := PremiseWorldSnapshotType.capture(now)
@@ -6583,6 +6600,8 @@ func _load_system_without_transition(system_id: String) -> void:
 	system_container.add_child(new_system)
 	GlobalState.active_system_root = new_system
 	GlobalState.current_system_id = runtime_system_id
+	# Before the new system's ships spawn (deferred to the end of this frame).
+	_refresh_local_faction_looks()
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
 	RuntimeTraceType.event("transition", "load_completed", {

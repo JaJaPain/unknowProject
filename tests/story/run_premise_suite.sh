@@ -43,6 +43,7 @@ TESTS=(
   run_failure_fallout_tests
   run_leverage_tests
   run_recurring_encounter_tests
+  run_faction_look_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

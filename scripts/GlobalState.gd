@@ -1663,6 +1663,9 @@ var system_environment: Dictionary = {}
 ## What failed jobs are doing to this system (store_price_mult,
 ## hostile_spawn_mult); see FailureFallout.
 var fallout_environment: Dictionary = {}
+## Base faction key -> the ship look (FactionDNA.ship_look) of the generated
+## faction flying that faction's ships in the current system. Set on arrival.
+var local_faction_looks: Dictionary = {}
 
 
 func environment_value(key: String, default_value: Variant) -> Variant:
