@@ -209,6 +209,17 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - Premise-card investigations (commit de83537): accept one from the board,
     find the scan sites near the story's station, scan both, resolve, turn in
     at the main station, then answer the story's finding on the board.
+- [ ] **Jump-tunnel writing: check in play (commit after 381b730).** The next
+  system's writing now starts inside the tunnel and the jump holds (up to 30 s,
+  N.O.V.A. remarks after 8 s) while it finishes. Watch the console for
+  `[GenerationWindow] Jump held Xs for writing` and whether the hold ever hits
+  its cap, and say whether the length feels right. If jumps routinely cap, the
+  remaining work is what the dock lookahead below should take.
+- [ ] **Pre-existing noise: `Lambda capture at index 0 was freed`** from
+  `LLMInterface.fetch_anomaly_event` (line ~7499, retried by the lambda at
+  ~7528): an anomaly deferred while the campaign bible generates is retried
+  after a jump freed it. Harmless (it receives null) but noisy; guard with
+  is_instance_valid before retrying.
 - [ ] **Lookahead writing for the next system (Phase 1, the big one).** Abe's
   2026-09-24 ledger: of ~50 real in-flight model calls, 44 were conversations
   pre-written right after arriving in a new system (mission_conversation 18,
