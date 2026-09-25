@@ -20,8 +20,9 @@
 
 ## Now
 
-- Next: Phase 1 continues (needs Abe's ledger from a real session to pick what moves into windows); activities (signal tuning, drone micro-mining maze) for Abe to test. Waiting on Abe: which F5 Nova takes (pace) and which death lines to approve. Faction DNA visual genes and recurring-cast scars wait for the visual pass. UI-heavy work (pin board, activities) after, for Abe to test in the windowed game.
-- 2b.5 remaining: pin-board UI for threads (InvestigationPanel), voiced reveal. Then next phase (see plan list).
+- Waiting on Abe's next play session: `[GenerationWindow] Jump held Xs for writing` lines (do jumps hit the 30 s cap?) and the per-dock model-call ledger. That decides whether the dock lookahead (write ahead for the next system while docked) is needed; it would require building the destination system in the background (the arrival prefetch reads the ACTIVE system's stations/factions).
+- Next core candidates: runtime handlers for the transmitter_lure and unstable_archive investigation recipes (100 of 101 card investigations are surveys today); activities (signal tuning, drone micro-mining maze) for Abe to test.
+- Verify in the next play: TTS server ownership messages at start and quit; radio level; Kaelen lines not dropping.
 
 ## Plan of small bites (vertical slice)
 
