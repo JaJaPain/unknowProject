@@ -7792,7 +7792,9 @@ func _run_dock_smoke_test() -> void:
 		# before services appear. The ship is held as docked during that cycle,
 		# so wait for the completed station UI instead of treating the first
 		# docked frame as the end of the procedure.
-		for frame in range(720):
+		# Tractor, clamps and pressure (about 10 s), then the welcome screen
+		# waits up to 12 s for N.O.V.A.'s line before fading: allow 30 s.
+		for frame in range(1800):
 			if ui and ui.dock_panel.visible:
 				break
 			await get_tree().physics_frame

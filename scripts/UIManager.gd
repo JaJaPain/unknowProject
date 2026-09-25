@@ -4547,10 +4547,13 @@ func _show_station_welcome(station: Node3D, is_outpost: bool) -> void:
 		true,
 		false,
 		true
-	).timeout.connect(_release_station_welcome.bind(serial))
+	).timeout.connect(_release_station_welcome.bind(serial, true))
 
 
-func _release_station_welcome(serial: int) -> void:
+## `force` (the max-wait timer) releases even if speech is still queued: with
+## the voice server down or slow the queue never empties, and waiting on it
+## left the captain stuck on the welcome screen with no station services.
+func _release_station_welcome(serial: int, force: bool = false) -> void:
 	if serial != _station_welcome_serial or not _station_welcome_active \
 			or not is_instance_valid(station_welcome_overlay):
 		return
@@ -4560,7 +4563,7 @@ func _release_station_welcome(serial: int) -> void:
 	# appeared. Re-arm and wait for the queue to actually empty. The
 	# STATION_WELCOME_MAX_WAIT_SECONDS timer still guarantees release, so a line
 	# that never plays cannot strand the overlay.
-	if is_instance_valid(SpeechService) \
+	if not force and is_instance_valid(SpeechService) \
 			and SpeechService.has_method("has_pending_ambient") \
 			and SpeechService.has_pending_ambient():
 		SpeechService.playback_finished.connect(
