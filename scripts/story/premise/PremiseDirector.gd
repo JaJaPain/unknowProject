@@ -187,13 +187,17 @@ func board_postings(world: Dictionary, now_minute: int) -> Array[Dictionary]:
 func _live_offers(world: Dictionary) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var system_id := str(world.get("system_id", ""))
+	# Complications read the system's quirks (a storm window only where storms are).
+	var world_with_quirks := world.duplicate()
+	if not world_with_quirks.has("quirks"):
+		world_with_quirks["quirks"] = profile_for(world).get("quirks", [])
 	for arc_id in ArcsType.active_arc_ids(state):
 		var a := ArcsType.arc(state, arc_id)
 		if str(a["system_id"]) != system_id and str(a["scale"]) != "regional":
 			continue
 		var card: Dictionary = library.get_card(str(a["card_id"]))
 		for ref in ArcsType.current_offers(state, library, arc_id):
-			var offer: Dictionary = ComposerType.compose(ref, card, a["cast"], world, campaign_seed)
+			var offer: Dictionary = ComposerType.compose(ref, card, a["cast"], world_with_quirks, campaign_seed)
 			if offer.is_empty() or bool(offer.get("premise_needs_completion", false)):
 				continue
 			out.append({"arc_id": arc_id, "ref": ref, "card": card, "offer": offer})

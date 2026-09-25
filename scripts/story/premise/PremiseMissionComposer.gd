@@ -23,6 +23,7 @@ const CastingType := preload("res://scripts/story/premise/PremiseCasting.gd")
 const SitePlannerType := preload("res://scripts/domain/InvestigationSitePlanner.gd")
 const InvestigationBuilderType := preload("res://scripts/domain/InvestigationOfferBuilder.gd")
 const InvestigationPlacementType := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
+const ComplicationsType := preload("res://scripts/story/premise/MissionComplications.gd")
 const InvestigationValidatorType := preload("res://scripts/domain/InvestigationStateValidator.gd")
 const ShapesType := preload("res://scripts/domain/MissionShapeRegistry.gd")
 
@@ -135,6 +136,10 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 	}
 	if needs_completion:
 		offer["premise_needs_completion"] = true
+	# Layer 3: about half the jobs come with a complication that changes how
+	# they play (seeded per mission, so a reload never rerolls it).
+	var complication := ComplicationsType.roll(verb, world.get("quirks", []), "%d|%s" % [seed_value, beat_id])
+	offer = ComplicationsType.apply(offer, complication, str(requester.get("display_name", "")))
 	return offer
 
 
