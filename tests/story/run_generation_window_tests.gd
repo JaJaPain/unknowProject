@@ -33,8 +33,14 @@ func _initialize() -> void:
 	window.closed.connect(func() -> void: _events.append("close"))
 	Gateway.request_ledger = {"window": 0, "flight": 0, "flight_by_source": {}}
 
+	var booting := [true]
+	window.boot_probe = func() -> bool: return booting[0]
 	window._process(0.1)
-	_check(not window.is_open() and _events.is_empty() and not Gateway.window_open, "in flight the window is closed")
+	_check(window.is_open() and window.reason() == "boot", "start-up counts as a window")
+	booting[0] = false
+	window._process(0.1)
+	_events.clear()
+	_check(not window.is_open() and not Gateway.window_open, "in flight the window is closed")
 	Gateway.note_request("npc_chat")
 	ship.is_docked = true
 	window._process(0.1)

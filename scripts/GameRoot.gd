@@ -1260,6 +1260,7 @@ func _init_premise_director() -> void:
 	generation_window = GenerationWindowType.new()
 	generation_window.name = "GenerationWindow"
 	generation_window.jump_probe = func() -> bool: return transition_in_progress or jump_request_pending
+	generation_window.boot_probe = func() -> bool: return not gameplay_runtime_started
 	add_child(generation_window)
 	premise_director.window_probe = generation_window.is_open
 	generation_window.opened.connect(_on_generation_window_opened)
