@@ -7869,7 +7869,9 @@ func _show_premise_decision(decision: Dictionary) -> void:
 	_show_agent_portrait(false)
 	var prompt := str(decision.get("prompt", "")).strip_edges()
 	if str(decision.get("kind", "")) == "finding":
-		prompt = "The job is done. How do you report what you found?"
+		# After an investigation the scan work is settled; this is the story's
+		# decision (expose or keep quiet, whose side to certify), not a repeat.
+		prompt = "You have what you went for. Now decide what to do with it."
 	agent_dialogue_label.text = prompt if not prompt.is_empty() else "Choose."
 	for child in agent_choices_container.get_children():
 		child.queue_free()

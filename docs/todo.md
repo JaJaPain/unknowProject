@@ -234,30 +234,13 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   in flight and from which feature. That list decides what moves into dock and
   jump windows next, and when `GenerationWindow.unload_on_close` can be turned
   on to free the model from VRAM during flight (the 8GB goal).
-- [ ] **Premise investigations ask twice.** The investigation's own branch
-  (report / certify match / certify mismatch) and then the card's "how do you
-  report what you found?" decision. Map branches onto the card's outcome tags
-  so one answer does both. Also: only survey_discrepancy and competing_claims
-  have runtime handlers today, so 100 of 101 card investigations are surveys;
-  transmitter_lure and unstable_archive would add variety once they can run
-  (the composer already picks them by wording).
-
-- [x] **Cause-aware enemy taunts -- heard in a REAL FIGHT.** VERDICT 2026-09-09
-  (Abe, run sheet 2.2). The result splits cleanly and the split matters:
-  - **The CONTENT system passes.** "The words are correct" -- the right lines
-    fire for the right cause. So the cause-aware bundling is NOT decoration; it
-    reaches the player exactly as designed. Do not rework it.
-  - **The DELIVERY fails.** "Still sound very lifeless... good for monotone
-    voice, sucks for anger and excitement." The bottleneck is the TTS engine, not
-    the authoring, the bundling, or the tuning.
-  - **The delivery-control lever is now exhausted.** I previously suggested that
-    speed, pause and style steering were the remaining way to get expressiveness
-    out of Kokoro. Abe has now heard the result in a fight and it is still flat,
-    so that path is closed. Do not spend more time on TAUNT_SPEED/TAUNT_STYLE
-    values; the ceiling is the 82M model.
-  - Consequence: the taunt work is DONE until the voice engine changes. Every
-    further improvement here is blocked on the Orpheus item below.
-
+- [x] **Premise investigations ask twice** (resolved 2026-09-24). Only 23 of
+  101 card investigations ask the second question, and it is a real story
+  decision (expose or keep quiet, whose side to certify), not a repeat of the
+  scan branch. The board prompt now says so: "You have what you went for. Now
+  decide what to do with it." Still open: only survey_discrepancy and
+  competing_claims have runtime handlers, so 100 of 101 card investigations
+  are surveys; transmitter_lure and unstable_archive would add variety.
 - [ ] **Taunt loose ends left when Abe finished the audio review** (2026-08-18).
   None are blocking; all were raised and never answered, so they stand as-is:
   - Is `bm_george` a weak lead voice, or just unlucky with short lines? One clip
