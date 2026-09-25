@@ -53,6 +53,8 @@ func _initialize() -> void:
 	var threads: Array = director.main_story_threads()
 	_check(threads.size() == 1 and str(threads[0]["text"]).contains("Vessa Orl"), "an overheard thread is on the Loose ends board: %s" % str(threads))
 	_check(not activity.has_offer(), "one transmission, one attempt")
+	var lev: Array = director.leverage_items()
+	_check(lev.size() == 1 and lev[0]["subject"] == "Vessa Orl" and lev[0]["kind"] == "intercept", "the intercept is leverage on its speaker: %s" % str(lev))
 
 	var ambient: Dictionary = director.faint_transmission({"system_id": "sys.z"}, 2)
 	var credits_before: int = gs.player_credits

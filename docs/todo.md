@@ -267,7 +267,9 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     (standing up there, down with the subject's side, a deed), or blackmail
     (a pickup job at an outpost dead drop for 2.5x the sale value). Values
     and whether blackmail should sometimes send raiders: decide after play.
-    Later sources: overheard intercepts, flight recorders, investigations.
+    Also from overheard story intercepts (leverage on the speaker, 160) and
+    wreck flight recorders (on the person in that story, 200). Investigation
+    findings were left out: most outcomes are not a secret about anyone.
   - Failure fallout: abandon or let expire a courier/ore/purchase job (store
     prices in that system go up 25% for 8 game hours) and a kill job (more
     raiders spawn there); the radio leads with what happened. Noticeable

@@ -27,6 +27,16 @@ func _initialize() -> void:
 	var entries := Leverage.add(Leverage.add([], e1), e1)
 	_check(entries.size() == 1, "kept once")
 
+	# Other sources: an overheard intercept, a flight recorder.
+	var heard := Leverage.make("intercept", "thread:th.0002", "Vessa Orl", "Overheard: she paid the guild twice.", "sys.a", 50)
+	_check(heard["kind"] == "intercept" and Leverage.value_of(heard) > 0, "an overheard conversation is leverage")
+	_check(Leverage.make("recorder", "x", "", "text", "sys.a", 0).is_empty(), "but only on someone")
+	var faint := preload("res://scripts/story/activities/FaintTransmissions.gd").pick({"arcs": {"arc.1": {"system_id": "sys.a", "cast": {
+		"broker": {"kind": "person", "entity_id": "npc.broker", "display_name": "Vessa Orl"}}}},
+		"main_story": {"threads": [{"id": "th.1", "arc_id": "arc.1", "surface": "dialogue", "detail": "{role:broker} paid twice.", "seen": false}]}},
+		"sys.a", "Tarn", [], 1)
+	_check(faint["speaker_name"] == "Vessa Orl", "an intercept knows who was speaking")
+
 	var world := {"system_id": "sys.a", "outposts": [{"id": "outpost.a", "display": "Rusk Outpost"}],
 		"main_station": {"id": "station.main", "display": "Tarn Station"},
 		"factions": [{"id": "faction.guild", "display_name": "Ore Guild"}, {"id": "faction.watch", "display_name": "Tarn Watch"}]}
@@ -58,9 +68,11 @@ func _initialize() -> void:
 	_check(not lawful_pick.is_empty(), "someone hears it")
 	var failed_drop: Dictionary = d.use_leverage(str(e2["id"]), "blackmail", {"outposts": []}, 122)
 	_check(not bool(failed_drop["ok"]) and d.leverage_items().size() == 1, "a blackmail with no drop spends nothing")
+	_check(not d.record_leverage_entry(heard).is_empty() and d.record_leverage_entry(heard).is_empty(), "an intercept is kept once")
+	_check(d.leverage_items().size() == 2, "alongside the rest")
 	var reloaded = DirectorType.new()
 	reloaded.load_from_dict(d.to_dict())
-	_check(reloaded.leverage_items().size() == 1, "leverage survives a save")
+	_check(reloaded.leverage_items().size() == 2, "leverage survives a save")
 	reloaded.free()
 
 	# The panel lists it and asks for a use.

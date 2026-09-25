@@ -13,7 +13,7 @@ extends RefCounted
 ## PURE: entries live in the premise director's saved state; GameRoot applies
 ## the effects (credits, standing, accepting the job).
 
-const VALUES := {"client_secret": 220, "smuggling": 180, "intercept": 140}
+const VALUES := {"client_secret": 220, "smuggling": 180, "intercept": 160, "recorder": 200, "finding": 190}
 const BLACKMAIL_MULT := 2.5
 const EXPOSE_STANDING := 5.0
 
@@ -45,6 +45,15 @@ static func from_twist(mission_data: Dictionary, now_minute: int) -> Dictionary:
 		"minute": now_minute,
 		"used": "",
 	}
+
+
+## An entry from any other source: an overheard intercept, a flight
+## recorder, an investigation finding. {} without a subject or summary.
+static func make(kind: String, id: String, subject: String, summary: String, system_id: String, now_minute: int, subject_faction: String = "") -> Dictionary:
+	if subject.strip_edges().is_empty() or summary.strip_edges().is_empty():
+		return {}
+	return {"id": "leverage:%s" % id, "kind": kind, "subject": subject.strip_edges(), "subject_faction": subject_faction,
+		"summary": summary.strip_edges(), "system_id": system_id, "minute": now_minute, "used": ""}
 
 
 ## Adds an entry unless one with its id exists. Returns the new list.

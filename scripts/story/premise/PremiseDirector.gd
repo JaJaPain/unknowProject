@@ -355,6 +355,19 @@ func record_leverage(mission_data: Dictionary, now_minute: int) -> Dictionary:
 	return entry
 
 
+## Keeps a leverage entry from any source (Leverage.make). Returns it, or {}
+## when empty or already kept.
+func record_leverage_entry(entry: Dictionary) -> Dictionary:
+	if entry.is_empty():
+		return {}
+	var before: Array = state.get("leverage", [])
+	var after := LeverageType.add(before, entry)
+	if after.size() == before.size():
+		return {}
+	state["leverage"] = after
+	return entry
+
+
 func leverage_items() -> Array:
 	return LeverageType.unused(state.get("leverage", []) as Array)
 
@@ -452,8 +465,17 @@ func recorder_thread(world: Dictionary) -> Dictionary:
 		return {}
 	var c: Dictionary = found[0]
 	var display := str(_system_names.get(system_id, world.get("system_display", "this system")))
+	# Whose recorder it is: the first person in that story, for leverage.
+	var subject := ""
+	var people: Array = []
+	for role_id in (c["cast"] as Dictionary).keys():
+		if str(c["cast"][role_id].get("kind", "")) == "person":
+			people.append(str(c["cast"][role_id].get("display_name", "")))
+	people.sort()
+	if not people.is_empty():
+		subject = str(people[0])
 	return {"id": "thread:%s" % c["thread_id"], "kind": "thread", "thread_id": c["thread_id"],
-		"text": CastingType.fill_text(str(c["detail"]), c["cast"], {"system_display": display})}
+		"text": CastingType.fill_text(str(c["detail"]), c["cast"], {"system_display": display}), "subject_name": subject}
 
 
 ## The captain pulled it in. A story thread is noticed (it joins the Loose

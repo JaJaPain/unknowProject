@@ -200,6 +200,8 @@ func _initialize() -> void:
 	var threads: Array = director.main_story_threads()
 	_check(threads.size() == 1 and str(threads[0]["text"]).contains("Ro Venn"), "the recorder's clue is on the Loose ends board: %s" % str(threads))
 	_check(director.recorder_thread({"system_id": "sys.a"}).is_empty(), "and no second wreck carries it")
+	var lev: Array = director.leverage_items()
+	_check(lev.size() == 1 and lev[0]["kind"] == "recorder" and lev[0]["subject"] == "Ro Venn", "the recorder is leverage on the person it is about: %s" % str(lev))
 
 	paused = false
 	activity.free()

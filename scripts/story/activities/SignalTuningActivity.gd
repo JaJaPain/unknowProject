@@ -14,6 +14,7 @@ const PanelType := preload("res://scripts/ui/SignalTuningPanel.gd")
 const Model := preload("res://scripts/story/activities/SignalTuningModel.gd")
 const FaintType := preload("res://scripts/story/activities/FaintTransmissions.gd")
 const VoiceType := preload("res://scripts/story/premise/VoiceDNA.gd")
+const LeverageType := preload("res://scripts/story/premise/Leverage.gd")
 
 ## Seconds of calm flight in a system before she mentions it.
 const OFFER_AFTER_MIN_S := 40.0
@@ -135,6 +136,14 @@ func _on_finished(outcome_id: String, clarity: float) -> void:
 	var now := int(get_node("/root/CampaignClock").total_minutes) if has_node("/root/CampaignClock") else 0
 	if director != null and is_instance_valid(director):
 		director.overhear(item, now)
+		# Leverage: a story conversation overheard is something on its speaker.
+		if str(item.get("kind", "")) == "thread" and director.has_method("record_leverage_entry"):
+			var system_id := str(get_node("/root/GlobalState").current_system_id) if has_node("/root/GlobalState") else ""
+			var kept: Dictionary = director.record_leverage_entry(LeverageType.make("intercept", str(item.get("id", "")),
+				str(item.get("speaker_name", "")), "Overheard: " + str(item.get("text", "")).trim_prefix("…"), system_id, now))
+			if not kept.is_empty():
+				get_tree().create_timer(9.0).timeout.connect(func() -> void:
+					_nova("I kept the recording. That's leverage on %s, if we want it." % str(kept["subject"])))
 	var heard := Model.garble(str(item["text"]), clarity, hash(str(item["id"])))
 	var gs := get_node_or_null("/root/GlobalState")
 	if gs != null:

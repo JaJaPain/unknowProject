@@ -57,10 +57,11 @@ static func pick(state: Dictionary, system_id: String, system_display: String, h
 	var threads := thread_candidates(state, system_id)
 	if not threads.is_empty():
 		var c: Dictionary = threads[0]
+		var speaker := _speaker(c["cast"], seed_value)
 		return {
 			"id": "thread:%s" % c["thread_id"], "kind": "thread", "thread_id": c["thread_id"],
 			"text": "…" + CastingType.fill_text(str(c["detail"]), c["cast"], {"system_display": system_display}),
-			"speaker_id": _speaker(c["cast"], seed_value),
+			"speaker_id": speaker, "speaker_name": _name_of(c["cast"], speaker),
 		}
 	var fresh: Array[int] = []
 	for i in AMBIENT.size():
@@ -70,6 +71,13 @@ static func pick(state: Dictionary, system_id: String, system_display: String, h
 		fresh.assign(range(AMBIENT.size()))
 	var index: int = fresh[posmod(seed_value, fresh.size())]
 	return {"id": "ambient:%d" % index, "kind": "ambient", "text": AMBIENT[index], "speaker_id": "intercept.%s.%d" % [system_id, index]}
+
+
+static func _name_of(cast: Dictionary, entity_id: String) -> String:
+	for role_id in cast.keys():
+		if str(cast[role_id].get("entity_id", "")) == entity_id:
+			return str(cast[role_id].get("display_name", ""))
+	return ""
 
 
 ## One of the arc's people, chosen by seed, else an anonymous id.

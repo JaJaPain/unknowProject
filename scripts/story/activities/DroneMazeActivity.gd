@@ -22,6 +22,7 @@ extends Node
 
 const ViewType := preload("res://scripts/ui/DroneMazeView.gd")
 const Maze := preload("res://scripts/story/activities/DroneMazeModel.gd")
+const LeverageType := preload("res://scripts/story/premise/Leverage.gd")
 
 const LAUNCH_KEY := KEY_G
 const LAUNCH_RANGE := 300.0
@@ -229,6 +230,11 @@ func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenera
 	if Maze.has_extracted(state, "recorder") and not _recorder_item.is_empty():
 		var now := int(get_node("/root/CampaignClock").total_minutes) if has_node("/root/CampaignClock") else 0
 		director.overhear(_recorder_item, now)
+		# Leverage: what the recorder holds is something on the person it is about.
+		if director.has_method("record_leverage_entry"):
+			var system_id := str(gs.current_system_id) if gs != null else ""
+			director.record_leverage_entry(LeverageType.make("recorder", str(_recorder_item.get("id", "")),
+				str(_recorder_item.get("subject_name", "")), "Flight recorder: " + str(_recorder_item.get("text", "")), system_id, now))
 		if gs != null:
 			gs.emit_chatter("FLIGHT RECORDER", str(_recorder_item["text"]), Color(0.6, 0.85, 0.8))
 		_nova(_line("recorder"))
