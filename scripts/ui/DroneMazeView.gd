@@ -30,13 +30,19 @@ var _shake := 0.0
 var _done := false
 var _paused_by_us := false
 var _bump_player: AudioStreamPlayer
+var _material := ""
+## Seam colours by tech-grade material: heat (amber), radiation (green),
+## temperature swings (ice blue).
+const MATERIAL_COLORS := {"thermal_lattice": Color(1.0, 0.55, 0.15), "rad_quartz": Color(0.45, 1.0, 0.35), "cryo_ferrite": Color(0.55, 0.85, 1.0)}
 var _mesh_task := -1
 var _mesh_result: Dictionary = {}
 var _crack_material: StandardMaterial3D
 
 
-func begin(seed_value: int, kind: String, with_recorder: bool) -> void:
+## `material` (a tech-grade material id) tints the crystal seams.
+func begin(seed_value: int, kind: String, with_recorder: bool, material: String = "") -> void:
 	state = Maze.start(seed_value, kind, with_recorder)
+	_material = material
 	layer = 125
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_world()
@@ -88,7 +94,7 @@ func _build_world() -> void:
 		_build_corridors(grid, wall_mat, rng)
 
 	for t in state["targets"]:
-		var node := _target_node(str(t["kind"]))
+		var node := _target_node(str(t["kind"]), MATERIAL_COLORS.get(_material, Color(0, 0, 0, 0)))
 		if state.has("cracks"):
 			node.scale = Vector3.ONE * 0.55
 		var at := Maze.target_at(t)
@@ -308,9 +314,11 @@ static func _wall_material(kind: String) -> StandardMaterial3D:
 
 ## A crystal cluster, a salvage crate, or a blinking recorder, built from
 ## primitive meshes and glowing so the headlight finds them.
-static func _target_node(kind: String) -> Node3D:
+static func _target_node(kind: String, tint: Color = Color(0, 0, 0, 0)) -> Node3D:
 	var root := Node3D.new()
 	var color: Color = TARGET_COLORS.get(kind, Color.WHITE)
+	if kind == "mineral" and tint.a > 0.0:
+		color = tint
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
 	mat.emission_enabled = true

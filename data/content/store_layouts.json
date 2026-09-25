@@ -41,7 +41,11 @@
                 "explosive_ammo",
                 "energy_ammo",
                 "hull_plating",
-                "fusion_cell"
+                "fusion_cell",
+                "thermal_lattice",
+                "rad_quartz",
+                "cryo_ferrite",
+                "resonant_crystal"
             ],
             "stock_overrides": {
                 "repair_kit": 2,

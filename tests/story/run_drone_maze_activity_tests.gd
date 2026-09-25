@@ -27,6 +27,10 @@ func _initialize() -> void:
 	gs.player = ship
 	var rock := Node3D.new()
 	rock.add_to_group("asteroid")
+	rock.add_to_group("tech_seam_asteroid")
+	var plain_rock := Node3D.new()
+	plain_rock.add_to_group("asteroid")
+	root.add_child(plain_rock)
 	root.add_child(rock)
 	rock.global_position = Vector3(100, 0, 0)
 	var wreck := StaticBody3D.new()
@@ -45,7 +49,34 @@ func _initialize() -> void:
 	root.add_child(activity)
 	activity.set_process(false)
 
-	_check(ActivityType.kind_of(rock) == "asteroid" and ActivityType.kind_of(wreck) == "wreck" and ActivityType.kind_of(ship) == "", "asteroids and wrecks qualify, ships do not")
+	_check(ActivityType.kind_of(rock) == "asteroid" and ActivityType.kind_of(wreck) == "wreck" and ActivityType.kind_of(ship) == "", "red rocks and wrecks qualify, ships do not")
+	_check(ActivityType.kind_of(plain_rock) == "", "ordinary asteroids do not")
+	plain_rock.free()
+	var AsteroidScript: GDScript = load("res://scripts/Asteroid.gd")
+	var seams := 0
+	for i in 5000:
+		if AsteroidScript.is_tech_seam_id("asteroid.test.%d" % i):
+			seams += 1
+	_check(seams > 25 and seams < 80, "about one rock in a hundred has tech-grade seams (%d/5000)" % seams)
+	_check(AsteroidScript.is_tech_seam_id("asteroid.test.1") == AsteroidScript.is_tech_seam_id("asteroid.test.1"), "fixed per rock")
+	# A real red rock: tinted, drone-workable, and a laser shatters it.
+	var red_id := ""
+	for i in 5000:
+		if AsteroidScript.is_tech_seam_id("asteroid.test.%d" % i):
+			red_id = "asteroid.test.%d" % i
+			break
+	var real_rock: Node3D = (load("res://scenes/asteroid.tscn") as PackedScene).instantiate()
+	real_rock.set("persistent_id", red_id)
+	root.add_child(real_rock)
+	var real_mesh := real_rock.get_node_or_null("MeshInstance3D") as MeshInstance3D
+	_check(bool(real_rock.get("tech_seam")) and real_rock.is_in_group("tech_seam_asteroid"), "a red rock knows it")
+	_check(real_mesh == null or real_mesh.material_overlay != null, "and is tinted red")
+	_check(ActivityType.kind_of(real_rock) == "asteroid", "the drone can work it")
+	var cargo_before: float = gs.cargo
+	real_rock.call("mine")
+	_check(bool(real_rock.get("destroyed")) and gs.cargo == cargo_before, "a mining laser shatters it and saves nothing")
+	_check(ActivityType.kind_of(real_rock) == "", "and then there is nothing left to work")
+	real_rock.free()
 	gs.active_target = rock
 	_check(activity.eligible_target() == rock, "a close asteroid can be worked")
 	rock.global_position = Vector3(1000, 0, 0)
@@ -74,27 +105,53 @@ func _initialize() -> void:
 	_check(not paused and _results.size() == 1 and _results[0][0] == "failed", "recalling empty-handed ends it and unpauses: %s" % str(_results))
 	_check(activity.eligible_target() == null, "each asteroid is worked once")
 
-	# The haul pays; a clean run pays a bonus.
-	var credits: int = gs.player_credits
+	# Every rock carries one tech-grade material, fixed per rock.
+	var mat := ActivityType.material_for(rock)
+	_check(mat in ActivityType.TECH_MATERIALS and ActivityType.material_for(rock) == mat, "a rock's material is fixed: %s" % mat)
+
+	# The haul: common ore pays a little, the material is the prize.
 	var clean := Maze.start(3, "asteroid")
 	for t in clean["targets"]:
 		t["extracted"] = true
 	clean["done"] = true
 	clean["end"] = "complete"
-	activity._on_finished("clean", clean)
-	_check(gs.player_credits == credits + 3 * 90 + 80, "three seams and the bonus: %d" % (gs.player_credits - credits))
-	_check(gs.inventory.get_quantity("resonant_crystal") == 1, "a clean, unbroken run brings home a resonant crystal")
-	credits = gs.player_credits
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var h: Dictionary = ActivityType.haul("clean", clean, "rad_quartz", rng)
+	_check(int(h["credits"]) == 3 * 120 + 100, "three seams and the bonus: %d" % int(h["credits"]))
+	_check((h["materials"] as Array).has("rad_quartz"), "a clean run always brings home the rock's material: %s" % str(h["materials"]))
 	var cracked := clean.duplicate(true)
-	cracked["ore_integrity"] = 0.6
-	activity._on_finished("clean", cracked)
-	_check(gs.player_credits == credits + int(round(270 * 0.6)) + 80, "cracked ore sells for what survived: %d" % (gs.player_credits - credits))
-	_check(gs.inventory.get_quantity("resonant_crystal") == 1, "cracked ore yields no crystal")
+	cracked["ore_integrity"] = 0.4
+	var hc: Dictionary = ActivityType.haul("clean", cracked, "rad_quartz", rng)
+	_check((hc["materials"] as Array).is_empty(), "badly cracked ore is only common ore: %s" % str(hc["materials"]))
+	_check(int(hc["credits"]) == int(round(360 * 0.4)) + 100, "and sells for what survived: %d" % int(hc["credits"]))
+	# Over many clean runs: about half bring a crystal; seams add more material.
+	var crystals := 0
+	var mats := 0
+	for i in 400:
+		var r: Dictionary = ActivityType.haul("clean", clean, "thermal_lattice", rng)
+		crystals += (r["materials"] as Array).count("resonant_crystal")
+		mats += (r["materials"] as Array).count("thermal_lattice")
+	_check(crystals > 150 and crystals < 250, "a resonant crystal in about half of clean runs (%d/400)" % crystals)
+	_check(mats > 600 and mats < 800, "about 1.75 of the rock's material per clean run (%d/400)" % mats)
+	var credits: int = gs.player_credits
+	activity._material = "cryo_ferrite"
+	activity._on_finished("clean", clean, rng)
+	_check(gs.player_credits == credits + 460 and gs.inventory.get_quantity("cryo_ferrite") >= 1, "the run pays out and the material is aboard")
 
-	# Upgrades: tier 3 and up need parts; tier 5 needs the crystal too.
-	_check(gs.upgrade_material_cost("weapons", 2).is_empty(), "tier 2 needs no parts")
-	_check(gs.upgrade_material_cost("weapons", 3) == {"power_coils": 1}, "tier 3 needs a part")
-	_check(gs.upgrade_material_cost("engine", 5) == {"fusion_cell": 2, "resonant_crystal": 1}, "tier 5 needs the crystal")
+	# A free drone from an enemy's debris, now and then.
+	var drones_before: int = gs.inventory.get_quantity("survey_drone")
+	activity._on_player_kill("reavers", 0.5)
+	_check(gs.inventory.get_quantity("survey_drone") == drones_before, "most kills leave no drone")
+	activity._on_player_kill("reavers", 0.01)
+	_check(gs.inventory.get_quantity("survey_drone") == drones_before + 1, "a lucky one does")
+	gs.inventory.remove("survey_drone", 1)
+
+	# Upgrades: tier 3 and up need tech-grade material; tier 5 the crystal too.
+	_check(gs.upgrade_material_cost("weapons", 2).is_empty(), "tier 2 needs no material")
+	_check(gs.upgrade_material_cost("weapons", 3) == {"thermal_lattice": 1}, "tier 3 needs one")
+	_check(gs.upgrade_material_cost("shields", 4) == {"rad_quartz": 2}, "tier 4 needs two")
+	_check(gs.upgrade_material_cost("cargo", 5) == {"cryo_ferrite": 2, "resonant_crystal": 1}, "tier 5 needs the crystal")
 	gs.player = null  # the fake ship has no health for the stat refresh
 	var saved_upgrades: Dictionary = gs.current_upgrades.duplicate(true)
 	var saved_credits: int = gs.player_credits
@@ -103,11 +160,10 @@ func _initialize() -> void:
 	gs.player_credits = 100000
 	gs.player_storage_ore = 10000.0
 	gs.power_capacity = 100000
-	var coils_before: int = gs.inventory.get_quantity("power_coils")
-	gs.inventory.remove("power_coils", coils_before)
-	_check(not gs.purchase_upgrade("weapons", "rapid"), "no part, no tier 3")
-	gs.inventory.add("power_coils", 1, 10)
-	_check(gs.purchase_upgrade("weapons", "rapid") and gs.inventory.get_quantity("power_coils") == 0, "the part is fitted")
+	gs.inventory.remove("thermal_lattice", gs.inventory.get_quantity("thermal_lattice"))
+	_check(not gs.purchase_upgrade("weapons", "rapid"), "no material, no tier 3")
+	gs.inventory.add("thermal_lattice", 1, 10)
+	_check(gs.purchase_upgrade("weapons", "rapid") and gs.inventory.get_quantity("thermal_lattice") == 0, "the material is used")
 	gs.current_upgrades = saved_upgrades
 	gs.player_credits = saved_credits
 	gs.player_storage_ore = saved_ore

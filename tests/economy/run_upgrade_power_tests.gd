@@ -30,8 +30,8 @@ func _reset_with_resources() -> void:
 	_state.reset_for_restart()
 	_state.player_credits = 10000
 	_state.player_storage_ore = 10000.0
-	# Tier 3+ also needs parts (and tier 5 a resonant crystal); stock plenty.
-	for item in ["power_coils", "fusion_cell", "sensor_cluster", "hull_plating", "resonant_crystal"]:
+	# Tier 3+ also needs tech-grade material (tier 5 a resonant crystal).
+	for item in ["thermal_lattice", "rad_quartz", "cryo_ferrite", "resonant_crystal"]:
 		_state.inventory.add(item, 10, 99)
 
 

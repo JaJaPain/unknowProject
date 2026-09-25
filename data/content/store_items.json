@@ -361,13 +361,61 @@
         {
             "item_id": "survey_drone",
             "display_name": "Piloted Survey Drone",
-            "description": "Fly it yourself into an asteroid's cracks or a wreck (target it, press G). Fragile ore, rich pay. Used up on launch.",
+            "description": "Fly it yourself into an asteroid's cracks or a wreck (target it, press G). Used up on launch. Sometimes found intact in an enemy's debris.",
             "category": "consumable",
-            "base_price": 150,
+            "base_price": 800,
             "stack_max": 3,
-            "restock_interval_minutes": 120,
+            "restock_interval_minutes": 480,
             "restock_quantity": 1,
-            "max_stock": 2,
+            "max_stock": 1,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
+            "item_id": "thermal_lattice",
+            "display_name": "Thermal Lattice",
+            "description": "Heat-shedding crystal lattice. The parts that live beside the power plant, the engines and the guns are made from it. Tech-grade: no station sells it. Mined from asteroid cracks; needed to upgrade the ship, and valuable.",
+            "category": "tech_material",
+            "base_price": 1200,
+            "stack_max": 10,
+            "restock_interval_minutes": 0,
+            "restock_quantity": 0,
+            "max_stock": 0,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
+            "item_id": "rad_quartz",
+            "display_name": "Rad-Quartz",
+            "description": "Radiation-hardening quartz. Shields, sensors and mining optics built from it survive years of exposure. Tech-grade: no station sells it. Mined from asteroid cracks; needed to upgrade the ship, and valuable.",
+            "category": "tech_material",
+            "base_price": 1200,
+            "stack_max": 10,
+            "restock_interval_minutes": 0,
+            "restock_quantity": 0,
+            "max_stock": 0,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
+            "item_id": "cryo_ferrite",
+            "display_name": "Cryo-Ferrite",
+            "description": "A ferrite that keeps its shape from deep cold to full sun. Holds, frames and storage bays are built from it. Tech-grade: no station sells it. Mined from asteroid cracks; needed to upgrade the ship, and valuable.",
+            "category": "tech_material",
+            "base_price": 1200,
+            "stack_max": 10,
+            "restock_interval_minutes": 0,
+            "restock_quantity": 0,
+            "max_stock": 0,
             "icon_sheet": "tactical",
             "icon_cell": [
                 0,
@@ -377,9 +425,9 @@
         {
             "item_id": "resonant_crystal",
             "display_name": "Resonant Crystal",
-            "description": "Fragile ore grown deep in an asteroid's cracks. Top-tier ship upgrades need one. Not sold anywhere.",
-            "category": "ship_part",
-            "base_price": 220,
+            "description": "A crystal that rings when struck, grown only in the deepest, most fragile seams. Top-tier upgrades need one. Tech-grade: no station sells it. Mined from asteroid cracks; needed to upgrade the ship, and valuable.",
+            "category": "tech_material",
+            "base_price": 3000,
             "stack_max": 5,
             "restock_interval_minutes": 0,
             "restock_quantity": 0,

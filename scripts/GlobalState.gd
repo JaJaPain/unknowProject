@@ -2488,21 +2488,25 @@ func get_current_power_draw() -> float:
 				total += UPGRADE_TREE[sys]["branches"][path][tier]["power"]
 	return total
 
-## Higher tiers also need expensive materials (Abe, 2026-09-24): ship parts
-## from tier 3, and at tier 5 a resonant crystal, which only comes out of an
-## asteroid's cracks (the drone maze). Parts are also sold at stations.
-## Materials are fitted into the ship, so a refund never returns them.
-const UPGRADE_PARTS := {
-	"weapons": "power_coils", "engine": "fusion_cell", "shields": "power_coils",
-	"mining": "sensor_cluster", "cargo": "hull_plating", "storage": "hull_plating",
-	"sensors": "sensor_cluster", "power": "fusion_cell",
+## Higher tiers need tech-grade materials (Abe, 2026-09-24/25): the rare
+## stuff the upgraded parts are manufactured from, parts that must survive
+## heat from the power plant, engines and guns (thermal lattice), long
+## radiation exposure (rad-quartz), and the extreme temperature swings of
+## space (cryo-ferrite). A few per tier; no station sells them, so the
+## captain mines them from asteroid cracks (the drone maze). Tier 5 also
+## needs a resonant crystal. Materials are fitted into the ship, so a refund
+## never returns them.
+const UPGRADE_MATERIALS := {
+	"weapons": "thermal_lattice", "engine": "thermal_lattice", "power": "thermal_lattice",
+	"shields": "rad_quartz", "sensors": "rad_quartz", "mining": "rad_quartz",
+	"cargo": "cryo_ferrite", "storage": "cryo_ferrite",
 }
 const TOP_TIER_MATERIAL := "resonant_crystal"
 
 
 ## {item_id: quantity} a tier needs besides credits and ore.
 static func upgrade_material_cost(sys: String, tier: int) -> Dictionary:
-	var part := str(UPGRADE_PARTS.get(sys, ""))
+	var part := str(UPGRADE_MATERIALS.get(sys, ""))
 	if part.is_empty() or tier < 3:
 		return {}
 	var out := {part: 1 if tier == 3 else 2}

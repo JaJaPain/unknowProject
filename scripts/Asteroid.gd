@@ -5,6 +5,18 @@ extends AnimatableBody3D
 @export var persistent_id: String = ""
 var resources: float = 300.0
 var destroyed: bool = false
+## About one rock in a hundred has tech-grade seams in its cracks (Abe,
+## 2026-09-25). They are tinted red, only a piloted survey drone can work
+## them (the drone maze), and a mining laser shatters them at once.
+const TECH_SEAM_PERCENT := 1
+const TECH_SEAM_GROUP := "tech_seam_asteroid"
+const TECH_SEAM_TINT := Color(0.85, 0.12, 0.06, 0.4)
+var tech_seam := false
+
+
+## Whether the rock with this persistent id has tech-grade seams (fixed per id).
+static func is_tech_seam_id(id: String) -> bool:
+	return not id.is_empty() and posmod((id + ":tech_seam").hash(), 100) < TECH_SEAM_PERCENT
 const FIRE_NOISE_PATH := "res://assets/T_Noise56ko.png"
 const USE_MINING_HEAT_DECAL := false
 const LOD_NEAR_DISTANCE := 900.0
@@ -67,6 +79,17 @@ func _ready():
 	if _mesh:
 		_model_index = AsteroidModels.model_index_for_seed(persistent_id.hash())
 		AsteroidModels.apply_model_index(_mesh, _model_index)
+	tech_seam = is_tech_seam_id(persistent_id)
+	if tech_seam:
+		add_to_group(TECH_SEAM_GROUP)
+		if _mesh:
+			var tint := StandardMaterial3D.new()
+			tint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			tint.albedo_color = TECH_SEAM_TINT
+			tint.emission_enabled = true
+			tint.emission = Color(TECH_SEAM_TINT.r, TECH_SEAM_TINT.g, TECH_SEAM_TINT.b)
+			tint.emission_energy_multiplier = 0.35
+			_mesh.material_overlay = tint
 	_tumble_axis = Vector3(
 		rng.randf_range(-1.0, 1.0),
 		rng.randf_range(-1.0, 1.0),
@@ -402,6 +425,12 @@ func mine():
 	# and special cargo cannot coexist.
 	if not GlobalState.can_accept_ore():
 		return
+	# Tech-grade seams are far too fragile for a laser: the rock shatters
+	# and nothing is saved.
+	if tech_seam:
+		GlobalState.emit_chatter("MINING", "The rock shattered. Those seams were too fragile for a laser; that was a job for a survey drone.", Color(1.0, 0.5, 0.4))
+		deplete()
+		return
 
 	# Calculate how much space is left in player's cargo
 	var space_left = GlobalState.cargo_max - GlobalState.cargo
@@ -439,6 +468,7 @@ func deplete():
 			(child as CollisionShape3D).disabled = true
 	remove_from_group("asteroid")
 	remove_from_group("persistent_entity")
+	remove_from_group(TECH_SEAM_GROUP)
 
 
 func _spawn_breakup_fx() -> void:

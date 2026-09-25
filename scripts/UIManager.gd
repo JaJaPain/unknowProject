@@ -8151,6 +8151,10 @@ func _render_store_items() -> void:
 		var item_def = store.get_item_def(item_id)
 		if item_def == null:
 			continue
+		# Tech-grade materials are never for sale; the row only appears when
+		# the captain has some to sell.
+		if str(item_def.category) == "tech_material" and GlobalState.inventory.get_quantity(item_id) <= 0:
+			continue
 		var price: int = store.get_price(item_id, rep_tier)
 		var stock: int = store.get_stock(item_id)
 		var owned: int = GlobalState.inventory.get_quantity(item_id)
@@ -15707,7 +15711,7 @@ func _on_su_slot_pressed(slot: String) -> void:
 			btn.text = "Upgrade to Mk %d\nCost: %d CR, %d Ore\nDraw: %d MW" % [next_tier, data["cost_cr"], data["cost_ore"], pwr]
 			var parts := _upgrade_materials_text(slot, next_tier)
 			if not parts.is_empty():
-				btn.text += "\nParts: " + parts
+				btn.text += "\nTech-grade: " + parts
 			btn.pressed.connect(func(): _attempt_upgrade(slot, current_path))
 			su_ship_sys_vbox.add_child(btn)
 			
@@ -15745,20 +15749,21 @@ var _insufficient_power_lines: Array = [
 ]
 
 var _insufficient_materials_lines: Array = [
-	"Credits and ore aren't enough at this tier. I need the actual parts, and you don't have them.",
-	"I can't print those components. Bring me the parts and I'll fit them.",
-	"That tier takes real hardware. Check the parts list and come back.",
-	"Top-tier work needs the rare stuff. Some of it only comes out of an asteroid's cracks.",
+	"Credits and ore won't do it at this tier. I need tech-grade material, and nobody sells that. You mine it.",
+	"Parts at this grade have to take engine heat and years of radiation. I can't make them without the right material.",
+	"No tech-grade material, no upgrade. Go find a rock with it in the cracks.",
+	"Top-tier work needs a resonant crystal as well. Those only come out of an asteroid's cracks, and only in one piece.",
 ]
 var _materials_idx: int = 0
+const DroneMazeActivityNames := preload("res://scripts/story/activities/DroneMazeActivity.gd")
 
 
-## "2 Power Coils (have 1), 1 Resonant Crystal (have 0)" for a tier, or "".
+## "2 Thermal Lattice (have 1), 1 Resonant Crystal (have 0)" for a tier, or "".
 func _upgrade_materials_text(slot: String, tier: int) -> String:
 	var cost: Dictionary = GlobalState.upgrade_material_cost(slot, tier)
 	var parts: PackedStringArray = []
 	for item in cost:
-		parts.append("%d %s (have %d)" % [int(cost[item]), str(item).capitalize(), GlobalState.inventory.get_quantity(item)])
+		parts.append("%d %s (have %d)" % [int(cost[item]), DroneMazeActivityNames.material_name(str(item)), GlobalState.inventory.get_quantity(item)])
 	return ", ".join(parts)
 
 

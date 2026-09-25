@@ -216,7 +216,7 @@ static func from_dict(data: Dictionary, catalog: Dictionary):
 
 func _default_demand_for(item_def: StoreItemDef) -> int:
 	match item_def.category:
-		"trade_good", "ship_part", "ammo", "novelty":
+		"trade_good", "ship_part", "ammo", "novelty", "tech_material":
 			return DEFAULT_DEMAND_MAX
 		_:
 			return 0
