@@ -217,19 +217,24 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - Signal tuning: N.O.V.A. mentions a faint transmission 40-110 s into
     flight; T opens the scope and dials. Too easy or too hard? Is the hiss too
     loud? Does the garbled intercept read and sound right?
-  - Drone maze: target a close asteroid or wreck, G. Needs a Piloted Survey
-    Drone (150 cr, max 3 aboard, used up every flight). Asteroids are narrow
-    organic cracks with fragile ore: every hard knock costs hull, and with
-    ore aboard cracks 20% of its value; ore only comes loose while holding
-    still. Pay: seam 90, salvage 70 (scaled by surviving ore), clean bonus
-    80, 35% chance of a ship part per seam. A clean run with ore 80%+ whole
-    gives a resonant crystal. Check: look, controls, crack width (too tight?),
-    knock feel, clock, the short "lowering the drone" wait, unpause after.
-  - Upgrades: tier 3 needs a ship part, tier 4 two, tier 5 two plus a
-    resonant crystal. Is that the right gate? Stores sell parts; crystals
-    only come from the maze.
-  - The survey drone borrows the salvage drone's store icon: add its own icon
-    to the image-needs list.
+  - Drone maze: target a close red asteroid (about 1 in 100 has tech-grade
+    seams; a mining laser shatters them) or a wreck, G. Needs a Piloted
+    Survey Drone (800 cr, max 3, one per flight; 3% of kills drop one).
+    Cracks are narrow and organic; knocks cost hull and, with ore aboard,
+    20% of its value; ore only comes loose while holding still. Haul: common
+    ore 120 and salvage 110 (scaled by surviving ore), clean bonus 100; the
+    rock's tech-grade material from each seam half the time (ore 60%+
+    intact), always at least one from a clean run, and a resonant crystal
+    from half of clean runs with ore 80%+ whole. Check: the red tint is
+    visible in the field, look, controls, crack width, knock feel, clock.
+  - Upgrades: tier 3 needs one tech-grade material, tier 4 two, tier 5 two
+    plus a resonant crystal (thermal lattice: weapons, engine, power;
+    rad-quartz: shields, sensors, mining; cryo-ferrite: cargo, storage).
+    Nobody sells them; Iron Reach buys them (1200 base, crystal 3000).
+    Is the grind right (about 40 materials and 8 crystals for everything)?
+  - The survey drone, the three tech-grade materials and the resonant
+    crystal borrow the salvage drone's store icon: add their own icons to
+    the image-needs list.
 - [ ] **Pre-existing: `tests/economy/run_consumable_tests.gd` does not compile**
   ("Identifier not found: GlobalState" in a preloaded script; broken since
   before claude/vision-slice, found 2026-09-24). Fix with get_node lookups.
