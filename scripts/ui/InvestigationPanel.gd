@@ -77,8 +77,18 @@ func _refresh() -> void:
 	_label(str(view["title"]))
 	if view["phase"] in ["ready", "closed"]:
 		_label("Finding filed. Dock at the assigned station to collect payment.")
+	elif not str(view.get("extract_site_id", "")).is_empty():
+		_label("Committed. Fly to the cache and hold within 300 m, below 10 m/s, to extract it.")
+		var cache_id := str(view["extract_site_id"])
+		_button("Extract the cache", "", func():
+			var report: Dictionary = manager.begin_investigation_scan(mission_id, cache_id)
+			status.text = "Extracting…" if bool(report.get("ok", false)) else _reason(str(report.get("reason", "Unavailable"))))
 	elif view["recipe"] == "survey_discrepancy":
 		_label("Certification pays the full reward if correct, or 25% if incorrect. You may file an unverified report for 50%.")
+	elif view["recipe"] == "transmitter_lure":
+		_label("A beacon advertises a cache. Check its code against the registry if you want to know whether it is genuine. Extraction pays 150%; a report pays 75% and keeps you clear of it.")
+	elif view["recipe"] == "unstable_archive":
+		_label("The archive is failing. A repair kit holds it in place for 125%. Recovering the backup lets you reconstruct a copy for the full reward, or file a report for 50%.")
 	else:
 		_label("Preserve the verified records for the full reward, or file an unverified report for 50%.")
 	for site: Dictionary in view["sites"]:
@@ -101,7 +111,8 @@ func _refresh() -> void:
 		var revision := int(view["revision"])
 		_button(str(branch["label"]), str(branch["reason"]), func():
 			var report: Dictionary = manager.dispatch_investigation_command({"mission_id": mission_id, "site_id": site_id, "action": "resolve", "branch_id": id, "expected_revision": revision})
-			status.text = "Finding filed. Return for payment." if bool(report.get("ok", false)) else _reason(str(report.get("reason", "Unavailable")))
+			var filed := "Committed. Fly to the cache." if bool(report.get("awaiting_extraction", false)) else "Finding filed. Return for payment."
+			status.text = filed if bool(report.get("ok", false)) else _reason(str(report.get("reason", "Unavailable")))
 			_signature = ""
 			_refresh())
 

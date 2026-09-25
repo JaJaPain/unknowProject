@@ -33,6 +33,11 @@ func begin_scan(owner: Node, mission_id: String, site_id: String) -> Dictionary:
 	if site.get("role", "") == "verification" and not cap._role_scanned(state, "primary"):
 		return {"ok": false, "reason": "verification_locked"}
 	if state.get("scanned_site_ids", []).has(site_id):
+		# A committed extraction is finished by holding at the cache (the
+		# primary site) the same way a scan is: close, slow, out of combat.
+		if str(state.get("branch_id", "")) == "extract" and site.get("role", "") == "primary":
+			_scan = {"mission_id": mission_id, "site_id": site_id, "revision": int(state.get("investigation_revision", 0)), "action": "extract_complete"}
+			return {"ok": true, "reason": "holding"}
 		return {"ok": true, "reason": "already_scanned"}
 	_scan = {"mission_id": mission_id, "site_id": site_id, "revision": int(state.get("investigation_revision", 0))}
 	return {"ok": true, "reason": "holding"}
@@ -59,7 +64,7 @@ func tick(owner: Node, delta: float) -> Dictionary:
 		return progress
 	var command := {
 		"mission_id": _scan["mission_id"], "site_id": site["id"],
-		"action": "scan_complete", "expected_revision": _scan["revision"],
+		"action": str(_scan.get("action", "scan_complete")), "expected_revision": _scan["revision"],
 		"hold_token": progress["token"],
 	}
 	var result := dispatch(owner, command)
@@ -96,10 +101,12 @@ func dispatch(owner: Node, command: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "invalid_investigation_state"}
 	var state: Dictionary = data["investigation"]
 	var action := str(command.get("action", ""))
-	if action not in ["scan_complete", "resolve"]:
+	if action not in ["scan_complete", "resolve", "extract_complete"]:
 		return {"ok": false, "reason": "unsupported_runtime_action"}
 	var site_id := str(command.get("site_id", ""))
 	var id := "%s:%s:scan" % [mission_id, site_id] if action == "scan_complete" else "%s:resolve" % mission_id
+	if action == "extract_complete":
+		id = "%s:extract" % mission_id
 	# Do not accept client-selected command IDs, inventory flags or side effects.
 	var applied: Dictionary = state.get("applied_commands", {})
 	if applied.has(id):
@@ -114,14 +121,16 @@ func dispatch(owner: Node, command: Dictionary) -> Dictionary:
 	# need not require flying back just to compare records.
 	if action == "resolve" and site_id not in state["scanned_site_ids"]:
 		return {"ok": false, "reason": "missing_scan"}
+	if action == "extract_complete" and str(site.get("role", "")) != "primary":
+		return {"ok": false, "reason": "not_the_cache"}
 	var pose := _pose(owner, data, site)
 	if not bool(pose.get("ok", false)):
 		return pose
 	var blocker := _hold._blocking_reason(float(pose["distance"]), float(pose["speed"]), bool(pose["combat"]))
 	if not blocker.is_empty():
 		return {"ok": false, "reason": blocker}
-	if action == "scan_complete":
-		if _scan.get("mission_id", "") != mission_id or _scan.get("site_id", "") != site_id or int(_scan.get("revision", -1)) != int(state["investigation_revision"]) or not _hold.consume_token(str(command.get("hold_token", "")), site_id):
+	if action in ["scan_complete", "extract_complete"]:
+		if str(_scan.get("action", "scan_complete")) != action or _scan.get("mission_id", "") != mission_id or _scan.get("site_id", "") != site_id or int(_scan.get("revision", -1)) != int(state["investigation_revision"]) or not _hold.consume_token(str(command.get("hold_token", "")), site_id):
 			return {"ok": false, "reason": "scan_hold_required"}
 	var gs = owner.get_node("/root/GlobalState")
 	var item := str(cap.BRANCH_CONSUMABLE.get(str(command.get("branch_id", "")), ""))
@@ -154,5 +163,11 @@ func dispatch(owner: Node, command: Dictionary) -> Dictionary:
 		gs.inventory.item_changed.emit(spent, gs.inventory.get_quantity(spent))
 	owner.quest_progress_updated.emit()
 	_busy = false
+	# A forged beacon was waiting for whoever came to collect.
+	if bool(result.get("spawn_hostile", false)) and owner.has_method("spawn_investigation_ambush"):
+		for raw in draft["investigation"]["sites"]:
+			if raw is Dictionary and str(raw.get("role", "")) == "primary":
+				var p: Array = raw["position"]
+				owner.spawn_investigation_ambush(mission_id, Vector3(float(p[0]), float(p[1]), float(p[2])))
 	result.merge({"ok": true, "revision": draft["investigation"]["investigation_revision"], "phase": draft["investigation"]["phase"]}, true)
 	return result

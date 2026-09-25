@@ -29,7 +29,7 @@ const ShapesType := preload("res://scripts/domain/MissionShapeRegistry.gd")
 ## Which investigation a card mission becomes, from words in its reason.
 const RECIPE_WORDS := {
 	"transmitter_lure": ["signal", "beacon", "transmission", "transmitter", "frequency", "broadcast", "distress"],
-	"unstable_archive": ["record", "records", "archive", "log", "logs", "recorder", "data", "files", "black box", "ledger"],
+	"unstable_archive": ["record", "records", "archive", "archives", "log", "logs", "recorder", "data", "files", "black box", "ledger"],
 	"competing_claims": ["claim", "claims", "ownership", "salvage rights", "owner", "deed"],
 }
 static var _shapes = null
@@ -259,9 +259,8 @@ static func _investigation_objective(offer_ref: Dictionary, card: Dictionary, ca
 
 
 ## The investigation recipe a mission reason calls for, among the recipes the
-## game can actually run (InvestigationStateValidator.BRANCHES: today survey
-## and competing claims; lure and archive join automatically when they get
-## runtime handlers). Competing claims needs two factions to be claimants.
+## game can actually run (InvestigationStateValidator.BRANCHES: all four since
+## 2026-09-24). Competing claims needs two factions to be claimants.
 static func recipe_for(reason: String, cast: Dictionary) -> String:
 	var text := reason.to_lower()
 	var factions := cast.values().filter(func(e): return str(e.get("kind", "")) == "faction").size()

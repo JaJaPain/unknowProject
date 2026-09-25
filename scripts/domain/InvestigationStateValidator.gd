@@ -4,6 +4,8 @@ const ResultType := preload("res://scripts/domain/ValidationResult.gd")
 const BRANCHES := {
 	"survey_discrepancy": ["report", "certify_match", "certify_mismatch"],
 	"competing_claims": ["report", "preserve", "liquidate"],
+	"transmitter_lure": ["report", "extract"],
+	"unstable_archive": ["report", "stabilize", "reconstruct"],
 }
 const COPY_FIELDS := ["shape_id", "recipe", "branch_ids", "mission_site_ids", "turn_in_station_id", "investigation"]
 
@@ -53,7 +55,7 @@ static func validate(data: Dictionary) -> RefCounted:
 		roles[role] = id
 		if data.has("system_id") and str(site.get("system_id", "")) != str(data["system_id"]):
 			result.add_error("wrong_investigation_system", "Site is outside the mission system.", "sites")
-		if recipe == "survey_discrepancy" and str(site.get("code", "")) not in ["A", "B"]:
+		if recipe in ["survey_discrepancy", "transmitter_lure"] and str(site.get("code", "")) not in ["A", "B"]:
 			result.add_error("invalid_evidence_code", "Missing comparison code.", "sites")
 		if recipe == "competing_claims" and role == "verification" and str(site.get("owner_faction_id", "")).is_empty():
 			result.add_error("missing_claim_owner", "Recorder ownership must be bound before publication.", "sites")
@@ -114,26 +116,36 @@ static func validate(data: Dictionary) -> RefCounted:
 	if phase not in ["search", "identified", "ready", "closed"] or int(state.get("investigation_revision", -1)) < 0 or not state.get("applied_commands", {}) is Dictionary:
 		result.add_error("invalid_investigation_progress", "Invalid investigation progress.", "investigation")
 	if phase in ["ready", "closed"]:
-		if chosen not in offered or scanned.is_empty() or (chosen in ["preserve", "certify_match", "certify_mismatch"] and scanned.size() != 2):
+		if chosen not in offered or scanned.is_empty() or (chosen in ["preserve", "certify_match", "certify_mismatch", "reconstruct"] and scanned.size() != 2):
 			result.add_error("invalid_investigation_resolution", "Resolution lacks its offered branch or evidence.", "investigation")
 		else:
 			var fraction := [1, 1]
 			var tag := "preserved"
 			match chosen:
 				"report":
-					fraction = [1, 2]
+					fraction = [3, 4] if recipe == "transmitter_lure" else [1, 2]
 					tag = "unverified"
 				"liquidate":
 					fraction = [3, 2]
 					tag = "liquidated"
+				"extract":
+					fraction = [3, 2]
+					tag = "extracted"
+				"stabilize":
+					fraction = [5, 4]
+					tag = "preserved"
+				"reconstruct":
+					tag = "copied"
 				"certify_match", "certify_mismatch":
 					var matches: bool = str(ids[roles["primary"]].get("code", "")) == str(ids[roles["verification"]].get("code", ""))
 					var correct: bool = matches if chosen == "certify_match" else not matches
 					fraction = [1, 1] if correct else [1, 4]
 					tag = "verified" if correct else "mistaken"
-			if int(state.get("payout_numerator", 0)) != fraction[0] or int(state.get("payout_denominator", 0)) != fraction[1] or str(state.get("outcome_tag", "")) != tag or bool(state.get("consumable_spent", false)) != (chosen == "liquidate"):
+			if int(state.get("payout_numerator", 0)) != fraction[0] or int(state.get("payout_denominator", 0)) != fraction[1] or str(state.get("outcome_tag", "")) != tag or bool(state.get("consumable_spent", false)) != (chosen in ["liquidate", "stabilize"]):
 				result.add_error("invalid_investigation_result", "Saved payout/outcome disagrees with the chosen action.", "investigation")
-	elif not chosen.is_empty() or (phase == "search" and not scanned.is_empty()) or (phase == "identified" and scanned.is_empty()):
+	elif (not chosen.is_empty() and not (phase == "identified" and chosen == "extract")) or (phase == "search" and not scanned.is_empty()) or (phase == "identified" and scanned.is_empty()):
+		# An extraction is committed (identified + extract) before the run to
+		# the cache completes it; any other chosen branch before ready is wrong.
 		result.add_error("invalid_investigation_progress", "Phase disagrees with evidence/decision.", "investigation")
 	return result
 

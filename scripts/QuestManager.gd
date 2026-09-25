@@ -87,6 +87,28 @@ func _physics_process(delta: float) -> void:
 		_investigation_world_elapsed = 0.0
 		reconcile_investigation_sites()
 
+## A forged transmitter lure: raiders were waiting at the cache. Headless runs
+## and runs without a live system spawn nothing.
+func spawn_investigation_ambush(mission_id: String, at: Vector3) -> void:
+	var system_root = GlobalState.active_system_root
+	if system_root == null or not is_instance_valid(system_root) or DisplayServer.get_name() == "headless":
+		return
+	var npc_scene: PackedScene = load("res://scenes/npc_ship.tscn")
+	if npc_scene == null:
+		return
+	var count := 2
+	for i in range(count):
+		var npc = npc_scene.instantiate()
+		npc.faction = "reavers"
+		npc.speed = 13.0
+		npc.ship_role = "Raider"
+		npc.name = "REAVERS_Lure_%d" % (randi() % 1000)
+		system_root.add_child(npc)
+		var angle: float = (TAU / count) * i
+		npc.global_position = at + Vector3(cos(angle), 0.0, sin(angle)) * 160.0
+	print("[QuestManager] Lure ambush for %s: %d raiders at the cache." % [mission_id, count])
+
+
 func reconcile_investigation_sites() -> void:
 	if _investigation_world.reconcile(self):
 		quest_progress_updated.emit()
@@ -123,22 +145,34 @@ func investigation_panel_view(mission_id: String) -> Dictionary:
 		var label := "Primary" if site.get("role", "") == "primary" else "Verification"
 		var code := str(evidence.get("observed_code", ""))
 		var owner_id := str(evidence.get("observed_owner_id", ""))
-		if not code.is_empty(): label += " route code: " + code
+		if str(data["recipe"]) == "transmitter_lure":
+			label = ("Beacon identity code: " if site.get("role", "") == "primary" else "Registry code for that beacon: ") + code
+		elif str(data["recipe"]) == "unstable_archive":
+			label = "Archive core located, failing" if site.get("role", "") == "primary" else "Backup fragments recovered from the second site"
+		elif not code.is_empty(): label += " route code: " + code
 		elif not owner_id.is_empty():
 			var owner_name: String = preload("res://scripts/domain/PublicBoardOfferBuilder.gd")._local_faction_display(owner_id)
 			label += " owner: " + (owner_name if not owner_name.is_empty() else "ownership record recovered")
 		else: label += ": recorder located; ownership not yet verified"
 		result["evidence"].append(label)
-	var labels := {"report": "File an unverified report — 50% reward", "certify_match": "Certify that the codes match", "certify_mismatch": "Certify that the codes differ", "preserve": "Preserve the verified claim records — full reward", "liquidate": "Salvage the hardware — destroy records, spend one salvage drone, 150% reward"}
+	var labels := {"report": "File a report and keep your distance — 75% reward" if str(data["recipe"]) == "transmitter_lure" else "File an unverified report — 50% reward", "extract": "Extract the cache — 150% reward", "stabilize": "Stabilize the archive in place — spend one repair kit, 125% reward", "reconstruct": "Reconstruct a copy from both sites — full reward", "certify_match": "Certify that the codes match", "certify_mismatch": "Certify that the codes differ", "preserve": "Preserve the verified claim records — full reward", "liquidate": "Salvage the hardware — destroy records, spend one salvage drone, 150% reward"}
 	if state["phase"] not in ["ready", "closed"]:
 		for branch: String in data["branch_ids"]:
 			var reason := ""
 			for role: String in cap.BRANCH_REQUIREMENTS[branch]:
 				if not cap._role_scanned(state, role): reason = "Scan the %s site first" % role
 			var item: String = cap.BRANCH_CONSUMABLE.get(branch, "")
-			if not item.is_empty() and not GlobalState.inventory.has_item(item): reason = "Requires one salvage drone"
+			if not item.is_empty() and not GlobalState.inventory.has_item(item): reason = "Requires one %s" % item.replace("_", " ")
 			if reason.is_empty() and str(result["resolve_site_id"]).is_empty(): reason = "Return within 300 m of a scanned site, below 10 m/s and out of combat"
 			result["branches"].append({"id": branch, "label": labels.get(branch, branch), "reason": reason})
+	# Committed to extraction: the choice is spent; what remains is the run to
+	# the cache.
+	result["extract_site_id"] = ""
+	if str(state.get("branch_id", "")) == "extract" and state["phase"] == "identified":
+		result["branches"] = []
+		for raw in state["sites"]:
+			if raw is Dictionary and str(raw.get("role", "")) == "primary":
+				result["extract_site_id"] = str(raw["id"])
 	return result
 const BOARD_COOLDOWN_MINUTES: int = 120
 const EMPTY_AGENT_MEMORY_CONTEXT := (

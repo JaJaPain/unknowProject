@@ -61,6 +61,8 @@ func _run():
 	_test_canonical_save_roundtrip()
 	_test_acceptance_placement_guard()
 	_test_world_discovery_and_panel()
+	_test_unstable_archive()
+	_test_transmitter_lure()
 	qm.restore_active_quest({})
 	gs.player = null
 	if failures.is_empty():
@@ -317,6 +319,59 @@ func _test_corrupt_restore_is_atomic():
 	var data: Dictionary = qm.capture_active_quest().duplicate(true)
 	data["investigation"]["phase"] = "ready"
 	_expect(not Validator.validate(data).is_valid(), "Ready state without evidence/choice passed.")
+
+func _test_unstable_archive():
+	if not _accept("unstable_archive"):
+		return
+	gs.inventory.clear()
+	_scan("primary")
+	_expect(not qm.dispatch_investigation_command(_command("resolve", _site("primary"), "reconstruct")).get("ok", true), "Reconstruction skipped the backup site.")
+	_expect(not qm.dispatch_investigation_command(_command("resolve", _site("primary"), "stabilize")).get("ok", true), "Stabilized without a repair kit.")
+	gs.inventory.add("repair_kit", 1)
+	var held: Dictionary = qm.dispatch_investigation_command(_command("resolve", _site("primary"), "stabilize"))
+	_expect(held.get("ok", false) and gs.inventory.get_quantity("repair_kit") == 0, "Stabilizing did not spend exactly one kit.")
+	_expect(qm.is_quest_completed() and qm.active_quest_payout() == 501, "Stabilized archive payout: %d" % qm.active_quest_payout())
+	if not _accept("unstable_archive"):
+		return
+	_scan("primary")
+	_scan("verification")
+	_expect(qm.dispatch_investigation_command(_command("resolve", _site("verification"), "reconstruct")).get("ok", false), "Reconstruction failed with both sites.")
+	_expect(qm.active_quest_payout() == 401, "Reconstructed copy payout: %d" % qm.active_quest_payout())
+	var view: Dictionary = qm.investigation_panel_view(qm.active_quest["runtime_id"])
+	_expect(str(view["evidence"]).contains("Backup fragments"), "Archive evidence reads like a survey: %s" % str(view["evidence"]))
+
+func _test_transmitter_lure():
+	if not _accept("transmitter_lure"):
+		return
+	_scan("primary")
+	_expect(qm.dispatch_investigation_command(_command("resolve", _site("primary"), "report")).get("ok", false), "Lure report failed.")
+	_expect(qm.active_quest_payout() == 300, "Lure report pays three quarters: %d" % qm.active_quest_payout())
+	if not _accept("transmitter_lure"):
+		return
+	_scan("primary")
+	_scan("verification")
+	var committed: Dictionary = qm.dispatch_investigation_command(_command("resolve", _site("verification"), "extract"))
+	_expect(committed.get("ok", false) and committed.get("awaiting_extraction", false), "Extraction was not committed: %s" % str(committed))
+	_expect(bool(committed.get("spawn_hostile", false)) == bool(qm.active_quest["investigation"]["forged"]), "Ambush does not follow the forged beacon.")
+	_expect(not qm.is_quest_completed(), "Committing completed the extraction.")
+	# A second resolve replays the commitment; it never switches branch.
+	qm.dispatch_investigation_command(_command("resolve", _site("verification"), "report"))
+	_expect(qm.active_quest["investigation"]["branch_id"] == "extract" and not qm.is_quest_completed(), "Switched away from a committed extraction.")
+	var view: Dictionary = qm.investigation_panel_view(qm.active_quest["runtime_id"])
+	_expect(view["branches"].is_empty() and view["extract_site_id"] == _site("primary")["id"], "Panel does not point at the cache.")
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(qm.capture_active_quest()))
+	_expect(qm.restore_active_quest(saved), "A committed extraction did not restore.")
+	var remote := _site("verification")
+	_move(remote)
+	_expect(not qm.begin_investigation_scan(qm.active_quest["runtime_id"], remote["id"]).get("reason", "") == "holding", "Extraction started away from the cache.")
+	var cache := _site("primary")
+	_move(cache)
+	var started: Dictionary = qm.begin_investigation_scan(qm.active_quest["runtime_id"], cache["id"])
+	_expect(started.get("reason", "") == "holding", "Extraction hold did not begin: %s" % str(started))
+	for frame in range(31):
+		qm._physics_process(0.1)
+	_expect(qm.is_quest_completed() and qm.active_quest["investigation"]["outcome_tag"] == "extracted", "Holding at the cache did not extract.")
+	_expect(qm.active_quest_payout() == 601, "Extraction payout: %d" % qm.active_quest_payout())
 
 func _expect(ok: bool, message: String):
 	if not ok:
