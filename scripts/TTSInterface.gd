@@ -11,6 +11,10 @@ const MAX_BACKGROUND_CACHE_REQUESTS := 2
 const LIVE_REQUEST_TIMEOUT := 30.0
 var _live_retry_body := ""
 var _live_retried := false
+## The game owns its voice server (Abe, 2026-09-24): leftovers from earlier
+## runs are stopped at start-up, exactly one server is launched, and it is
+## stopped again when the game closes. -1 = none launched by this run.
+var _owned_server_pid := -1
 const _TTS_HEARTBEAT_SECONDS := 30.0
 var http_request: HTTPRequest
 var audio_player: AudioStreamPlayer
@@ -89,6 +93,7 @@ func _ready():
 		print("[TTSInterface] Baseline offline mode: service discovery disabled.")
 		return
 
+	_take_ownership_of_tts_server()
 	_discover_and_verify_tts()
 	_schedule_tts_heartbeat()
 	
@@ -911,7 +916,69 @@ func _discover_and_verify_tts():
 			_launch_tts_server_process()
 		get_tree().create_timer(1.5).timeout.connect(_discover_and_verify_tts)
 
+## Start-up: stop any voice server left over from an earlier run (they piled
+## up, and a busy leftover that failed the first health check used to get a
+## second server launched beside it), then launch this run's own server.
+## Headless runs (tests) adopt whatever is running and never stop anything.
+func _take_ownership_of_tts_server() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var stopped := _stop_leftover_tts_servers()
+	if stopped > 0:
+		print("[TTSInterface] Stopped %d leftover TTS server process(es) from an earlier run." % stopped)
+	_launch_tts_server_process()
+
+
+## Stops python processes running this game's tts_server.py, plus whatever is
+## listening on the voice port as a tts_server. Returns how many it stopped.
+func _stop_leftover_tts_servers() -> int:
+	if OS.get_name() != "Windows":
+		var out: Array = []
+		OS.execute("pkill", PackedStringArray(["-f", "scripts/tts_server.py"]), out)
+		return 0
+	var ps := "$ids = @(); " \
+		+ "foreach ($c in @(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue)) { " \
+		+ "$p = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $c.OwningProcess); " \
+		+ "if ($p -and $p.CommandLine -like '*tts_server.py*') { $ids += $p.ProcessId } }; " \
+		+ "foreach ($p in @(Get-CimInstance Win32_Process | Where-Object { $_.Name -like 'python*' })) { " \
+		+ "if ($p.CommandLine -like '*scripts?tts_server.py*') { $ids += $p.ProcessId } }; " \
+		+ "foreach ($id in ($ids | Sort-Object -Unique)) { taskkill /PID $id /T /F | Out-Null; Write-Output $id }"
+	var output: Array = []
+	OS.execute("powershell", PackedStringArray(["-NoProfile", "-NonInteractive", "-Command", ps]), output, true)
+	var count := 0
+	for chunk in output:
+		for line in str(chunk).split("\n", false):
+			if line.strip_edges().is_valid_int():
+				count += 1
+	return count
+
+
+## Exit: stop the server this run launched (and its child process: the venv
+## python on Windows starts the real interpreter as a child).
+func _stop_owned_tts_server() -> void:
+	if _owned_server_pid <= 0:
+		return
+	var pid := _owned_server_pid
+	_owned_server_pid = -1
+	if OS.get_name() == "Windows":
+		OS.execute("taskkill", PackedStringArray(["/PID", str(pid), "/T", "/F"]), [], true)
+	else:
+		OS.kill(pid)
+	print("[TTSInterface] Stopped this run's TTS server (PID %d)." % pid)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_PREDELETE:
+		_stop_owned_tts_server()
+
+
+func _exit_tree() -> void:
+	_stop_owned_tts_server()
+
+
 func _launch_tts_server_process():
+	if _owned_server_pid > 0:
+		return  # one server per run; discovery must never start a second
 	if DisplayServer.get_name() == "headless":
 		print("[TTSInterface] Headless mode detected; skipping local TTS server auto-launch.")
 		return
@@ -932,6 +999,7 @@ func _launch_tts_server_process():
 	args.append(global_script_path)
 	var pid = OS.create_process(str(launcher["executable"]), args)
 	if pid > 0:
+		_owned_server_pid = pid
 		print("[TTSInterface] Successfully launched local TTS server background process (PID: ", pid, ")")
 	else:
 		print("[TTSInterface] Failed to launch local TTS server with Python: ", launcher["executable"])
