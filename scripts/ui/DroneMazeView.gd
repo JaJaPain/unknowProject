@@ -63,7 +63,13 @@ func _build_world() -> void:
 	env.fog_enabled = true
 	env.fog_light_color = Color(0.02, 0.02, 0.03)
 	env.fog_density = 0.18
+	# Glow only for the brightest bits (crystals, stripes), kept tight: a wide
+	# bloom floods a whole corridor with the recorder's red.
 	env.glow_enabled = true
+	env.glow_intensity = 0.3
+	env.glow_strength = 0.8
+	env.glow_bloom = 0.0
+	env.glow_hdr_threshold = 1.2
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	_viewport.add_child(world_env)
@@ -83,10 +89,24 @@ func _build_world() -> void:
 			if not Maze.is_open(grid, x, y) and _touches_open(grid, x, y):
 				tiles.append(Vector2i(x, y))
 	mm.instance_count = tiles.size()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(state["seed"])
+	var rocky := str(state["kind"]) == "asteroid"
 	for i in tiles.size():
-		mm.set_instance_transform(i, Transform3D(Basis(), Vector3(tiles[i].x + 0.5, WALL_HEIGHT * 0.5, tiles[i].y + 0.5)))
+		var basis := Basis()
+		var offset := Vector3.ZERO
+		if rocky:
+			# Tilted, uneven chunks read as a cave rather than a corridor. Kept
+			# small enough that the drone (radius RADIUS) never sees inside one.
+			basis = Basis.from_euler(Vector3(rng.randf_range(-0.18, 0.18), rng.randf_range(-0.5, 0.5), rng.randf_range(-0.18, 0.18))) 				.scaled(Vector3.ONE * rng.randf_range(1.05, 1.22))
+			offset = Vector3(rng.randf_range(-0.06, 0.06), rng.randf_range(-0.08, 0.08), rng.randf_range(-0.06, 0.06))
+		mm.set_instance_transform(i, Transform3D(basis, Vector3(tiles[i].x + 0.5, WALL_HEIGHT * 0.5, tiles[i].y + 0.5) + offset))
 	walls.multimesh = mm
 	_viewport.add_child(walls)
+	if rocky:
+		_add_rubble(grid, wall_mat, rng)
+	else:
+		_add_wreck_dressing(grid, rng)
 	var w := float(str(grid[0]).length())
 	var h := float(grid.size())
 	for y_level in [0.0, WALL_HEIGHT]:
@@ -107,7 +127,7 @@ func _build_world() -> void:
 		_target_nodes[str(t["id"])] = node
 
 	_camera = Camera3D.new()
-	_camera.fov = 78.0
+	_camera.fov = 62.0  # vertical; about 95 degrees across on 16:9
 	_camera.near = 0.05
 	_camera.far = 30.0
 	_viewport.add_child(_camera)
@@ -125,6 +145,73 @@ func _build_world() -> void:
 	_camera.add_child(glow)
 
 
+## Loose rock along the tunnel edges (never in the middle, where the drone flies).
+func _add_rubble(grid: Array, mat: Material, rng: RandomNumberGenerator) -> void:
+	var rubble := MultiMeshInstance3D.new()
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var rock := BoxMesh.new()
+	rock.size = Vector3(0.2, 0.14, 0.18)
+	rock.material = mat
+	mm.mesh = rock
+	var spots: Array[Transform3D] = []
+	for y in grid.size():
+		for x in str(grid[y]).length():
+			if not Maze.is_open(grid, x, y) or rng.randf() > 0.5:
+				continue
+			for n in rng.randi_range(1, 3):
+				var edge := Vector2(rng.randf_range(-0.42, 0.42), (0.38 if rng.randf() < 0.5 else -0.38))
+				if rng.randf() < 0.5:
+					edge = Vector2(edge.y, edge.x)
+				var basis := Basis.from_euler(Vector3(rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU)).scaled(Vector3.ONE * rng.randf_range(0.5, 1.4))
+				spots.append(Transform3D(basis, Vector3(x + 0.5 + edge.x, 0.05, y + 0.5 + edge.y)))
+	mm.instance_count = spots.size()
+	for i in spots.size():
+		mm.set_instance_transform(i, spots[i])
+	rubble.multimesh = mm
+	_viewport.add_child(rubble)
+
+
+## Hull ribs at tile seams and a few dying emergency lights.
+func _add_wreck_dressing(grid: Array, rng: RandomNumberGenerator) -> void:
+	var ribs := MultiMeshInstance3D.new()
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var beam := BoxMesh.new()
+	beam.size = Vector3(0.1, WALL_HEIGHT, 0.1)
+	var steel := StandardMaterial3D.new()
+	steel.albedo_color = Color(0.22, 0.23, 0.25)
+	steel.metallic = 0.8
+	steel.roughness = 0.45
+	beam.material = steel
+	mm.mesh = beam
+	var spots: Array[Vector3] = []
+	var lights := 0
+	for y in grid.size():
+		for x in str(grid[y]).length():
+			if not Maze.is_open(grid, x, y):
+				continue
+			# A rib in each corner of an open tile that meets a wall.
+			for c in [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)]:
+				var wall_side := not Maze.is_open(grid, x + (1 if c.x == 1 else -1), y) or not Maze.is_open(grid, x, y + (1 if c.y == 1 else -1))
+				if wall_side and (x + y) % 2 == 0:
+					spots.append(Vector3(x + c.x * 0.94 + 0.03, WALL_HEIGHT * 0.5, y + c.y * 0.94 + 0.03))
+			if lights < 6 and x % 2 == 1 and y % 2 == 1 and rng.randf() < 0.12:
+				lights += 1
+				var lamp := OmniLight3D.new()
+				lamp.light_color = Color(1.0, 0.55, 0.2)
+				lamp.omni_range = 2.2
+				lamp.light_energy = 0.45
+				lamp.position = Vector3(x + 0.5, WALL_HEIGHT - 0.1, y + 0.5)
+				lamp.name = "Emergency%d" % lights
+				_viewport.add_child(lamp)
+	mm.instance_count = spots.size()
+	for i in spots.size():
+		mm.set_instance_transform(i, Transform3D(Basis(), spots[i]))
+	ribs.multimesh = mm
+	_viewport.add_child(ribs)
+
+
 static func _touches_open(grid: Array, x: int, y: int) -> bool:
 	for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(-1, -1), Vector2i(1, -1), Vector2i(-1, 1)]:
 		if Maze.is_open(grid, x + d.x, y + d.y):
@@ -132,7 +219,8 @@ static func _touches_open(grid: Array, x: int, y: int) -> bool:
 	return false
 
 
-## Rock for an asteroid, dark plating for a wreck; both from noise, no files.
+## Rock for an asteroid (noise, no files); rusted plating for a wreck (the
+## ship-part metal texture), both with a noise normal map.
 static func _wall_material(kind: String) -> StandardMaterial3D:
 	var noise := FastNoiseLite.new()
 	noise.frequency = 0.035 if kind == "asteroid" else 0.08
@@ -154,9 +242,13 @@ static func _wall_material(kind: String) -> StandardMaterial3D:
 		mat.albedo_color = Color(0.45, 0.4, 0.36)
 		mat.roughness = 0.95
 	else:
-		mat.albedo_color = Color(0.3, 0.33, 0.36)
-		mat.metallic = 0.7
-		mat.roughness = 0.5
+		var plating: Texture2D = load("res://assets/ship_parts/textures/metals/metal.png")
+		if plating != null:
+			mat.albedo_texture = plating
+		mat.albedo_color = Color(0.85, 0.85, 0.85)
+		mat.uv1_scale = Vector3(0.5, 0.5, 0.5)
+		mat.metallic = 0.45
+		mat.roughness = 0.6
 	return mat
 
 
@@ -169,7 +261,7 @@ static func _target_node(kind: String) -> Node3D:
 	mat.albedo_color = color
 	mat.emission_enabled = true
 	mat.emission = color
-	mat.emission_energy_multiplier = 1.6
+	mat.emission_energy_multiplier = 1.2 if kind == "mineral" else 1.0
 	if kind == "mineral":
 		mat.metallic = 0.3
 		mat.roughness = 0.15
@@ -206,8 +298,8 @@ static func _target_node(kind: String) -> Node3D:
 		root.add_child(stripe)
 	var light := OmniLight3D.new()
 	light.light_color = color
-	light.omni_range = 1.4
-	light.light_energy = 0.8
+	light.omni_range = 1.2
+	light.light_energy = 0.5
 	light.position.y = 0.3
 	light.name = "Glow"
 	root.add_child(light)
@@ -317,7 +409,7 @@ func _sync_camera() -> void:
 		node.rotation.y = t * 0.6
 		var glow := node.get_node_or_null("Glow") as OmniLight3D
 		if glow != null:
-			glow.light_energy = 0.6 + 0.3 * sin(t * 5.0)
+			glow.light_energy = 0.4 + 0.2 * sin(t * 5.0)
 
 
 func _hide_extracted() -> void:

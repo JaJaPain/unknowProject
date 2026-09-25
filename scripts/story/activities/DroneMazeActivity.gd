@@ -16,8 +16,17 @@ const Maze := preload("res://scripts/story/activities/DroneMazeModel.gd")
 
 const LAUNCH_KEY := KEY_G
 const LAUNCH_RANGE := 300.0
-const PAY := {"mineral": 70, "salvage": 55, "recorder": 0}
-const CLEAN_BONUS := 60
+## High risk, high reward (Abe, 2026-09-24): the drone costs 150 and is
+## used up either way, so a clean run pays well and a poor one loses money.
+## Cracked ore sells for its remaining share.
+const PAY := {"mineral": 90, "salvage": 70, "recorder": 0}
+const CLEAN_BONUS := 80
+## Each seam or crate brought home may also carry an expensive material.
+const MATERIAL_CHANCE := 0.35
+const MATERIALS := {
+	"asteroid": ["fusion_cell", "power_coils", "sensor_cluster"],
+	"wreck": ["hull_plating", "memory_bank", "encrypted_core", "power_coils"],
+}
 const DRONE_ITEM := "survey_drone"
 
 const RESULT_LINES := {
@@ -135,14 +144,25 @@ func _on_finished(outcome_id: String, state: Dictionary) -> void:
 		_nova(_line("lost"))
 		return
 	var pay := 0
+	var materials: Array[String] = []
+	var kind := str(state.get("kind", "asteroid"))
 	for t in state.get("targets", []):
 		if bool(t["extracted"]):
 			pay += int(PAY.get(str(t["kind"]), 0))
+			var pool: Array = MATERIALS.get(kind, [])
+			if str(t["kind"]) != "recorder" and not pool.is_empty() and randf() < MATERIAL_CHANCE:
+				materials.append(str(pool[randi() % pool.size()]))
+	var integrity := float(state.get("ore_integrity", 1.0))
+	pay = int(round(pay * integrity))
 	if outcome_id == "clean":
 		pay += CLEAN_BONUS
 	if pay > 0 and gs != null:
 		gs.add_credits(pay)
-		gs.emit_chatter("DRONE BAY", "Haul sold: %d credits." % pay, Color(0.5, 0.95, 0.85))
+		var cracked := "" if integrity >= 1.0 else " (%d%% of the ore survived)" % int(integrity * 100.0)
+		gs.emit_chatter("DRONE BAY", "Haul sold: %d credits%s." % [pay, cracked], Color(0.5, 0.95, 0.85))
+	for item in materials:
+		if gs != null and gs.inventory != null and gs.inventory.add(item, 1, 10):
+			gs.emit_chatter("DRONE BAY", "Recovered: %s." % item.capitalize(), Color(1.0, 0.85, 0.3))
 	if Maze.has_extracted(state, "recorder") and not _recorder_item.is_empty():
 		var now := int(get_node("/root/CampaignClock").total_minutes) if has_node("/root/CampaignClock") else 0
 		director.overhear(_recorder_item, now)

@@ -361,9 +361,9 @@
         {
             "item_id": "survey_drone",
             "display_name": "Piloted Survey Drone",
-            "description": "Fly it yourself into an asteroid or a wreck (target it, press G). Used up on launch.",
+            "description": "Fly it yourself into an asteroid's cracks or a wreck (target it, press G). Fragile ore, rich pay. Used up on launch.",
             "category": "consumable",
-            "base_price": 60,
+            "base_price": 150,
             "stack_max": 3,
             "restock_interval_minutes": 120,
             "restock_quantity": 1,

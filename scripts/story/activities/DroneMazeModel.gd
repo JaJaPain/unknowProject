@@ -9,8 +9,16 @@ extends RefCounted
 ## Two kinds: "asteroid" (mineral seams) and "wreck" (salvage, and sometimes a
 ## recorder that carries a story thread).
 ##
-## PURE and seeded. The maze is a tile grid: odd tiles are corridors, walls are
-## whole tiles, one tile = one metre-ish unit. The view builds boxes from it.
+## Asteroids are micro-mining (Abe, 2026-09-24): the drone threads narrow,
+## organic cracks after very fragile ore. The cracks wander and pinch, so the
+## sides are easy to scrape; a hard knock costs hull, and once ore is aboard
+## every knock cracks some of it. Ore only comes loose for a drone holding
+## still. Wrecks are the ship's own square corridors.
+##
+## PURE and seeded. Both start from a tile grid (odd tiles are chambers, walls
+## are whole tiles, one tile = one metre-ish unit). A wreck collides with the
+## tiles; an asteroid turns the grid into a crack network ("cracks": jittered
+## chamber points joined by pinched capsules) and collides with that.
 
 const WALL := "#"
 const OPEN := "."
@@ -22,6 +30,18 @@ const BUMP_SPEED := 0.6       # throttle needed for a knock to count
 const BUMP_COOLDOWN := 0.8
 const EXTRACT_RANGE := 0.95
 const EXTRACT_FACING := 0.45  # cos of the widest angle it can grab at
+## Fragile ore: at most this much throttle while extracting, and each hard
+## knock with ore aboard takes this share of the haul's value.
+const EXTRACT_MAX_THROTTLE := 0.1
+const ORE_CRACK_PER_KNOCK := 0.2
+## A knock counts when the drone drives into the rock, not when it grazes it.
+const KNOCK_INTO := 0.25
+## Crack widths (radius, tiles): chambers, targets' pockets, and how much a
+## crack pinches between chambers.
+const CRACK_RADIUS := Vector2(0.38, 0.5)
+const POCKET_RADIUS := 0.52
+const PINCH := Vector2(0.78, 0.95)
+const CRACK_JITTER := 0.3
 
 const KINDS := {
 	"asteroid": {"cells": Vector2i(7, 7), "targets": 3, "hull": 5, "loops": 0.15},
@@ -51,20 +71,91 @@ static func start(seed_value: int, kind: String = "asteroid", with_recorder: boo
 		if kind == "wreck" and with_recorder and i == 0:
 			target_kind = "recorder"
 		targets.append({"id": "target.%d" % i, "tile": [t.x, t.y], "kind": target_kind, "extracted": false})
-	# Face down the first open corridor.
 	var time_total := TIME_MARGIN + TIME_PER_TOUR * float(_tour_length(grid, start_tile, targets)) / SPEED
-	var heading := 0.0
-	if grid[1][2] == OPEN:
-		heading = 0.0
-	elif grid[2][1] == OPEN:
-		heading = PI * 0.5
-	return {
+	var state := {
 		"seed": seed_value, "kind": kind, "grid": grid,
-		"pos": [start_tile.x + 0.5, start_tile.y + 0.5], "heading": heading,
+		"pos": [start_tile.x + 0.5, start_tile.y + 0.5], "heading": 0.0,
 		"targets": targets, "time_left": time_total, "time_total": time_total,
 		"hull": int(spec["hull"]), "hull_max": int(spec["hull"]), "bump_cooldown": 0.0,
+		"throttle": 0.0, "ore_integrity": 1.0,
 		"done": false, "end": "",
 	}
+	if kind == "asteroid":
+		var pockets := {}
+		for t in targets:
+			pockets[_key(Vector2i(int(t["tile"][0]), int(t["tile"][1])))] = true
+		state["cracks"] = _cracks(grid, rng, pockets)
+		var start_node: Array = state["cracks"]["nodes"][_key(start_tile)]
+		state["pos"] = [float(start_node[0]), float(start_node[1])]
+		for t in targets:
+			var n: Array = state["cracks"]["nodes"][_key(Vector2i(int(t["tile"][0]), int(t["tile"][1])))]
+			t["at"] = [float(n[0]), float(n[1])]
+	# Face down the first way out.
+	var route := route_to(state, target_at(targets[0])) if not targets.is_empty() else []
+	if route.size() >= 2:
+		state["heading"] = ((route[1] as Vector2) - (route[0] as Vector2)).angle()
+	elif grid[2][1] == OPEN:
+		state["heading"] = PI * 0.5
+	return state
+
+
+static func _key(c: Vector2i) -> String:
+	return "%d,%d" % [c.x, c.y]
+
+
+## The crack network: every chamber (odd tile) becomes a point nudged off the
+## grid with a width; every open link between chambers becomes a crack that
+## pinches in the middle. Targets sit in wider pockets.
+static func _cracks(grid: Array, rng: RandomNumberGenerator, pockets: Dictionary) -> Dictionary:
+	var nodes := {}
+	for y in range(1, grid.size(), 2):
+		for x in range(1, str(grid[y]).length(), 2):
+			var c := Vector2i(x, y)
+			var jitter := Vector2(rng.randf_range(-CRACK_JITTER, CRACK_JITTER), rng.randf_range(-CRACK_JITTER, CRACK_JITTER))
+			if c == Vector2i(1, 1):
+				jitter = Vector2.ZERO
+			var r := POCKET_RADIUS if pockets.has(_key(c)) else rng.randf_range(CRACK_RADIUS.x, CRACK_RADIUS.y)
+			nodes[_key(c)] = [x + 0.5 + jitter.x, y + 0.5 + jitter.y, r]
+	var edges: Array = []
+	for y in range(1, grid.size(), 2):
+		for x in range(1, str(grid[y]).length(), 2):
+			for d in [Vector2i(2, 0), Vector2i(0, 2)]:
+				var link: Vector2i = Vector2i(x, y) + d / 2
+				if not is_open(grid, link.x, link.y):
+					continue
+				var a: Array = nodes[_key(Vector2i(x, y))]
+				var b: Array = nodes[_key(Vector2i(x, y) + (d as Vector2i))]
+				var pinch := minf(float(a[2]), float(b[2])) * rng.randf_range(PINCH.x, PINCH.y)
+				edges.append([_key(Vector2i(x, y)), _key(Vector2i(x, y) + (d as Vector2i)), pinch])
+	return {"nodes": nodes, "edges": edges}
+
+
+## Radius of an edge at `t` (0..1): the ends' widths, pinched in the middle.
+static func _edge_radius(ra: float, rb: float, pinch: float, t: float) -> float:
+	var base := lerpf(ra, rb, t)
+	var squeeze := 4.0 * t * (1.0 - t)
+	return lerpf(base, minf(base, pinch), squeeze)
+
+
+## Where `p` stands against the crack network: the crack it is deepest inside,
+## the nearest point on that crack's spine, and how far from the spine the
+## drone may go there. `excess` > 0 means the drone is in the rock.
+static func crack_probe(cracks: Dictionary, p: Vector2) -> Dictionary:
+	var best := {}
+	var nodes: Dictionary = cracks["nodes"]
+	for e in cracks["edges"]:
+		var a: Array = nodes[e[0]]
+		var b: Array = nodes[e[1]]
+		var pa := Vector2(float(a[0]), float(a[1]))
+		var pb := Vector2(float(b[0]), float(b[1]))
+		var ab := pb - pa
+		var t := clampf((p - pa).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		var q := pa + ab * t
+		var limit := _edge_radius(float(a[2]), float(b[2]), float(e[2]), t) - RADIUS
+		var excess := p.distance_to(q) - limit
+		if best.is_empty() or excess < float(best["excess"]):
+			best = {"q": q, "limit": limit, "excess": excess}
+	return best
 
 
 ## Recursive backtracker on a cells.x by cells.y cell grid, then a share of
@@ -183,9 +274,69 @@ static func scanner(state: Dictionary) -> Dictionary:
 	for t in state["targets"]:
 		if bool(t["extracted"]):
 			continue
-		var to := Vector2(float(t["tile"][0]) + 0.5, float(t["tile"][1]) + 0.5) - pos
+		var to := target_at(t) - pos
 		if best.is_empty() or to.length() < float(best["distance"]):
 			best = {"distance": to.length(), "bearing": wrapf(to.angle() - float(state["heading"]), -PI, PI), "kind": str(t["kind"])}
+	return best
+
+
+## Where a target sits: its pocket in a crack, else its tile's centre.
+static func target_at(t: Dictionary) -> Vector2:
+	if t.has("at"):
+		return Vector2(float(t["at"][0]), float(t["at"][1]))
+	return Vector2(float(t["tile"][0]) + 0.5, float(t["tile"][1]) + 0.5)
+
+
+## Waypoints from the drone to `goal` along the tunnels (chamber points for
+## cracks, tile centres for corridors), ending at `goal`. For tests and for
+## anything that has to fly the drone.
+static func route_to(state: Dictionary, goal: Vector2) -> Array:
+	var grid: Array = state["grid"]
+	var here := Vector2(float(state["pos"][0]), float(state["pos"][1]))
+	var cracks: Dictionary = state.get("cracks", {})
+	var step := 2 if not cracks.is_empty() else 1
+	var from := _nearest_chamber(grid, here, cracks)
+	var to := _nearest_chamber(grid, goal, cracks)
+	var prev := {from: from}
+	var queue: Array[Vector2i] = [from]
+	while not queue.is_empty():
+		var c: Vector2i = queue.pop_front()
+		if c == to:
+			break
+		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			var n: Vector2i = c + d * step
+			if not prev.has(n) and is_open(grid, c.x + d.x, c.y + d.y) and is_open(grid, n.x, n.y):
+				prev[n] = c
+				queue.append(n)
+	var cells: Array[Vector2i] = []
+	var c := to
+	while prev.has(c) and c != from:
+		cells.push_front(c)
+		c = prev[c]
+	cells.push_front(from)
+	var out: Array = []
+	for cell in cells:
+		if cracks.is_empty():
+			out.append(Vector2(cell.x + 0.5, cell.y + 0.5))
+		else:
+			var n: Array = cracks["nodes"][_key(cell)]
+			out.append(Vector2(float(n[0]), float(n[1])))
+	out.append(goal)
+	return out
+
+
+static func _nearest_chamber(grid: Array, p: Vector2, cracks: Dictionary) -> Vector2i:
+	if cracks.is_empty():
+		return Vector2i(int(floor(p.x)), int(floor(p.y)))
+	var best := Vector2i(1, 1)
+	var best_d := INF
+	for key: String in cracks["nodes"]:
+		var n: Array = cracks["nodes"][key]
+		var d := p.distance_to(Vector2(float(n[0]), float(n[1])))
+		if d < best_d:
+			best_d = d
+			var parts := key.split(",")
+			best = Vector2i(int(parts[0]), int(parts[1]))
 	return best
 
 
@@ -204,23 +355,38 @@ static func step(state: Dictionary, dt: float, throttle: float, turn: float) -> 
 	var h := float(s["heading"])
 	var move := Vector2(cos(h), sin(h)) * clampf(throttle, -1.0, 1.0) * SPEED * dt
 	var pos := Vector2(float(s["pos"][0]), float(s["pos"][1]))
+	s["throttle"] = clampf(throttle, -1.0, 1.0)
 	var blocked := false
-	# Axis by axis, so the drone slides along a wall instead of sticking.
-	var nx := Vector2(pos.x + move.x, pos.y)
-	if _hits(s["grid"], nx):
-		blocked = move.x != 0.0
+	if s.has("cracks"):
+		# Slide along the crack wall: step, then pull back onto the wall. It is
+		# a knock when the drone was driving into the rock, not grazing it.
+		var probe := crack_probe(s["cracks"], pos + move)
+		pos += move
+		if float(probe["excess"]) > 0.0:
+			var q: Vector2 = probe["q"]
+			var out := (pos - q).normalized()
+			pos = q + out * float(probe["limit"])
+			blocked = move.length() > 0.0 and move.normalized().dot(out) >= KNOCK_INTO
 	else:
-		pos = nx
-	var ny := Vector2(pos.x, pos.y + move.y)
-	if _hits(s["grid"], ny):
-		blocked = blocked or move.y != 0.0
-	else:
-		pos = ny
+		# Axis by axis, so the drone slides along a wall instead of sticking.
+		var nx := Vector2(pos.x + move.x, pos.y)
+		if _hits(s["grid"], nx):
+			blocked = move.x != 0.0
+		else:
+			pos = nx
+		var ny := Vector2(pos.x, pos.y + move.y)
+		if _hits(s["grid"], ny):
+			blocked = blocked or move.y != 0.0
+		else:
+			pos = ny
 	s["pos"] = [pos.x, pos.y]
 	if blocked and absf(throttle) >= BUMP_SPEED and float(s["bump_cooldown"]) <= 0.0:
 		s["hull"] = int(s["hull"]) - 1
 		s["bump_cooldown"] = BUMP_COOLDOWN
 		s["bumped"] = true
+		# Fragile ore: every knock with ore aboard cracks some of it.
+		if s.has("cracks") and extracted_count(s) > 0:
+			s["ore_integrity"] = maxf(0.0, float(s["ore_integrity"]) - ORE_CRACK_PER_KNOCK)
 	else:
 		s["bumped"] = false
 	if int(s["hull"]) <= 0:
@@ -251,8 +417,7 @@ static func target_in_reach(state: Dictionary) -> Dictionary:
 	for t in state["targets"]:
 		if bool(t["extracted"]):
 			continue
-		var at := Vector2(float(t["tile"][0]) + 0.5, float(t["tile"][1]) + 0.5)
-		var to := at - pos
+		var to := target_at(t) - pos
 		if to.length() <= EXTRACT_RANGE and (to.length() < 0.3 or facing.dot(to.normalized()) >= EXTRACT_FACING):
 			return t
 	return {}
@@ -264,6 +429,9 @@ static func extract(state: Dictionary) -> Dictionary:
 		return s
 	var t := target_in_reach(s)
 	if t.is_empty():
+		return s
+	# Fragile: it only comes loose for a drone holding still.
+	if s.has("cracks") and absf(float(s.get("throttle", 0.0))) > EXTRACT_MAX_THROTTLE:
 		return s
 	for target in s["targets"]:
 		if str(target["id"]) == str(t["id"]):

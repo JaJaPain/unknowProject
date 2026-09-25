@@ -43,6 +43,30 @@ func _initialize() -> void:
 	turned["heading"] = float(fresh["heading"]) + float(ping["bearing"])
 	_check(absf(float(Maze.scanner(turned)["bearing"])) < 0.001, "turning by the bearing faces the seam")
 
+	# Cracks: the pilot stays inside them, and a drone that is still moving
+	# cannot pry fragile ore loose.
+	var cr := Maze.start(2026, "asteroid")
+	_check(cr.has("cracks") and not Maze.start(2026, "wreck").has("cracks"), "asteroids are cracks, wrecks are corridors")
+	for key in cr["cracks"]["nodes"]:
+		var n: Array = cr["cracks"]["nodes"][key]
+		_check(float(Maze.crack_probe(cr["cracks"], Vector2(float(n[0]), float(n[1])))["excess"]) <= 0.0, "every chamber is open rock")
+	var near := cr.duplicate(true)
+	var t0: Dictionary = near["targets"][0]
+	var pocket := Maze.target_at(t0)
+	near["pos"] = [pocket.x - 0.4, pocket.y]
+	near["heading"] = 0.0
+	near = Maze.step(near, 0.02, 0.5, 0.0)
+	_check(Maze.extracted_count(Maze.extract(near)) == 0, "a moving drone cannot pry the ore loose")
+	near = Maze.step(near, 0.02, 0.0, 0.0)
+	_check(Maze.extracted_count(Maze.extract(near)) == 1, "a still one can")
+	var loaded := Maze.extract(near)
+	loaded["heading"] = PI * 0.5
+	for i in range(60):
+		loaded = Maze.step(loaded, 0.05, 1.0, 0.0)
+		if bool(loaded["bumped"]):
+			break
+	_check(bool(loaded["bumped"]) and is_equal_approx(float(loaded["ore_integrity"]), 1.0 - Maze.ORE_CRACK_PER_KNOCK), "a knock with ore aboard cracks some of it (%.2f)" % float(loaded["ore_integrity"]))
+
 	# Walls hurt, but not every frame.
 	var b := Maze.start(1234, "asteroid")
 	b["heading"] = PI  # straight into the outer wall
@@ -92,22 +116,18 @@ func _all_cells_reachable(grid: Array) -> bool:
 	return true
 
 
-## Steer along the shortest tunnel path to the nearest unextracted target,
-## then extract it.
+## Steer along the tunnels to the nearest unextracted target, settle, and
+## extract it.
 func _fly_to_next(state: Dictionary) -> Dictionary:
 	var s := state
-	var pos := Vector2i(int(floor(float(s["pos"][0]))), int(floor(float(s["pos"][1]))))
-	var goal := Vector2i(-1, -1)
-	var path: Array[Vector2i] = []
+	var route: Array = []
 	for t in s["targets"]:
 		if bool(t["extracted"]):
 			continue
-		var p := _path(s["grid"], pos, Vector2i(int(t["tile"][0]), int(t["tile"][1])))
-		if goal.x < 0 or p.size() < path.size():
-			goal = Vector2i(int(t["tile"][0]), int(t["tile"][1]))
-			path = p
-	for tile: Vector2i in path:
-		var aim := Vector2(tile.x + 0.5, tile.y + 0.5)
+		var r := Maze.route_to(s, Maze.target_at(t))
+		if route.is_empty() or r.size() < route.size():
+			route = r
+	for aim: Vector2 in route:
 		for i in range(400):
 			var here := Vector2(float(s["pos"][0]), float(s["pos"][1]))
 			var to := aim - here
@@ -117,28 +137,9 @@ func _fly_to_next(state: Dictionary) -> Dictionary:
 			var turn := clampf(diff * 4.0, -1.0, 1.0)
 			var throttle := clampf(to.length() * 3.0, 0.0, 1.0) if absf(diff) < 0.15 else 0.0
 			s = Maze.step(s, 0.02, throttle, turn)
-	# Face the target and take it.
+	# Hold still, then take it (fragile ore only comes loose for a still drone).
+	s = Maze.step(s, 0.02, 0.0, 0.0)
 	return Maze.extract(s)
-
-
-func _path(grid: Array, from: Vector2i, to: Vector2i) -> Array[Vector2i]:
-	var prev := {from: from}
-	var queue: Array[Vector2i] = [from]
-	while not queue.is_empty():
-		var c: Vector2i = queue.pop_front()
-		if c == to:
-			break
-		for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-			var n: Vector2i = c + d
-			if not prev.has(n) and Maze.is_open(grid, n.x, n.y):
-				prev[n] = c
-				queue.append(n)
-	var out: Array[Vector2i] = []
-	var c := to
-	while c != from:
-		out.push_front(c)
-		c = prev[c]
-	return out
 
 
 func _check(condition: bool, message: String) -> void:

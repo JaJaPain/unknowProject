@@ -79,7 +79,12 @@ func _initialize() -> void:
 	clean["done"] = true
 	clean["end"] = "complete"
 	activity._on_finished("clean", clean)
-	_check(gs.player_credits == credits + 3 * 70 + 60, "three seams and the bonus: %d" % (gs.player_credits - credits))
+	_check(gs.player_credits == credits + 3 * 90 + 80, "three seams and the bonus: %d" % (gs.player_credits - credits))
+	credits = gs.player_credits
+	var cracked := clean.duplicate(true)
+	cracked["ore_integrity"] = 0.6
+	activity._on_finished("clean", cracked)
+	_check(gs.player_credits == credits + int(round(270 * 0.6)) + 80, "cracked ore sells for what survived: %d" % (gs.player_credits - credits))
 
 	# A lost drone pays nothing for its load (the drone itself was the cost).
 	credits = gs.player_credits
