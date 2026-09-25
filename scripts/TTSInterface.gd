@@ -4,6 +4,13 @@ const TTS_URL = "http://127.0.0.1:5000/tts"
 const PYTHON_SETTING := "application/run/python_executable"
 const PYTHON_ENV_VAR := "SPACEGAME_PYTHON"
 const MAX_BACKGROUND_CACHE_REQUESTS := 2
+# A live line waits for any render already holding the server's lock (it
+# renders one line at a time), then renders itself. 10 s dropped a long
+# Kaelen line in Abe's 2026-09-24 session; a live line now also pauses new
+# background caching and is retried once if it still gets no answer.
+const LIVE_REQUEST_TIMEOUT := 30.0
+var _live_retry_body := ""
+var _live_retried := false
 const _TTS_HEARTBEAT_SECONDS := 30.0
 var http_request: HTTPRequest
 var audio_player: AudioStreamPlayer
@@ -70,7 +77,7 @@ func _ready():
 	
 	http_request = HTTPRequest.new()
 	add_child(http_request)
-	http_request.timeout = 10.0
+	http_request.timeout = LIVE_REQUEST_TIMEOUT
 	http_request.request_completed.connect(_on_request_completed)
 	
 	audio_player = AudioStreamPlayer.new()
@@ -110,7 +117,9 @@ func _run_tts_heartbeat() -> void:
 	_tts_heartbeat_in_flight = true
 	var probe := HTTPRequest.new()
 	add_child(probe)
-	probe.timeout = 2.0
+	# A busy server (rendering a long line or a cache batch) can take a few
+	# seconds to answer; 2 s marked it dead dozens of times in one session.
+	probe.timeout = 6.0
 	probe.request_completed.connect(func(result, response_code, _headers, body):
 		probe.queue_free()
 		_tts_heartbeat_in_flight = false
@@ -457,6 +466,8 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 	
 	# Print statement to help debugging in console
 	print("[TTSInterface] Requesting speech for: ", clean_text, " using voice: ", voice_id, " speed: ", speed_override)
+	_live_retry_body = json_str
+	_live_retried = false
 	var err = http_request.request(TTS_URL, headers, HTTPClient.METHOD_POST, json_str)
 	if err != OK:
 		print("[TTSInterface] Failed to initiate HTTP request. Error code: ", err)
@@ -503,7 +514,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 		)
 		return "already_cached"
 		
-	if not tts_connected or active_cache_requests >= MAX_BACKGROUND_CACHE_REQUESTS:
+	if not tts_connected or is_requesting or active_cache_requests >= MAX_BACKGROUND_CACHE_REQUESTS:
 		_enqueue_cache_request(cache_key, clean_text, voice_id, speed, style_scale)
 		if not tts_connected:
 			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): %d voice=%s" % [clean_text.hash(), voice_id])
@@ -647,6 +658,7 @@ func _record_tts_cache_failure(
 func _drain_cache_queue() -> void:
 	active_cache_requests = maxi(active_cache_requests, 0)
 	while tts_connected \
+			and not is_requesting \
 			and active_cache_requests < MAX_BACKGROUND_CACHE_REQUESTS \
 			and not cache_queue.is_empty():
 		var item: Dictionary = cache_queue.pop_front()
@@ -761,8 +773,20 @@ func _on_request_completed(result: int, response_code: int, headers: PackedStrin
 	GlobalState.trace("[TRACE] [TTSInterface] HTTP response received. Time elapsed since request: %.3fs%s. Result: %d Response code: %d" % [elapsed, elapsed_str, result, response_code])
 	
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
-		print("[TTSInterface] Kokoro TTS request failed. Response code: ", response_code)
+		print("[TTSInterface] Kokoro TTS request failed. Result: %d Response code: %d" % [result, response_code])
+		# No answer at all (timeout, dropped connection): the server was busy,
+		# not refusing. Try the same line once more before giving up.
+		if response_code == 0 and not _live_retried and not _live_retry_body.is_empty():
+			_live_retried = true
+			is_requesting = true
+			tts_request_time = Time.get_ticks_msec()
+			print("[TTSInterface] Retrying the live line once.")
+			if http_request.request(TTS_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, _live_retry_body) == OK:
+				return
+			is_requesting = false
+		_drain_cache_queue()
 		return
+	_drain_cache_queue()  # background caching waited for this live line
 		
 	var start_decode = Time.get_ticks_msec()
 	var stream = load_wav_from_buffer(body)
