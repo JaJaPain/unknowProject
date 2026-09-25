@@ -232,6 +232,14 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     rad-quartz: shields, sensors, mining; cryo-ferrite: cargo, storage).
     Nobody sells them; Iron Reach buys them (1200 base, crystal 3000).
     Is the grind right (about 40 materials and 8 crystals for everything)?
+  - Gate rating (the push into upgrades): after the first two jumps, gates
+    into unvisited systems need Shields Mk II (going back is always open).
+    Trying one starts N.O.V.A.'s walkthrough: explanation plus a free first
+    drone, the red rock, rad-quartz to the mechanic, done. Every asteroid
+    field now has at least one red rock. Check: is the third system the
+    right place for the wall? Is the explanation clear and short enough?
+  - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
+    Mk V 8 (+2 crystals).
   - The survey drone, the three tech-grade materials and the resonant
     crystal borrow the salvage drone's store icon: add their own icons to
     the image-needs list.

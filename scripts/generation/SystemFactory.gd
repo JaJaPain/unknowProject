@@ -328,6 +328,11 @@ func _spawn_asteroid_ring(
 	ring_key: String,
 	seed_value: int
 ) -> void:
+	var ids: Array = []
+	for index in range(count):
+		ids.append("entity.gen.asteroid.%s.%03d" % [ring_key, index])
+	# Every field has at least one red rock (tech-grade seams).
+	var red_id: String = (load("res://scripts/Asteroid.gd") as GDScript).guaranteed_tech_seam_id(ids)
 	for index in range(count):
 		var angle := TAU * (float(index) / float(count)) + rng.randf_range(-0.035, 0.035)
 		var radius := ring_radius + rng.randf_range(-ring_width * 0.5, ring_width * 0.5)
@@ -335,6 +340,7 @@ func _spawn_asteroid_ring(
 		asteroid.name = "%s_Ring_%02d" % [ring_key.capitalize(), index]
 		asteroid.add_to_group("asteroid")
 		asteroid.persistent_id = "entity.gen.asteroid.%s.%03d" % [ring_key, index]
+		asteroid.force_tech_seam = asteroid.persistent_id == red_id
 		asteroid.orbit_center = planet.position
 		asteroid.orbit_radius = radius
 		asteroid.orbit_speed = rng.randf_range(0.003, 0.009)

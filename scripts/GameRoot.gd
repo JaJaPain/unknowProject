@@ -180,6 +180,7 @@ var system_quirk_runner: Node = null
 var generation_window: Node = null
 var signal_tuning_activity: Node = null
 var drone_maze_activity: Node = null
+var gate_rating_guide: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
@@ -326,6 +327,8 @@ func launch_campaign_from_landing(slot_id: String, occupied: bool) -> Dictionary
 	if is_instance_valid(premise_director):
 		# The campaign seed is read lazily once it exists (see _premise_sync_seed).
 		premise_director.reset_for_new_campaign(0)
+	if is_instance_valid(gate_rating_guide):
+		gate_rating_guide.reset_for_new_campaign()
 	return create_campaign_in_slot(
 		slot_id,
 		# The opening quest generator replaces this provisional label with its
@@ -398,10 +401,18 @@ func get_jump_block_reason(gate: Node3D) -> String:
 		return "Align the ship with the jumpgate."
 	if gate.has_method("is_jump_allowed") and not gate.call("is_jump_allowed"):
 		return "Gate route is not unlocked."
+	if is_instance_valid(gate_rating_guide):
+		var destination := system_registry.runtime_system_id(str(gate.get("destination_system_id")))
+		var rating := str(gate_rating_guide.block_reason(destination))
+		if not rating.is_empty():
+			return rating
 	return ""
 
 func request_gate_jump(gate: Node3D) -> bool:
-	if get_jump_block_reason(gate) != "":
+	var block := get_jump_block_reason(gate)
+	if block != "":
+		if is_instance_valid(gate_rating_guide) and block == gate_rating_guide.BLOCK_REASON:
+			gate_rating_guide.on_refused()
 		return false
 	var identity_validation := _validate_persistent_entities(
 		get_active_system_root()
@@ -1276,6 +1287,7 @@ const PremiseWorldSnapshotType := preload("res://scripts/story/premise/PremiseWo
 const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const SignalTuningActivityType := preload("res://scripts/story/activities/SignalTuningActivity.gd")
 const DroneMazeActivityType := preload("res://scripts/story/activities/DroneMazeActivity.gd")
+const GateRatingGuideType := preload("res://scripts/story/GateRatingGuide.gd")
 const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
 const SystemQuirkRunnerType := preload("res://scripts/story/quirks/SystemQuirkRunner.gd")
 const UndercurrentDirectorType := preload("res://scripts/story/undercurrent/UndercurrentDirector.gd")
@@ -1333,6 +1345,10 @@ func _init_premise_director() -> void:
 	drone_maze_activity.director = premise_director
 	drone_maze_activity.world_provider = signal_tuning_activity.world_provider
 	add_child(drone_maze_activity)
+	# Deeper gates need hardened shields; N.O.V.A. walks the captain through it.
+	gate_rating_guide = GateRatingGuideType.new()
+	gate_rating_guide.name = "GateRatingGuide"
+	add_child(gate_rating_guide)
 	# System radio: one item every couple of minutes (voiced later; comms feed now).
 	var radio_timer := Timer.new()
 	radio_timer.name = "PremiseRadioTimer"
@@ -2372,6 +2388,7 @@ func _capture_prepared_runtime_state() -> Dictionary:
 		"quiet_moments": _capture_quiet_moment_state(),
 		# Premise-card arcs roll back with the checkpoint like everything else.
 		"premise_arcs": premise_director.to_dict() if is_instance_valid(premise_director) else {},
+		"gate_rating": gate_rating_guide.to_dict() if is_instance_valid(gate_rating_guide) else {},
 		"systems": system_states.duplicate(true),
 	}, system_registry)
 
@@ -6401,6 +6418,9 @@ func _apply_save_data(data: Dictionary) -> void:
 		else:
 			# Saves from before premise arcs existed simply start with none.
 			premise_director.reset_for_new_campaign(0)
+	var checkpoint_gate_rating = data.get("gate_rating", {})
+	if is_instance_valid(gate_rating_guide):
+		gate_rating_guide.load_from_dict(checkpoint_gate_rating if checkpoint_gate_rating is Dictionary else {})
 	var checkpoint_npc_states = data.get("npc_states", {})
 	if checkpoint_npc_states is Dictionary \
 			and not (checkpoint_npc_states as Dictionary).is_empty():

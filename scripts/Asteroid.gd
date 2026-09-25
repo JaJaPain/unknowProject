@@ -12,11 +12,30 @@ const TECH_SEAM_PERCENT := 1
 const TECH_SEAM_GROUP := "tech_seam_asteroid"
 const TECH_SEAM_TINT := Color(0.85, 0.12, 0.06, 0.4)
 var tech_seam := false
+## Set by a field spawner so every field has at least one red rock.
+var force_tech_seam := false
 
 
 ## Whether the rock with this persistent id has tech-grade seams (fixed per id).
 static func is_tech_seam_id(id: String) -> bool:
 	return not id.is_empty() and posmod((id + ":tech_seam").hash(), 100) < TECH_SEAM_PERCENT
+
+
+## For a field of rocks: the id that must be a red rock so the field has at
+## least one, or "" when one already is. Deterministic, so the same rock is
+## chosen after a reload.
+static func guaranteed_tech_seam_id(ids: Array) -> String:
+	var best := ""
+	var best_score := 0
+	for raw in ids:
+		var id := str(raw)
+		if is_tech_seam_id(id):
+			return ""
+		var score := posmod((id + ":tech_seam").hash(), 1000000)
+		if best.is_empty() or score < best_score:
+			best = id
+			best_score = score
+	return best
 const FIRE_NOISE_PATH := "res://assets/T_Noise56ko.png"
 const USE_MINING_HEAT_DECAL := false
 const LOD_NEAR_DISTANCE := 900.0
@@ -79,7 +98,7 @@ func _ready():
 	if _mesh:
 		_model_index = AsteroidModels.model_index_for_seed(persistent_id.hash())
 		AsteroidModels.apply_model_index(_mesh, _model_index)
-	tech_seam = is_tech_seam_id(persistent_id)
+	tech_seam = force_tech_seam or is_tech_seam_id(persistent_id)
 	if tech_seam:
 		add_to_group(TECH_SEAM_GROUP)
 		if _mesh:

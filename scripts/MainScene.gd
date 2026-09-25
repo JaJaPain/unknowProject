@@ -95,6 +95,11 @@ func _spawn_asteroid_ring(
 ):
 	planet.set_meta("belt_clearance_y", maxf(180.0, width * 1.5 + 80.0))
 	var center := planet.global_position
+	var ids: Array = []
+	for i in range(count):
+		ids.append(prefix + "_Asteroid_" + str(i))
+	# Every field has at least one red rock (tech-grade seams).
+	var red_id: String = (load("res://scripts/Asteroid.gd") as GDScript).guaranteed_tech_seam_id(ids)
 	for i in range(count):
 		var angle = randf() * TAU
 		var offset_r = randf_range(-width / 2.0, width / 2.0)
@@ -109,6 +114,7 @@ func _spawn_asteroid_ring(
 		ast.name = prefix + "_Asteroid_" + str(i)
 		# Keep the current key for save compatibility, but assign it explicitly.
 		ast.persistent_id = ast.name
+		ast.force_tech_seam = ast.persistent_id == red_id
 		
 		# Setup orbiting variables on the asteroid
 		ast.orbit_center = center
