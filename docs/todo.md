@@ -250,7 +250,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   docking stranding the captain when the voice is slow. `--restart-smoke-test`
   needs `--baseline-offline` (or a warm model): online, the campaign bible can
   take over its 60 s budget on a cold model.
-- [ ] **Pre-existing: `tests/economy/run_consumable_tests.gd` does not compile**
+- [x] **Pre-existing: `tests/economy/run_consumable_tests.gd` does not compile** (fixed 2026-09-25: loads ConsumableEffects at runtime)
   ("Identifier not found: GlobalState" in a preloaded script; broken since
   before claude/vision-slice, found 2026-09-24). Fix with get_node lookups.
 - [ ] **Jump-tunnel writing: check in play (commit after 381b730).** The next

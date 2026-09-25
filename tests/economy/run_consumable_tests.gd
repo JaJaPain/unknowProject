@@ -1,6 +1,8 @@
 extends SceneTree
 
-const ConsumableFx = preload("res://scripts/economy/ConsumableEffects.gd")
+# Loaded at runtime: ConsumableEffects names the GlobalState autoload, which a
+# preload in a SceneTree script compiles before autoloads exist.
+var ConsumableFx: GDScript
 const PlayerInv = preload("res://scripts/economy/PlayerInventory.gd")
 
 var _failures: Array[String] = []
@@ -9,6 +11,7 @@ var _shield_cap: float = 100.0
 
 
 func _initialize() -> void:
+	ConsumableFx = load("res://scripts/economy/ConsumableEffects.gd")
 	_test_repair_kit_heals()
 	_test_repair_kit_caps_at_max()
 	_test_repair_kit_fails_at_full_hp()
