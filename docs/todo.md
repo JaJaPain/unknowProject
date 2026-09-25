@@ -215,7 +215,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   `[GenerationWindow] Jump held Xs for writing` and whether the hold ever hits
   its cap, and say whether the length feels right. If jumps routinely cap, the
   remaining work is what the dock lookahead below should take.
-- [ ] **Pre-existing noise: `Lambda capture at index 0 was freed`** from
+- [x] **Pre-existing noise: `Lambda capture at index 0 was freed`** (fixed 2026-09-24: AnomalyRegistry captures a weakref) from
   `LLMInterface.fetch_anomaly_event` (line ~7499, retried by the lambda at
   ~7528): an anomaly deferred while the campaign bible generates is retried
   after a jump freed it. Harmless (it receives null) but noisy; guard with
