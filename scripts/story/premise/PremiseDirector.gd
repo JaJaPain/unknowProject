@@ -491,6 +491,9 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 	# A twist's answer travels: taking the money or sparing a surrendered
 	# pilot is a deed the factions hear about.
 	var twist_id := str(quest_data.get("twist_id", (quest_data.get("objective", {}) as Dictionary).get("twist_id", "")))
+	# A wrong-cargo run delivered anyway is its own answer (no hail branch).
+	if twist_id == "wrong_cargo" and terminal_state == "completed" and str(quest_data.get("twist_state", "")) == "delivering":
+		branch = "deliver"
 	if not twist_id.is_empty():
 		var deed := TwistsType.deed_for(branch, str(quest_data.get("twist_target_name", "")))
 		if not deed.is_empty():

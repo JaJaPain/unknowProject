@@ -238,6 +238,14 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     drone, the red rock, rad-quartz to the mechanic, done. Every asteroid
     field now has at least one red rock. Check: is the third system the
     right place for the wall? Is the explanation clear and short enough?
+  - Mission complications (about half of story jobs): deadline, storm
+    window, advance paid, heavy escort, bigger load. Does the briefing line
+    read naturally after the contact's own words?
+  - Mission twists (about a third of story kill and courier jobs): the
+    counter-offer and surrender hails before the last kill (finish / take
+    the deal / walk away; finish / let them go), and the wrong-cargo scan a
+    minute into a courier run (deliver anyway / dump it). The answer shows
+    up as a deed on the radio. Too frequent? Hail lines right?
   - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
     Mk V 8 (+2 crystals).
   - The survey drone, the three tech-grade materials and the resonant

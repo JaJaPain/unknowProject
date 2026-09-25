@@ -1,11 +1,13 @@
 {
     "schema_version": 1,
-    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code.",
+    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code. wrong_cargo reveals a courier's sealed container mid-flight (N.O.V.A. scans it) and asks: deliver anyway, or dump it.",
     "chance": 0.35,
     "twists": [
         {
             "id": "counter_offer",
-            "verbs": ["kill_ships"],
+            "verbs": [
+                "kill_ships"
+            ],
             "kind": "bribe",
             "bribe_share": 1.3,
             "hails": [
@@ -17,7 +19,9 @@
         },
         {
             "id": "surrender",
-            "verbs": ["kill_ships"],
+            "verbs": [
+                "kill_ships"
+            ],
             "kind": "surrender",
             "spare_share": 0.6,
             "hails": [
@@ -25,6 +29,25 @@
                 "Stop, please. I surrender. My drives are dead and I've got people waiting for me. You don't have to do this.",
                 "All right, it's over, I yield. Shields down, guns off. I'll leave this system and never come back. Just let me live.",
                 "Don't. I'm done, I'm out. Whatever {requester} told you about me, I'm not worth the shot."
+            ]
+        },
+        {
+            "id": "wrong_cargo",
+            "verbs": [
+                "delivery_courier"
+            ],
+            "kind": "wrong_cargo",
+            "true_cargo": [
+                "military targeting cores",
+                "stolen medical stock",
+                "an unlicensed reactor seed",
+                "encrypted blackmail archives",
+                "weapon parts with the serials burned off"
+            ],
+            "hails": [
+                "Captain, the mass on that container is wrong for {item}. I scanned it. It's {true_cargo}. {requester} didn't mention that.",
+                "I don't like surprises, so here's one I found: that sealed crate isn't {item}. It's {true_cargo}.",
+                "Before we get there: the manifest says {item}. The scan says {true_cargo}. One of those is lying, and it isn't the scanner."
             ]
         }
     ]

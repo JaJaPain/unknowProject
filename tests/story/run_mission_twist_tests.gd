@@ -12,6 +12,11 @@ const Adapter := preload("res://scripts/domain/MissionAdapter.gd")
 var _failures: Array[String] = []
 
 
+class FakeShip extends CharacterBody3D:
+	var is_docked := false
+	var destroyed := false
+
+
 func _kill_offer() -> Dictionary:
 	return {"title": "Stop the Raven", "faction": "neutral", "agent_name": "Vessa Orl", "dialogue": "Stop them.",
 		"objective": {"type": "KILL_SHIPS", "target_faction": "reavers", "count_required": 3, "reward_credits": 400},
@@ -70,6 +75,44 @@ func _initialize() -> void:
 		qm.resolve_comms_branch("spare")
 		_check(gs.player_credits == credits + 240 and not qm.is_quest_active(), "sparing pays part of the fee and closes the job")
 		_check(str(finished[0].get("outcome_detail", "")) == "spared" and str(finished[0].get("twist_target_name", "")) == "the Raven", "and reports it: %s" % str(finished[0].get("outcome_detail")))
+
+	# Wrong cargo: a courier crate that is not what the manifest says.
+	var cargo_t: Dictionary = by_id["wrong_cargo"]
+	cargo_t["hail"] = cargo_t["hails"][0]
+	cargo_t["true_cargo_pick"] = "military targeting cores"
+	var courier_offer := {"title": "Courier to Kova", "faction": "neutral", "agent_name": "Vessa Orl", "dialogue": "Move it.",
+		"objective": {"type": "DELIVERY_COURIER", "item_name": "Grain samples", "origin_station_id": "station.a", "origin_display": "A",
+			"destination_station_id": "station.b", "destination_display": "B", "reward_credits": 300},
+		"choices": _kill_offer()["choices"]}
+	var wrong := Twists.apply(courier_offer, cargo_t, "Vessa Orl", "")
+	_check(str(wrong["objective"]["twist_reveal"]).contains("Grain samples") and str(wrong["objective"]["twist_reveal"]).contains("military targeting cores"), "the reveal names both: %s" % wrong["objective"]["twist_reveal"])
+	var ship := FakeShip.new()
+	root.add_child(ship)
+	var saved_player = gs.player
+	gs.player = ship
+	for choice in ["deliver", "dump"]:
+		qm.restore_active_quest({})
+		gs.clear_cargo()
+		var ok: bool = qm.accept_quest(wrong, wrong["choices"][0])
+		_check(ok, "the courier job is accepted: %s" % qm.last_validation_error)
+		if not ok:
+			continue
+		var revealed := [{}]
+		qm.cargo_twist_triggered.connect(func(d: Dictionary) -> void: revealed[0] = d, CONNECT_ONE_SHOT)
+		qm._tick_cargo_twist(30.0)
+		_check(revealed[0].is_empty(), "not yet: half a minute in")
+		qm._tick_cargo_twist(31.0)
+		_check(str(revealed[0].get("twist_state", "")) == "revealed", "a minute into the flight N.O.V.A. scans the crate")
+		qm.resolve_cargo_twist(choice)
+		if choice == "deliver":
+			_check(qm.is_quest_active() and str(qm.active_quest.get("twist_state", "")) == "delivering", "delivering it keeps the job")
+		else:
+			_check(not qm.is_quest_active(), "dumping it ends the job")
+	gs.player = saved_player
+	ship.free()
+	qm.restore_active_quest({})
+	gs.clear_cargo()
+	_check(Twists.deed_for("deliver", "Vessa Orl")["tag"] == "smuggled_undeclared_cargo", "running it anyway leaves a deed")
 
 	# Story: a bribe on a kill job means the target got away.
 	var mission := {"verb": "kill_ships", "outcome_tags": ["raven_stopped", "raven_escaped"]}

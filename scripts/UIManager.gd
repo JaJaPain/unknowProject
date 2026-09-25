@@ -529,6 +529,7 @@ func _ready():
 	QuestManager.quest_abandoned.connect(_on_quest_abandoned)
 	QuestManager.quest_expired.connect(_on_quest_expired)
 	QuestManager.comms_reversal_triggered.connect(_on_comms_reversal_triggered)
+	QuestManager.cargo_twist_triggered.connect(_on_cargo_twist_triggered)
 	
 	_create_hud()
 	_create_target_panel()
@@ -14164,6 +14165,41 @@ func _show_comms_hail(mission_data: Dictionary) -> void:
 	comms_hail_panel.visible = true
 
 	SpeechService.play(comms_line, faction)
+
+
+## Wrong-cargo twist: N.O.V.A. has scanned the courier's sealed crate. Reuses
+## the hail panel, with her line and a deliver-or-dump choice.
+func _on_cargo_twist_triggered(mission_data: Dictionary) -> void:
+	var reveal := str(mission_data.get("twist_reveal", ""))
+	if reveal.is_empty():
+		reveal = "Captain, that crate is not what the manifest says."
+	comms_hail_message.text = reveal
+	comms_hail_portrait.visible = false
+	for child in comms_hail_choices_container.get_children():
+		child.queue_free()
+	var client := str(mission_data.get("twist_target_name", "the client"))
+	var choices := [
+		{"id": "deliver", "text": "Deliver it anyway. Full pay, no questions.", "color": Color(1.0, 0.75, 0.3)},
+		{"id": "dump", "text": "Dump it. The job with %s is off." % client, "color": Color(0.6, 0.8, 1.0)},
+	]
+	for choice in choices:
+		var btn := Button.new()
+		btn.text = str(choice["text"])
+		btn.add_theme_color_override("font_color", choice["color"])
+		btn.add_theme_color_override("font_hover_color", Color(1.0, 1.0, 1.0))
+		var choice_id: String = str(choice["id"])
+		btn.pressed.connect(func():
+			comms_hail_panel.visible = false
+			QuestManager.resolve_cargo_twist(choice_id)
+			var reply := "Delivering it. I'll pretend I never looked."
+			if choice_id == "dump":
+				reply = "Crate's gone. So is the job. I feel lighter already."
+			add_chat_message("N.O.V.A.", reply, Color(0.5, 0.95, 0.85))
+		)
+		comms_hail_choices_container.add_child(btn)
+	comms_hail_panel.visible = true
+	if is_instance_valid(Nova) and Nova.has_method("ask_captain"):
+		Nova.ask_captain(reveal, "mystery")
 
 
 func _resolve_comms_hail(branch_id: String) -> void:

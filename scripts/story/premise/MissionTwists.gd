@@ -21,6 +21,7 @@ const REVERSAL_OBJECTIVE := "TARGET_WITH_COMMS_REVERSAL"
 const DEEDS := {
 	"accept_bribe": {"tag": "sold_out_contract", "summary": "A pilot took {target}'s money and let them go."},
 	"spare": {"tag": "spared_surrendered_target", "summary": "A pilot spared {target} after they surrendered."},
+	"deliver": {"tag": "smuggled_undeclared_cargo", "summary": "A pilot ran undeclared cargo for {target} and asked no questions."},
 }
 
 static var _deck: Dictionary = {}
@@ -52,13 +53,17 @@ static func roll(verb: String, seed_key: String) -> Dictionary:
 	var twist: Dictionary = (options[rng.randi() % options.size()] as Dictionary).duplicate(true)
 	var hails: Array = twist.get("hails", [])
 	twist["hail"] = str(hails[rng.randi() % hails.size()]) if not hails.is_empty() else ""
+	var cargo: Array = twist.get("true_cargo", [])
+	twist["true_cargo_pick"] = str(cargo[rng.randi() % cargo.size()]) if not cargo.is_empty() else ""
 	return twist
 
 
-## Turns a composed kill offer into its twisted form (returns a new offer).
+## Turns a composed offer into its twisted form (returns a new offer).
 static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, target_name: String) -> Dictionary:
 	if twist.is_empty():
 		return offer
+	if str(twist.get("kind", "")) == "wrong_cargo":
+		return _apply_wrong_cargo(offer, twist, requester_name)
 	var out := offer.duplicate(true)
 	var objective: Dictionary = out.get("objective", {})
 	var reward := int(objective.get("reward_credits", 0))
@@ -71,6 +76,24 @@ static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, 
 	objective["comms_reversal_line"] = str(twist.get("hail", "")).replace("{requester}", who).replace("{target}", target)
 	objective["bribe_amount"] = int(round(reward * float(twist.get("bribe_share", 1.3))))
 	objective["spare_amount"] = int(round(reward * float(twist.get("spare_share", 0.6))))
+	out["objective"] = objective
+	out["twist_id"] = str(twist.get("id", ""))
+	return out
+
+
+## A courier job whose sealed container is not what the manifest says. The
+## objective stays a courier run; N.O.V.A. scans the crate a minute into
+## the flight (QuestManager) and asks: deliver anyway, or dump it.
+static func _apply_wrong_cargo(offer: Dictionary, twist: Dictionary, requester_name: String) -> Dictionary:
+	var out := offer.duplicate(true)
+	var objective: Dictionary = out.get("objective", {})
+	var item := str(objective.get("item_name", "the cargo"))
+	var true_cargo := str(twist.get("true_cargo_pick", "something else"))
+	var who := requester_name if not requester_name.is_empty() else "the client"
+	objective["twist_id"] = str(twist.get("id", ""))
+	objective["twist_true_cargo"] = true_cargo
+	objective["twist_reveal"] = str(twist.get("hail", "")).replace("{item}", item).replace("{true_cargo}", true_cargo).replace("{requester}", who)
+	objective["twist_target_name"] = who
 	out["objective"] = objective
 	out["twist_id"] = str(twist.get("id", ""))
 	return out

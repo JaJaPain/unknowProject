@@ -200,6 +200,13 @@ static func build_active_state(
 				)
 			)
 			state["cargo_loaded"] = true
+			# Wrong-cargo twist (MissionTwists): revealed mid-flight.
+			state["twist_id"] = str(objective.get("twist_id", ""))
+			state["twist_state"] = "pending" if not str(state["twist_id"]).is_empty() else ""
+			state["twist_flight_s"] = 0.0
+			state["twist_true_cargo"] = str(objective.get("twist_true_cargo", ""))
+			state["twist_reveal"] = str(objective.get("twist_reveal", ""))
+			state["twist_target_name"] = str(objective.get("twist_target_name", ""))
 		"PURCHASE_DELIVERY":
 			state["item_id"] = str(objective.get("item_id", ""))
 			state["item_name"] = str(objective.get("item_name", ""))
@@ -462,6 +469,12 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			normalized["cargo_loaded"] = bool(
 				normalized.get("cargo_loaded", true)
 			)
+			normalized["twist_id"] = str(normalized.get("twist_id", ""))
+			normalized["twist_state"] = str(normalized.get("twist_state", ""))
+			normalized["twist_flight_s"] = maxf(0.0, float(normalized.get("twist_flight_s", 0.0)))
+			normalized["twist_true_cargo"] = str(normalized.get("twist_true_cargo", ""))
+			normalized["twist_reveal"] = str(normalized.get("twist_reveal", ""))
+			normalized["twist_target_name"] = str(normalized.get("twist_target_name", ""))
 		"PURCHASE_DELIVERY":
 			normalized["quantity_required"] = max(
 				1,

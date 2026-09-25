@@ -66,6 +66,12 @@ var _investigation_world_elapsed := 0.0
 var _terminal_in_progress: Dictionary = {}
 var _terminal_depth: int = 0
 signal investigation_scan_updated(report: Dictionary)
+## A courier's sealed container turned out not to be what the manifest says
+## (MissionTwists wrong_cargo): the UI asks deliver anyway or dump it.
+signal cargo_twist_triggered(mission_data: Dictionary)
+## Seconds of undocked flight with the cargo aboard before N.O.V.A. scans it.
+const CARGO_TWIST_AFTER_SECONDS := 60.0
+var _cargo_twist_prompted := {}
 
 func begin_investigation_scan(mission_id: String, site_id: String) -> Dictionary:
 	return _investigation_runtime.begin_scan(self, mission_id, site_id)
@@ -77,6 +83,7 @@ func dispatch_investigation_command(command: Dictionary) -> Dictionary:
 	return _investigation_runtime.dispatch(self, command)
 
 func _physics_process(delta: float) -> void:
+	_tick_cargo_twist(delta)
 	var scan_mission_id := str(_investigation_runtime._scan.get("mission_id", ""))
 	var report := _investigation_runtime.tick(self, delta)
 	if not report.is_empty():
@@ -107,6 +114,49 @@ func spawn_investigation_ambush(mission_id: String, at: Vector3) -> void:
 		var angle: float = (TAU / count) * i
 		npc.global_position = at + Vector3(cos(angle), 0.0, sin(angle)) * 160.0
 	print("[QuestManager] Lure ambush for %s: %d raiders at the cache." % [mission_id, count])
+
+
+## Counts undocked flight for a focused courier job with a pending wrong-cargo
+## twist, then reveals it. A revealed twist not yet answered (for example
+## after a reload) is asked again.
+func _tick_cargo_twist(delta: float) -> void:
+	var focused = _collection.get_focused()
+	if focused == null or get_tree().paused:
+		return
+	if str(focused.data.get("objective_type", "")) != "DELIVERY_COURIER" or str(focused.data.get("twist_id", "")) != "wrong_cargo":
+		return
+	var twist_state := str(focused.data.get("twist_state", ""))
+	if twist_state == "revealed":
+		if not _cargo_twist_prompted.has(focused.runtime_id):
+			_cargo_twist_prompted[focused.runtime_id] = true
+			cargo_twist_triggered.emit(focused.data.duplicate(true))
+		return
+	if twist_state != "pending":
+		return
+	var player = GlobalState.player
+	if not is_instance_valid(player) or player.get("is_docked") == true or player.get("destroyed") == true:
+		return
+	focused.data["twist_flight_s"] = float(focused.data.get("twist_flight_s", 0.0)) + delta
+	if float(focused.data["twist_flight_s"]) >= CARGO_TWIST_AFTER_SECONDS:
+		focused.data["twist_state"] = "revealed"
+		_cargo_twist_prompted[focused.runtime_id] = true
+		cargo_twist_triggered.emit(focused.data.duplicate(true))
+		quest_progress_updated.emit()
+
+
+## The captain's answer: "deliver" keeps the job (and leaves a deed at the
+## end); "dump" jettisons the crate and the job is abandoned.
+func resolve_cargo_twist(choice: String) -> void:
+	var focused = _collection.get_focused()
+	if focused == null or str(focused.data.get("twist_state", "")) != "revealed":
+		return
+	match choice:
+		"deliver":
+			focused.data["twist_state"] = "delivering"
+			quest_progress_updated.emit()
+		"dump":
+			focused.data["twist_state"] = "dumped"
+			abandon_quest()
 
 
 func reconcile_investigation_sites() -> void:
