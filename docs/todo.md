@@ -218,10 +218,16 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     flight; T opens the scope and dials. Too easy or too hard? Is the hiss too
     loud? Does the garbled intercept read and sound right?
   - Drone maze: target a close asteroid or wreck, G. Needs a Piloted Survey
-    Drone (store consumable, 60 cr, max 3 aboard; one per flight). Check the
-    look (noise rock, crystals, headlight, fog), controls, knock feel, the
-    clock, and that the game unpauses afterwards. Pay: seam 70, salvage 55,
-    clean bonus 60 (tune after play).
+    Drone (150 cr, max 3 aboard, used up every flight). Asteroids are narrow
+    organic cracks with fragile ore: every hard knock costs hull, and with
+    ore aboard cracks 20% of its value; ore only comes loose while holding
+    still. Pay: seam 90, salvage 70 (scaled by surviving ore), clean bonus
+    80, 35% chance of a ship part per seam. A clean run with ore 80%+ whole
+    gives a resonant crystal. Check: look, controls, crack width (too tight?),
+    knock feel, clock, the short "lowering the drone" wait, unpause after.
+  - Upgrades: tier 3 needs a ship part, tier 4 two, tier 5 two plus a
+    resonant crystal. Is that the right gate? Stores sell parts; crystals
+    only come from the maze.
   - The survey drone borrows the salvage drone's store icon: add its own icon
     to the image-needs list.
 - [ ] **Pre-existing: `tests/economy/run_consumable_tests.gd` does not compile**
