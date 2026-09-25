@@ -343,8 +343,18 @@ func _ensure_comms_bus() -> void:
 	crunch.mode = AudioEffectDistortion.MODE_OVERDRIVE
 	crunch.drive = 0.18
 	crunch.pre_gain = 2.0
-	crunch.post_gain = -3.0
+	crunch.post_gain = 0.0
 	AudioServer.add_bus_effect(idx, crunch)
+	# The band-pass strips much of a voice's energy, so radio lines sounded
+	# quiet next to ordinary speech (Abe, 2026-09-24). A compressor with makeup
+	# gain brings them back up, evenly, the way a real comms channel sounds.
+	var level := AudioEffectCompressor.new()
+	level.threshold = -20.0
+	level.ratio = 4.0
+	level.attack_us = 5000.0
+	level.release_ms = 150.0
+	level.gain = 9.0
+	AudioServer.add_bus_effect(idx, level)
 
 
 func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0, pause_seconds: float = -1.0):

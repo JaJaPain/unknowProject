@@ -21,6 +21,12 @@ func _initialize() -> void:
 				if AudioServer.get_bus_effect(idx, i) is AudioEffectBandPassFilter:
 					has_band = true
 			_check(has_band, "the comms bus is band-limited")
+			var has_makeup := false
+			for i in AudioServer.get_bus_effect_count(idx):
+				var fx = AudioServer.get_bus_effect(idx, i)
+				if fx is AudioEffectCompressor and fx.gain > 0.0:
+					has_makeup = true
+			_check(has_makeup, "the comms bus makes up the level the filter removes")
 		var speech := root.get_node_or_null("SpeechService")
 		_check(speech != null, "SpeechService autoload is present")
 		if speech != null:
