@@ -253,6 +253,14 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     them over about 4 minutes of flight; lose and the job expires). Some
     card private facts read as narration ("The pilot realizes...") when
     N.O.V.A. says them; worth a wording pass in the card brief.
+  - Recurring cast in person: about 3 in 10 arrivals (never two within 3
+    jumps, the same face not within 8), 25-55 s into calm flight, someone
+    from an earlier story hails in their own voice naming where you met.
+    Bitter: a hostile ship with their name comes at you (destroy it and the
+    feud ends for good, a deed). Warm: credits or a survey drone. Needs a
+    campaign long enough for stories to have ended. Right rate? Should a
+    bitter one sometimes bring friends? Scars on their ship wait for the
+    visual pass.
   - Leverage: a client's lie or smuggled cargo revealed by a twist is kept
     ("I kept a copy of that"); on the contract board, "Leverage (n)" lists
     it: sell to a broker, expose to the most law-minded local faction

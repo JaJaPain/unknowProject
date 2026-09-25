@@ -38,6 +38,7 @@ const FaintType := preload("res://scripts/story/activities/FaintTransmissions.gd
 const TwistsType := preload("res://scripts/story/premise/MissionTwists.gd")
 const FalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
 const LeverageType := preload("res://scripts/story/premise/Leverage.gd")
+const EncountersType := preload("res://scripts/story/premise/RecurringEncounters.gd")
 const FactionDNAType := preload("res://scripts/story/premise/FactionDNA.gd")
 
 const SAVE_VERSION := 1
@@ -321,6 +322,23 @@ func record_failure(quest_data: Dictionary, terminal_state: String, now_minute: 
 	records.append(f)
 	state["fallout"] = records
 	return f
+
+
+## The captain arrived in a system: maybe someone from an earlier story comes
+## to find them (RecurringEncounters). Returns the encounter, or {}.
+func on_arrival_encounter(system_id: String) -> Dictionary:
+	if not enabled:
+		return {}
+	var result := EncountersType.on_arrival(state, state.get("encounters", {}), _system_names,
+		hash("%d|%s" % [campaign_seed, system_id]))
+	state["encounters"] = result["log"]
+	return result["encounter"]
+
+
+## A bitter old contact came after the captain and was destroyed: the feud is
+## over for good.
+func end_feud(person_id: String, display_name: String, system_id: String) -> void:
+	state = EncountersType.feud_ended(state, person_id, display_name, system_id)
 
 
 ## A reveal twist showed the captain a client's secret: keep it as leverage.

@@ -181,6 +181,7 @@ var generation_window: Node = null
 var signal_tuning_activity: Node = null
 var drone_maze_activity: Node = null
 var gate_rating_guide: Node = null
+var recurring_encounter_runner: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
 # Requester IDs whose N.O.V.A. bank has already had its generated categories
@@ -1289,6 +1290,7 @@ const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const SignalTuningActivityType := preload("res://scripts/story/activities/SignalTuningActivity.gd")
 const DroneMazeActivityType := preload("res://scripts/story/activities/DroneMazeActivity.gd")
 const GateRatingGuideType := preload("res://scripts/story/GateRatingGuide.gd")
+const RecurringEncounterRunnerType := preload("res://scripts/story/RecurringEncounterRunner.gd")
 const PremiseFalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
 const StoreDefinitionForFallout := preload("res://scripts/economy/StoreDefinition.gd")
 const GenerationWindowType := preload("res://scripts/ai/GenerationWindow.gd")
@@ -1352,6 +1354,11 @@ func _init_premise_director() -> void:
 	gate_rating_guide = GateRatingGuideType.new()
 	gate_rating_guide.name = "GateRatingGuide"
 	add_child(gate_rating_guide)
+	# The recurring cast in person: old grudges and old debts find the captain.
+	recurring_encounter_runner = RecurringEncounterRunnerType.new()
+	recurring_encounter_runner.name = "RecurringEncounterRunner"
+	recurring_encounter_runner.director = premise_director
+	add_child(recurring_encounter_runner)
 	# System radio: one item every couple of minutes (voiced later; comms feed now).
 	var radio_timer := Timer.new()
 	radio_timer.name = "PremiseRadioTimer"
