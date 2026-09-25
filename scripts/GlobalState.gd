@@ -2492,9 +2492,9 @@ func get_current_power_draw() -> float:
 ## stuff the upgraded parts are manufactured from, parts that must survive
 ## heat from the power plant, engines and guns (thermal lattice), long
 ## radiation exposure (rad-quartz), and the extreme temperature swings of
-## space (cryo-ferrite). A few per tier; no station sells them, so the
-## captain mines them from asteroid cracks (the drone maze). Tier 5 also
-## needs a resonant crystal. Materials are fitted into the ship, so a refund
+## space (cryo-ferrite). No station sells them, so the captain mines them
+## from asteroid cracks (the drone maze). The top tiers also need resonant
+## crystals. Materials are fitted into the ship, so a refund
 ## never returns them.
 const UPGRADE_MATERIALS := {
 	"weapons": "thermal_lattice", "engine": "thermal_lattice", "power": "thermal_lattice",
@@ -2505,13 +2505,19 @@ const TOP_TIER_MATERIAL := "resonant_crystal"
 
 
 ## {item_id: quantity} a tier needs besides credits and ore.
+## The grind climbs steeply (Abe, 2026-09-25): the first upgrade is cheap-ish
+## and each one after roughly doubles, like the credit costs. Tune here.
+const MATERIALS_BY_TIER := {2: 1, 3: 2, 4: 4, 5: 8}
+const CRYSTALS_BY_TIER := {4: 1, 5: 2}
+
+
 static func upgrade_material_cost(sys: String, tier: int) -> Dictionary:
 	var part := str(UPGRADE_MATERIALS.get(sys, ""))
-	if part.is_empty() or tier < 3:
+	if part.is_empty() or not MATERIALS_BY_TIER.has(tier):
 		return {}
-	var out := {part: 1 if tier == 3 else 2}
-	if tier >= 5:
-		out[TOP_TIER_MATERIAL] = 1
+	var out := {part: int(MATERIALS_BY_TIER[tier])}
+	if CRYSTALS_BY_TIER.has(tier):
+		out[TOP_TIER_MATERIAL] = int(CRYSTALS_BY_TIER[tier])
 	return out
 
 

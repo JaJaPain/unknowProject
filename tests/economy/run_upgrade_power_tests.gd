@@ -32,7 +32,7 @@ func _reset_with_resources() -> void:
 	_state.player_storage_ore = 10000.0
 	# Tier 3+ also needs tech-grade material (tier 5 a resonant crystal).
 	for item in ["thermal_lattice", "rad_quartz", "cryo_ferrite", "resonant_crystal"]:
-		_state.inventory.add(item, 10, 99)
+		_state.inventory.add(item, 60, 99)
 
 
 func _test_baseline_power_budget() -> void:

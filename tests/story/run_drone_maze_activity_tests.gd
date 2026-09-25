@@ -147,11 +147,11 @@ func _initialize() -> void:
 	_check(gs.inventory.get_quantity("survey_drone") == drones_before + 1, "a lucky one does")
 	gs.inventory.remove("survey_drone", 1)
 
-	# Upgrades: tier 3 and up need tech-grade material; tier 5 the crystal too.
-	_check(gs.upgrade_material_cost("weapons", 2).is_empty(), "tier 2 needs no material")
-	_check(gs.upgrade_material_cost("weapons", 3) == {"thermal_lattice": 1}, "tier 3 needs one")
-	_check(gs.upgrade_material_cost("shields", 4) == {"rad_quartz": 2}, "tier 4 needs two")
-	_check(gs.upgrade_material_cost("cargo", 5) == {"cryo_ferrite": 2, "resonant_crystal": 1}, "tier 5 needs the crystal")
+	# Upgrades: tech-grade material at every tier, doubling; crystals at the top.
+	_check(gs.upgrade_material_cost("weapons", 2) == {"thermal_lattice": 1}, "the first upgrade is cheap-ish")
+	_check(gs.upgrade_material_cost("weapons", 3) == {"thermal_lattice": 2}, "the next costs more")
+	_check(gs.upgrade_material_cost("shields", 4) == {"rad_quartz": 4, "resonant_crystal": 1}, "and more")
+	_check(gs.upgrade_material_cost("cargo", 5) == {"cryo_ferrite": 8, "resonant_crystal": 2}, "and keeps going up")
 	gs.player = null  # the fake ship has no health for the stat refresh
 	var saved_upgrades: Dictionary = gs.current_upgrades.duplicate(true)
 	var saved_credits: int = gs.player_credits
@@ -161,7 +161,8 @@ func _initialize() -> void:
 	gs.player_storage_ore = 10000.0
 	gs.power_capacity = 100000
 	gs.inventory.remove("thermal_lattice", gs.inventory.get_quantity("thermal_lattice"))
-	_check(not gs.purchase_upgrade("weapons", "rapid"), "no material, no tier 3")
+	gs.inventory.add("thermal_lattice", 1, 10)
+	_check(not gs.purchase_upgrade("weapons", "rapid"), "one short, no tier 3")
 	gs.inventory.add("thermal_lattice", 1, 10)
 	_check(gs.purchase_upgrade("weapons", "rapid") and gs.inventory.get_quantity("thermal_lattice") == 0, "the material is used")
 	gs.current_upgrades = saved_upgrades

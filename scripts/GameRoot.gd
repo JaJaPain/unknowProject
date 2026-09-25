@@ -8845,7 +8845,8 @@ func _run_economy_smoke_test() -> void:
 
 	var asteroid: Node = null
 	for candidate in get_tree().get_nodes_in_group("asteroid"):
-		if get_active_system_root().is_ancestor_of(candidate):
+		# Red rocks (tech-grade seams) shatter under a laser; mine an ordinary one.
+		if get_active_system_root().is_ancestor_of(candidate) and not candidate.is_in_group("tech_seam_asteroid"):
 			asteroid = candidate
 			break
 	if not asteroid:
@@ -8910,6 +8911,9 @@ func _run_economy_smoke_test() -> void:
 
 	GlobalState.player_credits = 2000
 	GlobalState.player_storage_ore = 250.0
+	# Every upgrade also needs tech-grade material (one each at Mk II).
+	GlobalState.inventory.add("thermal_lattice", 2, 99)
+	GlobalState.inventory.add("rad_quartz", 1, 99)
 	if not GlobalState.purchase_upgrade("power", "standard") \
 			or int(GlobalState.current_upgrades["power"]["tier"]) != 2 \
 			or not is_equal_approx(GlobalState.power_capacity, 350.0):

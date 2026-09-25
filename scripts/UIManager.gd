@@ -15696,6 +15696,9 @@ func _on_su_slot_pressed(slot: String) -> void:
 			var cost_c = data["cost_cr"]
 			var cost_o = data["cost_ore"]
 			btn.text = "Install %s Mk II\nCost: %d CR, %d Ore\nDraw: %d MW" % [path.capitalize(), cost_c, cost_o, pwr]
+			var first_parts := _upgrade_materials_text(slot, 2)
+			if not first_parts.is_empty():
+				btn.text += "\nTech-grade: " + first_parts
 			btn.pressed.connect(func(): _attempt_upgrade(slot, path))
 			su_ship_sys_vbox.add_child(btn)
 	else:
