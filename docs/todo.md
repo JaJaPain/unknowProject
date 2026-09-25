@@ -209,6 +209,24 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - Premise-card investigations (commit de83537): accept one from the board,
     find the scan sites near the story's station, scan both, resolve, turn in
     at the main station, then answer the story's finding on the board.
+- [ ] **Activities and investigations, 2026-09-24** (claude/vision-slice; green
+  headless, never seen in the running game):
+  - Transmitter lure (commit to extraction, fly to the cache, hold; a forged
+    beacon brings two raiders) and unstable archive (repair kit or rebuild).
+    N.O.V.A. asks the decision after each scan.
+  - Signal tuning: N.O.V.A. mentions a faint transmission 40-110 s into
+    flight; T opens the scope and dials. Too easy or too hard? Is the hiss too
+    loud? Does the garbled intercept read and sound right?
+  - Drone maze: target a close asteroid or wreck, G. Needs a Piloted Survey
+    Drone (store consumable, 60 cr, max 3 aboard; one per flight). Check the
+    look (noise rock, crystals, headlight, fog), controls, knock feel, the
+    clock, and that the game unpauses afterwards. Pay: seam 70, salvage 55,
+    clean bonus 60 (tune after play).
+  - The survey drone borrows the salvage drone's store icon: add its own icon
+    to the image-needs list.
+- [ ] **Pre-existing: `tests/economy/run_consumable_tests.gd` does not compile**
+  ("Identifier not found: GlobalState" in a preloaded script; broken since
+  before claude/vision-slice, found 2026-09-24). Fix with get_node lookups.
 - [ ] **Jump-tunnel writing: check in play (commit after 381b730).** The next
   system's writing now starts inside the tunnel and the jump holds (up to 30 s,
   N.O.V.A. remarks after 8 s) while it finishes. Watch the console for

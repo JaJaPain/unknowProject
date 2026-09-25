@@ -359,6 +359,22 @@
             ]
         },
         {
+            "item_id": "survey_drone",
+            "display_name": "Piloted Survey Drone",
+            "description": "Fly it yourself into an asteroid or a wreck (target it, press G). Used up on launch.",
+            "category": "consumable",
+            "base_price": 60,
+            "stack_max": 3,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 1,
+            "max_stock": 2,
+            "icon_sheet": "tactical",
+            "icon_cell": [
+                0,
+                2
+            ]
+        },
+        {
             "item_id": "neon_sign",
             "display_name": "Neon Sign",
             "description": "\"Slightly used. Great ambience.\"",

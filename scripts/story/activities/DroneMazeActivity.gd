@@ -7,7 +7,9 @@ extends Node
 ## Asteroids hold crystal seams, sold as rare samples. Wrecks hold salvage,
 ## and when a story in this system left a clue in a wreck, a flight recorder:
 ## bringing it home puts the clue on the Loose ends board.
-## A drone lost to the walls or the clock costs a replacement.
+## Every flight uses up one piloted survey drone (a store consumable), home
+## or lost (Abe, 2026-09-24): that keeps the maze a treat rather than the
+## whole game. A lost drone also loses its load.
 
 const ViewType := preload("res://scripts/ui/DroneMazeView.gd")
 const Maze := preload("res://scripts/story/activities/DroneMazeModel.gd")
@@ -16,13 +18,13 @@ const LAUNCH_KEY := KEY_G
 const LAUNCH_RANGE := 300.0
 const PAY := {"mineral": 70, "salvage": 55, "recorder": 0}
 const CLEAN_BONUS := 60
-const REPLACEMENT_COST := 60
+const DRONE_ITEM := "survey_drone"
 
 const RESULT_LINES := {
 	"clean": ["Everything's aboard. Nicely flown.", "Full haul, and the drone's still in one piece. I'm almost impressed."],
 	"partial": ["Drone's home with part of it. Better than nothing.", "Some of it. The rest can stay in the dark."],
 	"failed_empty": ["Drone's home, hands empty.", "Nothing worth the trip. The drone's back, at least."],
-	"lost": ["Lost the drone. I've ordered another. It's coming out of the budget.", "Signal's gone. So is the drone. And everything it was carrying."],
+	"lost": ["Lost the drone, and everything it was carrying.", "Signal's gone. So is the drone. And its load."],
 	"recorder": ["The recorder's intact. I'm putting what's on it on the loose ends board.", "Got the flight recorder. There's something on it you'll want to see."],
 }
 
@@ -45,7 +47,9 @@ func _process(_delta: float) -> void:
 			_hinted[id] = true
 			var gs := get_node_or_null("/root/GlobalState")
 			if gs != null:
-				gs.emit_chatter("DRONE BAY", "Press G to fly the drone inside.", Color(0.5, 0.95, 0.85))
+				var drones := drones_aboard()
+				var hint := "Press G to fly a survey drone inside (%d aboard)." % drones if drones > 0 					else "A piloted survey drone could get inside. Stations sell them."
+				gs.emit_chatter("DRONE BAY", hint, Color(0.5, 0.95, 0.85))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -53,8 +57,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var key := event as InputEventKey
 	if key.pressed and not key.echo and key.physical_keycode == LAUNCH_KEY and eligible_target() != null:
-		launch(eligible_target())
 		get_viewport().set_input_as_handled()
+		if not launch(eligible_target()):
+			var gs := get_node_or_null("/root/GlobalState")
+			if gs != null:
+				gs.emit_chatter("DRONE BAY", "No survey drones aboard. Stations sell them.", Color(1.0, 0.6, 0.4))
+
+
+func drones_aboard() -> int:
+	var gs := get_node_or_null("/root/GlobalState")
+	return int(gs.inventory.get_quantity(DRONE_ITEM)) if gs != null and gs.inventory != null else 0
 
 
 ## The targeted asteroid or wreck, close enough and not yet worked, or null.
@@ -92,7 +104,11 @@ static func _id_for(node: Node) -> String:
 	return pid if not pid.is_empty() else "node.%d" % node.get_instance_id()
 
 
-func launch(target: Node3D) -> void:
+## Spends one drone and sends it in. False (and nothing spent) without one.
+func launch(target: Node3D) -> bool:
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null or gs.inventory == null or not gs.inventory.remove(DRONE_ITEM, 1):
+		return false
 	var kind := kind_of(target)
 	_worked[_id_for(target)] = true
 	_target_ref = weakref(target)
@@ -105,6 +121,7 @@ func launch(target: Node3D) -> void:
 	add_child(_view)
 	_view.finished.connect(_on_finished)
 	_view.begin(hash(_id_for(target)) ^ randi(), kind, not _recorder_item.is_empty())
+	return true
 
 
 ## Pays out and reports. Public so tests can feed a finished state.
@@ -114,10 +131,7 @@ func _on_finished(outcome_id: String, state: Dictionary) -> void:
 	var lost := str(state.get("end", "")) in ["wrecked", "timed_out"]
 	if lost:
 		if gs != null:
-			var cost := mini(REPLACEMENT_COST, int(gs.player_credits))
-			if cost > 0:
-				gs.add_credits(-cost)
-			gs.emit_chatter("DRONE BAY", "Drone lost with its load. Replacement: %d credits." % cost, Color(1.0, 0.5, 0.4))
+			gs.emit_chatter("DRONE BAY", "Drone lost with its load.", Color(1.0, 0.5, 0.4))
 		_nova(_line("lost"))
 		return
 	var pay := 0

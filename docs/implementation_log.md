@@ -22,7 +22,8 @@
 
 - Waiting on Abe's next play session: `[GenerationWindow] Jump held Xs for writing` lines (do jumps hit the 30 s cap?) and the per-dock model-call ledger. That decides whether the dock lookahead (write ahead for the next system while docked) is needed; it would require building the destination system in the background (the arrival prefetch reads the ACTIVE system's stations/factions).
 - Done 2026-09-24: all four investigation recipes run (e27de0a). Card investigations split 80 survey / 12 archive / 11 lure; competing claims rarely wins the keyword match (lure/archive words are checked first).
-- Next core candidates: activities (signal tuning, drone micro-mining maze) for Abe to test.
+- Done 2026-09-24: N.O.V.A. asks the investigation decisions; signal tuning (T) overhears story threads or sells chatter; the drone maze (G at a close asteroid or wreck) uses one Piloted Survey Drone per flight (Abe: consumable, to limit it) and a wreck's recorder can carry a story thread. Playtest list in docs/todo.md.
+- Next core candidates: card brief/validator verbs for the new activities (so Gemini writes reasons for eavesdrop and drone salvage); the image-needs JSON and ChatGPT prompt.
 - Verify in the next play: TTS server ownership messages at start and quit; radio level; Kaelen lines not dropping; a transmitter lure (commit to extraction, fly to the cache, hold; a forged one brings two raiders) and an unstable archive (repair kit or reconstruct).
 
 ## Plan of small bites (vertical slice)

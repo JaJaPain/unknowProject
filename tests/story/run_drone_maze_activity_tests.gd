@@ -55,8 +55,14 @@ func _initialize() -> void:
 	_check(activity.eligible_target() == null, "not while docked")
 	ship.is_docked = false
 
+	# No drone, no flight; each flight uses one up.
+	gs.inventory.clear()
+	_check(not activity.launch(rock) and activity._view == null, "no survey drone, no launch")
+	_check(activity.eligible_target() == rock, "a refused launch does not use up the asteroid")
+	gs.inventory.add("survey_drone", 2)
 	# The view pauses the game, and recalling gives it back.
-	activity.launch(rock)
+	_check(activity.launch(rock), "a drone aboard launches")
+	_check(gs.inventory.get_quantity("survey_drone") == 1, "the launch uses one drone")
 	var view = activity._view
 	_check(view != null and paused, "flying the drone pauses the game")
 	view.finished.connect(func(o: String, s: Dictionary) -> void: _results.append([o, s]))
@@ -75,16 +81,17 @@ func _initialize() -> void:
 	activity._on_finished("clean", clean)
 	_check(gs.player_credits == credits + 3 * 70 + 60, "three seams and the bonus: %d" % (gs.player_credits - credits))
 
-	# A lost drone costs a replacement and pays nothing for its load.
+	# A lost drone pays nothing for its load (the drone itself was the cost).
 	credits = gs.player_credits
 	var lost := clean.duplicate(true)
 	lost["end"] = "wrecked"
 	activity._on_finished("failed", lost)
-	_check(gs.player_credits == credits - 60, "a lost drone costs a replacement")
+	_check(gs.player_credits == credits, "a lost drone's load is lost")
 
 	# A wreck in a system with a wreck clue holds the recorder.
 	gs.active_target = wreck
 	activity.launch(wreck)
+	_check(gs.inventory.get_quantity("survey_drone") == 0, "home or lost, every flight used one")
 	var wreck_view = activity._view
 	var recorders := (wreck_view.state["targets"] as Array).filter(func(t): return t["kind"] == "recorder")
 	_check(recorders.size() == 1, "the wreck holds a flight recorder")
