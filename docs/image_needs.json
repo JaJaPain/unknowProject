@@ -1,0 +1,62 @@
+{
+    "schema_version": 1,
+    "note": "Every image the vision-slice work needs. Generate each entry as its own file into art_inbox/ using the given filename; tools/compose_icon_sheet.py then tiles the icons into assets/RandomIcon04.png (5 x 5, same layout as the existing store sheets).",
+    "style_reference": "assets/RandomIcon02.png",
+    "shared_style": "Square game inventory icon. A single sci-fi object, three-quarter view, centred, on a very dark navy background (#0b1016) inside a thin light-grey rounded square frame with a small margin. Realistic brushed and scuffed metal with small glowing accents, dramatic rim light, soft glow. The item name in bold white sans-serif capitals, centred along the bottom inside the frame. No other text, no watermark, no border outside the frame. Painterly-realistic like a premium space-game item shop.",
+    "images": [
+        {
+            "id": "icon_survey_drone",
+            "filename": "icon_survey_drone.png",
+            "size": "1024x1024",
+            "sheet_cell": [0, 0],
+            "used_for": "Store and inventory icon for survey_drone (Piloted Survey Drone), the consumable the captain flies into asteroid cracks and wrecks.",
+            "label": "SURVEY DRONE",
+            "prompt": "A small, expensive piloted mining drone: a compact rounded hull the size of a briefcase, one bright forward camera lens and a headlight, two slim folded manipulator arms with a fine cutting tool, tiny thrusters glowing pale teal. Precision instrument, not a weapon."
+        },
+        {
+            "id": "icon_thermal_lattice",
+            "filename": "icon_thermal_lattice.png",
+            "size": "1024x1024",
+            "sheet_cell": [1, 0],
+            "used_for": "Icon for thermal_lattice, a tech-grade material: heat-shedding crystal lattice that engine, power plant and weapon parts are made from.",
+            "label": "THERMAL LATTICE",
+            "prompt": "A raw chunk of rare mineral: a dense geometric lattice of translucent amber-orange crystal, glowing hot from inside like embers, fine heat shimmer, dark stone matrix at its base. Precious, fragile, clearly valuable."
+        },
+        {
+            "id": "icon_rad_quartz",
+            "filename": "icon_rad_quartz.png",
+            "size": "1024x1024",
+            "sheet_cell": [2, 0],
+            "used_for": "Icon for rad_quartz, a tech-grade material: radiation-hardening quartz for shields, sensors and mining optics.",
+            "label": "RAD-QUARTZ",
+            "prompt": "A cluster of long hexagonal quartz crystals in a luminous acid green, faint inner glow, tiny particle motes around it, set on dark rock. Looks rare and slightly dangerous."
+        },
+        {
+            "id": "icon_cryo_ferrite",
+            "filename": "icon_cryo_ferrite.png",
+            "size": "1024x1024",
+            "sheet_cell": [3, 0],
+            "used_for": "Icon for cryo_ferrite, a tech-grade material that holds its shape from deep cold to full sun; hulls, holds and storage bays are built from it.",
+            "label": "CRYO-FERRITE",
+            "prompt": "A dark metallic ferrite ore nugget with an ice-blue frosted crust and pale blue veins, faint frost vapour curling off it, metallic sheen underneath the frost."
+        },
+        {
+            "id": "icon_resonant_crystal",
+            "filename": "icon_resonant_crystal.png",
+            "size": "1024x1024",
+            "sheet_cell": [4, 0],
+            "used_for": "Icon for resonant_crystal, the rarest material: grown only in the deepest, most fragile seams; top-tier ship upgrades need it.",
+            "label": "RESONANT CRYSTAL",
+            "prompt": "A single flawless crystal spire, iridescent white shifting to violet and cyan, visible faint concentric ripple rings in the air around it as if it hums, delicate and extremely precious."
+        },
+        {
+            "id": "drone_hud_frame",
+            "filename": "drone_hud_frame.png",
+            "size": "1536x1024",
+            "sheet_cell": null,
+            "used_for": "Optional overlay for the first-person drone camera (DroneMazeView): a camera-feed frame drawn over the 3D view.",
+            "label": "",
+            "prompt": "A transparent-background HUD overlay for a mining drone's camera feed: thin teal corner brackets, a faint scanline texture, tiny tick marks along the edges, a small blinking 'REC' dot in the top right. The whole centre must be fully transparent. PNG with alpha. No text other than 'REC'. This one does NOT use the shared icon style."
+        }
+    ]
+}

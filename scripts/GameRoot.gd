@@ -9411,8 +9411,9 @@ func _run_mission_smoke_test() -> void:
 	if not QuestManager.accept_quest(kill_offer, accept_choice):
 		_fail_mission_smoke_test("Valid kill mission was rejected.")
 		return
-	GlobalState.ship_destroyed.emit("reavers")
-	GlobalState.ship_destroyed.emit("reavers")
+	# Only the player's own kills count toward a kill contract.
+	GlobalState.player_kill.emit("reavers")
+	GlobalState.player_kill.emit("reavers")
 	if not QuestManager.is_quest_completed() \
 			or int(QuestManager.active_quest["current_count"]) != 2:
 		_fail_mission_smoke_test("Kill mission progress did not reach completion.")
@@ -9558,7 +9559,10 @@ func _run_mission_smoke_test() -> void:
 		"Shiny, your cargo is ready.",
 		"voice.kaelen.v1"
 	)
-	if non_kaelen_line != "Indy, your cargo is ready." \
+	# Only Kaelen names the player; everyone else implies who they are
+	# talking to (commit f232ad9), so neither nickname survives for them.
+	if non_kaelen_line.contains("Shiny") or non_kaelen_line.contains("Indy") \
+			or not non_kaelen_line.to_lower().contains("your cargo is ready") \
 			or kaelen_line != "Shiny, your cargo is ready.":
 		_fail_mission_smoke_test("Speaker naming guard did not preserve Indy and Shiny rules.")
 		return
@@ -9663,8 +9667,9 @@ func _run_multi_mission_smoke_test() -> void:
 		_fail_multi_mission_smoke_test("Collection should have 2 missions, got %d." % QuestManager.get_mission_collection().size())
 		return
 
-	GlobalState.ship_destroyed.emit("reavers")
-	GlobalState.ship_destroyed.emit("reavers")
+	# Only the player's own kills count toward a kill contract.
+	GlobalState.player_kill.emit("reavers")
+	GlobalState.player_kill.emit("reavers")
 
 	var col := QuestManager.get_mission_collection()
 	var all_missions := col.get_all_active()
@@ -9829,6 +9834,8 @@ func _run_services_smoke_test() -> void:
 	GlobalState.player = player
 	GlobalState.player_credits = 2000
 	GlobalState.player_storage_ore = 250.0
+	# Every upgrade also needs tech-grade material (one each at Mk II).
+	GlobalState.inventory.add("thermal_lattice", 2, 99)
 	ui.current_station = main_station
 	ui.current_submenu = ui.DockSubmenu.MAINTENANCE
 	ui.call("_render_dock_submenu")
@@ -9868,6 +9875,8 @@ func _run_services_smoke_test() -> void:
 
 	ui.current_station = main_station
 	ui.current_submenu = ui.DockSubmenu.SERVICES
+	# First-dock onboarding hides the lounge until the agent has been visited.
+	StoryManager.story_state["intro_agent_visited"] = true
 	ui.call("_render_dock_submenu")
 	if not ui.station_lounge_btn.visible:
 		_fail_services_smoke_test("Station Lounge button was not visible at the main station.")
@@ -9911,10 +9920,21 @@ func _run_services_smoke_test() -> void:
 		_fail_services_smoke_test("Public board acceptance showed Kaelen's portrait.")
 		return
 	QuestManager.active_quest = {}
-	if not bool(ui.public_board_current_offers[2].get("enabled", false)):
+	# The board also carries collection and story postings now, so find the
+	# recovery posting by its objective rather than a fixed slot.
+	var recovery_index := -1
+	for i in range(ui.public_board_current_offers.size()):
+		var posting: Dictionary = (ui.public_board_current_offers[i] as Dictionary).get("quest_data", {})
+		if str((posting.get("objective", {}) as Dictionary).get("type", "")) == "RECOVER_COMBAT_DROP":
+			recovery_index = i
+			break
+	if recovery_index < 0:
+		_fail_services_smoke_test("No recovery posting on the public board.")
+		return
+	if not bool(ui.public_board_current_offers[recovery_index].get("enabled", false)):
 		_fail_services_smoke_test("Recovery public-board posting was still disabled.")
 		return
-	ui.call("_on_public_board_offer_accept", 2)
+	ui.call("_on_public_board_offer_accept", recovery_index)
 	if not QuestManager.is_quest_active() \
 			or QuestManager.active_quest.get("objective_type", "") \
 				!= "RECOVER_COMBAT_DROP" \
@@ -9953,7 +9973,9 @@ func _run_services_smoke_test() -> void:
 			or not _services_smoke_has_board_turn_in_disgust(
 				str(ui.agent_dialogue_label.text)
 			):
-		_fail_services_smoke_test("Tracker turn-in button did not route board completion through Kaelen.")
+		_fail_services_smoke_test("Tracker turn-in button did not route board completion through Kaelen (active=%s paid=%d/%d panel=%s line='%s')." % [
+			str(QuestManager.is_quest_active()), GlobalState.player_credits - credits_before_board_turn_in, recovery_payout,
+			str(ui.agent_panel.visible), str(ui.agent_dialogue_label.text).left(160)])
 		return
 	ui.public_board_panel.visible = false
 	ui.agent_panel.visible = false
@@ -10065,6 +10087,22 @@ func _run_services_smoke_test() -> void:
 
 
 func _services_smoke_has_board_turn_in_disgust(line: String) -> bool:
+	# Kaelen's curated public-board turn-in lines (fixed cast voice examples)
+	# replaced the older "slumming it" wording; either counts.
+	var file := FileAccess.open("res://data/content/fixed_cast_voice_examples.json", FileAccess.READ)
+	if file != null:
+		var parsed: Variant = JSON.parse_string(file.get_as_text())
+		var entries: Array = []
+		if parsed is Array:
+			entries = parsed
+		elif parsed is Dictionary:
+			for value: Variant in (parsed as Dictionary).values():
+				if value is Array:
+					entries.append_array(value)
+		for entry: Variant in entries:
+			if entry is Dictionary and str((entry as Dictionary).get("situation", "")) == "public_board_turn_in" \
+					and line.contains(str((entry as Dictionary).get("line", "")).left(24)):
+				return true
 	var lower_line := line.to_lower()
 	return lower_line.contains("public") \
 			and (

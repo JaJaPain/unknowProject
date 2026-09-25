@@ -95,3 +95,6 @@ tools/lounge_review/generator_*.log
 assets/audio/taunts/
 assets/audio/taunts_orpheus/
 assets/audio/cast_en/
+
+# Raw generated art before tools/compose_icon_sheet.py tiles it
+art_inbox/

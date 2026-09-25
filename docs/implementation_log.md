@@ -24,7 +24,8 @@
 - Done 2026-09-24: all four investigation recipes run (e27de0a). Card investigations split 80 survey / 12 archive / 11 lure; competing claims rarely wins the keyword match (lure/archive words are checked first).
 - Done 2026-09-24: N.O.V.A. asks the investigation decisions; signal tuning (T) overhears story threads or sells chatter; the drone maze (G at a close asteroid or wreck) uses one Piloted Survey Drone per flight (Abe: consumable, to limit it) and a wreck's recorder can carry a story thread. Playtest list in docs/todo.md.
 - Done 2026-09-24 (Abe's direction): asteroid mazes are narrow organic cracks with fragile ore (CrackMesher builds the cave from the collision shape); survey drones cost 150 and are always used up; upgrades need ship parts from tier 3 and a resonant crystal (maze-only) at tier 5. tools/maze_snapshot.gd renders the maze for screenshots (windowed; Abe approved).
-- Next core candidates: card brief/validator verbs for the new activities (so Gemini writes reasons for eavesdrop and drone salvage); the image-needs JSON and ChatGPT prompt.
+- Done 2026-09-25: gate rating push (deeper gates need Shields Mk II; N.O.V.A. walkthrough); exponential upgrade materials; a store-restock freeze fixed (caught by --jump-smoke-test); mission complications (Phase 3 layer 3: deadline, storm window, advance, heavy escort, bigger load); docs/image_needs.json + docs/image_generation_prompt.md + tools/compose_icon_sheet.py (the image deliverable; icons tile into assets/RandomIcon04.png). Smoke-test sweep: several game smoke tests had gone stale (onboarding lock, player-only kills, board cooldowns, upgrade materials) and are being updated.
+- Next core candidates: Phase 3 turns (mid-mission choices, counter-offer first, on CommsReversalCapability); failure fallout on every mission; card brief/validator verbs for the new activities (so Gemini writes reasons for eavesdrop and drone salvage); the image-needs JSON and ChatGPT prompt.
 - Verify in the next play: TTS server ownership messages at start and quit; radio level; Kaelen lines not dropping; a transmitter lure (commit to extraction, fly to the cache, hold; a forged one brings two raiders) and an unstable archive (repair kit or reconstruct).
 
 ## Plan of small bites (vertical slice)
@@ -115,4 +116,4 @@
 
 ## Image needs (collected for the final ChatGPT JSON)
 
-(none yet)
+See docs/image_needs.json (the list) and docs/image_generation_prompt.md (the ChatGPT loop prompt). Generated files go to art_inbox/ (git-ignored); `python tools/compose_icon_sheet.py` tiles them into assets/RandomIcon04.png and points the store items at it.
