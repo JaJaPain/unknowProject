@@ -560,11 +560,18 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	await get_tree().process_frame
 	_restore_system_state(runtime_system_id, new_system)
 	_queue_gate_travel_kaelen_arrival_prefetch(runtime_system_id, runtime_gate_id)
+	# Breathe in: the new system exists (hidden), so start writing for it now,
+	# inside the tunnel, instead of after arrival in flight. The arrival hook
+	# queues the same jobs again later; the scheduler merges them by cache key.
+	_on_system_arrival_prefetch(runtime_system_id, runtime_gate_id)
 
 	# Let the player fly down the 3D tunnel for a satisfying duration.
 	# We show the tunnel for 3.0s, then fade to white over 0.5s to cover the loading transition.
 	if DisplayServer.get_name() != "headless":
 		await get_tree().create_timer(3.1).timeout
+		# Hold the tunnel while the new system's writing finishes (Abe,
+		# 2026-09-24): arrive with it done rather than writing in flight.
+		await _hold_jump_for_writing()
 		# Start fading the tunnel jet early with a stutter gate. Duration is sized
 		# so the fade still ends at the same point (3.1 + 4.5 == prior 4.1 + 3.5),
 		# and the whiteout still fires at 5.6 (3.1 + 2.5).
@@ -669,6 +676,48 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if is_instance_valid(StoryQuestManager):
 		StoryQuestManager.on_system_arrived(runtime_system_id)
 	call_deferred("_premise_on_system_arrived")
+
+## How long a gate jump may be held for writing, and when N.O.V.A. remarks on
+## it. Whatever is unfinished at the cap continues after arrival as before.
+const JUMP_WRITING_HOLD_MAX_SECONDS := 30.0
+const JUMP_WRITING_STALL_LINE_AFTER_SECONDS := 8.0
+const JUMP_STALL_LINE := "The tunnel is running long. Nothing to worry about. Hold steady."
+
+
+## Keeps the tunnel going while story writing for the new system is pending or
+## running, pumping the narrative job queue so the tunnel is where it happens.
+func _hold_jump_for_writing() -> void:
+	var started := Time.get_ticks_msec()
+	var spoke := false
+	while _jump_writing_pending():
+		var held := (Time.get_ticks_msec() - started) / 1000.0
+		if held >= JUMP_WRITING_HOLD_MAX_SECONDS:
+			print("[GenerationWindow] Jump hold reached its %.0fs cap; the rest continues after arrival." % JUMP_WRITING_HOLD_MAX_SECONDS)
+			break
+		if not spoke and held >= JUMP_WRITING_STALL_LINE_AFTER_SECONDS:
+			spoke = true
+			if is_instance_valid(SpeechService):
+				SpeechService.play(JUMP_STALL_LINE, SpeechService.NOVA_PROFILE)
+		process_next_narrative_cache_job()
+		await get_tree().create_timer(0.25).timeout
+	var total := (Time.get_ticks_msec() - started) / 1000.0
+	if total >= 0.25:
+		print("[GenerationWindow] Jump held %.1fs for writing." % total)
+
+
+## True while the narrative queue has writing it can do (a job with a worker,
+## pending or in flight). A paused scheduler never holds a jump.
+func _jump_writing_pending() -> bool:
+	var scheduler: RefCounted = _ensure_narrative_cache_scheduler()
+	if scheduler == null or scheduler.is_paused():
+		return false
+	if int(scheduler.stats().get("in_flight", 0)) > 0:
+		return true
+	for job in scheduler.pending_jobs():
+		if _narrative_cache_job_has_worker(job):
+			return true
+	return false
+
 
 func _find_gate(system_root: Node3D, gate_id: String) -> Node3D:
 	for gate in get_tree().get_nodes_in_group("jumpgate"):
