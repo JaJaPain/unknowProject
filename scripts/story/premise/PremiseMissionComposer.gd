@@ -149,7 +149,7 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 				var hails: Array = twist.get("hails", [])
 				twist["hail"] = str(hails[abs(hash(beat_id)) % hails.size()]) if not hails.is_empty() else ""
 	else:
-		twist = TwistsType.roll(verb, "%d|%s" % [seed_value, beat_id], not str(offer.get("premise_private_fact", "")).strip_edges().is_empty())
+		twist = TwistsType.roll(verb, "%d|%s" % [seed_value, beat_id], TwistsType.is_readable_fact(str(offer.get("premise_private_fact", ""))))
 	if not twist.is_empty():
 		# A rival on the job is someone the captain may have met before (the
 		# recurring cast), else a new name.

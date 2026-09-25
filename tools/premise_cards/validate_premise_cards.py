@@ -115,6 +115,9 @@ NONVERBAL = re.compile(
 # errors only for the explicit words and a warning for a bare "AI".
 MACHINE_MIND = re.compile(r"\b(self[- ]aware\w*|sentien\w*|conscious machine|machine mind|artificial intelligence|thinking machine)\b", re.I)
 BARE_AI = re.compile(r"\bAIs?\b")
+# A private fact that narrates the pilot instead of stating a hidden truth.
+NARRATED_FACT = re.compile(r"^\s*the (pilot|player)\b|\bthe pilot (must|discovers?|realizes?|realises?|finds|learns|chooses|sees|notices|will)\b|\b(you|your)\b", re.I)
+
 # Overused or universe-history ideas the brief asks to avoid.
 BIG_HISTORY = re.compile(r"\b(alien\w*|precursor\w*|predates human\w*|ancient civili[sz]ation\w*|lost empire|galactic collapse|pre-collapse|dreadnoughts?|ancient (tech\w*|machine\w*|terraformer\w*|weapon\w*|war\w*|fleet\w*|defen[cs]e\w*)|pre-war|imperial|empire|the last war|old war|century ago|centuries ago|infinite energy|perpetual motion)\b", re.I)
 # Threads that all point at the same kind of culprit make the hidden mystery predictable.
@@ -549,6 +552,21 @@ def validate_card(card, report):
         report.add("WARN", card_id, "%d mission reason(s) under 60 characters; say what the requester needs, why now, and why this pilot" % len(thin_reasons))
     if thin_private:
         report.add("WARN", card_id, "%d private fact(s) under 45 characters; give the actor something real to hide" % len(thin_private))
+    # A private fact is a hidden truth about a person, and the game may have the
+    # companion read it aloud mid-job, so it must never narrate the pilot.
+    for m in all_missions:
+        fact = m.get("private_fact", "")
+        if m.get("verb") != "comms_reversal" and NARRATED_FACT.search(fact):
+            report.add("WARN", card_id, "private_fact narrates the pilot; state what the person hides, in the present tense: %r" % fact[:90])
+    kinds = {r.get("id"): r.get("kind") for r in card["roles"]}
+    for m in all_missions:
+        culprit = m.get("culprit")
+        if culprit is None:
+            continue
+        if m.get("verb") != "investigate_signal":
+            report.add("WARN", card_id, "culprit only means something on an investigate_signal mission")
+        elif culprit not in kinds or kinds[culprit] not in ("person", "faction"):
+            report.add("ERROR", card_id, "culprit %r must be the id of a person or faction role" % culprit)
     thin_summaries = [r for r in card["resolutions"] if len(r.get("summary", "")) < 70]
     if thin_summaries:
         report.add("WARN", card_id, "%d resolution summary(ies) under 70 characters; say who wins, who pays and what changes" % len(thin_summaries))

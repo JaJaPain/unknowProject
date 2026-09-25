@@ -40,6 +40,17 @@ static func deck() -> Dictionary:
 	return _deck
 
 
+## Whether a card's private fact can be read aloud as "what the client left
+## out": a hidden truth about someone, not narration of the pilot (the card
+## brief's rule 8; older cards are being rewritten).
+static func is_readable_fact(fact: String) -> bool:
+	var text := fact.strip_edges()
+	if text.length() < 20:
+		return false
+	var re := RegEx.create_from_string("(?i)\\b(pilot|player|you|your)\\b")
+	return re.search(text) == null
+
+
 ## The twist this mission rolls, or {} for none. `has_private_fact`: the
 ## card mission has a hidden truth the client-lie twist can reveal.
 static func roll(verb: String, seed_key: String, has_private_fact: bool = false) -> Dictionary:

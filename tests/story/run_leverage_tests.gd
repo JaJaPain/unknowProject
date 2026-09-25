@@ -75,6 +75,17 @@ func _initialize() -> void:
 	_check(reloaded.leverage_items().size() == 2, "leverage survives a save")
 	reloaded.free()
 
+	# An investigation whose card names a culprit gives leverage on them.
+	d.library.cards["premise.test_culprit"] = {"id": "premise.test_culprit", "beats": [{"n": 1, "missions": [
+		{"verb": "investigate_signal", "requester": "clerk", "target": "office", "culprit": "assessor"}]}]}
+	d.state["arcs"]["arc.0099"] = {"system_id": "sys.a", "cast": {"assessor": {"kind": "person", "entity_id": "npc.assessor", "display_name": "Hale Pryor"}}}
+	var before_findings: int = d.leverage_items().size()
+	d._record_culprit_leverage({"arc_id": "arc.0099", "card_id": "premise.test_culprit", "beat": 1, "mission_index": 0},
+		{"title": "Survey at Assay Office", "story_beat_id": "premise.test_culprit:b1:m0"}, 300)
+	var findings: Array = d.leverage_items().filter(func(x): return x["kind"] == "finding")
+	_check(d.leverage_items().size() == before_findings + 1 and findings.size() == 1 and findings[0]["subject"] == "Hale Pryor"
+		and str(findings[0]["summary"]).contains("Assay Office"), "an investigation that exposes someone is leverage on them: %s" % str(findings))
+
 	# The panel lists it and asks for a use.
 	var panel = PanelType.new()
 	root.add_child(panel)

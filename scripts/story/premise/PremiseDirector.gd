@@ -645,8 +645,32 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 	if terminal_state == "completed":
 		state = HandType.mark_arc_threads_seen(state, ref["arc_id"], now_minute, 1)
 		state = HandType.update_draft(state)
+		_record_culprit_leverage(ref, quest_data, now_minute)
 	_after_change(ref["arc_id"])
 	return true
+
+
+## An investigation whose card names a culprit (the role its evidence
+## exposes) gives the captain leverage on them once it is done.
+func _record_culprit_leverage(ref: Dictionary, quest_data: Dictionary, now_minute: int) -> void:
+	if library == null:
+		return
+	var card: Dictionary = library.get_card(str(ref.get("card_id", "")))
+	var missions: Array = LibraryType.beat(card, int(ref.get("beat", 1))).get("missions", [])
+	var index := int(ref.get("mission_index", 0))
+	if index < 0 or index >= missions.size():
+		return
+	var mission: Dictionary = missions[index]
+	var culprit := str(mission.get("culprit", ""))
+	if str(mission.get("verb", "")) != "investigate_signal" or culprit.is_empty():
+		return
+	var a := ArcsType.arc(state, str(ref["arc_id"]))
+	var who: Dictionary = (a.get("cast", {}) as Dictionary).get(culprit, {})
+	var name := str(who.get("display_name", ""))
+	var site := str(quest_data.get("title", "the investigation")).trim_prefix("Survey at ")
+	var entry := LeverageType.make("finding", "finding:%s:%s" % [str(ref["arc_id"]), str(quest_data.get("story_beat_id", index))], name,
+		"The evidence from %s points at %s." % [site, name], str(a.get("system_id", "")), now_minute, str(who.get("entity_id", "")) if str(who.get("kind", "")) == "faction" else "")
+	record_leverage_entry(entry)
 
 
 func pending_decisions() -> Array[Dictionary]:

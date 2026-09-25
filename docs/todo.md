@@ -274,6 +274,11 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     prices in that system go up 25% for 8 game hours) and a kill job (more
     raiders spawn there); the radio leads with what happened. Noticeable
     enough? Too punishing? (Two failures compound, capped at double.)
+  - Card rewrites (Gemini, REVIEW_NOTES tasks 4 and 5): 31 private facts that
+    narrate the pilot, and culprits on approved investigations. Gemini writes
+    data/content/premise_cards/private_fact_rewrites.json; review it, then
+    `python tools/premise_cards/apply_private_fact_rewrites.py`. Until then
+    the client's-lie twist only reads facts that never mention the pilot.
   - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
     Mk V 8 (+2 crystals).
   - The survey drone, the three tech-grade materials and the resonant

@@ -108,6 +108,12 @@ func _initialize() -> void:
 			_check(qm.is_quest_active() and str(qm.active_quest.get("twist_state", "")) == "delivering", "delivering it keeps the job")
 		else:
 			_check(not qm.is_quest_active(), "dumping it ends the job")
+	# Only hidden truths that read as a fact about someone can be read aloud.
+	_check(Twists.is_readable_fact("She is skimming the relief fund to pay her brother's debts."), "a plain hidden truth reads fine")
+	_check(not Twists.is_readable_fact("The pilot discovers the survivor sitting calmly at a desk."), "narration of the pilot does not")
+	_check(not Twists.is_readable_fact("He is stalling the pilot until the enforcers arrive."), "nor anything about the pilot")
+	_check(not Twists.is_readable_fact(""), "nor nothing")
+
 	# The client's lie: needs a hidden truth on the card mission.
 	_check(Twists.roll("delivery_courier", "lie|x", false).get("id", "") != "client_lie", "no hidden truth, no client-lie twist")
 	var lie_seen := false
