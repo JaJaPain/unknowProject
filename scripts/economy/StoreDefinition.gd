@@ -145,7 +145,9 @@ func restock_check(current_time_minutes: int) -> void:
 		if entry.is_empty():
 			continue
 		var restock_at: int = int(entry.get("restock_at", 0))
-		if restock_at <= 0:
+		if item_def.restock_interval_minutes <= 0:
+			pass  # never restocked (tech-grade materials: bought, never sold)
+		elif restock_at <= 0:
 			entry["restock_at"] = current_time_minutes + item_def.restock_interval_minutes
 		else:
 			while current_time_minutes >= restock_at:

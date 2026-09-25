@@ -147,6 +147,14 @@ func _initialize() -> void:
 	_check(gs.inventory.get_quantity("survey_drone") == drones_before + 1, "a lucky one does")
 	gs.inventory.remove("survey_drone", 1)
 
+	# Tech-grade materials never restock (interval 0): restocking every store
+	# across a long time jump must still finish (it once looped forever and
+	# froze the game on the first clock tick after arriving at Iron Reach).
+	var stores = load("res://scripts/economy/StoreRegistry.gd").shared()
+	stores.restock_all(100)
+	stores.restock_all(100000)
+	_check(true, "store restock finishes")
+
 	# Upgrades: tech-grade material at every tier, doubling; crystals at the top.
 	_check(gs.upgrade_material_cost("weapons", 2) == {"thermal_lattice": 1}, "the first upgrade is cheap-ish")
 	_check(gs.upgrade_material_cost("weapons", 3) == {"thermal_lattice": 2}, "the next costs more")
