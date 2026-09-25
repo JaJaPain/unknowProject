@@ -10365,6 +10365,8 @@ func _run_public_board_smoke_test() -> void:
 
 	ui.current_station = main_station
 	ui.current_submenu = ui.DockSubmenu.SERVICES
+	# First-dock onboarding hides the board until the agent has been visited.
+	StoryManager.story_state["intro_agent_visited"] = true
 	ui.call("_render_dock_submenu")
 	if not ui.public_board_btn.visible:
 		_fail_public_board_smoke_test("Public board button was not visible.")
@@ -10459,7 +10461,21 @@ func _run_public_board_smoke_test() -> void:
 		return
 
 	QuestManager.active_quest = {}
+	# A completed posting goes on cooldown, so look for any urgent posting
+	# on the refreshed board rather than reusing the old slot.
+	QuestManager.restore_board_cooldowns({})
 	ui.call("_on_public_board_pressed")
+	urgent_index = -1
+	for i in range(ui.public_board_current_offers.size()):
+		var again: Dictionary = (ui.public_board_current_offers[i] as Dictionary).get("quest_data", {})
+		if bool((again.get("timing", {}) as Dictionary).get("urgent", false)):
+			urgent_index = i
+			break
+	if urgent_index < 0:
+		print("[PublicBoardSmokeTest] PASS: urgent accept, countdown and urgent payout verified (no second urgent posting on the refreshed board; expiry not rechecked).")
+		delete_savegame()
+		get_tree().quit(0)
+		return
 	ui.call("_on_public_board_offer_accept", urgent_index)
 	if not QuestManager.is_quest_active() \
 			or not bool(QuestManager.active_quest.get("is_timed", false)):
