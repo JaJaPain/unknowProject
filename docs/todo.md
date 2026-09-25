@@ -243,6 +243,13 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   - The survey drone, the three tech-grade materials and the resonant
     crystal borrow the salvage drone's store icon: add their own icons to
     the image-needs list.
+- [x] **Game smoke-test sweep, 2026-09-25**: all 15 `--*-smoke-test` modes
+  pass. Stale ones were updated (onboarding lock, player-only kill credit,
+  nickname rule, board order, Kaelen's curated lines, queue timing). Two real
+  bugs found: a store restock loop that froze the game (tech materials) and
+  docking stranding the captain when the voice is slow. `--restart-smoke-test`
+  needs `--baseline-offline` (or a warm model): online, the campaign bible can
+  take over its 60 s budget on a cold model.
 - [ ] **Pre-existing: `tests/economy/run_consumable_tests.gd` does not compile**
   ("Identifier not found: GlobalState" in a preloaded script; broken since
   before claude/vision-slice, found 2026-09-24). Fix with get_node lookups.

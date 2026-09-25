@@ -9197,7 +9197,11 @@ func _run_combat_smoke_test() -> void:
 		_fail_combat_smoke_test("A hostile major-faction ship did not engage outside the safe zone.")
 		return
 
-	# Extremely poor standing overrides station protection.
+	# Extremely poor standing overrides station protection. The previous step
+	# queued this ship's own combat intent; the queue only ticks every 0.25 s,
+	# and a busy queue makes ships stand down, so clear it between steps.
+	for pending: Dictionary in (PlayerInteractionQueue.get("_queue") as Array).duplicate():
+		PlayerInteractionQueue.cancel(str(pending.get("id", "")))
 	player.global_position = Vector3(0.0, 0.0, 180.0)
 	test_npc.global_position = Vector3(25.0, 0.0, 180.0)
 	GlobalState.reputations["aurelia"] = -50.0
