@@ -30,6 +30,7 @@ TESTS=(
   run_subtitle_tests
   run_pin_board_tests
   run_generation_window_tests
+  run_nova_investigation_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

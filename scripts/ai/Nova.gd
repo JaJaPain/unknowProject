@@ -1318,6 +1318,13 @@ func on_gate_transition() -> void:
 	)
 
 
+## She puts a decision to the captain (an investigation's commit-or-not).
+## The captain is waiting on her answer, so the chatter budget, which exists
+## for unprompted remarks, does not hold it back; the repeat guard still does.
+func ask_captain(text: String, expression_event: String = "mystery") -> bool:
+	return speak(text, Severity.COMBAT, expression_for_event(expression_event))
+
+
 ## The jump is being held in the tunnel while the next system is written.
 func on_gate_hold() -> void:
 	speak(_pick_line("gate_hold", GATE_HOLD_LINES), Severity.NAV, expression_for_event("mystery"))

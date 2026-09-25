@@ -7,6 +7,9 @@ var rows: VBoxContainer
 var status: Label
 var _signature := ""
 var _elapsed := 0.0
+## N.O.V.A.'s current question, shown above the choices while they are open.
+var _nova_question := ""
+const NovaLines := preload("res://scripts/story/NovaInvestigationLines.gd")
 
 func setup(owner_ui: Control, quest_manager: Node) -> void:
 	ui = owner_ui
@@ -46,6 +49,8 @@ func setup(owner_ui: Control, quest_manager: Node) -> void:
 	hide()
 
 func open_mission(id: String) -> void:
+	if id != mission_id:
+		_nova_question = ""
 	mission_id = id
 	_signature = ""
 	status.text = "Hold within 300 m, below 10 m/s, for three seconds. Combat interrupts scanning."
@@ -75,6 +80,8 @@ func _refresh() -> void:
 		rows.remove_child(child)
 		child.queue_free()
 	_label(str(view["title"]))
+	if not _nova_question.is_empty() and not view["branches"].is_empty():
+		_label("N.O.V.A.: " + _nova_question)
 	if view["phase"] in ["ready", "closed"]:
 		_label("Finding filed. Dock at the assigned station to collect payment.")
 	elif not str(view.get("extract_site_id", "")).is_empty():
@@ -113,6 +120,13 @@ func _refresh() -> void:
 			var report: Dictionary = manager.dispatch_investigation_command({"mission_id": mission_id, "site_id": site_id, "action": "resolve", "branch_id": id, "expected_revision": revision})
 			var filed := "Committed. Fly to the cache." if bool(report.get("awaiting_extraction", false)) else "Finding filed. Return for payment."
 			status.text = filed if bool(report.get("ok", false)) else _reason(str(report.get("reason", "Unavailable")))
+			if bool(report.get("ok", false)) and not bool(report.get("replayed", false)):
+				_nova_question = ""
+				if bool(report.get("awaiting_extraction", false)):
+					var ambush := bool(report.get("spawn_hostile", false))
+					_nova_say(NovaLines.committed(ambush, randi()), "ambush" if ambush else "nav")
+				else:
+					_nova_say(NovaLines.filed(randi()), "companion")
 			_signature = ""
 			_refresh())
 
@@ -122,8 +136,30 @@ func _scan_status(report: Dictionary) -> void:
 		status.text = "Scanning: %d%%" % int(float(report.get("progress", 0.0)) * 100)
 	elif bool(report.get("ok", false)):
 		status.text = "Scan recorded. Review the evidence."
+		if str(report.get("outcome_tag", "")) == "extracted":
+			status.text = "Cache extracted. Return for payment."
+			_nova_say(NovaLines.extracted(randi()), "companion")
+		else:
+			_ask_decision()
 	else:
 		status.text = _reason(str(report.get("reason", "Scan interrupted")))
+
+## After a scan, she asks what to do with what it found.
+func _ask_decision() -> void:
+	var view: Dictionary = manager.investigation_panel_view(mission_id)
+	if view.is_empty() or view["branches"].is_empty():
+		return
+	_nova_question = NovaLines.decision(str(view["recipe"]), bool(view.get("verification_scanned", false)), bool(view.get("codes_match", false)), randi())
+	_nova_say(_nova_question, "mystery")
+	_signature = ""
+	_refresh()
+
+
+func _nova_say(text: String, event: String) -> void:
+	var nova := get_node_or_null("/root/Nova")
+	if nova != null and nova.has_method("ask_captain"):
+		nova.ask_captain(text, event)
+
 
 func _button(text: String, reason: String, action: Callable) -> void:
 	var button := Button.new()

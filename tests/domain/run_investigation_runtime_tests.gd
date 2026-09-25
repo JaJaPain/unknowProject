@@ -350,6 +350,8 @@ func _test_transmitter_lure():
 		return
 	_scan("primary")
 	_scan("verification")
+	var facts: Dictionary = qm.investigation_panel_view(qm.active_quest["runtime_id"])
+	_expect(facts["verification_scanned"] and facts["codes_match"] == (_site("primary")["code"] == _site("verification")["code"]), "N.O.V.A.'s facts disagree with the scans.")
 	var committed: Dictionary = qm.dispatch_investigation_command(_command("resolve", _site("verification"), "extract"))
 	_expect(committed.get("ok", false) and committed.get("awaiting_extraction", false), "Extraction was not committed: %s" % str(committed))
 	_expect(bool(committed.get("spawn_hostile", false)) == bool(qm.active_quest["investigation"]["forged"]), "Ambush does not follow the forged beacon.")

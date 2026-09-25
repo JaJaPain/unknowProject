@@ -165,6 +165,13 @@ func investigation_panel_view(mission_id: String) -> Dictionary:
 			if not item.is_empty() and not GlobalState.inventory.has_item(item): reason = "Requires one %s" % item.replace("_", " ")
 			if reason.is_empty() and str(result["resolve_site_id"]).is_empty(): reason = "Return within 300 m of a scanned site, below 10 m/s and out of combat"
 			result["branches"].append({"id": branch, "label": labels.get(branch, branch), "reason": reason})
+	# What the scans observed, for N.O.V.A.'s question: whether the second site
+	# is in, and whether the two observed codes agree.
+	var observed_codes := {}
+	for evidence: Dictionary in state["evidence"]:
+		observed_codes[str(cap._site(state, str(evidence["site_id"])).get("role", ""))] = str(evidence.get("observed_code", ""))
+	result["verification_scanned"] = observed_codes.has("verification")
+	result["codes_match"] = observed_codes.has("verification") and observed_codes.get("primary", "") == observed_codes["verification"]
 	# Committed to extraction: the choice is spent; what remains is the run to
 	# the cache.
 	result["extract_site_id"] = ""
