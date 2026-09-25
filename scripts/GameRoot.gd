@@ -269,6 +269,7 @@ func _start_gameplay_runtime() -> void:
 	QuestManager.quest_completed_details.connect(_on_premise_quest_completed)
 	QuestManager.quest_abandoned_details.connect(_on_premise_quest_abandoned)
 	QuestManager.quest_expired_details.connect(_on_premise_quest_expired)
+	QuestManager.reveal_twist_triggered.connect(_on_reveal_twist_for_leverage)
 
 
 func _start_requested_runtime_mode() -> void:
@@ -1482,6 +1483,52 @@ func _on_premise_quest_abandoned(quest_data: Dictionary) -> void:
 
 func _on_premise_quest_expired(quest_data: Dictionary) -> void:
 	_premise_terminal(quest_data, "expired")
+
+
+## Leverage (vision plan 4.4): a revealed secret about a client is kept.
+func _on_reveal_twist_for_leverage(mission_data: Dictionary) -> void:
+	if not is_instance_valid(premise_director):
+		return
+	var entry: Dictionary = premise_director.record_leverage(mission_data, int(CampaignClock.total_minutes))
+	if not entry.is_empty():
+		GlobalState.emit_chatter("N.O.V.A.", "I kept a copy of that. Leverage on %s, if we ever want it." % str(entry.get("subject", "them")), Color(0.5, 0.95, 0.85))
+
+
+func premise_leverage_items() -> Array:
+	return premise_director.leverage_items() if is_instance_valid(premise_director) else []
+
+
+## Uses leverage at the station: applies credits and standing, and for
+## blackmail accepts the job it creates. Returns {ok, message}.
+func premise_use_leverage(entry_id: String, how: String) -> Dictionary:
+	if not is_instance_valid(premise_director):
+		return {"ok": false, "message": "Nothing to use."}
+	var world := PremiseWorldSnapshotType.capture(int(CampaignClock.total_minutes))
+	if how == "blackmail" and QuestManager.is_quest_active():
+		return {"ok": false, "message": "Finish the job you're on first. Blackmail wants your full attention."}
+	var effect: Dictionary = premise_director.use_leverage(entry_id, how, world, int(CampaignClock.total_minutes))
+	if not bool(effect.get("ok", false)):
+		var reason := str(effect.get("reason", ""))
+		return {"ok": false, "message": "There's no dead drop in this system to collect from." if reason == "no_dead_drop" else "That can't be used now."}
+	var credits := int(effect.get("credits", 0))
+	if credits > 0:
+		GlobalState.add_credits(credits)
+	var standing: Dictionary = effect.get("standing", {})
+	for faction in standing.keys():
+		if not str(faction).is_empty():
+			GlobalState.adjust_reputation(str(faction), float(standing[faction]))
+	var offer: Dictionary = effect.get("offer", {})
+	if not offer.is_empty():
+		if not QuestManager.accept_quest(offer, offer["choices"][0]):
+			return {"ok": false, "message": "The drop fell through: %s" % QuestManager.last_validation_error}
+		return {"ok": true, "message": "They'll pay. Collect it at %s." % str(offer["objective"].get("target_outpost_display", "the drop"))}
+	match how:
+		"sell":
+			return {"ok": true, "message": "Sold to a broker for %d credits." % credits}
+		"expose":
+			var lawful: Dictionary = premise_director.lawful_faction(world)
+			return {"ok": true, "message": "Handed to %s. They won't forget the favour." % str(lawful.get("display_name", "the authorities"))}
+	return {"ok": true, "message": "Done."}
 
 
 func _premise_terminal(quest_data: Dictionary, terminal_state: String) -> void:

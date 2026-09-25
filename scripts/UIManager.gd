@@ -293,6 +293,8 @@ var public_board_back_btn: Button
 var public_board_current_offers: Array[Dictionary] = []
 var loose_ends_btn: Button
 var pin_board_panel: PanelContainer
+var leverage_btn: Button
+var leverage_panel: PanelContainer
 
 var store_panel: Panel
 var store_list: VBoxContainer
@@ -485,6 +487,7 @@ var selected_row_style: StyleBoxFlat
 
 const SubtitleOverlayType := preload("res://scripts/ui/SubtitleOverlay.gd")
 const PinBoardPanelType := preload("res://scripts/ui/PinBoardPanel.gd")
+const LeveragePanelType := preload("res://scripts/ui/LeveragePanel.gd")
 var subtitle_overlay: CanvasLayer = null
 
 
@@ -2090,6 +2093,12 @@ func _create_public_board_panel() -> void:
 	loose_ends_btn.visible = false
 	loose_ends_btn.pressed.connect(_on_loose_ends_pressed)
 	board_vbox.add_child(loose_ends_btn)
+
+	# Leverage: secrets the captain holds; hidden until they hold one.
+	leverage_btn = Button.new()
+	leverage_btn.visible = false
+	leverage_btn.pressed.connect(_on_leverage_pressed)
+	board_vbox.add_child(leverage_btn)
 
 	public_board_back_btn = Button.new()
 	public_board_back_btn.text = "Back to Services"
@@ -4314,6 +4323,7 @@ func toggle_dock_menu(
 	var dock_ui_open := dock_panel.visible or agent_panel.visible \
 			or (public_board_panel and public_board_panel.visible) \
 			or (pin_board_panel and pin_board_panel.visible) \
+			or (leverage_panel and leverage_panel.visible) \
 			or (store_panel and store_panel.visible)
 	if inventory_panel and inventory_panel.visible and inventory_return_to_dock:
 		dock_ui_open = true
@@ -4329,6 +4339,8 @@ func toggle_dock_menu(
 			public_board_panel.visible = false
 		if pin_board_panel:
 			pin_board_panel.visible = false
+		if leverage_panel:
+			leverage_panel.visible = false
 		if store_panel:
 			store_panel.visible = false
 		if inventory_panel:
@@ -7815,6 +7827,7 @@ func _on_public_board_pressed() -> void:
 		inventory_panel.visible = false
 	public_board_panel.visible = true
 	_refresh_loose_ends_button()
+	_refresh_leverage_button()
 	# A premise-card story waiting on the pilot's answer comes first.
 	var premise_root := get_tree().current_scene
 	if premise_root != null and premise_root.has_method("premise_pending_decisions"):
@@ -7833,6 +7846,41 @@ func _refresh_loose_ends_button() -> void:
 	loose_ends_btn.visible = not threads.is_empty()
 	var pinned := threads.filter(func(t): return bool(t.get("pinned", false))).size()
 	loose_ends_btn.text = "Loose ends (%d noticed, %d pinned)" % [threads.size(), pinned]
+
+
+func _refresh_leverage_button() -> void:
+	if leverage_btn == null:
+		return
+	var root := get_tree().current_scene
+	var items: Array = root.premise_leverage_items() if root != null and root.has_method("premise_leverage_items") else []
+	leverage_btn.visible = not items.is_empty()
+	leverage_btn.text = "Leverage (%d)" % items.size()
+
+
+func _on_leverage_pressed() -> void:
+	var root := get_tree().current_scene
+	if root == null or not root.has_method("premise_leverage_items"):
+		return
+	if leverage_panel == null:
+		leverage_panel = LeveragePanelType.new()
+		leverage_panel.name = "LeveragePanel"
+		public_board_panel.get_parent().add_child(leverage_panel)
+		# Same place and size as the contract board it opens from.
+		for prop in ["anchor_left", "anchor_right", "anchor_top", "anchor_bottom", "offset_left", "offset_right", "offset_top", "offset_bottom"]:
+			leverage_panel.set(prop, public_board_panel.get(prop))
+		leverage_panel.use_requested.connect(func(entry_id: String, how: String) -> void:
+			var scene := get_tree().current_scene
+			if scene == null or not scene.has_method("premise_use_leverage"):
+				return
+			var result: Dictionary = scene.premise_use_leverage(entry_id, how)
+			leverage_panel.show_entries(scene.premise_leverage_items())
+			leverage_panel.show_result(str(result.get("message", ""))))
+		leverage_panel.closed.connect(func() -> void:
+			public_board_panel.visible = true
+			_refresh_leverage_button())
+	public_board_panel.visible = false
+	leverage_panel.show_result("")
+	leverage_panel.show_entries(root.premise_leverage_items())
 
 
 func _on_loose_ends_pressed() -> void:

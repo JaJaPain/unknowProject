@@ -37,6 +37,8 @@ const GatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const FaintType := preload("res://scripts/story/activities/FaintTransmissions.gd")
 const TwistsType := preload("res://scripts/story/premise/MissionTwists.gd")
 const FalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
+const LeverageType := preload("res://scripts/story/premise/Leverage.gd")
+const FactionDNAType := preload("res://scripts/story/premise/FactionDNA.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -319,6 +321,61 @@ func record_failure(quest_data: Dictionary, terminal_state: String, now_minute: 
 	records.append(f)
 	state["fallout"] = records
 	return f
+
+
+## A reveal twist showed the captain a client's secret: keep it as leverage.
+## Returns the new entry, or {} (none, or already kept).
+func record_leverage(mission_data: Dictionary, now_minute: int) -> Dictionary:
+	var entry := LeverageType.from_twist(mission_data, now_minute)
+	if entry.is_empty():
+		return {}
+	var before: Array = state.get("leverage", [])
+	var after := LeverageType.add(before, entry)
+	if after.size() == before.size():
+		return {}
+	state["leverage"] = after
+	return entry
+
+
+func leverage_items() -> Array:
+	return LeverageType.unused(state.get("leverage", []) as Array)
+
+
+## Uses a leverage entry ("sell", "expose" or "blackmail") in `world` (the
+## current system). Returns the effect for GameRoot to apply; the entry is
+## spent and any deed recorded here. A blackmail job that cannot be placed
+## spends nothing.
+func use_leverage(entry_id: String, how: String, world: Dictionary, now_minute: int) -> Dictionary:
+	var entries: Array = state.get("leverage", [])
+	var entry: Dictionary = {}
+	for e in entries:
+		if str(e.get("id", "")) == entry_id:
+			entry = e
+	var effect := LeverageType.use(entry, how, world, lawful_faction(world))
+	if not bool(effect.get("ok", false)):
+		return effect
+	state["leverage"] = LeverageType.mark_used(entries, entry_id, how)
+	var deed: Dictionary = effect.get("deed", {})
+	if not deed.is_empty():
+		deed = deed.duplicate()
+		deed["system_id"] = str(world.get("system_id", ""))
+		if not state.get("deeds") is Array:
+			state["deeds"] = []
+		(state["deeds"] as Array).append(deed)
+	return effect
+
+
+## The faction here that cares most about order (Faction DNA): who an
+## exposure goes to. {} when the system has no factions.
+func lawful_faction(world: Dictionary) -> Dictionary:
+	var best: Dictionary = {}
+	var best_order := -INF
+	for f in world.get("factions", []):
+		var order := float((FactionDNAType.for_faction(str(f.get("id", ""))).get("axes", {}) as Dictionary).get("order", 0.0))
+		if order > best_order:
+			best_order = order
+			best = f
+	return best
 
 
 ## Fallout still in effect in a system.
