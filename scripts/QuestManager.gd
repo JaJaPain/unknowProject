@@ -1312,6 +1312,25 @@ func resolve_comms_branch(branch_id: String) -> void:
 			_increment_mission_history_revision("completed", bribe_quest)
 			quest_completed.emit()
 			quest_completed_details.emit(bribe_quest)
+		"spare":
+			# A surrender twist: the target powered down and begged. Sparing
+			# them closes the job at part of the fee (MissionTwists).
+			var spared_quest: Dictionary = focused.data.duplicate(true)
+			var spare_pay: int = int(focused.data.get("spare_amount", 0))
+			GlobalState.add_credits(spare_pay)
+			GlobalState.adjust_reputation(target_faction, 2.0)
+			_despawn_ceasefire_targets(target_faction)
+			_transition_to_completed(focused)
+			var rid: String = focused.runtime_id
+			_record_board_cooldown(focused.data)
+			_log_quest_to_file(str(focused.data.get("title", "")), "TARGET_WITH_COMMS_REVERSAL", "Resolved: spared the target (%d SC)." % spare_pay)
+			spared_quest["completed_time_minutes"] = CampaignClock.total_minutes
+			spared_quest["final_payout"] = spare_pay
+			spared_quest["outcome_detail"] = "spared"
+			_collection.remove(rid)
+			_increment_mission_history_revision("completed", spared_quest)
+			quest_completed.emit()
+			quest_completed_details.emit(spared_quest)
 		"walk_away":
 			var walkaway_quest: Dictionary = focused.data.duplicate(true)
 			GlobalState.adjust_reputation(focused.data.get("faction", "neutral"), -1.0)

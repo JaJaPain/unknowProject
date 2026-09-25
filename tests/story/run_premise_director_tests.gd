@@ -76,6 +76,7 @@ func _test_campaign_simulation() -> void:
 	rng.seed = 77
 	var now := 0
 	var resolved := 0
+	var bribed_twists := 0
 	var d_signal: Array = []
 	d.arc_resolved.connect(func(arc_id, res_id): d_signal.append(res_id))
 	for system_n in [1, 2, 3, 4]:
@@ -97,11 +98,21 @@ func _test_campaign_simulation() -> void:
 			var terminal := "completed" if rng.randi_range(0, 4) > 0 else "abandoned"
 			var q := quest.duplicate(true)
 			q["objective"]["branch_id"] = "accept_bribe" if rng.randi_range(0, 1) == 0 else "finish_kill"
+			# Treat every kill job as twisted (few kill jobs come up in four
+			# systems); the deed hook reads only the twist mark and the branch.
+			if str(q["objective"].get("type", "")) in ["KILL_SHIPS", "TARGET_WITH_COMMS_REVERSAL"]:
+				q["twist_id"] = "counter_offer"
+				q["twist_target_name"] = "the mark"
+			if not str(q.get("twist_id", "")).is_empty() and q["objective"]["branch_id"] == "accept_bribe":
+				bribed_twists += 1
 			_check(d.on_mission_terminal(q, terminal, now), "a premise mission should be recognised")
 	for arc_id in d.state["arcs"].keys():
 		if d.state["arcs"][arc_id]["status"] == "resolved":
 			resolved += 1
 	_check(resolved >= 4, "several stories should have run to an end, got %d" % resolved)
+	var bribe_deeds := (d.state.get("deeds", []) as Array).filter(func(x): return str(x.get("tag", "")) == "sold_out_contract").size()
+	_check(bribed_twists > 0, "the simulation should take at least one bribe on a twisted job")
+	_check(bribe_deeds == bribed_twists, "every bribe taken on a twisted job leaves a deed (%d of %d)" % [bribe_deeds, bribed_twists])
 	_check(d_signal.size() == resolved, "arc_resolved should fire once per resolution")
 	_check((d.state["ledger"] as Array).size() > 10, "the story ledger should have grown")
 	_check(not d.on_mission_terminal({"title": "Ordinary job", "narrative_metadata": {}}, "completed", now),

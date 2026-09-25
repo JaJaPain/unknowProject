@@ -277,6 +277,12 @@ static func build_active_state(
 			state["comms_reversal_line"] = str(
 				objective.get("comms_reversal_line", "")
 			)
+			# Mission twists (MissionTwists): "bribe" (counter-offer, the
+			# default) or "surrender"; what sparing pays; who the target is.
+			state["reversal_kind"] = str(objective.get("reversal_kind", "bribe"))
+			state["spare_amount"] = maxi(0, int(objective.get("spare_amount", 0)))
+			state["twist_id"] = str(objective.get("twist_id", ""))
+			state["twist_target_name"] = str(objective.get("twist_target_name", ""))
 
 	var state_validation := StateType.new().load_from_dict(state)
 	validation.merge(state_validation, "state")
@@ -502,6 +508,10 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 			normalized["comms_reversal_line"] = str(
 				normalized.get("comms_reversal_line", "")
 			)
+			normalized["reversal_kind"] = str(normalized.get("reversal_kind", "bribe"))
+			normalized["spare_amount"] = maxi(0, int(normalized.get("spare_amount", 0)))
+			normalized["twist_id"] = str(normalized.get("twist_id", ""))
+			normalized["twist_target_name"] = str(normalized.get("twist_target_name", ""))
 	return normalized
 
 

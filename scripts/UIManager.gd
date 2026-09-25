@@ -14144,6 +14144,12 @@ func _show_comms_hail(mission_data: Dictionary) -> void:
 		{"id": "accept_bribe", "text": "Take the deal. (+%d SC)" % bribe, "color": Color(0.3, 0.9, 0.4)},
 		{"id": "walk_away", "text": "Walk away. No payout.", "color": Color(0.6, 0.6, 0.6)},
 	]
+	# A surrender twist: the target has powered down and begs.
+	if str(mission_data.get("reversal_kind", "")) == "surrender":
+		choices = [
+			{"id": "finish_kill", "text": "Finish it.", "color": Color(1.0, 0.4, 0.3)},
+			{"id": "spare", "text": "Let them go. (+%d SC of the fee)" % int(mission_data.get("spare_amount", 0)), "color": Color(0.5, 0.85, 1.0)},
+		]
 	for choice in choices:
 		var btn := Button.new()
 		btn.text = str(choice["text"])
@@ -14173,6 +14179,8 @@ func _resolve_comms_hail(branch_id: String) -> void:
 			result_msg = "Deal accepted. Target departing the area."
 		"walk_away":
 			result_msg = "Contract voided. Target departing the area."
+		"spare":
+			result_msg = "Target spared. They are limping out of the system."
 	add_chat_message("COMMS", result_msg, Color(1.0, 0.55, 0.25))
 
 

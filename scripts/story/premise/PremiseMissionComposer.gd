@@ -24,6 +24,7 @@ const SitePlannerType := preload("res://scripts/domain/InvestigationSitePlanner.
 const InvestigationBuilderType := preload("res://scripts/domain/InvestigationOfferBuilder.gd")
 const InvestigationPlacementType := preload("res://scripts/domain/InvestigationWorldPlacement.gd")
 const ComplicationsType := preload("res://scripts/story/premise/MissionComplications.gd")
+const TwistsType := preload("res://scripts/story/premise/MissionTwists.gd")
 const InvestigationValidatorType := preload("res://scripts/domain/InvestigationStateValidator.gd")
 const ShapesType := preload("res://scripts/domain/MissionShapeRegistry.gd")
 
@@ -136,6 +137,20 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 	}
 	if needs_completion:
 		offer["premise_needs_completion"] = true
+	# Layer 4: some kill jobs turn mid-mission (a counter-offer or a
+	# surrender). A card's own comms-reversal mission is a counter-offer by
+	# design, so it always gets one (with a real bribe and hail line).
+	var twist := {}
+	if verb == "comms_reversal":
+		for t in TwistsType.deck().get("twists", []):
+			if str(t.get("id", "")) == "counter_offer":
+				twist = (t as Dictionary).duplicate(true)
+				var hails: Array = twist.get("hails", [])
+				twist["hail"] = str(hails[abs(hash(beat_id)) % hails.size()]) if not hails.is_empty() else ""
+	else:
+		twist = TwistsType.roll(verb, "%d|%s" % [seed_value, beat_id])
+	if not twist.is_empty():
+		offer = TwistsType.apply(offer, twist, str(requester.get("display_name", "")), str(target.get("display_name", "")))
 	# Layer 3: about half the jobs come with a complication that changes how
 	# they play (seeded per mission, so a reload never rerolls it).
 	var complication := ComplicationsType.roll(verb, world.get("quirks", []), "%d|%s" % [seed_value, beat_id])

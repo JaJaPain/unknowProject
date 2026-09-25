@@ -49,6 +49,8 @@ func format_tracker_text(data: Dictionary) -> String:
 				return "Deal accepted. Target released."
 			"walk_away":
 				return "Walked away. No payout."
+			"spare":
+				return "Target spared."
 		return "Resolved."
 	if bool(data.get("comms_triggered", false)):
 		return "INCOMING TRANSMISSION — respond"

@@ -35,6 +35,7 @@ const VoiceType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const CastType := preload("res://scripts/story/premise/RecurringCast.gd")
 const GatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const FaintType := preload("res://scripts/story/activities/FaintTransmissions.gd")
+const TwistsType := preload("res://scripts/story/premise/MissionTwists.gd")
 
 const SAVE_VERSION := 1
 ## How many live arcs of each scale a system carries at once.
@@ -487,6 +488,19 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 	if ref.is_empty():
 		return false
 	var branch := str((quest_data.get("objective", {}) as Dictionary).get("branch_id", quest_data.get("branch_id", "")))
+	# A twist's answer travels: taking the money or sparing a surrendered
+	# pilot is a deed the factions hear about.
+	var twist_id := str(quest_data.get("twist_id", (quest_data.get("objective", {}) as Dictionary).get("twist_id", "")))
+	if not twist_id.is_empty():
+		var deed := TwistsType.deed_for(branch, str(quest_data.get("twist_target_name", "")))
+		if not deed.is_empty():
+			var a := ArcsType.arc(state, str(ref["arc_id"]))
+			deed["system_id"] = str(a.get("system_id", ""))
+			deed["arc_id"] = str(ref["arc_id"])
+			deed["cast"] = (a.get("cast", {}) as Dictionary).duplicate(true)
+			if not state.get("deeds") is Array:
+				state["deeds"] = []
+			(state["deeds"] as Array).append(deed)
 	state = ArcsType.apply_mission_result(state, library, ref["arc_id"], int(ref["beat"]), int(ref["mission_index"]),
 		terminal_state, branch, now_minute)
 	# Working a story turns up more of its odd details.

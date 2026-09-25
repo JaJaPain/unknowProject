@@ -109,6 +109,10 @@ static func pending_decision(state: Dictionary, library, arc_id: String) -> Dict
 ## "?finding" when the player must pick among several tags.
 static func outcome_tag_for(mission: Dictionary, terminal_state: String, branch_id: String = "") -> String:
 	var tags: Array = mission.get("outcome_tags", [])
+	# A kill job twisted into a counter-offer (MissionTwists): taking the
+	# target's money means the target got away, whatever the payout says.
+	if branch_id == "accept_bribe" and str(mission.get("verb", "")) != "comms_reversal":
+		terminal_state = "abandoned"
 	if terminal_state != "completed":
 		for tag in tags:
 			if _has_word(str(tag), FAILURE_WORDS):

@@ -39,6 +39,7 @@ TESTS=(
   run_crack_mesher_tests
   run_gate_rating_tests
   run_mission_complication_tests
+  run_mission_twist_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

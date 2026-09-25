@@ -1,0 +1,31 @@
+{
+    "schema_version": 1,
+    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code.",
+    "chance": 0.35,
+    "twists": [
+        {
+            "id": "counter_offer",
+            "verbs": ["kill_ships"],
+            "kind": "bribe",
+            "bribe_share": 1.3,
+            "hails": [
+                "Hold fire. Whatever {requester} is paying you, I can beat it. Take my money and let me go, and nobody has to know.",
+                "Wait. Before you finish this, ask yourself why {requester} wants me dead and not in a cell. I'll pay more than they will.",
+                "Cease fire. I'm not the story you were sold. Walk away from {requester}'s job and I'll make it worth your while.",
+                "Listen. {requester} is using you to clean up their mess. I can pay you better than they can, right now, clean."
+            ]
+        },
+        {
+            "id": "surrender",
+            "verbs": ["kill_ships"],
+            "kind": "surrender",
+            "spare_share": 0.6,
+            "hails": [
+                "I'm powering down. Weapons cold. You've won. Please, just let me go home.",
+                "Stop, please. I surrender. My drives are dead and I've got people waiting for me. You don't have to do this.",
+                "All right, it's over, I yield. Shields down, guns off. I'll leave this system and never come back. Just let me live.",
+                "Don't. I'm done, I'm out. Whatever {requester} told you about me, I'm not worth the shot."
+            ]
+        }
+    ]
+}
