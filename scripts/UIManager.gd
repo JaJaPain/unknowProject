@@ -12107,7 +12107,7 @@ func _show_kaelen_first_briefing() -> void:
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "amused")
-	agent_back_btn.visible = true
+	agent_back_btn.visible = false  # only his two replies (Abe); "Not right now" goes back
 
 	var briefing_lines := _kaelen_first_briefing_lines()
 	agent_dialogue_label.text = "\n\n".join(briefing_lines)

@@ -10,7 +10,7 @@ _Active task list. Update this file at the end of every session._
 
 ## FIRST: agent dialogue panel bug (Abe, 2026-09-26)
 
-- [ ] **The agent (Kaelen) panel cuts off most of its text.** With the new
+- [x] **DONE 2026-09-26** (sell/fuel buttons now a compact 2x2 grid with clipped labels + tooltips, hidden with Back during Kaelen's briefing; dialogue keeps a 160px minimum. Verify in play.) **The agent (Kaelen) panel cuts off most of its text.** With the new
   UI, the dialogue text is pushed up and out of view by the stack of
   buttons under it (screenshot: Kaelen's tutorial offer, text starts
   mid-paragraph). During the tutorial, show only two options:
@@ -21,13 +21,13 @@ _Active task list. Update this file at the end of every session._
   panel's button box this week (UIManager: sell_btn, refine_fuel_btn,
   buy_fuel_btn, fabricate_blocks_btn); they probably belong in the
   station services menu, not the agent conversation, in any case.
-- [ ] **Enemy ships fly and shoot backwards.** Likely from this week's switch
+- [x] **DONE 2026-09-26** (NPCShip dropped the legacy half-turn on assembled hulls; they face -Z like the player's. Verify in play.) **Enemy ships fly and shoot backwards.** Likely from this week's switch
   of every faction to runtime kitbash hulls (NPCShip.KITBASH_ALL_FACTIONS):
   check the assembled hull's facing (glTF +Z is the rear) against the
   direction NPCShip moves and fires (-Z forward), and the weapon markers.
-- [ ] **Star map button at the start:** show it greyed out / disabled until
+- [x] **DONE 2026-09-26** (greyed out, disabled, tooltip until a second system exists.) **Star map button at the start:** show it greyed out / disabled until
   the first jump, instead of the empty placeholder slot.
-- [ ] **N.O.V.A.'s "no ice in this system" line never played:** it fired
+- [x] **DONE 2026-09-26** (waits for undock + SpeechService quiet, then 2 s.) **N.O.V.A.'s "no ice in this system" line never played:** it fired
   when Kaelen opened the gate, while Kaelen was talking, and was dropped.
   Hold it until the player undocks (and no one else is speaking), then say
   it once.
