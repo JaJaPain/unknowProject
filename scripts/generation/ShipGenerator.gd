@@ -24,6 +24,10 @@ const FACTION_EMBLEMS := {
 const METALLIC_RANGE := Vector2(0.7, 0.95)
 
 static var active_campaign_path: String = ""
+## The old Blender procedural ships (Abe, 2026-09-25: move to the runtime
+## kitbash, ShipAssembler). Off: no background Blender runs and no cached
+## Blender models on ships. Kept, not deleted, behind this switch.
+static var legacy_blender_ships := false
 
 
 static func output_dir() -> String:

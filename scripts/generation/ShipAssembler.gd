@@ -48,6 +48,18 @@ const FACTION_STYLE := {
 		"engine": Color(0.4, 1.0, 0.6),
 		"badge": "AurelliaBadge.png",
 	},
+	# Minor factions (GlobalState.MINOR_FACTIONS colours) on light metal, so
+	# the kitbash keeps the colours players know them by.
+	"reavers": {"metal": "RedMetal.png", "normal": "hull_normal.png", "metallic": 0.8, "roughness": 0.5,
+		"engine": Color(1.0, 0.2, 0.15), "tint": Color(0.95, 0.55, 0.55)},
+	"obsidian": {"metal": "whiteMetal.png", "normal": "hull_normal.png", "metallic": 0.85, "roughness": 0.35,
+		"engine": Color(0.7, 0.3, 1.0), "tint": Color(0.5, 0.3, 0.7)},
+	"dustborn": {"metal": "whiteMetal.png", "normal": "hull_normal.png", "metallic": 0.7, "roughness": 0.6,
+		"engine": Color(1.0, 0.7, 0.2), "tint": Color(0.85, 0.68, 0.35)},
+	"wraiths": {"metal": "whiteMetal.png", "normal": "hull_normal.png", "metallic": 0.8, "roughness": 0.45,
+		"engine": Color(0.3, 1.0, 0.4), "tint": Color(0.4, 0.7, 0.42)},
+	"ironclad": {"metal": "whiteMetal.png", "normal": "hull_normal.png", "metallic": 0.9, "roughness": 0.4,
+		"engine": Color(0.8, 0.85, 0.9), "tint": Color(0.58, 0.6, 0.64)},
 	# Neutral gunmetal grey — no faction badge. Player-ship / showcase use.
 	"gunmetal": {
 		"metal": "metal.png",
@@ -146,7 +158,8 @@ const PART_LOOK := {
 ## Build a faction metal+normal material for a part kind (triplanar — parts have
 ## no clean UVs). kind in {"hull","engine","weapon"}.
 static func _build_part_material(faction: String, kind: String = "hull") -> StandardMaterial3D:
-	var style: Dictionary = FACTION_STYLE.get(faction, FACTION_STYLE["vanguard"])
+	# Unknown factions fly neutral gunmetal rather than borrowing Vanguard red.
+	var style: Dictionary = FACTION_STYLE.get(faction, FACTION_STYLE["gunmetal"])
 	var look: Dictionary = PART_LOOK.get(kind, PART_LOOK["hull"])
 	var mat := StandardMaterial3D.new()
 	# A part-look can override the faction metal with a neutral texture (thrusters).
@@ -154,7 +167,7 @@ static func _build_part_material(faction: String, kind: String = "hull") -> Stan
 	var metal_path := "%s/metals/%s" % [TEX_DIR, metal_file]
 	if ResourceLoader.exists(metal_path):
 		mat.albedo_texture = load(metal_path)
-	mat.albedo_color = look["tint"]
+	mat.albedo_color = look["tint"] * style.get("tint", Color.WHITE) if not look.has("metal") else look["tint"]
 	var normal_path := "%s/normals/%s" % [TEX_DIR, style["normal"]]
 	if ResourceLoader.exists(normal_path):
 		mat.normal_enabled = true
@@ -355,10 +368,20 @@ static func _add_thruster_socket_markers(root: Node3D, part_root: Node3D, start_
 		var marker := Marker3D.new()
 		marker.name = "thruster_%d" % index
 		marker.transform = _local_transform_to_ancestor(root, socket)
-		marker.set_meta("thruster_radius", 0.34)
+		marker.set_meta("thruster_radius", _socket_radius(socket))
 		root.add_child(marker)
 		index += 1
 	return index
+
+
+## A socket plate as wide as its nozzle exit gives the plume radius; tiny
+## marker cubes (like 5-Engine's) keep the default.
+static func _socket_radius(socket: Node3D) -> float:
+	if socket is MeshInstance3D and (socket as MeshInstance3D).mesh != null:
+		var width := (socket as MeshInstance3D).mesh.get_aabb().size.x
+		if width >= 0.12:
+			return width * 0.5
+	return 0.34
 
 
 static func _collect_thruster_socket_nodes(node: Node, out: Array[Node3D]) -> void:
@@ -500,23 +523,32 @@ static func build_catalog_ship_with_look(faction: String, role: String, seed_val
 	return node
 
 
-## Tints and weathers hull and weapon materials (not thrusters or badges).
+## Tints and weathers hull, weapon and engine-body materials (not thruster
+## nozzles or badges).
 static func apply_look(root: Node3D, look: Dictionary) -> void:
 	var wear: Array = WEAR_LOOK.get(str(look.get("wear", "pristine")), WEAR_LOOK["pristine"])
-	var paint := Color.from_hsv(float(look.get("hue", 0.0)), 0.45 * float(wear[1]), 0.95 * float(wear[0]))
+	var paint := Color.from_hsv(float(look.get("hue", 0.0)), 0.55 * float(wear[1]), 0.95 * float(wear[0]))
+	# Paint goes over neutral light metal: over the base faction's dark metal
+	# every tint came out the same dark colour.
+	var neutral_path := "%s/metals/whiteMetal.png" % TEX_DIR
+	var neutral: Texture2D = load(neutral_path) if ResourceLoader.exists(neutral_path) else null
 	for child in root.get_children():
-		if not (child is Node3D) or str(child.name) == "FactionBadge" or str(child.name).begins_with("mount_engines"):
+		if not (child is Node3D) or str(child.name) == "FactionBadge":
 			continue
+		# Engine bodies take the paint a shade darker; nozzles keep their metal.
+		var is_engine := str(child.name).begins_with("mount_engines")
 		var meshes: Array[MeshInstance3D] = []
 		_collect_meshes(child, meshes)
 		for mi in meshes:
 			var surf := mi.mesh.get_surface_count() if mi.mesh else 0
 			for s in range(surf):
 				var mat := mi.get_surface_override_material(s) as StandardMaterial3D
-				if mat == null:
+				if mat == null or (is_engine and _surface_is_thruster(mi, s)):
 					continue
 				var painted := mat.duplicate() as StandardMaterial3D
-				painted.albedo_color = mat.albedo_color * paint
+				if neutral != null:
+					painted.albedo_texture = neutral
+				painted.albedo_color = mat.albedo_color * (paint.darkened(0.25) if is_engine else paint)
 				painted.roughness = float(wear[2])
 				mi.set_surface_override_material(s, painted)
 

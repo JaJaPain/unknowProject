@@ -283,6 +283,13 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     its Faction DNA look (hull silhouette where a matching hull exists,
     paint hue, wear: pristine / patched / scorched / salvaged). Not yet seen
     rendered: check the paint is not garish (ship screenshot pending Abe's OK).
+  - All factions now fly runtime kitbash ships (NPCShip.KITBASH_ALL_FACTIONS;
+    the old Blender procedural ships are off via
+    ShipGenerator.legacy_blender_ships). Thrusters done 2026-09-25 for the
+    engines in use (Cube, Bracket, Trap, split, Block_single; 5-Engine was
+    Abe's): nozzles on a "Thruster" material, one socket plate per nozzle
+    sized to its exit; NPC glow (NpcEngineGlow) sits in each nozzle at its
+    size. Snapshot: tools/engine_glow_snapshot.gd. Unused engines not done.
   - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
     Mk V 8 (+2 crystals).
   - Done 2026-09-25: the survey drone, the three tech-grade materials and

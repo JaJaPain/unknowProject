@@ -55,6 +55,8 @@ func _on_ship_generated(model_seed: String) -> void:
 			continue
 		if not entity.has_method("apply_generated_model"):
 			continue
+		if not ShipGenerator.legacy_blender_ships:
+			return
 		var model := ShipGenerator.load_runtime(model_seed)
 		if model:
 			entity.apply_generated_model(model)
@@ -203,7 +205,7 @@ func _spawn_ship(
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	var model_seed: String = "ship_%d_%d" % [config.seed_value, runtime_ship_sequence]
 	npc.set_meta("model_seed", model_seed)
-	if ShipGenerator.has_cached(model_seed):
+	if ShipGenerator.legacy_blender_ships and ShipGenerator.has_cached(model_seed):
 		npc.custom_model_scene = ShipGenerator.load_runtime(model_seed)
 	system_root.add_child(npc)
 	npc.global_position = pos

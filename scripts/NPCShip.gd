@@ -49,6 +49,7 @@ const RuntimeTraceType := preload(
 	"res://scripts/diagnostics/RuntimeTrace.gd"
 )
 const BountyRegistryScript = preload("res://scripts/economy/BountyRegistry.gd")
+const EngineGlowScript := preload("res://scripts/visuals/NpcEngineGlow.gd")
 
 # Archetype attributes
 var archetype: String = "Balanced"
@@ -99,6 +100,9 @@ const MAJOR_FACTION_MODELS := {
 
 # Factions whose ships are kitbash-assembled at runtime via ShipAssembler.
 const ASSEMBLED_FACTIONS := {"vanguard": true}
+## Every faction's ships are runtime kitbash (ShipAssembler) (Abe, 2026-09-25:
+## move off the old ships). False restores the per-faction legacy models.
+const KITBASH_ALL_FACTIONS := true
 
 const MAJOR_HULL_TARGET_SIZES := {
 	"Gunner": 24.0,
@@ -255,7 +259,7 @@ func _ready():
 func _setup_hull():
 	var hull_scene: PackedScene = null
 
-	if custom_model_scene != null:
+	if custom_model_scene != null and not KITBASH_ALL_FACTIONS:
 		hull_instance = custom_model_scene
 		visual.add_child(hull_instance)
 		hull_instance.rotation.y = PI
@@ -273,6 +277,14 @@ func _setup_hull():
 			_fit_major_hull(hull_instance)
 			hull_instance.scale *= 1.5
 			_setup_model_points(hull_instance)
+			return
+
+	# The runtime kitbash for every faction (legacy models only if it fails).
+	if KITBASH_ALL_FACTIONS:
+		if custom_model_scene != null:
+			custom_model_scene.queue_free()  # an old Blender model, unused
+			custom_model_scene = null
+		if _build_assembled_hull():
 			return
 
 	# Check if this is a minor faction (data-driven lookup)
@@ -450,7 +462,7 @@ func _setup_model_points(node: Node) -> void:
 	if node is Node3D:
 		if lower_name.begins_with("weapon_") or "hardpoint" in lower_name or "muzzle" in lower_name:
 			hardpoints.append(node as Node3D)
-		elif lower_name.begins_with("engine_") or "thruster" in lower_name or "exhaust" in lower_name:
+		elif EngineGlowScript.is_engine_point(node):
 			engine_points.append(node as Node3D)
 	for child in node.get_children():
 		_setup_model_points(child)
@@ -476,37 +488,10 @@ func _create_fallback_marker(marker_name: String, marker_position: Vector3) -> M
 func _create_engine_glow() -> void:
 	if engine_points.is_empty():
 		return
-
-	engine_glow = MultiMeshInstance3D.new()
-	engine_glow.name = "EngineGlow"
-	var glow_mesh := SphereMesh.new()
-	glow_mesh.radius = 0.42
-	glow_mesh.height = 0.84
-	glow_mesh.radial_segments = 8
-	glow_mesh.rings = 4
-	var glow_material := StandardMaterial3D.new()
-	glow_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	glow_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glow_material.albedo_color = Color(0.15, 0.75, 1.0, 0.82)
-	glow_material.emission_enabled = true
-	glow_material.emission = _get_engine_color()
-	glow_material.emission_energy_multiplier = 4.0
-	glow_mesh.material = glow_material
-
-	var multimesh := MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = glow_mesh
-	multimesh.instance_count = engine_points.size()
-	for index in range(engine_points.size()):
-		var engine_point := engine_points[index]
-		var relative_transform := visual.global_transform.affine_inverse() * engine_point.global_transform
-		multimesh.set_instance_transform(index, Transform3D(Basis.IDENTITY, relative_transform.origin))
-	engine_glow.multimesh = multimesh
-	visual.add_child(engine_glow)
-	engine_glow_material = glow_material
-	engine_glow_base_transforms.clear()
-	for index in range(engine_points.size()):
-		engine_glow_base_transforms.append(multimesh.get_instance_transform(index))
+	var built := EngineGlowScript.build(visual, engine_points, _get_engine_color())
+	engine_glow = built["node"]
+	engine_glow_material = built["material"]
+	engine_glow_base_transforms = built["bases"]
 
 func _get_engine_color() -> Color:
 	match faction:
@@ -524,18 +509,7 @@ func _update_engine_glow() -> void:
 	if engine_glow_material == null:
 		return
 	var speed_ratio := clampf(velocity.length() / maxf(speed, 1.0), 0.0, 1.0)
-	var pulse := 1.0 + sin(Time.get_ticks_msec() * 0.012) * 0.15
-	var alpha := lerpf(0.3, 0.9, speed_ratio) * pulse
-	var emission_mult := lerpf(2.0, 6.0, speed_ratio) * pulse
-	engine_glow_material.albedo_color.a = alpha
-	engine_glow_material.emission_energy_multiplier = emission_mult
-	var mm := engine_glow.multimesh
-	if mm == null:
-		return
-	var s := lerpf(0.6, 1.4, speed_ratio) * pulse
-	for i in range(mini(engine_glow_base_transforms.size(), mm.instance_count)):
-		var base := engine_glow_base_transforms[i]
-		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY.scaled(Vector3(s, s, s)), base.origin))
+	EngineGlowScript.animate(engine_glow, engine_glow_material, engine_glow_base_transforms, speed_ratio)
 
 func _refresh_role_patrol_center() -> void:
 	if bool(get_meta("is_quest_target", false)) \

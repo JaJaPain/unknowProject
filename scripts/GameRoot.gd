@@ -249,14 +249,18 @@ func _start_gameplay_runtime() -> void:
 	GlobalState.current_system_id = start_definition.legacy_id
 	if GateDiscovery:
 		GateDiscovery.ensure_destinations_for_system(start_definition.id)
-	ship_pre_generator = ShipPreGenerator.new()
-	ship_pre_generator.name = "ShipPreGenerator"
-	ship_pre_generator.initialize(system_registry)
-	add_child(ship_pre_generator)
+	# The old Blender ship pre-generator only runs when switched back on
+	# (ShipGenerator.legacy_blender_ships); ships are kitbashed at runtime.
+	if ShipGenerator.legacy_blender_ships:
+		ship_pre_generator = ShipPreGenerator.new()
+		ship_pre_generator.name = "ShipPreGenerator"
+		ship_pre_generator.initialize(system_registry)
+		add_child(ship_pre_generator)
 	system_changed.connect(_on_system_changed_prepare_destinations)
 	system_changed.connect(_on_system_arrival_prefetch)
-	system_changed.connect(ship_pre_generator.on_system_entered)
-	ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
+	if ship_pre_generator != null:
+		system_changed.connect(ship_pre_generator.on_system_entered)
+		ship_pre_generator.on_system_entered(start_definition.legacy_id, "")
 	QuestManager.quest_accepted_details.connect(_on_quest_accepted_chronicle)
 	QuestManager.quest_progress_updated.connect(_on_quest_progress_prefetch)
 	QuestManager.quest_declined_details.connect(_on_quest_declined_chronicle)
