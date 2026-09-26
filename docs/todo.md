@@ -299,7 +299,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     in a system without ice the job says the ice must be hauled in.
   - Still to build (Abe's idea): O2 canisters from water ice and O2
     delivery jobs (an outpost's scrubbers failing, 100 L to keep breathing).
-  - Inventory screen facelift (Abe, "as you have time"): the item inventory
+  - Inventory screen facelift (Abe): NEW SCREEN LANDED 2026-09-26 (scripts/ui/InventoryScreen.gd; tools/inventory_snapshot.gd). Was: the item inventory
     (not the ore hold) needs an AAA-quality look. Show before/after shots.
   - Investigations now take a deadline, an ambush, or a rival on the same
     signal (race them). The rival is their only turn so far, so it is the

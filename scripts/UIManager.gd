@@ -312,12 +312,8 @@ var store_back_btn: Button
 var store_btn: Button
 var _store_current_id: String = ""
 var inventory_panel: Panel
-var inventory_list: VBoxContainer
-var inventory_summary_label: Label
+const InventoryScreenScript := preload("res://scripts/ui/InventoryScreen.gd")
 var inventory_return_to_dock: bool = false
-var inventory_back_btn: Button
-var inventory_filter_btn: Button
-var inventory_consumables_only: bool = false
 
 var quest_tracker_panel: PanelContainer
 var quest_tracker_title: Label
@@ -1999,69 +1995,17 @@ func _create_store_panel() -> void:
 
 
 func _create_inventory_panel() -> void:
-	inventory_panel = Panel.new()
-	add_child(inventory_panel)
-	inventory_panel.anchor_left = 0.22
-	inventory_panel.anchor_right = 0.78
-	inventory_panel.anchor_top = 0.16
-	inventory_panel.anchor_bottom = 0.84
+	# The inventory screen (scripts/ui/InventoryScreen.gd): grid, detail pane,
+	# hold strip. This only places it and answers its two requests.
+	inventory_panel = InventoryScreenScript.new()
+	inventory_panel.anchor_left = 0.12
+	inventory_panel.anchor_right = 0.88
+	inventory_panel.anchor_top = 0.08
+	inventory_panel.anchor_bottom = 0.92
 	inventory_panel.visible = false
-
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
-	style.border_width_left = 2
-	style.border_width_top = 2
-	style.border_width_right = 2
-	style.border_width_bottom = 2
-	style.border_color = Color(0.2, 0.65, 0.95, 0.9)
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_right = 4
-	style.corner_radius_bottom_left = 4
-	inventory_panel.add_theme_stylebox_override("panel", style)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 16
-	vbox.offset_right = -16
-	vbox.offset_top = 16
-	vbox.offset_bottom = -16
-	vbox.add_theme_constant_override("separation", 8)
-	inventory_panel.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "SHIP INVENTORY"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
-	vbox.add_child(title)
-
-	inventory_summary_label = Label.new()
-	inventory_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	inventory_summary_label.add_theme_font_size_override("font_size", 14)
-	inventory_summary_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
-	vbox.add_child(inventory_summary_label)
-
-	inventory_filter_btn = Button.new()
-	inventory_filter_btn.text = "Show: All Items"
-	inventory_filter_btn.add_theme_font_size_override("font_size", 13)
-	inventory_filter_btn.pressed.connect(_on_inventory_filter_toggled)
-	vbox.add_child(inventory_filter_btn)
-
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	vbox.add_child(scroll)
-
-	inventory_list = VBoxContainer.new()
-	inventory_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	inventory_list.add_theme_constant_override("separation", 6)
-	scroll.add_child(inventory_list)
-
-	inventory_back_btn = Button.new()
-	inventory_back_btn.text = "Back to Services"
-	inventory_back_btn.pressed.connect(_on_inventory_back_pressed)
-	vbox.add_child(inventory_back_btn)
+	add_child(inventory_panel)
+	inventory_panel.use_requested.connect(_on_inventory_use_pressed)
+	inventory_panel.back_requested.connect(_on_inventory_back_pressed)
 
 
 func _create_public_board_panel() -> void:
@@ -8095,56 +8039,9 @@ func _close_inventory_panel() -> void:
 	inventory_return_to_dock = false
 
 
-func _on_inventory_filter_toggled() -> void:
-	inventory_consumables_only = not inventory_consumables_only
-	inventory_filter_btn.text = "Show: Consumables" if inventory_consumables_only else "Show: All Items"
-	_render_inventory_items()
-
-
 func _render_inventory_items() -> void:
-	for child in inventory_list.get_children():
-		child.queue_free()
-	inventory_summary_label.text = "Credits: %d SC    Banked Ore: %.1f / %.1f m³    Slots: %d / %d" % [
-		GlobalState.player_credits,
-		GlobalState.player_storage_ore,
-		GlobalState.player_storage_max,
-		GlobalState.inventory.slot_count(),
-		GlobalState.inventory.max_slots,
-	]
-	if not inventory_consumables_only:
-		inventory_list.add_child(_build_inventory_section_label("Cargo Hold"))
-		inventory_list.add_child(_build_inventory_cargo_row())
-	var items: Dictionary = GlobalState.inventory.get_all()
-	var section_label := "Consumables" if inventory_consumables_only else "Owned Items"
-	inventory_list.add_child(_build_inventory_section_label(section_label))
-	var keys := items.keys()
-	keys.sort()
-	var reg = StoreRegistryScript.shared()
-	var shown := 0
-	for item_id in keys:
-		var quantity := int(items[item_id])
-		if quantity <= 0:
-			continue
-		var item_def = reg.get_item(str(item_id))
-		if inventory_consumables_only:
-			var cat: String = item_def.category if item_def else ""
-			if cat != "consumable":
-				continue
-		shown += 1
-		inventory_list.add_child(_build_inventory_item_row(str(item_id), quantity, item_def))
-	if shown == 0:
-		var empty := Label.new()
-		empty.text = "No consumables." if inventory_consumables_only else "No stored items yet."
-		empty.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75))
-		inventory_list.add_child(empty)
-
-
-func _build_inventory_section_label(text: String) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", 15)
-	label.add_theme_color_override("font_color", Color(0.35, 0.8, 1.0))
-	return label
+	if inventory_panel != null and inventory_panel.has_method("refresh"):
+		inventory_panel.refresh()
 
 
 func _build_item_icon(item_def) -> TextureRect:
@@ -8173,80 +8070,6 @@ func _build_item_icon(item_def) -> TextureRect:
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	return icon
-
-
-func _build_inventory_cargo_row() -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	var title := Label.new()
-	if GlobalState.cargo_type == GlobalState.CargoType.EMPTY:
-		title.text = "Empty — ready to load ore or cargo"
-		title.add_theme_color_override("font_color", Color(0.65, 0.7, 0.75))
-	else:
-		title.text = GlobalState.cargo_display_text()
-		title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
-	title.add_theme_font_size_override("font_size", 14)
-	box.add_child(title)
-	if GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
-		var detail := Label.new()
-		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		detail.text = "%s → %s\n%s" % [
-			str(GlobalState.cargo_special.get("source", "Unknown source")),
-			str(GlobalState.cargo_special.get("destination", "Unknown destination")),
-			str(GlobalState.cargo_special.get("description", "")),
-		]
-		detail.add_theme_font_size_override("font_size", 12)
-		detail.add_theme_color_override("font_color", Color(0.72, 0.78, 0.84))
-		box.add_child(detail)
-	return box
-
-
-func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 2)
-	var header := HBoxContainer.new()
-	header.add_theme_constant_override("separation", 8)
-	header.alignment = BoxContainer.ALIGNMENT_CENTER
-	var icon := _build_item_icon(item_def)
-	if icon:
-		header.add_child(icon)
-	var title := Label.new()
-	var display_name := item_id.capitalize()
-	var category := "item"
-	var description := ""
-	if item_def != null:
-		display_name = item_def.display_name
-		category = item_def.category
-		description = item_def.description
-	var stack_text := "x%d" % quantity
-	if item_def != null and item_def.stack_max > 1:
-		stack_text = "x%d/%d" % [quantity, item_def.stack_max]
-	title.text = "%s %s [%s]" % [display_name, stack_text, category]
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title.add_theme_font_size_override("font_size", 14)
-	title.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
-	header.add_child(title)
-	if ConsumableEffectsScript.can_use(item_id):
-		var use_btn := Button.new()
-		use_btn.text = "Use"
-		use_btn.custom_minimum_size.x = 64
-		use_btn.disabled = not ConsumableEffectsScript.is_usable_now(
-			item_id,
-			GlobalState.player,
-			GlobalState.inventory,
-			GlobalState.shield_capacity
-		)
-		use_btn.pressed.connect(_on_inventory_use_pressed.bind(item_id))
-		header.add_child(use_btn)
-	box.add_child(header)
-	if not description.strip_edges().is_empty():
-		var detail := Label.new()
-		detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		detail.text = description
-		detail.add_theme_font_size_override("font_size", 12)
-		detail.add_theme_color_override("font_color", Color(0.72, 0.78, 0.84))
-		box.add_child(detail)
-	return box
 
 
 func _on_inventory_use_pressed(item_id: String) -> void:
