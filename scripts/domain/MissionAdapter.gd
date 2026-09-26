@@ -11,6 +11,7 @@ const ConsequenceType := preload(
 	"res://scripts/domain/MissionConsequenceDefinition.gd"
 )
 const StateType := preload("res://scripts/domain/MissionState.gd")
+const OreTypesType := preload("res://scripts/economy/OreTypes.gd")
 const NarrativeMetadataType := preload(
 	"res://scripts/domain/NarrativeMetadata.gd"
 )
@@ -164,6 +165,9 @@ static func build_active_state(
 				snappedf(float(objective.get("amount_required", 20.0)), 1.0)
 			)
 			state["partial_delivered"] = 0.0
+			# A named ore: only that type counts (none named: any ore).
+			var ore_type := str(objective.get("ore_type", "")).strip_edges()
+			state["ore_type"] = OreTypesType.normalize(ore_type) if not ore_type.is_empty() else ""
 		"PICKUP_SPECIAL":
 			state["target_outpost"] = str(objective.get("target_outpost", ""))
 			state["target_outpost_display"] = str(

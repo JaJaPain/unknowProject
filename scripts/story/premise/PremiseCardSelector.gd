@@ -12,6 +12,8 @@ extends RefCounted
 ##   themes: Array[String]           campaign theme bias (optional)
 ##   hidden_hand_method: String      main-story method to fit (optional)
 ##   excluded_ids: Array[String]     used or live in this campaign (never repeat)
+##   ores: Array[String]             ores this system's belts carry (optional;
+##                                   without it, ore is not checked)
 ##
 ## Hard requirements filter; then the order is:
 ##   1. history group on this machine (fresh, then older, then recent),
@@ -54,7 +56,27 @@ static func rejection(card: Dictionary, situation: Dictionary) -> String:
 			return "forbidden state %s" % s
 	if int(req.get("min_factions", 1)) > int(situation.get("faction_count", 0)):
 		return "not enough factions"
+	# An ore job the belts here cannot supply could never be finished.
+	if situation.has("ores"):
+		var ores := _strings(situation["ores"])
+		for ore in needed_ores(card):
+			if not ore in ores:
+				return "needs ore %s" % ore
 	return ""
+
+
+## The ores (other than silicate) a card's ore-delivery jobs ask for.
+static func needed_ores(card: Dictionary) -> Array[String]:
+	var out: Array[String] = []
+	for b in card.get("beats", []):
+		if not b is Dictionary:
+			continue
+		for m in (b as Dictionary).get("missions", []):
+			if m is Dictionary and str(m.get("verb", "")) == "deliver_ore":
+				var ore := str(m.get("ore", "silicate"))
+				if ore != "silicate" and not ore in out:
+					out.append(ore)
+	return out
 
 
 static func score(card: Dictionary, situation: Dictionary) -> int:

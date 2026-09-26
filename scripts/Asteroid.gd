@@ -12,11 +12,29 @@ const TECH_SEAM_PERCENT := 1
 const TECH_SEAM_GROUP := "tech_seam_asteroid"
 const TECH_SEAM_TINT := Color(0.85, 0.12, 0.06, 0.4)
 var tech_seam := false
+const OreTypesScript := preload("res://scripts/economy/OreTypes.gd")
+## What this rock yields (OreTypes), drawn from the system's belt mix by its
+## persistent id, so it is the same rock every visit.
+var ore_type := "silicate"
 ## Set by a field spawner so every field has at least one red rock.
 var force_tech_seam := false
 
 
 ## Whether the rock with this persistent id has tech-grade seams (fixed per id).
+## The ore a rock with this id carries, from a belt mix (type -> share).
+static func ore_type_for(id: String, mix: Dictionary) -> String:
+	if mix.is_empty():
+		return "silicate"
+	var roll := float(posmod((id + ":ore").hash(), 10000)) / 10000.0
+	var keys := mix.keys()
+	keys.sort()
+	for key in keys:
+		roll -= float(mix[key])
+		if roll < 0.0:
+			return str(key)
+	return "silicate"
+
+
 static func is_tech_seam_id(id: String) -> bool:
 	return not id.is_empty() and posmod((id + ":tech_seam").hash(), 100) < TECH_SEAM_PERCENT
 
@@ -99,6 +117,18 @@ func _ready():
 		_model_index = AsteroidModels.model_index_for_seed(persistent_id.hash())
 		AsteroidModels.apply_model_index(_mesh, _model_index)
 	tech_seam = force_tech_seam or is_tech_seam_id(persistent_id)
+	ore_type = ore_type_for(persistent_id, GlobalState.system_ore_mix)
+	if not tech_seam and ore_type != OreTypesScript.DEFAULT and _mesh:
+		var ore_tint := StandardMaterial3D.new()
+		var c := OreTypesScript.tint(ore_type)
+		ore_tint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		ore_tint.albedo_color = Color(c.r, c.g, c.b, 0.3)
+		var glow := OreTypesScript.glow(ore_type)
+		if glow > 0.0:
+			ore_tint.emission_enabled = true
+			ore_tint.emission = c
+			ore_tint.emission_energy_multiplier = glow
+		_mesh.material_overlay = ore_tint
 	if tech_seam:
 		add_to_group(TECH_SEAM_GROUP)
 		if _mesh:
@@ -464,7 +494,7 @@ func mine():
 	amount_to_mine = min(amount_to_mine, space_left)
 
 	if amount_to_mine > 0.0:
-		var added = GlobalState.add_ore(amount_to_mine)
+		var added = GlobalState.add_ore(amount_to_mine, ore_type)
 		resources -= added
 		if added > 0.0 and GlobalState.has_method("report_player_mined_asteroid"):
 			GlobalState.report_player_mined_asteroid(self)

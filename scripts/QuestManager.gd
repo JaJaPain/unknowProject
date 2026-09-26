@@ -1019,11 +1019,12 @@ func deliver_partial(amount: float) -> float:
 	if GlobalState.cargo_type != GlobalState.CargoType.ORE:
 		return 0.0
 	var remaining = active_quest["amount_required"] - active_quest.get("partial_delivered", 0.0)
-	var to_deliver = min(amount, remaining, GlobalState.cargo)
+	var ore_type := str(active_quest.get("ore_type", ""))
+	var to_deliver = min(amount, remaining, GlobalState.deliverable_ore(ore_type))
 	to_deliver = max(0.0, to_deliver)
 	if to_deliver <= 0.0:
 		return 0.0
-	GlobalState.remove_ore(to_deliver)
+	GlobalState.remove_ore(to_deliver, ore_type)
 	active_quest["partial_delivered"] = active_quest.get("partial_delivered", 0.0) + to_deliver
 	active_quest["partial_delivery_count"] = int(
 		active_quest.get("partial_delivery_count", 0)
@@ -1084,6 +1085,7 @@ func _capture_settlement_snapshot() -> Dictionary:
 		"reputations": GlobalState.reputations.duplicate(true),
 		"cargo": float(GlobalState.cargo),
 		"cargo_type": int(GlobalState.cargo_type),
+		"cargo_ore_types": GlobalState.cargo_ore_mix(),
 		"cargo_special": GlobalState.cargo_special.duplicate(true),
 		"inventory": GlobalState.inventory.to_dict(),
 		"board_cooldowns": _board_cooldowns.duplicate(true),
@@ -1097,6 +1099,7 @@ func _restore_settlement_snapshot(snapshot: Dictionary, instance = null, instanc
 	GlobalState.reputations = (snapshot.get("reputations", {}) as Dictionary).duplicate(true)
 	GlobalState.cargo = float(snapshot.get("cargo", 0.0))
 	GlobalState.cargo_type = int(snapshot.get("cargo_type", GlobalState.CargoType.EMPTY))
+	GlobalState.cargo_ore_types = (snapshot.get("cargo_ore_types", {}) as Dictionary).duplicate()
 	GlobalState.cargo_special = (snapshot.get("cargo_special", {}) as Dictionary).duplicate(true)
 	GlobalState.inventory = PlayerInventoryType.from_dict(snapshot.get("inventory", {}))
 	GlobalState.cargo_changed.emit(GlobalState.cargo)
@@ -1537,7 +1540,7 @@ func _despawn_ceasefire_targets(faction_name: String) -> void:
 
 func _apply_completion_hints(hints: Dictionary) -> void:
 	if hints.get("remove_ore", 0.0) > 0.0:
-		GlobalState.remove_ore(hints["remove_ore"])
+		GlobalState.remove_ore(hints["remove_ore"], str(hints.get("remove_ore_type", "")))
 	var item_id := str(hints.get("remove_inventory_item", ""))
 	var item_quantity := int(hints.get("remove_inventory_quantity", 0))
 	if not item_id.is_empty() and item_quantity > 0:

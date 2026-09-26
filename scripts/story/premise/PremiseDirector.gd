@@ -728,6 +728,7 @@ func _start_one(world: Dictionary, profile: Dictionary, scale: String, now_minut
 		"scale": scale,
 		"excluded_ids": state.get("used_card_ids", []),
 		"hidden_hand_method": str(HandType.main_story(state).get("method", "")),
+		"ores": (profile.get("ores", {"silicate": 1.0}) as Dictionary).keys(),
 	}
 	var seed_value := hash("%d|%s|%d" % [campaign_seed, world.get("system_id", ""), int(state.get("next_seq", 1))])
 	var picks := SelectorType.pick(library, _history, situation, seed_value, 1)

@@ -2834,7 +2834,8 @@ func _update_salvage(delta: float) -> void:
 
 func _salvage_collect_return() -> void:
 	var give := minf(SALVAGE_ORE_PER_RETURN, _salvage_ore_remaining)
-	var added := GlobalState.add_ore(give)
+	# Wreck salvage is scrap metal: ferrite.
+	var added := GlobalState.add_ore(give, "ferrite")
 	if added <= 0.0:
 		_abort_salvage("hold_full")
 		return

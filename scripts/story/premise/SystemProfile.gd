@@ -48,9 +48,26 @@ const RANDOM_STATE_POOL: Array[String] = [
 ]
 const RANDOM_STATE_CHANCE := 45   # percent chance of one random starting state
 
+# Ores the belts carry (OreTypes): silicate everywhere, plus two others drawn
+# by weight; star colour and quirks tilt the draw. Shares of the belt.
+const ORE_BASE_WEIGHT := {"water_ice": 4, "ferrite": 5, "cuprite": 3, "thorium": 1}
+const STAR_ORE_BONUS := {
+	"red": {"water_ice": 3, "ferrite": 1},
+	"white": {"thorium": 2, "cuprite": 1},
+	"blue": {"cuprite": 2, "thorium": 1},
+	"orange": {"ferrite": 3},
+	"yellow": {"water_ice": 1, "cuprite": 1},
+}
+const QUIRK_ORE_BONUS := {
+	"pulsar": {"thorium": 3}, "dying_star": {"thorium": 2}, "nebula": {"water_ice": 3},
+	"dense_debris": {"ferrite": 3}, "ion_storm": {"cuprite": 2},
+}
+const ORE_SHARES := [0.28, 0.14]
+const THORIUM_MAX_SHARE := 0.08
+
 
 static func generate(system_id: String, seed_value: int, star_type: String, is_first_system: bool = false) -> Dictionary:
-	var profile := {"system_id": system_id, "quirks": [], "states": []}
+	var profile := {"system_id": system_id, "quirks": [], "states": [], "ores": {"silicate": 1.0}}
 	if is_first_system:
 		return profile
 	var rng := RandomNumberGenerator.new()
@@ -83,7 +100,46 @@ static func generate(system_id: String, seed_value: int, star_type: String, is_f
 			states.append(s)
 	profile["quirks"] = quirks
 	profile["states"] = states
+	profile["ores"] = ore_mix(system_id, seed_value, star_type, quirks)
 	return profile
+
+
+## The belt mix: ore type -> share (sums to 1). Its own random stream, so
+## adding ores changed no system's quirks or states.
+static func ore_mix(system_id: String, seed_value: int, star_type: String, quirks: Array) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%s|%d|system_ores" % [system_id, seed_value])
+	var weights := ORE_BASE_WEIGHT.duplicate()
+	var star_bonus: Dictionary = STAR_ORE_BONUS.get(star_type, {})
+	for ore in star_bonus:
+		weights[ore] = int(weights.get(ore, 0)) + int(star_bonus[ore])
+	for q in quirks:
+		var qb: Dictionary = QUIRK_ORE_BONUS.get(str(q), {})
+		for ore in qb:
+			weights[ore] = int(weights.get(ore, 0)) + int(qb[ore])
+	var mix := {"silicate": 1.0}
+	for share in ORE_SHARES:
+		var total := 0
+		for ore in weights:
+			total += int(weights[ore])
+		if total <= 0:
+			break
+		var roll := rng.randi_range(0, total - 1)
+		var pick := ""
+		for ore in ORE_BASE_WEIGHT.keys():
+			if not weights.has(ore):
+				continue
+			roll -= int(weights[ore])
+			if roll < 0:
+				pick = str(ore)
+				break
+		if pick.is_empty():
+			break
+		weights.erase(pick)
+		var amount: float = minf(float(share), THORIUM_MAX_SHARE) if pick == "thorium" else float(share)
+		mix[pick] = amount
+		mix["silicate"] = float(mix["silicate"]) - amount
+	return mix
 
 
 ## Applies a card resolution's `system_state` consequence (add/remove lists).

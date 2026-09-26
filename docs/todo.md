@@ -269,6 +269,13 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     pulsar window (kill deadline), dying-star evacuation (2 h deadline).
     Ambush raiders are reavers (Abe: a travelling pirate race, right in any
     system). Does the ambush land at a fair distance (420 m ring)?
+  - Ore types (2026-09-25): belts now carry silicate plus two other ores
+    (water ice pale blue, ferrite steel grey, cuprite green, thorium yellow
+    with a faint glow). Rarer ore sells for more (1.3x to 4x). Story ore jobs
+    name their ore and only count that ore; a story needing an ore the belts
+    here lack is not offered here. Wreck salvage now yields ferrite (1.6x;
+    salvage pays more than it did). Are the tints readable at a distance?
+    Is thorium too lucrative?
   - Investigations now take a deadline, an ambush, or a rival on the same
     signal (race them). The rival is their only turn so far, so it is the
     most common turn overall; investigations need turns of their own.

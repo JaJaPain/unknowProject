@@ -1439,6 +1439,12 @@ func _refresh_local_faction_looks() -> void:
 			continue
 		looks[key] = PremiseFactionDNAType.ship_look(PremiseFactionDNAType.for_faction(str(f.get("id", ""))))
 	GlobalState.local_faction_looks = looks
+	# The belts' ores, set here too: this runs before the system's asteroids
+	# spawn, on a jump and on a load.
+	var ores: Dictionary = {"silicate": 1.0}
+	if is_instance_valid(premise_director):
+		ores = premise_director.profile_for(world).get("ores", ores)
+	GlobalState.system_ore_mix = ores
 
 
 func _premise_on_system_arrived() -> void:
@@ -6640,6 +6646,8 @@ func _capture_global_state() -> Dictionary:
 		"cargo_type": GlobalState.cargo_type,
 		"cargo_special": GlobalState.cargo_special.duplicate(true),
 		"storage_ore": GlobalState.player_storage_ore,
+		"cargo_ore_types": GlobalState.cargo_ore_mix(),
+		"storage_ore_types": GlobalState.storage_ore_mix(),
 		"upgrades": GlobalState.current_upgrades.duplicate(true),
 		"reputations": GlobalState.reputations.duplicate(true),
 		"faction_kills": GlobalState.faction_kills.duplicate(true),
@@ -6674,6 +6682,9 @@ func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.cargo_type = int(state.get("cargo_type", GlobalState.CargoType.EMPTY))
 	GlobalState.cargo_special = state.get("cargo_special", {}).duplicate(true)
 	GlobalState.cargo = float(state.get("cargo", 0.0))
+	# Older saves have no mix: their ore reads as silicate.
+	GlobalState.cargo_ore_types = (state.get("cargo_ore_types", {}) as Dictionary).duplicate()
+	GlobalState.storage_ore_types = (state.get("storage_ore_types", {}) as Dictionary).duplicate()
 	GlobalState.reputations = state.get("reputations", GlobalState.reputations).duplicate(true)
 	var loaded_kills: Dictionary = state.get(
 		"faction_kills",

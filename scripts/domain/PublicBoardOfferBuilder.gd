@@ -1026,9 +1026,12 @@ static func _offer(
 static func _objective_summary(objective: Dictionary) -> String:
 	match str(objective.get("type", "")):
 		"DELIVER_ORE":
-			return "%d m3 Ore" % int(round(float(
+			var ore_name := "Ore"
+			if not str(objective.get("ore_type", "")).is_empty():
+				ore_name = preload("res://scripts/economy/OreTypes.gd").display(str(objective["ore_type"]))
+			return "%d m3 %s" % [int(round(float(
 				objective.get("amount_required", 0.0)
-			)))
+			))), ore_name]
 		"PICKUP_SPECIAL":
 			return "Pick up %s from %s at %s" % [
 				str(objective.get("part_name", "the package")),

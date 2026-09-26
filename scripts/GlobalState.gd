@@ -1337,6 +1337,47 @@ var cargo_type: int = CargoType.EMPTY
 #   "destination" — where it needs to be delivered (e.g. "Grease Monkeys")
 var cargo_special: Dictionary = {}
 
+# ── Ore types ──────────────────────────────────────────────────────────────
+# `cargo` and `player_storage_ore` stay the true totals (everything that
+# reads them keeps working); these hold the mix by ore type (OreTypes).
+# Read them through cargo_ore_mix() / storage_ore_mix(): ore the mix does not
+# account for (old saves, code that sets the total) counts as silicate.
+const OreTypesScript = preload("res://scripts/economy/OreTypes.gd")
+var cargo_ore_types: Dictionary = {}
+var storage_ore_types: Dictionary = {}
+
+
+func cargo_ore_mix() -> Dictionary:
+	if cargo_type != CargoType.ORE or cargo <= 0.0:
+		return {}
+	cargo_ore_types = OreTypesScript.reconcile(cargo_ore_types, cargo)
+	return cargo_ore_types.duplicate()
+
+
+func storage_ore_mix() -> Dictionary:
+	storage_ore_types = OreTypesScript.reconcile(storage_ore_types, player_storage_ore)
+	return storage_ore_types.duplicate()
+
+
+## How much of one ore type the hold carries.
+func cargo_ore_amount(ore_type: String) -> float:
+	return float(cargo_ore_mix().get(OreTypesScript.normalize(ore_type), 0.0))
+
+
+## Ore in the hold that counts for a delivery asking for `ore_type` (any
+## ore when the job names no type).
+func deliverable_ore(ore_type: String) -> float:
+	if cargo_type != CargoType.ORE:
+		return 0.0
+	if ore_type.is_empty():
+		return cargo
+	return cargo_ore_amount(ore_type)
+
+
+## What the hold's ore sells for at `rate` SC per m³ of silicate.
+func cargo_ore_value(rate: float = 1.0) -> int:
+	return OreTypesScript.value(cargo_ore_mix(), rate)
+
 # Active test pickup-quest state. Empty dict when no test quest is active.
 # Used by the Grease Monkeys maintenance-bay debug buttons. Keys:
 #   "outpost_id"     — "iron_reach" or "kova"
@@ -1375,15 +1416,19 @@ func can_accept_special() -> bool:
 # Add ore to the hold. Returns the amount actually added (capped at
 # cargo_max). Returns 0 if the hold can't accept ore (i.e. a special
 # item is loaded).
-func add_ore(amount: float) -> float:
+func add_ore(amount: float, ore_type: String = "silicate") -> float:
 	if not can_accept_ore():
 		return 0.0
 	var available = cargo_max - cargo
 	var added = min(amount, available)
 	if added <= 0.0:
 		return 0.0
+	var mix := cargo_ore_mix()
+	var id: String = OreTypesScript.normalize(ore_type)
+	mix[id] = float(mix.get(id, 0.0)) + added
 	cargo += added
 	cargo_type = CargoType.ORE
+	cargo_ore_types = mix
 	cargo_changed.emit(cargo)
 	return added
 
@@ -1413,11 +1458,14 @@ func accept_special(
 # Remove a specific amount of ore. Returns the amount actually removed.
 # If ore drops to 0, the hold auto-returns to EMPTY. Does nothing if the
 # hold is carrying a special item.
-func remove_ore(amount: float) -> float:
+func remove_ore(amount: float, ore_type: String = "") -> float:
 	if cargo_type != CargoType.ORE:
 		return 0.0
-	var removed = min(amount, cargo)
+	# With a type, only that ore leaves the hold; otherwise evenly.
+	var taken: Array = OreTypesScript.take(cargo_ore_types, cargo, amount, ore_type)
+	var removed: float = float(taken[1])
 	removed = max(0.0, removed)
+	cargo_ore_types = taken[0]
 	cargo -= removed
 	if cargo <= 0.0:
 		clear_cargo()
@@ -1429,6 +1477,7 @@ func remove_ore(amount: float) -> float:
 # the player jettisons or delivers a special item.
 func clear_cargo() -> void:
 	cargo = 0.0
+	cargo_ore_types = {}
 	cargo_special = {}
 	cargo_type = CargoType.EMPTY
 	cargo_changed.emit(cargo)
@@ -1565,7 +1614,7 @@ func buyback_ore_at_outpost() -> int:
 	if cargo_type != CargoType.ORE or cargo <= 0.0:
 		return 0
 	var rate: float = buyback_price_per_m3()
-	var paid: int = int(round(cargo * rate))
+	var paid: int = cargo_ore_value(rate)
 	player_credits += paid
 	clear_cargo()
 	return paid
@@ -1578,7 +1627,10 @@ func cargo_display_text() -> String:
 		CargoType.EMPTY:
 			return "EMPTY"
 		CargoType.ORE:
-			return "ORE: %d / %d m³" % [int(cargo), int(cargo_max)]
+			var kind: String = OreTypesScript.summary(cargo_ore_mix())
+			if kind.is_empty() or kind == OreTypesScript.display(OreTypesScript.DEFAULT):
+				return "ORE: %d / %d m³" % [int(cargo), int(cargo_max)]
+			return "ORE: %d / %d m³ (%s)" % [int(cargo), int(cargo_max), kind]
 		CargoType.SPECIAL:
 			return "SPECIAL: " + cargo_special.get("name", "(unnamed)")
 	return ""
@@ -1666,6 +1718,9 @@ var fallout_environment: Dictionary = {}
 ## Base faction key -> the ship look (FactionDNA.ship_look) of the generated
 ## faction flying that faction's ships in the current system. Set on arrival.
 var local_faction_looks: Dictionary = {}
+## The current system's belt mix, ore type -> share (SystemProfile.ore_mix);
+## asteroids draw their type from it when they spawn. Silicate only until set.
+var system_ore_mix: Dictionary = {"silicate": 1.0}
 
 
 func environment_value(key: String, default_value: Variant) -> Variant:
@@ -2343,6 +2398,8 @@ func reset_for_restart():
 	cargo_type = CargoType.EMPTY
 	cargo_max = SHIP_BASE_STATS["cargo_max_m3"]
 	player_storage_ore = 0.0
+	cargo_ore_types = {}
+	storage_ore_types = {}
 	current_upgrades = {
 		"weapons": {"tier": 1, "path": "base"},
 		"engine": {"tier": 1, "path": "base"},
@@ -2599,14 +2656,13 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 	player_credits -= cost_cr
 	var remaining_ore_cost = cost_ore
 	if cargo_type == CargoType.ORE:
-		if cargo >= remaining_ore_cost:
-			cargo -= remaining_ore_cost
-			remaining_ore_cost = 0
-		else:
-			remaining_ore_cost -= cargo
-			cargo = 0.0
+		var from_hold: float = minf(cargo, float(remaining_ore_cost))
+		cargo_ore_types = OreTypesScript.take(cargo_ore_types, cargo, from_hold)[0]
+		cargo -= from_hold
+		remaining_ore_cost -= from_hold
 		normalize_cargo_state()
 	
+	storage_ore_types = OreTypesScript.take(storage_ore_types, player_storage_ore, float(remaining_ore_cost))[0]
 	player_storage_ore -= remaining_ore_cost
 	
 	current_upgrades[sys] = {"tier": next_tier, "path": path}
@@ -2631,9 +2687,12 @@ func refund_upgrade(sys: String):
 		total_ore_refund += int(data["cost_ore"] * 0.5)
 		
 	player_credits += total_cr_refund
+	var refunded_mix := storage_ore_mix()
 	player_storage_ore += total_ore_refund
 	if player_storage_ore > player_storage_max:
 		player_storage_ore = player_storage_max
+	# Refunds come back as common ore.
+	storage_ore_types = OreTypesScript.reconcile(refunded_mix, player_storage_ore)
 		
 	current_upgrades[sys] = {"tier": 1, "path": "base"}
 	apply_upgrade_stats()
@@ -2644,8 +2703,16 @@ func deposit_ore(amount: float) -> bool:
 	if player_storage_ore + amount > player_storage_max:
 		return false
 		
+	var moved: Array = OreTypesScript.take(cargo_ore_types, cargo, amount)
+	var stored := storage_ore_mix()
+	var moved_mix: Dictionary = OreTypesScript.reconcile(cargo_ore_types, cargo)
+	for id in moved_mix:
+		var left := float((moved[0] as Dictionary).get(id, 0.0))
+		stored[id] = float(stored.get(id, 0.0)) + float(moved_mix[id]) - left
+	cargo_ore_types = moved[0]
 	cargo -= amount
 	player_storage_ore += amount
+	storage_ore_types = stored
 	if cargo <= 0.0:
 		clear_cargo()
 	return true

@@ -123,7 +123,10 @@ static func task_text(objective: Dictionary) -> String:
 		"RECOVER_COMBAT_DROP":
 			return "take %s off hostile ships and bring it to %s" % [objective.get("item_name", "the cargo"), objective.get("turn_in_location", "the station")]
 		"DELIVER_ORE":
-			return "mine %d units of %s and deliver them" % [int(objective.get("amount_required", 20)), str(objective.get("ore_type", "ore"))]
+			var ore_name := "ore"
+			if not str(objective.get("ore_type", "")).is_empty():
+				ore_name = preload("res://scripts/economy/OreTypes.gd").display(str(objective["ore_type"])).to_lower()
+			return "mine %d units of %s and deliver them" % [int(objective.get("amount_required", 20)), ore_name]
 		"DELIVERY_COURIER":
 			return "carry %s from %s to %s" % [objective.get("item_name", "a package"), objective.get("origin_display", "here"), objective.get("destination_display", "the station")]
 		"PURCHASE_DELIVERY":

@@ -4789,7 +4789,7 @@ func _render_dock_submenu() -> void:
 			ask_for_part_btn.disabled = false
 			if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 				var rate: float = GlobalState.buyback_price_per_m3()
-				var payout: int = int(round(GlobalState.cargo * rate))
+				var payout: int = GlobalState.cargo_ore_value(rate)
 				ask_for_part_btn.text = "Trade Ore for %s (%d m³ → %d SC)" % [part_name, int(GlobalState.cargo), payout]
 			else:
 				ask_for_part_btn.text = "Ask %s for %s" % [npc_name, part_name]
@@ -9869,7 +9869,8 @@ func _on_nova_repair_prompt_undock() -> void:
 func _sell_ore():
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 		var ore_amount := int(GlobalState.cargo)
-		var earnings := int(GlobalState.cargo)
+		# Rarer ores sell for more than silicate (OreTypes).
+		var earnings := GlobalState.cargo_ore_value()
 		GlobalState.add_credits(earnings)
 		GlobalState.clear_cargo()
 		_update_sell_button()
@@ -11733,7 +11734,7 @@ func _update_sell_button():
 	if not sell_btn:
 		return
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
-		var earnings := int(GlobalState.cargo)
+		var earnings := GlobalState.cargo_ore_value()
 		sell_btn.text = "Sell Ore (%d m³ → %d SC)" % [int(GlobalState.cargo), earnings]
 		sell_btn.disabled = false
 	else:
@@ -11983,10 +11984,10 @@ func _on_talk_to_agent_pressed():
 		)
 		
 		# Partial shipment button — ore quests only, when player has cargo but isn't done yet
-		if q["objective_type"] == "DELIVER_ORE" and GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.5 and not QuestManager.is_quest_completed():
+		if q["objective_type"] == "DELIVER_ORE" and GlobalState.deliverable_ore(str(q.get("ore_type", ""))) > 0.5 and not QuestManager.is_quest_completed():
 			var banked = q.get("partial_delivered", 0.0)
 			var remaining = q["amount_required"] - banked
-			var deliverable = min(GlobalState.cargo, remaining)
+			var deliverable = min(GlobalState.deliverable_ore(str(q.get("ore_type", ""))), remaining)
 			var partial_btn = Button.new()
 			partial_btn.text = "Drop Off Partial Shipment (%.0f m³)" % deliverable
 			partial_btn.pressed.connect(func(): _on_partial_delivery_pressed(deliverable))
@@ -14559,10 +14560,12 @@ func _show_ore_trade_popup() -> void:
 		return
 	var ore_amount: int = int(GlobalState.cargo)
 	var rate: float = GlobalState.buyback_price_per_m3()
-	var payout: int = int(round(GlobalState.cargo * rate))
+	var payout: int = GlobalState.cargo_ore_value(rate)
 	var picked_part: String = str(QuestManager.active_quest.get("part_name", "the part"))
 	var picked_npc: String = str(QuestManager.active_quest.get("target_npc", "the contact"))
 	ore_trade_label.text = "Your hold's full of %d m³ of ore. %s will buy it at %s SC/m³ = %d SC to clear the bay for the part. Take the deal?" % [ore_amount, picked_npc, _format_rate(rate), payout]
+	if payout != int(round(GlobalState.cargo * rate)):
+		ore_trade_label.text = "Your hold's full of %d m³ of ore. %s will buy it at %s SC/m³, more for the rarer ore: %d SC to clear the bay for the part. Take the deal?" % [ore_amount, picked_npc, _format_rate(rate), payout]
 	ore_trade_popup.visible = true
 
 func _format_rate(rate: float) -> String:
@@ -14577,13 +14580,12 @@ func _on_ore_trade_accept_pressed() -> void:
 		show_dock_message("Hold's empty now. Go ahead and ask for the part.", "", Color(0.85, 0.85, 0.85))
 		return
 	var ore_amount: int = int(GlobalState.cargo)
-	var rate: float = GlobalState.buyback_price_per_m3()
 	var paid: int = GlobalState.buyback_ore_at_outpost()
 	if paid <= 0:
 		push_warning("[UIManager] _on_ore_trade_accept_pressed: buyback returned 0")
 		return
 	AudioManager.play_sell_ore()
-	show_dock_message("Sold %d m³ of ore at %s SC/m³ = %d SC. Hold cleared." % [ore_amount, _format_rate(rate), paid], "", Color(0.7, 1.0, 0.5))
+	show_dock_message("Sold %d m³ of ore for %d SC. Hold cleared." % [ore_amount, paid], "", Color(0.7, 1.0, 0.5))
 	_complete_pickup_with_handoff()
 
 func _on_ore_trade_decline_pressed() -> void:
