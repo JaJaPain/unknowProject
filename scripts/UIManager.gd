@@ -489,6 +489,8 @@ var combat_tutorial_overlay: Control = null
 var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the combat wheel (CombatPanel is layer 10)
 var undock_btn: Button = null
 var selected_row_style: StyleBoxFlat
+const HudStyle := preload("res://scripts/ui/HudStyle.gd")
+var _overview_divider: Control = null
 
 const SubtitleOverlayType := preload("res://scripts/ui/SubtitleOverlay.gd")
 const PinBoardPanelType := preload("res://scripts/ui/PinBoardPanel.gd")
@@ -502,7 +504,7 @@ func _ready():
 	subtitle_overlay = SubtitleOverlayType.new()
 	subtitle_overlay.name = "SubtitleOverlay"
 	add_child(subtitle_overlay)
-	# Configure selected row highlight stylebox
+	# Configure selected row highlight stylebox (HudStyle look, set below)
 	selected_row_style = StyleBoxFlat.new()
 	selected_row_style.bg_color = Color(0.0, 0.35, 0.55, 0.45) # Glowing semi-transparent cyan background
 	selected_row_style.border_width_left = 2
@@ -556,6 +558,7 @@ func _ready():
 	resize_handle.hide()
 	quest_tracker_panel.reset_size()
 	chat_window_panel.resized.connect(_update_chat_font_size)
+	_apply_hud_style()
 
 	# CombatPanel retains its own full-size centre-lower wheel layout.
 
@@ -569,42 +572,6 @@ func _ready():
 		overview_panel.show()
 		_update_quest_tracker()   # restores visibility based on active quest state
 	)
-
-	# L button — lock/unlock UI layout, sits right of M and I
-	var _tex_lock_closed := load("res://assets/lock_closed.png") as Texture2D
-	var _tex_lock_open := load("res://assets/lock_open.png") as Texture2D
-
-	var layout_lock_btn := TextureButton.new()
-	layout_lock_btn.texture_normal = _tex_lock_closed
-	layout_lock_btn.texture_pressed = _tex_lock_closed
-	layout_lock_btn.texture_hover = _tex_lock_closed
-	layout_lock_btn.tooltip_text = "Lock / Unlock UI Layout"
-	layout_lock_btn.custom_minimum_size = Vector2(64, 64)
-	layout_lock_btn.ignore_texture_size = true
-	layout_lock_btn.stretch_mode = TextureButton.STRETCH_SCALE
-	layout_lock_btn.anchor_left = 1.0
-	layout_lock_btn.anchor_right = 1.0
-	layout_lock_btn.anchor_top = 0.0
-	layout_lock_btn.anchor_bottom = 0.0
-	layout_lock_btn.offset_left = -72
-	layout_lock_btn.offset_right = -8
-	layout_lock_btn.offset_top = 8
-	layout_lock_btn.offset_bottom = 72
-	layout_lock_btn.pressed.connect(func():
-		_ui_layout_manager.toggle_edit_mode()
-		var is_open: bool = _ui_layout_manager.is_edit_mode()
-		var tex: Texture2D = _tex_lock_open if is_open else _tex_lock_closed
-		layout_lock_btn.texture_normal = tex
-		layout_lock_btn.texture_pressed = tex
-		layout_lock_btn.texture_hover = tex
-		# Show quest panel in edit mode so it can be repositioned even when empty
-		if is_open:
-			quest_tracker_panel.visible = true
-		else:
-			_update_quest_tracker()  # restores correct visibility based on quest state
-	)
-	add_child(layout_lock_btn)
-	_add_icon_hover(layout_lock_btn)
 
 	# Create target indicator marker
 	target_marker = Control.new()
@@ -1082,8 +1049,8 @@ func _create_hud():
 func _create_target_panel():
 	target_panel = PanelContainer.new()
 	add_child(target_panel)
-	target_panel.anchor_left = 0.35
-	target_panel.anchor_right = 0.65
+	target_panel.anchor_left = 0.38
+	target_panel.anchor_right = 0.62
 	target_panel.anchor_top = 0.02
 	target_panel.anchor_bottom = 0.02
 	target_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -2491,10 +2458,13 @@ func _create_context_menu():
 func _create_pause_menu():
 	pause_panel = Panel.new()
 	add_child(pause_panel)
-	pause_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# Anchors AND offsets: made before this node has a size, anchors alone
+	# left the panel zero-sized in the corner.
+	pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# A dimmed view of space behind the menu, not a wall.
 	pause_panel.add_theme_stylebox_override(
 		"panel",
-		_make_menu_style(Color(0.015, 0.025, 0.045, 0.96), Color(0.0, 0.65, 0.8, 0.3), 0)
+		_make_menu_style(Color(0.01, 0.015, 0.03, 0.82), Color(0, 0, 0, 0), 0)
 	)
 
 	var center := CenterContainer.new()
@@ -2502,10 +2472,10 @@ func _create_pause_menu():
 	pause_panel.add_child(center)
 	var shell := PanelContainer.new()
 	shell.custom_minimum_size = Vector2(920, 590)
-	shell.add_theme_stylebox_override(
-		"panel",
-		_make_menu_style(Color(0.045, 0.055, 0.085, 0.98), Color(0.0, 0.85, 1.0, 0.55), 26)
-	)
+	var shell_style := HudStyle.box(HudStyle.BG, HudStyle.EDGE, 2, 14, 26)
+	shell_style.shadow_color = Color(0, 0, 0, 0.5)
+	shell_style.shadow_size = 18
+	shell.add_theme_stylebox_override("panel", shell_style)
 	center.add_child(shell)
 
 	var layout := VBoxContainer.new()
@@ -2514,14 +2484,14 @@ func _create_pause_menu():
 	var title := Label.new()
 	title.text = "FLIGHT OPERATIONS"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 28)
-	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	HudStyle.style_label(title, 30, HudStyle.ACCENT)
 	layout.add_child(title)
 	var subtitle := Label.new()
-	subtitle.text = "Game paused"
+	subtitle.text = "GAME PAUSED"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_color_override("font_color", Color(0.65, 0.72, 0.82))
+	HudStyle.style_label(subtitle, 12, HudStyle.DIM)
 	layout.add_child(subtitle)
+	layout.add_child(HudStyle.rule())
 
 	var columns := HBoxContainer.new()
 	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -2564,18 +2534,23 @@ func _create_pause_menu():
 	]:
 		var command := Label.new()
 		command.text = binding[0]
-		command.add_theme_color_override("font_color", Color(0.4, 0.9, 1.0))
+		HudStyle.style_label(command, 13, HudStyle.DIM)
+		command.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		control_grid.add_child(command)
+		# The key as a keycap.
+		var cap := PanelContainer.new()
+		cap.size_flags_horizontal = Control.SIZE_SHRINK_END
+		cap.add_theme_stylebox_override("panel", HudStyle.box(Color(0.08, 0.1, 0.14), HudStyle.EDGE_SOFT, 1, 5, 5))
 		var key := Label.new()
 		key.text = binding[1]
-		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		key.add_theme_color_override("font_color", Color(0.82, 0.86, 0.92))
-		control_grid.add_child(key)
+		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		HudStyle.style_label(key, 12, HudStyle.TEXT)
+		cap.add_child(key)
+		control_grid.add_child(cap)
 
 	var audio_title := Label.new()
 	audio_title.text = "AUDIO"
-	audio_title.add_theme_font_size_override("font_size", 15)
-	audio_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	HudStyle.style_label(audio_title, 13, HudStyle.ACCENT)
 	controls.add_child(audio_title)
 	_add_volume_row(
 		controls,
@@ -2598,8 +2573,7 @@ func _create_pause_menu():
 
 	var video_title := Label.new()
 	video_title.text = "VIDEO"
-	video_title.add_theme_font_size_override("font_size", 15)
-	video_title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	HudStyle.style_label(video_title, 13, HudStyle.ACCENT)
 	controls.add_child(video_title)
 	_add_bloom_row(controls)
 	var reset_history := Button.new()
@@ -2609,6 +2583,7 @@ func _create_pause_menu():
 		var result: Dictionary = StoryManager.reset_novelty_histories()
 		reset_history.text = "Quest variety history reset" if result.get("ok", false) else "History reset failed — retry"
 	)
+	HudStyle.style_button(reset_history, 12)
 	controls.add_child(reset_history)
 
 	pause_panel.visible = false
@@ -2634,18 +2609,15 @@ func _make_menu_style(
 
 func _make_pause_card(title_text: String) -> PanelContainer:
 	var card := PanelContainer.new()
-	card.add_theme_stylebox_override(
-		"panel",
-		_make_menu_style(Color(0.025, 0.035, 0.06, 0.95), Color(0.0, 0.65, 0.8, 0.3), 20)
-	)
+	card.add_theme_stylebox_override("panel", HudStyle.box(HudStyle.PANEL_BG, HudStyle.EDGE_SOFT, 1, 10, 20))
 	var content := VBoxContainer.new()
 	content.add_theme_constant_override("separation", 12)
 	card.add_child(content)
 	var title := Label.new()
 	title.text = title_text
-	title.add_theme_font_size_override("font_size", 15)
-	title.add_theme_color_override("font_color", Color(0.35, 0.95, 1.0))
+	HudStyle.style_label(title, 14, HudStyle.ACCENT)
 	content.add_child(title)
+	content.add_child(HudStyle.rule())
 	return card
 
 
@@ -2657,9 +2629,10 @@ func _add_pause_action(
 ) -> Button:
 	var button := Button.new()
 	button.text = label
-	button.custom_minimum_size = Vector2(0, 48)
+	button.custom_minimum_size = Vector2(0, 46)
+	HudStyle.style_button(button, 15, HudStyle.GOOD if primary else HudStyle.ACCENT)
 	if primary:
-		button.add_theme_color_override("font_color", Color(0.7, 1.0, 1.0))
+		button.add_theme_stylebox_override("normal", HudStyle.box(Color(0.08, 0.24, 0.16, 0.95), HudStyle.GOOD, 1, 6, 6))
 	button.pressed.connect(action)
 	parent.add_child(button)
 	return button
@@ -2850,7 +2823,7 @@ func _add_bloom_row(parent: Control) -> void:
 
 func _create_campaign_manager() -> void:
 	campaign_panel = Panel.new()
-	campaign_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	campaign_panel.add_theme_stylebox_override(
 		"panel",
 		_make_menu_style(Color(0.015, 0.025, 0.045, 0.98), Color(0.0, 0.65, 0.8, 0.3), 0)
@@ -2919,7 +2892,7 @@ func _create_campaign_manager() -> void:
 func _create_campaign_load_fade() -> void:
 	campaign_load_fade = ColorRect.new()
 	campaign_load_fade.name = "CampaignLoadFade"
-	campaign_load_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	campaign_load_fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	campaign_load_fade.color = Color.BLACK
 	campaign_load_fade.modulate.a = 0.0
 	campaign_load_fade.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -3425,7 +3398,7 @@ func _on_campaign_action_confirmed() -> void:
 func _create_death_screen():
 	death_panel = Panel.new()
 	add_child(death_panel)
-	death_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	death_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	death_panel.offset_left = 0
 	death_panel.offset_right = 0
 	death_panel.offset_top = 0
@@ -3626,9 +3599,10 @@ func update_overview_list(entities: Array):
 				and not _is_hidden_gate(entity):
 			var is_mission_target := _is_overview_mission_target(entity)
 			var btn = Button.new()
-			btn.custom_minimum_size = Vector2(0, 30)
+			btn.custom_minimum_size = Vector2(0, 28)
 			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+			HudStyle.style_row(btn)
 			btn.pressed.connect(func():
 				GlobalState.active_target = entity
 				_queue_station_target_prefetch(entity, "selected")
@@ -3654,6 +3628,7 @@ func update_overview_list(entities: Array):
 			var name_lbl = Label.new()
 			var label_text = entity.get("display_name") if entity.get("display_name") else entity.name
 			name_lbl.text = "  " + ("⌖ " if is_mission_target else "") + label_text
+			name_lbl.add_theme_font_size_override("font_size", 13)
 			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 			name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -3664,10 +3639,12 @@ func update_overview_list(entities: Array):
 			dist_lbl.text = "  0m"
 			dist_lbl.custom_minimum_size = Vector2(110, 0)
 			dist_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+			dist_lbl.add_theme_font_size_override("font_size", 13)
 			dist_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			hbox.add_child(dist_lbl)
 			
 			var type_lbl = Label.new()
+			type_lbl.add_theme_font_size_override("font_size", 13)
 			var type_str = "Celestial"
 			if entity.is_in_group("asteroid"):
 				type_str = "Asteroid"
@@ -3912,8 +3889,11 @@ func _update_overview_distances(delta: float = 999.0):
 				if is_instance_valid(name_lbl):
 					var targeting_player: bool = entity.is_in_group("ship") \
 						and entity.get("target") == GlobalState.player
-					if targeting_player or bool(btn.get_meta("is_mission_target", false)):
-						name_lbl.add_theme_color_override("font_color", Color(1.0, 0.25, 0.25))
+					var pinned: bool = targeting_player or bool(btn.get_meta("is_mission_target", false)) \
+						or GlobalState.active_target == entity
+					btn.set_meta("pinned", pinned)
+					if pinned:
+						name_lbl.add_theme_color_override("font_color", HudStyle.DANGER)
 					else:
 						name_lbl.remove_theme_color_override("font_color")
 					# The white->red transition is the "hostile detected on sensors"
@@ -3935,17 +3915,14 @@ func _update_overview_distances(delta: float = 999.0):
 						
 				# Highlight selected object in overview spreadsheet
 				if GlobalState.active_target == entity:
-					btn.self_modulate = Color(1.0, 1.0, 1.0, 1.0) # Reset modulate to avoid tint conflicts
-					btn.add_theme_stylebox_override("normal", selected_row_style)
-					btn.add_theme_stylebox_override("hover", selected_row_style)
-					btn.add_theme_stylebox_override("pressed", selected_row_style)
-					btn.add_theme_stylebox_override("focus", selected_row_style)
-				else:
-					btn.self_modulate = Color(1.0, 1.0, 1.0, 1.0)
-					btn.remove_theme_stylebox_override("normal")
-					btn.remove_theme_stylebox_override("hover")
-					btn.remove_theme_stylebox_override("pressed")
-					btn.remove_theme_stylebox_override("focus")
+					if not bool(btn.get_meta("selected_styled", false)):
+						btn.set_meta("selected_styled", true)
+						btn.add_theme_stylebox_override("normal", selected_row_style)
+						btn.add_theme_stylebox_override("hover", selected_row_style)
+						btn.add_theme_stylebox_override("pressed", selected_row_style)
+				elif bool(btn.get_meta("selected_styled", false)):
+					btn.set_meta("selected_styled", false)
+					HudStyle.style_row(btn)
 			else:
 				btn.queue_free()
 				
@@ -3956,8 +3933,16 @@ func _update_overview_distances(delta: float = 999.0):
 		_sort_overview_list()
 
 func _sort_overview_list():
-	var children = overview_list.get_children()
+	var children: Array = []
+	for c in overview_list.get_children():
+		if c is Button:
+			children.append(c)
 	children.sort_custom(func(a, b):
+		# Pinned rows (target, mission ships, ships targeting us) come first.
+		var a_pin := bool(a.get_meta("pinned", false))
+		var b_pin := bool(b.get_meta("pinned", false))
+		if a_pin != b_pin:
+			return a_pin
 		if _overview_prioritize_mission_targets:
 			var a_is_target := bool(a.get_meta("is_mission_target", false))
 			var b_is_target := bool(b.get_meta("is_mission_target", false))
@@ -3993,9 +3978,24 @@ func _sort_overview_list():
 			return a.get_instance_id() < b.get_instance_id()
 	)
 	
-	# Apply sorted order
+	# Apply sorted order, with a line under the pinned rows.
+	if _overview_divider == null or not is_instance_valid(_overview_divider) or _overview_divider.get_parent() != overview_list:
+		_overview_divider = HudStyle.rule(Color(1.0, 0.32, 0.3, 0.45), 1)
+		overview_list.add_child(_overview_divider)
+	var pinned_count := 0
+	for c in children:
+		if bool(c.get_meta("pinned", false)) and (c as Control).visible:
+			pinned_count += 1
+	var index := 0
 	for i in range(children.size()):
-		overview_list.move_child(children[i], i)
+		if i == pinned_count:
+			overview_list.move_child(_overview_divider, index)
+			index += 1
+		overview_list.move_child(children[i], index)
+		index += 1
+	if pinned_count >= children.size():
+		overview_list.move_child(_overview_divider, overview_list.get_child_count() - 1)
+	_overview_divider.visible = pinned_count > 0 and pinned_count < children.size()
 
 # Target signal callbacks
 func _on_target_changed(new_target: Node3D):
@@ -4100,12 +4100,12 @@ func _on_target_icon_gui_input(event: InputEvent):
 
 func _on_credits_changed(new_credits: int):
 	if credits_label:
-		credits_label.text = "Credits: " + str(new_credits) + " SC"
+		credits_label.text = "%s SC" % _thousands(int(new_credits))
 
 
 func _on_campaign_time_changed(_total_minutes: int) -> void:
 	if time_label:
-		time_label.text = "Time: %s" % CampaignClock.formatted_datetime()
+		time_label.text = CampaignClock.formatted_datetime().to_upper()
 	if QuestManager.is_active_quest_timed():
 		_update_quest_tracker()
 
@@ -4120,7 +4120,7 @@ func _on_fuel_changed(new_fuel: float) -> void:
 	elif new_fuel < fuel_script.JUMP_MAX:
 		colour = FUEL_COLOR_LOW
 	if fuel_label and is_instance_valid(fuel_label):
-		var text := "Fuel: %d / %d" % [int(new_fuel), int(fuel_script.TANK_MAX)]
+		var text := "FUEL   %d / %d" % [int(new_fuel), int(fuel_script.TANK_MAX)]
 		var target = GlobalState.active_target
 		var root = get_tree().current_scene if get_tree() else null
 		if target != null and is_instance_valid(target) and target is Node3D and (target as Node3D).is_in_group("jumpgate") \
@@ -4132,7 +4132,7 @@ func _on_fuel_changed(new_fuel: float) -> void:
 		fuel_label.add_theme_color_override("font_color", colour)
 	if fuel_bar and is_instance_valid(fuel_bar):
 		fuel_bar.value = new_fuel
-		fuel_bar.self_modulate = colour
+		HudStyle.style_bar(fuel_bar, colour, 7)
 	_set_fuel_flashing(empty)
 
 
@@ -4159,7 +4159,7 @@ func _set_fuel_flashing(on: bool) -> void:
 
 func _on_cargo_changed(new_cargo: float):
 	if cargo_label and cargo_bar:
-		cargo_label.text = "Cargo: " + GlobalState.cargo_display_text()
+		cargo_label.text = "CARGO   " + GlobalState.cargo_display_text().replace("ORE: ", "")
 		cargo_bar.max_value = GlobalState.cargo_max
 		# Bar visual: ore fill when carrying ore, "full" when carrying a
 		# special item (so the player sees something is loaded), 0 when empty.
@@ -4187,6 +4187,7 @@ func _on_pause_changed(is_paused: bool):
 		else:
 			pause_panel.visible = is_paused
 			if is_paused:
+				pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 				move_child(pause_panel, -1)
 	if not is_paused and campaign_panel:
 		campaign_panel.visible = false
@@ -10749,6 +10750,75 @@ func _on_intro_handhold_arrow_draw() -> void:
 	intro_handhold_arrow.draw_colored_polygon(head, color)
 
 
+## The shared HudStyle look for the flight HUD (Abe: bring it up to the
+## inventory screen's standard). Only styles; the layout manager places.
+func _apply_hud_style() -> void:
+	selected_row_style = HudStyle.selected_row()
+	HudStyle.style_panel(hud_panel)
+	for child in hud_panel.get_children():
+		if child is VBoxContainer:
+			(child as VBoxContainer).add_theme_constant_override("separation", 3)
+	HudStyle.style_label(time_label, 12, HudStyle.DIM)
+	HudStyle.style_label(credits_label, 18, HudStyle.GOLD)
+	HudStyle.style_label(cargo_label, 12, HudStyle.TEXT)
+	HudStyle.style_label(fuel_label, 12, HudStyle.TEXT)
+	HudStyle.style_bar(cargo_bar, HudStyle.ACCENT, 7)
+	var hp_label := hud_panel.find_child("HPLabel", true, false) as Label
+	HudStyle.style_label(hp_label, 12, HudStyle.TEXT)
+	var hp_bar := hud_panel.find_child("HPBar", true, false) as ProgressBar
+	HudStyle.style_bar(hp_bar, HudStyle.GOOD, 7)
+	for n in ["ZenRepLabel", "AurRepLabel", "VanRepLabel", "RepSep1", "RepSep2"]:
+		var l := hud_panel.find_child(n, true, false) as Label
+		if l:
+			l.add_theme_font_size_override("font_size", 12)
+	for l in hud_panel.find_children("*", "Label", true, false):
+		if (l as Label).text == "Rep: ":
+			(l as Label).text = "REP  "
+			HudStyle.style_label(l, 12, HudStyle.DIM)
+	_on_fuel_changed(GlobalState.fuel)
+	_on_credits_changed(GlobalState.player_credits)
+	if time_label:
+		time_label.text = CampaignClock.formatted_datetime().to_upper()
+
+	# Radio.
+	HudStyle.style_panel(chat_window_panel)
+	for l in chat_window_panel.find_children("*", "Label", false, false):
+		if (l as Label).text == "SYSTEM COMMS RADIO":
+			HudStyle.style_label(l, 11, HudStyle.ACCENT)
+
+	# Overview.
+	HudStyle.style_panel(overview_panel)
+	HudStyle.style_label(overview_title_label, 13, HudStyle.ACCENT)
+	for b in [btn_name, btn_dist, btn_type]:
+		if b:
+			HudStyle.style_flat(b, HudStyle.DIM, 12)
+	for b in [overview_mission_targets_btn, overview_ships_btn, overview_asteroids_btn, collapse_btn]:
+		if b:
+			HudStyle.style_flat(b, HudStyle.DIM, 14)
+
+	# Target: top centre, only while something is targeted.
+	target_panel.add_theme_stylebox_override("panel", HudStyle.panel())
+	HudStyle.style_label(target_label, 15, HudStyle.TEXT)
+	for b in [target_boost_btn, target_approach_btn, target_orbit_btn, target_action_btn]:
+		if b:
+			HudStyle.style_button(b, 13)
+			b.custom_minimum_size = Vector2(84, 30)
+	if target_action_box:
+		target_action_box.add_theme_constant_override("separation", 6)
+
+	# Mission tracker.
+	quest_tracker_panel.add_theme_stylebox_override("panel", HudStyle.box(HudStyle.BG, HudStyle.EDGE, 1, 10, 10))
+
+
+static func _thousands(n: int) -> String:
+	var digits := str(absi(n))
+	var out := ""
+	while digits.length() > 3:
+		out = "," + digits.substr(digits.length() - 3) + out
+		digits = digits.substr(0, digits.length() - 3)
+	return ("-" if n < 0 else "") + digits + out
+
+
 func _update_hud_health():
 	if not hud_panel: return
 	var p = GlobalState.player
@@ -10760,7 +10830,7 @@ func _update_hud_health():
 		var max_hp = p.get("max_health")
 		if hp != null and max_hp != null:
 			if hp_label:
-				hp_label.text = "HP: " + str(int(hp)) + " / " + str(int(max_hp))
+				hp_label.text = "HULL   %d / %d" % [int(hp), int(max_hp)]
 			if hp_bar:
 				hp_bar.max_value = max_hp
 				hp_bar.value = hp

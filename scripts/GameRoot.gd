@@ -312,6 +312,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_jump_smoke_test")
+	elif "--hud-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_hud_snapshot")
 	elif "--no-save-load" not in OS.get_cmdline_user_args():
 		call_deferred("_load_startup_save")
 
@@ -7613,6 +7615,53 @@ func _verify_generated_test_system(return_gate: Node3D) -> bool:
 		return false
 	player.call("_clear_avoidance_state")
 	return true
+
+## Screenshots of the flight HUD for checking the look by eye (windowed only):
+## plain, with a ship targeted, and paused. -- --hud-snapshot --out=<dir>
+func _run_hud_snapshot() -> void:
+	var out := "user://hud_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	# The landing page draws over everything in a window; not wanted here.
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 90:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("hud_plain.png"))
+	# N.O.V.A. talking: her portrait over the radio.
+	var nova = get_node_or_null("/root/Nova")
+	if nova != null and nova.has_method("speak"):
+		nova.speak("Snapshot check. Try not to hit anything while I pose.", nova.Severity.COMBAT, "smile")
+		for i in 45:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("hud_nova.png"))
+	var ship: Node3D = null
+	for entity in GlobalState.active_system_entities:
+		if entity and is_instance_valid(entity) and entity.is_in_group("ship") and entity != player:
+			ship = entity
+			break
+	if ship != null:
+		GlobalState.active_target = ship
+		for i in 30:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("hud_target.png"))
+	GlobalState.paused = true
+	for i in 20:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("hud_pause.png"))
+	print("HUDSHOT done")
+	get_tree().quit()
+
+
+func _hud_snapshot_save(path: String) -> void:
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(path)
+	print("HUDSHOT saved %s" % path)
+
 
 func _run_core_smoke_test() -> void:
 	await get_tree().process_frame

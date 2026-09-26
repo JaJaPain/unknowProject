@@ -5,7 +5,8 @@ extends RefCounted
 const SAVE_PATH := "user://ui_layout.json"
 const VERSION := 3
 const PANEL_IDS := ["hud", "target", "overview", "chat", "quest"]
-const DEFAULT_ORDER := ["hud", "target", "overview", "chat"]
+## The target panel sits top centre on its own (Abe), not in the column.
+const DEFAULT_ORDER := ["hud", "overview", "chat"]
 const HANDLE_SIZE := 16.0
 const DRAG_BAR_H := 18.0
 const EDIT_TINT := Color(0.3, 0.7, 1.0, 0.25)
@@ -33,7 +34,9 @@ func setup(hud: Control, chat: Control, overview: Control, target: Control,
 	_root = scene_root
 	_panels = {"hud": hud, "chat": chat, "overview": overview, "target": target, "quest": quest}
 	_preferred = {"overview": Vector2(400, 320), "chat": Vector2(400, 200)}
-	_load_layout()
+	# The layout is fixed for now (Abe removed the unlock button): always the
+	# default column, never a saved edit.
+	_order = DEFAULT_ORDER.duplicate()
 	# Final pass after content containers settle, before anything is drawn.
 	RenderingServer.frame_pre_draw.connect(enforce_layout)
 	_root.tree_exiting.connect(_disconnect_layout)
