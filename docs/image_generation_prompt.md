@@ -24,13 +24,14 @@ Work through the "images" array in order, one image per reply:
 
 For each entry:
 - Build the prompt from: the entry's "prompt", then (unless the entry says
-  it does not use the shared style) the file's "shared_style", with the
-  entry's "label" as the only text on the image.
+  it does not use the shared style) the file's "shared_style".
+- Never put any text, letters or labels in the image. The game adds names
+  itself so the art stays language-neutral.
 - Generate exactly one image at the entry's "size".
 - Reply with the image and one line: "Save as: <filename>".
 - Do not add any other text, logos, watermarks or extra labels.
 - Keep the look consistent across the whole set: same frame, same dark
-  background, same lighting, same label font and placement, so the new
+  background, same lighting, so the new
   icons sit next to the reference sheet without standing out.
 
 After each image, wait for me to say "next" (or "redo" with notes) before

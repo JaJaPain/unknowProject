@@ -285,9 +285,10 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     rendered: check the paint is not garish (ship screenshot pending Abe's OK).
   - Upgrade materials by tier: Mk II 1, Mk III 2, Mk IV 4 (+1 crystal),
     Mk V 8 (+2 crystals).
-  - The survey drone, the three tech-grade materials and the resonant
-    crystal borrow the salvage drone's store icon: add their own icons to
-    the image-needs list.
+  - Done 2026-09-25: the survey drone, the three tech-grade materials and
+    the resonant crystal have their own text-free icons (assets/
+    RandomIcon04.png, generated in ChatGPT; baked-in labels removed with
+    tools/strip_icon_label.py). The drone camera frame is still optional.
 - [x] **Game smoke-test sweep, 2026-09-25**: all 15 `--*-smoke-test` modes
   pass. Stale ones were updated (onboarding lock, player-only kill credit,
   nickname rule, board order, Kaelen's curated lines, queue timing). Two real
