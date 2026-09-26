@@ -246,6 +246,9 @@ const DEBUG_TESTS: bool = false
 
 var sell_btn: Button
 var refine_fuel_btn: Button
+## Sell ore and the fuel services, a compact 2x2 grid under the agent's
+## choices; hidden while Kaelen gives the tutorial briefing.
+var agent_trade_grid: GridContainer
 var buy_fuel_btn: Button
 var fabricate_blocks_btn: Button
 var repair_btn: Button
@@ -1889,6 +1892,7 @@ func _create_dock_menu():
 	
 	agent_dialogue_scroll = ScrollContainer.new()
 	agent_dialogue_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	agent_dialogue_scroll.custom_minimum_size = Vector2(0, 160)
 	agent_dialogue_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	avbox.add_child(agent_dialogue_scroll)
 	
@@ -1903,23 +1907,24 @@ func _create_dock_menu():
 	agent_choices_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	avbox.add_child(agent_choices_container)
 
-	sell_btn = Button.new()
+	var trade_gap := Control.new()
+	trade_gap.custom_minimum_size = Vector2(0, 6)
+	avbox.add_child(trade_gap)
+	agent_trade_grid = GridContainer.new()
+	agent_trade_grid.columns = 2
+	agent_trade_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	agent_trade_grid.add_theme_constant_override("h_separation", 6)
+	agent_trade_grid.add_theme_constant_override("v_separation", 6)
+	avbox.add_child(agent_trade_grid)
+
+	sell_btn = _agent_trade_button(_sell_ore)
 	sell_btn.text = "Sell Ore (Hold Empty)"
 	sell_btn.disabled = true
-	sell_btn.pressed.connect(_sell_ore)
-	avbox.add_child(sell_btn)
-
 	# Fuel: refine the hold's water ice (cheap), or buy it (dear).
-	refine_fuel_btn = Button.new()
-	refine_fuel_btn.pressed.connect(_on_refine_fuel_pressed)
-	avbox.add_child(refine_fuel_btn)
-	buy_fuel_btn = Button.new()
-	buy_fuel_btn.pressed.connect(_on_buy_fuel_pressed)
-	avbox.add_child(buy_fuel_btn)
+	refine_fuel_btn = _agent_trade_button(_on_refine_fuel_pressed)
+	buy_fuel_btn = _agent_trade_button(_on_buy_fuel_pressed)
 	# Fuel Blocks for station generators, made here from the hold's ice.
-	fabricate_blocks_btn = Button.new()
-	fabricate_blocks_btn.pressed.connect(_on_fabricate_blocks_pressed)
-	avbox.add_child(fabricate_blocks_btn)
+	fabricate_blocks_btn = _agent_trade_button(_on_fabricate_blocks_pressed)
 
 	agent_back_btn = Button.new()
 	agent_back_btn.text = "Back to Services"
@@ -11736,6 +11741,25 @@ func clear_dock_message() -> void:
 	dock_message_portrait.texture = null
 	dock_message_portrait.visible = false
 
+## A trade-grid button: long labels clip with an ellipsis instead of widening
+## the panel (which pushed the dialogue off screen); the tooltip has it all.
+func _agent_trade_button(callback: Callable) -> Button:
+	var button := Button.new()
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.custom_minimum_size = Vector2(0, 32)
+	button.clip_text = true
+	button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	button.pressed.connect(callback)
+	agent_trade_grid.add_child(button)
+	return button
+
+
+func _sync_trade_tooltips() -> void:
+	for button in [sell_btn, refine_fuel_btn, buy_fuel_btn, fabricate_blocks_btn]:
+		if button != null and is_instance_valid(button):
+			button.tooltip_text = button.text
+
+
 func _update_fuel_buttons() -> void:
 	var fuel_script = GlobalState.FuelScript
 	if refine_fuel_btn and is_instance_valid(refine_fuel_btn):
@@ -11764,6 +11788,7 @@ func _update_fuel_buttons() -> void:
 			buy_fuel_btn.text = "Buy Fuel (%d SC per unit)" % int(fuel_script.BUY_PRICE)
 		else:
 			buy_fuel_btn.text = "Buy Fuel (%d → %d SC)" % [int(float(b[0])), int(b[1])]
+	_sync_trade_tooltips()
 
 
 func _on_fabricate_blocks_pressed() -> void:
@@ -11802,6 +11827,7 @@ func _update_sell_button():
 	else:
 		sell_btn.text = "Sell Ore (Hold Empty)"
 		sell_btn.disabled = true
+	_sync_trade_tooltips()
 
 
 func _update_repair_button():
@@ -11975,6 +12001,7 @@ func _on_talk_to_agent_pressed():
 		public_board_panel.visible = false
 	agent_panel.visible = true
 	_update_sell_button()
+	agent_trade_grid.visible = GlobalState.kaelen_briefing_seen
 
 	# Clear previous choice buttons
 	for child in agent_choices_container.get_children():
