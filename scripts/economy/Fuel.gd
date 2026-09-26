@@ -16,6 +16,13 @@ const BOOST_COST := 2.0
 ## One m³ of water ice refines into this much fuel, for this fee per unit.
 const FUEL_PER_ICE := 1.0
 const REFINE_FEE := 0.5
+## Flying in a system sips fuel: this much per second at full speed,
+## scaled by speed (Abe: "just sips it").
+const CRUISE_SIP_PER_SECOND := 0.01
+## An empty tank still flies, at this share of top speed, with no boost.
+const EMPTY_SPEED_MULT := 0.6
+## Below this the tank counts as empty.
+const EMPTY_BELOW := 0.5
 ## Buying fuel outright at a station.
 const BUY_PRICE := 3.0
 

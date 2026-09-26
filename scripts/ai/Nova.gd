@@ -900,8 +900,37 @@ func _say_tiered(
 
 
 # Player docked. Escalates if they dock repeatedly within a minute — she notices.
+## Docking on an empty tank: she complains instead of the usual line (Abe:
+## she will say this a lot, so there are many, picked without repeats).
+const FUEL_EMPTY_DOCK_LINES: Array[String] = [
+	"Docked on fumes. I'd like the record to show I mentioned the fuel gauge. Several times.",
+	"We made it in on vapour and spite. Mostly spite. Mine.",
+	"Tank's empty, Captain. I've been flying at sixty percent and a hundred percent resentment.",
+	"Refinery's right there. Ice goes in, fuel comes out. I believe in you.",
+	"I'm running on the memory of fuel. It's not as filling.",
+	"Before you do anything fun: fuel. Then fun. Actually, just fuel.",
+	"That was the slowest approach of my career. Buy fuel, or I start narrating it.",
+	"Empty tank, full opinions. Guess which one I'll be sharing until we refuel.",
+	"We are docked, dry, and one bad decision from towing ourselves with the mining laser.",
+	"Fuel reads zero. I checked twice. Then I checked out of spite. Still zero.",
+	"If the gate asks, we're not coming. We can't. The tank is a very expensive vacuum.",
+	"My engines are sipping air. They're not built for air, Captain.",
+	"No boost, no jump, no dignity. Please visit the fuel counter.",
+	"Docked. I'd celebrate, but celebration uses energy we don't have.",
+	"Every station sells fuel. Every one. We are at a station. Connect the dots.",
+	"I flew us in at sixty percent. I would like the other forty back.",
+	"The tank is so empty it echoes. I've been listening to it all the way in.",
+	"Water ice, Captain. Rocks with frost on them. The refinery turns them into not-being-stranded.",
+	"Fuel first. I'll hold the complaints until the tank's full. No, I won't.",
+	"We coasted the last stretch on momentum and my good will. One of those is gone.",
+]
+
+
 func on_docked(_station_name: String = "") -> void:
 	_docked_since_ms = Time.get_ticks_msec()  # start the "how long were we parked" clock
+	if GlobalState.has_method("is_fuel_empty") and GlobalState.is_fuel_empty():
+		speak(_pick_line("dock_fuel_empty", FUEL_EMPTY_DOCK_LINES), Severity.NAV, "worried")
+		return
 	_say_tiered(
 		"dock",
 		[

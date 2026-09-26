@@ -799,7 +799,7 @@ func hard_stop() -> void:
 
 
 func activate_boost() -> bool:
-	var no_fuel := GlobalState.fuel + 0.0001 < GlobalState.FuelScript.BOOST_COST
+	var no_fuel := GlobalState.is_fuel_empty() or GlobalState.fuel + 0.0001 < GlobalState.FuelScript.BOOST_COST
 	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0 or no_fuel:
 		var reason := "destroyed"
 		if not destroyed:
@@ -1288,6 +1288,9 @@ func _physics_process(delta: float):
 		steer_towards(steer_target, delta)
 		
 		var speed_limit: float = max_speed * GlobalState.engine_speed_mult
+		# An empty tank still flies, slower (Fuel.EMPTY_SPEED_MULT).
+		if GlobalState.is_fuel_empty():
+			speed_limit *= GlobalState.FuelScript.EMPTY_SPEED_MULT
 		if boost_timer > 0.0:
 			speed_limit *= BOOST_SPEED_MULTIPLIER
 		var target_speed: float = speed_limit
@@ -1360,7 +1363,10 @@ func _physics_process(delta: float):
 		var forward_dir = -global_transform.basis.z
 		velocity = forward_dir * current_speed
 		move_and_slide()
-		
+		# Cruising sips fuel, more the faster we go.
+		var full_speed := maxf(1.0, max_speed * GlobalState.engine_speed_mult)
+		GlobalState.sip_fuel(GlobalState.FuelScript.CRUISE_SIP_PER_SECOND * clampf(current_speed / full_speed, 0.0, 1.5) * delta)
+
 		if global_position.distance_to(dest) < 2.0 \
 				and nav_mode == "MOVE_TO_POINT":
 			cancel_autopilot()

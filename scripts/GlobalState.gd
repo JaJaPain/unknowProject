@@ -1354,6 +1354,22 @@ var fuel: float = FuelScript.TANK_MAX:
 		fuel_changed.emit(fuel)
 
 
+func is_fuel_empty() -> bool:
+	return fuel < FuelScript.EMPTY_BELOW
+
+
+var _fuel_sip_pending := 0.0
+
+
+## Cruising burns a sip of fuel; applied in small steps so the HUD is not
+## updated every frame.
+func sip_fuel(amount: float) -> void:
+	_fuel_sip_pending += amount
+	if _fuel_sip_pending >= 0.05:
+		fuel -= _fuel_sip_pending
+		_fuel_sip_pending = 0.0
+
+
 ## Spends fuel if there is enough. Returns false (and spends nothing) if not.
 func spend_fuel(amount: float) -> bool:
 	if fuel + 0.0001 < amount:

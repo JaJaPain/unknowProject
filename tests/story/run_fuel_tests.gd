@@ -42,6 +42,30 @@ func _initialize() -> void:
 	gs.clear_cargo()
 	gs.fuel = Fuel.TANK_MAX
 
+	# Cruising sips; an empty tank still flies (slower, no boost).
+	gs.fuel = 10.0
+	gs.sip_fuel(0.03)
+	_check(is_equal_approx(gs.fuel, 10.0), "tiny sips wait until they add up")
+	gs.sip_fuel(0.03)
+	_check(is_equal_approx(gs.fuel, 9.94), "then come off the tank (%.3f)" % gs.fuel)
+	_check(Fuel.CRUISE_SIP_PER_SECOND * 600.0 < Fuel.JUMP_BASE, "ten minutes of full-speed cruising costs less than one jump")
+	gs.fuel = 0.2
+	_check(gs.is_fuel_empty() and Fuel.EMPTY_SPEED_MULT == 0.6, "nearly dry counts as empty: 60% speed")
+	gs.fuel = Fuel.TANK_MAX
+	_check(not gs.is_fuel_empty(), "a full tank is not empty")
+	# N.O.V.A. has plenty to say about it, never the same line twice in a row.
+	var nova: Node = root.get_node_or_null("Nova")
+	if nova != null:
+		var lines: Array = nova.FUEL_EMPTY_DOCK_LINES
+		var distinct := {}
+		for l in lines:
+			distinct[l] = true
+		_check(lines.size() >= 20 and distinct.size() == lines.size(), "twenty different empty-tank dock lines")
+		var heard := {}
+		for i in lines.size():
+			heard[nova._pick_line("dock_fuel_empty", lines)] = true
+		_check(heard.size() == lines.size(), "each heard once before any repeats")
+
 	# Every belt past the start carries ice for fuel.
 	for i in 40:
 		for d in [1, 2, 5]:
