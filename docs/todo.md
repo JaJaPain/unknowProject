@@ -8,6 +8,22 @@ _Active task list. Update this file at the end of every session._
 
 ---
 
+## FIRST: agent dialogue panel bug (Abe, 2026-09-26)
+
+- [ ] **The agent (Kaelen) panel cuts off most of its text.** With the new
+  UI, the dialogue text is pushed up and out of view by the stack of
+  buttons under it (screenshot: Kaelen's tutorial offer, text starts
+  mid-paragraph). During the tutorial, show only two options:
+  "Let's hear it." and "Not right now. I need to get my bearings first."
+  (hide Sell Ore, Refine Fuel, Buy Fuel, Fabricate Fuel Blocks, Back to
+  Services there). Also make sure long text scrolls/fits so no lines are
+  skipped as it advances. The fuel/ore buttons were added to the agent
+  panel's button box this week (UIManager: sell_btn, refine_fuel_btn,
+  buy_fuel_btn, fabricate_blocks_btn); they probably belong in the
+  station services menu, not the agent conversation, in any case.
+
+---
+
 ## Campaign uniqueness: causal contracts and dialogue quality (2026-09-11)
 _Handoff of unfinished work: `docs/claude_handoff_to_codex_2026_09_12.md`._
 _Plan: `docs/plan_campaign_uniqueness_and_dialogue_quality.md`, which carries the
