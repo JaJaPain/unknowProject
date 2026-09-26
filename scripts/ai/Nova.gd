@@ -369,7 +369,22 @@ func _on_gate_state_changed(_gate_id: String, _old_state: String, new_state: Str
 	if not GlobalState.has_method("is_current_system_home") or not GlobalState.is_current_system_home():
 		return
 	_told_no_home_ice = true
+	# Kaelen opens the gate while you're docked with him, mid-sentence; she
+	# waits for the undock and a quiet channel so the line isn't lost (Abe).
+	while not _can_tell_no_home_ice():
+		if not is_inside_tree():
+			return
+		await get_tree().create_timer(1.0).timeout
+	await get_tree().create_timer(2.0).timeout
 	speak("Gate's open. One thing before we go: there's no ice in this belt, so nothing here refines into fuel. The nearest ice is out past that gate. Keep enough in the tank to get there.", Severity.NAV, "thoughtful")
+
+
+func _can_tell_no_home_ice() -> bool:
+	var ship = GlobalState.player
+	if ship == null or not is_instance_valid(ship) or bool(ship.get("is_docked")):
+		return false
+	var speech = get_node_or_null("/root/SpeechService")
+	return speech == null or not speech.is_busy()
 
 
 func set_campaign_quirk(quirk: String) -> void:
