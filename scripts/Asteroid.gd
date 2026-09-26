@@ -120,7 +120,14 @@ func _ready():
 		AsteroidModels.apply_model_index(_mesh, _model_index)
 	tech_seam = force_tech_seam or is_tech_seam_id(persistent_id)
 	ore_type = ore_type_for(persistent_id, GlobalState.system_ore_mix)
+	# An ore's own rock texture when it has one; otherwise a tint over the
+	# plain rock.
+	var ore_material: Material = null
 	if not tech_seam and ore_type != OreTypesScript.DEFAULT and _mesh:
+		ore_material = AsteroidModels.ore_material_for_index(_model_index, ore_type, OreTypesScript.glow(ore_type))
+		if ore_material != null:
+			_mesh.set_surface_override_material(0, ore_material)
+	if not tech_seam and ore_type != OreTypesScript.DEFAULT and _mesh and ore_material == null:
 		var ore_tint := StandardMaterial3D.new()
 		var c := OreTypesScript.tint(ore_type)
 		ore_tint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA

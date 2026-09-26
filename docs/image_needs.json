@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "note": "Every image the vision-slice work needs. Generate each entry as its own file into art_inbox/ using the given filename; tools/compose_icon_sheet.py then tiles the icons into assets/RandomIcon04.png (5 x 5, same layout as the existing store sheets). Art contains no words (localization): item names come from the game.",
+    "note": "Every image the vision-slice work needs. Generate each entry as its own file into art_inbox/ using the given filename; tools/compose_icon_sheet.py then tiles the icons into assets/RandomIcon04.png (5 x 5, same layout as the existing store sheets). Art contains no words (localization): item names come from the game. Asteroid ore atlases (asteroid_ore_*) are not icons: attach assets/asteroidTextures.png as the style reference instead, and save each straight to its destination.",
     "style_reference": "assets/RandomIcon02.png",
     "shared_style": "Square game inventory icon. A single sci-fi object, three-quarter view, centred, on a very dark navy background (#0b1016) inside a thin light-grey rounded square frame with a small margin. Realistic brushed and scuffed metal with small glowing accents, dramatic rim light, soft glow. No text, no letters, no labels, no numbers anywhere in the image (the game adds names itself, so art stays language-neutral). No watermark, no border outside the frame. Painterly-realistic like a premium space-game item shop.",
     "images": [
@@ -66,6 +66,42 @@
             "sheet_cell": null,
             "used_for": "Optional overlay for the first-person drone camera (DroneMazeView): a camera-feed frame drawn over the 3D view.",
             "prompt": "A transparent-background HUD overlay for a mining drone's camera feed: thin teal corner brackets, a faint scanline texture, tiny tick marks along the edges, a small blinking red dot in the top right. The whole centre must be fully transparent. PNG with alpha. This one does NOT use the shared icon style."
+        },
+        {
+            "id": "asteroid_ore_water_ice",
+            "filename": "water_ice.png",
+            "size": "1024x1024",
+            "destination": "assets/asteroid_ores/water_ice.png",
+            "style_reference": "assets/asteroidTextures.png",
+            "used_for": "Rock texture atlas for asteroids carrying water ice (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Water-ice rock: the dark stone is crusted with pale blue-white frost and glassy ice in the cracks and hollows, a little translucent ice showing through, cold and muted, still mostly rock. No text, no letters, no labels, no watermark."
+        },
+        {
+            "id": "asteroid_ore_ferrite",
+            "filename": "ferrite.png",
+            "size": "1024x1024",
+            "destination": "assets/asteroid_ores/ferrite.png",
+            "style_reference": "assets/asteroidTextures.png",
+            "used_for": "Rock texture atlas for asteroids carrying ferrite (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Iron-rich ferrite rock: dark steel-grey stone shot through with dull metallic grains and flecks that catch the light, a faint cool metallic sheen on the flat faces, no rust red. No text, no letters, no labels, no watermark."
+        },
+        {
+            "id": "asteroid_ore_cuprite",
+            "filename": "cuprite.png",
+            "size": "1024x1024",
+            "destination": "assets/asteroid_ores/cuprite.png",
+            "style_reference": "assets/asteroidTextures.png",
+            "used_for": "Rock texture atlas for asteroids carrying cuprite (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Copper-bearing cuprite rock: dark stone with veins and crusts of green and teal copper oxide (verdigris) in the cracks, a few small dull copper-brown metallic specks, muted and natural. No text, no letters, no labels, no watermark."
+        },
+        {
+            "id": "asteroid_ore_thorium",
+            "filename": "thorium.png",
+            "size": "1024x1024",
+            "destination": "assets/asteroid_ores/thorium.png",
+            "style_reference": "assets/asteroidTextures.png",
+            "used_for": "Rock texture atlas for asteroids carrying thorium (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Thorium-bearing rock: dark stone with thin veins and small crystal clusters of pale yellow-green mineral that glow very faintly, as if slightly radioactive; the glow stays inside the veins and the rest is ordinary rock. No text, no letters, no labels, no watermark."
         }
     ]
 }

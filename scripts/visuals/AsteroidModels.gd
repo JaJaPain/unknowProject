@@ -5,6 +5,10 @@ const ATLAS_PATH := "res://assets/asteroidTextures.png"
 const JSON_PATH := "res://assets/asteroids/asteroid_models.json"
 const MODEL_DIR := "res://assets/asteroids/"
 const CELL_SIZE := 1.0 / 3.0
+## Per-ore atlases in the same 3x3 layout as ATLAS_PATH (OreTypes ids).
+const ORE_ATLAS_DIR := "res://assets/asteroid_ores/"
+
+static var _ore_materials := {}
 
 static var _entries: Array[Dictionary] = []
 static var _loaded := false
@@ -65,6 +69,7 @@ static func _ensure_loaded() -> void:
 
 		_entries.append({
 			"mesh": mesh,
+			"cell": Vector2i(cx, cy),
 			"material": mat_cache[mat_key],
 			"fragments_path": MODEL_DIR + str(entry.get("fragments_file", "")),
 		})
@@ -102,6 +107,36 @@ static func material_for_index(idx: int) -> Material:
 		return null
 	idx = wrapi(idx, 0, _entries.size())
 	return _entries[idx]["material"] as Material
+
+
+## The material for a model in an ore's own atlas (same cell as the plain
+## rock), or null when that ore has no atlas yet (the caller tints instead).
+## Glowing ores light their bright veins a little.
+static func ore_material_for_index(idx: int, ore_type: String, glow: float = 0.0) -> Material:
+	_ensure_loaded()
+	if _entries.is_empty():
+		return null
+	idx = wrapi(idx, 0, _entries.size())
+	var cell: Vector2i = _entries[idx].get("cell", Vector2i.ZERO)
+	var key := "%s|%d_%d" % [ore_type, cell.x, cell.y]
+	if _ore_materials.has(key):
+		return _ore_materials[key]
+	var path := ORE_ATLAS_DIR + ore_type + ".png"
+	var tex: Texture2D = load(path) as Texture2D if ResourceLoader.exists(path) else null
+	var mat: StandardMaterial3D = null
+	if tex != null:
+		mat = StandardMaterial3D.new()
+		mat.albedo_texture = tex
+		mat.roughness = 0.9
+		mat.metallic = 0.15
+		mat.uv1_scale = Vector3(CELL_SIZE, CELL_SIZE, 1.0)
+		mat.uv1_offset = Vector3(float(cell.x) * CELL_SIZE, float(cell.y) * CELL_SIZE, 0.0)
+		if glow > 0.0:
+			mat.emission_enabled = true
+			mat.emission_texture = tex
+			mat.emission_energy_multiplier = glow
+	_ore_materials[key] = mat
+	return mat
 
 
 static func fragment_scene_path_for_index(idx: int) -> String:
