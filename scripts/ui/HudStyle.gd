@@ -104,6 +104,41 @@ static func style_flat(button: Button, colour: Color = DIM, size: int = 12) -> v
 	button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
 
 
+## A Theme carrying this look for every default control under the UI root:
+## buttons, panels, scrollbars, sliders, text fields, tooltips. Controls with
+## their own overrides keep them; everything else (station menus, the board,
+## the store, rows made at run time) picks this up.
+static func make_theme() -> Theme:
+	var t := Theme.new()
+	t.set_stylebox("normal", "Button", box(PANEL_BG, EDGE_SOFT, 1, 6, 8))
+	t.set_stylebox("hover", "Button", box(Color(0.09, 0.13, 0.18, 0.95), ACCENT, 1, 6, 8))
+	t.set_stylebox("pressed", "Button", box(Color(0.08, 0.2, 0.3, 0.95), ACCENT, 1, 6, 8))
+	t.set_stylebox("disabled", "Button", box(Color(0.05, 0.06, 0.08, 0.8), Color(0.12, 0.15, 0.2), 1, 6, 8))
+	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
+	t.set_color("font_color", "Button", TEXT)
+	t.set_color("font_hover_color", "Button", Color.WHITE)
+	t.set_color("font_pressed_color", "Button", Color.WHITE)
+	t.set_color("font_disabled_color", "Button", Color(0.4, 0.45, 0.5))
+	t.set_stylebox("panel", "Panel", panel())
+	t.set_stylebox("panel", "PanelContainer", box(PANEL_BG, EDGE_SOFT, 1, 8, 8))
+	t.set_stylebox("panel", "TooltipPanel", box(Color(0.03, 0.04, 0.06, 0.97), EDGE, 1, 6, 8))
+	t.set_color("font_color", "TooltipLabel", TEXT)
+	t.set_stylebox("normal", "LineEdit", box(Color(0.03, 0.04, 0.06), EDGE_SOFT, 1, 6, 6))
+	t.set_stylebox("focus", "LineEdit", box(Color(0.03, 0.04, 0.06), ACCENT, 1, 6, 6))
+	t.set_stylebox("normal", "TextEdit", box(Color(0.03, 0.04, 0.06), EDGE_SOFT, 1, 6, 6))
+	t.set_stylebox("background", "ProgressBar", box(Color(0.1, 0.12, 0.16, 0.95), Color(0, 0, 0, 0), 0, 4))
+	t.set_stylebox("fill", "ProgressBar", box(ACCENT, Color(0, 0, 0, 0), 0, 4))
+	for bar in ["VScrollBar", "HScrollBar"]:
+		t.set_stylebox("scroll", bar, box(Color(0.05, 0.06, 0.08, 0.6), Color(0, 0, 0, 0), 0, 4))
+		t.set_stylebox("grabber", bar, box(Color(0.22, 0.35, 0.5, 0.9), Color(0, 0, 0, 0), 0, 4))
+		t.set_stylebox("grabber_highlight", bar, box(ACCENT.darkened(0.2), Color(0, 0, 0, 0), 0, 4))
+		t.set_stylebox("grabber_pressed", bar, box(ACCENT, Color(0, 0, 0, 0), 0, 4))
+	t.set_stylebox("slider", "HSlider", box(Color(0.12, 0.15, 0.2), Color(0, 0, 0, 0), 0, 3))
+	t.set_stylebox("grabber_area", "HSlider", box(ACCENT.darkened(0.25), Color(0, 0, 0, 0), 0, 3))
+	t.set_stylebox("grabber_area_highlight", "HSlider", box(ACCENT, Color(0, 0, 0, 0), 0, 3))
+	return t
+
+
 ## A thin divider line.
 static func rule(colour: Color = Color(0.2, 0.45, 0.7, 0.4), height: int = 1) -> ColorRect:
 	var line := ColorRect.new()

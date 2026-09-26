@@ -299,6 +299,14 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     in a system without ice the job says the ice must be hauled in.
   - Still to build (Abe's idea): O2 canisters from water ice and O2
     delivery jobs (an outpost's scrubbers failing, 100 L to keep breathing).
+  - UI restyle (Abe, 2026-09-26): flight HUD, pause screen and inventory
+    done (HudStyle.gd). Docked screens: a shared Theme (HudStyle.make_theme)
+    now styles every default button/panel/scrollbar/slider under UIManager,
+    and the station menu uses the new panel. Still to do: replace the old
+    per-panel StyleBox overrides (agent, board, store, upgrades, lounge,
+    mechanic intro, campaign manager, death screen) with HudStyle, and check
+    each with `-- --dock-snapshot --out=<dir>` (windowed; waits for the
+    station welcome to finish is needed: shots can catch the arrival fade).
   - Inventory screen facelift (Abe): NEW SCREEN LANDED 2026-09-26 (scripts/ui/InventoryScreen.gd; tools/inventory_snapshot.gd). Was: the item inventory
     (not the ore hold) needs an AAA-quality look. Show before/after shots.
   - Investigations now take a deadline, an ambush, or a rival on the same

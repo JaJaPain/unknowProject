@@ -541,6 +541,8 @@ func _ready():
 	QuestManager.comms_reversal_triggered.connect(_on_comms_reversal_triggered)
 	QuestManager.reveal_twist_triggered.connect(_on_reveal_twist_triggered)
 	
+	# One shared look for every control under the UI (HudStyle).
+	theme = HudStyle.make_theme()
 	_create_hud()
 	_create_target_panel()
 	_create_overview()
@@ -1398,7 +1400,7 @@ func _create_dock_menu():
 	dock_style.corner_radius_top_right = 4
 	dock_style.corner_radius_bottom_right = 4
 	dock_style.corner_radius_bottom_left = 4
-	dock_panel.add_theme_stylebox_override("panel", dock_style)
+	dock_panel.add_theme_stylebox_override("panel", HudStyle.panel())
 
 	# Background image (RepairShop.png) — only shown when docked at a repair_shop.
 	# Sized to fill the panel and tinted dark so the foreground buttons stay readable.
