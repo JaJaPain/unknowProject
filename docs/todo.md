@@ -21,6 +21,16 @@ _Active task list. Update this file at the end of every session._
   panel's button box this week (UIManager: sell_btn, refine_fuel_btn,
   buy_fuel_btn, fabricate_blocks_btn); they probably belong in the
   station services menu, not the agent conversation, in any case.
+- [ ] **Enemy ships fly and shoot backwards.** Likely from this week's switch
+  of every faction to runtime kitbash hulls (NPCShip.KITBASH_ALL_FACTIONS):
+  check the assembled hull's facing (glTF +Z is the rear) against the
+  direction NPCShip moves and fires (-Z forward), and the weapon markers.
+- [ ] **Star map button at the start:** show it greyed out / disabled until
+  the first jump, instead of the empty placeholder slot.
+- [ ] **N.O.V.A.'s "no ice in this system" line never played:** it fired
+  when Kaelen opened the gate, while Kaelen was talking, and was dropped.
+  Hold it until the player undocks (and no one else is speaking), then say
+  it once.
 
 ---
 
