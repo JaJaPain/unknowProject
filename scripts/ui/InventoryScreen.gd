@@ -23,6 +23,8 @@ const GRID_CELLS := 28
 ## The older icon sheets print each item's name under its picture; crop it off
 ## (art stays text-free on screen).
 const LABELLED_SHEETS := ["novelty", "tactical", "cargo"]
+## Sheets whose cells carry their own frame (trimmed off).
+const FRAMED_SHEETS := ["props_supplies", "props_story"]
 const GRID_COLUMNS := 7
 
 const BG := Color(0.035, 0.045, 0.06, 0.97)
@@ -510,6 +512,9 @@ func _icon(def) -> Texture2D:
 		var cell := Rect2(def.icon_cell.x * w, def.icon_cell.y * h, w, h)
 		if def.icon_sheet in LABELLED_SHEETS:
 			cell = Rect2(cell.position.x + w * 0.12, cell.position.y + h * 0.05, w * 0.76, h * 0.72)
+		elif def.icon_sheet in FRAMED_SHEETS:
+			# These draw their own frame around each item; the slot has one.
+			cell = cell.grow(-w * 0.07)
 		atlas.region = cell
 		tex = atlas
 	_icon_cache[key] = tex

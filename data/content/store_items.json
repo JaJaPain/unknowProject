@@ -4,7 +4,9 @@
         "novelty": "res://assets/RandomIcon01.png",
         "tactical": "res://assets/RandomIcon02.png",
         "cargo": "res://assets/RandomIcon03.png",
-        "materials": "res://assets/RandomIcon04.png"
+        "materials": "res://assets/RandomIcon04.png",
+        "props_supplies": "res://assets/PropIconsSupplies.png",
+        "props_story": "res://assets/PropIconsStory.png"
     },
     "items": [
         {
@@ -81,10 +83,10 @@
             "restock_interval_minutes": 90,
             "restock_quantity": 2,
             "max_stock": 4,
-            "icon_sheet": "tactical",
+            "icon_sheet": "props_supplies",
             "icon_cell": [
                 4,
-                1
+                0
             ]
         },
         {
