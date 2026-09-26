@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "note": "Mission Composer layer 3 (vision plan 4.1): complications. Each changes how the job plays, not only its text. {requester}, {hours} and {extra} are filled in code. ambush_count/ambush_after_seconds: raiders jump the captain that many seconds into undocked flight on the job. standing_on_accept: standing with the requester's faction when the job is taken. Investigations get none yet: they are accepted through a checkpoint that allows no up-front money.",
+    "note": "Mission Composer layer 3 (vision plan 4.1): complications. Each changes how the job plays, not only its text. {requester}, {hours} and {extra} are filled in code. ambush_count/ambush_after_seconds: raiders jump the captain that many seconds into undocked flight on the job. standing_on_accept: standing with the requester's faction when the job is taken. Investigations take only the ones with no money up front (deadline, ambushes): they are accepted through a checkpoint that allows no up-front money. quirk_wins: the chance a complication tied to the system's quirk is chosen when one applies (else any fitting one).",
     "chance": 0.5,
     "complications": [
         {
@@ -10,7 +10,8 @@
                 "purchase_delivery",
                 "pickup_special",
                 "deliver_ore",
-                "recover_combat_drop"
+                "recover_combat_drop",
+                "investigate_signal"
             ],
             "effect": {
                 "deadline_minutes": 240,
@@ -52,7 +53,8 @@
         {
             "id": "heavy_escort",
             "verbs": [
-                "kill_ships"
+                "kill_ships",
+                "comms_reversal"
             ],
             "effect": {
                 "extra_kills": 1,
@@ -77,7 +79,8 @@
                 "delivery_courier",
                 "purchase_delivery",
                 "pickup_special",
-                "deliver_ore"
+                "deliver_ore",
+                "investigate_signal"
             ],
             "effect": {
                 "ambush_count": 2,
@@ -101,7 +104,8 @@
         {
             "id": "clock_on_the_hunt",
             "verbs": [
-                "kill_ships"
+                "kill_ships",
+                "comms_reversal"
             ],
             "effect": {
                 "deadline_minutes": 180,
@@ -129,7 +133,8 @@
                 "delivery_courier",
                 "purchase_delivery",
                 "pickup_special",
-                "deliver_ore"
+                "deliver_ore",
+                "investigate_signal"
             ],
             "requires_quirk": "nebula",
             "effect": {
@@ -142,7 +147,8 @@
         {
             "id": "pulsar_window",
             "verbs": [
-                "kill_ships"
+                "kill_ships",
+                "comms_reversal"
             ],
             "requires_quirk": "pulsar",
             "effect": {
@@ -165,5 +171,6 @@
             },
             "text": "The station is emptying out as the star fails. In {hours} hours there will be nobody left to receive it."
         }
-    ]
+    ],
+    "quirk_wins": 0.6
 }

@@ -35,7 +35,7 @@ func _initialize() -> void:
 			storm_calm = true
 	_check(storm_any and not storm_calm, "a storm window only where storms are")
 	for i in 100:
-		_check(Comp.roll("investigate_signal", ["ion_storm"], "inv|%d" % i).is_empty(), "investigations stay uncomplicated for now")
+		_check(str(Comp.roll("investigate_signal", ["ion_storm"], "inv|%d" % i).get("id", "")) in ["", "deadline", "ambush_en_route", "nebula_ambush"], "investigations take no money-up-front complications")
 
 	var courier := {"type": "DELIVERY_COURIER", "item_name": "Sealed cargo", "origin_station_id": "station.a", "origin_display": "A",
 		"destination_station_id": "station.b", "destination_display": "B", "reward_credits": 400}

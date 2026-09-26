@@ -44,11 +44,13 @@ static func roll(verb: String, quirks: Array, seed_key: String) -> Dictionary:
 		options.append(c)
 	if options.is_empty():
 		return {}
-	# A complication tied to this system's quirk wins when it applies: it is
-	# what makes the job feel like it belongs here.
-	for c in options:
-		if not str(c.get("requires_quirk", "")).is_empty():
-			return c
+	# A complication tied to this system's quirk usually wins when it applies:
+	# it is what makes the job feel like it belongs here (but not always, or
+	# every job in a nebula would be the same ambush).
+	if rng.randf() < float(d.get("quirk_wins", 0.6)):
+		for c in options:
+			if not str(c.get("requires_quirk", "")).is_empty():
+				return c
 	return options[rng.randi() % options.size()]
 
 

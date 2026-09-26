@@ -45,6 +45,7 @@ TESTS=(
   run_recurring_encounter_tests
   run_faction_look_tests
   run_engine_thruster_tests
+  run_mission_freshness_tests
 )
 failed=0
 for t in "${TESTS[@]}"; do

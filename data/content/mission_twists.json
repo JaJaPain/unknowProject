@@ -74,7 +74,8 @@
                 "delivery_courier",
                 "purchase_delivery",
                 "pickup_special",
-                "deliver_ore"
+                "deliver_ore",
+                "investigate_signal"
             ],
             "kind": "reveal",
             "reveal_kind": "rival",

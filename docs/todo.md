@@ -267,8 +267,11 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     favour (70% pay, +3 standing with the client's faction), and three
     quirk ones that win where the quirk is: nebula ambush (three raiders),
     pulsar window (kill deadline), dying-star evacuation (2 h deadline).
-    Ambush raiders always fly reavers for now. Does the ambush land at a
-    fair distance (420 m ring)?
+    Ambush raiders are reavers (Abe: a travelling pirate race, right in any
+    system). Does the ambush land at a fair distance (420 m ring)?
+  - Investigations now take a deadline, an ambush, or a rival on the same
+    signal (race them). The rival is their only turn so far, so it is the
+    most common turn overall; investigations need turns of their own.
   - Recurring cast in person: about 3 in 10 arrivals (never two within 3
     jumps, the same face not within 8), 25-55 s into calm flight, someone
     from an earlier story hails in their own voice naming where you met.
