@@ -16,6 +16,8 @@ const OreTypesScript := preload("res://scripts/economy/OreTypes.gd")
 ## What this rock yields (OreTypes), drawn from the system's belt mix by its
 ## persistent id, so it is the same rock every visit.
 var ore_type := "silicate"
+## How strongly an ore's tint shows over the rock texture.
+static var ore_tint_alpha := 0.15
 ## Set by a field spawner so every field has at least one red rock.
 var force_tech_seam := false
 
@@ -122,7 +124,7 @@ func _ready():
 		var ore_tint := StandardMaterial3D.new()
 		var c := OreTypesScript.tint(ore_type)
 		ore_tint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		ore_tint.albedo_color = Color(c.r, c.g, c.b, 0.3)
+		ore_tint.albedo_color = Color(c.r, c.g, c.b, ore_tint_alpha)
 		var glow := OreTypesScript.glow(ore_type)
 		if glow > 0.0:
 			ore_tint.emission_enabled = true
