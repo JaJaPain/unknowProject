@@ -65,8 +65,8 @@ var overview_asteroids_btn: Button
 var _overview_prioritize_mission_targets: bool = false
 var _overview_show_ships: bool = true
 var _overview_show_asteroids: bool = true
-var map_btn: TextureButton
-var inventory_hud_btn: TextureButton
+var map_btn: Button
+var inventory_hud_btn: Button
 var branch_map: BranchMapUI
 
 var dock_panel: Panel
@@ -1134,43 +1134,38 @@ func _create_target_panel():
 	target_panel.visible = false
 
 func _create_overview():
-	map_btn = TextureButton.new()
-	map_btn.texture_normal = load("res://assets/map.png") as Texture2D
-	map_btn.tooltip_text = "System Map"
-	map_btn.ignore_texture_size = true
-	map_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-	map_btn.visible = false
-	map_btn.custom_minimum_size = Vector2(64, 64)
-	map_btn.anchor_left = 1.0
-	map_btn.anchor_right = 1.0
-	map_btn.anchor_top = 0.0
-	map_btn.anchor_bottom = 0.0
-	map_btn.offset_left = -152
-	map_btn.offset_right = -88
-	map_btn.offset_top = 8
-	map_btn.offset_bottom = 72
-	map_btn.pressed.connect(_toggle_branch_map)
-	add_child(map_btn)
-	_add_icon_hover(map_btn)
-
-	inventory_hud_btn = TextureButton.new()
-	inventory_hud_btn.texture_normal = load("res://assets/inventory.png") as Texture2D
-	inventory_hud_btn.tooltip_text = "Inventory"
-	inventory_hud_btn.ignore_texture_size = true
-	inventory_hud_btn.stretch_mode = TextureButton.STRETCH_KEEP_ASPECT_CENTERED
-	inventory_hud_btn.visible = true
-	inventory_hud_btn.custom_minimum_size = Vector2(64, 64)
-	inventory_hud_btn.anchor_left = 1.0
-	inventory_hud_btn.anchor_right = 1.0
-	inventory_hud_btn.anchor_top = 0.0
-	inventory_hud_btn.anchor_bottom = 0.0
-	inventory_hud_btn.offset_left = -232
-	inventory_hud_btn.offset_right = -168
-	inventory_hud_btn.offset_top = 8
-	inventory_hud_btn.offset_bottom = 72
+	# Inventory and star map live in the stats panel as HUD buttons (Abe: the
+	# old corner icons looked out of place next to the new HUD).
+	var hud_vbox: VBoxContainer = null
+	for child in hud_panel.get_children():
+		if child is VBoxContainer:
+			hud_vbox = child
+	var command_row := HBoxContainer.new()
+	command_row.add_theme_constant_override("separation", 6)
+	inventory_hud_btn = _hud_command_button("INVENTORY", "I")
+	inventory_hud_btn.tooltip_text = "Inventory (I)"
 	inventory_hud_btn.pressed.connect(_on_inventory_pressed)
-	add_child(inventory_hud_btn)
-	_add_icon_hover(inventory_hud_btn)
+	command_row.add_child(inventory_hud_btn)
+	map_btn = _hud_command_button("STAR MAP", "M")
+	map_btn.tooltip_text = "System Map (M)"
+	map_btn.visible = false
+	map_btn.pressed.connect(_toggle_branch_map)
+	# The map's place is kept while it is not available yet (Abe), so the
+	# inventory button stays half width.
+	var map_slot := Control.new()
+	map_slot.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	map_slot.custom_minimum_size = Vector2(0, 30)
+	map_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	command_row.add_child(map_slot)
+	map_btn.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	map_slot.add_child(map_btn)
+	if hud_vbox != null:
+		var gap := Control.new()
+		gap.custom_minimum_size = Vector2(0, 4)
+		hud_vbox.add_child(gap)
+		hud_vbox.add_child(command_row)
+	else:
+		add_child(command_row)
 
 	overview_panel = Panel.new()
 	add_child(overview_panel)
@@ -1286,6 +1281,39 @@ func _create_overview():
 	overview_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(overview_list)
 	_update_overview_filter_buttons()
+
+
+## A HUD command: a name and its key as a small keycap.
+func _hud_command_button(text: String, key: String) -> Button:
+	var button := Button.new()
+	button.custom_minimum_size = Vector2(0, 30)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	HudStyle.style_button(button, 12)
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	button.add_child(row)
+	var label := Label.new()
+	label.text = text
+	HudStyle.style_label(label, 12, HudStyle.TEXT)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(label)
+	var cap := PanelContainer.new()
+	cap.add_theme_stylebox_override("panel", HudStyle.box(Color(0.08, 0.1, 0.14), HudStyle.EDGE_SOFT, 1, 4, 3))
+	cap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cap.custom_minimum_size = Vector2(20, 20)
+	cap.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var key_label := Label.new()
+	key_label.text = key
+	key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	key_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	HudStyle.style_label(key_label, 11, HudStyle.ACCENT)
+	key_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cap.add_child(key_label)
+	row.add_child(cap)
+	return button
 
 
 func _create_overview_filter_button(icon: String, tooltip: String, callback: Callable) -> Button:
