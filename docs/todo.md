@@ -299,6 +299,18 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     in a system without ice the job says the ice must be hauled in.
   - Still to build (Abe's idea): O2 canisters from water ice and O2
     delivery jobs (an outpost's scrubbers failing, 100 L to keep breathing).
+  - Fetch-mission cards from Gemini (Abe, 2026-09-26, NOT STARTED): for
+    every store item (data/content/store_items.json) and every prop
+    (data/content/prop_items.json), ask Gemini for 3 cards: "X needs <item>
+    as soon as possible, because Y" (Z happens if not). Tone may be funny or
+    life-or-death. Give Gemini the item list (id, name, description, tags)
+    in the prompt; cards go through the usual validate + review pipeline.
+  - Item rarity + "where to find it" (Abe, NOT STARTED; not Gemini's job):
+    give each store item and prop a rarity so a fetch item can't be bought
+    at every store. The game writes a hint about where to find it (a
+    station, a system, "the outer outposts") and then makes sure the item
+    is actually stocked there (it may cheat: create the hint first, then
+    place the item to match).
   - UI restyle (Abe, 2026-09-26): flight HUD, pause screen and inventory
     done (HudStyle.gd). Docked screens: a shared Theme (HudStyle.make_theme)
     now styles every default button/panel/scrollbar/slider under UIManager,
