@@ -158,10 +158,69 @@ func _initialize() -> void:
 			qm._tick_reveal_twist(20.0)
 			_check(not qm.is_quest_active(), "the rival got there first: the job is gone")
 
+	# Stowaway, double booking, law change: the reveal names the stranger or
+	# the law, and each answer changes the job.
+	for id in ["stowaway", "double_booking", "law_change"]:
+		var t: Dictionary = by_id[id]
+		t["hail"] = t["hails"][0]
+		t["law_pick"] = t.get("laws", [""])[0]
+		var twisted := Twists.apply(courier_offer, t, "Vessa Orl", "", {"stranger_name": "Tamsin Rook"})
+		var line := str(twisted["objective"]["twist_reveal"])
+		_check(not line.contains("{"), "%s: every placeholder is filled: %s" % [id, line])
+		_check(line.contains("Tamsin Rook") if id != "law_change" else line.contains("curfew"), "%s: the reveal names them: %s" % [id, line])
+	var t_seen := {}
+	for i in 900:
+		t_seen[str(Twists.roll("deliver_ore", "new|%d" % i).get("id", ""))] = true
+	_check(t_seen.has("stowaway") and t_seen.has("double_booking") and t_seen.has("law_change"), "all three can come up: %s" % str(t_seen.keys()))
+
+	var cases := [["stowaway", "shelter"], ["stowaway", "turn_in"], ["double_booking", "honor"], ["double_booking", "switch"],
+		["law_change", "comply"], ["law_change", "run"]]
+	for c in cases:
+		var t2: Dictionary = by_id[c[0]]
+		t2["hail"] = t2["hails"][0]
+		t2["law_pick"] = t2.get("laws", [""])[0]
+		var job := Twists.apply(courier_offer, t2, "Vessa Orl", "", {"stranger_name": "Tamsin Rook"})
+		qm.restore_active_quest({})
+		gs.clear_cargo()
+		if not qm.accept_quest(job, job["choices"][0]):
+			_check(false, "%s job accepted: %s" % [c[0], qm.last_validation_error])
+			continue
+		var full: int = qm.active_quest_payout()
+		var credits_before: int = gs.player_credits
+		qm._tick_reveal_twist(61.0)
+		_check(str(qm.active_quest.get("twist_state", "")) == "revealed", "%s: revealed a minute in" % c[0])
+		qm.resolve_reveal_twist(c[1])
+		match c[1]:
+			"shelter", "honor":
+				_check(qm.is_quest_active() and qm.active_quest_payout() == full, "%s keeps the job at full pay" % c[1])
+			"turn_in":
+				_check(qm.active_quest_payout() == int(round(full * 1.25)), "the bounty adds a quarter (%d -> %d)" % [full, qm.active_quest_payout()])
+			"comply":
+				_check(qm.active_quest_payout() == int(round(full * 0.75)), "the duty takes a quarter (%d -> %d)" % [full, qm.active_quest_payout()])
+			"switch":
+				_check(not qm.is_quest_active() and gs.player_credits == credits_before + 300, "switching pays the other side's fee now and drops the job")
+			"run":
+				_check(str(qm.active_quest.get("twist_state", "")) == "running", "running it keeps the job")
+				qm._tick_reveal_twist(qm.LAW_SCAN_AFTER_SECONDS + 1.0)
+				_check(bool(qm.active_quest.get("twist_scanned", false)), "a patrol scans us once")
+				var fined := int(qm.active_quest.get("twist_fined", 0))
+				_check(fined == 0 or gs.player_credits == credits_before - fined, "a catch is a fine (%d)" % fined)
+	# Over many runs the patrol catches some and misses some.
+	var caught := 0
+	for i in 200:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("law_scan|mission.runtime.%d" % i)
+		if rng.randf() < 0.4:
+			caught += 1
+	_check(caught > 50 and caught < 110, "about four in ten runs get fined (%d/200)" % caught)
+
 	gs.player = saved_player
 	ship.free()
 	qm.restore_active_quest({})
 	gs.clear_cargo()
+	for branch in ["shelter", "turn_in", "switch", "run_law"]:
+		var d := Twists.deed_for(branch, "Vessa Orl")
+		_check(not d.is_empty() and not preload("res://scripts/story/premise/FactionDNA.gd").deed_signal(str(d["tag"])).is_empty(), "%s leaves a deed factions understand: %s" % [branch, str(d)])
 	_check(Twists.deed_for("deliver", "Vessa Orl")["tag"] == "smuggled_undeclared_cargo", "running it anyway leaves a deed")
 	_check(Twists.deed_for("expose", "Vessa Orl")["tag"] == "exposed_client" and Twists.deed_for("race_won", "Vessa Orl")["tag"] == "won_the_race", "exposing a client and winning a race are deeds too")
 

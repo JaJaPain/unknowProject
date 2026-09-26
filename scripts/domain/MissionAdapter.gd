@@ -284,6 +284,14 @@ static func build_active_state(
 			state["twist_id"] = str(objective.get("twist_id", ""))
 			state["twist_target_name"] = str(objective.get("twist_target_name", ""))
 
+	# An ambush complication (MissionComplications): raiders jump the
+	# captain this many seconds into undocked flight on the job.
+	if int(objective.get("ambush_count", 0)) > 0:
+		state["ambush_count"] = int(objective["ambush_count"])
+		state["ambush_after_seconds"] = float(objective.get("ambush_after_seconds", 50.0))
+		state["ambush_flight_s"] = 0.0
+		state["ambush_done"] = false
+
 	# Mid-flight reveal twists (MissionTwists: wrong cargo, the client's lie,
 	# a rival on the job) work on any objective type. The hail twists on
 	# kill jobs keep their fields in the comms-reversal block above.
@@ -297,6 +305,11 @@ static func build_active_state(
 		state["twist_reveal"] = str(objective.get("twist_reveal", ""))
 		state["twist_target_name"] = str(objective.get("twist_target_name", ""))
 		state["twist_rival_name"] = str(objective.get("twist_rival_name", ""))
+		state["twist_other_name"] = str(objective.get("twist_other_name", ""))
+		state["twist_law"] = str(objective.get("twist_law", ""))
+		for key in ["twist_bounty_share", "twist_switch_share", "twist_tariff_share", "twist_fine_share", "twist_catch_chance"]:
+			if objective.has(key):
+				state[key] = float(objective[key])
 
 	var state_validation := StateType.new().load_from_dict(state)
 	validation.merge(state_validation, "state")

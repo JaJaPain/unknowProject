@@ -623,12 +623,15 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 	# A reveal twist's answer is its own "branch" for the deed (the arc still
 	# reads the hail branch, if any).
 	var deed_branch := branch
-	var reveal_answer := {"delivering": "deliver", "finishing": "finish_lie", "racing": "race_won"}
+	var reveal_answer := {"delivering": "deliver", "finishing": "finish_lie", "racing": "race_won",
+		"sheltering": "shelter", "turned_in": "turn_in", "running": "run_law"}
 	var twist_state := str(quest_data.get("twist_state", ""))
 	if terminal_state == "completed" and reveal_answer.has(twist_state):
 		deed_branch = str(reveal_answer[twist_state])
 	elif twist_state == "exposed":
 		deed_branch = "expose"
+	elif twist_state == "switched":
+		deed_branch = "switch"
 	if not twist_id.is_empty():
 		var deed := TwistsType.deed_for(deed_branch, str(quest_data.get("twist_target_name", "")))
 		if not deed.is_empty():

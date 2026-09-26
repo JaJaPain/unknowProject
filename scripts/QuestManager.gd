@@ -74,6 +74,8 @@ signal reveal_twist_triggered(mission_data: Dictionary)
 const REVEAL_TWIST_AFTER_SECONDS := 60.0
 ## A race against a rival: seconds of undocked flight to finish the job.
 const RIVAL_RACE_SECONDS := 240.0
+## Running cargo after a new law: seconds of flight before a patrol scan.
+const LAW_SCAN_AFTER_SECONDS := 45.0
 var _reveal_twist_prompted := {}
 var _race_warned := {}
 
@@ -88,6 +90,7 @@ func dispatch_investigation_command(command: Dictionary) -> Dictionary:
 
 func _physics_process(delta: float) -> void:
 	_tick_reveal_twist(delta)
+	_tick_ambush(delta)
 	var scan_mission_id := str(_investigation_runtime._scan.get("mission_id", ""))
 	var report := _investigation_runtime.tick(self, delta)
 	if not report.is_empty():
@@ -101,23 +104,51 @@ func _physics_process(delta: float) -> void:
 ## A forged transmitter lure: raiders were waiting at the cache. Headless runs
 ## and runs without a live system spawn nothing.
 func spawn_investigation_ambush(mission_id: String, at: Vector3) -> void:
+	if spawn_raiders(at, 2, "Lure") > 0:
+		print("[QuestManager] Lure ambush for %s: 2 raiders at the cache." % mission_id)
+
+
+## An ambush complication: counts undocked flight on the focused job, then
+## raiders come at the captain, once per job.
+func _tick_ambush(delta: float) -> void:
+	var focused = _collection.get_focused()
+	if focused == null or get_tree().paused:
+		return
+	if int(focused.data.get("ambush_count", 0)) <= 0 or bool(focused.data.get("ambush_done", false)):
+		return
+	var player = GlobalState.player
+	if not is_instance_valid(player) or player.get("is_docked") == true or player.get("destroyed") == true:
+		return
+	focused.data["ambush_flight_s"] = float(focused.data.get("ambush_flight_s", 0.0)) + delta
+	if float(focused.data["ambush_flight_s"]) < float(focused.data.get("ambush_after_seconds", 50.0)):
+		return
+	focused.data["ambush_done"] = true
+	var count := int(focused.data["ambush_count"])
+	var at: Vector3 = (player as Node3D).global_position if player is Node3D else Vector3.ZERO
+	spawn_raiders(at, count, "Ambush", 420.0)
+	GlobalState.emit_chatter("N.O.V.A.", "Contacts closing fast, %d of them. This is the company we were warned about." % count, Color(1.0, 0.45, 0.35))
+	quest_progress_updated.emit()
+
+
+## Spawns hostile raiders in a ring around `at`. Returns how many (none when
+## headless or without a live system).
+func spawn_raiders(at: Vector3, count: int, tag: String, radius: float = 160.0) -> int:
 	var system_root = GlobalState.active_system_root
 	if system_root == null or not is_instance_valid(system_root) or DisplayServer.get_name() == "headless":
-		return
+		return 0
 	var npc_scene: PackedScene = load("res://scenes/npc_ship.tscn")
 	if npc_scene == null:
-		return
-	var count := 2
+		return 0
 	for i in range(count):
 		var npc = npc_scene.instantiate()
 		npc.faction = "reavers"
 		npc.speed = 13.0
 		npc.ship_role = "Raider"
-		npc.name = "REAVERS_Lure_%d" % (randi() % 1000)
+		npc.name = "REAVERS_%s_%d" % [tag, randi() % 1000]
 		system_root.add_child(npc)
 		var angle: float = (TAU / count) * i
-		npc.global_position = at + Vector3(cos(angle), 0.0, sin(angle)) * 160.0
-	print("[QuestManager] Lure ambush for %s: %d raiders at the cache." % [mission_id, count])
+		npc.global_position = at + Vector3(cos(angle), 0.0, sin(angle)) * radius
+	return count
 
 
 ## Counts undocked flight on the focused job with a pending reveal twist, then
@@ -135,13 +166,16 @@ func _tick_reveal_twist(delta: float) -> void:
 			_reveal_twist_prompted[focused.runtime_id] = true
 			reveal_twist_triggered.emit(focused.data.duplicate(true))
 		return
-	if twist_state not in ["pending", "racing"]:
+	if twist_state not in ["pending", "racing", "running"]:
 		return
 	var player = GlobalState.player
 	if not is_instance_valid(player) or player.get("is_docked") == true or player.get("destroyed") == true:
 		return
 	if twist_state == "racing":
 		_tick_race(focused, delta)
+		return
+	if twist_state == "running":
+		_tick_law_run(focused, delta)
 		return
 	focused.data["twist_flight_s"] = float(focused.data.get("twist_flight_s", 0.0)) + delta
 	if float(focused.data["twist_flight_s"]) >= REVEAL_TWIST_AFTER_SECONDS:
@@ -171,10 +205,37 @@ func _tick_race(focused, delta: float) -> void:
 	check_active_quest_expiration()
 
 
+## Running cargo past a new law: once, a patrol scans the ship; a seeded roll
+## decides whether they catch it (a fine, a share of the job's pay).
+func _tick_law_run(focused, delta: float) -> void:
+	if bool(focused.data.get("twist_scanned", false)):
+		return
+	focused.data["twist_run_s"] = float(focused.data.get("twist_run_s", 0.0)) + delta
+	if float(focused.data["twist_run_s"]) < LAW_SCAN_AFTER_SECONDS:
+		return
+	focused.data["twist_scanned"] = true
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("law_scan|" + str(focused.runtime_id))
+	if rng.randf() >= float(focused.data.get("twist_catch_chance", 0.4)):
+		GlobalState.emit_chatter("N.O.V.A.", "A patrol swept us and moved on. Nothing flagged. Keep going.", Color(0.5, 0.95, 0.85))
+		return
+	var fine := int(round(float(focused.data.get("reward_credits", 0)) * float(focused.data.get("twist_fine_share", 0.5))))
+	fine = mini(fine, maxi(0, int(GlobalState.player_credits)))
+	GlobalState.add_credits(-fine)
+	focused.data["twist_fined"] = fine
+	GlobalState.emit_chatter("N.O.V.A.", "Patrol scan caught the cargo. They fined us %d credits and let us through. The job still stands." % fine, Color(1.0, 0.6, 0.35))
+	quest_progress_updated.emit()
+
+
 ## The captain's answer to a reveal twist.
 ##   wrong cargo: "deliver" keeps the job (a deed at the end); "dump" ends it.
 ##   client's lie: "finish" keeps it (a deed at the end); "expose" ends it.
 ##   rival: "split" halves the pay; "race" starts the rival's clock.
+##   stowaway: "shelter" keeps the job (a deed); "turn_in" adds a bounty.
+##   double booking: "honor" keeps the job; "switch" pays the other side's
+##     fee now and drops the job.
+##   law change: "comply" pays the duty out of the fee; "run" keeps the fee
+##     and risks a patrol fine.
 func resolve_reveal_twist(choice: String) -> void:
 	var focused = _collection.get_focused()
 	if focused == null or str(focused.data.get("twist_state", "")) != "revealed":
@@ -190,6 +251,25 @@ func resolve_reveal_twist(choice: String) -> void:
 		"race":
 			focused.data["twist_state"] = "racing"
 			focused.data["twist_race_left_s"] = RIVAL_RACE_SECONDS
+		"shelter":
+			focused.data["twist_state"] = "sheltering"
+		"turn_in":
+			focused.data["twist_state"] = "turned_in"
+			focused.data["reward_credits_multiplier"] = float(focused.data.get("reward_credits_multiplier", 1.0)) * (1.0 + float(focused.data.get("twist_bounty_share", 0.25)))
+		"honor":
+			focused.data["twist_state"] = "honoring"
+		"comply":
+			focused.data["twist_state"] = "complying"
+			focused.data["reward_credits_multiplier"] = float(focused.data.get("reward_credits_multiplier", 1.0)) * (1.0 - float(focused.data.get("twist_tariff_share", 0.25)))
+		"run":
+			focused.data["twist_state"] = "running"
+			focused.data["twist_run_s"] = 0.0
+		"switch":
+			var pay := int(round(float(focused.data.get("reward_credits", 0)) * float(focused.data.get("twist_switch_share", 1.0))))
+			GlobalState.add_credits(pay)
+			focused.data["twist_state"] = "switched"
+			abandon_quest()
+			return
 		"dump", "expose":
 			focused.data["twist_state"] = "dumped" if choice == "dump" else "exposed"
 			abandon_quest()

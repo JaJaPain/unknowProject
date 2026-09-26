@@ -253,6 +253,22 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     them over about 4 minutes of flight; lose and the job expires). Some
     card private facts read as narration ("The pilot realizes...") when
     N.O.V.A. says them; worth a wording pass in the card brief.
+    Three more (2026-09-25), same minute-in reveal on supply jobs:
+    a stowaway (let them off quietly, or turn them in: +25% bounty), a
+    double booking (another buyer hails in their own voice: keep the job,
+    or switch and get their fee now, dropping the client), and a law change
+    (pay the duty, -25%, or run it: one patrol scan 45 s later fines half
+    the fee 4 times in 10). That makes the plan's 8 starter turns; "quirk
+    strike" waits (it needs a pulsar/ion storm hook). With 8 twists over
+    the same verbs, does any one come up too often?
+  - Complications, now 12 (2026-09-25): new are an ambush on the way (two
+    reavers about 50 s into the flight, +20% pay), a rush ore order
+    (smaller, 2 h, +50% if in time), a clock on kill jobs (3 h, +35%), a
+    favour (70% pay, +3 standing with the client's faction), and three
+    quirk ones that win where the quirk is: nebula ambush (three raiders),
+    pulsar window (kill deadline), dying-star evacuation (2 h deadline).
+    Ambush raiders always fly reavers for now. Does the ambush land at a
+    fair distance (420 m ring)?
   - Recurring cast in person: about 3 in 10 arrivals (never two within 3
     jumps, the same face not within 8), 25-55 s into calm flight, someone
     from an earlier story hails in their own voice naming where you met.

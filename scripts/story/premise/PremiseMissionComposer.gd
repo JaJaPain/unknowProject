@@ -161,8 +161,12 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 			var name_rng := RandomNumberGenerator.new()
 			name_rng.seed = hash("rival|" + beat_id)
 			rival_name = NameForgeType.person_name(name_rng)
+		# A stowaway or the other buyer in a double deal is a new face.
+		var stranger_rng := RandomNumberGenerator.new()
+		stranger_rng.seed = hash("stranger|" + beat_id)
 		offer = TwistsType.apply(offer, twist, str(requester.get("display_name", "")), str(target.get("display_name", "")),
-			{"private_fact": str(offer.get("premise_private_fact", "")), "rival_name": rival_name})
+			{"private_fact": str(offer.get("premise_private_fact", "")), "rival_name": rival_name,
+				"stranger_name": NameForgeType.person_name(stranger_rng)})
 	# Layer 3: about half the jobs come with a complication that changes how
 	# they play (seeded per mission, so a reload never rerolls it).
 	var complication := ComplicationsType.roll(verb, world.get("quirks", []), "%d|%s" % [seed_value, beat_id])

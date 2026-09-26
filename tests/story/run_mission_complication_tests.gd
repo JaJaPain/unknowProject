@@ -18,6 +18,7 @@ func _offer(objective: Dictionary) -> Dictionary:
 
 
 func _initialize() -> void:
+	await process_frame
 	# Seeded, and about half the time.
 	var hits := 0
 	for i in 400:
@@ -59,6 +60,69 @@ func _initialize() -> void:
 	var ore := Comp.apply(_offer({"type": "DELIVER_ORE", "amount_required": 20.0, "ore_type": "silicate", "reward_credits": 300}), by_id["bigger_load"], "")
 	_check(is_equal_approx(float(ore["objective"]["amount_required"]), 30.0) and int(ore["objective"]["reward_credits"]) == 390, "a bigger load, more pay")
 	_check(Comp.apply(_offer(courier), {}, "x") == _offer(courier), "no complication, no change")
+
+	# Twelve, and every one makes a valid mission on every verb it names.
+	_check(by_id.size() >= 12, "the starter deck has 12 (%d)" % by_id.size())
+	var objectives := {
+		"delivery_courier": courier,
+		"purchase_delivery": courier,
+		"pickup_special": courier,
+		"deliver_ore": {"type": "DELIVER_ORE", "amount_required": 20.0, "ore_type": "silicate", "reward_credits": 300,
+			"destination_station_id": "station.b", "destination_display": "B"},
+		"kill_ships": {"type": "KILL_SHIPS", "target_faction": "reavers", "count_required": 3, "reward_credits": 400},
+	}
+	for id in by_id:
+		for verb in by_id[id]["verbs"]:
+			if not objectives.has(verb):
+				continue
+			var job := Comp.apply(_offer(objectives[verb]), by_id[id], "Vessa Orl")
+			var made := Adapter.build_active_state(job, job["choices"][0], "mission.runtime.all.%s" % id, "system.test", 0)
+			_check(made["validation"].is_valid(), "%s on %s makes a valid mission: %s" % [id, verb, str(made["validation"].errors)])
+			_check(not str(job["dialogue"]).contains("{"), "%s: the briefing is filled in: %s" % [id, job["dialogue"]])
+	# Quirk-bound ones only where the quirk is, and they win there.
+	for pair in [["nebula_ambush", "delivery_courier", "nebula"], ["pulsar_window", "kill_ships", "pulsar"], ["evacuation_window", "pickup_special", "dying_star"]]:
+		var seen_with := false
+		var seen_without := false
+		for i in 200:
+			seen_with = seen_with or str(Comp.roll(pair[1], [pair[2]], "q|%d" % i).get("id", "")) == pair[0]
+			seen_without = seen_without or str(Comp.roll(pair[1], [], "q|%d" % i).get("id", "")) == pair[0]
+		_check(seen_with and not seen_without, "%s only with %s" % [pair[0], pair[2]])
+
+	# Ambush: raiders come once, that far into undocked flight on the job.
+	var ambushed := Comp.apply(_offer(courier), by_id["ambush_en_route"], "Vessa Orl")
+	_check(int(ambushed["objective"]["ambush_count"]) == 2 and int(ambushed["objective"]["reward_credits"]) == 480, "an ambush: two raiders, more pay")
+	var qm: Node = root.get_node("QuestManager")
+	var gs: Node = root.get_node("GlobalState")
+	var ship := CharacterBody3D.new()
+	ship.set("is_docked", false)
+	root.add_child(ship)
+	var saved_player = gs.player
+	gs.player = ship
+	qm.restore_active_quest({})
+	gs.clear_cargo()
+	if qm.accept_quest(ambushed, ambushed["choices"][0]):
+		qm._tick_ambush(30.0)
+		_check(not bool(qm.active_quest.get("ambush_done", true)), "no ambush half a minute in")
+		qm._tick_ambush(25.0)
+		_check(bool(qm.active_quest.get("ambush_done", false)), "the ambush lands at 50 s, once")
+	else:
+		_check(false, "ambush job accepted: %s" % qm.last_validation_error)
+	# A favour: less pay, standing with the client's faction on accepting.
+	var fav_offer := _offer(courier)
+	fav_offer["faction"] = "zenith"
+	var fav := Comp.apply(fav_offer, by_id["favour"], "Vessa Orl")
+	_check(int(fav["objective"]["reward_credits"]) == 280 and is_equal_approx(float(fav["choices"][0]["consequence"]["reputation_change"].get("zenith", 0.0)), 3.0), "a favour: 70% pay, +3 standing")
+	var before: float = float(gs.reputations.get("zenith", 0.0))
+	qm.restore_active_quest({})
+	gs.clear_cargo()
+	if qm.accept_quest(fav, fav["choices"][0]):
+		_check(float(gs.reputations.get("zenith", 0.0)) > before, "taking it raises standing (%.1f -> %.1f)" % [before, float(gs.reputations.get("zenith", 0.0))])
+	else:
+		_check(false, "favour job accepted: %s" % qm.last_validation_error)
+	qm.restore_active_quest({})
+	gs.clear_cargo()
+	gs.player = saved_player
+	ship.free()
 
 	if _failures.is_empty():
 		print("[PASS] Mission complications")

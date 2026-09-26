@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code. wrong_cargo reveals a courier's sealed container mid-flight (N.O.V.A. scans it) and asks: deliver anyway, or dump it. client_lie reveals the requester's private fact mid-job (finish anyway, or expose them). rival_on_the_job: a rival pilot on the same contract (split the fee, or race against a clock; lose the race and the rival takes the credit).",
+    "note": "Mission Composer layer 4 (vision plan 4.2): turns. A twist lands mid-mission and always offers a choice whose answer becomes story (arc outcome and a deed). Hail lines are hand-written; {requester} and {target} are filled in code. wrong_cargo reveals a courier's sealed container mid-flight (N.O.V.A. scans it) and asks: deliver anyway, or dump it. client_lie reveals the requester's private fact mid-job (finish anyway, or expose them). rival_on_the_job: a rival pilot on the same contract (split the fee, or race against a clock; lose the race and the rival takes the credit). stowaway: someone hid in the hold (shelter them, or turn them in for a bounty). double_booking: another party paid for the same cargo (keep the job, or switch and get paid now; the job is dropped). law_change: a new local law makes the run illegal (pay the duty, or run it and risk a fine from a patrol scan).",
     "chance": 0.35,
     "twists": [
         {
@@ -83,6 +83,65 @@
                 "{rival} here. Same contract as you, pilot. {requester} hired us both and pays whoever finishes first. Split it with me, or race me for it.",
                 "Well, well. {rival}, working the same job for {requester}. We can share the fee and both go home, or you can try to beat me there.",
                 "You're on {requester}'s job too? Of course you are. This is {rival}. Half each, or the fast one takes it all. Your call."
+            ]
+        },
+        {
+            "id": "stowaway",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "kind": "reveal",
+            "reveal_kind": "stowaway",
+            "bounty_share": 0.25,
+            "hails": [
+                "Captain, there's a heartbeat in the hold that isn't yours. Someone called {stranger} stowed away before we launched. They're asking us not to hand them over.",
+                "We have a passenger. {stranger}, hiding behind the cargo since the dock. They say they had to get out, and they're begging for a quiet drop-off.",
+                "Life support's working for two. There's a stowaway aboard, {stranger}. There's a standing bounty on runaways, or we could let them off quietly at the drop."
+            ]
+        },
+        {
+            "id": "double_booking",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "kind": "reveal",
+            "reveal_kind": "double_booking",
+            "switch_share": 1.0,
+            "hails": [
+                "This is {stranger}. We paid for this cargo too, pilot, and it's not going to {requester}. Bring it to us instead and the fee's yours now, in full.",
+                "{stranger} here. Someone sold this job twice, and we were first. Turn around, hand it to us, and we'll pay what {requester} promised, today.",
+                "Pilot, {stranger}. {requester} doesn't own that cargo, we do, and we already paid for its delivery. Switch to us and get paid now. Or don't, and remember who you crossed."
+            ]
+        },
+        {
+            "id": "law_change",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "kind": "reveal",
+            "reveal_kind": "law_change",
+            "tariff_share": 0.25,
+            "fine_share": 0.5,
+            "catch_chance": 0.4,
+            "laws": [
+                "a curfew on cargo traffic",
+                "an emergency ban on unlicensed freight",
+                "a new duty on anything moving through the lanes",
+                "a lockdown on shipments from outside the system"
+            ],
+            "hails": [
+                "Captain, the local authority just declared {law}. As of now our run is illegal unless we pay the duty.",
+                "News on the local band: {law}, effective now. We can pay the duty and stay clean, or keep flying and hope nobody scans us.",
+                "Timing. They just announced {law}. Pay up and it's legal. Don't, and every patrol in the system has a reason to stop us."
             ]
         }
     ]

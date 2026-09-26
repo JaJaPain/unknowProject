@@ -1,38 +1,169 @@
 {
     "schema_version": 1,
-    "note": "Mission Composer layer 3 (vision plan 4.1): complications. Each changes how the job plays, not only its text. {requester}, {hours} and {extra} are filled in code. Investigations get none yet: they are accepted through a checkpoint that allows no up-front money.",
+    "note": "Mission Composer layer 3 (vision plan 4.1): complications. Each changes how the job plays, not only its text. {requester}, {hours} and {extra} are filled in code. ambush_count/ambush_after_seconds: raiders jump the captain that many seconds into undocked flight on the job. standing_on_accept: standing with the requester's faction when the job is taken. Investigations get none yet: they are accepted through a checkpoint that allows no up-front money.",
     "chance": 0.5,
     "complications": [
         {
             "id": "deadline",
-            "verbs": ["delivery_courier", "purchase_delivery", "pickup_special", "deliver_ore", "recover_combat_drop"],
-            "effect": {"deadline_minutes": 240, "urgent_reward_multiplier": 1.3},
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore",
+                "recover_combat_drop"
+            ],
+            "effect": {
+                "deadline_minutes": 240,
+                "urgent_reward_multiplier": 1.3
+            },
             "text": "It has to be there within {hours} hours, or it is no use to anyone. Done in time, the pay is better."
         },
         {
             "id": "storm_window",
-            "verbs": ["delivery_courier", "pickup_special", "purchase_delivery"],
+            "verbs": [
+                "delivery_courier",
+                "pickup_special",
+                "purchase_delivery"
+            ],
             "requires_quirk": "ion_storm",
-            "effect": {"deadline_minutes": 150, "urgent_reward_multiplier": 1.4},
+            "effect": {
+                "deadline_minutes": 150,
+                "urgent_reward_multiplier": 1.4
+            },
             "text": "There is a window between storm fronts, about {hours} hours. After that the lanes close."
         },
         {
             "id": "advance_paid",
-            "verbs": ["delivery_courier", "purchase_delivery", "pickup_special", "deliver_ore", "kill_ships", "recover_combat_drop", "comms_reversal"],
-            "effect": {"advance_share": 0.3, "remaining_multiplier": 0.8},
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore",
+                "kill_ships",
+                "recover_combat_drop",
+                "comms_reversal"
+            ],
+            "effect": {
+                "advance_share": 0.3,
+                "remaining_multiplier": 0.8
+            },
             "text": "{requester} pays part of it up front, {extra} credits now. Less at the end; that is the deal."
         },
         {
             "id": "heavy_escort",
-            "verbs": ["kill_ships"],
-            "effect": {"extra_kills": 1, "reward_multiplier": 1.25},
+            "verbs": [
+                "kill_ships"
+            ],
+            "effect": {
+                "extra_kills": 1,
+                "reward_multiplier": 1.25
+            },
             "text": "They are not flying alone. Expect one more than the report says; the fee reflects it."
         },
         {
             "id": "bigger_load",
-            "verbs": ["deliver_ore"],
-            "effect": {"ore_multiplier": 1.5, "reward_multiplier": 1.3},
+            "verbs": [
+                "deliver_ore"
+            ],
+            "effect": {
+                "ore_multiplier": 1.5,
+                "reward_multiplier": 1.3
+            },
             "text": "The order grew overnight. Half as much again, for more money."
+        },
+        {
+            "id": "ambush_en_route",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "effect": {
+                "ambush_count": 2,
+                "ambush_after_seconds": 50,
+                "reward_multiplier": 1.2
+            },
+            "text": "Someone wants this more than {requester} does. Expect company on the way; the fee allows for it."
+        },
+        {
+            "id": "rush_order",
+            "verbs": [
+                "deliver_ore"
+            ],
+            "effect": {
+                "ore_multiplier": 0.6,
+                "deadline_minutes": 120,
+                "urgent_reward_multiplier": 1.5
+            },
+            "text": "A smaller order, but it is needed within {hours} hours. Fast pays well."
+        },
+        {
+            "id": "clock_on_the_hunt",
+            "verbs": [
+                "kill_ships"
+            ],
+            "effect": {
+                "deadline_minutes": 180,
+                "urgent_reward_multiplier": 1.35
+            },
+            "text": "They leave the system in about {hours} hours. Catch them before that and the fee goes up."
+        },
+        {
+            "id": "favour",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "effect": {
+                "reward_multiplier": 0.7,
+                "standing_on_accept": 3.0
+            },
+            "text": "{requester} cannot pay the full rate this time, but they will not forget who helped."
+        },
+        {
+            "id": "nebula_ambush",
+            "verbs": [
+                "delivery_courier",
+                "purchase_delivery",
+                "pickup_special",
+                "deliver_ore"
+            ],
+            "requires_quirk": "nebula",
+            "effect": {
+                "ambush_count": 3,
+                "ambush_after_seconds": 40,
+                "reward_multiplier": 1.3
+            },
+            "text": "Raiders sit in the murk off the lanes, where sensors cannot see them. Two or three, likely. The pay reflects it."
+        },
+        {
+            "id": "pulsar_window",
+            "verbs": [
+                "kill_ships"
+            ],
+            "requires_quirk": "pulsar",
+            "effect": {
+                "deadline_minutes": 150,
+                "urgent_reward_multiplier": 1.4
+            },
+            "text": "They plan to slip out on a quiet stretch between sweeps, about {hours} hours from now. Be there first."
+        },
+        {
+            "id": "evacuation_window",
+            "verbs": [
+                "delivery_courier",
+                "pickup_special",
+                "purchase_delivery"
+            ],
+            "requires_quirk": "dying_star",
+            "effect": {
+                "deadline_minutes": 120,
+                "urgent_reward_multiplier": 1.5
+            },
+            "text": "The station is emptying out as the star fails. In {hours} hours there will be nobody left to receive it."
         }
     ]
 }

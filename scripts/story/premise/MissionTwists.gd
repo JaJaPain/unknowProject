@@ -25,6 +25,10 @@ const DEEDS := {
 	"finish_lie": {"tag": "covered_for_client", "summary": "A pilot learned what {target} was hiding and finished the job anyway."},
 	"expose": {"tag": "exposed_client", "summary": "A pilot walked away from {target}'s job and told everyone why."},
 	"race_won": {"tag": "won_the_race", "summary": "A pilot beat a rival to {target}'s job and took the whole fee."},
+	"shelter": {"tag": "helped_a_stowaway", "summary": "A pilot found a stowaway on {target}'s job and let them go free at the drop."},
+	"turn_in": {"tag": "caught_a_stowaway", "summary": "A pilot found a stowaway on {target}'s job and turned them in for the bounty."},
+	"switch": {"tag": "betrayed_client", "summary": "A pilot took {target}'s cargo to the other side of a double deal."},
+	"run_law": {"tag": "broke_the_new_law", "summary": "A pilot ran {target}'s cargo through the lanes after it was made illegal."},
 }
 
 static var _deck: Dictionary = {}
@@ -72,11 +76,13 @@ static func roll(verb: String, seed_key: String, has_private_fact: bool = false)
 	twist["hail"] = str(hails[rng.randi() % hails.size()]) if not hails.is_empty() else ""
 	var cargo: Array = twist.get("true_cargo", [])
 	twist["true_cargo_pick"] = str(cargo[rng.randi() % cargo.size()]) if not cargo.is_empty() else ""
+	var laws: Array = twist.get("laws", [])
+	twist["law_pick"] = str(laws[rng.randi() % laws.size()]) if not laws.is_empty() else ""
 	return twist
 
 
 ## Turns a composed offer into its twisted form (returns a new offer).
-## `context`: {private_fact, rival_name} for the reveal twists.
+## `context`: {private_fact, rival_name, stranger_name} for the reveal twists.
 static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, target_name: String, context: Dictionary = {}) -> Dictionary:
 	if twist.is_empty():
 		return offer
@@ -101,8 +107,10 @@ static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, 
 
 ## A twist revealed a minute into the flight (QuestManager), whatever the
 ## job: the courier's crate is not what the manifest says (wrong_cargo), the
-## client's hidden truth comes out (client_lie), or a rival pilot is working
-## the same contract (rival). The objective itself is unchanged.
+## client's hidden truth comes out (client_lie), a rival pilot is working the
+## same contract (rival), someone is hiding in the hold (stowaway), another
+## party paid for the same cargo (double_booking), or a new local law makes
+## the run illegal (law_change). The objective itself is unchanged.
 static func _apply_reveal(offer: Dictionary, twist: Dictionary, requester_name: String, context: Dictionary) -> Dictionary:
 	var out := offer.duplicate(true)
 	var objective: Dictionary = out.get("objective", {})
@@ -113,12 +121,23 @@ static func _apply_reveal(offer: Dictionary, twist: Dictionary, requester_name: 
 	if rival.is_empty():
 		rival = "Another freelancer"
 	var fact := str(context.get("private_fact", "")).strip_edges()
+	var stranger := str(context.get("stranger_name", "")).strip_edges()
+	if stranger.is_empty():
+		stranger = "Someone"
+	var law := str(twist.get("law_pick", "a new local law"))
 	objective["twist_id"] = str(twist.get("id", ""))
 	objective["twist_reveal_kind"] = str(twist.get("reveal_kind", "wrong_cargo"))
 	objective["twist_true_cargo"] = true_cargo
 	objective["twist_rival_name"] = rival
+	objective["twist_other_name"] = stranger
+	objective["twist_law"] = law
+	# The money a choice moves, as shares of the job's pay.
+	for key in ["bounty_share", "switch_share", "tariff_share", "fine_share", "catch_chance"]:
+		if twist.has(key):
+			objective["twist_" + key] = float(twist[key])
 	var reveal := str(twist.get("hail", "")).replace("{item}", item).replace("{true_cargo}", true_cargo)
 	objective["twist_reveal"] = reveal.replace("{requester}", who).replace("{rival}", rival).replace("{fact}", fact)
+	objective["twist_reveal"] = str(objective["twist_reveal"]).replace("{stranger}", stranger).replace("{law}", law)
 	objective["twist_target_name"] = who
 	out["objective"] = objective
 	out["twist_id"] = str(twist.get("id", ""))

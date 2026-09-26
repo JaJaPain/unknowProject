@@ -3,7 +3,8 @@ extends RefCounted
 ## Mission Composer, layer 3 (vision plan 4.1): complications. About half of
 ## the story missions get one, drawn from a small data deck and filtered by
 ## the mission's verb and the system's quirks. Every complication changes how
-## the job plays (a deadline, money up front, one more ship, a bigger load),
+## the job plays (a deadline, money up front, one more ship, a bigger load,
+## raiders on the way, standing instead of pay),
 ## not only what it says; its line joins the briefing.
 ##
 ## PURE and seeded: the same mission in the same campaign always rolls the
@@ -75,6 +76,18 @@ static func apply(offer: Dictionary, complication: Dictionary, requester_name: S
 			if choice is Dictionary and (choice as Dictionary).has("consequence"):
 				choice["consequence"]["credits_immediate"] = advance
 		out["choices"] = choices
+	if effect.has("ambush_count"):
+		# QuestManager jumps the captain that far into the flight.
+		objective["ambush_count"] = int(effect["ambush_count"])
+		objective["ambush_after_seconds"] = float(effect.get("ambush_after_seconds", 50.0))
+	if effect.has("standing_on_accept"):
+		var faction := str(out.get("faction", ""))
+		if not faction.is_empty() and faction != "neutral":
+			for choice in out.get("choices", []):
+				if choice is Dictionary and (choice as Dictionary).has("consequence"):
+					var rep: Dictionary = (choice["consequence"] as Dictionary).get("reputation_change", {})
+					rep[faction] = float(rep.get(faction, 0.0)) + float(effect["standing_on_accept"])
+					choice["consequence"]["reputation_change"] = rep
 	objective["reward_credits"] = reward
 	out["objective"] = objective
 	if effect.has("deadline_minutes"):

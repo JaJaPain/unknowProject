@@ -14231,6 +14231,18 @@ const REVEAL_TWIST_CHOICES := {
 		["split", "Split the fee with them.", "Half each. Nobody gets shot. I can live with that."],
 		["race", "Race them for it.", "Then fly. They're already moving."],
 	],
+	"stowaway": [
+		["shelter", "Let them off quietly at the drop.", "I'll find them a blanket. And a very quiet exit."],
+		["turn_in", "Turn them in for the bounty.", "Logged and flagged. They'll be collected at the drop."],
+	],
+	"double_booking": [
+		["honor", "Keep the job with %s.", "We keep our word. They won't like it."],
+		["switch", "Switch sides and take their money.", "Paid, and the job with our client is off. They'll hear about it."],
+	],
+	"law_change": [
+		["comply", "Pay the duty. Stay legal.", "Duty paid. It comes out of our fee, but nobody stops us."],
+		["run", "Keep flying and hope nobody scans us.", "Transponder quiet. Fly like we belong here."],
+	],
 }
 
 
@@ -14257,7 +14269,11 @@ func _on_reveal_twist_triggered(mission_data: Dictionary) -> void:
 		)
 		comms_hail_choices_container.add_child(btn)
 	comms_hail_panel.visible = true
-	if kind == "rival":
+	if kind == "double_booking":
+		var other := str(mission_data.get("twist_other_name", "Unknown"))
+		var other_voice := PremiseVoiceForTwists.register(PremiseVoiceForTwists.for_person("other.%s" % other.to_lower().replace(" ", "_")))
+		SpeechService.play_on_comms(reveal, other_voice, other)
+	elif kind == "rival":
 		var rival := str(mission_data.get("twist_rival_name", "Rival"))
 		var voice := PremiseVoiceForTwists.register(PremiseVoiceForTwists.for_person("rival.%s" % rival.to_lower().replace(" ", "_")))
 		SpeechService.play_on_comms(reveal, voice, rival)
