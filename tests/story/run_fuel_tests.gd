@@ -65,6 +65,51 @@ func _initialize() -> void:
 		for i in lines.size():
 			heard[nova._pick_line("dock_fuel_empty", lines)] = true
 		_check(heard.size() == lines.size(), "each heard once before any repeats")
+		# When Kaelen opens the start system's gate, she says where the ice is.
+		var discovery: Node = root.get_node_or_null("GateDiscovery")
+		if discovery != null:
+			var saved_system = gs.current_system_id
+			gs.current_system_id = "start_system"
+			nova._told_no_home_ice = false
+			discovery.gate_state_changed.emit("gate.test", "rumored", "known")
+			_check(nova._told_no_home_ice, "opening the home gate brings the no-ice line")
+			gs.current_system_id = saved_system
+
+	# Fuel runs (Abe): someone is short on fuel for a reason, and something
+	# happens if it does not arrive; the fuel comes out of the tank.
+	var Board: GDScript = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var Adapter: GDScript = load("res://scripts/domain/MissionAdapter.gd")
+	var DeliverOre: GDScript = load("res://scripts/domain/capabilities/DeliverOreCapability.gd")
+	var titles := {}
+	var run: Dictionary = {}
+	for i in 40:
+		var offer: Dictionary = Board._build_fuel_offer(i * 120)
+		if offer.is_empty():
+			continue
+		run = offer
+		titles[str(offer["title"])] = true
+		var q: Dictionary = offer["quest_data"]
+		_check(str(q["objective"]["ore_type"]) == "fuel" and not str(q["dialogue"]).contains("{"), "a fuel run asks for fuel: %s" % q["dialogue"])
+	_check(titles.size() >= 5, "fuel runs vary (%d kinds)" % titles.size())
+	_check(Board._build_fuel_offer(360) == Board._build_fuel_offer(400), "the same posting within a board window")
+	if not run.is_empty():
+		var q2: Dictionary = run["quest_data"]
+		var built: Dictionary = Adapter.build_active_state(q2, q2["choices"][0], "mission.runtime.fuelrun", "system.test", 0)
+		_check(built["validation"].is_valid() and str(built["state"]["ore_type"]) == "fuel", "a fuel run makes a valid job: %s" % built["validation"].summary())
+		var data: Dictionary = built["state"]
+		var cap = DeliverOre.new()
+		gs.clear_cargo()
+		gs.add_ore(50.0)
+		gs.fuel = 2.0
+		_check(not cap.is_completed(data), "ore in the hold is not fuel")
+		gs.fuel = Fuel.TANK_MAX
+		_check(cap.is_completed(data) and cap.format_tracker_text(data).begins_with("Fuel:"), "a full tank covers it: %s" % cap.format_tracker_text(data))
+		var need := float(data["amount_required"])
+		var given: float = gs.hand_over_delivery(need, "fuel")
+		_check(is_equal_approx(given, need) and is_equal_approx(gs.fuel, Fuel.TANK_MAX - need) and is_equal_approx(gs.cargo, 50.0), "handing it over drains the tank, not the hold")
+		_check(int(q2["objective"]["reward_credits"]) > int(need * Fuel.BUY_PRICE), "a fuel run pays more than the fuel costs to buy")
+		gs.clear_cargo()
+		gs.fuel = Fuel.TANK_MAX
 
 	# Every belt past the start carries ice for fuel.
 	for i in 40:

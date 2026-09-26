@@ -282,6 +282,20 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     8%, 15%, 22%, 30%, 36%, 42% from six jumps; thorium from three jumps.
     The log prints "[Ores] <system>, N jumps out: <mix>" on arrival. Does
     the ramp feel right?
+  - Fuel (2026-09-26, Abe's design): 100-unit tank, full at the start. A
+    jump costs 8 + 2 per jump of the destination's distance (max 20), the
+    boost 2, cruising sips 0.01/s at full speed. Empty: 60% speed, no boost,
+    no jumps; the HUD gauge turns red and flashes (amber under 20) and shows
+    a targeted gate's jump cost. Stations refine the hold's water ice into
+    fuel (0.5 SC/unit) or sell it (3 SC/unit). N.O.V.A. complains on every
+    empty-tank dock (20 lines, approved) and, once, tells you the start
+    system has no ice. Fuel runs on the public board: someone is short of
+    fuel for a reason, with a stake; the fuel comes from your tank (5.5
+    SC/unit). Tune: tank size, jump cost, sip rate, prices.
+  - Fuel next (Abe's ideas, not built): Fuel Blocks become station-only and
+    cannot pass a gate (fabricated from ice in the system that needs them;
+    a system without ice needs ice hauled in); O2 canisters from water ice
+    and O2 delivery jobs (an outpost's scrubbers failing).
   - Investigations now take a deadline, an ambush, or a rival on the same
     signal (race them). The rival is their only turn so far, so it is the
     most common turn overall; investigations need turns of their own.

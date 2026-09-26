@@ -1348,6 +1348,8 @@ const OreTypesScript = preload("res://scripts/economy/OreTypes.gd")
 # ── Fuel ───────────────────────────────────────────────────────────────────
 # Hydrogen for jumps and the boost (Fuel.gd). Starts full.
 const FuelScript = preload("res://scripts/economy/Fuel.gd")
+## The ore_type a DELIVER_ORE job uses for a fuel run (Fuel.gd).
+const FUEL_DELIVERY := "fuel"
 var fuel: float = FuelScript.TANK_MAX:
 	set(val):
 		fuel = clampf(val, 0.0, FuelScript.TANK_MAX)
@@ -1427,11 +1429,24 @@ func cargo_ore_amount(ore_type: String) -> float:
 ## Ore in the hold that counts for a delivery asking for `ore_type` (any
 ## ore when the job names no type).
 func deliverable_ore(ore_type: String) -> float:
+	# A fuel run hands over fuel from the tank, not ore from the hold.
+	if ore_type == FUEL_DELIVERY:
+		return fuel
 	if cargo_type != CargoType.ORE:
 		return 0.0
 	if ore_type.is_empty():
 		return cargo
 	return cargo_ore_amount(ore_type)
+
+
+## Hands over `amount` of what a delivery asks for: fuel from the tank for a
+## fuel run, else ore from the hold. Returns the amount handed over.
+func hand_over_delivery(amount: float, ore_type: String) -> float:
+	if ore_type == FUEL_DELIVERY:
+		var given := minf(amount, fuel)
+		fuel -= given
+		return given
+	return remove_ore(amount, ore_type)
 
 
 ## What the hold's ore sells for at `rate` SC per m³ of silicate.

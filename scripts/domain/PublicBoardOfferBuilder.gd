@@ -39,6 +39,9 @@ static var story_config_override_for_tests: SystemConfig = null
 static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var offers: Array[Dictionary] = []
 	offers.append(_build_ore_offer(current_time_minutes))
+	var fuel_offer := _build_fuel_offer(current_time_minutes)
+	if not fuel_offer.is_empty():
+		offers.append(fuel_offer)
 	var pickup_offer := _build_pickup_offer(current_time_minutes)
 	if not pickup_offer.is_empty():
 		offers.append(pickup_offer)
@@ -161,6 +164,77 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 			"{TURN_IN_LOCATION}": "the main station",
 		}
 	)
+
+
+## A fuel run (Abe): someone is short on fuel for a reason, and something
+## happens if it does not arrive. The fuel comes out of the captain's tank
+## (DELIVER_ORE with ore_type "fuel"); drawn from data/content/fuel_runs.json.
+static func _build_fuel_offer(current_time_minutes: int) -> Dictionary:
+	var deck := _fuel_run_deck()
+	var groups: Array = deck.get("groups", [])
+	var reasons: Array = deck.get("reasons", [])
+	if groups.is_empty() or reasons.is_empty():
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("fuel_run|%d" % int(current_time_minutes / 120))
+	var group: Dictionary = groups[rng.randi() % groups.size()]
+	var reason := str(reasons[rng.randi() % reasons.size()])
+	var stakes: Array = []
+	for s in deck.get("stakes", []):
+		var fits: Array = (s as Dictionary).get("for", [])
+		if str(group.get("id", "")) in fits or "*" in fits:
+			stakes.append(str(s.get("text", "")))
+	var stake: String = str(stakes[rng.randi() % stakes.size()]) if not stakes.is_empty() else "they are in real trouble"
+	var span: Array = deck.get("amount_range", [15, 35])
+	var amount := float(rng.randi_range(int(span[0]), int(span[1])))
+	var base_reward := int(round(amount * float(deck.get("pay_per_unit", 5.5))))
+	var who := str(group.get("who", "someone here"))
+	var title := str(group.get("title", "Fuel Run"))
+	var dialogue := "%s is short on fuel: %s. If it doesn't arrive, %s. Bring %d units of fuel from your own tank." % [
+		who.substr(0, 1).to_upper() + who.substr(1), reason, stake, int(amount)]
+	var objective := {
+		"type": "DELIVER_ORE",
+		"amount_required": amount,
+		"ore_type": "fuel",
+		"reward_credits": base_reward,
+	}
+	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, {
+		"timed": true,
+		"urgent": true,
+		"duration_minutes": int(deck.get("duration_minutes", 240)),
+		"expiration_policy": "expire",
+		"urgent_reward_multiplier": float(deck.get("urgent_reward_multiplier", 1.4)),
+	})
+	return _offer(
+		TEMPLATE_DELIVER_ORE,
+		true,
+		"[URGENT] " + title,
+		"Public Board",
+		dialogue,
+		"%d Fuel" % int(amount),
+		base_reward,
+		int(deck.get("duration_minutes", 240)),
+		float(deck.get("urgent_reward_multiplier", 1.4)),
+		quest_data,
+		["{ORE_AMOUNT}", "{TURN_IN_LOCATION}"],
+		{
+			"{ORE_AMOUNT}": "%d fuel" % int(amount),
+			"{TURN_IN_LOCATION}": "the main station",
+		}
+	)
+
+
+static var _fuel_deck_cache: Dictionary = {}
+
+
+static func _fuel_run_deck() -> Dictionary:
+	if _fuel_deck_cache.is_empty():
+		var f := FileAccess.open("res://data/content/fuel_runs.json", FileAccess.READ)
+		if f != null:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Dictionary:
+				_fuel_deck_cache = parsed
+	return _fuel_deck_cache
 
 
 static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
@@ -1027,7 +1101,9 @@ static func _objective_summary(objective: Dictionary) -> String:
 	match str(objective.get("type", "")):
 		"DELIVER_ORE":
 			var ore_name := "Ore"
-			if not str(objective.get("ore_type", "")).is_empty():
+			if str(objective.get("ore_type", "")) == "fuel":
+				ore_name = "Fuel"
+			elif not str(objective.get("ore_type", "")).is_empty():
 				ore_name = preload("res://scripts/economy/OreTypes.gd").display(str(objective["ore_type"]))
 			return "%d m3 %s" % [int(round(float(
 				objective.get("amount_required", 0.0)

@@ -167,7 +167,10 @@ static func build_active_state(
 			state["partial_delivered"] = 0.0
 			# A named ore: only that type counts (none named: any ore).
 			var ore_type := str(objective.get("ore_type", "")).strip_edges()
-			state["ore_type"] = OreTypesType.normalize(ore_type) if not ore_type.is_empty() else ""
+			if ore_type == "fuel":
+				state["ore_type"] = "fuel"
+			else:
+				state["ore_type"] = OreTypesType.normalize(ore_type) if not ore_type.is_empty() else ""
 		"PICKUP_SPECIAL":
 			state["target_outpost"] = str(objective.get("target_outpost", ""))
 			state["target_outpost_display"] = str(

@@ -26,7 +26,11 @@ func format_tracker_text(data: Dictionary) -> String:
 	var required := float(data.get("amount_required", 1.0))
 	var total := banked + in_hold
 	var label := "Ore" if ore_type.is_empty() else preload("res://scripts/economy/OreTypes.gd").display(ore_type)
-	var text := "%s: %.0f / %.0f m³" % [label, total, required]
+	var unit := " m³"
+	if ore_type == "fuel":
+		label = "Fuel"
+		unit = ""
+	var text := "%s: %.0f / %.0f%s" % [label, total, required, unit]
 	if banked > 0:
 		text += " (%.0f banked)" % banked
 	if total >= required:

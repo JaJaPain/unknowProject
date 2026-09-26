@@ -353,6 +353,23 @@ func _ready() -> void:
 			CombatManager.combat_ended.connect(on_combat_ended)
 		if CombatManager.has_signal("action_impact"):
 			CombatManager.action_impact.connect(_on_action_impact)
+	var discovery = get_node_or_null("/root/GateDiscovery")
+	if discovery != null and discovery.has_signal("gate_state_changed"):
+		discovery.gate_state_changed.connect(_on_gate_state_changed)
+
+
+var _told_no_home_ice := false
+
+
+## The start system has no ice on purpose (Abe): it pushes the captain out.
+## When Kaelen opens the way out, she says where fuel comes from. Once.
+func _on_gate_state_changed(_gate_id: String, _old_state: String, new_state: String) -> void:
+	if _told_no_home_ice or new_state != "known":
+		return
+	if not GlobalState.has_method("is_current_system_home") or not GlobalState.is_current_system_home():
+		return
+	_told_no_home_ice = true
+	speak("Gate's open. One thing before we go: there's no ice in this belt, so nothing here refines into fuel. The nearest ice is out past that gate. Keep enough in the tank to get there.", Severity.NAV, "thoughtful")
 
 
 func set_campaign_quirk(quirk: String) -> void:

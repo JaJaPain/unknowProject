@@ -1016,7 +1016,7 @@ func set_pickup_handoff(line: String, voice_profile_id: String, is_fallback: boo
 func deliver_partial(amount: float) -> float:
 	if not is_quest_active() or active_quest["objective_type"] != "DELIVER_ORE":
 		return 0.0
-	if GlobalState.cargo_type != GlobalState.CargoType.ORE:
+	if GlobalState.deliverable_ore(str(active_quest.get("ore_type", ""))) <= 0.0:
 		return 0.0
 	var remaining = active_quest["amount_required"] - active_quest.get("partial_delivered", 0.0)
 	var ore_type := str(active_quest.get("ore_type", ""))
@@ -1024,7 +1024,7 @@ func deliver_partial(amount: float) -> float:
 	to_deliver = max(0.0, to_deliver)
 	if to_deliver <= 0.0:
 		return 0.0
-	GlobalState.remove_ore(to_deliver, ore_type)
+	GlobalState.hand_over_delivery(to_deliver, ore_type)
 	active_quest["partial_delivered"] = active_quest.get("partial_delivered", 0.0) + to_deliver
 	active_quest["partial_delivery_count"] = int(
 		active_quest.get("partial_delivery_count", 0)
@@ -1540,7 +1540,7 @@ func _despawn_ceasefire_targets(faction_name: String) -> void:
 
 func _apply_completion_hints(hints: Dictionary) -> void:
 	if hints.get("remove_ore", 0.0) > 0.0:
-		GlobalState.remove_ore(hints["remove_ore"], str(hints.get("remove_ore_type", "")))
+		GlobalState.hand_over_delivery(hints["remove_ore"], str(hints.get("remove_ore_type", "")))
 	var item_id := str(hints.get("remove_inventory_item", ""))
 	var item_quantity := int(hints.get("remove_inventory_quantity", 0))
 	if not item_id.is_empty() and item_quantity > 0:

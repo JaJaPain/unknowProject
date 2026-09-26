@@ -32,6 +32,10 @@ var credits_label: Label
 var cargo_label: Label
 var fuel_label: Label
 var fuel_bar: ProgressBar
+var _fuel_flash_tween: Tween = null
+const FUEL_COLOR_OK := Color(0.35, 0.7, 1.0)
+const FUEL_COLOR_LOW := Color(1.0, 0.7, 0.25)
+const FUEL_COLOR_EMPTY := Color(1.0, 0.25, 0.2)
 var cargo_bar: ProgressBar
 
 var target_panel: PanelContainer
@@ -802,6 +806,8 @@ func _create_hud():
 	_on_fuel_changed(GlobalState.fuel)
 	if not GlobalState.fuel_changed.is_connected(_on_fuel_changed):
 		GlobalState.fuel_changed.connect(_on_fuel_changed)
+	# Targeting a gate shows its jump cost on the gauge.
+	GlobalState.target_changed.connect(func(_t: Node3D) -> void: _on_fuel_changed(GlobalState.fuel))
 	
 	var hp_lbl = Label.new()
 	hp_lbl.name = "HPLabel"
@@ -4154,11 +4160,52 @@ func _on_campaign_time_changed(_total_minutes: int) -> void:
 	if QuestManager.is_active_quest_timed():
 		_update_quest_tracker()
 
+## The fuel gauge: blue, amber when a far jump is out of reach, red and
+## flashing when empty (Abe). With a gate targeted it shows the jump's cost.
 func _on_fuel_changed(new_fuel: float) -> void:
+	var fuel_script = GlobalState.FuelScript
+	var empty: bool = new_fuel < fuel_script.EMPTY_BELOW
+	var colour: Color = FUEL_COLOR_OK
+	if empty:
+		colour = FUEL_COLOR_EMPTY
+	elif new_fuel < fuel_script.JUMP_MAX:
+		colour = FUEL_COLOR_LOW
 	if fuel_label and is_instance_valid(fuel_label):
-		fuel_label.text = "Fuel: %d / %d" % [int(new_fuel), int(GlobalState.FuelScript.TANK_MAX)]
+		var text := "Fuel: %d / %d" % [int(new_fuel), int(fuel_script.TANK_MAX)]
+		var target = GlobalState.active_target
+		var root = get_tree().current_scene if get_tree() else null
+		if target != null and is_instance_valid(target) and target is Node3D and (target as Node3D).is_in_group("jumpgate") \
+				and root != null and root.has_method("jump_fuel_cost"):
+			text += " (jump %d)" % int(ceil(float(root.call("jump_fuel_cost", target))))
+		if empty:
+			text += "  EMPTY: 60% speed, no boost, no jumps"
+		fuel_label.text = text
+		fuel_label.add_theme_color_override("font_color", colour)
 	if fuel_bar and is_instance_valid(fuel_bar):
 		fuel_bar.value = new_fuel
+		fuel_bar.self_modulate = colour
+	_set_fuel_flashing(empty)
+
+
+func _set_fuel_flashing(on: bool) -> void:
+	if on:
+		if _fuel_flash_tween != null and _fuel_flash_tween.is_valid():
+			return
+		_fuel_flash_tween = create_tween().set_loops()
+		for node in [fuel_label, fuel_bar]:
+			if node != null and is_instance_valid(node):
+				_fuel_flash_tween.parallel().tween_property(node, "modulate:a", 0.25, 0.45)
+		_fuel_flash_tween.chain()
+		for node in [fuel_label, fuel_bar]:
+			if node != null and is_instance_valid(node):
+				_fuel_flash_tween.parallel().tween_property(node, "modulate:a", 1.0, 0.45)
+		return
+	if _fuel_flash_tween != null and _fuel_flash_tween.is_valid():
+		_fuel_flash_tween.kill()
+	_fuel_flash_tween = null
+	for node in [fuel_label, fuel_bar]:
+		if node != null and is_instance_valid(node):
+			node.modulate.a = 1.0
 
 
 func _on_cargo_changed(new_cargo: float):
