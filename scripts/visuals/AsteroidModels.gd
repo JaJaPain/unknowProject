@@ -111,8 +111,9 @@ static func material_for_index(idx: int) -> Material:
 
 ## The material for a model in an ore's own atlas (same cell as the plain
 ## rock), or null when that ore has no atlas yet (the caller tints instead).
-## Glowing ores light their bright veins a little.
-static func ore_material_for_index(idx: int, ore_type: String, glow: float = 0.0) -> Material:
+## The atlas carries the ore's look itself (thorium's veins are bright
+## already), so these do not glow.
+static func ore_material_for_index(idx: int, ore_type: String) -> Material:
 	_ensure_loaded()
 	if _entries.is_empty():
 		return null
@@ -131,10 +132,6 @@ static func ore_material_for_index(idx: int, ore_type: String, glow: float = 0.0
 		mat.metallic = 0.15
 		mat.uv1_scale = Vector3(CELL_SIZE, CELL_SIZE, 1.0)
 		mat.uv1_offset = Vector3(float(cell.x) * CELL_SIZE, float(cell.y) * CELL_SIZE, 0.0)
-		if glow > 0.0:
-			mat.emission_enabled = true
-			mat.emission_texture = tex
-			mat.emission_energy_multiplier = glow
 	_ore_materials[key] = mat
 	return mat
 
