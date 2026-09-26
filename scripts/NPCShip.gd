@@ -375,7 +375,8 @@ func _build_assembled_hull() -> bool:
 		return false
 	hull_instance = model
 	visual.add_child(hull_instance)
-	hull_instance.rotation.y = PI
+	# Assembled ships already face -Z (as the player's does); the legacy GLB
+	# half-turn made them fly and shoot backwards.
 	_fit_major_hull(hull_instance)
 	hull_instance.scale *= 1.5
 	_setup_model_points(hull_instance)
