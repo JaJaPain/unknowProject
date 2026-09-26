@@ -4,7 +4,7 @@ const AnomalyRegistryType := preload("res://scripts/AnomalyRegistry.gd")
 
 const VALID_ITEMS := [
 	"repair_kit", "shield_cell", "scanner_probe", "salvage_drone", "flare_decoy",
-	"fuel_booster", "emp_charge", "target_painter", "data_chip", "kinetic_ammo",
+	"emp_charge", "target_painter", "data_chip", "kinetic_ammo",
 	"thermal_ammo", "explosive_ammo", "energy_ammo", "damaged_transponder",
 	"encrypted_core", "antimatter_pod",
 ]

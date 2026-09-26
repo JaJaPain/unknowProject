@@ -42,6 +42,9 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var fuel_offer := _build_fuel_offer(current_time_minutes)
 	if not fuel_offer.is_empty():
 		offers.append(fuel_offer)
+	var block_offer := _build_fuel_block_offer(current_time_minutes)
+	if not block_offer.is_empty():
+		offers.append(block_offer)
 	var pickup_offer := _build_pickup_offer(current_time_minutes)
 	if not pickup_offer.is_empty():
 		offers.append(pickup_offer)
@@ -220,6 +223,69 @@ static func _build_fuel_offer(current_time_minutes: int) -> Dictionary:
 		{
 			"{ORE_AMOUNT}": "%d fuel" % int(amount),
 			"{TURN_IN_LOCATION}": "the main station",
+		}
+	)
+
+
+## Fuel Blocks for a station's generators (item fuel_booster): fabricated here
+## from water ice, never jumped in. The hand-in is the main station.
+static func _build_fuel_block_offer(current_time_minutes: int) -> Dictionary:
+	var deck: Dictionary = _fuel_run_deck().get("block_runs", {})
+	var groups: Array = deck.get("groups", [])
+	var reasons: Array = deck.get("reasons", [])
+	if groups.is_empty() or reasons.is_empty():
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("fuel_blocks|%d" % int(current_time_minutes / 180))
+	var group: Dictionary = groups[rng.randi() % groups.size()]
+	var reason := str(reasons[rng.randi() % reasons.size()])
+	var stakes: Array = []
+	for s in deck.get("stakes", []):
+		var fits: Array = (s as Dictionary).get("for", [])
+		if str(group.get("id", "")) in fits or "*" in fits:
+			stakes.append(str(s.get("text", "")))
+	var stake: String = str(stakes[rng.randi() % stakes.size()]) if not stakes.is_empty() else "people here go without"
+	var span: Array = deck.get("quantity_range", [4, 8])
+	var quantity := rng.randi_range(int(span[0]), int(span[1]))
+	var base_reward := quantity * int(deck.get("pay_per_block", 34))
+	var station_id := _main_station_id()
+	var station_display := _main_station_display()
+	var who := str(group.get("who", "the station"))
+	var title := str(group.get("title", "Fuel Blocks Needed"))
+	var dialogue := "Fuel Blocks are running out for %s: %s. If they don't get more, %s. Bring %d Fuel Blocks to %s. They can't come through a gate, so they have to be fabricated here, from water ice." % [
+		who, reason, stake, quantity, station_display]
+	var gs = Engine.get_main_loop().root.get_node_or_null("GlobalState")
+	if gs != null and float((gs.get("system_ore_mix") as Dictionary).get("water_ice", 0.0)) <= 0.0:
+		dialogue += " There's no ice in this system's belts; it'll have to be hauled in."
+	var objective := {
+		"type": "PURCHASE_DELIVERY",
+		"item_id": "fuel_booster",
+		"item_name": "Fuel Block",
+		"quantity_required": quantity,
+		"store_station_id": station_id,
+		"store_display": station_display,
+		"destination_station_id": station_id,
+		"destination_display": station_display,
+		"reward_credits": base_reward,
+	}
+	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, {})
+	return _offer(
+		TEMPLATE_PURCHASE_DELIVERY,
+		true,
+		"[POWER] " + title,
+		"Public Board",
+		dialogue,
+		"%d Fuel Blocks to %s" % [quantity, station_display],
+		base_reward,
+		0,
+		1.0,
+		quest_data,
+		["{QUANTITY}", "{ITEM_NAME}", "{STORE_LOCATION}", "{DESTINATION}"],
+		{
+			"{QUANTITY}": str(quantity),
+			"{ITEM_NAME}": "Fuel Block",
+			"{STORE_LOCATION}": station_display,
+			"{DESTINATION}": station_display,
 		}
 	)
 

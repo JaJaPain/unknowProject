@@ -292,10 +292,15 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     system has no ice. Fuel runs on the public board: someone is short of
     fuel for a reason, with a stake; the fuel comes from your tank (5.5
     SC/unit). Tune: tank size, jump cost, sip rate, prices.
-  - Fuel next (Abe's ideas, not built): Fuel Blocks become station-only and
-    cannot pass a gate (fabricated from ice in the system that needs them;
-    a system without ice needs ice hauled in); O2 canisters from water ice
-    and O2 delivery jobs (an outpost's scrubbers failing).
+  - Fuel Blocks (2026-09-26): station goods now (not a ship consumable; no
+    loot drops). Stations fabricate them from the hold's water ice (4 m³ +
+    3 SC each); carrying any refuses a gate jump. Board jobs: "Fuel Blocks
+    are running out for X: reason. If not, stake." (4-8 blocks, 34 SC each);
+    in a system without ice the job says the ice must be hauled in.
+  - Still to build (Abe's idea): O2 canisters from water ice and O2
+    delivery jobs (an outpost's scrubbers failing, 100 L to keep breathing).
+  - Inventory screen facelift (Abe, "as you have time"): the item inventory
+    (not the ore hold) needs an AAA-quality look. Show before/after shots.
   - Investigations now take a deadline, an ambush, or a rival on the same
     signal (race them). The rival is their only turn so far, so it is the
     most common turn overall; investigations need turns of their own.

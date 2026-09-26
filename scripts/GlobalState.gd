@@ -1397,6 +1397,36 @@ func refine_ice_to_fuel() -> float:
 	return gained
 
 
+## How many Fuel Blocks the hold's water ice makes, limited by credits and
+## inventory room.
+func fuel_blocks_possible() -> int:
+	var by_ice := int(floor(cargo_ore_amount("water_ice") / FuelScript.ICE_PER_BLOCK))
+	var by_money := int(floor(float(player_credits) / float(FuelScript.BLOCK_FAB_FEE)))
+	var n := mini(by_ice, by_money)
+	while n > 0 and not inventory.can_add(FuelScript.FUEL_BLOCK_ITEM, n, 20):
+		n -= 1
+	return maxi(0, n)
+
+
+## Fabricates Fuel Blocks from the hold's water ice. Returns how many.
+func fabricate_fuel_blocks() -> int:
+	var n := fuel_blocks_possible()
+	if n <= 0:
+		return 0
+	remove_ore(float(n) * FuelScript.ICE_PER_BLOCK, "water_ice")
+	player_credits -= n * FuelScript.BLOCK_FAB_FEE
+	inventory.add(FuelScript.FUEL_BLOCK_ITEM, n, 20, current_system_id)
+	return n
+
+
+## The first item aboard the gate will not take, or "".
+func no_jump_item() -> String:
+	for item_id in FuelScript.NO_JUMP_ITEMS:
+		if inventory.has_item(str(item_id)):
+			return str(item_id)
+	return ""
+
+
 ## Buys fuel up to a full tank, as far as credits allow. Returns fuel bought.
 func buy_fuel_to_full() -> float:
 	var r: Array = FuelScript.buy_to_full(fuel, player_credits)

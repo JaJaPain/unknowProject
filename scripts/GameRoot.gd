@@ -412,6 +412,8 @@ func get_jump_block_reason(gate: Node3D) -> String:
 		var rating := str(gate_rating_guide.block_reason(destination))
 		if not rating.is_empty():
 			return rating
+	if not GlobalState.no_jump_item().is_empty():
+		return "Fuel Blocks can't go through a gate: too unstable for the jump. Sell or use them in this system first."
 	var fuel_needed := jump_fuel_cost(gate)
 	if GlobalState.fuel + 0.0001 < fuel_needed:
 		return "Not enough fuel for this jump (need %d, have %d). Refine water ice or buy fuel at a station." % [int(ceil(fuel_needed)), int(GlobalState.fuel)]

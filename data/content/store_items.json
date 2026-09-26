@@ -74,10 +74,10 @@
         {
             "item_id": "fuel_booster",
             "display_name": "Fuel Block",
-            "description": "Compressed fuel pellet. Reduces next gate jump time by half.",
-            "category": "consumable",
+            "description": "Compressed fuel block for station generators. Too unstable for a jump drive: it cannot go through a gate. Fabricated from water ice.",
+            "category": "trade_good",
             "base_price": 25,
-            "stack_max": 5,
+            "stack_max": 20,
             "restock_interval_minutes": 90,
             "restock_quantity": 2,
             "max_stock": 4,
@@ -101,38 +101,6 @@
             "icon_cell": [
                 3,
                 0
-            ]
-        },
-        {
-            "item_id": "nanite_paste_unused",
-            "display_name": "Nanite Repair Paste (Deprecated)",
-            "description": "Slow-release hull nanites. Restores 50 HP over 30 seconds.",
-            "category": "consumable",
-            "base_price": 55,
-            "stack_max": 3,
-            "restock_interval_minutes": 150,
-            "restock_quantity": 1,
-            "max_stock": 2,
-            "icon_sheet": "tactical",
-            "icon_cell": [
-                0,
-                2
-            ]
-        },
-        {
-            "item_id": "capsuleer_booster_unused",
-            "display_name": "Capsuleer Booster (Deprecated)",
-            "description": "Sharpens reflexes. 20% weapon cooldown reduction for 60 seconds.",
-            "category": "consumable",
-            "base_price": 70,
-            "stack_max": 2,
-            "restock_interval_minutes": 180,
-            "restock_quantity": 1,
-            "max_stock": 1,
-            "icon_sheet": "tactical",
-            "icon_cell": [
-                1,
-                2
             ]
         },
         {

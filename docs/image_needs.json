@@ -1,6 +1,6 @@
 {
     "schema_version": 1,
-    "note": "Every image the vision-slice work needs. Generate each entry as its own file into art_inbox/ using the given filename; tools/compose_icon_sheet.py then tiles the icons into assets/RandomIcon04.png (5 x 5, same layout as the existing store sheets). Art contains no words (localization): item names come from the game. Asteroid ore atlases (asteroid_ore_*) are not icons: attach assets/asteroidTextures.png as the style reference instead, and save each straight to its destination.",
+    "note": "Every image the vision-slice work needs. Generate each entry as its own file into art_inbox/ using the given filename; tools/compose_icon_sheet.py then tiles the icons into assets/RandomIcon04.png (5 x 5, same layout as the existing store sheets). Art contains no words (localization): item names come from the game. Asteroid ore atlases (asteroid_ore_*) are not icons: attach assets/asteroidTextures.png as the style reference instead, and save each straight to its destination. Prop sheets (props_*) are whole 5 x 5 sheets in one image, with a written style brief and no reference image: the older icon sheets were made from another game's art (Abe), so they are never attached as references.",
     "style_reference": "assets/RandomIcon02.png",
     "shared_style": "Square game inventory icon. A single sci-fi object, three-quarter view, centred, on a very dark navy background (#0b1016) inside a thin light-grey rounded square frame with a small margin. Realistic brushed and scuffed metal with small glowing accents, dramatic rim light, soft glow. No text, no letters, no labels, no numbers anywhere in the image (the game adds names itself, so art stays language-neutral). No watermark, no border outside the frame. Painterly-realistic like a premium space-game item shop.",
     "images": [
@@ -102,6 +102,24 @@
             "style_reference": "assets/asteroidTextures.png",
             "used_for": "Rock texture atlas for asteroids carrying thorium (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
             "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Thorium-bearing rock: dark stone with thin veins and small crystal clusters of pale yellow-green mineral that glow very faintly, as if slightly radioactive; the glow stays inside the veins and the rest is ordinary rock. No text, no letters, no labels, no watermark."
+        },
+        {
+            "id": "props_supplies",
+            "filename": "PropIconsSupplies.png",
+            "size": "1024x1024",
+            "destination": "assets/PropIconsSupplies.png",
+            "style_reference": "none (original look; do not attach the older icon sheets)",
+            "used_for": "Prop items for procedural missions, station stock and loot (data/content/prop_items.json).",
+            "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: compressed o2 canister; co2 scrubber cartridge; water purification unit; hydrogen fuel canister; fuel block. Row 2, left to right: medical supply crate; vaccine cooler; ration crate; hydroponic seed vault; filter pack. Row 3, left to right: radiation suit; reactor coolant drum; portable generator; airlock seal kit; thermal blanket bundle. Row 4, left to right: emergency beacon; life-support control board; solar panel patch; mining charge; drill head. Row 5, left to right: ore sample case; ice core tube; atmosphere sensor; portable stasis pod; worn duffel bag."
+        },
+        {
+            "id": "props_story",
+            "filename": "PropIconsStory.png",
+            "size": "1024x1024",
+            "destination": "assets/PropIconsStory.png",
+            "style_reference": "none (original look; do not attach the older icon sheets)",
+            "used_for": "Prop items for procedural missions, station stock and loot (data/content/prop_items.json).",
+            "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: sealed evidence tube; forged manifest slate; transponder chip; sealed ballot cache; seal of office. Row 2, left to right: gate-cult idol; ghost-fleet flight log; caged ai core; unlicensed reactor seed; weapon crate, serials burned. Row 3, left to right: counterfeit credit chips; vintage wine crate; artwork tube; heirloom music box; diplomatic pouch. Row 4, left to right: bounty warrant chip; restraint collar; cracked star chart; derelict ship's bell; stolen targeting core. Row 5, left to right: biohazard flask; terraforming seed canister; quarantine sample case; dead-drop cache; ancient data slate."
         }
     ]
 }

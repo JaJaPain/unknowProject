@@ -1,17 +1,44 @@
 {
     "schema_version": 1,
     "note": "Fuel runs (Abe, 2026-09-26): someone is short on fuel for a reason, and something happens if it does not arrive. A fuel run is a delivery of fuel from the captain's own tank (DELIVER_ORE with ore_type \"fuel\"). One group, one reason and one stake are drawn per posting; the title comes from the group. Neutral wording, no numbers in the text (the game adds the amount).",
-    "amount_range": [15, 35],
+    "amount_range": [
+        15,
+        35
+    ],
     "pay_per_unit": 5.5,
     "duration_minutes": 240,
     "urgent_reward_multiplier": 1.4,
     "groups": [
-        {"id": "clinic", "title": "Clinic Generators Running Dry", "who": "the station clinic"},
-        {"id": "survey_crew", "title": "Survey Crew Stranded", "who": "a survey crew out on the edge of the belt"},
-        {"id": "convoy", "title": "Convoy Short of Fuel", "who": "a refugee convoy waiting at the gate"},
-        {"id": "patrol", "title": "Patrol Wing Grounded", "who": "the local patrol wing"},
-        {"id": "co_op", "title": "Mining Co-op Needs Fuel", "who": "the mining co-op"},
-        {"id": "relay", "title": "Relay Keepers Low on Fuel", "who": "the crew keeping the comms relay running"}
+        {
+            "id": "clinic",
+            "title": "Clinic Generators Running Dry",
+            "who": "the station clinic"
+        },
+        {
+            "id": "survey_crew",
+            "title": "Survey Crew Stranded",
+            "who": "a survey crew out on the edge of the belt"
+        },
+        {
+            "id": "convoy",
+            "title": "Convoy Short of Fuel",
+            "who": "a refugee convoy waiting at the gate"
+        },
+        {
+            "id": "patrol",
+            "title": "Patrol Wing Grounded",
+            "who": "the local patrol wing"
+        },
+        {
+            "id": "co_op",
+            "title": "Mining Co-op Needs Fuel",
+            "who": "the mining co-op"
+        },
+        {
+            "id": "relay",
+            "title": "Relay Keepers Low on Fuel",
+            "who": "the crew keeping the comms relay running"
+        }
     ],
     "reasons": [
         "their refinery cracked a feed line",
@@ -22,12 +49,115 @@
         "their own ice run came back empty"
     ],
     "stakes": [
-        {"for": ["clinic"], "text": "the clinic goes dark and the patients on life support go with it"},
-        {"for": ["survey_crew"], "text": "their ship drifts into the belt with nobody at the helm"},
-        {"for": ["convoy"], "text": "the convoy misses its window and is left behind when the lane closes"},
-        {"for": ["patrol"], "text": "nobody answers the next raider call"},
-        {"for": ["co_op"], "text": "the co-op sells its claims to whoever is waiting to buy them cheap"},
-        {"for": ["relay"], "text": "the relay goes quiet and half the system loses its news"},
-        {"for": ["*"], "text": "they lose the only thing they had left to bargain with"}
-    ]
+        {
+            "for": [
+                "clinic"
+            ],
+            "text": "the clinic goes dark and the patients on life support go with it"
+        },
+        {
+            "for": [
+                "survey_crew"
+            ],
+            "text": "their ship drifts into the belt with nobody at the helm"
+        },
+        {
+            "for": [
+                "convoy"
+            ],
+            "text": "the convoy misses its window and is left behind when the lane closes"
+        },
+        {
+            "for": [
+                "patrol"
+            ],
+            "text": "nobody answers the next raider call"
+        },
+        {
+            "for": [
+                "co_op"
+            ],
+            "text": "the co-op sells its claims to whoever is waiting to buy them cheap"
+        },
+        {
+            "for": [
+                "relay"
+            ],
+            "text": "the relay goes quiet and half the system loses its news"
+        },
+        {
+            "for": [
+                "*"
+            ],
+            "text": "they lose the only thing they had left to bargain with"
+        }
+    ],
+    "block_runs": {
+        "note": "Fuel Blocks for station generators (item fuel_booster): made in this system from water ice, never jumped in. Where the belts have no ice, the ice has to be hauled in from outside.",
+        "quantity_range": [
+            4,
+            8
+        ],
+        "pay_per_block": 34,
+        "groups": [
+            {
+                "id": "generators",
+                "title": "Station Generators Failing",
+                "who": "the station's backup generators"
+            },
+            {
+                "id": "habitat",
+                "title": "Habitat Ring Needs Power",
+                "who": "the habitat ring"
+            },
+            {
+                "id": "docks",
+                "title": "Dock Cranes Running Dry",
+                "who": "the loading cranes on the docks"
+            },
+            {
+                "id": "beacons",
+                "title": "Nav Beacons Going Dark",
+                "who": "the lane beacons"
+            }
+        ],
+        "reasons": [
+            "the last shipment of blocks was sold off-station",
+            "a fire took out the block store",
+            "the fabricator's been down for a week",
+            "demand doubled when the shift rota changed"
+        ],
+        "stakes": [
+            {
+                "for": [
+                    "generators"
+                ],
+                "text": "the next power dip takes the air recyclers with it"
+            },
+            {
+                "for": [
+                    "habitat"
+                ],
+                "text": "a whole ring goes cold overnight"
+            },
+            {
+                "for": [
+                    "docks"
+                ],
+                "text": "cargo sits on the pads and the traders move on"
+            },
+            {
+                "for": [
+                    "beacons"
+                ],
+                "text": "ships start missing the lanes"
+            },
+            {
+                "for": [
+                    "*"
+                ],
+                "text": "people here go without, and remember who could have helped"
+            }
+        ]
+    }
 }

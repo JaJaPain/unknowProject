@@ -23,6 +23,14 @@ const CRUISE_SIP_PER_SECOND := 0.01
 const EMPTY_SPEED_MULT := 0.6
 ## Below this the tank counts as empty.
 const EMPTY_BELOW := 0.5
+## Fuel Blocks (item fuel_booster): station generator fuel, fabricated at a
+## station from water ice. Too unstable for a jump drive, so they cannot go
+## through a gate: made and used in the same system (Abe).
+const FUEL_BLOCK_ITEM := "fuel_booster"
+const ICE_PER_BLOCK := 4.0
+const BLOCK_FAB_FEE := 3
+## Items the gate refuses to carry.
+const NO_JUMP_ITEMS := ["fuel_booster"]
 ## Buying fuel outright at a station.
 const BUY_PRICE := 3.0
 

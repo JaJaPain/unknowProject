@@ -247,6 +247,7 @@ const DEBUG_TESTS: bool = false
 var sell_btn: Button
 var refine_fuel_btn: Button
 var buy_fuel_btn: Button
+var fabricate_blocks_btn: Button
 var repair_btn: Button
 var agent_service_btn: Button
 var maintenance_bay_btn: Button
@@ -1922,6 +1923,10 @@ func _create_dock_menu():
 	buy_fuel_btn = Button.new()
 	buy_fuel_btn.pressed.connect(_on_buy_fuel_pressed)
 	avbox.add_child(buy_fuel_btn)
+	# Fuel Blocks for station generators, made here from the hold's ice.
+	fabricate_blocks_btn = Button.new()
+	fabricate_blocks_btn.pressed.connect(_on_fabricate_blocks_pressed)
+	avbox.add_child(fabricate_blocks_btn)
 
 	agent_back_btn = Button.new()
 	agent_back_btn.text = "Back to Services"
@@ -11820,6 +11825,13 @@ func _update_fuel_buttons() -> void:
 			refine_fuel_btn.text = "Refine Fuel (tank full)"
 		else:
 			refine_fuel_btn.text = "Refine Fuel (%d m³ ice → %d fuel, %d SC)" % [int(ceil(float(r[1]))), int(float(r[0])), int(r[2])]
+	if fabricate_blocks_btn and is_instance_valid(fabricate_blocks_btn):
+		var n := GlobalState.fuel_blocks_possible()
+		fabricate_blocks_btn.disabled = n <= 0
+		if GlobalState.cargo_ore_amount("water_ice") < fuel_script.ICE_PER_BLOCK:
+			fabricate_blocks_btn.text = "Fabricate Fuel Blocks (%d m³ water ice each)" % int(fuel_script.ICE_PER_BLOCK)
+		else:
+			fabricate_blocks_btn.text = "Fabricate Fuel Blocks (%d from %d m³ ice, %d SC)" % [n, int(n * fuel_script.ICE_PER_BLOCK), n * fuel_script.BLOCK_FAB_FEE]
 	if buy_fuel_btn and is_instance_valid(buy_fuel_btn):
 		var b: Array = fuel_script.buy_to_full(GlobalState.fuel, GlobalState.player_credits)
 		buy_fuel_btn.disabled = float(b[0]) <= 0.0
@@ -11829,6 +11841,14 @@ func _update_fuel_buttons() -> void:
 			buy_fuel_btn.text = "Buy Fuel (%d SC per unit)" % int(fuel_script.BUY_PRICE)
 		else:
 			buy_fuel_btn.text = "Buy Fuel (%d → %d SC)" % [int(float(b[0])), int(b[1])]
+
+
+func _on_fabricate_blocks_pressed() -> void:
+	var made := GlobalState.fabricate_fuel_blocks()
+	if made > 0:
+		AudioManager.play_sell_ore()
+		show_dock_message("Fabricated %d Fuel Block%s from water ice. They can't go through a gate: use or sell them in this system." % [made, "" if made == 1 else "s"], "", Color(0.6, 0.85, 1.0))
+	_update_sell_button()
 
 
 func _on_refine_fuel_pressed() -> void:

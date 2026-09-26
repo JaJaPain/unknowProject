@@ -111,6 +111,35 @@ func _initialize() -> void:
 		gs.clear_cargo()
 		gs.fuel = Fuel.TANK_MAX
 
+	# Fuel Blocks (Abe): station goods, fabricated here from ice, and the gate
+	# will not take them.
+	var Effects: GDScript = load("res://scripts/economy/ConsumableEffects.gd")
+	_check(not Effects.can_use(Fuel.FUEL_BLOCK_ITEM), "a Fuel Block is no ship consumable any more")
+	gs.inventory.remove(Fuel.FUEL_BLOCK_ITEM, gs.inventory.get_quantity(Fuel.FUEL_BLOCK_ITEM))
+	gs.clear_cargo()
+	gs.add_ore(18.0, "water_ice")
+	gs.add_ore(5.0)
+	gs.player_credits = 100
+	_check(gs.fuel_blocks_possible() == 4, "18 m³ of ice makes 4 blocks")
+	_check(gs.no_jump_item().is_empty(), "nothing aboard the gate refuses yet")
+	var made: int = gs.fabricate_fuel_blocks()
+	_check(made == 4 and gs.inventory.get_quantity(Fuel.FUEL_BLOCK_ITEM) == 4 and gs.player_credits == 100 - 4 * Fuel.BLOCK_FAB_FEE, "fabricating uses ice and a small fee")
+	_check(is_equal_approx(gs.cargo_ore_amount("water_ice"), 2.0) and is_equal_approx(gs.cargo, 7.0), "only the ice needed is used")
+	_check(gs.no_jump_item() == Fuel.FUEL_BLOCK_ITEM, "now the gate refuses the jump")
+	var block_offer: Dictionary = Board._build_fuel_block_offer(0)
+	_check(not block_offer.is_empty(), "the board posts Fuel Block jobs")
+	if not block_offer.is_empty():
+		var bq: Dictionary = block_offer["quest_data"]
+		_check(str(bq["objective"]["item_id"]) == Fuel.FUEL_BLOCK_ITEM and not str(bq["dialogue"]).contains("{") and str(bq["dialogue"]).contains("fabricated here"), "a block job explains itself: %s" % bq["dialogue"])
+		var bbuilt: Dictionary = Adapter.build_active_state(bq, bq["choices"][0], "mission.runtime.blocks", "system.test", 0)
+		_check(bbuilt["validation"].is_valid(), "and makes a valid job: %s" % bbuilt["validation"].summary())
+		var pd = load("res://scripts/domain/capabilities/PurchaseDeliveryCapability.gd").new()
+		var need := int(bq["objective"]["quantity_required"])
+		gs.inventory.add(Fuel.FUEL_BLOCK_ITEM, maxi(0, need - gs.inventory.get_quantity(Fuel.FUEL_BLOCK_ITEM)), 20, "system.test")
+		_check(pd.is_completed(bbuilt["state"]), "home-made blocks fill the order")
+	gs.inventory.remove(Fuel.FUEL_BLOCK_ITEM, gs.inventory.get_quantity(Fuel.FUEL_BLOCK_ITEM))
+	gs.clear_cargo()
+
 	# Every belt past the start carries ice for fuel.
 	for i in 40:
 		for d in [1, 2, 5]:

@@ -119,7 +119,7 @@ func _test_can_use_known_items() -> void:
 	_expect(ConsumableFx.can_use("repair_kit"), "repair_kit should be usable")
 	_expect(ConsumableFx.can_use("shield_cell"), "shield_cell should be usable")
 	_expect(ConsumableFx.can_use("scanner_probe"), "scanner_probe should be usable")
-	_expect(ConsumableFx.can_use("fuel_booster"), "fuel_booster should be consumable")
+	_expect(not ConsumableFx.can_use("fuel_booster"), "fuel_booster (Fuel Block) is a station good now, not a ship consumable")
 	_expect(ConsumableFx.can_use("salvage_drone"), "nanite_paste should be consumable")
 	_expect(ConsumableFx.can_use("damaged_transponder"), "capsuleer_booster should be consumable")
 	_expect(ConsumableFx.can_use("target_painter"), "target_painter should be consumable")

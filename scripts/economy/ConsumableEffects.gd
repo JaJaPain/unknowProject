@@ -7,7 +7,6 @@ const EFFECTS = {
 	"salvage_drone": {"type": "salvage", "total_ore": 40.0},
 	"damaged_transponder": {"type": "buff", "stat": "weapon_cooldown", "multiplier": 0.8, "duration_seconds": 60.0},
 	"target_painter": {"type": "buff", "stat": "weapon_damage", "multiplier": 1.25, "duration_seconds": 15.0},
-	"fuel_booster": {"type": "buff", "stat": "engine_speed", "multiplier": 2.0, "duration_seconds": 15.0},
 	"flare_decoy": {"type": "decoy", "duration_seconds": 8.0},
 	"emp_charge": {"type": "emp", "duration_seconds": 10.0},
 	"antimatter_pod": {"type": "emp", "duration_seconds": 15.0},
