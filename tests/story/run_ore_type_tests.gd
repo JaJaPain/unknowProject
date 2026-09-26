@@ -68,12 +68,40 @@ func _initialize() -> void:
 		for k in m:
 			sum += float(m[k])
 			seen[k] = true
-		_check(is_equal_approx(sum, 1.0) and m.size() == 3 and float(m["silicate"]) >= 0.5, "a belt is mostly silicate plus two others: %s" % str(m))
+		_check(is_equal_approx(sum, 1.0) and m.size() >= 3 and m.size() <= 4 and float(m["silicate"]) >= 0.5, "a belt is mostly silicate plus two others (and ice for fuel): %s" % str(m))
 		_check(float(m.get("thorium", 0.0)) <= Profile.THORIUM_MAX_SHARE + 0.0001, "thorium stays rare")
 	for ore in Ores.TYPES:
 		_check(seen.has(ore), "%s turns up somewhere" % ore)
 	_check(Profile.ore_mix("system.x", 5, "red", []) == Profile.ore_mix("system.x", 5, "red", []), "a system's belts never change")
 	_check(Profile.generate("system.start", 1, "yellow", true)["ores"] == {"silicate": 1.0}, "the tutorial belt is plain silicate")
+
+	# Rare ore grows with distance from the start (Abe): mostly plain rock
+	# early on, no thorium until three jumps out.
+	for i in 60:
+		var id := "system.depth_%d" % i
+		var star: String = ["red", "white", "blue", "orange", "yellow"][i % 5]
+		var q: Array = ["pulsar"]
+		_check(Profile.ore_mix(id, i, star, q, 0) == {"silicate": 1.0}, "the start system's belts are plain rock")
+		var one: Dictionary = Profile.ore_mix(id, i, star, q, 1)
+		var rare_one := 0.0
+		for k in one:
+			if k != "silicate" and k != "water_ice":
+				rare_one += float(one[k])
+		_check(rare_one <= 0.0801 and float(one.get("water_ice", 0.0)) >= Profile.ICE_FLOOR - 0.0001, "one jump out: 8%% rare at most, and ice for fuel: %s" % str(one))
+		for d in [1, 2]:
+			_check(not Profile.ore_mix(id, i, star, q, d).has("thorium"), "no thorium %d jumps out" % d)
+		_check(Profile.ore_mix(id, i, star, q, 9) == Profile.ore_mix(id, i, star, q, -1), "far out: full rarity")
+	var rare_by_depth: Array = []
+	for d in 7:
+		var total := 0.0
+		for i in 40:
+			total += 1.0 - float(Profile.ore_mix("system.r%d" % i, i, "yellow", [], d)["silicate"])
+		rare_by_depth.append(total / 40.0)
+	for d in range(1, 7):
+		_check(float(rare_by_depth[d]) > float(rare_by_depth[d - 1]), "rarer ore grows with every jump: %s" % str(rare_by_depth))
+	var links := {"start": ["a", "b"], "a": ["start", "c"], "b": ["start"], "c": ["a", "d"], "d": ["c"]}
+	_check(Profile.gate_depth(links, "start", "start") == 0 and Profile.gate_depth(links, "start", "c") == 2 and Profile.gate_depth(links, "start", "d") == 3, "jumps from the start")
+	_check(Profile.gate_depth(links, "start", "nowhere") == -1, "unreachable is unknown")
 
 	# Rocks draw from the mix by id.
 	var belt := {"silicate": 0.6, "ferrite": 0.28, "water_ice": 0.12}

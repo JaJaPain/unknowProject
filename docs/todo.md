@@ -276,6 +276,12 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     here lack is not offered here. Wreck salvage now yields ferrite (1.6x;
     salvage pays more than it did). Are the tints readable at a distance?
     Is thorium too lucrative?
+    Rocks now wear ChatGPT texture atlases per ore (assets/asteroid_ores/;
+    tools/recolor_ore_atlas.py makes more from the cuprite sheet). Rare ore
+    grows with gate jumps from the start (Abe): start system all rock, then
+    8%, 15%, 22%, 30%, 36%, 42% from six jumps; thorium from three jumps.
+    The log prints "[Ores] <system>, N jumps out: <mix>" on arrival. Does
+    the ramp feel right?
   - Investigations now take a deadline, an ambush, or a rival on the same
     signal (race them). The rival is their only turn so far, so it is the
     most common turn overall; investigations need turns of their own.

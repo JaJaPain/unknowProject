@@ -799,15 +799,19 @@ func hard_stop() -> void:
 
 
 func activate_boost() -> bool:
-	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0:
+	var no_fuel := GlobalState.fuel + 0.0001 < GlobalState.FuelScript.BOOST_COST
+	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0 or no_fuel:
 		var reason := "destroyed"
 		if not destroyed:
 			if is_docked:
 				reason = "docked"
 			elif boost_timer > 0.0:
 				reason = "already_boosting"
-			else:
+			elif boost_cooldown_timer > 0.0:
 				reason = "cooldown"
+			else:
+				reason = "no_fuel"
+				GlobalState.emit_chatter("N.O.V.A.", "No fuel for the boost. The tank's dry.", Color(1.0, 0.6, 0.35))
 		GlobalState.emit_ship_movement_event(
 			ShipMovementEventsType.BOOST_REJECTED,
 			{
@@ -818,6 +822,7 @@ func activate_boost() -> bool:
 		return false
 	boost_timer = BOOST_DURATION_SECONDS
 	boost_cooldown_timer = BOOST_COOLDOWN_SECONDS
+	GlobalState.spend_fuel(GlobalState.FuelScript.BOOST_COST)
 	health = maxf(1.0, health - BOOST_HEAT_DAMAGE)
 	AudioManager.play_align()
 	GlobalState.emit_ship_movement_event(

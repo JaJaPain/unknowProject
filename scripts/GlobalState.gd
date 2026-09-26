@@ -1283,6 +1283,7 @@ static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String
 
 signal target_changed(new_target: Node3D)
 signal cargo_changed(new_cargo: float)
+signal fuel_changed(new_fuel: float)
 signal credits_changed(new_credits: int)
 signal game_paused(paused: bool)
 
@@ -1343,6 +1344,49 @@ var cargo_special: Dictionary = {}
 # Read them through cargo_ore_mix() / storage_ore_mix(): ore the mix does not
 # account for (old saves, code that sets the total) counts as silicate.
 const OreTypesScript = preload("res://scripts/economy/OreTypes.gd")
+
+# ── Fuel ───────────────────────────────────────────────────────────────────
+# Hydrogen for jumps and the boost (Fuel.gd). Starts full.
+const FuelScript = preload("res://scripts/economy/Fuel.gd")
+var fuel: float = FuelScript.TANK_MAX:
+	set(val):
+		fuel = clampf(val, 0.0, FuelScript.TANK_MAX)
+		fuel_changed.emit(fuel)
+
+
+## Spends fuel if there is enough. Returns false (and spends nothing) if not.
+func spend_fuel(amount: float) -> bool:
+	if fuel + 0.0001 < amount:
+		return false
+	fuel -= amount
+	return true
+
+
+## Refines the water ice in the hold into fuel, paying the refinery fee.
+## Returns the fuel gained (0 when there is no ice, no room, or no money).
+func refine_ice_to_fuel() -> float:
+	var ice := cargo_ore_amount("water_ice")
+	if ice <= 0.0:
+		return 0.0
+	var r: Array = FuelScript.refine(ice, fuel)
+	var gained: float = float(r[0])
+	var fee: int = int(r[2])
+	if gained <= 0.0 or player_credits < fee:
+		return 0.0
+	remove_ore(float(r[1]), "water_ice")
+	player_credits -= fee
+	fuel += gained
+	return gained
+
+
+## Buys fuel up to a full tank, as far as credits allow. Returns fuel bought.
+func buy_fuel_to_full() -> float:
+	var r: Array = FuelScript.buy_to_full(fuel, player_credits)
+	if float(r[0]) <= 0.0:
+		return 0.0
+	player_credits -= int(r[1])
+	fuel += float(r[0])
+	return float(r[0])
 var cargo_ore_types: Dictionary = {}
 var storage_ore_types: Dictionary = {}
 
@@ -2398,6 +2442,7 @@ func reset_for_restart():
 	cargo_type = CargoType.EMPTY
 	cargo_max = SHIP_BASE_STATS["cargo_max_m3"]
 	player_storage_ore = 0.0
+	fuel = FuelScript.TANK_MAX
 	cargo_ore_types = {}
 	storage_ore_types = {}
 	current_upgrades = {

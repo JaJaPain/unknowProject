@@ -30,6 +30,8 @@ var hud_panel: Panel
 var time_label: Label
 var credits_label: Label
 var cargo_label: Label
+var fuel_label: Label
+var fuel_bar: ProgressBar
 var cargo_bar: ProgressBar
 
 var target_panel: PanelContainer
@@ -239,6 +241,8 @@ var deliver_part_btn: Button
 const DEBUG_TESTS: bool = false
 
 var sell_btn: Button
+var refine_fuel_btn: Button
+var buy_fuel_btn: Button
 var repair_btn: Button
 var agent_service_btn: Button
 var maintenance_bay_btn: Button
@@ -786,6 +790,18 @@ func _create_hud():
 	cargo_bar.value = 0
 	cargo_bar.custom_minimum_size = Vector2(300, 12)
 	vbox.add_child(cargo_bar)
+
+	fuel_label = Label.new()
+	fuel_label.name = "FuelLabel"
+	vbox.add_child(fuel_label)
+	fuel_bar = ProgressBar.new()
+	fuel_bar.name = "FuelBar"
+	fuel_bar.max_value = GlobalState.FuelScript.TANK_MAX
+	fuel_bar.custom_minimum_size = Vector2(300, 12)
+	vbox.add_child(fuel_bar)
+	_on_fuel_changed(GlobalState.fuel)
+	if not GlobalState.fuel_changed.is_connected(_on_fuel_changed):
+		GlobalState.fuel_changed.connect(_on_fuel_changed)
 	
 	var hp_lbl = Label.new()
 	hp_lbl.name = "HPLabel"
@@ -1892,6 +1908,14 @@ func _create_dock_menu():
 	sell_btn.disabled = true
 	sell_btn.pressed.connect(_sell_ore)
 	avbox.add_child(sell_btn)
+
+	# Fuel: refine the hold's water ice (cheap), or buy it (dear).
+	refine_fuel_btn = Button.new()
+	refine_fuel_btn.pressed.connect(_on_refine_fuel_pressed)
+	avbox.add_child(refine_fuel_btn)
+	buy_fuel_btn = Button.new()
+	buy_fuel_btn.pressed.connect(_on_buy_fuel_pressed)
+	avbox.add_child(buy_fuel_btn)
 
 	agent_back_btn = Button.new()
 	agent_back_btn.text = "Back to Services"
@@ -4129,6 +4153,13 @@ func _on_campaign_time_changed(_total_minutes: int) -> void:
 		time_label.text = "Time: %s" % CampaignClock.formatted_datetime()
 	if QuestManager.is_active_quest_timed():
 		_update_quest_tracker()
+
+func _on_fuel_changed(new_fuel: float) -> void:
+	if fuel_label and is_instance_valid(fuel_label):
+		fuel_label.text = "Fuel: %d / %d" % [int(new_fuel), int(GlobalState.FuelScript.TANK_MAX)]
+	if fuel_bar and is_instance_valid(fuel_bar):
+		fuel_bar.value = new_fuel
+
 
 func _on_cargo_changed(new_cargo: float):
 	if cargo_label and cargo_bar:
@@ -11730,7 +11761,48 @@ func clear_dock_message() -> void:
 	dock_message_portrait.texture = null
 	dock_message_portrait.visible = false
 
+func _update_fuel_buttons() -> void:
+	var fuel_script = GlobalState.FuelScript
+	if refine_fuel_btn and is_instance_valid(refine_fuel_btn):
+		var ice := GlobalState.cargo_ore_amount("water_ice")
+		var r: Array = fuel_script.refine(ice, GlobalState.fuel)
+		refine_fuel_btn.disabled = float(r[0]) <= 0.0 or GlobalState.player_credits < int(r[2])
+		if ice <= 0.0:
+			refine_fuel_btn.text = "Refine Fuel (no water ice in the hold)"
+		elif float(r[0]) <= 0.0:
+			refine_fuel_btn.text = "Refine Fuel (tank full)"
+		else:
+			refine_fuel_btn.text = "Refine Fuel (%d m³ ice → %d fuel, %d SC)" % [int(ceil(float(r[1]))), int(float(r[0])), int(r[2])]
+	if buy_fuel_btn and is_instance_valid(buy_fuel_btn):
+		var b: Array = fuel_script.buy_to_full(GlobalState.fuel, GlobalState.player_credits)
+		buy_fuel_btn.disabled = float(b[0]) <= 0.0
+		if GlobalState.fuel >= fuel_script.TANK_MAX - 0.5:
+			buy_fuel_btn.text = "Buy Fuel (tank full)"
+		elif float(b[0]) <= 0.0:
+			buy_fuel_btn.text = "Buy Fuel (%d SC per unit)" % int(fuel_script.BUY_PRICE)
+		else:
+			buy_fuel_btn.text = "Buy Fuel (%d → %d SC)" % [int(float(b[0])), int(b[1])]
+
+
+func _on_refine_fuel_pressed() -> void:
+	var gained := GlobalState.refine_ice_to_fuel()
+	if gained > 0.0:
+		AudioManager.play_sell_ore()
+		show_dock_message("Refined water ice into %d fuel. Tank: %d / %d." % [int(gained), int(GlobalState.fuel), int(GlobalState.FuelScript.TANK_MAX)], "", Color(0.6, 0.85, 1.0))
+	_update_sell_button()
+
+
+func _on_buy_fuel_pressed() -> void:
+	var before := GlobalState.player_credits
+	var bought := GlobalState.buy_fuel_to_full()
+	if bought > 0.0:
+		AudioManager.play_sell_ore()
+		show_dock_message("Bought %d fuel for %d SC. Tank: %d / %d." % [int(bought), before - GlobalState.player_credits, int(GlobalState.fuel), int(GlobalState.FuelScript.TANK_MAX)], "", Color(0.6, 0.85, 1.0))
+	_update_sell_button()
+
+
 func _update_sell_button():
+	_update_fuel_buttons()
 	if not sell_btn:
 		return
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:

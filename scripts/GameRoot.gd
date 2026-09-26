@@ -412,7 +412,18 @@ func get_jump_block_reason(gate: Node3D) -> String:
 		var rating := str(gate_rating_guide.block_reason(destination))
 		if not rating.is_empty():
 			return rating
+	var fuel_needed := jump_fuel_cost(gate)
+	if GlobalState.fuel + 0.0001 < fuel_needed:
+		return "Not enough fuel for this jump (need %d, have %d). Refine water ice or buy fuel at a station." % [int(ceil(fuel_needed)), int(GlobalState.fuel)]
 	return ""
+
+
+## Fuel this gate's jump costs: more the further its destination is from the
+## start (Fuel.jump_cost).
+func jump_fuel_cost(gate: Node3D) -> float:
+	var destination := str(gate.get("destination_system_id"))
+	var depth := PremiseWorldSnapshotType._system_depth(destination) if not destination.is_empty() else -1
+	return GlobalState.FuelScript.jump_cost(depth)
 
 func request_gate_jump(gate: Node3D) -> bool:
 	var block := get_jump_block_reason(gate)
@@ -434,6 +445,11 @@ func request_gate_jump(gate: Node3D) -> bool:
 	if destination_system == "" or destination_gate == "":
 		push_warning("[GameRoot] Jumpgate is missing destination metadata.")
 		return false
+	var fuel_cost := jump_fuel_cost(gate)
+	GlobalState.spend_fuel(fuel_cost)
+	# N.O.V.A. speaks up when this jump leaves too little for another.
+	if GlobalState.fuel < GlobalState.FuelScript.JUMP_MAX:
+		GlobalState.emit_chatter("N.O.V.A.", "Jump fuel spent. %d left in the tank; that may not get us through another gate. Water ice refines into fuel at any station." % int(GlobalState.fuel), Color(1.0, 0.75, 0.35))
 	jump_request_pending = true
 	call_deferred("_change_system", destination_system, destination_gate)
 	return true
@@ -1445,6 +1461,7 @@ func _refresh_local_faction_looks() -> void:
 	if is_instance_valid(premise_director):
 		ores = premise_director.profile_for(world).get("ores", ores)
 	GlobalState.system_ore_mix = ores
+	print("[Ores] %s, %d jumps out: %s" % [str(world.get("system_id", "")), int(world.get("system_depth", -1)), str(ores)])
 
 
 func _premise_on_system_arrived() -> void:
@@ -6646,6 +6663,7 @@ func _capture_global_state() -> Dictionary:
 		"cargo_type": GlobalState.cargo_type,
 		"cargo_special": GlobalState.cargo_special.duplicate(true),
 		"storage_ore": GlobalState.player_storage_ore,
+		"fuel": GlobalState.fuel,
 		"cargo_ore_types": GlobalState.cargo_ore_mix(),
 		"storage_ore_types": GlobalState.storage_ore_mix(),
 		"upgrades": GlobalState.current_upgrades.duplicate(true),
@@ -6682,6 +6700,8 @@ func _apply_global_state(state: Dictionary) -> void:
 	GlobalState.cargo_type = int(state.get("cargo_type", GlobalState.CargoType.EMPTY))
 	GlobalState.cargo_special = state.get("cargo_special", {}).duplicate(true)
 	GlobalState.cargo = float(state.get("cargo", 0.0))
+	# Older saves have no fuel: they start with a full tank.
+	GlobalState.fuel = float(state.get("fuel", GlobalState.FuelScript.TANK_MAX))
 	# Older saves have no mix: their ore reads as silicate.
 	GlobalState.cargo_ore_types = (state.get("cargo_ore_types", {}) as Dictionary).duplicate()
 	GlobalState.storage_ore_types = (state.get("storage_ore_types", {}) as Dictionary).duplicate()

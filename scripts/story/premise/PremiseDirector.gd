@@ -118,7 +118,7 @@ func load_from_dict(data: Dictionary) -> void:
 ## Base profile for a system (deterministic; no save needed).
 func profile_for(world: Dictionary) -> Dictionary:
 	return ProfileType.generate(str(world.get("system_id", "")), int(world.get("system_seed", 0)),
-		str(world.get("star_type", "yellow")), bool(world.get("is_first_system", false)))
+		str(world.get("star_type", "yellow")), bool(world.get("is_first_system", false)), int(world.get("system_depth", -1)))
 
 
 ## Starts arcs so this system has its share of live stories. Returns new arc ids.

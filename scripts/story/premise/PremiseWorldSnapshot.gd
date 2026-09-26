@@ -22,6 +22,8 @@ static func capture(now_minute: int) -> Dictionary:
 		"system_seed": int(config.seed_value) if config != null else 0,
 		"star_type": str(config.star_type) if config != null else "yellow",
 		"is_first_system": _is_home(),
+		# Gate jumps from the start: rare ore grows with it (SystemProfile).
+		"system_depth": _system_depth(system_id),
 		"post_tutorial": _post_tutorial(),
 		# Card investigations use the live scan system (investigation_world,
 		# below); where no safe sites exist they fall back to a pickup.
@@ -77,6 +79,24 @@ static func capture(now_minute: int) -> Dictionary:
 	if not item.is_empty():
 		(world["store_items"] as Array).append(item)
 	return world
+
+
+static func _system_depth(system_id: String) -> int:
+	var loop := Engine.get_main_loop()
+	var root_scene = (loop as SceneTree).current_scene if loop is SceneTree else null
+	if root_scene == null or not "system_registry" in root_scene or root_scene.system_registry == null:
+		return -1
+	var registry = root_scene.system_registry
+	var links := {}
+	for sys in registry.get_all_systems():
+		var from := str(sys.id)
+		var outs: Array = []
+		for gate in sys.gates:
+			outs.append(str(registry.resolve_system_id(gate.destination_system_id)))
+		links[from] = outs
+	var start := str(registry.resolve_system_id("start_system"))
+	var here := str(registry.resolve_system_id(system_id))
+	return preload("res://scripts/story/premise/SystemProfile.gd").gate_depth(links, start, here)
 
 
 static func _is_home() -> bool:

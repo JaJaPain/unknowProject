@@ -64,9 +64,17 @@ const QUIRK_ORE_BONUS := {
 }
 const ORE_SHARES := [0.28, 0.14]
 const THORIUM_MAX_SHARE := 0.08
+# Rare ore grows with distance from the start (gate jumps): early belts are
+# almost all ordinary rock (Abe). Index = depth; deeper uses the last value.
+const RARE_SHARE_BY_DEPTH := [0.0, 0.08, 0.15, 0.22, 0.30, 0.36, 0.42]
+const THORIUM_MIN_DEPTH := 3
+# Water ice refines into fuel, so every belt past the start carries at least
+# this much of it, however early (a utility ore, not a rare one).
+const ICE_FLOOR := 0.06
 
 
-static func generate(system_id: String, seed_value: int, star_type: String, is_first_system: bool = false) -> Dictionary:
+## `depth`: gate jumps from the start system (-1 = unknown: full rarity).
+static func generate(system_id: String, seed_value: int, star_type: String, is_first_system: bool = false, depth: int = -1) -> Dictionary:
 	var profile := {"system_id": system_id, "quirks": [], "states": [], "ores": {"silicate": 1.0}}
 	if is_first_system:
 		return profile
@@ -100,13 +108,13 @@ static func generate(system_id: String, seed_value: int, star_type: String, is_f
 			states.append(s)
 	profile["quirks"] = quirks
 	profile["states"] = states
-	profile["ores"] = ore_mix(system_id, seed_value, star_type, quirks)
+	profile["ores"] = ore_mix(system_id, seed_value, star_type, quirks, depth)
 	return profile
 
 
 ## The belt mix: ore type -> share (sums to 1). Its own random stream, so
 ## adding ores changed no system's quirks or states.
-static func ore_mix(system_id: String, seed_value: int, star_type: String, quirks: Array) -> Dictionary:
+static func ore_mix(system_id: String, seed_value: int, star_type: String, quirks: Array, depth: int = -1) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%s|%d|system_ores" % [system_id, seed_value])
 	var weights := ORE_BASE_WEIGHT.duplicate()
@@ -139,7 +147,50 @@ static func ore_mix(system_id: String, seed_value: int, star_type: String, quirk
 		var amount: float = minf(float(share), THORIUM_MAX_SHARE) if pick == "thorium" else float(share)
 		mix[pick] = amount
 		mix["silicate"] = float(mix["silicate"]) - amount
-	return mix
+	return _scale_rarity(mix, depth)
+
+
+## Shrinks the rare ores to what this depth allows (silicate takes the rest);
+## thorium only from THORIUM_MIN_DEPTH out.
+static func _scale_rarity(mix: Dictionary, depth: int) -> Dictionary:
+	# Unknown depth (-1): full rarity, still with ice for fuel.
+	var at := depth if depth >= 0 else RARE_SHARE_BY_DEPTH.size() - 1
+	var allowed: float = float(RARE_SHARE_BY_DEPTH[mini(at, RARE_SHARE_BY_DEPTH.size() - 1)])
+	var full: float = float(RARE_SHARE_BY_DEPTH[RARE_SHARE_BY_DEPTH.size() - 1])
+	var scale := allowed / full
+	var out := {"silicate": 1.0}
+	for ore in mix:
+		if ore == "silicate" or (ore == "thorium" and at < THORIUM_MIN_DEPTH):
+			continue
+		var amount := float(mix[ore]) * scale
+		if amount <= 0.0:
+			continue
+		out[ore] = amount
+		out["silicate"] = float(out["silicate"]) - amount
+	if at >= 1 and float(out.get("water_ice", 0.0)) < ICE_FLOOR:
+		out["silicate"] = float(out["silicate"]) - (ICE_FLOOR - float(out.get("water_ice", 0.0)))
+		out["water_ice"] = ICE_FLOOR
+	return out
+
+
+## Gate jumps from `start` to `target` over `links` (system id -> ids it has
+## gates to), or -1 if unreachable.
+static func gate_depth(links: Dictionary, start: String, target: String) -> int:
+	if start == target:
+		return 0
+	var seen := {start: 0}
+	var queue: Array = [start]
+	while not queue.is_empty():
+		var at: String = queue.pop_front()
+		for next in links.get(at, []):
+			var id := str(next)
+			if seen.has(id):
+				continue
+			seen[id] = int(seen[at]) + 1
+			if id == target:
+				return int(seen[id])
+			queue.append(id)
+	return -1
 
 
 ## Applies a card resolution's `system_state` consequence (add/remove lists).
