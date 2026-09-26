@@ -314,6 +314,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_jump_smoke_test")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_hud_snapshot")
+	elif "--dock-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_dock_snapshot")
 	elif "--no-save-load" not in OS.get_cmdline_user_args():
 		call_deferred("_load_startup_save")
 
@@ -7654,6 +7656,69 @@ func _run_hud_snapshot() -> void:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("hud_pause.png"))
 	print("HUDSHOT done")
+	get_tree().quit()
+
+
+## Screenshots of every docked screen at the main station (windowed only):
+## -- --dock-snapshot --out=<dir>
+func _run_dock_snapshot() -> void:
+	var out := "user://dock_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 30:
+		await get_tree().process_frame
+	var system_root := get_active_system_root()
+	var station: Node3D = null
+	for candidate in get_tree().get_nodes_in_group("station"):
+		if candidate is Node3D and system_root.is_ancestor_of(candidate) and str(candidate.get("station_type")) != "outpost":
+			station = candidate
+			break
+	if station == null:
+		print("DOCKSHOT no station")
+		get_tree().quit(1)
+		return
+	var docking_position: Vector3 = station.get_docking_position(player.global_position) if station.has_method("get_docking_position") else station.global_position
+	var approach := (docking_position - station.global_position).normalized()
+	if approach.length_squared() < 0.001:
+		approach = Vector3.FORWARD
+	player.global_position = docking_position + approach * 28.0
+	player.look_at(docking_position, Vector3.UP)
+	player.sync_camera_to_ship()
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+	GlobalState.active_target = station
+	player.nav_mode = "DOCK"
+	var ui = GlobalState.get_ui_manager()
+	for frame in 1200:
+		await get_tree().process_frame
+		if player.is_docked and ui != null and ui.dock_panel.visible:
+			break
+	for i in 60:
+		await get_tree().process_frame
+	var screens := [["menu", ""], ["agent", "_on_talk_to_agent_pressed"], ["board", "_on_public_board_pressed"],
+		["store", "_on_store_pressed"], ["lounge", "_on_station_lounge_pressed"],
+		["maintenance", "_on_maintenance_bay_pressed"], ["upgrades", "_on_ship_upgrades_pressed"]]
+	for screen in screens:
+		# Back to the services menu, as the back buttons do.
+		for panel_name in ["agent_panel", "public_board_panel", "store_panel", "ship_upgrades_panel", "inventory_panel"]:
+			var panel = ui.get(panel_name)
+			if panel != null and is_instance_valid(panel):
+				panel.visible = false
+		ui.dock_panel.visible = true
+		ui.current_submenu = ui.DockSubmenu.SERVICES
+		ui._render_dock_submenu()
+		if not str(screen[1]).is_empty() and ui.has_method(str(screen[1])):
+			ui.call(str(screen[1]))
+		for i in 45:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("dock_%s.png" % screen[0]))
+	print("DOCKSHOT done")
 	get_tree().quit()
 
 
