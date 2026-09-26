@@ -1153,7 +1153,8 @@ func _create_overview():
 	command_row.add_child(inventory_hud_btn)
 	map_btn = _hud_command_button("STAR MAP", "M")
 	map_btn.tooltip_text = "System Map (M)"
-	map_btn.visible = false
+	map_btn.disabled = true
+	map_btn.modulate.a = 0.4
 	map_btn.pressed.connect(_toggle_branch_map)
 	# The map's place is kept while it is not available yet (Abe), so the
 	# inventory button stays half width.
@@ -3583,7 +3584,7 @@ func _restart_game():
 
 func _unhandled_input(event: InputEvent):
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_M and map_btn and map_btn.visible:
+		if event.keycode == KEY_M and map_btn and map_btn.visible and not map_btn.disabled:
 			_toggle_branch_map()
 			get_viewport().set_input_as_handled()
 			return
@@ -11008,11 +11009,11 @@ func refresh_overview():
 			call_deferred("_auto_select_route_gate")
 
 	if map_btn:
+		# Always shown; greyed out until there is somewhere else (first jump).
 		var registry: Variant = _get_system_registry()
-		if registry != null:
-			map_btn.visible = registry.get_all_systems().size() > 1
-		else:
-			map_btn.visible = false
+		map_btn.disabled = registry == null or registry.get_all_systems().size() <= 1
+		map_btn.tooltip_text = "System Map (M)" if not map_btn.disabled else "Star map unlocks after your first jump"
+		map_btn.modulate.a = 1.0 if not map_btn.disabled else 0.4
 	
 	# Add ALL stations (main + outposts) by group — never hardcode node names
 	for node in scene_tree.get_nodes_in_group("station"):
