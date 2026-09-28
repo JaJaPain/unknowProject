@@ -1,0 +1,115 @@
+{
+  "batch": 1,
+  "cards": [
+    {
+      "card_id": "fetch_survey_drone_life_or_death",
+      "item_id": "survey_drone",
+      "variant": "life_or_death",
+      "requester": "a frantic rescue coordinator",
+      "need": "A mining crew is trapped in a collapsing fissure, and we can't map a safe drill path without a drone that can squeeze through the wreckage.",
+      "stakes": "The air recyclers in the pocket will fail in six hours, and twelve miners will suffocate.",
+      "board_text": "I need a Piloted Survey Drone dropped here yesterday! We've got twelve people stuck under half a mountain of rock, and the primary sensors are blind. I can't risk a drill blindly without mapping the faults. Get me eyes down there, or I'm ordering body bags.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_survey_drone_funny",
+      "item_id": "survey_drone",
+      "variant": "funny",
+      "requester": "a paranoid prospector",
+      "need": "I dropped my lucky wrench down a ventilation shaft and my arms are too thick to reach it.",
+      "stakes": "I refuse to start the refinery cycle without it, and my crew is threatening a mutiny over the delay.",
+      "board_text": "Don't ask questions, just bring me a survey drone. The small kind. I lost my favorite wrench down a tube and I am not putting my hand in there, it smells weird. The boys say I'm holding up production, but I ain't turning the melter on without my lucky wrench.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_survey_drone_personal",
+      "item_id": "survey_drone",
+      "variant": "personal",
+      "requester": "a grieving father",
+      "need": "My daughter's scout ship was lost in this sector, and I want to search the debris field myself.",
+      "stakes": "Without closure, I can never move on from her disappearance.",
+      "board_text": "The authorities say they've called off the search, but I know she's still out there. I just need a survey drone to comb the outer asteroid belt. I can't leave her behind in the dark. Please help me bring my little girl home, one way or another.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_encrypted_core_life_or_death",
+      "item_id": "encrypted_core",
+      "variant": "life_or_death",
+      "requester": "a desperate colony doctor",
+      "need": "The core contains the cure formula for the plague sweeping our lower decks.",
+      "stakes": "If I don't get those synthesis instructions, the mortality rate will reach one hundred percent by tomorrow.",
+      "board_text": "This is an emergency medical requisition. I am tracking a courier who went down with an encrypted core carrying the cure sequence for this blight. Bring it to me immediately. Every minute you waste, someone's lungs turn to ash.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_encrypted_core_personal",
+      "item_id": "encrypted_core",
+      "variant": "personal",
+      "requester": "a disgraced corporate auditor",
+      "need": "This core contains the unedited financial records that prove I was framed for embezzlement.",
+      "stakes": "Without this evidence, I will spend the rest of my life in a penal colony for a crime my boss committed.",
+      "board_text": "I lost everything when they pinned the missing funds on me. That core has the real transaction logs. If you can get it to me before my sentencing hearing, I can finally clear my name and look my family in the eye again. Please, it's my last chance.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_seed_vault_funny",
+      "item_id": "seed_vault",
+      "variant": "funny",
+      "requester": "a competitive botanist",
+      "need": "The annual station flower show is next month and my rival has imported rare orchids.",
+      "stakes": "I will lose my title as 'Best in Show' and be forced to endure a year of smug gloating.",
+      "board_text": "That arrogant fool thinks he can beat my hydrangeas? Unacceptable! I need a seed vault of exotic, hyper-blooming flora, and I need it fast. I will not let some amateur with a fancy greenhouse steal my ribbon. The honor of my garden is at stake!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_seed_vault_personal",
+      "item_id": "seed_vault",
+      "variant": "personal",
+      "requester": "an aging terraformer",
+      "need": "I promised my late husband I would plant his favorite trees on our new homeworld.",
+      "stakes": "I'm getting too old to travel, and this is my last chance to fulfill his dying wish.",
+      "board_text": "My bones ache, and I don't have many jumps left in me. I need a seed vault with old-strain maples. My husband always dreamed of seeing red leaves in the autumn here. Just bring me the seeds, so I can rest knowing I kept my promise.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_evidence_tube_life_or_death",
+      "item_id": "evidence_tube",
+      "variant": "life_or_death",
+      "requester": "a terrified whistleblower",
+      "need": "This tube holds the chemical samples proving the local syndicate is poisoning the water supply.",
+      "stakes": "If the magistrate doesn't see this today, the cartel's assassins will find me and the poisoning will continue.",
+      "board_text": "They know I took the samples. I can hear them in the corridor. I need someone to get this sealed evidence tube to the central magistrate right away. Don't open it, don't stop, just run. If this doesn't arrive, a lot of people are going to die, starting with me.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_gate_idol_life_or_death",
+      "item_id": "gate_idol",
+      "variant": "life_or_death",
+      "requester": "a superstitious convoy leader",
+      "need": "Our navigator refuses to plot the jump through the chaotic storm sector without the idol's blessing.",
+      "stakes": "The pirates are closing in, and if we don't jump soon, the entire convoy will be slaughtered.",
+      "board_text": "We are sitting ducks out here! The navigator is having a panic attack and won't touch the console without a Gate-Cult idol to 'ward off the turbulence.' I don't care if it's rocks and wire, bring me one before those pirate ships enter firing range!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_gate_idol_funny",
+      "item_id": "gate_idol",
+      "variant": "funny",
+      "requester": "an interior decorator",
+      "need": "The client specifically requested 'authentic local religious artifacts' to tie the VIP lounge together.",
+      "stakes": "If the room isn't perfect, they won't pay my exorbitant consulting fee.",
+      "board_text": "The aesthetic of this lounge is utterly ruined! The client wants a rustic, spiritual vibe, and all I have is cheap plastic junk. I need a genuine Gate-Cult idol, worn smooth by hands, to act as the centerpiece. Hurry, the opening gala is tomorrow and my reputation is on the line!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_gate_idol_personal",
+      "item_id": "gate_idol",
+      "variant": "personal",
+      "requester": "an ex-cultist",
+      "need": "I left the order years ago, but I want the idol to remember my friends who stayed behind.",
+      "stakes": "It's the only connection I have left to a community I still miss.",
+      "board_text": "I walked away from the gates a long time ago. The chanting, the fasting... it wasn't for me. But I miss the quiet moments. Bring me a small idol. I don't worship anymore, but I just want something to hold when the silence on this station gets too loud.",
+      "urgency": "days"
+    }
+  ]
+}

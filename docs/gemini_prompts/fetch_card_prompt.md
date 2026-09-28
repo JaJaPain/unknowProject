@@ -18,6 +18,8 @@ The player finds or buys the item and flies it to them.
 - Save each batch as **one JSON file**:
   `data/content/fetch_cards/incoming/batch_NN.json` (NN = 01, 02, ...).
 - Stop after each batch so it can be checked.
+- **Before each batch, read `data/content/fetch_cards/incoming/REVIEW_NOTES.md`**
+  and rework any cards it lists (in place, same card_id) first.
 
 ## Card format
 
