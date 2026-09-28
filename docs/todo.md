@@ -84,16 +84,17 @@ _Active task list. Update this file at the end of every session._
   not a bug). Sometimes, right after an ambient news/radio broadcast plays, she
   gives one dry line about filtering it (she keeps the feed on because the
   useful thing could be in there). Low frequency, long cooldown, never over
-  someone else talking, never in combat. Draft lines (Abe to approve, then
+  someone else talking, never in combat. Lines (Abe reviewed 2026-09-28; old 4 and 8 cut; then
   bake audio):
   1. "I keep the news channel open, Captain. Most of it is noise, but noise is where the useful rumors hide."
   2. "Ninety-eight percent of that broadcast was filler. I stay tuned for the other two."
   3. "I'd mute the news, Captain. The one time I do, it'll be a pirate warning."
-  4. "Logged, sorted, discarded. I read every bulletin so you only hear the ones that matter."
+  4. "Signal-to-noise on that broadcast: poor. I'm still listening. Someone has to."
   5. "That report took a full diagnostic cycle to confirm it said nothing. I'll keep listening."
   6. "Another bulletin about nothing. Somewhere in the next hundred is a route closure, so the channel stays open."
   7. "I've started ranking the news by usefulness. That one scored below the hull-scrubbing schedule."
-  8. "Four minutes on a station's new paint colors. Filed as irrelevant. The channel stays open anyway."
+  8. "Probability that bulletin affects our route: zero. I checked twice anyway."
+  Spare: "That one was all noise, Captain. The channel stays open in case the next one isn't."
 
 ---
 
