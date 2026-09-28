@@ -95,6 +95,21 @@ _Active task list. Update this file at the end of every session._
   7. "I've started ranking the news by usefulness. That one scored below the hull-scrubbing schedule."
   8. "Probability that bulletin affects our route: zero. I checked twice anyway."
   9. "That one was all noise, Captain. The channel stays open in case the next one isn't."
+- [ ] **CRASH: undocking after accepting a board courier job** (Abe, 2026-09-28).
+  Log: after "Quest accepted: Sealed Courier Run: Recorded Testimony Drive, No
+  Heroics type:DELIVERY_COURIER", undock_player -> request_safe_checkpoint ->
+  SaveMigrator.prepare_for_save -> _map_investigation_board
+  (scripts/persistence/SaveMigrator.gd:467): "Invalid access to property or key
+  'system_id' on a base object of type 'Dictionary'". An investigation-board
+  posting's quest objective has no system_id, and the save mapper indexes it
+  directly. Likely from this week's investigation changes (complications:
+  deadline/ambush on investigate_signal). Fix both ends: the posting builder
+  must always set objective.system_id, and _map_investigation_board (and
+  _map_investigation_sites/_contracts) should use .get() and fail soft (skip or
+  _failure) instead of crashing the checkpoint. Add a save round-trip test with
+  a posted investigation. Unrelated noise in the same log: UIManager.gd:2221
+  public-board text JSON "Unterminated string" from the model (handled, no
+  crash).
 - [ ] **System radio/news voice changes per system** (Abe, 2026-09-28). Each star
   system's radio announcer should have its own voice (and keep it for that
   system, so returning sounds familiar), picked from the voice pool and never
