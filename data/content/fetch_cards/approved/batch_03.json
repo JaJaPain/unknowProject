@@ -120,6 +120,36 @@
       "stakes": "It took me months to afford these blooms, and I want them to be perfect when I arrive.",
       "board_text": "I feel so foolish asking for this, but I need a portable stasis pod. The heater on my transport died, and the exotic flowers I bought for my partner are beginning to wilt in the cold. It is their first birthday since we moved out here, and I just want the flowers to stay exactly as beautiful as when I bought them.",
       "urgency": "days"
+    },
+    {
+      "card_id": "fetch_ballot_cache_life_or_death",
+      "item_id": "ballot_cache",
+      "variant": "life_or_death",
+      "requester": "a terrified election monitor",
+      "need": "The regime hijacked the digital tally, making a lost cache of physical votes the only way to prove the election was stolen.",
+      "stakes": "If the true count is not submitted to the high court by tonight, his execution squads will begin purging the opposition.",
+      "board_text": "The regime has hijacked the digital network and faked the election results! The physical ballots from the outer colonies are our only proof of the true tally, but the transport convoys were scattered. Bring me a sealed ballot cache, any one you can find out there. If the high court does not see those physical votes tonight, the executions begin at dawn!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_ballot_cache_funny",
+      "item_id": "ballot_cache",
+      "variant": "funny",
+      "requester": "a panicking trivia host",
+      "need": "I lost the official physical votes for the pub's annual awards, and the regulars are demanding a recount.",
+      "stakes": "If I cannot produce the sealed box, they will revoke my hosting privileges and stop buying the expensive imported ale.",
+      "board_text": "I made a terrible mistake! I got intoxicated and lost the official voting box for our annual customer awards somewhere in the transit hub. The regulars are demanding a recount, and they are threatening to boycott the bar! I need you to track down that sealed ballot cache. Bring it back with the seals intact before the happy hour crowd tears this place apart!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_ballot_cache_personal",
+      "item_id": "ballot_cache",
+      "variant": "personal",
+      "requester": "a grieving widow",
+      "need": "My husband died defending a box of colony votes, and I want to personally deliver them to complete his final run.",
+      "stakes": "It is the only way I can ensure his sacrifice meant something.",
+      "board_text": "My husband was a courier for the outer settlements. His ship was attacked last week, and the authorities only recovered a partial manifest. He died protecting his cargo, and I know he was carrying a sealed ballot cache for the regional council. Please, find the cache and bring it to me. I want to deliver those votes myself, so his final run is finished.",
+      "urgency": "days"
     }
   ]
 }

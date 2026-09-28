@@ -9,20 +9,18 @@ continue with the next batch. Approved cards have been moved to
 
 ## Batch 02: done (15/15 after rework)
 
-## Batch 03: 12 approved, 3 to rework
+## Batch 03: done (15/15 after rework)
 
-Solid batch. The pulsar survey pilot, the methane sculptor and the
-flowers-for-a-birthday stasis pod were standouts.
+## Batch 04: 15/15 approved
 
-### Rework (in `incoming/batch_03.json`)
+Best batch yet, nothing to rework. The treaty pouch, the ambassador's
+smuggled cheese and the torn map between estranged siblings were standouts.
 
-- All three `ballot_cache` cards use it as an **empty box** to lock votes
-  into. The item is a Sealed Ballot Cache: *it already holds counted votes*
-  ("Votes, locked and counted. For now."). Same problem as the evidence tube
-  in batch 01. Rewrite so the requester needs a cache that already has
-  votes sealed inside it (one that went missing, was stolen, was sent the
-  wrong way, needs to reach a recount, is proof of a rigged count, etc.).
-  Keep the tones: life-or-death, funny, personal. Three different situations.
+### Small fix I made myself
+
+- `fetch_star_chart_funny`: "the infamous Cobalt Hoard" is a proper name;
+  changed to "an infamous pirate hoard". Names of treasures, ships and
+  places count too.
 
 ### For the next batches
 

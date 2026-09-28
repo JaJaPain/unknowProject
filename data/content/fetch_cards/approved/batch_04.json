@@ -1,0 +1,155 @@
+{
+  "batch": 4,
+  "cards": [
+    {
+      "card_id": "fetch_reactor_seed_life_or_death",
+      "item_id": "reactor_seed",
+      "variant": "life_or_death",
+      "requester": "a desperate slum doctor",
+      "need": "The local grid was shut off by the authorities, and the life support systems in my clinic are failing.",
+      "stakes": "Dozens of critically ill patients will perish if I cannot bring a new power source online immediately.",
+      "board_text": "The enforcers cut the power to the lower levels again! My clinic's backup batteries are almost drained, and the incubators are failing. I need an unlicensed reactor seed to start a shadow grid off the books. I know the risks of an uncertified burn, but it is the only way to keep my patients breathing. Get one here fast!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_reactor_seed_funny",
+      "item_id": "reactor_seed",
+      "variant": "funny",
+      "requester": "an obsessed tinkerer",
+      "need": "My automated espresso machine requires far more power than the standard habitat outlets can provide.",
+      "stakes": "If I cannot pull a perfect shot of espresso, my mornings will be completely ruined.",
+      "board_text": "The civilian power grid is pathetically weak! Every time I try to run my custom twenty-bar espresso extractor, I blow the fuses for the entire residential block. The neighbors are furious. I require an unlicensed reactor seed to power my kitchen appliances independently. Do not tell the safety inspectors, just bring the seed!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_reactor_seed_personal",
+      "item_id": "reactor_seed",
+      "variant": "personal",
+      "requester": "an idealistic colonist",
+      "need": "We want to start a new settlement far away from corporate oversight, and we need an off-grid power source.",
+      "stakes": "It is our only chance to raise our children in a community that is truly free.",
+      "board_text": "My group is packing up and leaving the corporate zones behind forever. We found a small rock out in the fringes where we can start over, but we cannot take registered equipment or they will track us. We need an unlicensed reactor seed to power our new home. Help us disappear and build something better.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_wine_crate_life_or_death",
+      "item_id": "wine_crate",
+      "variant": "life_or_death",
+      "requester": "a trapped hostage",
+      "need": "My captor is a fanatic collector who promised to release me if I can procure a specific lost vintage for him.",
+      "stakes": "If I cannot produce the crate by his deadline, he will vent my holding cell into space.",
+      "board_text": "Please, you have to help me! The pirate king who captured me is obsessed with pre-collapse artifacts. He gave me a single encrypted comms channel and told me that if I can secure a vintage wine crate from the lost worlds, he will let me go. Bring the wine intact, or he is going to throw me out the airlock!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_wine_crate_funny",
+      "item_id": "wine_crate",
+      "variant": "funny",
+      "requester": "a pretentious sommelier",
+      "need": "A rival critic claimed my palate was unrefined, and only a taste of an extinct vintage can restore my honor.",
+      "stakes": "I will be forced to resign in disgrace and drink synthesized grape juice for the rest of my career.",
+      "board_text": "The absolute nerve of that hack! He wrote in his column that I could not distinguish a synthetic blend from a true reserve. I must host a blind tasting and humiliate him! I need a vintage wine crate, the kind grown on a world that no longer exists. I will prove my superiority, no matter the cost. Bring the bottles safely!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_wine_crate_personal",
+      "item_id": "wine_crate",
+      "variant": "personal",
+      "requester": "an old soldier",
+      "need": "My commanding officer and I promised to drink a glass from our destroyed homeworld when the war finally ended.",
+      "stakes": "He is fading fast in the hospice, and I want to fulfill our pact before he passes.",
+      "board_text": "We made a promise in a trench a long time ago. We said when the fighting stopped, we would crack open a bottle from the old world and toast the ones we lost. He does not have much time left. I need a vintage wine crate from our dead planet. I just want to pour him one last glass while he can still taste it.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_diplomatic_pouch_life_or_death",
+      "item_id": "diplomatic_pouch",
+      "variant": "life_or_death",
+      "requester": "a desperate ambassador",
+      "need": "The pouch contains the signed peace treaty, and the ceasefire expires at midnight.",
+      "stakes": "If the documents do not arrive, the orbital bombardment will commence and millions will die.",
+      "board_text": "A courier carrying our signed peace accord was ambushed in the transit lanes! The pouch is still out there. The ceasefire relies on the physical delivery of those documents to the central authority. I need that sealed diplomatic pouch recovered immediately. Do not break the seal, or the treaty is void. The lives of an entire world are on the line!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_diplomatic_pouch_funny",
+      "item_id": "diplomatic_pouch",
+      "variant": "funny",
+      "requester": "a disgruntled junior attache",
+      "need": "My boss used his diplomatic immunity to order rare, smelly cheeses, and the courier lost the package.",
+      "stakes": "If the ambassador does not get his snacks, he will assign me to archive duty in the basement for a decade.",
+      "board_text": "You would not believe what passes for state secrets around here. The ambassador used a secured courier to bypass customs for his pungent cheese collection, but the transport was waylaid. I need you to find that sealed diplomatic pouch! I do not care what it smells like, just do not open it, and get it to me before he ruins my career!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_diplomatic_pouch_personal",
+      "item_id": "diplomatic_pouch",
+      "variant": "personal",
+      "requester": "a disgraced diplomat",
+      "need": "The pouch contains the official letters of recall that prove my government abandoned me, not the other way around.",
+      "stakes": "I want the documents to clear my name so I can finally return to my family without shame.",
+      "board_text": "They told the press I defected, but it was a lie. They sent a courier with orders to cut me loose, but the ship never arrived, leaving me stranded and branded a traitor. Find that sealed diplomatic pouch. The stamped orders inside are the only proof that I followed protocol. I just want to go home with my head held high.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_star_chart_life_or_death",
+      "item_id": "star_chart",
+      "variant": "life_or_death",
+      "requester": "a stranded navigator",
+      "need": "My crew is trapped in a decaying orbit, and the chart completes the only safe jump vector out of this gravity well.",
+      "stakes": "If we cannot plot the micro-jumps in the next few hours, our hull will disintegrate in the atmosphere.",
+      "board_text": "Our navigation computer is fried and we are caught in a terminal drag! I have the left half of an old survey map, but we need the other piece to calculate the jump out of this storm system. Bring me a cracked star chart that matches the old coordinates. If we do not get that route, we are going to burn up!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_star_chart_funny",
+      "item_id": "star_chart",
+      "variant": "funny",
+      "requester": "a greedy treasure hunter",
+      "need": "I bought half a map to a legendary stash of pirate gold, but the seller ran off before handing over the rest.",
+      "stakes": "I already rented a very expensive excavation ship, and the daily fees are bankrupting me.",
+      "board_text": "I was swindled! I paid top credit for a map to an infamous pirate hoard, but the scoundrel only gave me the left side and jumped system! I need the matching cracked star chart to find the coordinates. I have a massive drill ship on lease and it is costing me a fortune every single day. Bring me the other half!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_star_chart_personal",
+      "item_id": "star_chart",
+      "variant": "personal",
+      "requester": "an estranged sibling",
+      "need": "My sister and I each inherited half of our parents' old exploration routes, and I want to finally piece them together.",
+      "stakes": "It is my way of reaching out to her after ten years of bitter silence.",
+      "board_text": "When our parents died, my sister and I fought over everything. We literally tore their favorite map in two. I have not spoken to her in a decade, but I am ready to make amends. I know the other half is circulating out there somewhere. Bring me the cracked star chart so I can finally cross the divide and go see her.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_targeting_core_life_or_death",
+      "item_id": "targeting_core",
+      "variant": "life_or_death",
+      "requester": "a desperate militia commander",
+      "need": "Our planetary defense cannon is useless without a high-grade processor to track the incoming pirate dreadnought.",
+      "stakes": "If the cannon cannot lock on, the dreadnought will level our cities from orbit.",
+      "board_text": "The pirate armada is entering the system, and our main defense battery is blind! The old civilian targeting arrays cannot track ships moving that fast. I need a stolen targeting core, military grade, and I do not care whose armory it came from. Get it here before the dreadnought enters firing range, or we are all dead!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_targeting_core_funny",
+      "item_id": "targeting_core",
+      "variant": "funny",
+      "requester": "an eccentric entomologist",
+      "need": "I am trying to photograph a notoriously fast and evasive species of alien moth for my research portfolio.",
+      "stakes": "The academic journals keep rejecting my blurry photos, and my peers are beginning to doubt the moth exists.",
+      "board_text": "These moths are impossible to capture on film! They move erratically and dodge standard camera auto-focus. I need a stolen targeting core from a weapon system to track their flight paths and adjust my lenses in real time! It is the only way to get a clear picture and silence my critics at the university. Just bring it!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_targeting_core_personal",
+      "item_id": "targeting_core",
+      "variant": "personal",
+      "requester": "a former gunner",
+      "need": "I want to install the core in my decommissioned patrol ship so I can fly the old training simulators one last time.",
+      "stakes": "My eyesight is failing, and I just want to experience the thrill of a perfect lock-on before I go blind.",
+      "board_text": "I flew interceptors for twenty years. Now my ship is parked in a hangar, and my eyes are getting worse every day. I stripped the weapons long ago, but I miss the sound of the tracking computer pinging a solid lock. Bring me a stolen targeting core. I just want to plug it into the simulator suite and fly one last mission while I can still see the console.",
+      "urgency": "days"
+    }
+  ]
+}
