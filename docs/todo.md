@@ -48,6 +48,15 @@ _Active task list. Update this file at the end of every session._
   2026-09-28). While the station tractor beam is pulling the player in to
   dock, the target display and its action buttons should be hidden or
   disabled (the player can't act on a target then).
+- [ ] **Story model recast Kaelen as the player's creditor/harasser** (Abe, 2026-09-28).
+  Campaign bible "Toxic Debt" (qwen3:8b): opening "owes Kaelen a favor she
+  won't let go unpaid"; chapter 1 beat kaelen_introduces_debt with stake
+  "avoid Kaelen's continued harassment". The mission agent then told the
+  player Kaelen is harassing them over a debt, and Kaelen's handoff said
+  "You owe Kaelen a favor" (third person). Fix: fixed cast (Kaelen, N.O.V.A.)
+  can't be creditor, antagonist, victim or subject of a beat's stake in the
+  bible / chapter-plan prompts and validators; debts and threats go to
+  invented NPCs. Also reject Kaelen lines that name Kaelen in the third person.
 
 ---
 
