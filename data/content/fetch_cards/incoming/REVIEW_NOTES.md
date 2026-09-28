@@ -7,26 +7,28 @@ continue with the next batch. Approved cards have been moved to
 
 ## Batch 01: done (all 15 approved after rework)
 
-## Batch 02: 14 approved, 1 to rework
+## Batch 02: done (15/15 after rework)
 
-Great batch: the explosive-collar music box, the sourdough dead drop and
-the buoy tender's bell were standouts. All four batch 01 reworks landed.
+## Batch 03: 12 approved, 3 to rework
 
-### Rework (in `incoming/batch_02.json`)
+Solid batch. The pulsar survey pilot, the methane sculptor and the
+flowers-for-a-birthday stasis pod were standouts.
 
-- `fetch_burned_serial_crate_personal`: "lay the ghosts of my old squad to
-  rest". Ghosts are a reserved topic even as a figure of speech. Keep the
-  memorial idea; say it without ghosts, spirits or the dead "resting".
+### Rework (in `incoming/batch_03.json`)
 
-### Small fix I made myself
-
-- `fetch_music_box_life_or_death`: an em dash came through as a broken
-  character. **Use plain commas or " - " instead of em dashes.**
+- All three `ballot_cache` cards use it as an **empty box** to lock votes
+  into. The item is a Sealed Ballot Cache: *it already holds counted votes*
+  ("Votes, locked and counted. For now."). Same problem as the evidence tube
+  in batch 01. Rewrite so the requester needs a cache that already has
+  votes sealed inside it (one that went missing, was stolen, was sent the
+  wrong way, needs to reach a recount, is proof of a rigged count, etc.).
+  Keep the tones: life-or-death, funny, personal. Three different situations.
 
 ### For the next batches
 
 - No numbered or named places ("Station 4", "Sector 7"), no Earth.
-- Check each card against its item description: the item must be used
-  for what it is.
+- **Use each item for what it is. If the description says it's sealed or
+  already holds something, the requester wants it *with its contents*, not
+  as an empty container.**
 - No ghosts, spirits or hauntings, not even as figures of speech.
 - No em dashes.

@@ -1,0 +1,125 @@
+{
+  "batch": 3,
+  "cards": [
+    {
+      "card_id": "fetch_rad_quartz_life_or_death",
+      "item_id": "rad_quartz",
+      "variant": "life_or_death",
+      "requester": "a desperate survey pilot",
+      "need": "My sensor array was stripped by micrometeorites, and I am flying blind toward a pulsar.",
+      "stakes": "Without replacement shielding for the optics, the radiation will blind me and fry my ship's controls in a matter of hours.",
+      "board_text": "Mayday! I took a bad hit in a dust cloud and my primary sensor shielding is gone. I am drifting too close to a pulsar, and the interference is already cooking my readouts. I need a load of rad-quartz to harden the backup array before the radiation blinds my ship entirely. Get it to me now!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_rad_quartz_funny",
+      "item_id": "rad_quartz",
+      "variant": "funny",
+      "requester": "a vain holovid star",
+      "need": "My new zero-gravity tanning bed is emitting far too much ultraviolet, and I am turning an unappealing shade of magenta.",
+      "stakes": "I will be laughed off the set of my latest movie if I arrive looking like a boiled crustacean.",
+      "board_text": "Disaster! Absolute disaster! My customized tanning pod is malfunctioning, and it is bombarding me with unfiltered radiation. I need industrial rad-quartz to shield the bulbs immediately. I am scheduled to film the big romance scene tomorrow, and I refuse to do it while glowing in the dark. Bring the quartz!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_rad_quartz_personal",
+      "item_id": "rad_quartz",
+      "variant": "personal",
+      "requester": "an amateur astronomer",
+      "need": "I am building a specialized telescope to observe a distant nebula that emits massive amounts of hard radiation.",
+      "stakes": "It has been my lifelong dream to capture a clear image of that phenomenon with my own equipment.",
+      "board_text": "I have spent years assembling the lenses for a custom observatory array. The only thing missing is a layer of rad-quartz to protect the delicate optical sensors from the deep-space glare. It is not an emergency, but I would pay handsomely to finally finish this project and see the colors of the nebula for myself.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_cryo_ferrite_life_or_death",
+      "item_id": "cryo_ferrite",
+      "variant": "life_or_death",
+      "requester": "a frantic orbital architect",
+      "need": "The structural struts on our new solar array are expanding unevenly as we rotate into the sun, and the frame is buckling.",
+      "stakes": "If the array collapses, it will crush the habitat module below it and kill everyone inside.",
+      "board_text": "We have a critical engineering failure! The contractor used cheap alloys for the new solar collectors. As the station turns toward the star, the heat differential is warping the struts. We need cryo-ferrite immediately to reinforce the frame. If that array snaps off, it will tear the main habitat apart!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_cryo_ferrite_funny",
+      "item_id": "cryo_ferrite",
+      "variant": "funny",
+      "requester": "a perfectionist sculptor",
+      "need": "I am carving a masterpiece out of frozen methane, and my standard tools are warping from the temperature changes.",
+      "stakes": "The grand exhibition is this weekend, and my magnum opus currently looks like a melted puddle.",
+      "board_text": "Art requires sacrifice, but it should not require shoddy tools! Every time I take my carving frame out of the freezer, the metal expands and ruins the delicate methane shaving process. I require cryo-ferrite struts to build a temperature-stable workbench. If my ice sculpture thaws, the critics will destroy me!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_cryo_ferrite_personal",
+      "item_id": "cryo_ferrite",
+      "variant": "personal",
+      "requester": "a lonely smuggler",
+      "need": "I need to rebuild the hidden compartment on my ship so it stops rattling when I fly near a star.",
+      "stakes": "That compartment holds the only mementos I have left of my family, and I cannot stand hearing them bang around.",
+      "board_text": "My ship is a rusted bucket, and the secret hold in the floorboards warps every time we hit the heat of a system's inner orbits. I need some cryo-ferrite to frame it properly. It is not for contraband. It is just for keeping some old family pictures safe without them getting crushed when the hull shifts.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_antimatter_pod_life_or_death",
+      "item_id": "antimatter_pod",
+      "variant": "life_or_death",
+      "requester": "a panicked dockmaster",
+      "need": "A damaged freighter just limped into the bay, and its primary fuel containment is leaking into our atmosphere.",
+      "stakes": "If we don't transfer the unstable fuel to a fresh pod, the resulting explosion will vaporize the entire trading post.",
+      "board_text": "Evacuation protocols are in effect! We have a crippled hauler in the main dock with a failing containment field. The antimatter is eating through the secondary bulkheads as we speak. I need a pristine anti-matter containment pod dropped here immediately to siphon the fuel. Do not crash on your way in, or you will take us all with you!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_antimatter_pod_funny",
+      "item_id": "antimatter_pod",
+      "variant": "funny",
+      "requester": "a reckless mechanic",
+      "need": "I bet the other mechanics I could build a personal hoverbike that runs on weapons-grade fuel.",
+      "stakes": "If I cannot contain the fuel source, my workshop will be a crater, and worse, I will lose the bet.",
+      "board_text": "Listen, I may have made a slight miscalculation. I need an anti-matter containment pod, and I need it before my custom hoverbike dissolves my garage. The boys said it was impossible to power a bike with starship fuel, and I am going to prove them wrong! I just need to stop the engine block from spontaneously disintegrating first.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_antimatter_pod_personal",
+      "item_id": "antimatter_pod",
+      "variant": "personal",
+      "requester": "a disgraced physicist",
+      "need": "I have discovered a safe way to neutralize unstable antimatter, but I need a certified pod to transport my prototype catalyst.",
+      "stakes": "Presenting this research is my only chance to get my academic credentials back.",
+      "board_text": "The university expelled me for my theoretical work on safe containment, calling me a madman. I have finally perfected the neutralizing compound, but the transport authority will not let me carry it without an official anti-matter containment pod. Bring me one, and I will prove to the entire sector that my theories were right all along.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_stasis_pod_life_or_death",
+      "item_id": "stasis_pod",
+      "variant": "life_or_death",
+      "requester": "a quarantine officer",
+      "need": "An unknown parasite is spreading through our security team, and we need to freeze the first infected guard to study the life cycle.",
+      "stakes": "Without a frozen subject to safely dissect, the infection will consume the entire local population by tomorrow.",
+      "board_text": "Code red in the security wing. Three guards are down with an aggressive alien parasite, and the medical bays are overwhelmed. I need a portable stasis pod right now. We have to put Patient Zero into suspended animation so the doctors can figure out how to kill the bug without it spreading further. Hurry!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_stasis_pod_funny",
+      "item_id": "stasis_pod",
+      "variant": "funny",
+      "requester": "a gourmet caterer",
+      "need": "I accidentally created the perfect souffle, and it will collapse in five minutes if I do not freeze time.",
+      "stakes": "I cannot remember the exact ingredient ratio, so this single pastry is my only path to culinary immortality.",
+      "board_text": "Stop what you are doing and bring me a portable stasis pod! I have achieved the impossible - a flawless, zero-gravity souffle that defies the laws of physics. But it is starting to deflate! I must put it into suspended animation immediately so the culinary board can witness its majesty. Do not drop it!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_stasis_pod_personal",
+      "item_id": "stasis_pod",
+      "variant": "personal",
+      "requester": "a heartbroken courier",
+      "need": "I am transporting a bouquet of rare flowers for my partner's birthday, and the ship's climate control just failed.",
+      "stakes": "It took me months to afford these blooms, and I want them to be perfect when I arrive.",
+      "board_text": "I feel so foolish asking for this, but I need a portable stasis pod. The heater on my transport died, and the exotic flowers I bought for my partner are beginning to wilt in the cold. It is their first birthday since we moved out here, and I just want the flowers to stay exactly as beautiful as when I bought them.",
+      "urgency": "days"
+    }
+  ]
+}

@@ -140,6 +140,16 @@
       "stakes": "I want to repair his life's work rather than let a corporation replace it with a soulless modern generator.",
       "board_text": "They don't make power cores like my granddad used to. The local energy cartel is just waiting for it to fail so they can charge me a fortune for a new grid tie. All I need is a rare thermal lattice to fix the old heat-shedder. Please, help me keep his legacy humming.",
       "urgency": "days"
+    },
+    {
+      "card_id": "fetch_burned_serial_crate_personal",
+      "item_id": "burned_serial_crate",
+      "variant": "personal",
+      "requester": "a disillusioned veteran",
+      "need": "I want to melt down the same kind of untraceable weapons we used in the war to build a memorial.",
+      "stakes": "It is the only way I can honor the memory of the squadmates who never came back.",
+      "board_text": "We did terrible things out there with guns that didn't exist on paper. I'm trying to build a monument for the ones who didn't come back, forged from the very metal that tore us apart. Bring me a weapon crate with burned serials. I need to turn something ugly into something peaceful.",
+      "urgency": "days"
     }
   ]
 }

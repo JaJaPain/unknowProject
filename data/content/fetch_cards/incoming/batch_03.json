@@ -1,0 +1,35 @@
+{
+  "batch": 3,
+  "cards": [
+    {
+      "card_id": "fetch_ballot_cache_life_or_death",
+      "item_id": "ballot_cache",
+      "variant": "life_or_death",
+      "requester": "a terrified election monitor",
+      "need": "The corrupt governor has ordered his thugs to destroy the physical vote backups before the recount.",
+      "stakes": "If I cannot secure the original ballots, the dictator will steal the election and begin his purges.",
+      "board_text": "They are burning the tally stations! The governor knows he lost the vote, and his men are destroying the physical records. I managed to gather the raw datachits, but I need a sealed ballot cache to lock them away where his override codes cannot reach them. Help me save this democracy before the violence starts.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_ballot_cache_funny",
+      "item_id": "ballot_cache",
+      "variant": "funny",
+      "requester": "a petty guild leader",
+      "need": "The vote for the new cafeteria menu was a tie, and I refuse to let the opposing faction win the rights to Taco Tuesday.",
+      "stakes": "If the ballots are compromised, we will be subjected to boiled nutrient paste for another month.",
+      "board_text": "The cafeteria union vote has devolved into total anarchy! Half the guild wants tacos, and the other half wants synthesized gruel. I have the tie-breaking ballots, and I do not trust the other side not to tamper with them. I need a sealed ballot cache to lock these votes down. The culinary future of this station is at stake!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_ballot_cache_personal",
+      "item_id": "ballot_cache",
+      "variant": "personal",
+      "requester": "an aging clan matriarch",
+      "need": "My family is tearing itself apart over who will lead when I step down, and we must hold a secret, unhackable vote.",
+      "stakes": "Without a secure way to count the choices, the clan will fracture into a bitter feud.",
+      "board_text": "My children are arguing over the inheritance, and the bickering is destroying our family. I have decided to let the whole clan vote on the new leader, but I know my eldest will try to slice the digital tallies. I need a sealed ballot cache, the old-fashioned physical kind. Only a locked box can give us a fair answer and keep the peace.",
+      "urgency": "days"
+    }
+  ]
+}
