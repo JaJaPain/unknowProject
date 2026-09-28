@@ -31,6 +31,10 @@ _Active task list. Update this file at the end of every session._
   when Kaelen opened the gate, while Kaelen was talking, and was dropped.
   Hold it until the player undocks (and no one else is speaking), then say
   it once.
+- [ ] **N.O.V.A. spoke a quiet moment during the load screen of a new campaign** (Abe, 2026-09-28).
+  Quiet-moment lines (and likely other idle chatter) must wait until the
+  load fade is gone and the player has control; check the quiet-moment
+  timer isn't running or carried over while the campaign is loading.
 
 ---
 
