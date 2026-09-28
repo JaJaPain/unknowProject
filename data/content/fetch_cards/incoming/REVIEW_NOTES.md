@@ -11,16 +11,12 @@ continue with the next batch. Approved cards have been moved to
 
 ## Batch 03: done (15/15 after rework)
 
-## Batch 04: 15/15 approved
+## Batch 04: done (15/15)
 
-Best batch yet, nothing to rework. The treaty pouch, the ambassador's
-smuggled cheese and the torn map between estranged siblings were standouts.
+## Batch 05: 15/15 approved
 
-### Small fix I made myself
-
-- `fetch_star_chart_funny`: "the infamous Cobalt Hoard" is a proper name;
-  changed to "an infamous pirate hoard". Names of treasures, ships and
-  places count too.
+Clean batch, nothing to fix. The minefield route hidden in a painting's
+brushstrokes and the clerk stamping their own vacation were standouts.
 
 ### For the next batches
 

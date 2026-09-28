@@ -1,0 +1,155 @@
+{
+  "batch": 5,
+  "cards": [
+    {
+      "card_id": "fetch_biohazard_flask_life_or_death",
+      "item_id": "biohazard_flask",
+      "variant": "life_or_death",
+      "requester": "a rogue epidemiologist",
+      "need": "I am synthesizing an antidote for the pathogen released in the lower levels, but I need a live sample of the raw virus.",
+      "stakes": "If I cannot analyze the original strain in the next few hours, the death toll will be catastrophic.",
+      "board_text": "The authorities are trying to burn out the infection, but they are just killing innocent people! I am close to a cure, but my lab needs the unmutated pathogen. Bring me a sealed biohazard flask containing a raw sample. Do not open it, and do not let the enforcers see you with it. Billions of lives depend on this.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_biohazard_flask_funny",
+      "item_id": "biohazard_flask",
+      "variant": "funny",
+      "requester": "a desperate sanitation worker",
+      "need": "The giant gelatinous clog in the primary waste pipes is immune to standard acids, and I need a weaponized solvent to clear it.",
+      "stakes": "If that clog is not dissolved today, the entire residential block will overflow with raw sewage.",
+      "board_text": "We have a code brown in the main plumbing arteries! There is a blockage down there the size of a shuttle, and it is actively resisting my plunger. I need a biohazard flask full of industrial-grade biological solvent. Just bring me the nastiest, most corrosive organic slop you can find in a sealed container so I can melt this nightmare!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_biohazard_flask_personal",
+      "item_id": "biohazard_flask",
+      "variant": "personal",
+      "requester": "an obsessed biologist",
+      "need": "I spent my life tracking a rare, highly toxic deep-space fungus, and I finally have the funds to study a live sample.",
+      "stakes": "It is my life's work, and my funding grant expires tomorrow.",
+      "board_text": "Nobody believed my theories about vacuum-resistant spores. They called me a crank! But I know samples exist out there on the black market. Bring me a biohazard flask containing a viable specimen of the fungal strain. It is highly toxic, so do not crack the seal. I just want to prove my life's work was not a waste of time.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_quarantine_case_life_or_death",
+      "item_id": "quarantine_case",
+      "variant": "life_or_death",
+      "requester": "a desperate medical auditor",
+      "need": "A mining colony was sealed off under false pretenses to cover up a chemical spill, and these tissue samples are the only proof.",
+      "stakes": "If the tribunal does not see this evidence tonight, the corporation will incinerate the colony to hide their crimes.",
+      "board_text": "They are lying about the plague outbreak! The mining corporation just locked down the facility to cover up an industrial accident, and they are preparing a lethal sterilization sweep. A whistleblower got a quarantine sample case out before the blockade. Bring it to me intact. The tissues inside prove it is a chemical burn, not a virus!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_quarantine_case_funny",
+      "item_id": "quarantine_case",
+      "variant": "funny",
+      "requester": "a paranoid hypochondriac",
+      "need": "I am convinced my neighbors are breeding a new space-flu, and I need an official case of their air filters to prove it to the medical board.",
+      "stakes": "If I cannot prove they are sickening me, I will be forced to buy another expensive air purifier.",
+      "board_text": "I know what they are doing next door! They cough all night, and my own throat is feeling scratchy. I hired a freelancer to steal their vent filters, but he panicked and left the quarantine sample case at a drop point. Go fetch it for me! Do not touch the latches! I need to take those sealed swabs straight to the clinic.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_quarantine_case_personal",
+      "item_id": "quarantine_case",
+      "variant": "personal",
+      "requester": "a retired geneticist",
+      "need": "The case holds the last surviving seed-spores of a glowing moss that only grew on a station that was decommissioned years ago.",
+      "stakes": "I want to cultivate the moss in my private greenhouse to remember the best years of my career.",
+      "board_text": "I worked on the deep orbit arrays for forty years. We used to grow this beautiful luminescent moss in the hydroponics bay, just to have some color. The station is gone now, but I know some salvage crews pulled the old samples. Bring me a quarantine sample case with the moss spores. I just want some familiar light in my garden.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_seal_of_office_life_or_death",
+      "item_id": "seal_of_office",
+      "variant": "life_or_death",
+      "requester": "a loyal bodyguard",
+      "need": "The rightful governor is in a coma, and the military junta will execute the civilian council unless we produce the physical seal to legally halt the proceedings.",
+      "stakes": "If we do not stamp the amnesty decree in the next hour, the firing squads will commence.",
+      "board_text": "We are out of time! The general has seized the capital, claiming the governor abandoned us. The governor is actually in hiding and critically wounded, but without the physical seal of office, her override codes are useless. We managed to smuggle the seal out, but the courier was intercepted. Find it and bring it here so we can stop the executions!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_seal_of_office_funny",
+      "item_id": "seal_of_office",
+      "variant": "funny",
+      "requester": "a petty bureaucrat",
+      "need": "My supervisor refused my vacation request, so I am going to stamp it myself using the sector administrator's stolen seal.",
+      "stakes": "If my leave is not approved by the end of the shift, I will lose my non-refundable deposit on a luxury cruise.",
+      "board_text": "My boss is a tyrant! I have not had a day off in three standard cycles, and she just denied my leave again. I heard a smuggler recently acquired a genuine seal of office from a high-ranking official. Bring it to me! I am going to authorize my own vacation, and they will not be able to question the stamp. Hurry, the ship leaves tomorrow!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_seal_of_office_personal",
+      "item_id": "seal_of_office",
+      "variant": "personal",
+      "requester": "a disgraced magistrate",
+      "need": "I was unfairly stripped of my rank, and I want my old seal back just to hold it and remember when I made a difference.",
+      "stakes": "It is the only physical proof I have that my life's work was real.",
+      "board_text": "They took everything from me when they voted me out. My pension, my quarters, my pride. The new administration threw my old seal of office onto the black market like common trash. I want it back. Please, find it and bring it to me. I do not want to give any orders, I just want to hold it and remember when my decisions mattered.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_artwork_tube_life_or_death",
+      "item_id": "artwork_tube",
+      "variant": "life_or_death",
+      "requester": "a desperate smuggler",
+      "need": "The canvas inside this tube conceals a micro-printed map of the local minefield, and our escape ship is trapped.",
+      "stakes": "If we do not get that map, the patrol cruisers will blow us into dust before we can jump.",
+      "board_text": "We are boxed in! The authorities surrounded the perimeter, and the only way out is through the old autonomous minefield. Our contact hid the safe navigation route in the brushstrokes of a smuggled painting. Find that artwork tube and get it to our airlock! Without that canvas, we are going to be reduced to floating slag.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_artwork_tube_funny",
+      "item_id": "artwork_tube",
+      "variant": "funny",
+      "requester": "a frantic gallery curator",
+      "need": "The centerpiece for our grand opening was accidentally lost in transit, and the wealthy patrons are arriving.",
+      "stakes": "If that specific painting is not on the wall, the critics will declare me a fraud and ruin my gallery.",
+      "board_text": "Absolute catastrophe! The interns accidentally lost a priceless abstract masterpiece in transit to the exhibition hall! The wealthy donors are arriving for the gala tonight! Find the artwork tube and bring it back immediately. If I have to put a blank canvas on that wall and call it 'minimalism' again, I will be a laughingstock!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_artwork_tube_personal",
+      "item_id": "artwork_tube",
+      "variant": "personal",
+      "requester": "a nostalgic widower",
+      "need": "The tube holds a portrait of my late husband, painted by a street artist on the day we met.",
+      "stakes": "It is the only picture of him smiling that I have left, and my memory is starting to fade.",
+      "board_text": "Years ago, before the colony expanded, a street vendor painted a beautiful portrait of my husband. It was lost during our last relocation. I just heard a salvage broker is selling a batch of old colony art. Please, bring me that artwork tube. I just want to see his face clearly one more time before my mind loses him entirely.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_terraform_seed_life_or_death",
+      "item_id": "terraform_seed",
+      "variant": "life_or_death",
+      "requester": "a frantic habitat engineer",
+      "need": "A toxic algae bloom is destroying our water supply, and these specific terraforming microbes are the only thing that can eat the toxin.",
+      "stakes": "If we do not seed the reservoirs immediately, the entire settlement will die of dehydration.",
+      "board_text": "We have a critical emergency in the water treatment plant! A mutant algae is poisoning the supply, and standard filters are useless. I need a terraforming seed canister loaded with deep-rock soil microbes. They are aggressive enough to outcompete the algae and purify the tanks. Bring them now, or this whole colony dies of thirst!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_terraform_seed_funny",
+      "item_id": "terraform_seed",
+      "variant": "funny",
+      "requester": "an impatient landscaper",
+      "need": "The governor wants a lush green lawn outside his mansion by tomorrow, and the soil is completely barren.",
+      "stakes": "If the grass is not growing by sunrise, he will revoke my landscaping license.",
+      "board_text": "The governor is completely unreasonable! He built his new mansion on a slab of irradiated bedrock and expects a perfect green lawn by tomorrow morning! I cannot wait centuries for natural soil to form. I need a terraforming seed canister right now. I am going to blast his yard with concentrated microbes and hope the grass survives the mutation!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_terraform_seed_personal",
+      "item_id": "terraform_seed",
+      "variant": "personal",
+      "requester": "a visionary pioneer",
+      "need": "I want to plant these microbes on a barren asteroid so my great-grandchildren might one day have a garden.",
+      "stakes": "I know I will never see the results, but I want to leave something beautiful behind for the future.",
+      "board_text": "This whole sector is just dead rock and cold metal. It is no place to raise a family, but it is all we have. I want to change that, even if it takes a hundred years. Bring me a terraforming seed canister. I am going to seed the canyon behind our settlement. I will be gone before the first flower blooms, but my descendants will know I tried.",
+      "urgency": "days"
+    }
+  ]
+}
