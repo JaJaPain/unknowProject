@@ -94,7 +94,7 @@ _Active task list. Update this file at the end of every session._
   6. "Another bulletin about nothing. Somewhere in the next hundred is a route closure, so the channel stays open."
   7. "I've started ranking the news by usefulness. That one scored below the hull-scrubbing schedule."
   8. "Probability that bulletin affects our route: zero. I checked twice anyway."
-  Spare: "That one was all noise, Captain. The channel stays open in case the next one isn't."
+  9. "That one was all noise, Captain. The channel stays open in case the next one isn't."
 
 ---
 
