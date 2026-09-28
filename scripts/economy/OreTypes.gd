@@ -41,6 +41,27 @@ static func tint(ore_type: String) -> Color:
 	return TYPES[normalize(ore_type)]["tint"]
 
 
+## Icons (assets/OreIcons.png, ChatGPT 2026-09-28): a 3x2 sheet of 512px
+## cells, silicate / water ice / ferrite, cuprite / thorium / hydrogen fuel.
+## The inset drops each cell's painted frame.
+const ICON_SHEET := "res://assets/OreIcons.png"
+const ICON_ORDER := ["silicate", "water_ice", "ferrite", "cuprite", "thorium", "fuel"]
+const ICON_CELL := 512
+const ICON_INSET := 44
+
+
+## The icon for an ore type, or "fuel"; null if unknown or the sheet is missing.
+static func icon(ore_type: String) -> Texture2D:
+	var idx := ICON_ORDER.find(ore_type)
+	if idx < 0 or not ResourceLoader.exists(ICON_SHEET):
+		return null
+	var atlas := AtlasTexture.new()
+	atlas.atlas = load(ICON_SHEET)
+	atlas.region = Rect2((idx % 3) * ICON_CELL + ICON_INSET, floori(idx / 3.0) * ICON_CELL + ICON_INSET,
+		ICON_CELL - ICON_INSET * 2, ICON_CELL - ICON_INSET * 2)
+	return atlas
+
+
 static func glow(ore_type: String) -> float:
 	return float(TYPES[normalize(ore_type)]["glow"])
 

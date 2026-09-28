@@ -418,6 +418,9 @@ func _fill_hold(gs: Node) -> void:
 	var summary := _label("", 13, TEXT)
 	summary.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(summary)
+	var fuel_icon := _ore_icon("fuel", 22)
+	if fuel_icon != null:
+		row.add_child(fuel_icon)
 	var fuel_text := _label("FUEL  %d / %d" % [int(gs.fuel), int(FuelScript.TANK_MAX)], 13, ACCENT if not gs.is_fuel_empty() else WARN)
 	row.add_child(fuel_text)
 	if gs.cargo_type == gs.CargoType.SPECIAL:
@@ -445,7 +448,12 @@ func _fill_hold(gs: Node) -> void:
 		seg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		seg.size_flags_stretch_ratio = maxf(0.01, float(mix[id]))
 		bar.add_child(seg)
-		legend.add_child(_label("■ %s %d" % [OreTypesScript.display(str(id)), int(round(float(mix[id])))], 12, c))
+		var entry := HBoxContainer.new()
+		entry.add_theme_constant_override("separation", 5)
+		var icon := _ore_icon(str(id), 26)
+		entry.add_child(icon if icon != null else _label("■", 12, c))
+		entry.add_child(_label("%s %d" % [OreTypesScript.display(str(id)), int(round(float(mix[id])))], 12, c))
+		legend.add_child(entry)
 	var free: float = maxf(0.0, float(gs.cargo_max) - float(gs.cargo))
 	if free > 0.0:
 		var empty := ColorRect.new()
@@ -486,6 +494,20 @@ func _sort_key(def, id: String) -> String:
 	var cat: String = def.category if def != null else "zz"
 	var rank := order.find(cat)
 	return "%02d|%s" % [rank if rank >= 0 else 99, (def.display_name if def != null else id)]
+
+
+func _ore_icon(ore_id: String, px: int) -> TextureRect:
+	var tex := OreTypesScript.icon(ore_id)
+	if tex == null:
+		return null
+	var rect := TextureRect.new()
+	rect.texture = tex
+	rect.custom_minimum_size = Vector2(px, px)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
 
 
 func _ore_color(ore_id: String) -> Color:

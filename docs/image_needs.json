@@ -132,6 +132,14 @@
             "used_for": "Prop items for procedural missions, station stock and loot (data/content/prop_items.json).",
             "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: sealed evidence tube; forged manifest slate; transponder chip; sealed ballot cache; seal of office. Row 2, left to right: gate-cult idol; ghost-fleet flight log; caged ai core; unlicensed reactor seed; weapon crate, serials burned. Row 3, left to right: counterfeit credit chips; vintage wine crate; artwork tube; heirloom music box; diplomatic pouch. Row 4, left to right: bounty warrant chip; restraint collar; cracked star chart; derelict ship's bell; stolen targeting core. Row 5, left to right: biohazard flask; terraforming seed canister; quarantine sample case; dead-drop cache; ancient data slate.",
             "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
+        },
+        {
+            "id": "ore_icons",
+            "filename": "OreIcons.png",
+            "size": "1536x1024",
+            "destination": "assets/OreIcons.png",
+            "used_for": "3x2 icons: silicate, water ice, ferrite / cuprite, thorium, hydrogen fuel (OreTypes.icon)",
+            "status": "done 2026-09-28"
         }
     ],
     "note_status": "Only generate entries without a 'status' starting with 'done'."
