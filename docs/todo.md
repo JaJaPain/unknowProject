@@ -35,6 +35,8 @@ _Active task list. Update this file at the end of every session._
   Quiet-moment lines (and likely other idle chatter) must wait until the
   load fade is gone and the player has control; check the quiet-moment
   timer isn't running or carried over while the campaign is loading.
+  Not just audio: her talking portrait also appears over the load screen, so
+  gate the whole speak() path (portrait + voice + comms text), not only TTS.
 - [ ] **Two Reaver ships in the overview during the tutorial kill mission** (Abe, 2026-09-28,
   screenshot): "Clean and Easy" asks for 1 Reaver kill, but two REAVERS
   combat vessels show pinned in red (272m and 1906m). Either the mission
