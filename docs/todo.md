@@ -95,6 +95,12 @@ _Active task list. Update this file at the end of every session._
   7. "I've started ranking the news by usefulness. That one scored below the hull-scrubbing schedule."
   8. "Probability that bulletin affects our route: zero. I checked twice anyway."
   9. "That one was all noise, Captain. The channel stays open in case the next one isn't."
+- [ ] **System radio/news voice changes per system** (Abe, 2026-09-28). Each star
+  system's radio announcer should have its own voice (and keep it for that
+  system, so returning sounds familiar), picked from the voice pool and never
+  N.O.V.A.'s or Kaelen's voice; the next system gets a different one. Pick
+  deterministically from the system id / campaign seed so saves and revisits
+  keep the same announcer.
 
 ---
 
