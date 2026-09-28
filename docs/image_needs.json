@@ -13,7 +13,8 @@
                 0
             ],
             "used_for": "Store and inventory icon for survey_drone (Piloted Survey Drone), the consumable the captain flies into asteroid cracks and wrecks.",
-            "prompt": "A small, expensive piloted mining drone: a compact rounded hull the size of a briefcase, one bright forward camera lens and a headlight, two slim folded manipulator arms with a fine cutting tool, tiny thrusters glowing pale teal. Precision instrument, not a weapon."
+            "prompt": "A small, expensive piloted mining drone: a compact rounded hull the size of a briefcase, one bright forward camera lens and a headlight, two slim folded manipulator arms with a fine cutting tool, tiny thrusters glowing pale teal. Precision instrument, not a weapon.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "icon_thermal_lattice",
@@ -24,7 +25,8 @@
                 0
             ],
             "used_for": "Icon for thermal_lattice, a tech-grade material: heat-shedding crystal lattice that engine, power plant and weapon parts are made from.",
-            "prompt": "A raw chunk of rare mineral: a dense geometric lattice of translucent amber-orange crystal, glowing hot from inside like embers, fine heat shimmer, dark stone matrix at its base. Precious, fragile, clearly valuable."
+            "prompt": "A raw chunk of rare mineral: a dense geometric lattice of translucent amber-orange crystal, glowing hot from inside like embers, fine heat shimmer, dark stone matrix at its base. Precious, fragile, clearly valuable.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "icon_rad_quartz",
@@ -35,7 +37,8 @@
                 0
             ],
             "used_for": "Icon for rad_quartz, a tech-grade material: radiation-hardening quartz for shields, sensors and mining optics.",
-            "prompt": "A cluster of long hexagonal quartz crystals in a luminous acid green, faint inner glow, tiny particle motes around it, set on dark rock. Looks rare and slightly dangerous."
+            "prompt": "A cluster of long hexagonal quartz crystals in a luminous acid green, faint inner glow, tiny particle motes around it, set on dark rock. Looks rare and slightly dangerous.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "icon_cryo_ferrite",
@@ -46,7 +49,8 @@
                 0
             ],
             "used_for": "Icon for cryo_ferrite, a tech-grade material that holds its shape from deep cold to full sun; hulls, holds and storage bays are built from it.",
-            "prompt": "A dark metallic ferrite ore nugget with an ice-blue frosted crust and pale blue veins, faint frost vapour curling off it, metallic sheen underneath the frost."
+            "prompt": "A dark metallic ferrite ore nugget with an ice-blue frosted crust and pale blue veins, faint frost vapour curling off it, metallic sheen underneath the frost.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "icon_resonant_crystal",
@@ -57,7 +61,8 @@
                 0
             ],
             "used_for": "Icon for resonant_crystal, the rarest material: grown only in the deepest, most fragile seams; top-tier ship upgrades need it.",
-            "prompt": "A single flawless crystal spire, iridescent white shifting to violet and cyan, visible faint concentric ripple rings in the air around it as if it hums, delicate and extremely precious."
+            "prompt": "A single flawless crystal spire, iridescent white shifting to violet and cyan, visible faint concentric ripple rings in the air around it as if it hums, delicate and extremely precious.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "drone_hud_frame",
@@ -65,7 +70,8 @@
             "size": "1536x1024",
             "sheet_cell": null,
             "used_for": "Optional overlay for the first-person drone camera (DroneMazeView): a camera-feed frame drawn over the 3D view.",
-            "prompt": "A transparent-background HUD overlay for a mining drone's camera feed: thin teal corner brackets, a faint scanline texture, tiny tick marks along the edges, a small blinking red dot in the top right. The whole centre must be fully transparent. PNG with alpha. This one does NOT use the shared icon style."
+            "prompt": "A transparent-background HUD overlay for a mining drone's camera feed: thin teal corner brackets, a faint scanline texture, tiny tick marks along the edges, a small blinking red dot in the top right. The whole centre must be fully transparent. PNG with alpha. This one does NOT use the shared icon style.",
+            "status": "done 2026-09-28: assets/ui/drone_hud_frame.png (not wired into the drone view yet)"
         },
         {
             "id": "asteroid_ore_water_ice",
@@ -74,7 +80,8 @@
             "destination": "assets/asteroid_ores/water_ice.png",
             "style_reference": "assets/asteroidTextures.png",
             "used_for": "Rock texture atlas for asteroids carrying water ice (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
-            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Water-ice rock: the dark stone is crusted with pale blue-white frost and glassy ice in the cracks and hollows, a little translucent ice showing through, cold and muted, still mostly rock. No text, no letters, no labels, no watermark."
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Water-ice rock: the dark stone is crusted with pale blue-white frost and glassy ice in the cracks and hollows, a little translucent ice showing through, cold and muted, still mostly rock. No text, no letters, no labels, no watermark.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "asteroid_ore_ferrite",
@@ -83,7 +90,8 @@
             "destination": "assets/asteroid_ores/ferrite.png",
             "style_reference": "assets/asteroidTextures.png",
             "used_for": "Rock texture atlas for asteroids carrying ferrite (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
-            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Iron-rich ferrite rock: dark steel-grey stone shot through with dull metallic grains and flecks that catch the light, a faint cool metallic sheen on the flat faces, no rust red. No text, no letters, no labels, no watermark."
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Iron-rich ferrite rock: dark steel-grey stone shot through with dull metallic grains and flecks that catch the light, a faint cool metallic sheen on the flat faces, no rust red. No text, no letters, no labels, no watermark.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "asteroid_ore_cuprite",
@@ -92,7 +100,8 @@
             "destination": "assets/asteroid_ores/cuprite.png",
             "style_reference": "assets/asteroidTextures.png",
             "used_for": "Rock texture atlas for asteroids carrying cuprite (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
-            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Copper-bearing cuprite rock: dark stone with veins and crusts of green and teal copper oxide (verdigris) in the cracks, a few small dull copper-brown metallic specks, muted and natural. No text, no letters, no labels, no watermark."
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Copper-bearing cuprite rock: dark stone with veins and crusts of green and teal copper oxide (verdigris) in the cracks, a few small dull copper-brown metallic specks, muted and natural. No text, no letters, no labels, no watermark.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "asteroid_ore_thorium",
@@ -101,7 +110,8 @@
             "destination": "assets/asteroid_ores/thorium.png",
             "style_reference": "assets/asteroidTextures.png",
             "used_for": "Rock texture atlas for asteroids carrying thorium (same 3 x 3 layout as assets/asteroidTextures.png; each rock uses one square).",
-            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Thorium-bearing rock: dark stone with thin veins and small crystal clusters of pale yellow-green mineral that glow very faintly, as if slightly radioactive; the glow stays inside the veins and the rest is ordinary rock. No text, no letters, no labels, no watermark."
+            "prompt": "A 3 x 3 grid of nine different seamless close-up rock surface textures for asteroids, exactly the layout, framing and photographic realism of the attached reference sheet (thin light lines between the nine squares, every square filled edge to edge, viewed straight on, soft even light, no perspective). Same dark space-rock base as the reference; vary the nine squares the same way (fractured slabs, fine gravel, layered shale, pitted pumice, cracked plates, rubble). Thorium-bearing rock: dark stone with thin veins and small crystal clusters of pale yellow-green mineral that glow very faintly, as if slightly radioactive; the glow stays inside the veins and the rest is ordinary rock. No text, no letters, no labels, no watermark.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "props_supplies",
@@ -110,7 +120,8 @@
             "destination": "assets/PropIconsSupplies.png",
             "style_reference": "none (original look; do not attach the older icon sheets)",
             "used_for": "Prop items for procedural missions, station stock and loot (data/content/prop_items.json).",
-            "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: compressed o2 canister; co2 scrubber cartridge; water purification unit; hydrogen fuel canister; fuel block. Row 2, left to right: medical supply crate; vaccine cooler; ration crate; hydroponic seed vault; filter pack. Row 3, left to right: radiation suit; reactor coolant drum; portable generator; airlock seal kit; thermal blanket bundle. Row 4, left to right: emergency beacon; life-support control board; solar panel patch; mining charge; drill head. Row 5, left to right: ore sample case; ice core tube; atmosphere sensor; portable stasis pod; worn duffel bag."
+            "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: compressed o2 canister; co2 scrubber cartridge; water purification unit; hydrogen fuel canister; fuel block. Row 2, left to right: medical supply crate; vaccine cooler; ration crate; hydroponic seed vault; filter pack. Row 3, left to right: radiation suit; reactor coolant drum; portable generator; airlock seal kit; thermal blanket bundle. Row 4, left to right: emergency beacon; life-support control board; solar panel patch; mining charge; drill head. Row 5, left to right: ore sample case; ice core tube; atmosphere sensor; portable stasis pod; worn duffel bag.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         },
         {
             "id": "props_story",
@@ -119,7 +130,9 @@
             "destination": "assets/PropIconsStory.png",
             "style_reference": "none (original look; do not attach the older icon sheets)",
             "used_for": "Prop items for procedural missions, station stock and loot (data/content/prop_items.json).",
-            "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: sealed evidence tube; forged manifest slate; transponder chip; sealed ballot cache; seal of office. Row 2, left to right: gate-cult idol; ghost-fleet flight log; caged ai core; unlicensed reactor seed; weapon crate, serials burned. Row 3, left to right: counterfeit credit chips; vintage wine crate; artwork tube; heirloom music box; diplomatic pouch. Row 4, left to right: bounty warrant chip; restraint collar; cracked star chart; derelict ship's bell; stolen targeting core. Row 5, left to right: biohazard flask; terraforming seed canister; quarantine sample case; dead-drop cache; ancient data slate."
+            "prompt": "An original sci-fi item icon sheet: a 5 x 5 grid of 25 separate game inventory icons in one square image, each object alone in its own rounded square cell with a thin light-grey frame and a small margin, on a very dark blue-black background. Each object in three-quarter view, centred, realistic painted rendering: worn metal, plastic and glass with small coloured status lights, soft rim light, gentle glow. Grounded, practical, lived-in industrial space-frontier equipment, original designs. Absolutely no text, letters, numbers, labels, logos or symbols anywhere, not even on the objects. Row 1, left to right: sealed evidence tube; forged manifest slate; transponder chip; sealed ballot cache; seal of office. Row 2, left to right: gate-cult idol; ghost-fleet flight log; caged ai core; unlicensed reactor seed; weapon crate, serials burned. Row 3, left to right: counterfeit credit chips; vintage wine crate; artwork tube; heirloom music box; diplomatic pouch. Row 4, left to right: bounty warrant chip; restraint collar; cracked star chart; derelict ship's bell; stolen targeting core. Row 5, left to right: biohazard flask; terraforming seed canister; quarantine sample case; dead-drop cache; ancient data slate.",
+            "status": "done: already in game; the 2026-09-28 regenerate was reviewed and the originals kept. Do not regenerate."
         }
-    ]
+    ],
+    "note_status": "Only generate entries without a 'status' starting with 'done'."
 }
