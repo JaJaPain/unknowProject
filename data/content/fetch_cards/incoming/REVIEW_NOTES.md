@@ -13,10 +13,18 @@ continue with the next batch. Approved cards have been moved to
 
 ## Batch 04: done (15/15)
 
-## Batch 05: 15/15 approved
+## Batch 05: done (15/15)
 
-Clean batch, nothing to fix. The minefield route hidden in a painting's
-brushstrokes and the clerk stamping their own vacation were standouts.
+## Batch 06: 6/6 approved. ALL BATCHES DONE (81 cards)
+
+### Small fixes I made myself
+
+- The slate cards echoed the brief's word "mundane" in player text
+  ("Just mundane star charts"); removed. Brief instructions are for you,
+  not for the requester's mouth.
+- `fetch_ancient_slate_funny`: "tens of thousands of years old" became
+  "older than the gates". Don't invent timelines or history the lore
+  hasn't set.
 
 ### For the next batches
 

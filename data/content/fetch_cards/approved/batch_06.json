@@ -1,0 +1,65 @@
+{
+  "batch": 6,
+  "cards": [
+    {
+      "card_id": "fetch_resonant_crystal_life_or_death",
+      "item_id": "resonant_crystal",
+      "variant": "life_or_death",
+      "requester": "a desperate sonar tech",
+      "need": "The subterranean ocean we are exploring is too dense for standard scanners, and we are losing oxygen.",
+      "stakes": "If we cannot use the acoustic ping of a rare crystal to find the exit cavern, my crew will drown in the dark.",
+      "board_text": "Our submersible is trapped under the ice crust, and standard sonar is just bouncing off the dense mineral water! I am transmitting on an emergency tether. We need a resonant crystal dropped down the borehole. We can strike it against the hull, and its unique ringing frequency will penetrate the murky water to map an exit route. Please, we are running out of air!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_resonant_crystal_funny",
+      "item_id": "resonant_crystal",
+      "variant": "funny",
+      "requester": "an avant-garde musician",
+      "need": "I am composing a symphony that requires a note so pure it shatters tempered glass, and synthetic instruments are failing me.",
+      "stakes": "If the climax of my performance does not cause property damage, the critics will call my work derivative.",
+      "board_text": "My upcoming concert is a study in acoustic destruction, but my instruments are simply too dull! Synthesizers cannot reach the necessary pitch. I require a genuine resonant crystal to use as the centerpiece of my percussion section. When I strike it, the pure ringing tone will obliterate the windows in the concert hall. Fetch one for me, and you will have front row seats to the chaos!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_resonant_crystal_personal",
+      "item_id": "resonant_crystal",
+      "variant": "personal",
+      "requester": "a blind watchmaker",
+      "need": "I want to carve the crystal into a chime for a clock I am building for my daughter, so she can hear the time beautifully.",
+      "stakes": "It is the final piece of my masterpiece, and my hands are getting too shaky to build another.",
+      "board_text": "I cannot see the timepieces I craft anymore, but I know how they sound. I am building one last grand clock for my daughter's wedding. I need a resonant crystal to cut for the main chime. When it strikes the hour, the ringing will echo through her whole home, and she will always know I made it just for her. Please, bring me one before my hands fail completely.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_ancient_slate_life_or_death",
+      "item_id": "ancient_slate",
+      "variant": "life_or_death",
+      "requester": "a panicked fleet navigator",
+      "need": "A magnetic storm erased our navigational database, and an archaic map is the only way to plot a manual course out of the debris field.",
+      "stakes": "If we do not map the safe lanes soon, the shifting rocks will crush our transport.",
+      "board_text": "Our entire navigational grid was just wiped by a solar flare, and we are adrift in a chaotic debris field! Modern sensors are blind. I need an ancient data slate that holds old, pre-gate stellar cartography. If we can cross-reference the old coordinates, I can manually pilot us out. Get it here before the rocks crush us!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_ancient_slate_funny",
+      "item_id": "ancient_slate",
+      "variant": "funny",
+      "requester": "an obsessive accountant",
+      "need": "I am determined to calculate compound interest on a local trade ledger older than the gates.",
+      "stakes": "If I cannot complete the math, I will lose a very pedantic argument with my rival at the financial guild.",
+      "board_text": "You will not believe the ignorance of my colleagues! They claim long-term economic forecasting is impossible, but I know prehistoric trade ledgers exist! Find me an ancient data slate filled with old transaction records. If I can prove that interest rates remained stable across millennia, I will finally win the argument that has consumed my department for five years. Bring me those receipts!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_ancient_slate_personal",
+      "item_id": "ancient_slate",
+      "variant": "personal",
+      "requester": "a dedicated archivist",
+      "need": "I spend my time translating prehistoric harvest yields and tax codes to understand baseline economics before the gates.",
+      "stakes": "Finding a new set of complete records would be the crowning achievement of my quiet academic life.",
+      "board_text": "Everyone looks for weapons or technology out there, but I just want to study agriculture and trade. I need an ancient data slate containing crop yields, supply manifests, or simple tax accounts. There is so much beauty in the tedious details of daily survival. Please, bring me one intact. It is a puzzle I have spent my whole life trying to solve.",
+      "urgency": "days"
+    }
+  ]
+}

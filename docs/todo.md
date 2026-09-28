@@ -325,7 +325,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     in a system without ice the job says the ice must be hauled in.
   - Still to build (Abe's idea): O2 canisters from water ice and O2
     delivery jobs (an outpost's scrubbers failing, 100 L to keep breathing).
-  - Fetch-mission cards from Gemini (Abe, 2026-09-26, NOT STARTED): for
+  - Fetch-mission cards from Gemini (Abe, 2026-09-26). **Rare items DONE 2026-09-28:** 81 cards (27 items at rarity 3.5+, 3 variants each) in data/content/fetch_cards/approved/; rarity for all items in data/content/item_rarity.json; brief docs/gemini_prompts/fetch_card_prompt.md; checker tools/fetch_cards/check_fetch_cards.py. Next: wire them into the public board, then items under 3.5 if wanted. Original note: for
     every store item (data/content/store_items.json) and every prop
     (data/content/prop_items.json), ask Gemini for 3 cards: "X needs <item>
     as soon as possible, because Y" (Z happens if not). Tone may be funny or
