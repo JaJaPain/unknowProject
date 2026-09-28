@@ -35,6 +35,15 @@ _Active task list. Update this file at the end of every session._
   Quiet-moment lines (and likely other idle chatter) must wait until the
   load fade is gone and the player has control; check the quiet-moment
   timer isn't running or carried over while the campaign is loading.
+- [ ] **Two Reaver ships in the overview during the tutorial kill mission** (Abe, 2026-09-28,
+  screenshot): "Clean and Easy" asks for 1 Reaver kill, but two REAVERS
+  combat vessels show pinned in red (272m and 1906m). Either the mission
+  spawns two, or a second Reaver (ambush/raider/patrol) spawns in the start
+  system during the tutorial. The tutorial should show exactly one.
+- [ ] **Star map button still lit on day 1** (same screenshot): the 2026-09-26
+  fix greys it out only while the registry has one system, but the registry
+  likely knows every system from the start. Gate it on having made a jump
+  (or a visited-systems count > 1) instead.
 
 ---
 
