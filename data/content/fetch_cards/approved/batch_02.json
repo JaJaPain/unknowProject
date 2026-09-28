@@ -1,0 +1,145 @@
+{
+  "batch": 2,
+  "cards": [
+    {
+      "card_id": "fetch_burned_serial_crate_life_or_death",
+      "item_id": "burned_serial_crate",
+      "variant": "life_or_death",
+      "requester": "an underground resistance leader",
+      "need": "The enforcers are raiding our compound tonight, and we need untraceable arms to defend ourselves.",
+      "stakes": "Without those weapons, my entire network will be executed by dawn.",
+      "board_text": "We've been made. The raid is coming in hours. I need a weapon crate with burned serials, and I don't care what kind of heat is inside as long as it fires. If we use registered blasters, they'll track our suppliers and end the whole movement. Hurry, or you'll only find bodies.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_burned_serial_crate_funny",
+      "item_id": "burned_serial_crate",
+      "variant": "funny",
+      "requester": "a stressed wedding planner",
+      "need": "The bride insisted on a live-fire salute, but the local authorities denied our permit for registered munitions.",
+      "stakes": "If I don't provide a spectacular finale, the father of the bride will ruin my career.",
+      "board_text": "This wedding is a logistical nightmare! The bride wants a traditional twenty-gun salute, but the magistrate won't issue a permit. I need a crate of unregistered weapons, serials burned, just for the ceremony. I can't have the patrol tracing the blast signatures back to my catering company! Save me!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_music_box_life_or_death",
+      "item_id": "music_box",
+      "variant": "life_or_death",
+      "requester": "a kidnapped engineer",
+      "need": "My captors don't know the music box's specific melody contains the acoustic override code for my explosive collar.",
+      "stakes": "The timer runs out in half a day, and this collar will take my head off.",
+      "board_text": "Listen closely, I'm transmitting on a hidden frequency. I'm being held hostage in the lower levels. I need an heirloom music box—one of the old mechanical ones. The pitch of the failing tines perfectly matches the disarm frequency for this collar. Get it to me before the timer hits zero!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_music_box_funny",
+      "item_id": "music_box",
+      "variant": "funny",
+      "requester": "a desperate insomniac",
+      "need": "It is the only sound in the universe that can drown out the terrible humming of my neighbor's illegal gravity generator.",
+      "stakes": "If I don't get some sleep tonight, I am going to march over there and start biting people.",
+      "board_text": "I haven't slept in a week. The guy next door installed a bootleg gravity well and the hum is vibrating my teeth. I need an heirloom music box, the clunkier and more out-of-tune the better. I will strap it to my head if I have to. Just bring it so I can sleep!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_music_box_personal",
+      "item_id": "music_box",
+      "variant": "personal",
+      "requester": "a distant descendant",
+      "need": "I need a working model to study the cylinder pattern so I can safely open a broken one left by my ancestor.",
+      "stakes": "I want to solve the family mystery that obsessed my father until his dying day.",
+      "board_text": "My father spent his life looking for our ancestor's lost stash, but he couldn't crack the broken music box she left behind. I need an intact heirloom model of the same make. If I can take a working one apart and study the cylinder pattern, I can finally open hers safely. I just want to finish his work.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_ships_bell_life_or_death",
+      "item_id": "ships_bell",
+      "variant": "life_or_death",
+      "requester": "a rescue diver",
+      "need": "A submersible habitat is sinking into a gas giant's dense layers, and standard sonar can't penetrate the interference.",
+      "stakes": "We need the acoustic resonance of a heavy ship's bell to ping their hull, or they will be crushed in the depths.",
+      "board_text": "A research hab just lost buoyancy and is sinking fast. The atmospheric density is scrambling our comms and modern sonar. I need a heavy derelict ship's bell. We can use the old acoustic resonance to ping their hull and track their descent. Get it here before they hit crush depth!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_ships_bell_funny",
+      "item_id": "ships_bell",
+      "variant": "funny",
+      "requester": "a chaotic bartender",
+      "need": "My old tip bell melted when a plasma-torch fight broke out, and the patrons won't leave tips without a loud noise.",
+      "stakes": "I'll go bankrupt by the end of the week because my customers have no attention span.",
+      "board_text": "Business is terrible! Ever since the old bell got vaporized, nobody is tipping. They need the auditory stimulation! Bring me a derelict ship's bell. I want something so loud it shakes the dust off the ceiling when I ring it. Help me monetize these cheapskates before I have to close shop!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_ships_bell_personal",
+      "item_id": "ships_bell",
+      "variant": "personal",
+      "requester": "a deep-space buoy tender",
+      "need": "I want to ring it once a year for every ship that passed by my station and never came back.",
+      "stakes": "It's my private vigil, and I can't bear to miss the anniversary.",
+      "board_text": "It gets quiet out here by the beacon. Over the decades, I've watched a lot of ships jump out and never return. I need a derelict ship's bell. Every solstice, I want to ring it out into the void for the crews who were lost. It's the only respect they'll get.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_dead_drop_cache_life_or_death",
+      "item_id": "dead_drop_cache",
+      "variant": "life_or_death",
+      "requester": "a hunted informant",
+      "need": "I need to hide the encryption keys for the syndicate's bank accounts before their hitmen kick down my door.",
+      "stakes": "If they catch me with the data on my person, they'll torture me until I break.",
+      "board_text": "They are already on this level. I can't run. I need a dead-drop cache immediately. I have to stash these data drives somewhere secure before the sweep teams find me. If I have the cache, I can hide the leverage. If I don't, I'm dead, and so is everyone the syndicate is extorting.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_dead_drop_cache_funny",
+      "item_id": "dead_drop_cache",
+      "variant": "funny",
+      "requester": "a paranoid baker",
+      "need": "My rival keeps trying to steal my sourdough starter, so I must hide it in an untrackable location.",
+      "stakes": "If he gets my yeast culture, my bakery will lose its monopoly on fluffy bread.",
+      "board_text": "That sneak from the bakery down the promenade is trying to steal my yeast! I caught him sniffing around my vents! I need a dead-drop cache to hide a backup jar of my starter culture somewhere off-station. My bread is the only thing keeping me in business, I can't risk it!",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_dead_drop_cache_personal",
+      "item_id": "dead_drop_cache",
+      "variant": "personal",
+      "requester": "a romantic runaway",
+      "need": "I am leaving my clan forever, and I want to leave a final letter for the one person who understood me.",
+      "stakes": "I need them to know the truth of why I left, even if we never speak again.",
+      "board_text": "I'm catching the next freighter out of the system, and I'm not coming back. But I can't leave without explaining myself to someone who matters. Bring me a dead-drop cache. I'll bury my letter where only they know to look. It's the only way to say goodbye without getting caught.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_thermal_lattice_life_or_death",
+      "item_id": "thermal_lattice",
+      "variant": "life_or_death",
+      "requester": "a desperate med-evac pilot",
+      "need": "The cooling array on my transport just cracked, and the fusion plant is going critical while I have critically wounded patients on board.",
+      "stakes": "If the drive melts down, the patients and I will be vaporized before we reach the hospital.",
+      "board_text": "Mayday! My engine cooling is failing and I'm carrying five unstable trauma cases. I need a thermal lattice flown out to my coordinates right now so I can hot-swap the cracked crystal. If you don't get here in the next few hours, my reactor is going to turn us all into a small star.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_thermal_lattice_funny",
+      "item_id": "thermal_lattice",
+      "variant": "funny",
+      "requester": "an overheated server admin",
+      "need": "I overclocked my rig to win a virtual racing tournament, and the cooling fans just melted.",
+      "stakes": "If I drop out of the race now, I'll lose my first-place ranking to a twelve-year-old.",
+      "board_text": "Emergency! My custom rig is running so hot the casing is glowing red! I need an industrial thermal lattice to slap onto my processor before it fuses into a lump of slag. I'm in the final lap of the orbital championship and I refuse to be beaten by some kid in the outer colonies!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_thermal_lattice_personal",
+      "item_id": "thermal_lattice",
+      "variant": "personal",
+      "requester": "a nostalgic engineer",
+      "need": "My grandfather built a custom power plant for our homestead, and it's finally failing after fifty years.",
+      "stakes": "I want to repair his life's work rather than let a corporation replace it with a soulless modern generator.",
+      "board_text": "They don't make power cores like my granddad used to. The local energy cartel is just waiting for it to fail so they can charge me a fortune for a new grid tie. All I need is a rare thermal lattice to fix the old heat-shedder. Please, help me keep his legacy humming.",
+      "urgency": "days"
+    }
+  ]
+}

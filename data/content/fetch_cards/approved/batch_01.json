@@ -110,6 +110,46 @@
       "stakes": "It's the only connection I have left to a community I still miss.",
       "board_text": "I walked away from the gates a long time ago. The chanting, the fasting... it wasn't for me. But I miss the quiet moments. Bring me a small idol. I don't worship anymore, but I just want something to hold when the silence on this station gets too loud.",
       "urgency": "days"
+    },
+    {
+      "card_id": "fetch_encrypted_core_funny",
+      "item_id": "encrypted_core",
+      "variant": "funny",
+      "requester": "a wannabe slicer",
+      "need": "I bet my entire allowance that I could crack a military-grade encrypted core in under an hour.",
+      "stakes": "If I don't produce a cracked core by tonight, my friends will ban me from the local arcade.",
+      "board_text": "Okay, I might have exaggerated my hacking skills. I told the local crew I crack encrypted cores for breakfast, and now they want proof. Just bring me one, any locked core with valuable data! I downloaded a brute-force script that is guaranteed to work, I just need the hardware before they realize I'm a fraud.",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_seed_vault_life_or_death",
+      "item_id": "seed_vault",
+      "variant": "life_or_death",
+      "requester": "a failing outpost administrator",
+      "need": "Our atmospheric scrubbers failed, and these engineered crops are the only way to re-oxygenate the station.",
+      "stakes": "The entire population will choke to death on carbon dioxide within a week.",
+      "board_text": "Red alert on the ring hab. The scrubbers are dead, and our air is getting thinner by the hour. We need a hydroponic seed vault loaded with fast-growing algae and oxygenators. Bring them now, or you'll be delivering to a tomb.",
+      "urgency": "days"
+    },
+    {
+      "card_id": "fetch_evidence_tube_funny",
+      "item_id": "evidence_tube",
+      "variant": "funny",
+      "requester": "an amateur investigative broadcaster",
+      "need": "My true-crime channel is bleeding viewers, and unboxing a sealed evidence tube live on the feed will get my ratings back up.",
+      "stakes": "If I don't get a viral hit tonight, my sponsors will pull their funding.",
+      "board_text": "Hey fans, I need your help! My stream numbers are tanking. Nothing boosts engagement like a live unboxing, and I want to open a genuine sealed evidence tube right in front of the camera. I don't care what tribunal it was meant for, I just need that tamper tape intact when you hand it over. Bring it in, and I'll give you a shoutout on the cast!",
+      "urgency": "hours"
+    },
+    {
+      "card_id": "fetch_evidence_tube_personal",
+      "item_id": "evidence_tube",
+      "variant": "personal",
+      "requester": "a disgraced forensic technician",
+      "need": "I need to study an intact sealed evidence tube to prove my old department's tamper tape is defective, clearing my name.",
+      "stakes": "It's the only way to get my pension restored before I'm evicted from my hab.",
+      "board_text": "They fired me for 'mishandling' evidence, but I know the official tamper tape degrades in high humidity! I just need a genuine sealed evidence tube, straight off the black market or found in a wreck, with the seals intact. If I can analyze the adhesive failure, I can clear my name and get my life back.",
+      "urgency": "days"
     }
   ]
 }

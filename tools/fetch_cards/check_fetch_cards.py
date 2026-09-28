@@ -74,8 +74,10 @@ def main(paths: list) -> int:
             per_item[(c.get("item_id"), c.get("variant"))] += 1
             text = " ".join(str(c.get(f, "")) for f in FIELDS[3:]).lower()
             for w in FLAG_WORDS:
-                if re.search(r"\b" + re.escape(w.strip()) + r"\b", text):
+                if re.search(r"\b" + re.escape(w.strip()) + r"s?\b", text):
                     errors.append(f"{cid}: FLAG word '{w.strip()}' (read it)")
+            if "�" in text:
+                errors.append(f"{cid}: broken character (lost em dash?)")
             if len(str(c.get("board_text", ""))) < 80:
                 errors.append(f"{cid}: board_text very short")
             all_cards.append((Path(path).name, c))

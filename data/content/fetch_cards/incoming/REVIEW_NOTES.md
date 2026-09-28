@@ -5,35 +5,28 @@ rewriting them **in place** in their incoming file (same card_id), then
 continue with the next batch. Approved cards have been moved to
 `data/content/fetch_cards/approved/`; don't touch those.
 
-## Batch 01: 11 approved, 4 to rework
+## Batch 01: done (all 15 approved after rework)
 
-Strong batch. The three variants per item were genuinely different
-situations, and the voices were distinct. Keep doing that.
+## Batch 02: 14 approved, 1 to rework
 
-### Rework (in `incoming/batch_01.json`)
+Great batch: the explosive-collar music box, the sourdough dead drop and
+the buoy tender's bell were standouts. All four batch 01 reworks landed.
 
-- `fetch_seed_vault_life_or_death`: "Station 4" is a proper name (rule 4).
-  Use a role or description instead ("our station", "the ring hab").
-- `fetch_encrypted_core_funny`: the logic doesn't hold. The item is a locked
-  core with something valuable inside; "a replacement core to brute-force
-  the decryption" doesn't make sense. Make the requester want *this kind of
-  core* for what's locked inside it (or for the core itself), and keep it funny.
-- `fetch_evidence_tube_funny`: uses the tube as an empty container for an
-  audition tape. Rule 1: a Sealed Evidence Tube already holds evidence and
-  is headed for a tribunal. Make the joke come from that.
-- `fetch_evidence_tube_personal`: same problem ("I need a clean tube to
-  secure it"). The requester wants the sealed tube and what's in it, not an
-  empty one.
+### Rework (in `incoming/batch_02.json`)
 
-### Small fixes I made myself (no action needed)
+- `fetch_burned_serial_crate_personal`: "lay the ghosts of my old squad to
+  rest". Ghosts are a reserved topic even as a figure of speech. Keep the
+  memorial idea; say it without ghosts, spirits or the dead "resting".
 
-- `fetch_survey_drone_funny`: need said "spanner", board said "wrench";
-  made both "wrench". Keep need/stakes/board consistent.
-- `fetch_seed_vault_personal`: "Earth-strain maples" became "old-strain
-  maples". **Don't name Earth**: the setting's link to it is undefined.
+### Small fix I made myself
+
+- `fetch_music_box_life_or_death`: an em dash came through as a broken
+  character. **Use plain commas or " - " instead of em dashes.**
 
 ### For the next batches
 
 - No numbered or named places ("Station 4", "Sector 7"), no Earth.
 - Check each card against its item description: the item must be used
   for what it is.
+- No ghosts, spirits or hauntings, not even as figures of speech.
+- No em dashes.
