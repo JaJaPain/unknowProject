@@ -1,0 +1,78 @@
+{
+    "schema_version": 1,
+    "created": "2026-09-29",
+    "how_to": "Generate each track in a text-to-music tool (instrumental only, no vocals, no lyrics). Save as .mp3 or .ogg with the given filename into sound/BackgroundMusic/NewForReview/, then tell Claude. The game crossfades between states, so tracks in the same family share key and a similar feel. Loopable tracks should start and end on the same held texture (no fade-in or fade-out, no big ending).",
+    "shared_style": "Original score for a grounded, dark sci-fi game about a lone freelance pilot on an industrial frontier. Cinematic but restrained: analog synth pads, low strings, sparse piano, metallic percussion, distant radio-like textures. Melancholy and tense rather than heroic. Reference mood only: the game's existing track 'Iron Lullaby'. Everything in D minor unless noted. No vocals, no choir words, no recognisable melodies from any existing film, game or show.",
+    "tracks": [
+        {
+            "id": "explore_a",
+            "filename": "Explore_A.mp3",
+            "state": "explore (flying, nothing hostile nearby)",
+            "length": "3:00 to 4:00, seamless loop",
+            "prompt": "Instrumental ambient space exploration music, D minor, slow 80 BPM feel with no strong beat. Warm analog synth pads that swell and recede, a lonely sparse piano motif of four or five notes that returns now and then, soft low string drones, faint crackle of distant radio static. Spacious, calm, a little lonely, the feeling of drifting through an empty star system. No drums. Loopable: starts and ends on the same sustained pad chord."
+        },
+        {
+            "id": "explore_b",
+            "filename": "Explore_B.mp3",
+            "state": "explore (alternate, so long flights don't repeat)",
+            "length": "3:00 to 4:00, seamless loop",
+            "prompt": "Instrumental ambient space music, D minor, 80 BPM, companion piece to a lonely exploration track. Glassy arpeggiated synth pulses at low volume, deep sub-bass swells, a solo cello line that enters halfway and fades back into the pads, subtle metallic shimmer like distant machinery. Curious and slightly uneasy, not sad. No drums. Loopable, same sustained texture at start and end."
+        },
+        {
+            "id": "tension",
+            "filename": "Tension.mp3",
+            "state": "tension (a hostile ship is targeting the player, or a mission ambush is near)",
+            "length": "2:00 to 3:00, seamless loop",
+            "prompt": "Instrumental suspense music for a space game, D minor, 90 BPM. A steady low pulsing synth heartbeat, tight muted string ostinato, dissonant high string clusters that creep in and out, occasional metallic clank hits, a rising sense of threat that never resolves. Sparse and controlled, leaving room for dialogue on top. Loopable with no build to a climax and no ending."
+        },
+        {
+            "id": "combat_a",
+            "filename": "Combat_A.mp3",
+            "state": "combat",
+            "length": "2:30 to 3:30, seamless loop",
+            "prompt": "Instrumental space combat music, D minor, 128 BPM. Driving industrial percussion (big low toms, metallic hits, tight electronic snare), aggressive staccato low strings, a gritty distorted analog bass line, short urgent brass-like synth stabs, a dark repeating four-bar hook. Intense and physical but not heroic or triumphant; the feeling of a desperate dogfight. Loopable: the last bar leads straight back into the first, no ending."
+        },
+        {
+            "id": "combat_b",
+            "filename": "Combat_B.mp3",
+            "state": "combat (alternate, heavier, for big fights and multiple hostiles)",
+            "length": "2:30 to 3:30, seamless loop",
+            "prompt": "Instrumental heavy space battle music, D minor, 132 BPM. Relentless layered industrial drums, pounding sub-bass, fast string runs, a pulsing sawtooth synth arpeggio, dissonant horn-like synth swells on every eighth bar, alarm-like high tones low in the mix. Overwhelming and dangerous. Loopable, no ending."
+        },
+        {
+            "id": "docked",
+            "filename": "Docked.mp3",
+            "state": "docked (station menus, board, store; the lounge keeps its own track)",
+            "length": "3:00 to 4:00, seamless loop",
+            "prompt": "Instrumental space station ambience music, D minor, relaxed 85 BPM. Soft muted electric piano chords, a gentle low bass line, light brushed percussion, warm pad underneath, faint background station hum and distant muffled announcements with no words. Safe harbour after a dangerous flight, a little worn and tired but comforting. Loopable, no ending."
+        },
+        {
+            "id": "stinger_jump",
+            "filename": "Stinger_Jump.mp3",
+            "state": "one-shot: gate jump arrival",
+            "length": "0:06 to 0:10",
+            "prompt": "Short instrumental cinematic stinger, D minor: a deep rising synth swell that bursts into a wide shimmering chord with a low boom, then a soft tail that fades to silence. Awe and arrival in a new place. No melody, no drums after the boom."
+        },
+        {
+            "id": "stinger_victory",
+            "filename": "Stinger_Victory.mp3",
+            "state": "one-shot: combat won",
+            "length": "0:04 to 0:08",
+            "prompt": "Short instrumental stinger after surviving a space battle, D minor resolving to F major: two low percussion hits then a warm, tired string and pad chord that settles. Relief, not triumph. Ends cleanly."
+        },
+        {
+            "id": "stinger_mission",
+            "filename": "Stinger_Mission.mp3",
+            "state": "one-shot: mission complete / paid",
+            "length": "0:03 to 0:06",
+            "prompt": "Very short instrumental reward stinger for completing a contract in a sci-fi game: a bright plucked synth arpeggio up three notes over a soft pad, then a clean ending. Satisfying, understated, a little dry."
+        },
+        {
+            "id": "stinger_danger",
+            "filename": "Stinger_Danger.mp3",
+            "state": "one-shot: hostile ship spotted / ambush sprung",
+            "length": "0:03 to 0:05",
+            "prompt": "Very short instrumental alert stinger for a space game: a sudden low brass-like synth blast with a dissonant high string scrape and a metallic hit, cut off sharply. Alarming, D minor."
+        }
+    ]
+}

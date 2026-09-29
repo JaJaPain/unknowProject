@@ -232,6 +232,8 @@ Stop-and-show points for Abe (windowed snapshots): after 14, 18, 21, 23.
 
 ## 4. Questions for Abe (answer before the reset if possible)
 
+**Answered 2026-09-29:** Q1 yes (Arc Engine owns the story; legacy bible flavour-only behind a flag). Q2 yes (standing OK for short windowed snapshot runs this week). Q3 build with stand-in tracks; detailed music prompts in docs/music_needs.json for Abe to generate later. Q4 Abe runs art from a fresh JSON (docs/art_batch_2026_09_29.json); ChatGPT is open in Chrome if something is needed fast while he's away.
+
 - Q1. Story authority: may the Arc Engine / Premise Deck own the story
   beats, with the legacy campaign bible kept only for flavour text behind a
   flag (P8)? Recommended: yes.
