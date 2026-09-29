@@ -140,6 +140,56 @@
             "destination": "assets/OreIcons.png",
             "used_for": "3x2 icons: silicate, water ice, ferrite / cuprite, thorium, hydrogen fuel (OreTypes.icon)",
             "status": "done 2026-09-28"
+        },
+        {
+            "id": "station_service_icons",
+            "filename": "StationServiceIcons.png",
+            "size": "1536x1024",
+            "destination": "assets/StationServiceIcons.png",
+            "style_reference": "assets/OreIcons.png (same framing and lighting)",
+            "used_for": "Station hub service tiles (P1)",
+            "prompt": "One image, 1536x1024, a 4-column by 2-row grid of 8 game UI icons in matching style: realistic high-detail 3D-rendered objects, each centered in its own rounded-square cell with a very dark navy-black background (#0a0e14) and a thin subtle silver-grey border, three-quarter view from slightly above, dramatic studio lighting, crisp silhouettes that read at small size. Left to right, top row then bottom row: 1) a holographic comms handset projecting a faint blue glow (talk to the station broker); 2) a wall-mounted job board slate with glowing pinned cards, blank of any writing; 3) a stack of sealed cargo crates with a price-tag clip (store); 4) crossed heavy wrench and welding torch with sparks (maintenance); 5) a ship engine module with an upward-glowing upgrade arrow shape made of light (upgrades); 6) a cocktail glass with a faint neon reflection on a bar top (lounge); 7) an industrial refinery canister with pipes and a blue glow (fuel refinery); 8) a locked vault storage locker (storage). Original design for an original sci-fi game, not based on any existing game or franchise. Absolutely no text, letters, numbers, labels, symbols or watermarks anywhere.",
+            "status": "pending (queued 2026-09-29, next_level_plan Section 5)"
+        },
+        {
+            "id": "vfx_explosion_flipbook",
+            "filename": "VfxExplosion.png",
+            "size": "1024x1024",
+            "destination": "assets/vfx/VfxExplosion.png",
+            "style_reference": "none",
+            "used_for": "Ship explosion flipbook (P2)",
+            "prompt": "A sprite sheet, 1024x1024, 8 columns by 8 rows of equal square frames on a pure black background, showing one space explosion animating from frame 1 (top-left, a tiny bright white-hot core) through a rapidly expanding orange and yellow fireball with dark smoke tendrils and flying bright embers, to frame 64 (bottom-right, faint dissipating grey smoke). No gravity, no ground, viewed from the side. Every frame centered, nothing crossing frame borders, consistent scale progression. Original design for an original sci-fi game, not based on any existing game or franchise. Absolutely no text, letters, numbers, labels, symbols or watermarks anywhere.",
+            "status": "pending (queued 2026-09-29, next_level_plan Section 5)"
+        },
+        {
+            "id": "vfx_combat_sheet",
+            "filename": "VfxCombat.png",
+            "size": "1024x1024",
+            "destination": "assets/vfx/VfxCombat.png",
+            "style_reference": "none",
+            "used_for": "Muzzle flash, spark burst, shockwave ring, shield ripple (P2)",
+            "prompt": "One image, 1024x1024, a 2 by 2 grid of four separate additive-blend visual effect textures on a pure black background, each centered in its quarter with space around it: top-left a bright weapon muzzle flash, a star-shaped burst of white-hot light fading to orange at the tips; top-right a burst of bright metallic sparks flying outward from a point; bottom-left a thin glowing circular shockwave ring, bright pale blue at the edge fading inward, mostly empty center; bottom-right a translucent hexagonal energy shield ripple pattern in cyan spreading from an impact point. Soft glows, no hard black outlines. Original design for an original sci-fi game, not based on any existing game or franchise. Absolutely no text, letters, numbers, labels, symbols or watermarks anywhere.",
+            "status": "pending (queued 2026-09-29, next_level_plan Section 5)"
+        },
+        {
+            "id": "sky_backdrops",
+            "filename": "SkyWarm.png, SkyCool.png, SkyDusty.png, SkyDark.png",
+            "size": "2048x1024 each (generate 4 separate images)",
+            "destination": "assets/skies/",
+            "style_reference": "none",
+            "used_for": "Per-system sky panoramas by star type (P5)",
+            "prompt": "A seamless 2:1 equirectangular space panorama for a game skybox: deep space full of fine stars of varied brightness, with {VARIANT}. Photographic, subtle, not cartoony; the stars must stay sharp and small; the left and right edges must tile seamlessly; no planets, no ships, no stations. Run four times with {VARIANT} = (1) a large soft warm nebula in amber and rose with dark dust lanes; (2) a cool blue and teal nebula veil across one third of the sky; (3) a thick brown-grey dust cloud band with a few bright young stars glowing through it; (4) almost empty dark space with a faint distant galaxy smudge and sparse stars. Original design for an original sci-fi game, not based on any existing game or franchise. Absolutely no text, letters, numbers, labels, symbols or watermarks anywhere.",
+            "status": "pending (queued 2026-09-29, next_level_plan Section 5)"
+        },
+        {
+            "id": "mission_card_accents",
+            "filename": "CardAccents.png",
+            "size": "1536x512",
+            "destination": "assets/ui/CardAccents.png",
+            "style_reference": "assets/ui/drone_hud_frame.png (same UI family)",
+            "used_for": "Public board mission card backgrounds by variant (P1)",
+            "prompt": "One image, 1536x512, three equal side-by-side 512x512 panels of subtle dark UI background textures for sci-fi mission cards, each mostly near-black so text stays readable on top: left panel a faint red hazard-stripe glow along the bottom edge with fine grime; middle panel a faint warm amber glow with soft scuffed metal texture; right panel a faint cool blue glow with a soft brushed-metal texture. Very low contrast, elegant, no shapes that could be mistaken for symbols. Original design for an original sci-fi game, not based on any existing game or franchise. Absolutely no text, letters, numbers, labels, symbols or watermarks anywhere.",
+            "status": "pending (queued 2026-09-29, next_level_plan Section 5)"
         }
     ],
     "note_status": "Only generate entries without a 'status' starting with 'done'."
