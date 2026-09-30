@@ -239,3 +239,6 @@ Claude adds new items here as work lands (newest section at the bottom).
       voice lines" and "story banks" should pass in a few seconds, not wait on
       the whole voice queue. Her and Kaelen's lines should sound like the
       approved recordings (pre-baked clips are used instead of re-synthesized).
+- [ ] **Exit tumble.** At the end of the opening, as the white-out clears, the
+      ship is thrown out tumbling (two turns of roll) and settles as the new
+      system comes into view.

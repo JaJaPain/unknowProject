@@ -698,6 +698,13 @@ func _run() -> void:
 	if _finished:
 		return
 	_cleanup_tunnel()
+	# Thrown out of the gate tumbling: whole turns on every axis, easing out as
+	# the new system comes into view (Abe liked the old tumble's ending). Only
+	# now, with the tunnel gone, can the chase camera swing freely.
+	if p != null and is_instance_valid(p):
+		var tumble := create_tween().set_ignore_time_scale(true)
+		tumble.tween_property(p, "rotation", p.rotation + Vector3(TAU, TAU, TAU * 2.0), REVEAL_DURATION + 1.8) \
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	_stop_intro_audio()
 	_apply_consequences()
 	var warp_drop_player := _play_intro_one_shot(SFX_WARP_DROP, 4.0)
