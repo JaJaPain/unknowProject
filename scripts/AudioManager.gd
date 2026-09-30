@@ -304,6 +304,37 @@ func _state_streams(state: String) -> Array:
 	return found
 
 
+var _tension_check_timer := 0.0
+
+
+func _process(delta: float) -> void:
+	if GlobalState != null and not GlobalState.paused:
+		_update_tension(delta)
+
+
+## Tension: a live ship has locked onto the player outside turn combat.
+## Checked once a second; combat and docking set their own states.
+func _update_tension(delta: float) -> void:
+	_tension_check_timer -= delta
+	if _tension_check_timer > 0.0:
+		return
+	_tension_check_timer = 1.0
+	if music_state not in ["explore", "tension"]:
+		return
+	var player = GlobalState.player if GlobalState else null
+	if player == null or not is_instance_valid(player) or player.get("is_docked") == true:
+		return
+	var threatened := false
+	for entity in GlobalState.active_system_entities:
+		if entity is Node and is_instance_valid(entity) and entity != player 				and entity.get("destroyed") != true and entity.get("target") == player:
+			threatened = true
+			break
+	if threatened and music_state == "explore":
+		set_music_state("tension")
+	elif not threatened and music_state == "tension":
+		set_music_state("explore")
+
+
 ## Game events that move the music (autoloads are all up by the next frame).
 func _connect_music_events() -> void:
 	var combat = get_node_or_null("/root/CombatManager")
