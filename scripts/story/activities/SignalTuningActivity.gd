@@ -23,9 +23,11 @@ const AMBIENT_OFFER_CHANCE := 0.5
 const TUNE_KEY := KEY_T
 
 const OFFER_LINES: Array[String] = [
-	"I'm catching something faint under the static. Want to tune in?",
-	"There's a voice down in the noise floor. Someone isn't meant to be heard. Shall we listen?",
-	"Faint transmission, close by and very quiet. I can hand you the receiver if you're curious.",
+	# Statements that point at the receiver prompt, never an open question the
+	# player can't see how to answer (Abe, 2026-09-30).
+	"Something faint under the static, close by. I've routed it to your receiver. Tune it and we might get words.",
+	"There's a voice down in the noise floor. Someone isn't meant to be heard. It's on your receiver now.",
+	"Faint transmission, very quiet. I've patched it through to your receiver. It's yours to tune.",
 ]
 const RESULT_LINES := {
 	"thread_clean": ["Got all of it. I've put it on the loose ends board.", "Clean copy. That one's going on the board."],
@@ -45,6 +47,21 @@ var _offer_at := 0.0
 var _decided := false
 var _offered: Dictionary = {}
 var _panel: Node = null
+## On-screen prompt while an offer is open: the only other hint was one comms
+## line that scrolled away, so players never knew the receiver existed.
+var _prompt_layer: CanvasLayer = null
+var _prompt: PanelContainer = null
+var _prompt_t := 0.0
+## The first offer ever gets her full explanation (saved in story_state).
+const TAUGHT_FLAG := "signal_tuning_taught"
+const FIRST_OFFER_AFTER_S := 30.0
+
+
+func _taught() -> bool:
+	var story := get_node_or_null("/root/StoryManager")
+	return story != null and bool(story.story_state.get(TAUGHT_FLAG, false))
+
+const TEACH_LINE := "First time on the receiver, so here's how it works. Press T and I'll hand you the dials. Frequency finds the voice, phase cleans it up, and if you hold it clear it locks. Recordings sell, and now and then one leads somewhere."
 
 
 func _process(delta: float) -> void:
@@ -55,9 +72,12 @@ func _process(delta: float) -> void:
 	if system_id != _system_id:
 		_system_id = system_id
 		_flight_s = 0.0
-		_offer_at = randf_range(OFFER_AFTER_MIN_S, OFFER_AFTER_MAX_S)
+		# Until she has taught it once, the offer is certain and comes early,
+		# so a new player meets the receiver instead of maybe never.
+		_offer_at = FIRST_OFFER_AFTER_S if not _taught() else randf_range(OFFER_AFTER_MIN_S, OFFER_AFTER_MAX_S)
 		_decided = false
 		_offered = {}
+	_update_prompt(delta)
 	if _panel != null:
 		if not _can_listen():
 			_panel.abort()
@@ -101,7 +121,7 @@ func _try_offer() -> void:
 	var item: Dictionary = director.faint_transmission(world, randi())
 	if item.is_empty():
 		return
-	if str(item.get("kind", "")) == "ambient" and randf() > AMBIENT_OFFER_CHANCE:
+	if _taught() and str(item.get("kind", "")) == "ambient" and randf() > AMBIENT_OFFER_CHANCE:
 		return
 	offer(item)
 
@@ -109,10 +129,59 @@ func _try_offer() -> void:
 ## Make `item` available to tune into, and have her mention it.
 func offer(item: Dictionary) -> void:
 	_offered = item
-	_nova(OFFER_LINES[randi() % OFFER_LINES.size()])
+	var story := get_node_or_null("/root/StoryManager")
+	var taught := story != null and bool(story.story_state.get(TAUGHT_FLAG, false))
+	_nova(OFFER_LINES[randi() % OFFER_LINES.size()] + ("" if taught else " " + TEACH_LINE))
+	if story != null and not taught:
+		story.story_state[TAUGHT_FLAG] = true
 	var gs := get_node_or_null("/root/GlobalState")
 	if gs != null:
-		gs.emit_chatter("RECEIVER", "Press T to tune in.", Color(0.5, 0.95, 0.85))
+		gs.emit_chatter("RECEIVER", "Faint transmission. Press T to tune in.", Color(0.5, 0.95, 0.85))
+
+
+## "[T] TUNE RECEIVER" at the bottom of the screen, gently pulsing, for as long
+## as the offer is open and the player is free to take it.
+func _update_prompt(delta: float) -> void:
+	var show := not _offered.is_empty() and _panel == null and _can_listen()
+	if show and _prompt == null:
+		_build_prompt()
+	if _prompt == null:
+		return
+	_prompt.visible = show
+	if show:
+		_prompt_t += delta
+		_prompt.modulate.a = 0.75 + 0.25 * sin(_prompt_t * 3.0)
+
+
+func _build_prompt() -> void:
+	_prompt_layer = CanvasLayer.new()
+	_prompt_layer.layer = 5
+	add_child(_prompt_layer)
+	_prompt = PanelContainer.new()
+	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_prompt.anchor_left = 0.5
+	_prompt.anchor_right = 0.5
+	_prompt.anchor_top = 1.0
+	_prompt.anchor_bottom = 1.0
+	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_prompt.offset_top = -150.0
+	_prompt.offset_bottom = -110.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.08, 0.1, 0.85)
+	style.border_color = Color(0.5, 0.95, 0.85, 0.9)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 18.0
+	style.content_margin_right = 18.0
+	style.content_margin_top = 8.0
+	style.content_margin_bottom = 8.0
+	_prompt.add_theme_stylebox_override("panel", style)
+	var label := Label.new()
+	label.text = "[T]  TUNE RECEIVER   ·   faint transmission nearby"
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.92))
+	_prompt.add_child(label)
+	_prompt_layer.add_child(_prompt)
 
 
 func open_tuning() -> void:

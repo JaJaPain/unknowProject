@@ -104,7 +104,7 @@
 			{
 				"shape": "question",
 				"facts": "A pursuing ship lost track of the Captain's vessel during a manoeuvre.",
-				"line": "They've lost us. Want to know how close that was, or would that just give you ideas?"
+				"line": "They've lost us. I won't tell you how close that was. You'd only take it as a challenge."
 			},
 			{
 				"shape": "address_first",
@@ -114,7 +114,7 @@
 			{
 				"shape": "single_sentence",
 				"facts": "A near miss occurred. No damage was taken.",
-				"line": "Closer than I'll admit out loud. Check my scoring later, would you? The paint. I meant the paint."
+				"line": "Closer than I'll admit out loud. I'm going to be sulking about my scoring for a week. The paint. I meant the paint."
 			},
 			{
 				"shape": "question",
@@ -144,7 +144,7 @@
 			{
 				"shape": "question",
 				"facts": "A coolant line is weeping somewhere inaccessible to the ship's automatics.",
-				"line": "I've got a weeping line somewhere behind the main housing. Who do we know with narrow arms?"
+				"line": "I've got a weeping line somewhere behind the main housing. Nobody we know has arms narrow enough to reach it. I'll live."
 			},
 			{
 				"shape": "fact_first",
