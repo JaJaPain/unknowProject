@@ -185,3 +185,6 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Scorch marks.** In a fight, unshielded hits leave dark scorch marks
       on the hull (yours and the enemy's) where they land. They clear when
       the fight ends. Note: do they sit on the hull, or float/smear?
+- [ ] **Enemies crack.** Get an enemy below about a third of its hull: after
+      the "Target hull failing" message, the enemy says a desperate line
+      (e.g. "You got lucky. Say it.") in its taunt voice.

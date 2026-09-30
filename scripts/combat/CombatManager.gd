@@ -476,6 +476,37 @@ func _play_npc_action_taunt(key: String) -> void:
 	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), line, Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
 
+## The enemy cracks when its hull fails (below 30 percent): one line per
+## fight, in its taunt voice (the fight's escalation arc).
+const DESPERATE_LINES := [
+	"You got lucky. Say it. Say you got lucky.",
+	"Hull's breached. Doesn't matter. I've flown worse home.",
+	"Fine! You want the ship? You'll have to take it in pieces!",
+	"Everything's red. Everything. That's never good.",
+	"I'm not done. I'm very nearly done, but I'm not done.",
+	"Keep coming. I've got one good gun left and it hates you.",
+	"Mayday to anyone listening. Anyone. Please.",
+	"Walk away and I forget your face. Last offer.",
+	"You think this scares me? My ship's scared. I'm fine.",
+	"Venting atmosphere. Venting pride. Still shooting.",
+	"That was my good engine. You owe me an engine.",
+	"All right, all right! What do you want? Credits? Cargo?",
+	"I should have taken the day off. I really should have.",
+	"If I'm going out, I'm taking your paint job with me.",
+	"Reactor's screaming. So am I. We're in agreement.",
+	"One more pass. Just one. Then we'll see who's laughing.",
+]
+
+
+func _play_desperate_taunt() -> void:
+	if not _combat_voice_on() or not is_instance_valid(enemy_node):
+		return
+	var line: String = DESPERATE_LINES[randi() % DESPERATE_LINES.size()]
+	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
+	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), line, Color(1.0, 0.4, 0.3))
+	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
+
+
 func _play_npc_flee_taunt() -> void:
 	if not _combat_voice_on() or not is_instance_valid(enemy_node):
 		return
@@ -1730,6 +1761,7 @@ func _after_npc_turn() -> void:
 			_enemy_low_alarmed = true
 			_sfx("low_health_alarm", (enemy_node as Node3D).global_position, -8.0)
 			GlobalState.emit_chatter("SYSTEM", "Target hull failing — press the attack.", Color(0.5, 1.0, 0.5))
+			_play_desperate_taunt()
 
 	_check_boss_phase_transition()
 	_begin_planning()
