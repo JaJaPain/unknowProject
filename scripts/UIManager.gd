@@ -493,6 +493,10 @@ var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the com
 var undock_btn: Button = null
 var selected_row_style: StyleBoxFlat
 const TypewriterLabelType := preload("res://scripts/ui/TypewriterLabel.gd")
+const StoreScreenScript := preload("res://scripts/ui/StoreScreen.gd")
+## The store on the inventory layout (StoreScreen); false brings back the old list.
+const USE_STORE_SCREEN := true
+var store_screen: Control
 const HudStyle := preload("res://scripts/ui/HudStyle.gd")
 var _overview_divider: Control = null
 
@@ -1948,6 +1952,7 @@ func _create_store_panel() -> void:
 	store_panel.anchor_top = 0.16
 	store_panel.anchor_bottom = 0.84
 	store_panel.visible = false
+	if store_screen != null: store_screen.visible = false
 
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
@@ -2012,6 +2017,16 @@ func _create_inventory_panel() -> void:
 	add_child(inventory_panel)
 	inventory_panel.use_requested.connect(_on_inventory_use_pressed)
 	inventory_panel.back_requested.connect(_on_inventory_back_pressed)
+	store_screen = StoreScreenScript.new()
+	store_screen.anchor_left = 0.12
+	store_screen.anchor_right = 0.88
+	store_screen.anchor_top = 0.08
+	store_screen.anchor_bottom = 0.92
+	store_screen.visible = false
+	add_child(store_screen)
+	store_screen.buy_requested.connect(_on_store_buy)
+	store_screen.sell_requested.connect(_on_store_sell)
+	store_screen.back_requested.connect(_on_store_back_pressed)
 
 
 func _create_public_board_panel() -> void:
@@ -4427,6 +4442,7 @@ func toggle_dock_menu(
 			leverage_panel.visible = false
 		if store_panel:
 			store_panel.visible = false
+			if store_screen != null: store_screen.visible = false
 		if inventory_panel:
 			inventory_panel.visible = false
 		if GlobalState.player:
@@ -7907,6 +7923,7 @@ func _on_public_board_pressed() -> void:
 	agent_panel.visible = false
 	if store_panel:
 		store_panel.visible = false
+		if store_screen != null: store_screen.visible = false
 	if inventory_panel:
 		inventory_panel.visible = false
 	public_board_panel.visible = true
@@ -8052,11 +8069,17 @@ func _on_store_pressed() -> void:
 	_store_current_id = stores[0].store_id
 	_render_store_items()
 	dock_panel.visible = false
-	store_panel.visible = true
+	if USE_STORE_SCREEN and store_screen != null:
+		store_screen.visible = true
+		store_screen.refresh()
+	else:
+		store_panel.visible = true
 
 
 func _on_store_back_pressed() -> void:
 	store_panel.visible = false
+	if store_screen != null:
+		store_screen.visible = false
 	dock_panel.visible = true
 	_render_dock_submenu()
 
@@ -8078,6 +8101,7 @@ func _on_inventory_pressed() -> void:
 		public_board_panel.visible = false
 	if store_panel:
 		store_panel.visible = false
+		if store_screen != null: store_screen.visible = false
 	_render_inventory_items()
 	dock_panel.visible = false
 	inventory_panel.visible = true
@@ -8162,6 +8186,7 @@ func _render_store_items() -> void:
 	if store == null:
 		return
 	var rep_tier := _get_reputation_tier()
+	var screen_rows: Array = []
 	for item_id in store.get_catalog_ids():
 		var item_def = store.get_item_def(item_id)
 		if item_def == null:
@@ -8192,6 +8217,8 @@ func _render_store_items() -> void:
 				sell_origin,
 				_trade_origin_id()
 			)
+		screen_rows.append({"item_id": item_id, "price": price, "stock": stock, "owned": owned,
+			"can_sell": can_sell, "sell_price": sell_price})
 		var row := _build_store_row(
 			item_id,
 			item_def,
@@ -8202,6 +8229,10 @@ func _render_store_items() -> void:
 			sell_price
 		)
 		store_list.add_child(row)
+	if store_screen != null:
+		store_screen.rows = screen_rows
+		if store_screen.visible:
+			store_screen.refresh()
 
 
 func _get_reputation_tier() -> String:
@@ -9611,6 +9642,7 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 		public_board_panel.visible = false
 	if store_panel:
 		store_panel.visible = false
+		if store_screen != null: store_screen.visible = false
 	if inventory_panel:
 		inventory_panel.visible = false
 	current_station = null
@@ -12101,6 +12133,7 @@ func _on_talk_to_agent_pressed():
 		inventory_panel.visible = false
 	if store_panel:
 		store_panel.visible = false
+		if store_screen != null: store_screen.visible = false
 	if public_board_panel:
 		public_board_panel.visible = false
 	agent_panel.visible = true

@@ -7725,7 +7725,7 @@ func _run_dock_snapshot() -> void:
 		["maintenance", "_on_maintenance_bay_pressed"], ["upgrades", "_on_ship_upgrades_pressed"]]
 	for screen in screens:
 		# Back to the services menu, as the back buttons do.
-		for panel_name in ["agent_panel", "public_board_panel", "store_panel", "ship_upgrades_panel", "inventory_panel"]:
+		for panel_name in ["agent_panel", "public_board_panel", "store_panel", "store_screen", "ship_upgrades_panel", "inventory_panel"]:
 			var panel = ui.get(panel_name)
 			if panel != null and is_instance_valid(panel):
 				panel.visible = false

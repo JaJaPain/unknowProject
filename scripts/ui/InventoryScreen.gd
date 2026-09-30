@@ -90,6 +90,11 @@ func refresh() -> void:
 	_fill_hold(gs)
 
 
+## Subclasses (StoreScreen) retitle the same layout.
+func _screen_title() -> String:
+	return "SHIP INVENTORY"
+
+
 func set_tab(tab_id: String) -> void:
 	_tab = tab_id
 	refresh()
@@ -116,7 +121,7 @@ func _build() -> void:
 	titles.add_theme_constant_override("separation", 0)
 	titles.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(titles)
-	var title := _label("SHIP INVENTORY", 24, ACCENT)
+	var title := _label(_screen_title(), 24, ACCENT)
 	titles.add_child(title)
 	_ore_bank_label = _label("", 13, DIM)
 	titles.add_child(_ore_bank_label)
