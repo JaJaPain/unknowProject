@@ -113,6 +113,9 @@ var connection_attempts: int = 0
 
 func set_campaign_bible_priority_active(active: bool) -> void:
 	campaign_bible_priority_active = active
+	# Voice pre-caching held back for the bible picks up again.
+	if not active:
+		TTSInterface.call_deferred("_drain_cache_queue")
 
 
 func is_campaign_bible_priority_active() -> bool:

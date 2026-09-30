@@ -662,6 +662,12 @@ func _record_tts_cache_failure(
 
 func _drain_cache_queue() -> void:
 	active_cache_requests = maxi(active_cache_requests, 0)
+	# While the campaign bible is being written, voice pre-caching waits: both
+	# share the GPU, and ~200 cache jobs made the bible time out twice, holding a
+	# new-campaign load at 92 percent (Abe, 2026-09-30). LLMInterface restarts
+	# the drain when the bible is done.
+	if LLMInterface.is_campaign_bible_priority_active():
+		return
 	while tts_connected \
 			and not is_requesting \
 			and active_cache_requests < MAX_BACKGROUND_CACHE_REQUESTS \

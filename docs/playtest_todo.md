@@ -212,3 +212,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       what it does.
 - [ ] **Feel check.** Does a turn of Boost + Fire, or Micro-Warp + Fire, feel
       like it matters now? Say which one still falls flat.
+
+## J. New-campaign load (added 2026-09-30)
+
+- [ ] **No stall at 92%.** Begin a new campaign with the voice server and story
+      model both running. The load should pass 92% without a long hold. Voice
+      pre-caching now waits until the campaign outline is written, then runs.
