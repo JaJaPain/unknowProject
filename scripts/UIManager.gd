@@ -2590,6 +2590,7 @@ func _create_pause_menu():
 	columns.add_child(actions_card)
 	var actions := actions_card.get_child(0) as VBoxContainer
 	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
+	pause_wiki_button = _add_pause_action(actions, "WIKI", open_wiki)
 	_add_pause_action(actions, "COMBAT HELP", func(): _show_combat_tutorial_popup(true))
 	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
 	pause_new_campaign_button = _add_pause_action(
@@ -2719,6 +2720,28 @@ func _make_pause_card(title_text: String) -> PanelContainer:
 	content.add_child(title)
 	content.add_child(HudStyle.rule())
 	return card
+
+
+## Pause menu > WIKI (scripts/ui/WikiScreen.gd, content in
+## data/content/wiki_entries.json). The button shows how many entries are new.
+const WikiType := preload("res://scripts/ui/Wiki.gd")
+var pause_wiki_button: Button = null
+var _wiki_screen: Node = null
+
+
+func open_wiki() -> void:
+	if _wiki_screen != null and is_instance_valid(_wiki_screen):
+		return
+	_wiki_screen = load("res://scripts/ui/WikiScreen.gd").new()
+	_wiki_screen.closed.connect(refresh_wiki_button)
+	add_child(_wiki_screen)
+
+
+func refresh_wiki_button() -> void:
+	if pause_wiki_button == null or not is_instance_valid(pause_wiki_button):
+		return
+	var unread := WikiType.unread_count()
+	pause_wiki_button.text = "WIKI  (%d new)" % unread if unread > 0 else "WIKI"
 
 
 func _add_pause_action(
@@ -3662,6 +3685,10 @@ func _unhandled_input(event: InputEvent):
 	if event.is_action_pressed("pause_game"):
 		if loading_panel and is_instance_valid(loading_panel):
 			return
+		if _wiki_screen != null and is_instance_valid(_wiki_screen):
+			_wiki_screen.call("_close")
+			get_viewport().set_input_as_handled()
+			return
 		if branch_map and branch_map.visible:
 			branch_map._close()
 			return
@@ -4295,6 +4322,7 @@ func _on_pause_changed(is_paused: bool):
 			pause_panel.visible = is_paused
 			if is_paused:
 				pause_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+				refresh_wiki_button()
 				move_child(pause_panel, -1)
 	if not is_paused and campaign_panel:
 		campaign_panel.visible = false

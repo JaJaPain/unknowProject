@@ -177,6 +177,7 @@ func get_arrival_rumor() -> Dictionary:
 	# Where to look: an area, never the spot.
 	if not zone.is_empty():
 		line += " Somewhere %s." % zone
+	load("res://scripts/ui/Wiki.gd").unlock("anomalies")
 	return {"sender": sender, "line": line}
 
 

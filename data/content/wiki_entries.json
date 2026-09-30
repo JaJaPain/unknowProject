@@ -1,0 +1,202 @@
+{
+	"_comment": "In-game wiki (pause menu > WIKI). 'unlocked' entries are there from the start; the rest unlock through scripts/ui/Wiki.gd unlock(id). Body is BBCode. Controls are written as {tokens} from 'controls', never as literal keys: each has a keyboard label, a controller label (fill in when controller support lands; empty = not mapped yet) and, where one exists, the InputMap action whose live binding wins over the keyboard label.",
+	"categories": [
+		"Flight",
+		"Ship",
+		"Stations & Trade",
+		"Combat",
+		"Exploration",
+		"Story"
+	],
+	"controls": {
+		"select": {
+			"keyboard": "Left click",
+			"controller": ""
+		},
+		"move": {
+			"keyboard": "Double left click",
+			"controller": ""
+		},
+		"camera": {
+			"keyboard": "Hold right click and drag",
+			"controller": ""
+		},
+		"zoom": {
+			"keyboard": "Mouse wheel",
+			"controller": ""
+		},
+		"approach": {
+			"action": "override_approach",
+			"keyboard": "Q",
+			"controller": ""
+		},
+		"orbit": {
+			"action": "override_orbit",
+			"keyboard": "W",
+			"controller": ""
+		},
+		"action": {
+			"action": "override_action",
+			"keyboard": "E",
+			"controller": ""
+		},
+		"stop": {
+			"action": "hard_stop",
+			"keyboard": "Space",
+			"controller": ""
+		},
+		"pause": {
+			"action": "pause_game",
+			"keyboard": "Esc",
+			"controller": ""
+		},
+		"inventory": {
+			"keyboard": "I",
+			"controller": ""
+		},
+		"star_map": {
+			"keyboard": "M",
+			"controller": ""
+		},
+		"tune": {
+			"keyboard": "T",
+			"controller": ""
+		},
+		"drone": {
+			"keyboard": "G",
+			"controller": ""
+		},
+		"drone_fly": {
+			"keyboard": "W A S D (or the arrow keys)",
+			"controller": ""
+		}
+	},
+	"entries": [
+		{
+			"id": "movement",
+			"category": "Flight",
+			"title": "Flying the ship",
+			"unlocked": true,
+			"body": "[b]{move}[/b] in space to fly to that point.\n[b]{select}[/b] selects a ship, station, rock or gate as your target.\n[b]{camera}[/b] to turn the camera. [b]{zoom}[/b] zooms.\n[b]{stop}[/b] brings the ship to a full stop.\n\nWith a target selected:\n[b]{approach}[/b]  Approach: fly to it and hold there.\n[b]{orbit}[/b]  Orbit: circle it at a safe distance.\n[b]{action}[/b]  Action: whatever fits the target. Mine a rock, dock at a station, jump through a gate, attack a hostile."
+		},
+		{
+			"id": "overview",
+			"category": "Flight",
+			"title": "Overview and targets",
+			"unlocked": true,
+			"body": "The [b]Overview[/b] panel lists everything nearby, closest first. Click a row to target it, the same as clicking it in space.\n\nThe icons at the top of the Overview filter it (ships, stations and gates, everything). A targeted ship shows its hull and shields, and its tag tells you where you stand with it: hostile, neutral or friendly."
+		},
+		{
+			"id": "boost",
+			"category": "Flight",
+			"title": "Boost",
+			"unlocked": true,
+			"body": "The [b]Boost[/b] button on the target panel fires a short burst of speed. It burns fuel and needs a moment to recharge.\n\nIn a fight, Boost becomes an evasive burn instead (see [b]Evasion[/b] under Combat)."
+		},
+		{
+			"id": "docking",
+			"category": "Stations & Trade",
+			"title": "Docking",
+			"unlocked": true,
+			"body": "Target a station and press [b]{action}[/b]. Once you are close, the station's tractor beam takes over and brings you in the last few metres.\n\nUndock from the station menu to go back to space."
+		},
+		{
+			"id": "station_services",
+			"category": "Stations & Trade",
+			"title": "Station services",
+			"unlocked": true,
+			"body": "Docked, the station menu gives you its services. Not every station has every one.\n\n[b]Repairs[/b]  Fix hull damage for credits.\n[b]Store[/b]  Buy gear, drones and supplies. What a station stocks depends on who runs it.\n[b]Market[/b]  Sell ore and cargo.\n[b]Job board[/b]  Pick up contracts.\n[b]Ship upgrades[/b]  Improve your hull, weapons and systems.\n[b]Lounge[/b]  Talk to the people who work there."
+		},
+		{
+			"id": "inventory",
+			"category": "Ship",
+			"title": "Inventory and cargo",
+			"unlocked": true,
+			"body": "Press [b]{inventory}[/b] (or the INVENTORY button) to see what you are carrying. Your cargo hold has a limit: when it is full, mining stops and you will need to sell or store something.\n\nThe top-left panel shows credits (SC), cargo, fuel, hull and your standing with each faction."
+		},
+		{
+			"id": "mining",
+			"category": "Ship",
+			"title": "Mining",
+			"unlocked": true,
+			"body": "Target an asteroid and press [b]{action}[/b]. The ship flies in and its mining laser starts cutting; ore goes straight into your hold.\n\nDifferent belts hold different ores, and some are worth far more than others. The star map shows which ores a system's belts carry. Sell ore at a station market."
+		},
+		{
+			"id": "fuel",
+			"category": "Ship",
+			"title": "Fuel",
+			"unlocked": true,
+			"body": "Jumps and boosting burn fuel. Keep an eye on the FUEL bar.\n\nDocked, use [b]Buy Fuel[/b] in the station menu to top up. Some stations post fuel runs on their job boards. Running dry far from a station is a bad day."
+		},
+		{
+			"id": "hull",
+			"category": "Ship",
+			"title": "Hull and repairs",
+			"unlocked": true,
+			"body": "The HULL bar is your ship's health. At zero the ship is lost.\n\nDamage stays until you pay for repairs at a station. N.O.V.A. will remind you if you try to leave a station with a damaged hull."
+		},
+		{
+			"id": "contracts",
+			"category": "Stations & Trade",
+			"title": "Contracts",
+			"unlocked": true,
+			"body": "Job boards post contracts: deliveries, fetch jobs, bounties and more. Accepted contracts show at the top right with their current step.\n\nWhen a contract says [i]payment pending[/i], dock where it tells you to collect."
+		},
+		{
+			"id": "nova",
+			"category": "Story",
+			"title": "N.O.V.A.",
+			"unlocked": true,
+			"body": "Your ship's AI. She flies with you, warns you about threats, comments on what happens, and helps with anything technical.\n\nWhen she talks, her portrait appears over the comms panel. Everything she and everyone else says is also written in the comms feed."
+		},
+		{
+			"id": "combat_basics",
+			"category": "Combat",
+			"title": "Combat basics",
+			"unlocked": false,
+			"body": "Fights are turn based. Each turn you get [b]action points (AP)[/b] and plan your moves on the combat wheel, then both sides act.\n\n[b]Fire[/b]  Shoot your guns. Shields absorb hits until they break, then the hull takes it.\n[b]Drones[/b]  Launch a drone that attacks on its own.\n[b]Shield Reroute[/b]  Divert power to shields: the next hit is softened.\n[b]Boost[/b] and [b]Micro-Warp[/b]  Your ways to avoid getting hit (see Evasion).\n[b]Repair Kit[/b]  Patch some hull mid-fight, if you carry one.\n[b]Flee[/b]  Try to break off and escape.\n\nHover a wedge on the wheel to see what it does. You can open this guide in a fight with COMBAT HELP in the pause menu."
+		},
+		{
+			"id": "evasion",
+			"category": "Combat",
+			"title": "Evasion",
+			"unlocked": false,
+			"body": "[b]Boost[/b] in a fight is an evasive burn. Your ship swerves off the enemy's firing line and banks a dodge (up to 2). Each enemy shot has a 65 percent chance to miss while a dodge is banked, and the dodge is used either way.\n\n[b]Micro-Warp[/b] arcs you round to the enemy's flank and breaks its lock: its next shot misses for certain, and flanking hits harder. It needs 2 turns to recharge.\n\nA shot that misses flies wide and shows MISS."
+		},
+		{
+			"id": "jumping",
+			"category": "Exploration",
+			"title": "Jump gates and the star map",
+			"unlocked": false,
+			"body": "Target a jump gate and press [b]{action}[/b] to jump to the system it leads to. Jumping costs fuel.\n\nPress [b]{star_map}[/b] for the star map: systems you know, the routes between them, who controls each, and which ores their belts carry."
+		},
+		{
+			"id": "receiver",
+			"category": "Exploration",
+			"title": "Receiver: faint transmissions",
+			"unlocked": false,
+			"body": "Now and then, in calm flight, N.O.V.A. picks up a faint transmission and routes it to your receiver. A [b][{tune}] TUNE RECEIVER[/b] prompt shows at the bottom of the screen while it is there.\n\nPress [b]{tune}[/b] to take the dials. [b]Frequency[/b] finds the voice; [b]Phase[/b] cleans it up. Hold the signal clear and it locks.\n\nA clean copy sells to a broker, and some recordings lead to a story thread (on the loose ends board). Stuck? [b]Let N.O.V.A. try[/b] gets you part of it, never a clean copy."
+		},
+		{
+			"id": "drone_maze",
+			"category": "Exploration",
+			"title": "Survey drones",
+			"unlocked": false,
+			"body": "Some targets, like big red rocks and wrecks, can be flown into with a survey drone. When one is in range the DRONE BAY tells you: press [b]{drone}[/b] to launch.\n\nFly the drone with [b]{drone_fly}[/b]. Collect what you find and bring the drone back out. Lose the drone and you lose its load. Drones are used up, so buy more at stores."
+		},
+		{
+			"id": "anomalies",
+			"category": "Exploration",
+			"title": "Anomalies and rumours",
+			"unlocked": false,
+			"body": "Arriving in a system, you may hear a rumour of something strange out there. Rumours name an area (near a planet, along a belt, off the gate), never an exact spot.\n\nFly out to that area. Anomalies only show up on your sensors when you are close."
+		},
+		{
+			"id": "investigations",
+			"category": "Story",
+			"title": "Investigations",
+			"unlocked": false,
+			"body": "Some jobs are investigations. N.O.V.A. reads what you find and gives you choices: file what you have for part of the pay, or push on to the next site for the full picture. Each choice comes up as a button."
+		}
+	]
+}

@@ -598,6 +598,9 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 		return
 	if state != State.IDLE:
 		return
+	var wiki = load("res://scripts/ui/Wiki.gd")
+	wiki.unlock("combat_basics")
+	wiki.unlock("evasion")
 	if not player_initiated and is_training_combat_active() \
 			and not bool(enemy.get_meta("intro_tutorial_target", false)):
 		if enemy.has_method("_redirect_from_combat_queue"):

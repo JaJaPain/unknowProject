@@ -49,6 +49,7 @@ func setup(owner_ui: Control, quest_manager: Node) -> void:
 	hide()
 
 func open_mission(id: String) -> void:
+	load("res://scripts/ui/Wiki.gd").unlock("investigations")
 	if id != mission_id:
 		_nova_question = ""
 	mission_id = id

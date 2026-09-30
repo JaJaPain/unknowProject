@@ -82,6 +82,7 @@ func _process(_delta: float) -> void:
 			var gs := get_node_or_null("/root/GlobalState")
 			if gs != null:
 				gs.emit_chatter("DRONE BAY", _hint_for(target), Color(0.5, 0.95, 0.85))
+			load("res://scripts/ui/Wiki.gd").unlock("drone_maze")
 
 
 func _hint_for(target: Node) -> String:

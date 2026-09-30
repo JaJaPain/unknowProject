@@ -319,6 +319,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_first_session_smoke_test")
 	elif "--traffic-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_smoke_test")
+	elif "--wiki-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_wiki_snapshot")
 	elif "--intro-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_intro_snapshot")
 	elif "--evasion-smoke-test" in OS.get_cmdline_user_args():
@@ -470,6 +472,7 @@ func request_gate_jump(gate: Node3D) -> bool:
 	GlobalState.spend_fuel(fuel_cost)
 	# The star map unlocks after the first jump (saved with the story state).
 	StoryManager.story_state["first_jump_done"] = true
+	load("res://scripts/ui/Wiki.gd").unlock("jumping")
 	# N.O.V.A. speaks up when this jump leaves too little for another.
 	if GlobalState.fuel < GlobalState.FuelScript.JUMP_MAX:
 		GlobalState.emit_chatter("N.O.V.A.", "Jump fuel spent. %d left in the tank; that may not get us through another gate. Water ice refines into fuel at any station." % int(GlobalState.fuel), Color(1.0, 0.75, 0.35))
@@ -10567,6 +10570,32 @@ func _run_first_session_smoke_test() -> void:
 		if not str(plan.get("status", "")) in ui.CHAPTER_PLAN_DONE_STATUSES:
 			_fail_first_session_smoke_test("The loading screen would hang on chapter plan status '%s'." % str(plan.get("status", "")))
 			return
+	# Wiki (pause menu): every entry's controls resolve, basics are there from
+	# the start, and unlocking marks an entry new until it is read.
+	var wiki = load("res://scripts/ui/Wiki.gd")
+	for e in wiki.all_entries():
+		if "{" in wiki.body_text(e):
+			_fail_first_session_smoke_test("Wiki entry '%s' has an unresolved control token." % str(e.get("id", "")))
+			return
+	if not wiki.is_unlocked("movement") or not wiki.is_unlocked("mining"):
+		_fail_first_session_smoke_test("Wiki basics are not unlocked from the start.")
+		return
+	StoryManager.story_state.erase(wiki.UNLOCKED_KEY)
+	StoryManager.story_state.erase(wiki.UNREAD_KEY)
+	if wiki.is_unlocked("receiver") or not wiki.unlock("receiver") or not wiki.is_unread("receiver"):
+		_fail_first_session_smoke_test("Wiki unlock did not add the receiver entry as new.")
+		return
+	ui.open_wiki()
+	await get_tree().process_frame
+	if ui._wiki_screen == null or not is_instance_valid(ui._wiki_screen):
+		_fail_first_session_smoke_test("The pause menu's WIKI did not open the wiki.")
+		return
+	# It opens on the unread entry, which reading clears.
+	if wiki.is_unread("receiver"):
+		_fail_first_session_smoke_test("Opening the wiki did not show (and clear) the new entry.")
+		return
+	ui._wiki_screen.call("_close")
+	await get_tree().process_frame
 	# A new player: no jump yet (other smoke tests may have saved one).
 	StoryManager.story_state["first_jump_done"] = false
 	ui.refresh_overview()
@@ -10651,7 +10680,7 @@ func _run_first_session_smoke_test() -> void:
 		_fail_first_session_smoke_test("The one-kill tutorial had %d Reavers at once, expected 1: %s" % [most, str(names)])
 		return
 
-	print("[FirstSessionSmokeTest] PASS: locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver.")
+	print("[FirstSessionSmokeTest] PASS: wiki, locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver.")
 	delete_savegame()
 	get_tree().quit()
 
@@ -10694,6 +10723,35 @@ func _run_traffic_smoke_test() -> void:
 
 ## The landing (title) screen as the player first sees it (windowed):
 ## -- --landing-snapshot --out=<dir>
+## The pause menu and the wiki, windowed: -- --wiki-snapshot --baseline-offline --out=<dir>
+func _run_wiki_snapshot() -> void:
+	var out := "user://wiki_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	for i in 60:
+		await get_tree().process_frame
+	load("res://scripts/ui/Wiki.gd").unlock("receiver")
+	GlobalState.paused = true
+	for i in 20:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("pause.png"))
+	var ui = GlobalState.get_ui_manager()
+	ui.open_wiki()
+	for i in 20:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("wiki.png"))
+	ui._wiki_screen.call("_show", "movement")
+	for i in 5:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("wiki_movement.png"))
+	get_tree().quit()
+
+
 ## The opening cinematic (broken gate), windowed, a frame every ~2 s for 22 s:
 ## -- --intro-snapshot --baseline-offline --out=<dir>
 func _run_intro_snapshot() -> void:

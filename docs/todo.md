@@ -1329,3 +1329,5 @@ _Four places where the game hands the player a moment but doesn't tell them what
 
 - [ ] **Re-bake N.O.V.A. lines changed 2026-09-30** (quiet_moment_beats nova[7], nova[9], nova[15]; the three SignalTuningActivity offer lines and its TEACH_LINE). Until re-baked they are voiced live by Kokoro, not the F5 clone.
 - [ ] **Teach the drone maze (G) the same way** as the receiver: a first-time explanation from N.O.V.A. and a persistent on-screen prompt while a target is in range. Abe didn't know the receiver mini-game existed; the drone bay likely has the same problem.
+- [ ] **Controller labels for the wiki** (when controller support lands): fill in each control's `controller` label in data/content/wiki_entries.json `controls`, and set `Wiki.prefer_controller` from the last input device used (scripts/ui/Wiki.gd). Entries never name keys directly; they use {tokens}.
+- [ ] **New systems get a wiki entry**: add it to data/content/wiki_entries.json and call `load("res://scripts/ui/Wiki.gd").unlock("<id>")` where the player first meets it.

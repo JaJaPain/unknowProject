@@ -134,6 +134,7 @@ func offer(item: Dictionary) -> void:
 	_nova(OFFER_LINES[randi() % OFFER_LINES.size()] + ("" if taught else " " + TEACH_LINE))
 	if story != null and not taught:
 		story.story_state[TAUGHT_FLAG] = true
+	load("res://scripts/ui/Wiki.gd").unlock("receiver")
 	var gs := get_node_or_null("/root/GlobalState")
 	if gs != null:
 		gs.emit_chatter("RECEIVER", "Faint transmission. Press T to tune in.", Color(0.5, 0.95, 0.85))

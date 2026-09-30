@@ -257,3 +257,9 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **No dead-end asks.** Her quiet lines no longer ask things you can't act
       on ("want to know how close that was", "check my scoring", "who do we
       know with narrow arms" are now statements).
+- [ ] **Wiki.** Esc > WIKI: basics (flying, overview, boost, docking, station
+      services, inventory, mining, fuel, hull, contracts, N.O.V.A.) are there
+      from the start. After the receiver offer (30 s calm flight) the pause
+      button says "WIKI (1 new)" and a comms line says a new entry was added;
+      the wiki opens on it marked NEW. First fight adds Combat basics and
+      Evasion; first jump adds Jump gates. Esc closes the wiki, not the pause.
