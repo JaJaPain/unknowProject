@@ -699,8 +699,8 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ## World / Exploration
 
-- [ ] **Map hover tooltips** -- hovering a map node shows stations, ore types, factions present
-- [ ] **Route planner** -- click-to-plan route; gates highlight in overview; auto-clears on arrival
+- [~] **Map hover tooltips** (checked 2026-09-30: stations and factions coloured by standing already show; ore types still missing) -- hovering a map node shows stations, ore types, factions present
+- [x] **Route planner** (BranchMapUI.plan_route_to + BFS path exist; checked 2026-09-30) -- click-to-plan route; gates highlight in overview; auto-clears on arrival
 - [x] **Gate portal particles** (exist: JumpGate._spawn_portal_particles; checked 2026-09-30) -- particle effects off the gate portal (portal shader is locked/approved, don't touch it)
 - [x] **Generated systems: NPC ships** (GeneratedSystemNPCManager patrols/roamers/lanes + TrafficDirector gate traffic; checked 2026-09-30) -- procedural systems feel empty; need ambient NPC traffic
 - [ ] **Generated systems: station variety** -- all proc-gen stations look the same; need visual variants
