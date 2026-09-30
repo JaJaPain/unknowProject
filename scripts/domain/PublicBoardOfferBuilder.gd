@@ -45,6 +45,9 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var block_offer := _build_fuel_block_offer(current_time_minutes)
 	if not block_offer.is_empty():
 		offers.append(block_offer)
+	var fetch_offer := _build_fetch_offer(current_time_minutes)
+	if not fetch_offer.is_empty():
+		offers.append(fetch_offer)
 	var pickup_offer := _build_pickup_offer(current_time_minutes)
 	if not pickup_offer.is_empty():
 		offers.append(pickup_offer)
@@ -208,7 +211,7 @@ static func _build_fuel_offer(current_time_minutes: int) -> Dictionary:
 		"expiration_policy": "expire",
 		"urgent_reward_multiplier": float(deck.get("urgent_reward_multiplier", 1.4)),
 	})
-	return _offer(
+	var authored := _offer(
 		TEMPLATE_DELIVER_ORE,
 		true,
 		"[URGENT] " + title,
@@ -225,6 +228,10 @@ static func _build_fuel_offer(current_time_minutes: int) -> Dictionary:
 			"{TURN_IN_LOCATION}": "the main station",
 		}
 	)
+	# Its own title and brief say fuel; the ore template text would call it
+	# "16 fuel Ore" (Abe, 2026-09-28), so the text generator leaves it alone.
+	authored["keep_authored_text"] = true
+	return authored
 
 
 ## Fuel Blocks for a station's generators (item fuel_booster): fabricated here
@@ -269,7 +276,7 @@ static func _build_fuel_block_offer(current_time_minutes: int) -> Dictionary:
 		"reward_credits": base_reward,
 	}
 	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, {})
-	return _offer(
+	var authored := _offer(
 		TEMPLATE_PURCHASE_DELIVERY,
 		true,
 		"[POWER] " + title,
@@ -288,9 +295,122 @@ static func _build_fuel_block_offer(current_time_minutes: int) -> Dictionary:
 			"{DESTINATION}": station_display,
 		}
 	)
+	# Its own title and brief say fuel; the ore template text would call it
+	# "16 fuel Ore" (Abe, 2026-09-28), so the text generator leaves it alone.
+	authored["keep_authored_text"] = true
+	return authored
 
 
 static var _fuel_deck_cache: Dictionary = {}
+
+
+## Rare items a store actually sells, so a fetch job can be finished. Props
+## join once the rarity / "where to find it" work places them (todo).
+const FETCH_STOCKED_ITEMS := ["survey_drone", "thermal_lattice", "rad_quartz", "cryo_ferrite", "resonant_crystal", "antimatter_pod"]
+static var _fetch_cards_cache: Array = []
+
+
+## A fetch job from Gemini's approved cards (data/content/fetch_cards/approved):
+## someone needs a rare item, for a reason, or something happens. Buy it at the
+## main station and bring it to the requester at an outpost (or the station).
+static func _build_fetch_offer(current_time_minutes: int) -> Dictionary:
+	var cards := _fetch_cards()
+	if cards.is_empty():
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("fetch|%d" % int(current_time_minutes / 240))
+	var card: Dictionary = cards[rng.randi() % cards.size()]
+	var item_id := str(card.get("item_id", ""))
+	var item := _store_item(item_id)
+	if item.is_empty():
+		return {}
+	var item_name := str(item.get("display_name", item_id))
+	var station_id := _main_station_id()
+	var station_display := _main_station_display()
+	var dest_id := station_id
+	var dest_display := station_display
+	var gs = Engine.get_main_loop().root.get_node_or_null("GlobalState")
+	if gs != null and gs.has_method("get_current_pickup_outposts"):
+		var outposts: Array = gs.get_current_pickup_outposts()
+		if not outposts.is_empty():
+			var outpost: Dictionary = outposts[rng.randi() % outposts.size()]
+			dest_id = str(outpost.get("id", station_id))
+			dest_display = str(outpost.get("display", dest_id))
+	var urgent := str(card.get("urgency", "days")) == "hours"
+	var base_reward := int(round(float(item.get("base_price", 100)) * 1.35)) + 120
+	var requester := str(card.get("requester", "a local"))
+	var title := "%s Needed" % item_name
+	var dialogue := "%s
+
+Buy a %s at %s and bring it to %s." % [str(card.get("board_text", "")), item_name, station_display, dest_display]
+	var objective := {
+		"type": "PURCHASE_DELIVERY",
+		"item_id": item_id,
+		"item_name": item_name,
+		"quantity_required": 1,
+		"store_station_id": station_id,
+		"store_display": station_display,
+		"destination_station_id": dest_id,
+		"destination_display": dest_display,
+		"reward_credits": base_reward,
+	}
+	var extra := {}
+	if urgent:
+		extra = {"timed": true, "urgent": true, "duration_minutes": 360, "expiration_policy": "expire", "urgent_reward_multiplier": 1.3}
+	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, extra)
+	var offer := _offer(
+		TEMPLATE_PURCHASE_DELIVERY,
+		true,
+		("[URGENT] " if urgent else "") + title,
+		requester.substr(0, 1).to_upper() + requester.substr(1),
+		dialogue,
+		"%s to %s" % [item_name, dest_display],
+		base_reward,
+		360 if urgent else 0,
+		1.3 if urgent else 1.0,
+		quest_data,
+		["{QUANTITY}", "{ITEM_NAME}", "{STORE_LOCATION}", "{DESTINATION}"],
+		{
+			"{QUANTITY}": "1",
+			"{ITEM_NAME}": item_name,
+			"{STORE_LOCATION}": station_display,
+			"{DESTINATION}": dest_display,
+		}
+	)
+	offer["keep_authored_text"] = true
+	offer["fetch_variant"] = str(card.get("variant", ""))
+	offer["fetch_card_id"] = str(card.get("card_id", ""))
+	return offer
+
+
+static func _fetch_cards() -> Array:
+	if _fetch_cards_cache.is_empty():
+		var dir := DirAccess.open("res://data/content/fetch_cards/approved")
+		if dir != null:
+			for file_name in dir.get_files():
+				if not file_name.ends_with(".json"):
+					continue
+				var f := FileAccess.open("res://data/content/fetch_cards/approved/" + file_name, FileAccess.READ)
+				if f == null:
+					continue
+				var parsed: Variant = JSON.parse_string(f.get_as_text())
+				if parsed is Dictionary:
+					for card in (parsed as Dictionary).get("cards", []):
+						if card is Dictionary and str(card.get("item_id", "")) in FETCH_STOCKED_ITEMS:
+							_fetch_cards_cache.append(card)
+	return _fetch_cards_cache
+
+
+static func _store_item(item_id: String) -> Dictionary:
+	var f := FileAccess.open("res://data/content/store_items.json", FileAccess.READ)
+	if f == null:
+		return {}
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	if parsed is Dictionary:
+		for item in (parsed as Dictionary).get("items", []):
+			if item is Dictionary and str(item.get("item_id", "")) == item_id:
+				return item
+	return {}
 
 
 static func _fuel_run_deck() -> Dictionary:

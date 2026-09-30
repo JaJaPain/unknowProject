@@ -121,6 +121,9 @@ static func apply_payload_to_offer(
 	payload: Dictionary,
 	is_fallback: bool
 ) -> Dictionary:
+	# Offers that write their own text (fuel runs, Fuel Blocks) keep it.
+	if bool(offer.get("keep_authored_text", false)):
+		return {"ok": true, "offer": offer.duplicate(true), "reason": ""}
 	var result := validate_payload(template, offer, payload)
 	if not bool(result.get("ok", false)):
 		return {

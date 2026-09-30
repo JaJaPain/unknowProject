@@ -2017,27 +2017,18 @@ func _create_inventory_panel() -> void:
 func _create_public_board_panel() -> void:
 	public_board_panel = Panel.new()
 	add_child(public_board_panel)
-	public_board_panel.anchor_left = 0.22
-	public_board_panel.anchor_right = 0.78
-	public_board_panel.anchor_top = 0.16
-	public_board_panel.anchor_bottom = 0.84
+	public_board_panel.anchor_left = 0.2
+	public_board_panel.anchor_right = 0.86
+	public_board_panel.anchor_top = 0.1
+	public_board_panel.anchor_bottom = 0.9
 	public_board_panel.offset_left = 0
 	public_board_panel.offset_right = 0
 	public_board_panel.offset_top = 0
 	public_board_panel.offset_bottom = 0
 	public_board_panel.visible = false
 
-	var board_style := StyleBoxFlat.new()
-	board_style.bg_color = Color(0.09, 0.09, 0.11, 0.98)
-	board_style.border_width_left = 2
-	board_style.border_width_top = 2
-	board_style.border_width_right = 2
-	board_style.border_width_bottom = 2
-	board_style.border_color = Color(0.85, 0.52, 0.18, 0.9)
-	board_style.corner_radius_top_left = 4
-	board_style.corner_radius_top_right = 4
-	board_style.corner_radius_bottom_right = 4
-	board_style.corner_radius_bottom_left = 4
+	var board_style := HudStyle.panel()
+	board_style.bg_color = Color(0.03, 0.04, 0.055, 0.985)
 	public_board_panel.add_theme_stylebox_override("panel", board_style)
 
 	var board_vbox := VBoxContainer.new()
@@ -2052,16 +2043,15 @@ func _create_public_board_panel() -> void:
 	var title := Label.new()
 	title.text = "PUBLIC CONTRACT BOARD"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color(1.0, 0.72, 0.32))
+	HudStyle.style_label(title, 22, HudStyle.ACCENT)
 	board_vbox.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = "Local postings. Verified mechanics. Questionable judgment."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 12)
-	subtitle.modulate = Color(0.75, 0.75, 0.78)
+	HudStyle.style_label(subtitle, 12, HudStyle.DIM)
 	board_vbox.add_child(subtitle)
+	board_vbox.add_child(HudStyle.rule())
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -2265,51 +2255,64 @@ func _request_public_board_text_attempt(
 func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.04, 0.055, 0.92)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 1
-	style.border_width_bottom = 1
-	style.border_color = Color(0.55, 0.42, 0.25, 0.7)
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_right = 4
-	style.corner_radius_bottom_left = 4
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
+	# A mission card: dark glass with a coloured spine by kind (urgent amber,
+	# investigation blue, everything else the soft edge).
+	var urgent := int(posting.get("duration_minutes", 0)) > 0
+	var investigation := bool(posting.get("investigation_posting", false))
+	var spine: Color = HudStyle.WARN if urgent else (HudStyle.ACCENT if investigation else HudStyle.EDGE)
+	# Fetch jobs wear their card's tone: life-or-death red, funny gold, personal blue.
+	match str(posting.get("fetch_variant", "")):
+		"life_or_death": spine = HudStyle.DANGER
+		"funny": spine = HudStyle.GOLD
+		"personal": spine = HudStyle.ACCENT
+	var style := HudStyle.box(Color(0.05, 0.065, 0.09, 0.95), HudStyle.EDGE_SOFT, 1, 8, 12)
+	style.content_margin_left = 0
+	style.content_margin_top = 0
+	style.content_margin_bottom = 0
 	card.add_theme_stylebox_override("panel", style)
+	var spine_line := ColorRect.new()
+	spine_line.color = spine
+	spine_line.custom_minimum_size = Vector2(4, 0)
+	spine_line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	public_board_list.add_child(card)
 
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	card.add_child(row)
+	row.add_child(spine_line)
 	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 4)
-	card.add_child(vbox)
+	vbox.add_theme_constant_override("separation", 5)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var pad := MarginContainer.new()
+	pad.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pad.add_theme_constant_override("margin_top", 12)
+	pad.add_theme_constant_override("margin_bottom", 12)
+	pad.add_theme_constant_override("margin_right", 14)
+	pad.add_child(vbox)
+	row.add_child(pad)
 
 	var title := Label.new()
 	title.text = str(posting.get("title", "Untitled Posting"))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	title.add_theme_font_size_override("font_size", 15)
-	title.add_theme_color_override("font_color", Color(1.0, 0.78, 0.38))
+	HudStyle.style_label(title, 16, spine if urgent or investigation else HudStyle.TEXT)
 	vbox.add_child(title)
 
 	var poster := Label.new()
 	poster.text = "Posted by: %s" % str(posting.get("poster", "Anonymous"))
-	poster.add_theme_font_size_override("font_size", 11)
-	poster.modulate = Color(0.72, 0.72, 0.76)
+	HudStyle.style_label(poster, 11, HudStyle.DIM)
 	vbox.add_child(poster)
 
 	var body := Label.new()
 	body.text = str(posting.get("body", "The details are suspiciously missing."))
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	HudStyle.style_label(body, 14, Color(0.82, 0.86, 0.92))
 	vbox.add_child(body)
 
 	var objective := Label.new()
-	objective.text = "Verified objective: %s" % str(posting.get("objective", "Pending"))
+	objective.text = "OBJECTIVE  %s" % str(posting.get("objective", "Pending"))
 	objective.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	objective.add_theme_color_override("font_color", Color(0.75, 0.95, 1.0))
+	HudStyle.style_label(objective, 13, HudStyle.ACCENT)
 	vbox.add_child(objective)
 
 	if not str(posting.get("pressure_id", "")).is_empty():
@@ -2344,8 +2347,8 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 			int(round(float(base_reward) * urgent_multiplier)),
 			CampaignClock.format_duration(duration_minutes),
 		]
-	payout.text = "Payout: %s" % payout_text
-	payout.add_theme_color_override("font_color", Color(0.65, 1.0, 0.55))
+	payout.text = "PAYOUT  %s" % payout_text
+	HudStyle.style_label(payout, 14, HudStyle.GOLD)
 	vbox.add_child(payout)
 
 	# Frozen final terms, exactly as they will be paid at settlement.
@@ -2394,6 +2397,8 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		accept.text = "Accept Posting"
 		accept.disabled = false
 		accept.pressed.connect(func(): _on_public_board_offer_accept(index))
+	accept.size_flags_horizontal = Control.SIZE_SHRINK_END
+	accept.custom_minimum_size = Vector2(220, 34)
 	vbox.add_child(accept)
 	if bool(posting.get("investigation_posting", false)) and not QuestManager.is_lane_occupied("BOARD"):
 		var decline := Button.new()
