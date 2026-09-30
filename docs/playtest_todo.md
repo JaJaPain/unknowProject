@@ -188,7 +188,8 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Enemies crack.** Get an enemy below about a third of its hull: after
       the "Target hull failing" message, the enemy says a desperate line
       (e.g. "You got lucky. Say it.") in its taunt voice.
-- [ ] **Rumours point to an area.** Soon after arriving in a system with an
-      anomaly, a radio rumour may mention it; it now ends with where to look,
+- [ ] **Rumours point to an area.** Within ~20 s of arriving in a system,
+      a radio rumour about an anomaly shows up in most systems (not all; jump
+      through two or three to catch one). It now ends with where to look,
       e.g. "Somewhere out past the gas giant." Fly there and search: the
       anomaly is in that area (not always right on top of the landmark).
