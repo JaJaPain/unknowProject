@@ -4039,6 +4039,9 @@ func _on_target_changed(new_target: Node3D):
 	# Selecting a new target is what clears the hysteresis latch — being in
 	# reach of the last ship says nothing about this one.
 	_attack_in_reach = false
+	if _docking_procedure_active:
+		target_panel.visible = false
+		return
 	if new_target and is_instance_valid(new_target):
 		target_panel.visible = true
 		var type_str = "Object"
@@ -4236,6 +4239,10 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	if not is_instance_valid(station) or not is_instance_valid(ship):
 		return
 	_docking_procedure_active = true
+	# The tractor beam has the ship: nothing on the target panel can be acted
+	# on, so it goes away until the player is flying again (Abe, 2026-09-28).
+	if target_panel:
+		target_panel.visible = false
 	# Keep the accepted dock command latched through the docking sequence. If it
 	# resets here, the starter handhold can jump back to its earlier dock-arrow
 	# step while the tractor beam is still bringing the ship in.

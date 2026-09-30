@@ -46,7 +46,7 @@ _Active task list. Update this file at the end of every session._
   fix greys it out only while the registry has one system, but the registry
   likely knows every system from the start. Gate it on having made a jump
   (or a visited-systems count > 1) instead.
-- [ ] **Minor: target panel stays active while the tractor beam has the ship** (Abe,
+- [x] **DONE 2026-09-29** (hidden when the docking tractor starts; target changes during docking don't reopen it.) **Minor: target panel stays active while the tractor beam has the ship** (Abe,
   2026-09-28). While the station tractor beam is pulling the player in to
   dock, the target display and its action buttons should be hidden or
   disabled (the player can't act on a target then).
