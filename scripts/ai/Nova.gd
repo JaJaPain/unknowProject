@@ -387,6 +387,46 @@ func _can_tell_no_home_ice() -> bool:
 	return speech == null or not speech.is_busy()
 
 
+## Her dry take on pointless news, now and then after a broadcast (Abe
+## approved these 9 lines, 2026-09-28). Long cooldown, never twice in a row.
+const NEWS_REACTION_LINES := [
+	"I keep the news channel open, Captain. Most of it is noise, but noise is where the useful rumors hide.",
+	"Ninety-eight percent of that broadcast was filler. I stay tuned for the other two.",
+	"I'd mute the news, Captain. The one time I do, it'll be a pirate warning.",
+	"Signal-to-noise on that broadcast: poor. I'm still listening. Someone has to.",
+	"That report took a full diagnostic cycle to confirm it said nothing. I'll keep listening.",
+	"Another bulletin about nothing. Somewhere in the next hundred is a route closure, so the channel stays open.",
+	"I've started ranking the news by usefulness. That one scored below the hull-scrubbing schedule.",
+	"Probability that bulletin affects our route: zero. I checked twice anyway.",
+	"That one was all noise, Captain. The channel stays open in case the next one isn't.",
+]
+const NEWS_REACTION_COOLDOWN_MS := 12 * 60 * 1000
+var _last_news_reaction_ms := -100000000
+var _last_news_line := -1
+
+
+## Called after a radio item airs. Waits for the channel to go quiet; skips
+## in combat, while docked talk is running, or inside the cooldown.
+func react_to_news() -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_news_reaction_ms < NEWS_REACTION_COOLDOWN_MS or _in_combat:
+		return
+	_last_news_reaction_ms = now
+	var speech = get_node_or_null("/root/SpeechService")
+	for i in 30:
+		await get_tree().create_timer(1.0).timeout
+		if speech == null or not speech.is_busy():
+			break
+	if _in_combat:
+		return
+	await get_tree().create_timer(1.5).timeout
+	var idx := randi() % NEWS_REACTION_LINES.size()
+	if idx == _last_news_line:
+		idx = (idx + 1) % NEWS_REACTION_LINES.size()
+	_last_news_line = idx
+	speak(NEWS_REACTION_LINES[idx], Severity.IDLE, "neutral")
+
+
 const HELD_LINE_MAX_WAIT_S := 60.0
 var _held_lines: Array = []
 

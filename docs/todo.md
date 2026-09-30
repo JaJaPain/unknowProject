@@ -82,7 +82,7 @@ _Active task list. Update this file at the end of every session._
   Same screenshots: the offer text shows "[Offline Backup]" to the player (debug
   tag leaking), and the same contact "Juno Calder" appears under two
   organisations (Naktortalnak Claims Office, Solilvekan Security Lease).
-- [ ] **N.O.V.A. reacts to pointless news now and then** (Abe, 2026-09-28; feature,
+- [x] **DONE 2026-09-29** (Nova.react_to_news after ~30% of radio items, 12 min cooldown, waits for a quiet channel; audio bake still to do.) **N.O.V.A. reacts to pointless news now and then** (Abe, 2026-09-28; feature,
   not a bug). Sometimes, right after an ambient news/radio broadcast plays, she
   gives one dry line about filtering it (she keeps the feed on because the
   useful thing could be in there). Low frequency, long cooldown, never over
@@ -116,7 +116,7 @@ _Active task list. Update this file at the end of every session._
 - [ ] **Station hub service icons**: once StationServiceIcons.png (art batch) lands, put an icon on each hub tile.
 - [ ] **Services smoke never exits after PASS** (found 2026-09-29, also on the pre-sprint commit): `--services-smoke-test --baseline-offline` prints PASS, then loops forever logging "Deferring lounge_bundle while required campaign bible is generating" (~35k times in 10 min). Something keeps requesting the lounge bundle every frame while the bible is pending, and the test doesn't quit. Run it with `timeout` until fixed.
 - [ ] **Pre-existing test failure** (found 2026-09-29, fails on the base commit too): tests/story/run_narrative_cache_scheduler_tests.gd, "Ready offer text is not presented before audio-cache waits" and "Lounge model-wait state still uses non-actionable placeholder text".
-- [ ] **System radio/news voice changes per system** (Abe, 2026-09-28). Each star
+- [x] **DONE 2026-09-29** (the radio already used VoiceDNA.for_radio_host per system; the neutral-voiced news was the 'Local ambient channel', now on the same host voice.) **System radio/news voice changes per system** (Abe, 2026-09-28). Each star
   system's radio announcer should have its own voice (and keep it for that
   system, so returning sounds familiar), picked from the voice pool and never
   N.O.V.A.'s or Kaelen's voice; the next system gets a different one. Pick

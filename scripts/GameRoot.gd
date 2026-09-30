@@ -1451,6 +1451,9 @@ func _premise_radio_tick() -> void:
 	if not SpeechService.is_busy() and not PlayerInteractionQueue.is_busy() and not PlayerInteractionQueue.in_combat_window():
 		var host := PremiseVoiceDNAType.register(PremiseVoiceDNAType.for_radio_host(str(world.get("system_id", ""))))
 		SpeechService.play_on_comms(text, host, "System radio")
+		# Sometimes N.O.V.A. has a dry word about it afterwards.
+		if randf() < 0.3 and is_instance_valid(Nova) and Nova.has_method("react_to_news"):
+			Nova.react_to_news()
 
 
 func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> void:
