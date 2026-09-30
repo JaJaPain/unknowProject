@@ -4303,6 +4303,8 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	# 5x, which previously magnified the tether after its length was applied.
 	get_tree().current_scene.add_child(_docking_tractor_beam)
 	_docking_tractor_beam.call("configure", station, ship)
+	if ship.has_method("begin_docking_camera"):
+		ship.begin_docking_camera(station)
 	_ensure_docking_procedure_panel()
 	docking_procedure_panel.visible = true
 	_docking_procedure_title.text = "%s // DOCKING CONTROL" % _current_station_display_name().to_upper()
@@ -9719,6 +9721,8 @@ func _get_contact_mood(npc_name: String) -> String:
 
 func undock_player(skip_repair_warning: bool = false) -> void:
 	AudioManager.set_music_state("explore")
+	if GlobalState.player and is_instance_valid(GlobalState.player) and GlobalState.player.has_method("end_docking_camera"):
+		GlobalState.player.end_docking_camera()
 	if not skip_repair_warning and _show_nova_repair_undock_prompt():
 		return
 	_dismiss_station_welcome()

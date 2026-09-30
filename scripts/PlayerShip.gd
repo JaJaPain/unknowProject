@@ -133,6 +133,10 @@ var _cam_mode:        int     = 0
 var _orbit_angle:     float   = 0.0
 var _orbit_radius:    float   = 40.0
 var _orbit_midpoint:  Vector3 = Vector3.ZERO
+## Docking camera (mode 4): a slow arc beside the ship with the station in
+## frame while the tractor brings it in, and behind the menus while docked.
+var _dock_cam_station: Node3D
+var _dock_cam_angle := 0.0
 var _cam_goal_pos:    Vector3 = Vector3.ZERO   # action-mode pivot goal
 var _cam_look_at:     Vector3 = Vector3.ZERO   # point the pivot looks at
 var _cam_look_cur:    Vector3 = Vector3.ZERO   # smoothed look target (lerps toward _cam_look_at)
@@ -466,6 +470,23 @@ func _enter_orbit(enemy: Node) -> void:
 	_last_telegraph_action = -1
 	_cam_lerp_speed = _ORBIT_LERP
 
+func begin_docking_camera(station: Node3D) -> void:
+	if station == null or not is_instance_valid(station) or _cam_mode != 0:
+		return
+	_dock_cam_station = station
+	# Start on the far side of the ship from the station, so both are in view.
+	_dock_cam_angle = 0.0
+	_cam_look_cur = camera_pivot.global_position + (-camera_pivot.basis.z) * 20.0
+	_cam_mode = 4
+
+
+func end_docking_camera() -> void:
+	if _cam_mode != 4:
+		return
+	_dock_cam_station = null
+	_on_combat_ended_orbit(false)
+
+
 func _on_combat_ended_orbit(_won: bool) -> void:
 	_release_mouse_capture()
 	_end_drone_pov()
@@ -650,7 +671,23 @@ func _process(delta: float) -> void:
 		return
 	# Wall-clock delta so camera speed is constant regardless of time_scale slow-mo.
 	var real_delta := delta / maxf(Engine.time_scale, 0.01)
-	if _cam_mode == 1:
+	if _cam_mode == 4:
+		if not is_instance_valid(_dock_cam_station) or not is_docked:
+			end_docking_camera()
+			return
+		# Stay on the open side: behind the ship, away from the station (its
+		# berth sits inside the scaled station model), looking back past the
+		# ship at the station, with a slow sway.
+		_dock_cam_angle += 0.25 * real_delta
+		var scale := _cam_ship_scale()
+		var away := global_position - _dock_cam_station.global_position
+		away.y = 0.0
+		away = away.normalized() if away.length() > 0.01 else Vector3.BACK
+		away = away.rotated(Vector3.UP, sin(_dock_cam_angle) * 0.35)
+		_cam_goal_pos = global_position + away * 46.0 * scale + Vector3(0.0, 14.0 * scale, 0.0)
+		_cam_look_at = global_position.lerp(_dock_cam_station.global_position, 0.2)
+		_cam_lerp_speed = 1.6
+	elif _cam_mode == 1:
 		_orbit_angle += _ORBIT_SPEED * real_delta
 		var x := sin(_orbit_angle) * _orbit_radius
 		var z := cos(_orbit_angle) * _orbit_radius

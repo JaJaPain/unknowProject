@@ -7723,8 +7723,14 @@ func _run_dock_snapshot() -> void:
 	GlobalState.active_target = station
 	player.nav_mode = "DOCK"
 	var ui = GlobalState.get_ui_manager()
+	var tractor_shot := false
 	for frame in 1200:
 		await get_tree().process_frame
+		# The docking camera, four seconds into the tractor pull.
+		if not tractor_shot and ui != null and bool(ui.get("_docking_procedure_active")):
+			tractor_shot = true
+			await get_tree().create_timer(4.0).timeout
+			await _hud_snapshot_save(out.path_join("dock_tractor.png"))
 		if player.is_docked and ui != null and ui.dock_panel.visible:
 			break
 	for i in 60:
@@ -10504,6 +10510,9 @@ func _run_first_session_smoke_test() -> void:
 		return
 	for i in 30:
 		await get_tree().process_frame
+	# A new player: no jump yet (other smoke tests may have saved one).
+	StoryManager.story_state["first_jump_done"] = false
+	ui.refresh_overview()
 	if ui.map_btn == null or not ui.map_btn.disabled:
 		_fail_first_session_smoke_test("The star map is usable before the first jump.")
 		return
