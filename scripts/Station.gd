@@ -44,6 +44,8 @@ func _ready():
 		else:
 			push_warning("[Station] Could not load GLB: %s — using default mesh" % model_path)
 	
+	# Running lights, fitted once the model is in place.
+	(func(): load("res://scripts/visuals/StationLights.gd").attach(self)).call_deferred()
 	# Emit so overview refreshes with this station included
 	GlobalState.entities_changed.emit()
 
