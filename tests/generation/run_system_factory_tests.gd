@@ -219,9 +219,10 @@ func _test_campaign_system_names() -> void:
 	var third := names.next_name()
 	_expect(third == "Crest", "next_name() didn't return third name.")
 	var overflow := names.next_name()
-	_expect(overflow == "Uncharted System 4", "Overflow name didn't use fallback pattern: '%s'" % overflow)
+	_expect(overflow == CampaignSystemNames.generated_name(4) and not overflow.begins_with("Uncharted"),
+		"Overflow name didn't use a generated name: '%s'" % overflow)
 	var second_overflow := names.next_name()
-	_expect(second_overflow == "Uncharted System 5", "Overflow name did not advance: '%s'" % second_overflow)
+	_expect(second_overflow == CampaignSystemNames.generated_name(5), "Overflow name did not advance: '%s'" % second_overflow)
 
 
 func _test_registry_generated_system() -> void:

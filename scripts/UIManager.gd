@@ -3704,22 +3704,23 @@ func update_overview_list(entities: Array):
 			elif entity.is_in_group("ship"):
 				var ship_name_upper = entity.name.to_upper()
 				var faction_str = entity.get("faction")
-				var faction_upper = faction_str.to_upper() if faction_str else ""
+				# The faction's player-facing name (generated factions have hash ids).
+				var faction_upper = GlobalState.faction_display_name(str(faction_str)) if faction_str else ""
 				# Derive ship class from its name — already contains Patrol/Raider/Sentinel etc.
 				if "PATROL" in ship_name_upper:
-					type_str = faction_upper.capitalize() + " Patrol"
+					type_str = faction_upper + " Patrol"
 				elif "RAIDER" in ship_name_upper:
-					type_str = faction_upper.capitalize() + " Raider"
+					type_str = faction_upper + " Raider"
 				elif "SENTINEL" in ship_name_upper:
-					type_str = faction_upper.capitalize() + " Sentinel"
+					type_str = faction_upper + " Sentinel"
 				elif "HAULER" in ship_name_upper or "SALVAGER" in ship_name_upper:
 					type_str = "Independent Hauler"
 				elif "INTERCEPTOR" in ship_name_upper:
-					type_str = faction_upper.capitalize() + " Interceptor"
+					type_str = faction_upper + " Interceptor"
 				elif "GUNSHIP" in ship_name_upper:
-					type_str = faction_upper.capitalize() + " Gunship"
+					type_str = faction_upper + " Gunship"
 				else:
-					type_str = faction_upper.capitalize() + " Combat Vessel"
+					type_str = faction_upper + " Combat Vessel"
 			elif entity.is_in_group("wreckage"):
 				type_str = "Wreckage"
 			elif entity.is_in_group("anomaly"):
@@ -10905,6 +10906,43 @@ func _update_hud_reputations():
 		sep1.visible = zen_vis and (aur_vis or van_vis)
 	if sep2:
 		sep2.visible = aur_vis and van_vis
+	_update_local_rep_labels(sys_factions, zen_vis or aur_vis or van_vis)
+
+
+## Generated factions in this system get their own rep entries after the core
+## three (the row was blank in generated systems, Abe 2026-09-28).
+func _update_local_rep_labels(sys_factions: Array[String], core_shown: bool) -> void:
+	var van := hud_panel.find_child("VanRepLabel", true, false) as Label
+	if van == null:
+		return
+	var row := van.get_parent()
+	var box := row.get_node_or_null("LocalRepBox") as HBoxContainer
+	if box == null:
+		box = HBoxContainer.new()
+		box.name = "LocalRepBox"
+		row.add_child(box)
+	for child in box.get_children():
+		child.queue_free()
+	var first := not core_shown
+	for faction_id in sys_factions:
+		if faction_id in ["zenith", "aurelia", "vanguard"]:
+			continue
+		if not first:
+			var sep := Label.new()
+			sep.text = " | "
+			sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			HudStyle.style_label(sep, 12, HudStyle.DIM)
+			box.add_child(sep)
+		first = false
+		var rep_value := int(GlobalState.reputations.get(faction_id, 0.0))
+		var info := GlobalState.faction_info(faction_id)
+		var lbl := Label.new()
+		lbl.text = "%s %d" % [str(info.abbrev), rep_value]
+		lbl.mouse_filter = Control.MOUSE_FILTER_STOP
+		lbl.add_theme_font_size_override("font_size", 12)
+		lbl.add_theme_color_override("font_color", GlobalState.reputation_color(rep_value))
+		lbl.tooltip_text = "%s (%s) — %s (%d)" % [info.name, info.descriptor, GlobalState.reputation_tier(rep_value), rep_value]
+		box.add_child(lbl)
 
 # Updates one faction's HUD rep label: text (abbrev + value), color (tier
 # gradient), and tooltip (full name + descriptor + current tier + value).

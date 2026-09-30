@@ -47,7 +47,7 @@ func next_name() -> String:
 	if _used_count >= _names.size():
 		_used_count += 1
 		_save()
-		return "Uncharted System %d" % _used_count
+		return generated_name(_used_count)
 	var name_str: String = _names[_used_count]
 	_used_count += 1
 	_save()
@@ -56,8 +56,23 @@ func next_name() -> String:
 
 func peek_next() -> String:
 	if _used_count >= _names.size():
-		return "Uncharted System %d" % (_used_count + 1)
+		return generated_name(_used_count + 1)
 	return _names[_used_count]
+
+
+const _ROOTS_A := ["Kes", "Vor", "Ash", "Tal", "Myr", "Or", "Sel", "Bren", "Cal", "Iv", "Nox", "Teth",
+	"Quar", "Hal", "Dun", "Pyr", "Zar", "Mor", "Eld", "Ruk", "Sab", "Ven", "Thal", "Cor"]
+const _ROOTS_B := ["ra", "en", "is", "ath", "ora", "une", "ek", "ion", "ari", "os", "eth", "ain", "ux", "ide"]
+const _SUFFIXES := ["", "", "", " Reach", " Drift", " Hollow", " Verge", " Deep", " Crossing", " Expanse", " Shoal", " Rise"]
+
+
+## A stable, real-sounding name for the nth system once the list runs out
+## (the old "Uncharted System 28" placeholder showed in play, Abe 2026-09-28).
+static func generated_name(n: int) -> String:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("campaign_system_name|%d" % n)
+	var root: String = _ROOTS_A[rng.randi() % _ROOTS_A.size()] + _ROOTS_B[rng.randi() % _ROOTS_B.size()]
+	return root + _SUFFIXES[rng.randi() % _SUFFIXES.size()]
 
 
 func remaining() -> int:

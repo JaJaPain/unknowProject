@@ -59,7 +59,7 @@ _Active task list. Update this file at the end of every session._
   can't be creditor, antagonist, victim or subject of a beat's stake in the
   bible / chapter-plan prompts and validators; debts and threats go to
   invented NPCs. Also reject Kaelen lines that name Kaelen in the third person.
-- [ ] **Generated-faction ships show their internal ID as name and type** (Abe,
+- [x] **DONE 2026-09-29** (NPCShip/Wreckage display_name from faction_display_name; overview type, N.O.V.A. callouts and combat chatter use it; HUD REP row lists local generated factions; system names past the list are generated, not "Uncharted System N". Needs an in-game look.) **Generated-faction ships show their internal ID as name and type** (Abe,
   2026-09-28, screenshot in Uncharted System 28): target panel reads
   "GEN_C4D50C0A4F59_F2 Interceptor 824 [Hostile NPCShip]", the overview's
   Type column "Gen C 4d 50c 0a 4f 59 F 2", wreckage "GEN_C4D5...". They

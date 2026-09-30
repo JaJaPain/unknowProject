@@ -301,7 +301,7 @@ func _taunt_generation_context(cause: String) -> Dictionary:
 	if is_instance_valid(enemy_node):
 		var faction := str(enemy_node.get("faction")) if enemy_node.get("faction") else ""
 		if not faction.is_empty():
-			context["faction_label"] = faction.capitalize()
+			context["faction_label"] = GlobalState.faction_display_name(faction)
 		var role := str(enemy_node.get("ship_role")) if enemy_node.get("ship_role") else ""
 		if not role.is_empty():
 			context["archetype"] = role.to_lower()
@@ -443,7 +443,7 @@ func _play_combat_taunt() -> void:
 			{"text": str(pick.get("text", ""))}
 		)
 	var faction: String = enemy_node.get("faction") if is_instance_valid(enemy_node) and enemy_node.get("faction") else "ENEMY"
-	GlobalState.emit_chatter(faction.to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
+	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), pick["text"], Color(1.0, 0.4, 0.3))
 	# A few lines were judged too fast or wanted a shorter beat during the audio
 	# review. Those carry per-line overrides in the data file; everything else
 	# uses the global taunt delivery.
@@ -473,7 +473,7 @@ func _play_npc_action_taunt(key: String) -> void:
 			push_warning("[TAUNT FALLBACK] action taunt key '%s' is empty — per-fight fetch may have fallen back to canned dict" % key)
 		return
 	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
-	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
+	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), line, Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
 
 func _play_npc_flee_taunt() -> void:
@@ -483,7 +483,7 @@ func _play_npc_flee_taunt() -> void:
 	if line.is_empty():
 		return
 	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
-	GlobalState.emit_chatter(faction.to_upper(), line, Color(1.0, 0.4, 0.3))
+	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), line, Color(1.0, 0.4, 0.3))
 	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
 
 

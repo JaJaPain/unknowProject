@@ -1,5 +1,7 @@
 extends StaticBody3D
 
+var display_name: String = ""
+
 var being_salvaged: bool = false
 var last_attacker_faction: String = ""  # Set by NPCShip.die() so salvager knows if player killed this
 

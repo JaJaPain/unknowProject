@@ -610,9 +610,9 @@ func warn_hostile_engagement(enemy: Node = null) -> String:
 		var faction := str(enemy.get("faction")).strip_edges()
 		var role := str(enemy.get("ship_role")).strip_edges()
 		if not faction.is_empty() and not role.is_empty():
-			enemy_label = "%s %s" % [faction.to_upper(), role]
+			enemy_label = "%s %s" % [GlobalState.faction_display_name(faction), role]
 		elif not faction.is_empty():
-			enemy_label = "%s hostile" % faction.to_upper()
+			enemy_label = "%s hostile" % GlobalState.faction_display_name(faction)
 	var line: String
 	if _is_powerful_enemy(enemy):
 		# Big ship — she gets nervous right at the evasive/engage decision.

@@ -53,6 +53,9 @@ const EngineGlowScript := preload("res://scripts/visuals/NpcEngineGlow.gd")
 
 # Archetype attributes
 var archetype: String = "Balanced"
+## What the overview and target panel show. The node name stays internal (it
+## holds the raw faction id, which for generated factions is "GEN_<hash>_F2").
+var display_name: String = ""
 var fire_cooldown_min: float = 1.3
 var fire_cooldown_max: float = 1.5
 var damage_min: float = 5.5
@@ -197,7 +200,9 @@ func _configure_role(role: String) -> void:
 	scale = Vector3(visual_scale_mult, visual_scale_mult, visual_scale_mult)
 	
 	# Override name to display archetype in UI
-	name = faction.to_upper() + " " + archetype + " " + str(randi() % 1000)
+	var hull_number := randi() % 1000
+	name = faction.to_upper() + " " + archetype + " " + str(hull_number)
+	display_name = "%s %s %d" % [GlobalState.faction_display_name(faction), archetype, hull_number]
 
 ## Apply a faction profile from FactionRegistry, overriding role-based stats.
 ## Call this AFTER add_child() so _ready()/_configure_role() have already run.
@@ -936,6 +941,7 @@ func die():
 		var wreck = StaticBody3D.new()
 		wreck.set_script(wreck_script)
 		wreck.name = name + "_Wreck"
+		wreck.set("display_name", ("%s Wreck" % display_name) if not display_name.is_empty() else "Wreckage")
 		get_parent().add_child(wreck)
 		wreck.global_position = global_position
 		wreck.global_rotation = global_rotation
