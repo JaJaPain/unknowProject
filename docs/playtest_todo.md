@@ -100,3 +100,9 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Radio voices.** The system radio / local channel in two different
       systems uses two different voices, and neither sounds like
       N.O.V.A. or Kaelen.
+
+## F. Added 2026-09-30
+
+- [ ] **Your ship in Ship Upgrades.** Maintenance Bay > Ship Upgrades: the
+      ship behind the system boxes is YOUR ship (the one you fly), lit, and
+      slowly turning. Not the old flat picture.

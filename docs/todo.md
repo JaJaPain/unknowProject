@@ -112,7 +112,7 @@ _Active task list. Update this file at the end of every session._
   a posted investigation. Unrelated noise in the same log: UIManager.gd:2221
   public-board text JSON "Unterminated string" from the model (handled, no
   crash).
-- [ ] **Ship Upgrades screen shows the old hull model** (found 2026-09-29 in the dock snapshot): the system boxes sit over the legacy ship, not the player's kitbash hull (ShipAssembler.build_special(0)). Swap the backdrop model.
+- [x] **DONE 2026-09-30** (scripts/ui/ShipShowcase.gd: live, turning view of ShipAssembler.build_special(0); old picture behind USE_SHIP_SHOWCASE.) **Ship Upgrades screen shows the old hull model** (found 2026-09-29 in the dock snapshot): the system boxes sit over the legacy ship, not the player's kitbash hull (ShipAssembler.build_special(0)). Swap the backdrop model.
 - [ ] **Station hub service icons**: once StationServiceIcons.png (art batch) lands, put an icon on each hub tile.
 - [x] **DONE 2026-09-30** (AudioManager checks once a second for a live ship targeting the player; audible once Tension.mp3 exists.) **Tension music has no trigger**: AudioManager.set_music_state("tension") exists; call it when a hostile targets the player out of combat (NPCShip target lock) and back to explore when it clears.
 - [ ] **Services smoke never exits after PASS** (found 2026-09-29, also on the pre-sprint commit): `--services-smoke-test --baseline-offline` prints PASS, then loops forever logging "Deferring lounge_bundle while required campaign bible is generating" (~35k times in 10 min). Something keeps requesting the lounge bundle every frame while the bible is pending, and the test doesn't quit. Run it with `timeout` until fixed.

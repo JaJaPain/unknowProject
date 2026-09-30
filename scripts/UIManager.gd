@@ -496,6 +496,7 @@ const TypewriterLabelType := preload("res://scripts/ui/TypewriterLabel.gd")
 const StoreScreenScript := preload("res://scripts/ui/StoreScreen.gd")
 ## The store on the inventory layout (StoreScreen); false brings back the old list.
 const USE_STORE_SCREEN := true
+const USE_SHIP_SHOWCASE := true
 var dock_subtitle: Label
 var dock_hub_vbox: VBoxContainer
 var store_screen: Control
@@ -15980,12 +15981,20 @@ func _create_ship_upgrades_panel() -> void:
 	ship_upgrades_panel.add_child(bg)
 	
 	# Central Ship Image (Dynamically composited)
-	var ship_image = TextureRect.new()
-	ship_image.texture = load("res://assets/INDYMiner_render_side.png")
+	# The captain's own ship, live and slowly turning (was a picture of the
+	# old hull; USE_SHIP_SHOWCASE = false brings the picture back).
+	var ship_image: Control
+	if USE_SHIP_SHOWCASE:
+		ship_image = load("res://scripts/ui/ShipShowcase.gd").new()
+	else:
+		var picture := TextureRect.new()
+		picture.texture = load("res://assets/INDYMiner_render_side.png")
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		ship_image = picture
 	ship_image.set_anchors_preset(Control.PRESET_CENTER)
 	ship_image.custom_minimum_size = Vector2(1100, 650)
-	ship_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	ship_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ship_image.size = ship_image.custom_minimum_size
 	ship_image.position = -ship_image.custom_minimum_size / 2
 	ship_upgrades_panel.add_child(ship_image)
 	
