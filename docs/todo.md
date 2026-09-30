@@ -516,6 +516,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
   while docked, write ahead for the systems the gates lead to. Then the small
   live reactions (background_chatter, ambient_chat, kaelen_line, quiet_moment)
   can move to pre-written pools, and `unload_on_close` can go on.
+- [ ] **Perf baseline 2026-09-30** (`-- --perf-probe --baseline-offline`, windowed, start system, RTX 3060): avg 58.6 fps (vsync), min 47 around a boost, max 151 draw calls, 517 MB video memory, after the nebula sky, bolts with lights, flipbook explosions, station lights, speed lines. Re-run after visual changes; watch min fps and VRAM on the 8GB target.
 - [ ] **Generation-window ledger (Phase 1 measurement, commit cc9c1d7).** Play
   a normal session (dock, fly, fight, jump, dock) and copy the console lines
   starting `[GenerationWindow] open`. They show how many model calls happened

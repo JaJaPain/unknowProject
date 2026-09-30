@@ -321,6 +321,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_traffic_smoke_test")
 	elif "--landing-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_landing_snapshot")
+	elif "--perf-probe" in OS.get_cmdline_user_args():
+		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_hud_snapshot")
 	elif "--dock-snapshot" in OS.get_cmdline_user_args():
@@ -10684,6 +10686,34 @@ func _run_landing_snapshot() -> void:
 	DirAccess.make_dir_recursive_absolute(out)
 	await get_tree().create_timer(8.0).timeout
 	await _hud_snapshot_save(out.path_join("landing.png"))
+	get_tree().quit()
+
+
+## Frame rate, draw calls and video memory in normal flight (windowed):
+## -- --perf-probe --baseline-offline. Samples for 12 s after a 6 s settle, plus
+## a boost burst, and prints one PERF line.
+func _run_perf_probe() -> void:
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	await get_tree().create_timer(6.0).timeout
+	var samples: Array[float] = []
+	var draws: Array[int] = []
+	for i in 24:
+		await get_tree().create_timer(0.5).timeout
+		samples.append(Engine.get_frames_per_second())
+		draws.append(int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)))
+		if i == 12:
+			GlobalState.fuel = 100.0
+			player.boost_cooldown_timer = 0.0
+			player.activate_boost()
+	var total := 0.0
+	for f in samples:
+		total += f
+	var vram := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576.0
+	print("PERF avg_fps=%.1f min_fps=%.1f max_draws=%d vram_mb=%.0f gpu=%s" % [
+		total / samples.size(), samples.min(), draws.max(), vram, RenderingServer.get_video_adapter_name()])
 	get_tree().quit()
 
 
