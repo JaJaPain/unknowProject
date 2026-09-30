@@ -242,3 +242,9 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Exit tumble.** At the end of the opening, as the white-out clears, the
       ship is thrown out tumbling (two turns of roll) and settles as the new
       system comes into view.
+- [ ] **N.O.V.A. portrait never lingers.** Undock a few times and fight once:
+      her portrait may appear while she talks, but if a line doesn't play it
+      fades within about 2 seconds instead of staying up silent.
+- [ ] **Combat camera re-orbits each turn.** In a fight, each new planning
+      turn the camera settles back into its slow orbit around the enemy (a
+      signal mismatch used to skip this with an error every turn).

@@ -448,7 +448,7 @@ func _on_combat_started_orbit(enemy: Node) -> void:
 		return
 	_enter_orbit(enemy)
 
-func _on_planning_started_orbit(_ap: int, _max: int, _intent: Dictionary, _taunts: Dictionary) -> void:
+func _on_planning_started_orbit(_ap: int, _max: int, _intent: Dictionary, _taunts: Dictionary, _npc_plan: Array = []) -> void:
 	# Re-settle into the slow planning orbit each turn (ships may have moved).
 	if _cam_mode == 0:
 		return

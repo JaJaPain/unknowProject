@@ -11801,6 +11801,26 @@ func _show_nova_talk_portrait(expression: String) -> void:
 	var tw := _nova_talk_portrait.create_tween()
 	tw.tween_property(_nova_talk_portrait, "modulate:a", 1.0, 0.25)
 	_nova_talk_portrait.set_meta("fade_tween", tw)
+	_talk_portrait_serial += 1
+	_watch_talk_portrait(_talk_portrait_serial, Time.get_ticks_msec())
+
+
+## Fading only on playback_finished left her portrait up, silent, whenever a
+## line never actually played (a failed voice request, or another line cutting
+## in: stop() emits nothing) (Abe, 2026-09-30). After a short grace for the
+## voice request, she fades as soon as nothing is being spoken or synthesized.
+var _talk_portrait_serial := 0
+
+
+func _watch_talk_portrait(serial: int, shown_ms: int) -> void:
+	await get_tree().create_timer(0.5, true, false, true).timeout
+	if serial != _talk_portrait_serial or _nova_talk_portrait == null 			or not is_instance_valid(_nova_talk_portrait) or not _nova_talk_portrait.visible:
+		return
+	var age := Time.get_ticks_msec() - shown_ms
+	if age > 20000 or (age > 1500 and not SpeechService.is_busy()):
+		_fade_nova_talk_portrait()
+		return
+	_watch_talk_portrait(serial, shown_ms)
 
 
 # Fades the talk portrait out (called when she stops speaking).
