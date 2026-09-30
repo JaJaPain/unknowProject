@@ -387,6 +387,47 @@ func _can_tell_no_home_ice() -> bool:
 	return speech == null or not speech.is_busy()
 
 
+const HELD_LINE_MAX_WAIT_S := 60.0
+var _held_lines: Array = []
+
+
+func _world_hidden() -> bool:
+	var tree := get_tree()
+	if tree == null:
+		return false
+	var root := tree.current_scene
+	if root != null and root.get_node_or_null("LandingLayer") != null:
+		return true
+	if bool(GlobalState.get("intro_cinematic_active")):
+		return true
+	var ui = GlobalState.get_ui_manager() if GlobalState.has_method("get_ui_manager") else null
+	if ui != null and is_instance_valid(ui):
+		var loading = ui.get("loading_panel")
+		if loading != null and is_instance_valid(loading) and (loading as Control).is_visible_in_tree():
+			return true
+	return false
+
+
+func _hold_until_visible(line: String, severity: int, expression: String) -> void:
+	for held in _held_lines:
+		if str(held[0]) == line:
+			return
+	_held_lines.append([line, severity, expression])
+	if _held_lines.size() > 1:
+		return  # a waiter is already running
+	var waited := 0.0
+	while _world_hidden() and waited < HELD_LINE_MAX_WAIT_S:
+		await get_tree().create_timer(0.5).timeout
+		waited += 0.5
+	var lines := _held_lines.duplicate()
+	_held_lines.clear()
+	if waited >= HELD_LINE_MAX_WAIT_S:
+		return
+	await get_tree().create_timer(1.5).timeout
+	for held in lines:
+		speak(str(held[0]), int(held[1]), str(held[2]))
+
+
 func set_campaign_quirk(quirk: String) -> void:
 	_campaign_quirk = quirk.strip_edges()
 
@@ -402,6 +443,7 @@ func set_memory_glitch_lines(lines: Array) -> void:
 # Wipe contract (docs/campaign_bible_schema.md): a new campaign must not inherit
 # the old one's quirk, glitch lines, streak memory, or no-repeat picker state.
 func reset_for_restart() -> void:
+	_held_lines.clear()
 	_campaign_quirk = ""
 	_memory_glitch_lines = []
 	_last_quirk_line_ms = -100000000
@@ -504,6 +546,13 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 	if line.is_empty():
 		return false
 	if not is_instance_valid(GlobalState):
+		return false
+	# Nothing she says (voice, portrait, comms text) plays over a load screen
+	# or the landing menu (Abe, 2026-09-28: a quiet moment played, portrait and
+	# all, during a new campaign's load). Hold the line and say it once the
+	# player has the ship; a held line is only kept for a minute.
+	if _world_hidden():
+		_hold_until_visible(line, severity, expression)
 		return false
 	var now := Time.get_ticks_msec()
 	# Verbatim repeat guard. Deliberately ABOVE the severity check: a THREAT
