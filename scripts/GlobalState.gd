@@ -712,6 +712,13 @@ static func _generated_contact_name(
 	var last := GENERATED_CONTACT_LAST_NAMES[
 		rng.randi() % GENERATED_CONTACT_LAST_NAMES.size()
 	]
+	# One person, one organisation (Abe, 2026-09-28: "Juno Calder" worked for
+	# two). Re-roll while another contact already has this person's name.
+	for attempt in 12:
+		if not _contact_person_taken("%s %s" % [first, last]):
+			break
+		first = GENERATED_CONTACT_FIRST_NAMES[rng.randi() % GENERATED_CONTACT_FIRST_NAMES.size()]
+		last = GENERATED_CONTACT_LAST_NAMES[rng.randi() % GENERATED_CONTACT_LAST_NAMES.size()]
 	var faction_display := ""
 	if not faction_name.is_empty():
 		faction_display = str(faction_info(faction_name).get("name", faction_name.capitalize()))
@@ -723,6 +730,13 @@ static func _generated_contact_name(
 	if generated_outpost_npc_data.has(name):
 		name = "%s %s" % [name, world_id.sha256_text().substr(index * 2, 2).to_upper()]
 	return name
+
+static func _contact_person_taken(person: String) -> bool:
+	for existing in generated_outpost_npc_data.keys():
+		var full := str(existing)
+		if full == person or full.ends_with(" " + person):
+			return true
+	return false
 
 static func _generated_contact_data(
 	world_id: String,

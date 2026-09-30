@@ -12820,8 +12820,8 @@ func _render_mission_conversation_screen(
 		"neutral",
 		str(quest_data.get("agent_portrait_id", ""))
 	)
-	var note := " [Offline Backup]" if is_fallback else ""
-	agent_dialogue_label.text = str(screen.get("text", "")).strip_edges() + note
+	# Backup text is logged (GenerationDiagnostics), never labelled on screen.
+	agent_dialogue_label.text = str(screen.get("text", "")).strip_edges()
 	SpeechService.play(str(screen.get("text", "")), agent_voice_profile_id)
 	agent_back_btn.visible = true
 	for child in agent_choices_container.get_children():
@@ -12961,7 +12961,6 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 	# ── Step 2: The quest giver delivers their briefing ───────────────────────
 	var raw_dialogue = quest_data.get("dialogue", "")
 	var display_dialogue = SpeechService.clean_dialogue_text(raw_dialogue)
-	var note = " [Offline Backup]" if is_fallback else ""
 	
 	agent_name_label.text = quest_data.get("agent_name", "Broker Kaelen").to_upper()
 	agent_subtitle_label.text = str(quest_data.get("agent_role", "Neutral Fixer & Profit Broker"))
@@ -12977,7 +12976,7 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 		"neutral",
 		str(quest_data.get("agent_portrait_id", ""))
 	)
-	agent_dialogue_label.text = display_dialogue + note
+	agent_dialogue_label.text = display_dialogue
 	GenerationDiagnostics.record_lifecycle_timestamp(
 		"quest_briefing",
 		"text_presented",
