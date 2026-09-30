@@ -685,13 +685,13 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
   - Wire `_get_autopilot_avoidance()` back into the autopilot movement block (`PlayerShip.gd:740-754`). It exists and works but is not being called.
   - After `_route_steer_target()` returns a `steer_target`, pass it through `_get_autopilot_avoidance(steer_target, active_target)`. When `is_avoiding` is true, use the avoidance waypoint as the actual steer target.
   - This gives two complementary layers: A* planner handles the macro route, real-time avoidance handles surprises mid-flight.
-- [ ] **Forward whisker (nose sensor) for imminent collision**
+- [x] **Forward whisker (nose sensor) for imminent collision** -- exists (PlayerShip nose sphere-cast, throttled replan; checked 2026-09-30)
   - Add a `RayCast3D` pointing forward (`-Z`) on the ship. No new scene node needed -- configure it in `_ready()`.
   - In `_physics_process` during autopilot: if the raycast hits something within ~50u that is not the nav target, call `_clear_planned_route()` immediately to force a fresh A* replan without waiting for the 2.5s stall timer.
   - Godot equivalent of the Unity "empty object on ship nose" pattern. The raycast IS the whisker.
 - [x] **Fishtailing in tight spaces** -- LIKELY FIXED, Abe 2026-09-09 (run sheet 2.6): flew tight spaces and saw neither the fishtail nor the avoidance regression. Answers the question I asked with it -- they went away together, which is consistent with one steering fault rather than two, so `steer_towards()` did not need separate fixes. Original note kept below for the next regression.
 - [ ] ~~Fishtailing in tight spaces~~ -- ship wiggles its butt side to side when trying to squeeze into a tight area (e.g. navigating close to a station or between asteroids). The steering overshoots, corrects, overshoots the other way, and oscillates instead of committing to a clean line. Needs dampening on the angular correction when the ship is close to an obstacle and the heading delta is small -- reduce turn aggression proportionally to proximity so it slides in smoothly instead of wagging its tail. **Fix is in `steer_towards()` in `PlayerShip.gd`** -- when proximity to an obstacle is detected AND the heading correction angle is small, scale down the turn rate so the ship commits to the line rather than overcorrecting back and forth.
-- [ ] **Route validity re-check while following waypoints**
+- [x] **Route validity re-check while following waypoints** -- superseded (checked 2026-09-30): autopilot follows a spline path (_autopilot_steer_target) that replans on target move, straying or the whisker; planned_route/index is the older path
   - After each waypoint is passed (`planned_route_index` advances), call `NavigationRoutePlanner.route_is_clear()` on the remaining waypoints against current hazards. If it returns false, replan immediately.
   - Catches cases where an obstacle moved into the planned path since the last full replan.
 
