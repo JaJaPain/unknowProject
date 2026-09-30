@@ -182,3 +182,6 @@ Claude adds new items here as work lands (newest section at the bottom).
       stations in different systems: the mechanics' voices differ (and match
       whether the portrait is a man or a woman). Jenna at the start is
       unchanged.
+- [ ] **Scorch marks.** In a fight, unshielded hits leave dark scorch marks
+      on the hull (yours and the enemy's) where they land. They clear when
+      the fight ends. Note: do they sit on the hull, or float/smear?

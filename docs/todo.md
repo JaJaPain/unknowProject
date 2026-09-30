@@ -636,7 +636,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 - [x] **Attack drone visual** -- strike now peels the nearest green orbiting drone out of formation (hides it for the run) and launches a matching green strike-drone from that position instead of a blue ball from the ship center. Camera rides a POV chase cam behind the diving drone, with a green drone-cam reticle overlay (corner frame + center crosshair + enemy-tracking bracket) via `scripts/DroneReticle.gd`. Hands back to the impact framing on the hit. (`PlayerShip.gd` `launch_combat_drone` / `_begin_drone_pov` / `_end_drone_pov`)
 - [x] **Salvage drone wreck action** -- wreckage targets now expose a disabled/enabled `Salvage` action with tooltip reasons; spending 1 salvage drone starts the existing salvage loop without opening inventory.
 - [ ] **Enemy low-health escalation arc** -- enemy dialogue/behavior should escalate when below 30% HP
-- [ ] **Impact decals on player ship** -- hull hit marks that persist during a fight
+- [x] **Impact decals on player ship** (2026-09-30: scorch decals on any ship's hull where unshielded hits land, max 8 per ship, cleared at combat end; CombatManager._add_scorch) -- hull hit marks that persist during a fight
 - [ ] **Richer combat taunt flavor** -- TACTICAL bucket system: situation-aware taunts (flanked, shielded, drone hit, etc.)
   - 2026-08-18: the CAUSE half of this shipped -- taunts now know WHY the fight
     started (see `scripts/combat/TauntCause.gd`, 8 causes derived from real

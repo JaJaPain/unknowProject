@@ -700,6 +700,7 @@ func _on_taunts_ready(data: Dictionary) -> void:
 
 func end_combat(player_won: bool) -> void:
 	state = State.IDLE
+	_clear_scorches()
 	_lerp_timescale(1.0, 1.0, 600)
 	player_node   = null
 	enemy_nodes.clear()
@@ -924,12 +925,68 @@ func _spawn_hit_fx(target, center: Vector3, blocked: bool, crit: bool) -> void:
 		toward = (attacker.global_position - center)
 		toward = toward.normalized() if toward.length() > 0.01 else Vector3.UP
 	var contact := center + toward * radius * 0.8
+	if not blocked:
+		_add_scorch(target, contact, toward, radius)
 	if blocked:
 		ImpactEffect.spawn_shield_ripple(fx_parent, center, radius * 1.15, contact)
 	elif crit:
 		ImpactEffect.spawn_hit(fx_parent, contact, Color(1.0, 0.95, 0.75), 1.8)
 	else:
 		ImpactEffect.spawn_hit(fx_parent, contact, Color(1.0, 0.6, 0.25), 1.2)
+
+
+## Scorch marks that stay on a hull for the rest of the fight (next_level_plan
+## P2): a decal projected onto the ship from the attacker's side, cleared when
+## combat ends. Capped per ship so a long fight doesn't pile them up.
+const MAX_SCORCHES_PER_SHIP := 8
+var _scorches: Array = []
+static var _scorch_texture: Texture2D
+
+
+func _add_scorch(target, contact: Vector3, toward: Vector3, radius: float) -> void:
+	if not is_instance_valid(target) or not target is Node3D:
+		return
+	var ship := target as Node3D
+	var existing := 0
+	for d in _scorches:
+		if is_instance_valid(d) and (d as Node).get_parent() == ship:
+			existing += 1
+	if existing >= MAX_SCORCHES_PER_SHIP:
+		return
+	if _scorch_texture == null:
+		var grad := Gradient.new()
+		grad.set_color(0, Color(0.05, 0.04, 0.03, 0.95))
+		grad.add_point(0.45, Color(0.12, 0.08, 0.05, 0.7))
+		grad.set_color(grad.get_point_count() - 1, Color(0.1, 0.08, 0.06, 0.0))
+		var tex := GradientTexture2D.new()
+		tex.gradient = grad
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5)
+		tex.fill_to = Vector2(0.5, 0.0)
+		tex.width = 128
+		tex.height = 128
+		_scorch_texture = tex
+	var decal := Decal.new()
+	decal.texture_albedo = _scorch_texture
+	var mark := clampf(radius * 0.35, 0.8, 3.5)
+	decal.size = Vector3(mark, radius * 2.0, mark)
+	decal.cull_mask = 1
+	ship.add_child(decal)
+	# A decal projects along its -Y: point that into the hull from outside.
+	decal.global_position = contact + toward * radius * 0.5
+	var down := -toward.normalized()
+	var side := down.cross(Vector3.UP)
+	if side.length() < 0.01:
+		side = down.cross(Vector3.RIGHT)
+	decal.global_basis = Basis(side.normalized(), -down, side.normalized().cross(-down).normalized())
+	_scorches.append(decal)
+
+
+func _clear_scorches() -> void:
+	for d in _scorches:
+		if is_instance_valid(d):
+			(d as Node).queue_free()
+	_scorches.clear()
 
 
 func _hit_radius(target) -> float:
