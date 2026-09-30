@@ -178,3 +178,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       (glowing object) can't be seen from far away, only once you're close
       enough for it to show on the overview. Once it has fired, it stays
       visible.
+- [ ] **Mechanics sound different.** Visit the Maintenance Bay at two
+      stations in different systems: the mechanics' voices differ (and match
+      whether the portrait is a man or a woman). Jenna at the start is
+      unchanged.

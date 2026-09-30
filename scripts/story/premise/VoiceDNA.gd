@@ -24,11 +24,14 @@ const FAMILIES := [
 
 
 ## {provider_voice, speed} for a person. `faction_id` may be "".
-static func for_person(entity_id: String, faction_id: String = "") -> Dictionary:
+## `force_female`: -1 picks by seed; 1 / 0 fix it (to match a portrait).
+static func for_person(entity_id: String, faction_id: String = "", force_female: int = -1) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("voice|%s" % entity_id)
 	var family: Dictionary = FAMILIES[abs(hash("family|%s" % faction_id)) % FAMILIES.size()] if not faction_id.is_empty() else {}
 	var female := rng.randi_range(0, 1) == 0
+	if force_female >= 0:
+		female = force_female == 1
 	var pool: Array = (family.get("female", FEMALE) if female else family.get("male", MALE)) if not family.is_empty() else (FEMALE if female else MALE)
 	var lead := str(pool[rng.randi_range(0, pool.size() - 1)])
 	var others: Array = (FEMALE if female else MALE).filter(func(v): return v != lead)

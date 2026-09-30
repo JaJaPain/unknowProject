@@ -575,7 +575,16 @@ static func get_station_mechanic_voice(outpost_id: String) -> String:
 	for npc_name in get_minor_npcs_at_outpost(outpost_id):
 		var data: Dictionary = generated_outpost_npc_data.get(npc_name, {})
 		if str(data.get("role", "")) == "Station mechanic":
-			return str(data.get("voice_profile_id", ""))
+			# Every station's mechanic has their own voice (Abe, 2026-09-09: two
+			# stations sharing one sound like the same place). The 7-voice pool
+			# ran out; VoiceDNA makes one per station from its id, stable across
+			# saves, never the fixed cast's. Registered here, where it is used.
+			var dna = load("res://scripts/story/premise/VoiceDNA.gd")
+			# Keep the voice's gender matching the portrait it was paired with.
+			var old_voice := str(GameContentRegistry.shared().provider_voice(str(data.get("voice_profile_id", ""))).get("provider_voice", ""))
+			var female := 1 if (old_voice.begins_with("af") or old_voice.begins_with("bf")) else (0 if old_voice.begins_with("a") or old_voice.begins_with("b") else -1)
+			var own: String = dna.register(dna.for_person("mechanic|" + outpost_id, "", female))
+			return own if not own.is_empty() else str(data.get("voice_profile_id", ""))
 	return ""
 
 

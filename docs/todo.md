@@ -819,7 +819,7 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
     future attempt to "bake all of Kaelen" needs to reckon with that first.
 
 
-- [ ] **No two stations should share a maintenance person** (Abe, 2026-09-09).
+- [~] **Voices DONE 2026-09-30:** each station's mechanic now speaks with their own VoiceDNA voice (seeded by station id, gender kept to match the portrait, never the fixed cast), so no two stations sound alike. Portraits are still a 7-image pool (content). **No two stations should share a maintenance person** (Abe, 2026-09-09).
   Dock clearance now speaks in the station mechanic's voice (landed same day), so
   a repeated mechanic is now AUDIBLE as well as visible -- two stations that
   share one sound like the same place.
