@@ -226,3 +226,7 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Begin animates into loading.** Press Begin Expedition (or Continue):
       the menu slides away, stars burst into warp streaks, the ship flies into
       them, then "Charting course..." holds until the loading screen fades in.
+- [ ] **N.O.V.A. talks again.** New campaign: she appears and speaks on the
+      first dock, when you try to leave without repairs, and when she marks
+      the enemy ship. (An empty title-screen layer left behind after launch
+      made her hold every line.)

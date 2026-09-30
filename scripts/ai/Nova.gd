@@ -436,7 +436,10 @@ func _world_hidden() -> bool:
 	if tree == null:
 		return false
 	var root := tree.current_scene
-	if root != null and root.get_node_or_null("LandingLayer") != null:
+	# The title screen itself, not its layer: the empty LandingLayer outlived
+	# the launch and silenced her for the whole session (Abe, 2026-09-30).
+	var landing := root.get_node_or_null("LandingLayer/LandingScreen") if root != null else null
+	if landing != null and not landing.is_queued_for_deletion():
 		return true
 	if bool(GlobalState.get("intro_cinematic_active")):
 		return true

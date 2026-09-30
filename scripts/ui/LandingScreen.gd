@@ -262,7 +262,13 @@ func _finish_launch(loaded_campaign: bool) -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 0.0, 0.45)
 	await tween.finished
-	queue_free()
+	# Take the whole title layer with it; an empty LandingLayer left behind
+	# reads as "still on the title screen" to anything that checks for it.
+	var layer := get_parent()
+	if layer != null and layer.name == "LandingLayer":
+		layer.queue_free()
+	else:
+		queue_free()
 
 
 var _cover: ColorRect
