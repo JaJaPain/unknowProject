@@ -11048,8 +11048,9 @@ func refresh_overview():
 
 	if map_btn:
 		# Always shown; greyed out until there is somewhere else (first jump).
-		var registry: Variant = _get_system_registry()
-		map_btn.disabled = registry == null or registry.get_all_systems().size() <= 1
+		# The registry knows every system from day 1, so gate on a real jump
+		# (or being anywhere but home, for saves from before the flag).
+		map_btn.disabled = not bool(StoryManager.story_state.get("first_jump_done", false)) and str(GlobalState.current_system_id) == "start_system"
 		map_btn.tooltip_text = "System Map (M)" if not map_btn.disabled else "Star map unlocks after your first jump"
 		map_btn.modulate.a = 1.0 if not map_btn.disabled else 0.4
 	

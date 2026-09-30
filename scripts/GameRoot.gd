@@ -453,6 +453,8 @@ func request_gate_jump(gate: Node3D) -> bool:
 		return false
 	var fuel_cost := jump_fuel_cost(gate)
 	GlobalState.spend_fuel(fuel_cost)
+	# The star map unlocks after the first jump (saved with the story state).
+	StoryManager.story_state["first_jump_done"] = true
 	# N.O.V.A. speaks up when this jump leaves too little for another.
 	if GlobalState.fuel < GlobalState.FuelScript.JUMP_MAX:
 		GlobalState.emit_chatter("N.O.V.A.", "Jump fuel spent. %d left in the tank; that may not get us through another gate. Water ice refines into fuel at any station." % int(GlobalState.fuel), Color(1.0, 0.75, 0.35))
@@ -6849,6 +6851,9 @@ func _run_jump_smoke_test() -> void:
 		return
 	if GlobalState.get_primary_station() == null:
 		_fail_jump_smoke_test("The generated system has no main station (quest turn-ins show 'Destination Not In System').")
+		return
+	if not bool(StoryManager.story_state.get("first_jump_done", false)):
+		_fail_jump_smoke_test("The first jump did not unlock the star map (first_jump_done).")
 		return
 	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
 		_fail_jump_smoke_test("Outbound jump did not advance campaign time.")

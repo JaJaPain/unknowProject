@@ -42,7 +42,7 @@ _Active task list. Update this file at the end of every session._
   combat vessels show pinned in red (272m and 1906m). Either the mission
   spawns two, or a second Reaver (ambush/raider/patrol) spawns in the start
   system during the tutorial. The tutorial should show exactly one.
-- [ ] **Star map button still lit on day 1** (same screenshot): the 2026-09-26
+- [x] **DONE 2026-09-29** (story_state.first_jump_done set when a jump commits; the button is greyed until then, or anywhere outside the start system for older saves.) **Star map button still lit on day 1** (same screenshot): the 2026-09-26
   fix greys it out only while the registry has one system, but the registry
   likely knows every system from the start. Gate it on having made a jump
   (or a visited-systems count > 1) instead.
