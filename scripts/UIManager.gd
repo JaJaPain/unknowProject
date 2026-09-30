@@ -5023,6 +5023,18 @@ func show_system_title_card() -> void:
 	tween.tween_callback(card.queue_free)
 
 
+var _damage_vignette: Control
+
+
+## Screen-edge flash for a hit on the player (DamageVignette.gd).
+func flash_damage(fraction: float, shield: bool) -> void:
+	if _damage_vignette == null or not is_instance_valid(_damage_vignette):
+		_damage_vignette = load("res://scripts/ui/DamageVignette.gd").new()
+		_damage_vignette.name = "DamageVignette"
+		add_child(_damage_vignette)
+	_damage_vignette.hit(fraction, shield)
+
+
 func _update_dock_subtitle() -> void:
 	if dock_subtitle == null or not is_instance_valid(dock_subtitle):
 		return

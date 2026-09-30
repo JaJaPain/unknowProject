@@ -2728,6 +2728,10 @@ func take_damage(amount: float, attacker_faction: String = ""):
 	if GlobalState.has_max_speed_engine:
 		shield_regen_timer += 2.0
 	
+	# The screen edges answer the hit (UIManager damage vignette).
+	var hit_ui = GlobalState.get_ui_manager()
+	if hit_ui != null and hit_ui.has_method("flash_damage"):
+		hit_ui.flash_damage(amount / maxf(1.0, max_health), current_shield >= amount)
 	if current_shield > 0.0:
 		if amount <= current_shield:
 			current_shield -= amount

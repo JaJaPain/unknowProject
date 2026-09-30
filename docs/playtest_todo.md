@@ -155,3 +155,6 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Title screen.** Launch the game: the campaign list sits left of
       centre, your ship turns slowly on the right, Continue/Begin buttons are
       blue, Delete is red. Continue still loads your campaign.
+- [ ] **Getting hit.** Take a hull hit: the screen edges flash red (harder
+      hits, stronger). A hit your shields absorb gives a faint blue flash.
+      Drop under 30% hull: a slow red pulse at the edges until repaired.

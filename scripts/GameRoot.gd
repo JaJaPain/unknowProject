@@ -7710,6 +7710,11 @@ func _run_hud_snapshot() -> void:
 	title_ui.show_system_title_card()
 	await get_tree().create_timer(2.0).timeout
 	await _hud_snapshot_save(out.path_join("hud_title.png"))
+	# A hard hull hit: the screen edges flash red.
+	title_ui.flash_damage(0.3, false)
+	for i in 4:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("hud_hit.png"))
 	print("HUDSHOT done")
 	get_tree().quit()
 
