@@ -5200,7 +5200,7 @@ func _render_station_contacts(should_show: bool) -> void:
 			card_data["approach"] = true
 		_add_lounge_contact_card(i, card_data)
 		# Phase 9: prepare this contact's exchange bundle in the background
-		# so the first click can be instant instead of "Listening...".
+		# so the first click can be instant instead of a listening placeholder.
 		_prepare_lounge_exchange_bundle(card_data)
 
 

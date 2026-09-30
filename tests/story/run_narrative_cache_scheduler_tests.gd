@@ -1135,7 +1135,7 @@ func _test_ui_offer_text_is_presented_before_audio_waits() -> void:
 	if file == null:
 		return
 	var source := file.get_as_text()
-	var present_idx := source.find("_on_quest_generated_received(cached_quest_data, cached_quest_is_fallback)")
+	var present_idx := source.find("_present_agent_board_result_when_ready(cached_quest_data, cached_quest_is_fallback)")
 	var loading_wait_idx := source.find("SpeechService.cache_queue_completed.connect(_on_tts_cache_completed)")
 	_expect(
 		present_idx >= 0
