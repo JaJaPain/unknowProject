@@ -133,3 +133,5 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Nebula skies.** Behind the stars there is a faint coloured nebula
       (warm amber/rose at the start). Jump to another system: its nebula
       has a different shape and, often, a different colour.
+- [ ] **Weapon shots.** Shots are glowing bolts pointing where they fly (not
+      dots), lighting nearby hulls, with a small flash at the gun.

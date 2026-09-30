@@ -14,15 +14,49 @@ var spent: bool = false
 
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 
+## A glowing bolt along its flight and a flash at the gun (next_level_plan
+## P2); set false for shots that shouldn't flash (none yet).
+var muzzle_flash := true
+
+
 func _ready():
-	# Configure visual color
+	# A bright, stretched bolt that glows (bloom) instead of a flat dot.
 	var mat = StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = color
+	mat.albedo_color = color.lightened(0.35)
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 5.0
+	var bolt := CapsuleMesh.new()
+	bolt.radius = 0.14
+	bolt.height = 2.6
+	bolt.radial_segments = 8
+	bolt.rings = 2
+	mesh_instance.mesh = bolt
 	mesh_instance.set_surface_override_material(0, mat)
-	
+	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var glow := OmniLight3D.new()
+	glow.light_color = color
+	glow.light_energy = 1.2
+	glow.omni_range = 7.0
+	glow.shadow_enabled = false
+	add_child(glow)
+	# Position and direction are set right after add_child, so aim and flash
+	# a frame later.
+	_aim_and_flash.call_deferred()
+
 	# Connect collision signals
 	body_entered.connect(_on_body_entered)
+
+
+func _aim_and_flash() -> void:
+	if not is_inside_tree():
+		return
+	if direction.length_squared() > 0.0001:
+		# The capsule's long axis is Y: point it along the flight.
+		mesh_instance.global_basis = Basis(Quaternion(Vector3.UP, direction.normalized()))
+	if muzzle_flash and get_parent() is Node3D:
+		ImpactEffect.spawn_hit(get_parent(), global_position, color, 0.55)
 
 func _physics_process(delta: float):
 	global_position += direction * speed * delta
