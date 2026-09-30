@@ -262,6 +262,17 @@ func _count_minor_faction_ships() -> int:
 
 func _spawn_minor_faction_ship():
 	var minor_keys = GlobalState.MINOR_FACTIONS.keys()
+	# While Kaelen's one-Reaver tutorial runs, a roaming Reaver reads as a
+	# second target (Abe, 2026-09-28: two Reavers pinned red). Other minor
+	# factions still roam.
+	# Until the first jump, no roaming Reavers at home either: the tutorial's
+	# lone Reaver should be the only one the new player meets.
+	var tutorial_active: bool = QuestManager.is_quest_active() and QuestManager.is_intro_tutorial_contract(QuestManager.active_quest)
+	var before_first_jump: bool = str(GlobalState.current_system_id) == "start_system" and not bool(StoryManager.story_state.get("first_jump_done", false))
+	if tutorial_active or before_first_jump:
+		minor_keys = minor_keys.filter(func(k): return str(k) != "reavers")
+		if minor_keys.is_empty():
+			return
 	var faction_name = minor_keys[randi() % minor_keys.size()]
 	
 	# Patrol toward planets/belts — NOT the station (they're outlaws)

@@ -37,7 +37,7 @@ _Active task list. Update this file at the end of every session._
   timer isn't running or carried over while the campaign is loading.
   Not just audio: her talking portrait also appears over the load screen, so
   gate the whole speak() path (portrait + voice + comms text), not only TTS.
-- [x] **DONE 2026-09-29** (likely cause: the accept-time spawn, 3 s after accepting, ran after the undock restore had already spawned the target; it now skips when a live target exists. Verify in play.) **Two Reaver ships in the overview during the tutorial kill mission** (Abe, 2026-09-28,
+- [x] **DONE 2026-09-29** (real cause, from Abe's logs: MainScene's ambient minor-faction spawner rolls Reavers in the start system; now no roaming Reavers at home before the first jump or during the tutorial. The accept-time spawn also skips when a live target exists. Covered by --first-session-smoke-test.) **Two Reaver ships in the overview during the tutorial kill mission** (Abe, 2026-09-28,
   screenshot): "Clean and Easy" asks for 1 Reaver kill, but two REAVERS
   combat vessels show pinned in red (272m and 1906m). Either the mission
   spawns two, or a second Reaver (ambush/raider/patrol) spawns in the start

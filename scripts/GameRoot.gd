@@ -312,6 +312,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_jump_smoke_test")
+	elif "--first-session-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_first_session_smoke_test")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_hud_snapshot")
 	elif "--dock-snapshot" in OS.get_cmdline_user_args():
@@ -10464,6 +10466,122 @@ func _position_player_for_gate_test(gate: Node3D) -> void:
 	player.global_position = gate.global_position + gate.global_transform.basis.z.normalized() * 80.0
 	player.look_at(gate.global_position, Vector3.UP)
 	player.velocity = Vector3.ZERO
+
+## The new player's first session, as they play it: star map locked, dock at
+## the main station (no target panel under the tractor), Kaelen's briefing with
+## only his two replies, take the Reaver job, undock, and exactly one Reaver.
+## Covers the 2026-09-28 playtest bugs end to end.
+## -- --first-session-smoke-test --baseline-offline
+func _run_first_session_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	var ui = GlobalState.get_ui_manager()
+	if ui == null:
+		_fail_first_session_smoke_test("No UI manager.")
+		return
+	for i in 30:
+		await get_tree().process_frame
+	if ui.map_btn == null or not ui.map_btn.disabled:
+		_fail_first_session_smoke_test("The star map is usable before the first jump.")
+		return
+
+	var station := GlobalState.get_primary_station()
+	if station == null:
+		_fail_first_session_smoke_test("The start system has no main station.")
+		return
+	var docking_position: Vector3 = station.get_docking_position(player.global_position) if station.has_method("get_docking_position") else station.global_position
+	var approach := (docking_position - station.global_position).normalized()
+	if approach.length_squared() < 0.001:
+		approach = Vector3.FORWARD
+	player.global_position = docking_position + approach * 28.0
+	player.look_at(docking_position, Vector3.UP)
+	player.sync_camera_to_ship()
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+	GlobalState.active_target = station
+	player.nav_mode = "DOCK"
+	var saw_tractor := false
+	for frame in 2400:
+		await get_tree().physics_frame
+		if bool(ui.get("_docking_procedure_active")):
+			saw_tractor = true
+			if ui.target_panel.visible:
+				_fail_first_session_smoke_test("The target panel is up while the tractor beam has the ship.")
+				return
+		if player.is_docked and ui.dock_panel.visible:
+			break
+	if not (player.is_docked and ui.dock_panel.visible):
+		_fail_first_session_smoke_test("Docking at the main station did not reach the station menu.")
+		return
+	if not saw_tractor:
+		print("[FirstSessionSmokeTest] note: docking finished without the tractor procedure.")
+
+	GlobalState.kaelen_briefing_seen = false
+	ui._on_talk_to_agent_pressed()
+	await get_tree().process_frame
+	var replies := _live_buttons(ui.agent_choices_container)
+	var reply_texts := []
+	for b in replies:
+		reply_texts.append(b.text)
+	if reply_texts != ["Let's hear it.", "Not right now. I need to get my bearings first."]:
+		_fail_first_session_smoke_test("Kaelen's briefing should offer only his two replies, got %s." % str(reply_texts))
+		return
+	if ui.agent_trade_grid.visible or ui.agent_back_btn.visible:
+		_fail_first_session_smoke_test("Trade buttons or Back to Services show during Kaelen's briefing.")
+		return
+
+	replies[0].pressed.emit()
+	for i in 5:
+		await get_tree().process_frame
+	var offer := _live_buttons(ui.agent_choices_container)
+	if offer.is_empty():
+		_fail_first_session_smoke_test("Kaelen's Reaver job had no reply to accept.")
+		return
+	offer[0].pressed.emit()
+	for i in 10:
+		await get_tree().process_frame
+	if not QuestManager.is_quest_active() or not QuestManager.is_intro_tutorial_contract(QuestManager.active_quest):
+		_fail_first_session_smoke_test("Accepting Kaelen's job did not start the tutorial contract.")
+		return
+
+	ui.undock_player(true)
+	# Any Reaver counts, not only mission targets: in play the second one was
+	# pinned red too (Abe, 2026-09-28). Watch for a while after undocking.
+	var most := 0
+	var names := []
+	for second in 40:
+		await get_tree().create_timer(1.0).timeout
+		var alive := []
+		for ship in get_tree().get_nodes_in_group("ship"):
+			if is_instance_valid(ship) and str(ship.get("faction")) == "reavers" and not bool(ship.get("destroyed")):
+				alive.append("%s%s" % [ship.name, " (target)" if bool(ship.get_meta("is_quest_target", false)) else ""])
+		if alive.size() > most:
+			most = alive.size()
+			names = alive
+	if most != 1:
+		_fail_first_session_smoke_test("The one-kill tutorial had %d Reavers at once, expected 1: %s" % [most, str(names)])
+		return
+
+	print("[FirstSessionSmokeTest] PASS: locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver.")
+	delete_savegame()
+	get_tree().quit()
+
+
+func _live_buttons(container: Node) -> Array:
+	var found := []
+	if container == null:
+		return found
+	for child in container.get_children():
+		if child is Button and not child.is_queued_for_deletion() and child.visible:
+			found.append(child)
+	return found
+
+
+func _fail_first_session_smoke_test(message: String) -> void:
+	push_error("[FirstSessionSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
+
 
 func _fail_jump_smoke_test(message: String) -> void:
 	push_error("[JumpSmokeTest] FAIL: " + message)
