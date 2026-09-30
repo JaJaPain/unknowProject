@@ -9,6 +9,14 @@ with Abe's OK, no fixed-cast secret anywhere, original art only, no text in art.
 
 ---
 
+## Progress (2026-09-29 / 30)
+
+All 24 bites done and pushed on claude/vision-slice (B1-B10 bug sprint,
+then P1-P8). Follow-ups noted in docs/todo.md: tension music has no trigger
+yet (needs a "hostile targeting you" signal); upgrades screen shows the old
+hull; hub tiles await service icons; the explosion core awaits the art-batch
+flipbook; the docking camera framing and station lights want an in-play look.
+
 ## 1. Bug sprint (all pre-located)
 
 Each bug: where it is, the cause as far as known, the fix, the test.

@@ -152,6 +152,9 @@ var campaign_kaelen_memory_store: CampaignKaelenMemoryStore
 var campaign_idea_memory_store: CampaignIdeaMemoryStore
 var campaign_bible_store: CampaignBibleStore
 var campaign_chapter_packet_store = null
+## Model-written chapter beats (legacy story generator). Off: the Arc Engine /
+## premise cards own the story; the campaign bible is flavour only.
+const LEGACY_CHAPTER_PLAN_ENABLED := false
 var campaign_generated_faction_store: CampaignGeneratedFactionStore
 var campaign_npc_identity_store = null
 var campaign_npc_state_store = null
@@ -3764,6 +3767,12 @@ func request_chapter_plan_generation(target_chapter: int = 0) -> Dictionary:
 		return {"ok": true, "status": "already_generated"}
 	if chapter_plan_generation_in_flight:
 		return {"ok": true, "status": "already_requested"}
+	# The Arc Engine and premise cards own the story (Abe, 2026-09-29, Q1);
+	# the model's free-form chapter beats (which once made Kaelen the player's
+	# creditor) stay off. The authored fallback packet keeps the chapter
+	# machinery fed. Flip LEGACY_CHAPTER_PLAN_ENABLED to bring them back.
+	if not LEGACY_CHAPTER_PLAN_ENABLED:
+		return _commit_fallback_chapter_plan(chapter, "legacy_chapter_plan_disabled")
 	if not LLMInterface.llm_connected:
 		chapter_plan_pending_target_chapter = chapter
 		if not LLMInterface.llm_connection_established.is_connected(_on_llm_ready_for_chapter_plan):
@@ -3881,7 +3890,7 @@ func _commit_fallback_chapter_plan(target_chapter: int, reason: String) -> Dicti
 	_queue_narrative_prefetch_jobs_for_event(
 		_narrative_prefetch_event_from_chapter_packet(fallback_packet)
 	)
-	print("[GameRoot] Fallback chapter narrative packet committed after model plan failure.")
+	print("[GameRoot] Fallback chapter narrative packet committed (%s)." % reason)
 	return {"ok": true, "status": "fallback_committed", "packet": fallback_packet}
 
 
