@@ -326,7 +326,7 @@ func _update_tension(delta: float) -> void:
 		return
 	var threatened := false
 	for entity in GlobalState.active_system_entities:
-		if entity is Node and is_instance_valid(entity) and entity != player 				and entity.get("destroyed") != true and entity.get("target") == player:
+		if is_instance_valid(entity) and entity is Node and entity != player and entity.get("destroyed") != true and entity.get("target") == player:
 			threatened = true
 			break
 	if threatened and music_state == "explore":

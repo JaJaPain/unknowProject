@@ -296,8 +296,11 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 	station.set("display_name", display_name)
 	station.set("station_type", station_type)
 	station.set("model_path", STATION_MODELS[model_idx])
-	station.set("model_instance_scale", STATION_SCALES[model_idx])
+	# Two models, many stations: each one gets its own size, heading and a
+	# slight tilt so no two read as the same place.
+	station.set("model_instance_scale", STATION_SCALES[model_idx] * rng.randf_range(0.8, 1.25))
 	station.position = position
+	station.rotation = Vector3(rng.randf_range(-0.12, 0.12), rng.randf_range(0.0, TAU), rng.randf_range(-0.12, 0.12))
 
 	_placed_positions.append(position)
 	_placed_radii.append(MIN_STATION_CLEARANCE)

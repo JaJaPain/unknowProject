@@ -36,6 +36,7 @@ func _process(delta: float) -> void:
 var forced_arriving := -1
 var forced_speed := 0.0
 var docked_count := 0
+var stuck_count := 0
 var left_count := 0
 
 
@@ -93,6 +94,19 @@ func _tick_ship(entry: Dictionary) -> void:
 		_ships.erase(entry)
 		return
 	var d := (ship as Node3D).global_position.distance_to(entry["dest"])
+	# NPC steering doesn't route around planets: a freighter that stops
+	# closing on its destination for 12 s is quietly retired (fades out).
+	var now := Time.get_ticks_msec()
+	if d < float(entry.get("best_dist", INF)) - 5.0:
+		entry["best_dist"] = d
+		entry["stuck_since"] = now
+	elif now - int(entry.get("stuck_since", now)) > 12000:
+		_ships.erase(entry)
+		stuck_count += 1
+		var fade := (ship as Node3D).create_tween()
+		fade.tween_property(ship, "scale", Vector3.ONE * 0.05, 1.0)
+		fade.tween_callback((ship as Node).queue_free)
+		return
 	if entry["kind"] == "dock" and d < DOCK_RADIUS:
 		_ships.erase(entry)
 		var tween := (ship as Node3D).create_tween()

@@ -701,10 +701,10 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 - [ ] **Map hover tooltips** -- hovering a map node shows stations, ore types, factions present
 - [ ] **Route planner** -- click-to-plan route; gates highlight in overview; auto-clears on arrival
-- [ ] **Gate portal particles** -- particle effects off the gate portal (portal shader is locked/approved, don't touch it)
-- [ ] **Generated systems: NPC ships** -- procedural systems feel empty; need ambient NPC traffic
+- [x] **Gate portal particles** (exist: JumpGate._spawn_portal_particles; checked 2026-09-30) -- particle effects off the gate portal (portal shader is locked/approved, don't touch it)
+- [x] **Generated systems: NPC ships** (GeneratedSystemNPCManager patrols/roamers/lanes + TrafficDirector gate traffic; checked 2026-09-30) -- procedural systems feel empty; need ambient NPC traffic
 - [ ] **Generated systems: station variety** -- all proc-gen stations look the same; need visual variants
-- [ ] **Generated systems: difficulty scaling** -- enemy stats should scale with system danger level
+- [x] **Generated systems: difficulty scaling** (SystemConfig.difficulty_multiplier + danger-level faction profiles; checked 2026-09-30) -- enemy stats should scale with system danger level
 - [ ] **Discovery visual treatments** -- named/story systems should feel different on arrival: skybox tint, arrival text banner, environmental storytelling (debris, explosion haze). See `docs/design_parking_lot.md section2`
 - [ ] **Sensor contacts panel (name TBD)** -- when a ship comes within passive-sensor range (or you're in combat with it), it's added to a contacts list. Open the list to view that ship's 3D model (rotatable) plus the details your sensors picked up: ship class/role, weapon types, power supply/reactor, shields, hull composition, faction, etc. Fidelity of detail could scale with sensor strength / scan time. Data already partially exists on `NPCShip` (weapon_tier, powerplant_tier, hull_composition, shield_tier, archetype) -- surface it here. Kitbash ships make the 3D model view cheap to render. **3D viewer already built:** `scripts/ui/ModelViewer.gd` + `scenes/ui/model_viewer.tscn` (orbit-drag/zoom/auto-spin, `show_ship(faction,role,seed)` / `set_model(node)`) -- just drop it into the panel.
 - [ ] **Rumor-instanced anomalies** -- anomalies should not all pre-exist as obvious map loot. A lounge/story rumor can spawn a hidden anomaly in a plausible region of the current system, then system chat records the unverified lead ("Possible anomaly signal added to local sensor memory"). State flow: `rumored` -> `sensor_contact` -> `identified` -> `resolved`.

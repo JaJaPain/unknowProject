@@ -167,3 +167,6 @@ Claude adds new items here as work lands (newest section at the bottom).
       reads Friendly), not "Hostile NPCShip" for everyone.
 - [ ] **Reset story variety.** Pause > settings has "Reset story variety".
       Press it: it says "Story variety reset" and your campaign is unchanged.
+- [ ] **Stations look different.** In two or three generated systems, the
+      stations differ in size, heading and tilt, even when they use the same
+      model.

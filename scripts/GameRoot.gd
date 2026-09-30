@@ -10646,6 +10646,14 @@ func _run_traffic_smoke_test() -> void:
 	traffic_director.spawn_now()
 	for second in 90:
 		await get_tree().create_timer(1.0).timeout
+		# A freighter blocked by a planet is retired; send another of that kind.
+		if second % 15 == 14:
+			if traffic_director.docked_count == 0:
+				traffic_director.forced_arriving = 1
+				traffic_director.spawn_now()
+			if traffic_director.left_count == 0:
+				traffic_director.forced_arriving = 0
+				traffic_director.spawn_now()
 		if traffic_director.docked_count >= 1 and traffic_director.left_count >= 1:
 			print("[TrafficSmokeTest] PASS: a freighter docked at the berth and another left through the gate.")
 			delete_savegame()
