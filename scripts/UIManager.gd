@@ -492,6 +492,7 @@ var combat_tutorial_overlay: Control = null
 var combat_tutorial_layer: CanvasLayer = null  # hosts the overlay above the combat wheel (CombatPanel is layer 10)
 var undock_btn: Button = null
 var selected_row_style: StyleBoxFlat
+const TypewriterLabelType := preload("res://scripts/ui/TypewriterLabel.gd")
 const HudStyle := preload("res://scripts/ui/HudStyle.gd")
 var _overview_divider: Control = null
 
@@ -1803,49 +1804,47 @@ func _create_dock_menu():
 	# Construct Agent Panel
 	agent_panel = Panel.new()
 	add_child(agent_panel)
-	agent_panel.anchor_left = 0.25
-	agent_panel.anchor_right = 0.75
-	agent_panel.anchor_top = 0.2
-	agent_panel.anchor_bottom = 0.8
+	# A conversation, not a pop-up: most of the screen, the HUD look.
+	agent_panel.anchor_left = 0.2
+	agent_panel.anchor_right = 0.86
+	agent_panel.anchor_top = 0.1
+	agent_panel.anchor_bottom = 0.9
 	agent_panel.offset_left = 0
 	agent_panel.offset_right = 0
 	agent_panel.offset_top = 0
 	agent_panel.offset_bottom = 0
 	agent_panel.visible = false
 	
-	var agent_style = StyleBoxFlat.new()
-	agent_style.bg_color = Color(0.12, 0.12, 0.15, 1.0)
-	agent_style.border_width_left = 2
-	agent_style.border_width_top = 2
-	agent_style.border_width_right = 2
-	agent_style.border_width_bottom = 2
-	agent_style.border_color = Color(0.0, 0.8, 0.8, 1.0)
-	agent_style.corner_radius_top_left = 4
-	agent_style.corner_radius_top_right = 4
-	agent_style.corner_radius_bottom_right = 4
-	agent_style.corner_radius_bottom_left = 4
+	# Opaque: the station menu must not show through the conversation.
+	var agent_style := HudStyle.panel()
+	agent_style.bg_color = Color(0.03, 0.04, 0.055, 0.985)
 	agent_panel.add_theme_stylebox_override("panel", agent_style)
 	
 	var agent_hbox = HBoxContainer.new()
 	agent_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	agent_hbox.offset_left = 15
-	agent_hbox.offset_right = -15
-	agent_hbox.offset_top = 15
-	agent_hbox.offset_bottom = -15
+	agent_hbox.offset_left = 24
+	agent_hbox.offset_right = -24
+	agent_hbox.offset_top = 22
+	agent_hbox.offset_bottom = -22
 	agent_panel.add_child(agent_hbox)
 	
 	# Left Side: Agent Portrait
 	var portrait_vbox = VBoxContainer.new()
 	agent_portrait_column = portrait_vbox
-	portrait_vbox.custom_minimum_size = Vector2(180, 0)
+	portrait_vbox.custom_minimum_size = Vector2(300, 0)
 	portrait_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	agent_hbox.add_child(portrait_vbox)
 	
+	# The speaker, large and framed: the face carries the scene.
+	var portrait_frame := PanelContainer.new()
+	var frame_style := HudStyle.box(Color(0.02, 0.03, 0.045, 0.95), HudStyle.EDGE, 1, 10, 6)
+	portrait_frame.add_theme_stylebox_override("panel", frame_style)
+	portrait_vbox.add_child(portrait_frame)
 	agent_portrait = TextureRect.new()
-	agent_portrait.custom_minimum_size = Vector2(180, 180)
+	agent_portrait.custom_minimum_size = Vector2(288, 340)
 	agent_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	agent_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	portrait_vbox.add_child(agent_portrait)
+	agent_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	portrait_frame.add_child(agent_portrait)
 	
 	var col_spacer = Control.new()
 	col_spacer.custom_minimum_size = Vector2(20, 0)
@@ -1869,15 +1868,13 @@ func _create_dock_menu():
 	agent_name_label = Label.new()
 	agent_name_label.text = "BROKER KAELEN"
 	agent_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	agent_name_label.add_theme_color_override("font_color", Color(0.0, 0.9, 0.9))
-	agent_name_label.add_theme_font_size_override("font_size", 18)
+	HudStyle.style_label(agent_name_label, 22, HudStyle.ACCENT)
 	name_vbox.add_child(agent_name_label)
 	
 	agent_subtitle_label = Label.new()
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	agent_subtitle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	agent_subtitle_label.add_theme_font_size_override("font_size", 11)
-	agent_subtitle_label.modulate = Color(0.7, 0.7, 0.7)
+	HudStyle.style_label(agent_subtitle_label, 12, HudStyle.DIM)
 	name_vbox.add_child(agent_subtitle_label)
 	
 	agent_client_logo = TextureRect.new()
@@ -1897,8 +1894,10 @@ func _create_dock_menu():
 	agent_dialogue_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	avbox.add_child(agent_dialogue_scroll)
 	
-	agent_dialogue_label = Label.new()
+	agent_dialogue_label = TypewriterLabelType.new()
 	agent_dialogue_label.text = "What is your business here, pilot? If it doesn't make credits, it's not my concern."
+	HudStyle.style_label(agent_dialogue_label, 16, HudStyle.TEXT)
+	agent_dialogue_label.add_theme_constant_override("line_spacing", 4)
 	agent_dialogue_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	agent_dialogue_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	agent_dialogue_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -1906,7 +1905,11 @@ func _create_dock_menu():
 	
 	agent_choices_container = VBoxContainer.new()
 	agent_choices_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	agent_choices_container.add_theme_constant_override("separation", 6)
 	avbox.add_child(agent_choices_container)
+	# Replies are numbered rows (keys 1-4), styled as they arrive.
+	agent_choices_container.child_entered_tree.connect(func(_n: Node) -> void: call_deferred("_restyle_agent_choices"))
+	agent_choices_container.child_exiting_tree.connect(func(_n: Node) -> void: call_deferred("_restyle_agent_choices"))
 
 	var trade_gap := Control.new()
 	trade_gap.custom_minimum_size = Vector2(0, 6)
@@ -3585,6 +3588,9 @@ func _restart_game():
 
 func _unhandled_input(event: InputEvent):
 	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode >= KEY_1 and event.keycode <= KEY_4 and _press_agent_reply(event.keycode - KEY_1 + 1):
+			get_viewport().set_input_as_handled()
+			return
 		if event.keycode == KEY_M and map_btn and map_btn.visible and not map_btn.disabled:
 			_toggle_branch_map()
 			get_viewport().set_input_as_handled()
@@ -11791,6 +11797,51 @@ func clear_dock_message() -> void:
 
 ## A trade-grid button: long labels clip with an ellipsis instead of widening
 ## the panel (which pushed the dialogue off screen); the tooltip has it all.
+## Numbered, full-width reply rows. Replies are made in many places, so they
+## are styled here as they enter the container; the number is the key (1-4).
+func _restyle_agent_choices() -> void:
+	if agent_choices_container == null or not is_instance_valid(agent_choices_container):
+		return
+	var n := 0
+	for child in agent_choices_container.get_children():
+		if not child is Button or child.is_queued_for_deletion() or not child.visible:
+			continue
+		n += 1
+		var b := child as Button
+		var raw := str(b.get_meta("raw_text", ""))
+		if raw.is_empty() or not b.text.ends_with(raw):
+			raw = b.text
+			b.set_meta("raw_text", raw)
+		b.text = "%d   %s" % [n, raw] if n <= 4 else raw
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size.y = 40
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		if not b.has_meta("reply_styled"):
+			b.set_meta("reply_styled", true)
+			b.add_theme_font_size_override("font_size", 15)
+			b.add_theme_stylebox_override("normal", HudStyle.box(Color(0.06, 0.08, 0.11, 0.9), HudStyle.EDGE_SOFT, 1, 6, 10))
+			b.add_theme_stylebox_override("hover", HudStyle.box(Color(0.08, 0.14, 0.2, 0.95), HudStyle.ACCENT, 1, 6, 10))
+			b.add_theme_stylebox_override("pressed", HudStyle.box(Color(0.08, 0.2, 0.3, 0.95), HudStyle.ACCENT, 1, 6, 10))
+
+
+## Keys 1-4 pick the matching reply while the agent is talking.
+func _press_agent_reply(index: int) -> bool:
+	if agent_panel == null or not agent_panel.visible:
+		return false
+	var n := 0
+	for child in agent_choices_container.get_children():
+		if not child is Button or child.is_queued_for_deletion() or not child.visible:
+			continue
+		n += 1
+		if n == index:
+			if not (child as Button).disabled:
+				if agent_dialogue_label.has_method("finish"):
+					agent_dialogue_label.finish()
+				(child as Button).pressed.emit()
+			return true
+	return false
+
+
 func _agent_trade_button(callback: Callable) -> Button:
 	var button := Button.new()
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL

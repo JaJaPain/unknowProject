@@ -10531,7 +10531,7 @@ func _run_first_session_smoke_test() -> void:
 	var replies := _live_buttons(ui.agent_choices_container)
 	var reply_texts := []
 	for b in replies:
-		reply_texts.append(b.text)
+		reply_texts.append(str(b.get_meta("raw_text", b.text)))
 	if reply_texts != ["Let's hear it.", "Not right now. I need to get my bearings first."]:
 		_fail_first_session_smoke_test("Kaelen's briefing should offer only his two replies, got %s." % str(reply_texts))
 		return
