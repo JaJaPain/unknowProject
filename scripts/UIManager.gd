@@ -5041,8 +5041,9 @@ func _set_dock_panel_lounge_layout(use_lounge_layout: bool) -> void:
 	if not dock_panel or not is_instance_valid(dock_panel):
 		return
 	if use_lounge_layout:
-		dock_panel.anchor_left = 0.08
-		dock_panel.anchor_right = 0.92
+		# Clear of the HUD and radio on the left, like the other docked screens.
+		dock_panel.anchor_left = 0.2
+		dock_panel.anchor_right = 0.94
 		dock_panel.anchor_top = 0.10
 		dock_panel.anchor_bottom = 0.86
 	else:
