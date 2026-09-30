@@ -29,6 +29,13 @@ const EMPTY_BELOW := 0.5
 const FUEL_BLOCK_ITEM := "fuel_booster"
 const ICE_PER_BLOCK := 4.0
 const BLOCK_FAB_FEE := 3
+## Compressed O2 (Abe): water ice also gives oxygen. A canister holds 10 L and
+## takes 2 m³ of ice; unlike Fuel Blocks it CAN go through a gate, so relief
+## can be hauled to other systems.
+const O2_ITEM := "o2_canister"
+const ICE_PER_O2 := 2.0
+const O2_FAB_FEE := 2
+const O2_LITRES := 10
 ## Items the gate refuses to carry.
 const NO_JUMP_ITEMS := ["fuel_booster"]
 ## Buying fuel outright at a station.

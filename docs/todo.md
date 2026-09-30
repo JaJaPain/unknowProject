@@ -415,7 +415,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
     3 SC each); carrying any refuses a gate jump. Board jobs: "Fuel Blocks
     are running out for X: reason. If not, stake." (4-8 blocks, 34 SC each);
     in a system without ice the job says the ice must be hauled in.
-  - Still to build (Abe's idea): O2 canisters from water ice and O2
+  - DONE 2026-09-30 (Compress O2 at stations, o2_canister item, [LIFE SUPPORT] board jobs from data/content/o2_runs.json; unit tests for O2 still to add): O2 canisters from water ice and O2
     delivery jobs (an outpost's scrubbers failing, 100 L to keep breathing).
   - Fetch-mission cards from Gemini (Abe, 2026-09-26). **Rare items DONE 2026-09-28:** 81 cards (27 items at rarity 3.5+, 3 variants each) in data/content/fetch_cards/approved/; rarity for all items in data/content/item_rarity.json; brief docs/gemini_prompts/fetch_card_prompt.md; checker tools/fetch_cards/check_fetch_cards.py. Wired 2026-09-29: PublicBoardOfferBuilder._build_fetch_offer posts cards for the 6 store-stocked rare items (buy at the main station, deliver to an outpost; spine colour by variant). 2026-09-30: prop cards (and anything not stocked) now run as outpost pickups: the card names who at which outpost has it, pay scales with item_rarity.json. Still to do: rare store items only stocked where a hint points. Then items under 3.5 if wanted. Original note: for
     every store item (data/content/store_items.json) and every prop

@@ -1433,6 +1433,27 @@ func fabricate_fuel_blocks() -> int:
 	return n
 
 
+## How many O2 canisters the hold's water ice and the captain's credits allow.
+func o2_canisters_possible() -> int:
+	var by_ice := int(floor(cargo_ore_amount("water_ice") / FuelScript.ICE_PER_O2))
+	var by_money := int(floor(float(player_credits) / float(FuelScript.O2_FAB_FEE)))
+	var n := mini(by_ice, by_money)
+	while n > 0 and not inventory.can_add(FuelScript.O2_ITEM, n, 20):
+		n -= 1
+	return maxi(0, n)
+
+
+## Compresses the hold's water ice into O2 canisters. Returns how many.
+func compress_o2_canisters() -> int:
+	var n := o2_canisters_possible()
+	if n <= 0:
+		return 0
+	remove_ore(float(n) * FuelScript.ICE_PER_O2, "water_ice")
+	player_credits -= n * FuelScript.O2_FAB_FEE
+	inventory.add(FuelScript.O2_ITEM, n, 20, current_system_id)
+	return n
+
+
 ## The first item aboard the gate will not take, or "".
 func no_jump_item() -> String:
 	for item_id in FuelScript.NO_JUMP_ITEMS:

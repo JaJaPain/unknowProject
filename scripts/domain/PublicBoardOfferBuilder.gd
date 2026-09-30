@@ -45,6 +45,9 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	var block_offer := _build_fuel_block_offer(current_time_minutes)
 	if not block_offer.is_empty():
 		offers.append(block_offer)
+	var o2_offer := _build_o2_offer(current_time_minutes)
+	if not o2_offer.is_empty():
+		offers.append(o2_offer)
 	var fetch_offer := _build_fetch_offer(current_time_minutes)
 	if not fetch_offer.is_empty():
 		offers.append(fetch_offer)
@@ -302,6 +305,75 @@ static func _build_fuel_block_offer(current_time_minutes: int) -> Dictionary:
 
 
 static var _fuel_deck_cache: Dictionary = {}
+
+
+## O2 relief (Abe): an outpost's air is running short. Compress canisters from
+## water ice at a station (Compress O2) and deliver them; data/content/o2_runs.json.
+static func _build_o2_offer(current_time_minutes: int) -> Dictionary:
+	var f := FileAccess.open("res://data/content/o2_runs.json", FileAccess.READ)
+	if f == null:
+		return {}
+	var deck: Variant = JSON.parse_string(f.get_as_text())
+	if not deck is Dictionary:
+		return {}
+	var groups: Array = deck.get("groups", [])
+	var reasons: Array = deck.get("reasons", [])
+	var gs = _global_state()
+	if groups.is_empty() or reasons.is_empty() or gs == null or not gs.has_method("get_current_pickup_outposts"):
+		return {}
+	var outposts: Array = gs.get_current_pickup_outposts()
+	if outposts.is_empty():
+		return {}
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("o2_run|%d" % int(current_time_minutes / 200))
+	var group: Dictionary = groups[rng.randi() % groups.size()]
+	var reason := str(reasons[rng.randi() % reasons.size()])
+	var stakes: Array = []
+	for st in deck.get("stakes", []):
+		var fits: Array = (st as Dictionary).get("for", [])
+		if str(group.get("id", "")) in fits or "*" in fits:
+			stakes.append(str(st.get("text", "")))
+	var stake: String = str(stakes[rng.randi() % stakes.size()]) if not stakes.is_empty() else "people there go without"
+	var outpost: Dictionary = outposts[rng.randi() % outposts.size()]
+	var dest_id := str(outpost.get("id", ""))
+	var dest_display := str(outpost.get("display", dest_id))
+	var span: Array = deck.get("quantity_range", [4, 10])
+	var quantity := rng.randi_range(int(span[0]), int(span[1]))
+	var base_reward := quantity * int(deck.get("pay_per_canister", 38))
+	var station_display := _main_station_display()
+	var title := str(group.get("title", "Outpost Needs Oxygen"))
+	var dialogue := "Air is running short for %s at %s: %s. If it doesn't arrive, %s. Bring %d O2 canisters (%d L). Compress them from water ice at a station refinery (Compress O2); they are safe to carry through a gate." % [
+		str(group.get("who", "the outpost")), dest_display, reason, stake, quantity, quantity * 10]
+	var objective := {
+		"type": "PURCHASE_DELIVERY",
+		"item_id": "o2_canister",
+		"item_name": "Compressed O2 Canister",
+		"quantity_required": quantity,
+		"store_station_id": _main_station_id(),
+		"store_display": station_display,
+		"destination_station_id": dest_id,
+		"destination_display": dest_display,
+		"reward_credits": base_reward,
+	}
+	var extra := {"timed": true, "urgent": true, "duration_minutes": int(deck.get("duration_minutes", 300)),
+		"expiration_policy": "expire", "urgent_reward_multiplier": float(deck.get("urgent_reward_multiplier", 1.35))}
+	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, extra)
+	var offer := _offer(
+		TEMPLATE_PURCHASE_DELIVERY,
+		true,
+		"[LIFE SUPPORT] " + title,
+		"Public Board",
+		dialogue,
+		"%d O2 canisters to %s" % [quantity, dest_display],
+		base_reward,
+		int(deck.get("duration_minutes", 300)),
+		float(deck.get("urgent_reward_multiplier", 1.35)),
+		quest_data,
+		["{QUANTITY}", "{ITEM_NAME}", "{STORE_LOCATION}", "{DESTINATION}"],
+		{"{QUANTITY}": str(quantity), "{ITEM_NAME}": "Compressed O2 Canister", "{STORE_LOCATION}": station_display, "{DESTINATION}": dest_display}
+	)
+	offer["keep_authored_text"] = true
+	return offer
 
 
 ## Rare items a store actually sells, so a fetch job can be finished. Props

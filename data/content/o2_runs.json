@@ -1,0 +1,32 @@
+{
+    "schema_version": 1,
+    "note": "O2 relief jobs (Abe, 2026-09-26): an outpost's air is running short; bring compressed O2 canisters (10 L each), made from water ice at a station refinery. Canisters can pass a gate. Tone may be life-or-death or dry. No names; the game fills the outpost.",
+    "quantity_range": [4, 10],
+    "pay_per_canister": 38,
+    "duration_minutes": 300,
+    "urgent_reward_multiplier": 1.35,
+    "groups": [
+        {"id": "crew", "who": "the outpost crew", "title": "Outpost Air Running Thin"},
+        {"id": "clinic", "who": "the outpost clinic", "title": "Clinic Needs Oxygen"},
+        {"id": "hydroponics", "who": "the hydroponics bay", "title": "Hydroponics Bay Gasping"},
+        {"id": "night_shift", "who": "the night shift", "title": "Night Shift Needs Air"},
+        {"id": "families", "who": "the families on the lower ring", "title": "Lower Ring Short Of Air"}
+    ],
+    "reasons": [
+        "their CO2 scrubbers are clogging faster than the spares can be swapped",
+        "the oxygen plant tripped its breaker and the part to fix it is two jumps away",
+        "a seal blew in the storage deck and took the reserve tanks with it",
+        "someone sold the reserve canisters to pay a docking fee and hoped nobody would check",
+        "the algae tanks crashed after a bad feed batch and stopped making air",
+        "a supply freighter was turned back at the gate and the next one is a week out",
+        "the recycler is running, but it is running on hope and duct tape"
+    ],
+    "stakes": [
+        {"for": ["*"], "text": "they start sealing off sections and sleeping in shifts"},
+        {"for": ["crew", "night_shift"], "text": "the shift gets cut and the outpost stops paying anyone"},
+        {"for": ["clinic"], "text": "the patients on assisted breathing are the first to feel it"},
+        {"for": ["hydroponics"], "text": "the crops die and the air gets worse, not better"},
+        {"for": ["families"], "text": "the kids get moved to the one room with a working vent"},
+        {"for": ["*"], "text": "the headaches turn into something worse by morning"}
+    ]
+}

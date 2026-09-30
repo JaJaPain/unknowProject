@@ -114,3 +114,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       (b) "Word is <name> at <outpost> has one": fly to that outpost, get the
       item from that person, bring it back to the station's Maintenance Bay
       and use Deliver Part; it pays out.
+- [ ] **Compress O2.** With water ice in the hold, Talk to Agent: a
+      "Compress O2" button turns 2 m³ of ice into one canister (small fee);
+      the canisters show in your inventory.
+- [ ] **O2 relief job.** The board has a "[LIFE SUPPORT] …" job asking for
+      N O2 canisters at an outpost. Compress enough, fly there, and it pays.
+      Canisters can go through a gate (unlike Fuel Blocks).

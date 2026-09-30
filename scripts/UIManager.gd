@@ -249,6 +249,7 @@ var refine_fuel_btn: Button
 ## Sell ore and the fuel services, a compact 2x2 grid under the agent's
 ## choices; hidden while Kaelen gives the tutorial briefing.
 var agent_trade_grid: GridContainer
+var compress_o2_btn: Button
 var buy_fuel_btn: Button
 var fabricate_blocks_btn: Button
 var repair_btn: Button
@@ -1946,6 +1947,8 @@ func _create_dock_menu():
 	buy_fuel_btn = _agent_trade_button(_on_buy_fuel_pressed)
 	# Fuel Blocks for station generators, made here from the hold's ice.
 	fabricate_blocks_btn = _agent_trade_button(_on_fabricate_blocks_pressed)
+	# O2 canisters for relief jobs, compressed here from the hold's ice.
+	compress_o2_btn = _agent_trade_button(_on_compress_o2_pressed)
 
 	agent_back_btn = Button.new()
 	agent_back_btn.text = "Back to Services"
@@ -12004,7 +12007,7 @@ func _agent_trade_button(callback: Callable) -> Button:
 
 
 func _sync_trade_tooltips() -> void:
-	for button in [sell_btn, refine_fuel_btn, buy_fuel_btn, fabricate_blocks_btn]:
+	for button in [sell_btn, refine_fuel_btn, buy_fuel_btn, fabricate_blocks_btn, compress_o2_btn]:
 		if button != null and is_instance_valid(button):
 			button.tooltip_text = button.text
 
@@ -12028,6 +12031,13 @@ func _update_fuel_buttons() -> void:
 			fabricate_blocks_btn.text = "Fabricate Fuel Blocks (%d m³ water ice each)" % int(fuel_script.ICE_PER_BLOCK)
 		else:
 			fabricate_blocks_btn.text = "Fabricate Fuel Blocks (%d from %d m³ ice, %d SC)" % [n, int(n * fuel_script.ICE_PER_BLOCK), n * fuel_script.BLOCK_FAB_FEE]
+	if compress_o2_btn and is_instance_valid(compress_o2_btn):
+		var o2 := GlobalState.o2_canisters_possible()
+		compress_o2_btn.disabled = o2 <= 0
+		if GlobalState.cargo_ore_amount("water_ice") < fuel_script.ICE_PER_O2:
+			compress_o2_btn.text = "Compress O2 (%d m³ water ice per canister)" % int(fuel_script.ICE_PER_O2)
+		else:
+			compress_o2_btn.text = "Compress O2 (%d canisters, %d SC)" % [o2, o2 * fuel_script.O2_FAB_FEE]
 	if buy_fuel_btn and is_instance_valid(buy_fuel_btn):
 		var b: Array = fuel_script.buy_to_full(GlobalState.fuel, GlobalState.player_credits)
 		buy_fuel_btn.disabled = float(b[0]) <= 0.0
@@ -12038,6 +12048,14 @@ func _update_fuel_buttons() -> void:
 		else:
 			buy_fuel_btn.text = "Buy Fuel (%d → %d SC)" % [int(float(b[0])), int(b[1])]
 	_sync_trade_tooltips()
+
+
+func _on_compress_o2_pressed() -> void:
+	var made := GlobalState.compress_o2_canisters()
+	if made > 0:
+		AudioManager.play_sell_ore()
+		show_dock_message("Compressed %d O2 canister%s (%d L) from water ice. Safe to carry through a gate." % [made, "" if made == 1 else "s", made * GlobalState.FuelScript.O2_LITRES], "", Color(0.6, 0.9, 1.0))
+	_update_sell_button()
 
 
 func _on_fabricate_blocks_pressed() -> void:

@@ -520,6 +520,22 @@
                 3,
                 3
             ]
+        },
+        {
+            "item_id": "o2_canister",
+            "display_name": "Compressed O2 Canister",
+            "description": "Ten litres of breathable oxygen under pressure. Compressed from water ice at a station; safe to carry through a gate.",
+            "category": "trade_good",
+            "base_price": 14,
+            "stack_max": 20,
+            "restock_interval_minutes": 120,
+            "restock_quantity": 2,
+            "max_stock": 6,
+            "icon_sheet": "props_supplies",
+            "icon_cell": [
+                0,
+                0
+            ]
         }
     ]
 }
