@@ -146,7 +146,15 @@ func _test_per_system_rosters_and_desires() -> void:
 		var board = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
 		board.story_config_override_for_tests = config
 		var intent: String = config.story_pack["mission_causes"].keys()[0]
-		_expect(board._story_cause_metadata(intent).get("desire_id", "") == config.story_pack["mission_causes"][intent]["desire_id"], "Real board builder must use local desire instead of unrelated campaign boilerplate")
+		var local_desires: Array = config.story_pack["mission_causes_all"][intent].map(func(c): return str(c["desire_id"]))
+		_expect(str(board._story_cause_metadata(intent).get("desire_id", "")) in local_desires, "Real board builder must use local desire instead of unrelated campaign boilerplate")
+		# Several factions wanting the same kind of job take turns on the board.
+		var seen_desires := {}
+		for window in 24:
+			board._board_time = window * 240
+			seen_desires[str(board._story_cause_metadata(intent).get("desire_id", ""))] = true
+		board._board_time = 0
+		_expect(local_desires.size() < 2 or seen_desires.size() >= 2, "Jobs of one kind must not all share one requester when several factions want them")
 		board.story_config_override_for_tests = null
 		var metadata_type = load("res://scripts/domain/NarrativeMetadata.gd")
 		var cause: Dictionary = config.story_pack["mission_causes"][intent]

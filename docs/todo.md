@@ -163,7 +163,7 @@ full implementation status table. Phases A-D landed 2026-09-11 (Claude)._
   text, a faction obstructing itself, two mangled sentences, and ore claiming to
   satisfy a need it cannot. All pinned by
   `tests/domain/run_causal_fact_text_tests.gd`.
-- [ ] **E (rest) -- per-objective causes, then playable consequences.** NEXT.
+- [~] **E (rest) -- per-objective causes, then playable consequences.** 2026-09-30: every faction wanting a job kind is kept (story_pack.mission_causes_all) and the board rotates them per 4 h window (PublicBoardOfferBuilder._cause_for), so jobs of one verb no longer all share a requester. Still open: P2 investigation runtime integration and the P3 pressure reducer checks below.
   `SystemConfig._apply_faction_story()` still emits ONE cause per mission
   *intent*, so two jobs sharing a verb still share a requester and desire. It
   needs to emit a cause per objective INSTANCE. Then P2 investigation runtime
@@ -182,7 +182,7 @@ full implementation status table. Phases A-D landed 2026-09-11 (Claude)._
   reply (my bug, fixed), invented "before it's too late" urgency (new check),
   and a U+FFFD encoding artifact in an ACCEPTED line (new check).
   **No prose quality claim.** Several accepted lines are plainly not good.
-- [ ] **Constrain the joint desire draw.** NEXT, and the writer run is the
+- [x] **DONE (already, found 2026-09-30):** GeneratedDesireConstraints v2 (2026-09-14) draws the need from the goal's compatible set with a written reason. **Constrain the joint desire draw.**, and the writer run is the
   evidence: one contract paired need "fuel it can afford" with goal "prove a
   rival's manifest is fiction", and the model wrote "we need this fuel to prove
   the manifest is fake". Independent draws contradict each other, and a

@@ -36,7 +36,12 @@ const COURIER_PACKAGE_NAMES: Array[String] = [
 static var story_config_override_for_tests: SystemConfig = null
 
 
+## The board window being built; picks which faction's cause a job carries.
+static var _board_time := 0
+
+
 static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
+	_board_time = current_time_minutes
 	var offers: Array[Dictionary] = []
 	offers.append(_build_ore_offer(current_time_minutes))
 	var fuel_offer := _build_fuel_offer(current_time_minutes)
@@ -830,11 +835,24 @@ static func _build_recovery_preview() -> Dictionary:
 	)
 
 
+## Which faction's cause a job of this kind carries in this board window:
+## every faction that wants it takes turns as the board refreshes (before,
+## the first faction owned every job of that kind). {} when none.
+static func _cause_for(offer_kind: String) -> Dictionary:
+	var story_pack := _current_system_story_pack()
+	var all: Array = story_pack.get("mission_causes_all", {}).get(offer_kind, [])
+	if not all.is_empty():
+		var window := int(_board_time / 240)
+		return all[absi(hash("%s|%s|%d" % [str(story_pack.get("system_id", "")), offer_kind, window])) % all.size()]
+	var causes: Dictionary = story_pack.get("mission_causes", {})
+	return causes.get(offer_kind, {})
+
+
 static func _story_board_context(_offer_kind: String) -> String:
 	var story_pack := _current_system_story_pack()
-	var causes: Dictionary = story_pack.get("mission_causes", {})
-	if causes.has(_offer_kind):
-		return str(causes[_offer_kind].get("public_because", ""))
+	var picked := _cause_for(_offer_kind)
+	if not picked.is_empty():
+		return str(picked.get("public_because", ""))
 	if story_pack.is_empty():
 		return ""
 	var seeds: Array = story_pack.get("mission_seeds", [])
@@ -1179,9 +1197,9 @@ static func _reward_source_text(faction_id: String) -> String:
 
 
 static func _story_cause_metadata(offer_kind: String) -> Dictionary:
-	var causes: Dictionary = _current_system_story_pack().get("mission_causes", {})
-	if causes.has(offer_kind):
-		return (causes[offer_kind] as Dictionary).duplicate(true)
+	var picked := _cause_for(offer_kind)
+	if not picked.is_empty():
+		return picked.duplicate(true)
 	var because := ""
 	var hook := ""
 	var main_loop := Engine.get_main_loop()

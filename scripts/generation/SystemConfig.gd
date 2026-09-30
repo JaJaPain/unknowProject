@@ -295,6 +295,9 @@ static func _color_from_variant(raw_color: Variant, fallback: Color) -> Color:
 func _apply_faction_story() -> void:
 	var agendas: Array = []
 	var causes: Dictionary = {}
+	# Every faction that wants each kind of job, not only the first: the board
+	# rotates through them (PublicBoardOfferBuilder._cause_for).
+	var causes_all: Dictionary = {}
 	var intents: Array[String] = []
 	for legacy_key in faction_weights:
 		var faction: Dictionary = faction_identities.get(legacy_key, {})
@@ -320,14 +323,19 @@ func _apply_faction_story() -> void:
 		for intent in desire.get("mission_intents", []):
 			if str(intent) not in intents:
 				intents.append(str(intent))
+			var cause := {"cause_id": "cause.%s.%s" % [str(desire["id"]).trim_prefix("desire."), intent],
+				"cause_faction_id": faction["id"], "cause_rival_faction_id": rival.get("id", ""),
+				"desire_id": desire["id"], "public_because": reason, "stake": desire["stake"]}
 			if not causes.has(str(intent)):
-				causes[str(intent)] = {"cause_id": "cause.%s.%s" % [str(desire["id"]).trim_prefix("desire."), intent],
-					"cause_faction_id": faction["id"], "cause_rival_faction_id": rival.get("id", ""),
-					"desire_id": desire["id"], "public_because": reason, "stake": desire["stake"]}
+				causes[str(intent)] = cause
+			if not causes_all.has(str(intent)):
+				causes_all[str(intent)] = []
+			(causes_all[str(intent)] as Array).append(cause)
 	if agendas.is_empty():
 		return
 	story_pack["faction_agendas"] = agendas
 	story_pack["mission_causes"] = causes
+	story_pack["mission_causes_all"] = causes_all
 	story_pack["mission_intents"] = intents
 	var first_cause: Dictionary = causes.values()[0]
 	story_pack["station_economy_problem"] = first_cause["public_because"]
