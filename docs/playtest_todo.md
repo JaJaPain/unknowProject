@@ -165,3 +165,5 @@ Claude adds new items here as work lands (newest section at the bottom).
       (green, turning amber then red as it takes damage). The tag after the
       name says Hostile, Neutral or Friendly (a Zenith ship with ZEN 50
       reads Friendly), not "Hostile NPCShip" for everyone.
+- [ ] **Reset story variety.** Pause > settings has "Reset story variety".
+      Press it: it says "Story variety reset" and your campaign is unchanged.

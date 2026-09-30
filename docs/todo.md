@@ -304,11 +304,11 @@ implemented, tested and wired. Commits `31e685fa`, `d35de049`, `91e6ea11`,
   item, origin, destination and accepting local contact bound before it becomes
   runtime-eligible. A delivery records only that the item ARRIVED -- never that a
   lease transferred, an appeal succeeded or a route reopened.
-- [ ] **Novelty ranking is not consulted by the offer builders yet.** The history
+- [x] **Mostly stale (checked 2026-09-30):** InvestigationBoardLifecycle ranks investigation candidates with rank_candidates; ordinary builders make one candidate per kind, and local causes now rotate per board window. **Novelty ranking is not consulted by the offer builders yet.** The history
   records and `rank_candidates()` works, but no builder calls it to order its
   candidates before prose generation. Until it does, novelty history is being
   collected but not acted on.
-- [ ] **No settings action resets the two history files.** The handoff asks for a
+- [x] **DONE 2026-09-30** (Settings: "Reset story variety" calls StoryManager.reset_novelty_histories.) **No settings action resets the two history files.** The handoff asks for a
   narrow reset. `NoveltyHistoryStore.reset()` and `RunOpeningHistoryStore.reset()`
   exist and are tested; no UI calls them.
 

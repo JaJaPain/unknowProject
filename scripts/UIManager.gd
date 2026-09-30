@@ -2665,6 +2665,17 @@ func _create_pause_menu():
 	controls.add_child(video_title)
 	_add_bloom_row(controls)
 	_add_volume_row(controls, "Camera shake", GlobalState.screen_shake_scale, func(v: float) -> void: GlobalState.screen_shake_scale = v)
+	# Forget which jobs and openings have been offered before (across
+	# campaigns), so variety starts fresh. Campaign progress is untouched.
+	var variety_btn := Button.new()
+	variety_btn.text = "Reset story variety"
+	variety_btn.tooltip_text = "Forget which jobs and campaign openings you have already seen, across all campaigns. Your progress is not touched."
+	variety_btn.pressed.connect(func() -> void:
+		var result: Dictionary = StoryManager.reset_novelty_histories()
+		variety_btn.text = "Story variety reset" if bool(result.get("ok", false)) else "Reset failed; try again"
+		variety_btn.disabled = bool(result.get("ok", false))
+	)
+	controls.add_child(variety_btn)
 	var reset_history := Button.new()
 	reset_history.text = "Reset remembered quest variety"
 	reset_history.tooltip_text = "Clears only cross-campaign quest and opening history. Campaigns and character memories are preserved."
