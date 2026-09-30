@@ -161,3 +161,7 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Hurt ships spark.** Damage an enemy below about a third of its hull:
       it throws small bursts of sparks, faster as it gets closer to dying.
       Same for your own ship when your hull is low.
+- [ ] **Target panel detail.** Target a ship: under its name a hull bar
+      (green, turning amber then red as it takes damage). The tag after the
+      name says Hostile, Neutral or Friendly (a Zenith ship with ZEN 50
+      reads Friendly), not "Hostile NPCShip" for everyone.

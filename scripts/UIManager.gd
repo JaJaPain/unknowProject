@@ -681,6 +681,7 @@ func refresh_restored_state() -> void:
 	refresh_overview()
 
 func _process(delta):
+	_update_target_bars()
 	if _ui_layout_manager:
 		_ui_layout_manager.enforce_layout()
 	if GlobalState.paused: return
@@ -1096,7 +1097,19 @@ func _create_target_panel():
 	target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	target_label.text = "No Target Selected"
 	target_info_box.add_child(target_label)
-	
+
+	# The target's condition: hull (and shields, where the target has them).
+	target_bars = VBoxContainer.new()
+	target_bars.add_theme_constant_override("separation", 3)
+	target_bars.visible = false
+	vbox.add_child(target_bars)
+	target_shield_bar = ProgressBar.new()
+	HudStyle.style_bar(target_shield_bar, Color(0.35, 0.7, 1.0), 5)
+	target_bars.add_child(target_shield_bar)
+	target_hull_bar = ProgressBar.new()
+	HudStyle.style_bar(target_hull_bar, HudStyle.GOOD, 7)
+	target_bars.add_child(target_hull_bar)
+
 	target_action_box = HBoxContainer.new()
 	target_action_box.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_child(target_action_box)
@@ -4105,7 +4118,7 @@ func _on_target_changed(new_target: Node3D):
 				_: type_str = "Jumpgate to " + str(new_target.get("destination_display_name"))
 			icon_index = 3
 		elif new_target.is_in_group("ship"):
-			type_str = "Hostile NPCShip"
+			type_str = _ship_standing(new_target)
 			icon_index = 0
 		elif new_target.is_in_group("wreckage"):
 			type_str = "Wreckage"
@@ -5024,6 +5037,48 @@ func show_system_title_card() -> void:
 
 
 var _damage_vignette: Control
+var target_bars: VBoxContainer
+var target_hull_bar: ProgressBar
+var target_shield_bar: ProgressBar
+
+
+## Hull and shield bars for a targeted ship; hidden for anything else.
+## How a ship stands with the player: minor factions and bad reputation are
+## Hostile; good reputation Friendly; otherwise Neutral. (The tag used to say
+## "Hostile NPCShip" for every ship, friends included.)
+func _ship_standing(ship: Node) -> String:
+	var faction := str(ship.get("faction")) if ship.get("faction") != null else ""
+	if faction.is_empty():
+		return "Ship"
+	if GlobalState.is_minor_faction(faction):
+		return "Hostile"
+	var rep := float(GlobalState.reputations.get(faction, 0.0))
+	if rep < -10.0:
+		return "Hostile"
+	if rep > 20.0:
+		return "Friendly"
+	return "Neutral"
+
+
+func _update_target_bars() -> void:
+	if target_bars == null:
+		return
+	var t = GlobalState.active_target
+	var ship_target: bool = t != null and is_instance_valid(t) and t.is_in_group("ship") 		and t.get("max_health") != null and t.get("health") != null
+	target_bars.visible = ship_target and target_panel.visible
+	if not target_bars.visible:
+		return
+	var max_h := maxf(1.0, float(t.get("max_health")))
+	var frac := clampf(float(t.get("health")) / max_h, 0.0, 1.0)
+	target_hull_bar.max_value = 1.0
+	target_hull_bar.value = frac
+	var fill := HudStyle.GOOD if frac > 0.6 else (HudStyle.WARN if frac > 0.3 else HudStyle.DANGER)
+	(target_hull_bar.get_theme_stylebox("fill") as StyleBoxFlat).bg_color = fill
+	var has_shield: bool = t.get("current_shield") != null and t.get("max_shield") != null and float(t.get("max_shield")) > 0.0
+	target_shield_bar.visible = has_shield
+	if has_shield:
+		target_shield_bar.max_value = 1.0
+		target_shield_bar.value = clampf(float(t.get("current_shield")) / float(t.get("max_shield")), 0.0, 1.0)
 
 
 ## Screen-edge flash for a hit on the player (DamageVignette.gd).
