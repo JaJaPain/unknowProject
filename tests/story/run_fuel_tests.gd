@@ -140,6 +140,28 @@ func _initialize() -> void:
 	gs.inventory.remove(Fuel.FUEL_BLOCK_ITEM, gs.inventory.get_quantity(Fuel.FUEL_BLOCK_ITEM))
 	gs.clear_cargo()
 
+	# O2 (Abe): water ice compresses into canisters, which (unlike blocks)
+	# the gate accepts; relief jobs ask for them at an outpost.
+	gs.inventory.remove(Fuel.O2_ITEM, gs.inventory.get_quantity(Fuel.O2_ITEM))
+	gs.add_ore(9.0, "water_ice")
+	gs.add_ore(3.0)
+	gs.player_credits = 5
+	_check(gs.o2_canisters_possible() == 2, "credits cap the canisters: 5 SC at 2 SC each makes 2")
+	gs.player_credits = 100
+	_check(gs.o2_canisters_possible() == 4, "9 m³ of ice makes 4 canisters")
+	var o2_made: int = gs.compress_o2_canisters()
+	_check(o2_made == 4 and gs.inventory.get_quantity(Fuel.O2_ITEM) == 4 and gs.player_credits == 100 - 4 * Fuel.O2_FAB_FEE, "compressing uses ice and a small fee")
+	_check(is_equal_approx(gs.cargo_ore_amount("water_ice"), 1.0) and is_equal_approx(gs.cargo, 4.0), "only the ice needed is used")
+	_check(gs.no_jump_item().is_empty(), "O2 canisters can go through a gate")
+	var o2_offer: Dictionary = Board._build_o2_offer(0)
+	if not o2_offer.is_empty():
+		var oq: Dictionary = o2_offer["quest_data"]
+		_check(str(oq["objective"]["item_id"]) == Fuel.O2_ITEM and not str(oq["dialogue"]).contains("{"), "an O2 job asks for canisters: %s" % oq["dialogue"])
+		var obuilt: Dictionary = Adapter.build_active_state(oq, oq["choices"][0], "mission.runtime.o2", "system.test", 0)
+		_check(obuilt["validation"].is_valid(), "and makes a valid job: %s" % obuilt["validation"].summary())
+	gs.inventory.remove(Fuel.O2_ITEM, gs.inventory.get_quantity(Fuel.O2_ITEM))
+	gs.clear_cargo()
+
 	# Every belt past the start carries ice for fuel.
 	for i in 40:
 		for d in [1, 2, 5]:
