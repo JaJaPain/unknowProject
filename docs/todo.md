@@ -67,7 +67,7 @@ _Active task list. Update this file at the end of every session._
   factions) for name, type and wreck labels; the raw id stays internal.
   Same screenshot: REP row is empty in this system, and "Uncharted System 28"
   / "UNCHARTED HAVE..." station names look like placeholders too.
-- [ ] **Mission card says "Destination Not In System" when it is** (Abe, 2026-09-28):
+- [x] **DONE 2026-09-29** (generated systems never joined the primary_station group, so get_primary_station() was null outside the start system; SystemFactory adds station 0; jump smoke checks it.) **Mission card says "Destination Not In System" when it is** (Abe, 2026-09-28):
   "Ore Delivery: the main station", contract satisfied, payment pending with
   Naktortalnak Claims Office Juno Calder; the button reads "Destination Not In
   System" (disabled) though the turn-in station was in the current system.

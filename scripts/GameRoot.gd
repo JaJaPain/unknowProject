@@ -6847,6 +6847,9 @@ func _run_jump_smoke_test() -> void:
 	if GlobalState.current_system_id != generated_system_id:
 		_fail_jump_smoke_test("Outbound jump loaded the wrong system.")
 		return
+	if GlobalState.get_primary_station() == null:
+		_fail_jump_smoke_test("The generated system has no main station (quest turn-ins show 'Destination Not In System').")
+		return
 	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
 		_fail_jump_smoke_test("Outbound jump did not advance campaign time.")
 		return

@@ -286,6 +286,11 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 	var station := _station_scene.instantiate() as Node3D
 	station.name = "Station_%d" % index
 	station.add_to_group("station")
+	# GlobalState.get_primary_station() finds the main station by this group
+	# (the start system's is a node named "Station"); without it, generated
+	# systems had no main station ("Destination Not In System").
+	if index == 0:
+		station.add_to_group("primary_station")
 	station.set("world_id", world_id)
 	station.set("display_name", display_name)
 	station.set("station_type", station_type)
