@@ -266,6 +266,7 @@ static func spawn_explosion(parent: Node3D, pos: Vector3, col: Color, size: floa
 	# shockwave ring, tumbling hull chunks and smoke that lingers.
 	var cleanup := 1.5
 	if size >= 0.8:
+		_add_fireball(container, size)
 		_add_blast_light(container, col, size)
 		_add_shockwave(container, size)
 		_add_hull_chunks(container, col, size)
@@ -275,6 +276,27 @@ static func spawn_explosion(parent: Node3D, pos: Vector3, col: Color, size: floa
 	# Self-cleanup
 	var timer := container.get_tree().create_timer(cleanup)
 	timer.timeout.connect(container.queue_free)
+
+
+## The fireball: a 16-frame flipbook (assets/vfx/VfxExplosion.png, ChatGPT
+## 2026-09-30) from white-hot core to fading smoke, on a camera-facing quad.
+static func _add_fireball(container: Node3D, size: float) -> void:
+	if not ResourceLoader.exists("res://assets/vfx/VfxExplosion.png"):
+		return
+	var quad := MeshInstance3D.new()
+	var mesh := QuadMesh.new()
+	mesh.size = Vector2(16.0, 16.0) * size
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/flipbook_additive.gdshader")
+	mat.set_shader_parameter("sheet", load("res://assets/vfx/VfxExplosion.png"))
+	mat.set_shader_parameter("frame", 0.0)
+	mesh.material = mat
+	quad.mesh = mesh
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	container.add_child(quad)
+	var tween := quad.create_tween()
+	tween.tween_method(func(v: float) -> void: mat.set_shader_parameter("frame", v), 0.0, 15.99, 1.6)
+	tween.tween_callback(quad.queue_free)
 
 
 static func _add_blast_light(container: Node3D, col: Color, size: float) -> void:

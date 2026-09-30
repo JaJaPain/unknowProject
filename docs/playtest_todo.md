@@ -64,7 +64,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       facing the shooter; crits are bigger and whiter.
 - [ ] **Explosions.** A kill: bright flash, a ring that expands outward,
       glowing chunks tumbling away and cooling, then smoke.
-      Note: does the fireball look too white?
+      The fireball is now an animated flipbook (white core, orange fire,
+      then smoke). Note: does it look right at game distance?
 - [ ] **Shake slider.** Pause > settings: "Camera shake" slider. Set it
       to 0 and get hit: no shake.
 - [ ] **Enemies face forward.** Enemy ships fly and shoot nose-first.
