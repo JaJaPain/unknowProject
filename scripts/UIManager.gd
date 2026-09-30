@@ -5848,6 +5848,11 @@ func _lounge_bundle_status(card: Dictionary) -> String:
 # kinds with their own machinery (Kaelen handoffs, the stranger's pitch,
 # planted story NPCs) and anything already pending/ready this dock.
 func _prepare_lounge_exchange_bundle(card: Dictionary) -> void:
+	# While the campaign bible has the model, a request fails at once; that
+	# failure refreshed the cards, which asked again inside the same deferred
+	# flush: an endless loop that also kept the game from quitting. Ask later.
+	if LLMInterface.get("campaign_bible_priority_active") == true:
+		return
 	if not _lounge_bundle_supported(card):
 		return
 	var contact_key := _lounge_contact_key(card)
