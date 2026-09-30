@@ -6897,6 +6897,11 @@ func _run_jump_smoke_test() -> void:
 	if (StoryManager.story_state.get("known_system_ores", {}) as Dictionary).is_empty():
 		_fail_jump_smoke_test("Arriving did not record the system's ores for the star map.")
 		return
+	var zone: String = load("res://scripts/AnomalyRegistry.gd").search_zone(Vector3(2600.0, 0.0, -1800.0))
+	print("[JumpSmokeTest] search zone sample: ", zone)
+	if zone.is_empty() or RegEx.create_from_string("[0-9]").search(zone) != null:
+		_fail_jump_smoke_test("Search-zone hint was empty or gave numbers: '%s'" % zone)
+		return
 	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
 		_fail_jump_smoke_test("Outbound jump did not advance campaign time.")
 		return

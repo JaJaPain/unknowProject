@@ -4,6 +4,9 @@ static var _shared = null
 
 var _activated_ids: Array = []
 var _last_spawned_flavors: Array = []  # flavor_type strings from last generate call
+## Where each of those was placed (local to the system root), for search-zone
+## hints: rumours name an area, never the exact spot.
+var _last_spawned_positions: Array = []
 
 const MIN_ANOMALIES := 0
 const MAX_ANOMALIES := 2
@@ -20,6 +23,7 @@ static func reset() -> void:
 # Spawn 0-2 deterministic anomaly nodes at stable positions in the system.
 func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 	_last_spawned_flavors.clear()
+	_last_spawned_positions.clear()
 	var rng := _rng_for_system(system_id)
 	var count: int = rng.randi_range(MIN_ANOMALIES, MAX_ANOMALIES)
 
@@ -49,6 +53,7 @@ func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 		scene_parent.add_child(node)
 		_request_llm_event_for_node(system_id, node, data)
 		_last_spawned_flavors.append(str(data.get("flavor_type", "")))
+		_last_spawned_positions.append(node.position)
 
 	if has_forced:
 		var forced_preset: Dictionary = {}
@@ -71,6 +76,7 @@ func generate_for_system(system_id: String, scene_parent: Node3D) -> void:
 				scene_parent.add_child(fnode)
 				_request_llm_event_for_node(system_id, fnode, forced_preset)
 				_last_spawned_flavors.append(forced_flavor)
+				_last_spawned_positions.append(fnode.position)
 				print("[AnomalyRegistry] Planted story anomaly '%s' for system '%s'" % [forced_flavor, system_id])
 		GlobalState.story_forced_anomaly = {}
 
@@ -86,6 +92,41 @@ func clear() -> void:
 
 # Returns a rumor hint line if anomalies were spawned this system, "" otherwise.
 # Call this ~10s after generate_for_system so it fires naturally in-world.
+## A search zone for a spot: the nearest landmark (planet, belt, station,
+## gate) and roughly how far off it, e.g. "out past the gas giant". Never
+## coordinates. "" when there is nothing to anchor to.
+static func search_zone(spot: Vector3) -> String:
+	var root := GlobalState.get_system_root()
+	if root == null:
+		return ""
+	var best: Node3D = null
+	var best_d := INF
+	var kind := ""
+	for group in ["celestial", "station", "jumpgate", "asteroid"]:
+		for node in root.get_tree().get_nodes_in_group(group):
+			if not node is Node3D or not root.is_ancestor_of(node):
+				continue
+			var d := (node as Node3D).global_position.distance_to(root.to_global(spot))
+			if d < best_d:
+				best_d = d
+				best = node
+				kind = group
+	if best == null:
+		return ""
+	var name := str(best.get("display_name")) if best.get("display_name") != null and str(best.get("display_name")) != "" else ""
+	match kind:
+		"asteroid":
+			return "out along the asteroid belt"
+		"jumpgate":
+			return "off the jump gate" if best_d < 1500.0 else "somewhere past the gate lane"
+		"station":
+			var station_name := name.capitalize() if not name.is_empty() else "the station"
+			return ("not far from %s" % station_name) if best_d < 1200.0 else ("well out from %s" % station_name)
+		_:
+			var body := name if not name.is_empty() else ("the gas giant" if "gas" in str(best.name).to_lower() else "the rocky planet" if "rock" in str(best.name).to_lower() else "the nearest planet")
+			return ("close in by %s" % body) if best_d < 1500.0 else ("out past %s" % body)
+
+
 func get_arrival_rumor() -> Dictionary:
 	if _last_spawned_flavors.is_empty():
 		return {}
@@ -93,6 +134,7 @@ func get_arrival_rumor() -> Dictionary:
 	if randf() > 0.60:
 		return {}
 	var flavor: String = _last_spawned_flavors[0]
+	var zone := search_zone(_last_spawned_positions[0]) if not _last_spawned_positions.is_empty() else ""
 	var senders := ["Independent Hauler", "Passing Vessel", "Comms Relay", "Local Traffic"]
 	var sender: String = senders[randi() % senders.size()]
 	var line: String
@@ -132,6 +174,9 @@ func get_arrival_rumor() -> Dictionary:
 				"Something out there that shouldn't be. Could be interesting.",
 			]
 			line = opts[randi() % opts.size()]
+	# Where to look: an area, never the spot.
+	if not zone.is_empty():
+		line += " Somewhere %s." % zone
 	return {"sender": sender, "line": line}
 
 
