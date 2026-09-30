@@ -5735,7 +5735,9 @@ func _template_line_bank_for_speaker(job: Dictionary, speaker_key: String) -> Di
 		"ambient":
 			return {
 				"speaker_name": "Local ambient channel",
-				"voice_profile_id": "voice.neutral.v1",
+				# The system's own radio host: a different voice in every system
+				# (Abe, 2026-09-28), never the fixed cast's.
+				"voice_profile_id": PremiseVoiceDNAType.register(PremiseVoiceDNAType.for_radio_host(str(GlobalState.current_system_id))),
 				"context_block": context_block,
 				"line_kind": "ambient_chatter",
 				"fallback_lines": [
