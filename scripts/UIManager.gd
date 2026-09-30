@@ -15712,6 +15712,11 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 				)
 
 
+## Chapter-plan request statuses that mean the plan is already in place.
+## Missing "fallback_committed" held new-campaign loads at 92 percent forever.
+const CHAPTER_PLAN_DONE_STATUSES := ["already_generated", "fallback_committed", "already_ready"]
+
+
 func _wait_for_chapter_plan_before_gameplay() -> void:
 	var game_root := get_tree().current_scene
 	loading_bar.value = minf(loading_bar.value, 96.0)
@@ -15731,7 +15736,9 @@ func _wait_for_chapter_plan_before_gameplay() -> void:
 		var requested = game_root.call("request_chapter_plan_generation")
 		if requested is Dictionary:
 			var request_status := str(requested.get("status", ""))
-			if request_status == "already_generated":
+			# The authored fallback packet (legacy chapter planning is off) is
+			# committed on the spot, with no finished signal to wait for.
+			if request_status in CHAPTER_PLAN_DONE_STATUSES:
 				_on_chapter_plan_gate_result(true, summary)
 			elif request_status == "requested":
 				loading_status_label.text = (

@@ -10558,6 +10558,13 @@ func _run_first_session_smoke_test() -> void:
 		return
 	for i in 30:
 		await get_tree().process_frame
+	# The loading screen must accept the authored fallback chapter plan as done
+	# (it once waited forever at 92 percent for a signal that never came).
+	if campaign_chapter_packet_store != null and campaign_chapter_packet_store.is_valid():
+		var plan: Dictionary = _commit_fallback_chapter_plan(1, "first_session_smoke")
+		if not str(plan.get("status", "")) in ui.CHAPTER_PLAN_DONE_STATUSES:
+			_fail_first_session_smoke_test("The loading screen would hang on chapter plan status '%s'." % str(plan.get("status", "")))
+			return
 	# A new player: no jump yet (other smoke tests may have saved one).
 	StoryManager.story_state["first_jump_done"] = false
 	ui.refresh_overview()
