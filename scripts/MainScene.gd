@@ -20,6 +20,7 @@ func _ready():
 	var world_env := $WorldEnvironment as WorldEnvironment
 	if world_env and world_env.environment:
 		SystemAmbience.apply_glow(world_env.environment)
+		SystemAmbience.apply_nebula_sky(world_env.environment, "start_system", "yellow")
 	# Seed random number generator
 	randomize()
 	

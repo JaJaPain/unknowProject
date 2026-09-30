@@ -130,3 +130,6 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Hub icons.** Each station menu tile has a small picture: comms
       handset (agent), pinned cards (board), cocktail (lounge), wrench and
       torch (maintenance), crates (store).
+- [ ] **Nebula skies.** Behind the stars there is a faint coloured nebula
+      (warm amber/rose at the start). Jump to another system: its nebula
+      has a different shape and, often, a different colour.

@@ -67,6 +67,7 @@ func _build(config: SystemConfig) -> Dictionary:
 	env.ambient_light_color = config.ambient_color
 	env.ambient_light_energy = config.ambient_energy
 	SystemAmbience.apply_glow(env)
+	SystemAmbience.apply_nebula_sky(env, str(config.legacy_id), str(config.star_type))
 
 	var world_env := WorldEnvironment.new()
 	world_env.name = "WorldEnvironment"

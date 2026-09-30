@@ -179,7 +179,7 @@
             "style_reference": "none",
             "used_for": "Per-system sky panoramas by star type (P5)",
             "prompt": "A seamless 2:1 equirectangular space panorama for a game skybox: deep space full of fine stars of varied brightness, with {VARIANT}. Photographic, subtle, not cartoony; the stars must stay sharp and small; the left and right edges must tile seamlessly; no planets, no ships, no stations. Run four times with {VARIANT} = (1) a large soft warm nebula in amber and rose with dark dust lanes; (2) a cool blue and teal nebula veil across one third of the sky; (3) a thick brown-grey dust cloud band with a few bright young stars glowing through it; (4) almost empty dark space with a faint distant galaxy smudge and sparse stars. Original design for an original sci-fi game, not based on any existing game or franchise. Absolutely no text, letters, numbers, labels, symbols or watermarks anywhere.",
-            "status": "pending (queued 2026-09-29, next_level_plan Section 5)"
+            "status": "done 2026-09-30 in code instead: shaders/nebula_sky.gdshader (seamless, seeded per system, tinted by star type). No art needed."
         },
         {
             "id": "mission_card_accents",

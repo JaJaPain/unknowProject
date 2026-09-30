@@ -160,6 +160,41 @@ static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D:
 	return container
 
 
+## Nebula tints by star type: [main, secondary].
+const NEBULA_TINTS := {
+	"yellow": [Color(0.62, 0.34, 0.16), Color(0.42, 0.14, 0.26)],
+	"orange": [Color(0.5, 0.26, 0.12), Color(0.24, 0.16, 0.1)],
+	"red": [Color(0.55, 0.12, 0.14), Color(0.3, 0.08, 0.34)],
+	"blue": [Color(0.12, 0.36, 0.6), Color(0.1, 0.5, 0.48)],
+	"white": [Color(0.28, 0.32, 0.4), Color(0.16, 0.18, 0.26)],
+}
+
+
+## A nebula sky behind the starfield, different per system (seeded) and
+## tinted by its star. Lighting stays on the ambient colour, not the sky.
+static func apply_nebula_sky(env: Environment, system_id: String, star_type: String = "yellow") -> void:
+	if env == null or not ResourceLoader.exists("res://shaders/nebula_sky.gdshader"):
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("nebula|" + system_id)
+	var tints: Array = NEBULA_TINTS.get(star_type, NEBULA_TINTS["yellow"])
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/nebula_sky.gdshader")
+	mat.set_shader_parameter("tint_a", tints[0])
+	mat.set_shader_parameter("tint_b", tints[1])
+	mat.set_shader_parameter("seed", rng.randf_range(0.0, 100.0))
+	mat.set_shader_parameter("strength", rng.randf_range(0.22, 0.42))
+	mat.set_shader_parameter("coverage", rng.randf_range(0.35, 0.6))
+	var sky := Sky.new()
+	sky.sky_material = mat
+	sky.process_mode = Sky.PROCESS_MODE_QUALITY
+	sky.radiance_size = Sky.RADIANCE_SIZE_32
+	env.sky = sky
+	env.background_mode = Environment.BG_SKY
+	if env.ambient_light_source == Environment.AMBIENT_SOURCE_BG:
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+
+
 static func apply_glow(env: Environment, connect_toggle: bool = true) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var global_state := tree.root.get_node_or_null("/root/GlobalState") if tree else null
