@@ -4946,6 +4946,24 @@ func _style_hub_buttons() -> void:
 		b.add_theme_stylebox_override("hover", HudStyle.box(Color(0.08, 0.14, 0.2, 0.95), HudStyle.ACCENT, 1, 8, 12))
 		b.add_theme_stylebox_override("pressed", HudStyle.box(Color(0.08, 0.2, 0.3, 0.95), HudStyle.ACCENT, 1, 8, 12))
 		b.add_theme_stylebox_override("disabled", HudStyle.box(Color(0.04, 0.05, 0.07, 0.8), Color(0.12, 0.15, 0.2), 1, 8, 12))
+	# Service icons (assets/StationServiceIcons.png, ChatGPT 2026-09-30):
+	# a 4x2 sheet, agent / board / store / maintenance, upgrades / lounge /
+	# refinery / storage.
+	var icon_cells := {agent_service_btn: 0, public_board_btn: 1, store_btn: 2, maintenance_bay_btn: 3,
+		repair_btn: 3, ship_upgrades_btn: 4, station_lounge_btn: 5}
+	var sheet: Texture2D = load("res://assets/StationServiceIcons.png") if ResourceLoader.exists("res://assets/StationServiceIcons.png") else null
+	if sheet != null:
+		for b in icon_cells:
+			if b == null or not is_instance_valid(b) or b.icon != null:
+				continue
+			var cell: int = icon_cells[b]
+			var atlas := AtlasTexture.new()
+			atlas.atlas = sheet
+			atlas.region = Rect2((cell % 4) * 384 + 24, floori(cell / 4.0) * 512 + 70, 336, 372)
+			b.icon = atlas
+			b.expand_icon = false
+			b.add_theme_constant_override("icon_max_width", 34)
+			b.add_theme_constant_override("h_separation", 12)
 	if undock_btn and is_instance_valid(undock_btn):
 		undock_btn.add_theme_stylebox_override("normal", HudStyle.box(Color(0.12, 0.08, 0.05, 0.92), HudStyle.WARN.darkened(0.4), 1, 8, 12))
 		undock_btn.add_theme_stylebox_override("hover", HudStyle.box(Color(0.2, 0.12, 0.06, 0.95), HudStyle.WARN, 1, 8, 12))

@@ -126,3 +126,6 @@ Claude adds new items here as work lands (newest section at the bottom).
       some stations but not all. Everyday items (Repair Kit, ammo) are at both.
 - [ ] **The fetch card tells the truth.** If the board's rare-item card says
       "Buy a <item> at <station>", that station's Store has it in stock.
+- [ ] **Hub icons.** Each station menu tile has a small picture: comms
+      handset (agent), pinned cards (board), cocktail (lounge), wrench and
+      torch (maintenance), crates (store).
