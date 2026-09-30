@@ -314,6 +314,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_jump_smoke_test")
 	elif "--first-session-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_first_session_smoke_test")
+	elif "--traffic-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_traffic_smoke_test")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_hud_snapshot")
 	elif "--dock-snapshot" in OS.get_cmdline_user_args():
@@ -468,6 +470,8 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	if transition_in_progress:
 		jump_request_pending = false
 		return
+	if is_instance_valid(traffic_director):
+		traffic_director.clear()
 	var ui_mgr := GlobalState.get_ui_manager()
 	var runtime_system_id := system_registry.runtime_system_id(
 		destination_system_id
@@ -1348,9 +1352,16 @@ func _init_undercurrent_director() -> void:
 	undercurrent_director = UndercurrentDirectorType.new()
 	undercurrent_director.name = "UndercurrentDirector"
 	add_child(undercurrent_director)
+	# Freighters docking at and leaving the main station through the gate.
+	traffic_director = load("res://scripts/world/TrafficDirector.gd").new()
+	traffic_director.name = "TrafficDirector"
+	add_child(traffic_director)
 
 
 ## The rare death moment, if this death earned one (consumed once).
+var traffic_director: Node
+
+
 func consume_undercurrent_death_moment() -> Dictionary:
 	return undercurrent_director.consume_death_moment() if is_instance_valid(undercurrent_director) else {}
 
@@ -10597,6 +10608,34 @@ func _run_first_session_smoke_test() -> void:
 	print("[FirstSessionSmokeTest] PASS: locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver.")
 	delete_savegame()
 	get_tree().quit()
+
+
+## Station traffic end to end: one freighter in from the gate to the berth,
+## one out from the berth to the gate (fast, so the test is short).
+## -- --traffic-smoke-test --baseline-offline
+func _run_traffic_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	for i in 30:
+		await get_tree().process_frame
+	traffic_director.forced_speed = 160.0
+	traffic_director.forced_arriving = 1
+	traffic_director.spawn_now()
+	traffic_director.forced_arriving = 0
+	traffic_director.spawn_now()
+	for second in 90:
+		await get_tree().create_timer(1.0).timeout
+		if traffic_director.docked_count >= 1 and traffic_director.left_count >= 1:
+			print("[TrafficSmokeTest] PASS: a freighter docked at the berth and another left through the gate.")
+			delete_savegame()
+			get_tree().quit()
+			return
+	for entry in traffic_director.get("_ships"):
+		if is_instance_valid(entry["ship"]):
+			print("[TrafficSmokeTest] %s kind=%s dist=%.0f speed=%.1f pos=%s" % [entry["ship"].name, entry["kind"], entry["ship"].global_position.distance_to(entry["dest"]), entry["ship"].velocity.length(), str(entry["ship"].global_position)])
+	push_error("[TrafficSmokeTest] FAIL: docked=%d left=%d after 90 s." % [traffic_director.docked_count, traffic_director.left_count])
+	delete_savegame()
+	get_tree().quit(1)
 
 
 func _live_buttons(container: Node) -> Array:

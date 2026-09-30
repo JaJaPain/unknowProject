@@ -518,6 +518,9 @@ func _update_engine_glow() -> void:
 	EngineGlowScript.animate(engine_glow, engine_glow_material, engine_glow_base_transforms, speed_ratio)
 
 func _refresh_role_patrol_center() -> void:
+	# Station traffic (TrafficDirector) flies its own gate/berth route.
+	if bool(get_meta("civilian_traffic", false)):
+		return
 	if bool(get_meta("is_quest_target", false)) \
 			or GlobalState.is_minor_faction(faction) \
 			or is_reinforcement \
