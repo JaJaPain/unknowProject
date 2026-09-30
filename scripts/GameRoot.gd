@@ -10991,6 +10991,10 @@ func _run_public_board_smoke_test() -> void:
 			urgent_index = i
 			break
 	if urgent_index < 0:
+		var fetch_problem := _check_fetch_offers_for_smoke()
+		if not fetch_problem.is_empty():
+			_fail_public_board_smoke_test(fetch_problem)
+			return
 		print("[PublicBoardSmokeTest] PASS: urgent accept, countdown and urgent payout verified (no second urgent posting on the refreshed board; expiry not rechecked).")
 		delete_savegame()
 		get_tree().quit(0)
@@ -11013,9 +11017,32 @@ func _run_public_board_smoke_test() -> void:
 		_fail_public_board_smoke_test("Timed mission did not expire when deadline was reached.")
 		return
 
+	var fetch_problem := _check_fetch_offers_for_smoke()
+	if not fetch_problem.is_empty():
+		_fail_public_board_smoke_test(fetch_problem)
+		return
 	print("[PublicBoardSmokeTest] PASS: urgent accept, countdown, urgent payout, and deterministic expiration verified.")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+## Fetch cards over 30 board refreshes: both kinds appear (a store item to buy
+## and deliver; a prop to collect from a named outpost contact), each titled
+## and keeping its own text. "" when fine.
+func _check_fetch_offers_for_smoke() -> String:
+	var builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var kinds := {}
+	for bucket in 30:
+		var fetch: Dictionary = builder._build_fetch_offer(bucket * 240)
+		if fetch.is_empty():
+			continue
+		if str(fetch.get("title", "")).is_empty() or not bool(fetch.get("keep_authored_text", false)):
+			return "A fetch offer came out untitled or unmarked: %s" % str(fetch.get("fetch_card_id", ""))
+		var quest: Dictionary = fetch.get("quest_data", {})
+		kinds[str((quest.get("objective", {}) as Dictionary).get("type", ""))] = true
+	if kinds.size() < 2:
+		return "Fetch offers did not include both store and outpost kinds: %s" % str(kinds.keys())
+	return ""
 
 
 func _fail_public_board_smoke_test(message: String) -> void:

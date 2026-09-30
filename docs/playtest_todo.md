@@ -106,3 +106,11 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Your ship in Ship Upgrades.** Maintenance Bay > Ship Upgrades: the
       ship behind the system boxes is YOUR ship (the one you fly), lit, and
       slowly turning. Not the old flat picture.
+- [ ] **Fetch job, start to finish.** On the public board, take the rare-item
+      card (the "… Needed" one with a red/gold/blue stripe). Its text ends in
+      one of two ways; follow whichever it says:
+      (a) "Buy a <item> at <station> and bring it to <outpost>": buy it in the
+      Store, fly to that outpost, and it pays out;
+      (b) "Word is <name> at <outpost> has one": fly to that outpost, get the
+      item from that person, bring it back to the station's Maintenance Bay
+      and use Deliver Part; it pays out.

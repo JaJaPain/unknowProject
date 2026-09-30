@@ -322,8 +322,10 @@ static func _build_fetch_offer(current_time_minutes: int) -> Dictionary:
 	var card: Dictionary = cards[rng.randi() % cards.size()]
 	var item_id := str(card.get("item_id", ""))
 	var item := _store_item(item_id)
-	if item.is_empty():
-		return {}
+	if item.is_empty() or not item_id in FETCH_STOCKED_ITEMS:
+		# Props aren't sold: someone at an outpost has one (the hint is the
+		# job itself: who and where), and it comes back to the station.
+		return _build_fetch_pickup_offer(card, rng)
 	var item_name := str(item.get("display_name", item_id))
 	var station_id := _main_station_id()
 	var station_display := _main_station_display()
@@ -383,6 +385,88 @@ Buy a %s at %s and bring it to %s." % [str(card.get("board_text", "")), item_nam
 	return offer
 
 
+## A prop fetch card as a pickup: "<npc> at <outpost> has one". Pay grows
+## with the item's rarity (data/content/item_rarity.json).
+static func _build_fetch_pickup_offer(card: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+	var gs = _global_state()
+	if gs == null or not gs.has_method("get_current_pickup_outposts"):
+		return {}
+	var outposts: Array = gs.get_current_pickup_outposts()
+	if outposts.is_empty():
+		return {}
+	var outpost: Dictionary = outposts[rng.randi() % outposts.size()]
+	var outpost_id := str(outpost.get("id", ""))
+	var outpost_display := str(outpost.get("display", outpost_id))
+	var npcs: Array = gs.get_minor_npcs_at_outpost(outpost_id)
+	if npcs.is_empty():
+		return {}
+	var holder := str(npcs[rng.randi() % npcs.size()])
+	var item_id := str(card.get("item_id", ""))
+	var item_name := _prop_name(item_id)
+	if item_name.is_empty():
+		return {}
+	var rarity := float(_item_rarity().get(item_id, 3.5))
+	var base_reward := int(round(120.0 + rarity * 70.0))
+	var requester := str(card.get("requester", "a local"))
+	var title := "%s Needed" % item_name
+	var dialogue := "%s
+
+Word is %s at %s has one. Collect it and bring it back here." % [str(card.get("board_text", "")), holder, outpost_display]
+	var objective := {
+		"type": "PICKUP_SPECIAL",
+		"target_outpost": outpost_id,
+		"target_outpost_display": outpost_display,
+		"target_npc": holder,
+		"part_name": item_name,
+		"destination": "Grease Monkeys",
+		"reward_credits": base_reward,
+	}
+	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, {})
+	var offer := _offer(
+		TEMPLATE_PICKUP_SPECIAL,
+		true,
+		title,
+		requester.substr(0, 1).to_upper() + requester.substr(1),
+		dialogue,
+		"Collect %s from %s at %s" % [item_name, holder, outpost_display],
+		base_reward,
+		0,
+		1.0,
+		quest_data,
+		["{ITEM_NAME}", "{TARGET_NPC}", "{PICKUP_LOCATION}"],
+		{"{ITEM_NAME}": item_name, "{TARGET_NPC}": holder, "{PICKUP_LOCATION}": outpost_display}
+	)
+	offer["keep_authored_text"] = true
+	offer["fetch_variant"] = str(card.get("variant", ""))
+	offer["fetch_card_id"] = str(card.get("card_id", ""))
+	return offer
+
+
+static var _rarity_cache: Dictionary = {}
+
+
+static func _item_rarity() -> Dictionary:
+	if _rarity_cache.is_empty():
+		var f := FileAccess.open("res://data/content/item_rarity.json", FileAccess.READ)
+		if f != null:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Dictionary:
+				_rarity_cache = (parsed as Dictionary).get("rarity", {})
+	return _rarity_cache
+
+
+static func _prop_name(item_id: String) -> String:
+	var f := FileAccess.open("res://data/content/prop_items.json", FileAccess.READ)
+	if f == null:
+		return ""
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	if parsed is Dictionary:
+		for item in (parsed as Dictionary).get("items", []):
+			if item is Dictionary and str(item.get("id", "")) == item_id:
+				return str(item.get("name", item_id))
+	return ""
+
+
 static func _fetch_cards() -> Array:
 	if _fetch_cards_cache.is_empty():
 		var dir := DirAccess.open("res://data/content/fetch_cards/approved")
@@ -396,7 +480,7 @@ static func _fetch_cards() -> Array:
 				var parsed: Variant = JSON.parse_string(f.get_as_text())
 				if parsed is Dictionary:
 					for card in (parsed as Dictionary).get("cards", []):
-						if card is Dictionary and str(card.get("item_id", "")) in FETCH_STOCKED_ITEMS:
+						if card is Dictionary:
 							_fetch_cards_cache.append(card)
 	return _fetch_cards_cache
 
