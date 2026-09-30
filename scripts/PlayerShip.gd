@@ -154,6 +154,10 @@ var _shake_strength: float = 0.0
 var _shake_decay:    float = 0.0
 # FOV punch (quick zoom kick that springs back — adds snap to action beats)
 var _base_fov:   float = 75.0
+## Boost widens the view a little (eases in and out) and turns on streaks.
+const BOOST_FOV_WIDEN := 9.0
+var _boost_fov := 0.0
+var _speed_lines: Node3D
 var _fov_punch:  float = 0.0   # additive offset on base fov; negative = zoom-in
 # Repeated-action framing variety: when the same attack telegraphs twice in a
 # row, flip the over-the-shoulder side so the second shot reads from a new angle.
@@ -206,6 +210,8 @@ func _ready():
 	camera_pivot.global_position = global_position
 	camera_pivot.rotation_degrees = Vector3(-15, 0, 0) # Pitch down, looking at player
 	_base_fov = camera.fov   # rest FOV; combat punch-ins kick off this baseline
+	_speed_lines = load("res://scripts/visuals/SpeedLines.gd").new()
+	camera.add_child(_speed_lines)
 	
 	GlobalState.target_changed.connect(_on_target_changed)
 	CombatManager.combat_started.connect(_on_combat_started_orbit)
@@ -637,7 +643,10 @@ func _frame_action(source: Node, target: Node, flip: bool = false) -> void:
 	_trigger_shake(0.3)
 
 func _process(delta: float) -> void:
+	_update_boost_feel(delta)
 	if _cam_mode == 0:
+		if not is_equal_approx(camera.fov, _base_fov + _boost_fov):
+			camera.fov = _base_fov + _boost_fov
 		return
 	# Wall-clock delta so camera speed is constant regardless of time_scale slow-mo.
 	var real_delta := delta / maxf(Engine.time_scale, 0.01)
@@ -700,9 +709,21 @@ func _process(delta: float) -> void:
 		_fov_punch = lerpf(_fov_punch, 0.0, minf(real_delta * 7.0, 1.0))
 		if absf(_fov_punch) < 0.05:
 			_fov_punch = 0.0
-		camera.fov = _base_fov + _fov_punch
-	elif not is_equal_approx(camera.fov, _base_fov):
-		camera.fov = _base_fov
+	var want_fov := _base_fov + _fov_punch + _boost_fov
+	if not is_equal_approx(camera.fov, want_fov):
+		camera.fov = want_fov
+
+## Boost widens the view and runs the speed streaks while it lasts. Runs in
+## every camera mode (the rest of _process is for the combat cameras).
+func _update_boost_feel(delta: float) -> void:
+	var real_delta := delta / maxf(Engine.time_scale, 0.01)
+	var boosting := boost_timer > 0.0 and not is_docked and not destroyed
+	_boost_fov = lerpf(_boost_fov, BOOST_FOV_WIDEN if boosting else 0.0, minf(real_delta * (5.0 if boosting else 2.5), 1.0))
+	if absf(_boost_fov) < 0.02 and not boosting:
+		_boost_fov = 0.0
+	if _speed_lines != null:
+		_speed_lines.set("boosting", boosting)
+
 
 func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float:
 	var min_r := maxf(ship_sep * 0.9, 28.0)

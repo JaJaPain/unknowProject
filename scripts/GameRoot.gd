@@ -7665,6 +7665,15 @@ func _run_hud_snapshot() -> void:
 	for i in 20:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("hud_pause.png"))
+	# Boost: widened view and speed streaks.
+	GlobalState.paused = false
+	GlobalState.active_target = null
+	GlobalState.fuel = 100.0
+	player.boost_cooldown_timer = 0.0
+	player.activate_boost()
+	for i in 25:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("hud_boost.png"))
 	print("HUDSHOT done")
 	get_tree().quit()
 
