@@ -2612,6 +2612,7 @@ func _create_pause_menu():
 	HudStyle.style_label(video_title, 13, HudStyle.ACCENT)
 	controls.add_child(video_title)
 	_add_bloom_row(controls)
+	_add_volume_row(controls, "Camera shake", GlobalState.screen_shake_scale, func(v: float) -> void: GlobalState.screen_shake_scale = v)
 	var reset_history := Button.new()
 	reset_history.text = "Reset remembered quest variety"
 	reset_history.tooltip_text = "Clears only cross-campaign quest and opening history. Campaigns and character memories are preserved."

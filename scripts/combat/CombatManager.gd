@@ -906,6 +906,42 @@ func _await_travel(from: Node, to: Node) -> void:
 
 # Apply damage at projectile-arrival time and emit the impact beat.
 # is_drone=true routes damage through drone_dmg_mult instead of weapon_dmg_mult.
+## The hit seen on the ship: a shield shell and flash when blocked, sparks and
+## a flash on the hull otherwise (bigger and whiter on a crit). The effect sits
+## on the side facing the attacker, not at the ship's centre.
+func _spawn_hit_fx(target, center: Vector3, blocked: bool, crit: bool) -> void:
+	var fx_parent: Node3D = null
+	if is_instance_valid(target) and (target as Node).get_parent() is Node3D:
+		fx_parent = (target as Node).get_parent()
+	elif is_instance_valid(player_node) and player_node.get_parent() is Node3D:
+		fx_parent = player_node.get_parent()
+	if fx_parent == null:
+		return
+	var attacker: Node3D = player_node if target == enemy_node else enemy_node
+	var radius := _hit_radius(target)
+	var toward := Vector3.UP
+	if is_instance_valid(attacker):
+		toward = (attacker.global_position - center)
+		toward = toward.normalized() if toward.length() > 0.01 else Vector3.UP
+	var contact := center + toward * radius * 0.8
+	if blocked:
+		ImpactEffect.spawn_shield_ripple(fx_parent, center, radius * 1.15, contact)
+	elif crit:
+		ImpactEffect.spawn_hit(fx_parent, contact, Color(1.0, 0.95, 0.75), 1.8)
+	else:
+		ImpactEffect.spawn_hit(fx_parent, contact, Color(1.0, 0.6, 0.25), 1.2)
+
+
+func _hit_radius(target) -> float:
+	if not is_instance_valid(target):
+		return 4.0
+	var shape_node := (target as Node).get_node_or_null("CollisionShape3D") as CollisionShape3D
+	if shape_node != null and shape_node.shape is BoxShape3D:
+		var size: Vector3 = (shape_node.shape as BoxShape3D).size * (target as Node3D).scale
+		return clampf(maxf(size.x, maxf(size.y, size.z)) * 0.5, 2.0, 30.0)
+	return 4.0
+
+
 func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocked: bool, is_drone: bool = false) -> void:
 	if not is_instance_valid(target):
 		return
@@ -936,6 +972,7 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 	if crit:
 		_sfx("hit_critical", hit_pos)
 	_spawn_damage_number(target, hit_pos, dmg, blocked, crit, damage_mult)
+	_spawn_hit_fx(target, hit_pos, blocked, crit)
 	emit_signal("action_impact", target, hit_pos, dmg, lethal, blocked, crit)
 	# Check boss phase transitions when the player damages the enemy.
 	if target == enemy_node:

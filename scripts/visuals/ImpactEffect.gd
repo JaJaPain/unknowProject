@@ -2,7 +2,7 @@ class_name ImpactEffect
 extends RefCounted
 
 
-static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void:
+static func spawn_hit(parent: Node3D, pos: Vector3, col: Color, size: float = 1.0) -> void:
 	var container := Node3D.new()
 	container.name = "HitFX"
 	parent.add_child(container)
@@ -11,7 +11,7 @@ static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void:
 	# Billboard flash with radial gradient
 	var flash := MeshInstance3D.new()
 	var quad := QuadMesh.new()
-	quad.size = Vector2(2.5, 2.5)
+	quad.size = Vector2(2.5, 2.5) * size
 	var flash_mat := StandardMaterial3D.new()
 	flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	flash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -47,7 +47,7 @@ static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void:
 	# Spark particles
 	var sparks := GPUParticles3D.new()
 	sparks.one_shot = true
-	sparks.amount = 8
+	sparks.amount = int(8 * size)
 	sparks.lifetime = 0.25
 	sparks.explosiveness = 0.9
 	sparks.fixed_fps = 30
@@ -57,8 +57,8 @@ static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void:
 	var proc := ParticleProcessMaterial.new()
 	proc.direction = Vector3.ZERO
 	proc.spread = 180.0
-	proc.initial_velocity_min = 15.0
-	proc.initial_velocity_max = 30.0
+	proc.initial_velocity_min = 15.0 * size
+	proc.initial_velocity_max = 30.0 * size
 	proc.gravity = Vector3.ZERO
 	proc.scale_min = 0.05
 	proc.scale_max = 0.12
@@ -92,6 +92,38 @@ static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void:
 	# Self-cleanup
 	var timer := container.get_tree().create_timer(0.5)
 	timer.timeout.connect(container.queue_free)
+
+
+## A shield taking a hit: a brief glowing shell around the ship that fades
+## as it swells, plus a small flash where the shot met it.
+static func spawn_shield_ripple(parent: Node3D, center: Vector3, radius: float, contact: Vector3, col: Color = Color(0.35, 0.85, 1.0)) -> void:
+	var shell := MeshInstance3D.new()
+	shell.name = "ShieldRippleFX"
+	var sphere := SphereMesh.new()
+	sphere.radius = radius
+	sphere.height = radius * 2.0
+	sphere.radial_segments = 24
+	sphere.rings = 12
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.albedo_color = Color(col, 0.28)
+	# Rim-bright shell: the edges read as the shield, the middle stays clear.
+	mat.rim_enabled = true
+	mat.rim = 1.0
+	mat.rim_tint = 1.0
+	sphere.material = mat
+	shell.mesh = sphere
+	shell.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(shell)
+	shell.global_position = center
+	var tween := shell.create_tween()
+	tween.tween_property(shell, "scale", Vector3.ONE * 1.08, 0.35).from(Vector3.ONE * 0.94)
+	tween.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.35)
+	tween.tween_callback(shell.queue_free)
+	spawn_hit(parent, contact, col, 0.7)
 
 
 static func spawn_explosion(parent: Node3D, pos: Vector3, col: Color, size: float = 1.0) -> void:

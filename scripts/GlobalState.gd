@@ -1913,6 +1913,11 @@ var bloom_amount: float = 1.0:
 signal bloom_changed(enabled: bool)
 signal bloom_amount_changed(amount: float)
 
+## Camera shake strength (Settings, accessibility): 0 = off, 1 = default.
+var screen_shake_scale: float = 1.0:
+	set(val):
+		screen_shake_scale = clampf(val, 0.0, 1.5)
+
 # Reputation system
 var reputations: Dictionary = {
 	"zenith": 50.0,

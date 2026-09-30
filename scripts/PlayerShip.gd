@@ -512,7 +512,7 @@ func _on_action_impact_cam(_target: Node, world_pos: Vector3, dmg: float, _letha
 	_punch_fov(-clampf(mag * 6.0, 1.5, 7.0))
 
 func _trigger_shake(strength: float) -> void:
-	_shake_strength = maxf(_shake_strength, clampf(strength, 0.0, 1.5))
+	_shake_strength = maxf(_shake_strength, clampf(strength * GlobalState.screen_shake_scale, 0.0, 1.5))
 	_shake_decay = _shake_strength
 
 # Punch in tight on the kill and rattle the camera for the death beat.
