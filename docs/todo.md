@@ -1000,7 +1000,7 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ## UI / UX
 
-- [ ] **Pin the active target to the top of the overview** (Abe, 2026-09-06).
+- [x] **Pin the active target to the top of the overview** (done in the 2026-09-26 HUD restyle: pinned rows + divider) (Abe, 2026-09-06).
   The overview re-sorts on a timer, so the thing the player has actually
   targeted can be pushed off-screen by whatever sort they have chosen -- fly far
   enough away and nearer contacts fill the top of the list. The player loses
@@ -1016,12 +1016,12 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
     the target dies or is cleared -- see the N.O.V.A. third-party-kill item,
     which is the same event from the audio side.
 
-- [ ] **Landing page / campaign select** -- late-process main menu that finally gives the game a real front door. Needs a `Continue` button that loads the most recently played campaign, three visible campaign slots showing what is in each slot, actions to load another campaign, delete a campaign, and create a new one. Use a cool animated backdrop such as a rotating space station / orbital scene instead of a static flat menu. Also use this phase to brainstorm and choose the real game title, since the current title is only a placeholder.
+- [x] **Landing page / campaign select** (exists; 2026-09-30 ship showcase beside it) -- late-process main menu that finally gives the game a real front door. Needs a `Continue` button that loads the most recently played campaign, three visible campaign slots showing what is in each slot, actions to load another campaign, delete a campaign, and create a new one. Use a cool animated backdrop such as a rotating space station / orbital scene instead of a static flat menu. Also use this phase to brainstorm and choose the real game title, since the current title is only a placeholder.
 - [x] **Quest tracker panel blue box on second quest** -- `reset_size()` now fires after the tracker content is rebuilt so the panel shrinks back to content on quest changes.
-- [ ] **Station lounge UI / social layer** -- give the lounge its own polished interface instead of a plain utility menu: contact cards, relationship heat bar, contact moods, "last seen" timestamp, rumor badge, available conversation/action buttons, and a layout that can support dynamic NPCs and bartering later. See `docs/design_parking_lot.md section1`
+- [x] **Station lounge UI / social layer** (lounge art + contact cards; layout fixed 2026-09-30) -- give the lounge its own polished interface instead of a plain utility menu: contact cards, relationship heat bar, contact moods, "last seen" timestamp, rumor badge, available conversation/action buttons, and a layout that can support dynamic NPCs and bartering later. See `docs/design_parking_lot.md section1`
 - [x] **Lounge black-market passerby** -- 2026-07-05 (L4): rare "A Stranger" temp card (6%, 90-min cooldown, not in start system, exclusive with wants-a-word). LLM pitches; deal is code-owned (intel|goods, chapter-scaled ask, 35% scam, one haggle, walk-away may sweeten). Goods fence 1.6x; intel appends a pending story hook; scams sting quietly; all outcomes in record_player_choice. FUTURE (kept from original idea): stolen/illegal ship upgrades + shady-mechanic installs, delayed-payout job kind.
 - [ ] **Unstable dynamic NPCs & Dynamic Bartering** -- Docking at station lounges puts you in contact with unstable dynamic NPCs. Instead of traditional visual menus, trading rare cargo updates into a dynamic bartering sequence.
-- [ ] **Store presentation polish** -- item cards, purchase confirm dialog, inventory integration, mission highlight. See `docs/design_parking_lot.md section3`
+- [x] **Store presentation polish** (2026-09-29 StoreScreen on the inventory layout; purchase confirm not added) -- item cards, purchase confirm dialog, inventory integration, mission highlight. See `docs/design_parking_lot.md section3`
 
 ---
 
