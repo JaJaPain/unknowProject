@@ -1,6 +1,29 @@
 extends Node
 
 var bgm_player: AudioStreamPlayer
+## Adaptive music (next_level_plan P3): explore / tension / combat / docked,
+## crossfaded on two players. A state uses its own track once the file from
+## docs/music_needs.json is in sound/BackgroundMusic/; until then it keeps
+## whatever is playing (the explore tracks are the stand-ins).
+const MUSIC_DIR := "res://sound/BackgroundMusic/"
+const STATE_TRACKS := {
+	"explore": ["Explore_A.mp3", "Explore_B.mp3"],
+	"tension": ["Tension.mp3"],
+	"combat": ["Combat_A.mp3", "Combat_B.mp3"],
+	"docked": ["Docked.mp3"],
+}
+const STINGERS := {
+	"jump": "Stinger_Jump.mp3",
+	"victory": "Stinger_Victory.mp3",
+	"mission": "Stinger_Mission.mp3",
+	"danger": "Stinger_Danger.mp3",
+}
+const MUSIC_CROSSFADE_S := 2.0
+var music_state := "explore"
+var _bgm_alt: AudioStreamPlayer
+var _stinger_player: AudioStreamPlayer
+var _state_track_idx := {}
+var _bus_tween: Tween
 var jump_player: AudioStreamPlayer  # dedicated channel for the tunnel jet (so we can fade it)
 var broken_gate_rain_player: AudioStreamPlayer
 var broken_gate_thunder_player: AudioStreamPlayer
@@ -80,6 +103,13 @@ func _ready():
 	bgm_player.bus = "Music"
 	add_child(bgm_player)
 	bgm_player.finished.connect(_on_bgm_finished)
+	_bgm_alt = AudioStreamPlayer.new()
+	_bgm_alt.bus = "Music"
+	add_child(_bgm_alt)
+	_bgm_alt.finished.connect(_on_bgm_finished)
+	_stinger_player = AudioStreamPlayer.new()
+	_stinger_player.bus = "Music"
+	add_child(_stinger_player)
 
 	# Dedicated player for the jump-tunnel jet so we can fade it on arrival.
 	jump_player = AudioStreamPlayer.new()
@@ -107,6 +137,11 @@ func _ready():
 	tractor_player.finished.connect(_on_tractor_loop_finished)
 
 	tracks = [bgm_track1, bgm_track2]
+	# Dedicated explore tracks replace the stand-ins once they exist.
+	var explore := _state_streams("explore")
+	if not explore.is_empty():
+		tracks = explore
+	_connect_music_events.call_deferred()
 	
 	# Setup SFX Players pool
 	for i in range(max_sfx_channels):
@@ -202,8 +237,99 @@ func _on_bgm_finished():
 		return
 	if _lounge_music_active:
 		bgm_player.play()
+		return
+	# A state with its own tracks loops them; explore cycles the flight list.
+	var own := _state_streams(music_state)
+	if music_state != "explore" and not own.is_empty():
+		_play_state_track(own, false)
 	else:
 		play_next_bgm()
+
+
+## Moves the music to a new state. Lounge and landing keep their own music;
+## the state is remembered and applies when they end.
+func set_music_state(state: String) -> void:
+	if state == music_state or not STATE_TRACKS.has(state):
+		return
+	var previous := music_state
+	music_state = state
+	if _lounge_music_active or _landing_music_active or _music_suspended_for_broken_gate:
+		return
+	var own := _state_streams(state)
+	if own.is_empty():
+		# No track for this state yet. Coming back to explore from a state that
+		# had one returns to the flight list; otherwise the music carries on.
+		if state == "explore" and not _state_streams(previous).is_empty():
+			var flight: Array = tracks
+			if not flight.is_empty():
+				_crossfade_to(flight[current_track_idx % flight.size()])
+		return
+	_play_state_track(own, true)
+
+
+func _play_state_track(streams: Array, crossfade: bool) -> void:
+	var idx := int(_state_track_idx.get(music_state, 0))
+	_state_track_idx[music_state] = idx + 1
+	var stream: AudioStream = streams[idx % streams.size()]
+	if crossfade and bgm_player.playing:
+		_crossfade_to(stream)
+	else:
+		bgm_player.stream = stream
+		bgm_player.volume_db = 0.0
+		bgm_player.play()
+
+
+func _crossfade_to(stream: AudioStream) -> void:
+	var old := bgm_player
+	bgm_player = _bgm_alt
+	_bgm_alt = old
+	bgm_player.stream = stream
+	bgm_player.volume_db = -40.0
+	bgm_player.play()
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(bgm_player, "volume_db", 0.0, MUSIC_CROSSFADE_S)
+	tween.tween_property(old, "volume_db", -40.0, MUSIC_CROSSFADE_S)
+	tween.chain().tween_callback(old.stop)
+
+
+func _state_streams(state: String) -> Array:
+	var found := []
+	for file_name in STATE_TRACKS.get(state, []):
+		var path := MUSIC_DIR + str(file_name)
+		if ResourceLoader.exists(path):
+			var stream = load(path)
+			if stream != null:
+				found.append(stream)
+	return found
+
+
+## Game events that move the music (autoloads are all up by the next frame).
+func _connect_music_events() -> void:
+	var combat = get_node_or_null("/root/CombatManager")
+	if combat != null:
+		if combat.has_signal("combat_started"):
+			combat.combat_started.connect(func(_enemy) -> void:
+				play_stinger("danger")
+				set_music_state("combat"))
+		if combat.has_signal("combat_ended"):
+			combat.combat_ended.connect(func(player_won: bool) -> void:
+				if player_won:
+					play_stinger("victory")
+				set_music_state("explore"))
+	var quests = get_node_or_null("/root/QuestManager")
+	if quests != null and quests.has_signal("quest_completed"):
+		quests.quest_completed.connect(func() -> void: play_stinger("mission"))
+
+
+## A one-shot over the music (jump arrival, victory, mission paid, danger),
+## if its file exists (docs/music_needs.json).
+func play_stinger(stinger_id: String) -> void:
+	var path := MUSIC_DIR + str(STINGERS.get(stinger_id, ""))
+	if not STINGERS.has(stinger_id) or not ResourceLoader.exists(path):
+		return
+	_stinger_player.stream = load(path)
+	_stinger_player.play()
 
 func enter_lounge_music() -> void:
 	if bgm_player == null or bgm_lounge == null:
@@ -402,7 +528,13 @@ func _update_bus_volumes():
 		var target_db = linear_to_db(music_volume_percent)
 		if is_ducked:
 			target_db -= _dialogue_duck_music_db
-		AudioServer.set_bus_volume_db(music_idx, target_db)
+		# Duck and release smoothly (a snap is audible under a voice line).
+		if _bus_tween != null and _bus_tween.is_valid():
+			_bus_tween.kill()
+		var from_db := AudioServer.get_bus_volume_db(music_idx)
+		_bus_tween = create_tween()
+		_bus_tween.tween_method(func(db: float) -> void: AudioServer.set_bus_volume_db(music_idx, db),
+			from_db, target_db, 0.25 if is_ducked else 0.6)
 		AudioServer.set_bus_mute(music_idx, music_volume_percent <= 0.0001)
 		
 	var sfx_idx = AudioServer.get_bus_index("SFX")

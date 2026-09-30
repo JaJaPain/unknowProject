@@ -4733,6 +4733,7 @@ func _reveal_dock_panel() -> void:
 # hangar image shows only while the maintenance submenu is active.
 func _render_dock_submenu() -> void:
 	_refresh_board_delivery_button()
+	AudioManager.set_music_state("docked")
 	_style_hub_buttons()
 	_update_dock_subtitle()
 	# Clear any active docked message so a flavor line from the
@@ -9663,6 +9664,7 @@ func _get_contact_mood(npc_name: String) -> String:
 
 
 func undock_player(skip_repair_warning: bool = false) -> void:
+	AudioManager.set_music_state("explore")
 	if not skip_repair_warning and _show_nova_repair_undock_prompt():
 		return
 	_dismiss_station_welcome()

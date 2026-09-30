@@ -74,5 +74,6 @@
             "length": "0:03 to 0:05",
             "prompt": "Very short instrumental alert stinger for a space game: a sudden low brass-like synth blast with a dissonant high string scrape and a metallic hit, cut off sharply. Alarming, D minor."
         }
-    ]
+    ],
+    "wiring": "AudioManager picks each file up automatically from sound/BackgroundMusic/<filename> (Claude moves them there after review). Until a state's file exists, that state keeps whatever is playing; stingers are silent until theirs exist."
 }

@@ -711,6 +711,7 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 		}
 	)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
+	AudioManager.play_stinger("jump")
 
 	if ui_mgr and ui_mgr.has_method("refresh_overview"):
 		ui_mgr.call_deferred("refresh_overview")
