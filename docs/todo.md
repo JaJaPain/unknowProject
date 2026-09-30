@@ -638,7 +638,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 - [x] **Salvage drone wreck action** -- wreckage targets now expose a disabled/enabled `Salvage` action with tooltip reasons; spending 1 salvage drone starts the existing salvage loop without opening inventory.
 - [x] **Enemy low-health escalation arc** (behaviour existed: flee chance under 30% rising as hull drops, gunner brace under 25%, interceptor evade under 30%; 2026-09-30 added 16 desperate lines + hull sparks) -- enemy dialogue/behavior should escalate when below 30% HP
 - [x] **Impact decals on player ship** (2026-09-30: scorch decals on any ship's hull where unshielded hits land, max 8 per ship, cleared at combat end; CombatManager._add_scorch) -- hull hit marks that persist during a fight
-- [ ] **Richer combat taunt flavor** -- TACTICAL bucket system: situation-aware taunts (flanked, shielded, drone hit, etc.)
+- [x] **Richer combat taunt flavor** (2026-09-30: enemy reactions to shield-blocked shots, crits, drone hits and flanks; 4-5 lines each, max once per turn, 45% chance; CombatManager.REACTION_LINES) -- TACTICAL bucket system: situation-aware taunts (flanked, shielded, drone hit, etc.)
   - 2026-08-18: the CAUSE half of this shipped -- taunts now know WHY the fight
     started (see `scripts/combat/TauntCause.gd`, 8 causes derived from real
     state) and rotate true round-robin per cause with a persisted cursor

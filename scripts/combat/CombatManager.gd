@@ -498,6 +498,34 @@ const DESPERATE_LINES := [
 ]
 
 
+## The enemy reacts to what the player does to it (richer taunt flavour):
+## a shot its shield stops, a crit, a drone strike, a flank. At most once
+## per turn and not every time, in its taunt voice.
+const REACTION_LINES := {
+	"blocked": ["That all you've got? My shields barely noticed.", "Ha! Bounced right off.", "Try aiming for the part that isn't shielded.", "Shields holding. You're wasting charge.", "Is that meant to hurt?"],
+	"crit": ["Argh! Where did that come from?", "That one went straight through. Damage control!", "Lucky shot. Very lucky shot.", "Everything just went red. Not good.", "You'll pay for that one."],
+	"drone": ["Get that drone off me!", "Something's chewing on my hull. A drone? Seriously?", "Swat that thing down! Anyone!", "Cheap trick, sending a drone."],
+	"flanked": ["Where'd you go? Behind me? No, no, no.", "Turn! Turn the ship!", "Coming around my blind side. Clever.", "Can't get my guns around fast enough!"],
+}
+const REACTION_CHANCE := 0.45
+var _reacted_this_turn := false
+
+
+func _play_reaction(kind: String) -> void:
+	if _reacted_this_turn or randf() > REACTION_CHANCE:
+		return
+	if not _combat_voice_on() or not is_instance_valid(enemy_node):
+		return
+	var pool: Array = REACTION_LINES.get(kind, [])
+	if pool.is_empty():
+		return
+	_reacted_this_turn = true
+	var line: String = pool[randi() % pool.size()]
+	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
+	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), line, Color(1.0, 0.4, 0.3))
+	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
+
+
 func _play_desperate_taunt() -> void:
 	if not _combat_voice_on() or not is_instance_valid(enemy_node):
 		return
@@ -867,6 +895,7 @@ var _lerp_start:  int   = 0
 var _lerp_active: bool  = false
 
 func _begin_planning() -> void:
+	_reacted_this_turn = false
 	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
 		end_combat(false)
 		return
@@ -1061,6 +1090,13 @@ func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocke
 		_sfx("hit_critical", hit_pos)
 	_spawn_damage_number(target, hit_pos, dmg, blocked, crit, damage_mult)
 	_spawn_hit_fx(target, hit_pos, blocked, crit)
+	if target == enemy_node and not lethal:
+		if blocked:
+			_play_reaction("blocked")
+		elif crit:
+			_play_reaction("crit")
+		elif is_drone:
+			_play_reaction("drone")
 	emit_signal("action_impact", target, hit_pos, dmg, lethal, blocked, crit)
 	# Check boss phase transitions when the player damages the enemy.
 	if target == enemy_node:
@@ -1309,6 +1345,7 @@ func _exec_micro_warp() -> void:
 			var flank_offset: Vector3 = enemy3d.global_transform.basis.x * 18.0
 			player_node.global_position = enemy3d.global_position + flank_offset
 	player_is_flanking = true
+	_play_reaction("flanked")
 	micro_warp_cooldown = 3
 	range_band = CombatActionType.RangeBand.CLOSE
 	# Flanking nullifies the enemy's shield angle — angle changed.

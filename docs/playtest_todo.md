@@ -193,3 +193,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       through two or three to catch one). It now ends with where to look,
       e.g. "Somewhere out past the gas giant." Fly there and search: the
       anomaly is in that area (not always right on top of the landmark).
+- [ ] **Enemies react.** Over a two- or three-turn fight you'll hear the enemy
+      react to what you do: gloating when its shield stops your shot, cursing
+      a crit, yelling about your drone, panicking when you flank. At most one
+      reaction a turn.
