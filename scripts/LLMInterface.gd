@@ -6033,6 +6033,10 @@ func _build_kaelen_intro_prompt(
 # rejected. The reason string doubles as the correction_suffix on the retry.
 func _check_kaelen_intro_speaker(line: String, agent_name: String) -> String:
 	var lower = line.to_lower()
+	# Kaelen is the speaker, so naming "Kaelen" is her talking about herself in
+	# the third person ("You owe Kaelen a favor"), or someone else speaking.
+	if load("res://scripts/story/FixedCastRoleGuard.gd").kaelen_third_person(line):
+		return "The line names Kaelen, but Kaelen is the one speaking. Speak as Kaelen in the first person (I, me, my) and never say the name Kaelen."
 	var has_shiny = lower.find("shiny") != -1 or lower.find("contractor") != -1 or lower.find("merc") != -1 or lower.find("ghost") != -1
 	var agent_lower = agent_name.to_lower()
 	# Does the line open with the agent's name (with optional punctuation)?

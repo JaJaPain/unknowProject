@@ -24,6 +24,7 @@ static func build_chapter_plan_prompt(
 	lines.append("Create one append-only chapter narrative packet.")
 	lines.append("Use only the labeled inputs below. Do not invent unavailable entities, mechanics, factions, NPCs, stores, gates, or mission types.")
 	lines.append("Never reveal hidden facts in player-facing fields; keep facts marked hidden/secret inside fact records only.")
+	lines.append("Kaelen (the player's broker) and N.O.V.A. (the player's ship) are never the player's creditor, debt holder, tormentor, threat or enemy. Any debt, threat or pressure belongs to an invented NPC or faction.")
 	lines.append("")
 	_append_block(lines, "director_context", director_context.strip_edges())
 	_append_json_block(lines, "validated_entities", validated_entities)
@@ -344,6 +345,30 @@ static func _normalized_opposing_force_dossier(value: Variant) -> Dictionary:
 	return dossier
 
 
+## Kaelen and N.O.V.A. can't be cast as the player's creditor or tormentor
+## (FixedCastRoleGuard). A beat bound to either one fails on a hostile word even
+## when the text says only "her".
+static func _check_fixed_cast_roles(packet: Dictionary, result: ValidationResult) -> void:
+	var guard = load("res://scripts/story/FixedCastRoleGuard.gd")
+	var beats: Variant = packet.get("beats", [])
+	if not beats is Array:
+		return
+	for beat in beats:
+		if not beat is Dictionary:
+			continue
+		var bound := false
+		for entity_id in (beat as Dictionary).get("eligible_entity_ids", []):
+			if guard.is_cast_entity(str(entity_id)):
+				bound = true
+		var texts: Array = []
+		for key in ["stake", "decline_consequence", "summary", "hook", "player_text"]:
+			texts.append(str((beat as Dictionary).get(key, "")))
+		for sentence in guard.scan(texts, bound):
+			result.add_error("fixed_cast_recast",
+				"Beat '%s' casts Kaelen or N.O.V.A. as the player's creditor or threat: \"%s\". Give the debt or threat to an invented NPC." % [str(beat.get("beat_id", "")), sentence],
+				"beats")
+
+
 static func _validate_packet(
 	packet: Dictionary,
 	available_objective_types: Array,
@@ -351,6 +376,7 @@ static func _validate_packet(
 	eligible_attachment_beats: Array
 ) -> ValidationResult:
 	var result := ValidationResultType.new()
+	_check_fixed_cast_roles(packet, result)
 	if str(packet.get("packet_id", "")).strip_edges().is_empty():
 		result.add_error(
 			"missing_chapter_packet_id",

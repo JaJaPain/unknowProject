@@ -189,6 +189,7 @@ static func build_campaign_bible_prompt(
 		"- Do not reveal future frontier factions to the player up front.",
 		"- Kaelen is the only fixed recurring NPC besides the player.",
 		"- Kaelen cannot die and her full mystery must never be completely solved.",
+		"- Kaelen (the player's broker) and N.O.V.A. (the player's ship) are never the player's creditor, debt holder, tormentor, threat or enemy. Any debt, threat or pressure belongs to an invented NPC or faction.",
 		"- Kaelen must publicly appear as a broker, fixer, or contract handler, not a scavenger, scientist, commander, prophet, mechanic, AI, archive, or failsafe.",
 		"- Kaelen's hidden identity can be strange, mundane, human, non-human, technological, or unknown, but the story bible must frame it as hidden director knowledge only.",
 		"- kaelen_angle is HIDDEN director-only knowledge: what she secretly knows or did. It must never restate kaelen_rule's public role, and must never be shown to the player or to small-model prompts.",
@@ -1044,6 +1045,14 @@ static func _normalized_campaign_bible(
 
 static func _validate_campaign_bible_shape(bible: Dictionary) -> ValidationResult:
 	var result := ValidationResultType.new()
+	# Public-facing story fields only; kaelen_angle and her other director-only
+	# fields may hold darker secrets.
+	var guard = load("res://scripts/story/FixedCastRoleGuard.gd")
+	for field in ["campaign_logline", "opening_situation", "core_pressure", "main_mystery", "act_1_outline", "story_arcs"]:
+		for sentence in guard.scan([bible.get(field, "")]):
+			result.add_error("fixed_cast_recast",
+				"'%s' casts Kaelen or N.O.V.A. as the player's creditor or threat: \"%s\". Give the debt or threat to an invented NPC." % [field, sentence],
+				field)
 	for field in [
 		"campaign_title",
 		"campaign_logline",

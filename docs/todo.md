@@ -50,7 +50,7 @@ _Active task list. Update this file at the end of every session._
   2026-09-28). While the station tractor beam is pulling the player in to
   dock, the target display and its action buttons should be hidden or
   disabled (the player can't act on a target then).
-- [ ] **Story model recast Kaelen as the player's creditor/harasser** (Abe, 2026-09-28).
+- [x] **DONE 2026-09-29** (scripts/story/FixedCastRoleGuard.gd, used by the campaign-bible and chapter-plan validators and prompts; Kaelen intros naming "Kaelen" are retried; tests/story/run_fixed_cast_role_guard_tests.gd. The legacy bible's authority goes behind a flag later, plan P8.) **Story model recast Kaelen as the player's creditor/harasser** (Abe, 2026-09-28).
   Campaign bible "Toxic Debt" (qwen3:8b): opening "owes Kaelen a favor she
   won't let go unpaid"; chapter 1 beat kaelen_introduces_debt with stake
   "avoid Kaelen's continued harassment". The mission agent then told the
@@ -112,6 +112,7 @@ _Active task list. Update this file at the end of every session._
   a posted investigation. Unrelated noise in the same log: UIManager.gd:2221
   public-board text JSON "Unterminated string" from the model (handled, no
   crash).
+- [ ] **Pre-existing test failure** (found 2026-09-29, fails on the base commit too): tests/story/run_narrative_cache_scheduler_tests.gd, "Ready offer text is not presented before audio-cache waits" and "Lounge model-wait state still uses non-actionable placeholder text".
 - [ ] **System radio/news voice changes per system** (Abe, 2026-09-28). Each star
   system's radio announcer should have its own voice (and keep it for that
   system, so returning sounds familiar), picked from the voice pool and never
