@@ -174,3 +174,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       shows its stations, factions by their real names (not "Generated"),
       and "Ores: …" for systems you've visited ("unknown until visited"
       for the rest).
+- [ ] **Anomalies are a surprise.** Fly around a system: an unfired anomaly
+      (glowing object) can't be seen from far away, only once you're close
+      enough for it to show on the overview. Once it has fired, it stays
+      visible.

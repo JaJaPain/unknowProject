@@ -12,6 +12,8 @@ const VALID_ITEMS := [
 var persistent_id: String = ""
 var anomaly_data: Dictionary = {}
 var _activated: bool = false
+var _shown := true
+const RevealModelType := preload("res://scripts/domain/SiteRevealModel.gd")
 var _action_index: int = 0
 var _mesh: MeshInstance3D = null
 var _light: OmniLight3D = null
@@ -79,12 +81,25 @@ func _physics_process(delta: float) -> void:
 	if _light:
 		_light.light_energy = 2.5 + sin(_pulse_time * 2.0) * 0.8
 
-	if _activated:
-		return
 	var player = GlobalState.player
 	if not player or not is_instance_valid(player):
 		return
-	if global_position.distance_to(player.global_position) <= ACTIVATION_RANGE:
+	var dist := global_position.distance_to(player.global_position)
+	# Seen only when sensors could pick it up (the overview's reveal range), so
+	# it can't be spotted by eye from across the system. A fired anomaly stays
+	# visible. Held until 1.3x the range so it doesn't flicker at the edge.
+	var reveal := RevealModelType.anomaly_reveal_range()
+	var seen := _activated or dist <= reveal or (_shown and dist <= reveal * 1.3)
+	if seen != _shown:
+		_shown = seen
+		if _mesh:
+			_mesh.visible = seen
+		if _light:
+			_light.visible = seen
+
+	if _activated:
+		return
+	if dist <= ACTIVATION_RANGE:
 		_activate()
 
 
