@@ -73,7 +73,7 @@ _Active task list. Update this file at the end of every session._
   System" (disabled) though the turn-in station was in the current system.
   Check how the tracker resolves the settle station (generated system / station
   id vs name) and the button's in-system test.
-- [ ] **Kill-Zenith contract in the second system, with no way to decline** (Abe,
+- [x] **DONE 2026-09-29** (every briefing ends with a "Not this one." decline; backup kill offers only target a faction with ships in the system. [Offline Backup] and Juno Calder: see B5.) **Kill-Zenith contract in the second system, with no way to decline** (Abe,
   2026-09-28): the agent offered "Destroy 2 Zenith ships" in a generated system
   (are there Zenith ships there at all?), and the three replies were all
   accept/negotiate ("A job's a job", "50 credits up front", "Payout is too

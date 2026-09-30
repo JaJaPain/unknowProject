@@ -5023,8 +5023,11 @@ func _trigger_fallback():
 	
 	# Try to pick a fallback template that hasn't been completed/abandoned recently
 	var available_indices = []
+	var present_factions := _factions_in_current_system()
 	for i in range(fallback_templates.size()):
 		var template = fallback_templates[i]
+		if not _fallback_target_present(template, present_factions):
+			continue
 		if last_history_text == "" or last_history_text.find(template["title"]) == -1:
 			available_indices.append(i)
 			
@@ -5032,7 +5035,11 @@ func _trigger_fallback():
 	if available_indices.size() > 0:
 		idx = available_indices[randi() % available_indices.size()]
 	else:
-		idx = randi() % fallback_templates.size()
+		var fallback_pool := []
+		for i in range(fallback_templates.size()):
+			if _fallback_target_present(fallback_templates[i], present_factions):
+				fallback_pool.append(i)
+		idx = fallback_pool[randi() % fallback_pool.size()] if not fallback_pool.is_empty() else randi() % fallback_templates.size()
 		
 	var selected_quest = fallback_templates[idx].duplicate(true)
 	selected_quest["campaign_name"] = _fallback_campaign_name()
@@ -5062,6 +5069,27 @@ func _trigger_fallback():
 	
 	if active_callback.is_valid():
 		active_callback.call(selected_quest, true)
+
+## Factions with ships in the current system (empty before the system loads).
+func _factions_in_current_system() -> Array:
+	var found := []
+	for entity in GlobalState.active_system_entities:
+		if entity is Node and is_instance_valid(entity):
+			var faction = entity.get("faction")
+			if faction != null and not str(faction).is_empty() and not str(faction) in found:
+				found.append(str(faction))
+	return found
+
+
+## A kill offer only makes sense if its target faction flies here (Abe,
+## 2026-09-28: "Destroy 2 Zenith ships" in a system with no Zenith). With no
+## ships known yet, every template stays eligible.
+func _fallback_target_present(template: Dictionary, present_factions: Array) -> bool:
+	var objective: Dictionary = template.get("objective", {})
+	if str(objective.get("type", "")) != "KILL_SHIPS" or present_factions.is_empty():
+		return true
+	return str(objective.get("target_faction", "")) in present_factions
+
 
 func get_chatter_line(type: String, context: Dictionary = {}) -> String:
 	if not chatter_cache.has(type):

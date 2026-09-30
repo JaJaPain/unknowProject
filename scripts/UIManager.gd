@@ -13057,6 +13057,15 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 		choice_btn.pressed.connect(func(): _on_choice_selected(quest_data, choice))
 		agent_choices_container.add_child(choice_btn)
 		shown += 1
+	# Every offer can be turned down (Abe, 2026-09-28): the model's replies are
+	# all ways of accepting, so the decline is added here, always last.
+	var decline_btn := Button.new()
+	decline_btn.text = "Not this one."
+	decline_btn.pressed.connect(func():
+		SpeechService.stop()
+		_on_agent_back_pressed()
+	)
+	agent_choices_container.add_child(decline_btn)
 
 
 
