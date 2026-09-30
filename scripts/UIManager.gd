@@ -4945,6 +4945,60 @@ func _style_hub_buttons() -> void:
 		undock_btn.add_theme_stylebox_override("hover", HudStyle.box(Color(0.2, 0.12, 0.06, 0.95), HudStyle.WARN, 1, 8, 12))
 
 
+## Arrival title card: the system's name large in the centre with who runs
+## it, fading in and out after a jump (next_level_plan P4).
+func show_system_title_card() -> void:
+	var sys_name := _get_current_system_display_name()
+	if sys_name.is_empty():
+		return
+	var old := get_node_or_null("SystemTitleCard")
+	if old != null:
+		old.queue_free()
+	var card := VBoxContainer.new()
+	card.name = "SystemTitleCard"
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	card.anchor_top = 0.2
+	card.anchor_bottom = 0.2
+	card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	card.alignment = BoxContainer.ALIGNMENT_CENTER
+	card.add_theme_constant_override("separation", 4)
+	add_child(card)
+	var kicker := Label.new()
+	kicker.text = "ARRIVING"
+	kicker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(kicker, 13, HudStyle.DIM)
+	kicker.add_theme_constant_override("outline_size", 4)
+	kicker.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+	card.add_child(kicker)
+	var title := Label.new()
+	title.text = sys_name.to_upper()
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(title, 44, HudStyle.TEXT)
+	title.add_theme_constant_override("outline_size", 8)
+	title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+	card.add_child(title)
+	var line := HudStyle.rule(HudStyle.ACCENT, 2)
+	line.custom_minimum_size = Vector2(420, 2)
+	line.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	card.add_child(line)
+	var factions := _get_current_system_faction_ids()
+	if not factions.is_empty():
+		var sub := Label.new()
+		sub.text = "Controlled by %s" % GlobalState.faction_display_name(str(factions[0]))
+		sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		HudStyle.style_label(sub, 16, HudStyle.ACCENT)
+		sub.add_theme_constant_override("outline_size", 4)
+		sub.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
+		card.add_child(sub)
+	card.modulate.a = 0.0
+	var tween := card.create_tween()
+	tween.tween_property(card, "modulate:a", 1.0, 0.8).set_delay(0.6)
+	tween.tween_interval(3.0)
+	tween.tween_property(card, "modulate:a", 0.0, 1.2)
+	tween.tween_callback(card.queue_free)
+
+
 func _update_dock_subtitle() -> void:
 	if dock_subtitle == null or not is_instance_valid(dock_subtitle):
 		return

@@ -712,6 +712,9 @@ func _change_system(destination_system_id: String, arrival_gate_id: String) -> v
 	)
 	system_changed.emit(runtime_system_id, runtime_gate_id)
 	AudioManager.play_stinger("jump")
+	var arrival_ui = GlobalState.get_ui_manager()
+	if arrival_ui != null and arrival_ui.has_method("show_system_title_card"):
+		arrival_ui.call_deferred("show_system_title_card")
 
 	if ui_mgr and ui_mgr.has_method("refresh_overview"):
 		ui_mgr.call_deferred("refresh_overview")
@@ -7675,6 +7678,11 @@ func _run_hud_snapshot() -> void:
 	for i in 25:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("hud_boost.png"))
+	# Arrival title card.
+	var title_ui = GlobalState.get_ui_manager()
+	title_ui.show_system_title_card()
+	await get_tree().create_timer(2.0).timeout
+	await _hud_snapshot_save(out.path_join("hud_title.png"))
 	print("HUDSHOT done")
 	get_tree().quit()
 
