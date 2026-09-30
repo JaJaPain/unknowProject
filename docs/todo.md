@@ -620,7 +620,7 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 - [x] **Damage number visual feedback for resistance** -- resisted hits show small dim `RESIST` numbers; vulnerable hits show large bright `WEAK` numbers. Player reads the difference in the moment and learns without being told explicitly.
 - [ ] **Phase 7 -- Boss (mega)** -- DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
 - [ ] **Phase 8 -- Squads** -- DONE (in-game) but needs StoryManager trigger hook (see Story section below)
-- [ ] **Shield reroute: hold until it does its job** (Abe, 2026-09-09, run sheet 2.4).
+- [x] **Already true in code (checked 2026-09-30):** the turn runs player actions, then every enemy's plan, and only the next planning phase clears the reroute; a hit it absorbs spends it (65% mitigation, spent-on-use default). It also ends early when an enemy flanks or boosts (angle change), by design. If it still feels like it evaporates in play, say which case. **Shield reroute: hold until it does its job** (Abe, 2026-09-09, run sheet 2.4).
   The reroute should PERSIST until either the enemy fires and the shield absorbs
   that damage, or the turn ends -- whichever comes first. Today it is spent on a
   timer/phase boundary regardless of whether it ever met an attack, which makes
