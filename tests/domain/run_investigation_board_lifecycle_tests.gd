@@ -45,6 +45,7 @@ func _run():
 		_test_store_and_manager(context)
 		_test_local_context(context)
 		_test_board_save_aliases(context)
+		_test_board_save_with_ordinary_posting(context)
 		_test_ordinary_posting_ownership(context)
 	if failures.is_empty():
 		print("[PASS] Investigation board lifecycle: local causes, publication, persistence, stale drafts, failed commits and ordinary posting ownership")
@@ -373,6 +374,36 @@ func _finish_board_job(quests: Node, gs: Node, pilot: CharacterBody3D, ui: Contr
 	_expect(not quests.is_lane_occupied("BOARD") and gs.player_credits == credits + 400, "Local investigation settlement failed or paid incorrect reward.")
 	ui._on_public_board_turn_in_pressed()
 	_expect(gs.player_credits == credits + 400, "Repeated settlement paid twice.")
+
+## Crash 2026-09-28: undocking after accepting a board courier job crashed the
+## checkpoint, because the save mapper read an investigation objective's
+## system_id off an ordinary posting that shares the board.
+func _test_board_save_with_ordinary_posting(context: Dictionary):
+	var local := context.duplicate(true)
+	local["system_id"] = "start_system"
+	local["world"]["system_id"] = "start_system"
+	var prepared := Board.prepare({}, local)
+	if not prepared.get("ok", false):
+		_expect(false, "Ordinary-save fixture could not prepare an investigation posting.")
+		return
+	var published := Board.publish(prepared["state"], prepared["offer_id"], local)
+	var claimed: Dictionary = Board.claim_ordinary(published["state"], local, _ordinary_candidate("board.ore.saved", "DELIVER_ORE"))
+	if not bool(claimed.get("ok", false)):
+		_expect(false, "Ordinary-save fixture could not claim an ordinary posting: %s" % str(claimed.get("reason", "")))
+		return
+	var registry = load("res://scripts/registry/SystemRegistry.gd").load_default()
+	var migrator = load("res://scripts/persistence/SaveMigrator.gd")
+	var story := Store._default_state()
+	story["investigation_board"] = claimed["state"]
+	var encoded: Dictionary = migrator.prepare_for_save({"current_system_id": "start_system", "player": {"health": 100.0, "position": [1, 2, 3]}, "global": {}, "quest": [], "systems": {}, "story_state": story}, registry)
+	_expect(encoded.get("ok", false), "A board holding an ordinary posting failed to save: %s" % encoded.get("error", ""))
+	if not encoded.get("ok", false): return
+	var decoded: Dictionary = migrator.decode_for_runtime(JSON.parse_string(JSON.stringify(encoded["data"])), registry)
+	_expect(decoded.get("ok", false), "A board holding an ordinary posting failed to load.")
+	if not decoded.get("ok", false): return
+	_expect(decoded["data"]["story_state"]["investigation_board"] == claimed["state"],
+		"Saving and loading changed a board that holds an ordinary posting.")
+
 
 func _test_board_save_aliases(context: Dictionary):
 	var local := context.duplicate(true)

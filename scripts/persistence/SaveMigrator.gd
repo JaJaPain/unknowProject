@@ -460,11 +460,17 @@ static func _map_investigation_board(data: Dictionary, registry: SystemRegistry,
 		if parts[1].is_empty(): return _failure("Investigation posting references an unknown system.")
 		entry["owner"] = "|".join(parts)
 		var old_key := str(entry["reservation_key"])
-		entry["reservation_key"] = "pending." + str(entry["owner"])
-		remapped_keys[old_key] = entry["reservation_key"]
+		if not old_key.is_empty():  # ordinary postings hold no reservation
+			entry["reservation_key"] = "pending." + str(entry["owner"])
+			remapped_keys[old_key] = entry["reservation_key"]
 		var quest: Dictionary = entry["posting"]["quest_data"]
-		var objective: Dictionary = quest["objective"]
-		objective["system_id"] = _mapped_system(objective["system_id"], registry, to_runtime)
+		# Ordinary postings share this board but carry no investigation
+		# objective system; only map the system ids an entry actually has.
+		if quest.has("system_id"):
+			quest["system_id"] = _mapped_system(quest["system_id"], registry, to_runtime)
+		var objective: Dictionary = quest.get("objective", {})
+		if objective.has("system_id"):
+			objective["system_id"] = _mapped_system(objective["system_id"], registry, to_runtime)
 		_map_investigation_sites(objective, registry, to_runtime)
 		_map_investigation_contracts(quest, registry, to_runtime)
 	for reservation: Dictionary in board["selection"]["outstanding_offers"]:

@@ -97,7 +97,7 @@ _Active task list. Update this file at the end of every session._
   7. "I've started ranking the news by usefulness. That one scored below the hull-scrubbing schedule."
   8. "Probability that bulletin affects our route: zero. I checked twice anyway."
   9. "That one was all noise, Captain. The channel stays open in case the next one isn't."
-- [ ] **CRASH: undocking after accepting a board courier job** (Abe, 2026-09-28).
+- [x] **DONE 2026-09-29** (cause: ordinary postings share the board and have no objective system_id or reservation key; SaveMigrator now maps only what an entry has; regression test in run_investigation_board_lifecycle_tests.) **CRASH: undocking after accepting a board courier job** (Abe, 2026-09-28).
   Log: after "Quest accepted: Sealed Courier Run: Recorded Testimony Drive, No
   Heroics type:DELIVERY_COURIER", undock_player -> request_safe_checkpoint ->
   SaveMigrator.prepare_for_save -> _map_investigation_board
