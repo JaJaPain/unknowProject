@@ -135,3 +135,17 @@ Claude adds new items here as work lands (newest section at the bottom).
       has a different shape and, often, a different colour.
 - [ ] **Weapon shots.** Shots are glowing bolts pointing where they fly (not
       dots), lighting nearby hulls, with a small flash at the gun.
+
+## G. Music (added 2026-09-30, your stand-in tracks)
+
+- [ ] **Flying music.** Normal flight plays "Flying, safe", then "Alternate
+      safe", and keeps going.
+- [ ] **Docked music.** Dock: over ~2 seconds the music blends into the
+      Docked track. Undock: it blends back to flying music.
+- [ ] **Danger and combat.** When an enemy locks onto you, the Tension track
+      blends in; when the fight starts, the danger stinger plays and Combat A
+      takes over; win it and the victory stinger plays, then flying music.
+- [ ] **Jump and payday.** Jumping through a gate plays the jump stinger;
+      turning in a job plays the mission-complete stinger.
+- [ ] **Voices over music.** When N.O.V.A. or Kaelen talk, the music dips
+      smoothly (no sudden drop) and comes back after.
