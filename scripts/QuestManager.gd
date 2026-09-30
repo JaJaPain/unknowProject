@@ -654,6 +654,12 @@ func accept_quest(
 				"RECOVER_COMBAT_DROP",
 			]:
 				return
+			# The undock restore (reconcile_missing_kill_ship_targets_after_restore)
+			# can spawn this mission's targets inside the 3 s window; spawning the
+			# full count again doubled them (two Reavers in the one-kill tutorial,
+			# Abe 2026-09-28).
+			if _has_alive_quest_target_for_faction(GlobalState.active_system_entities, str(spawn_faction)):
+				return
 			GlobalState.spawn_mission_targets(spawn_faction, spawn_count)
 		)
 	elif active_quest["objective_type"] == "DELIVERY_COURIER":
