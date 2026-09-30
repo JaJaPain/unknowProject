@@ -216,6 +216,9 @@ func _ready():
 	_base_fov = camera.fov   # rest FOV; combat punch-ins kick off this baseline
 	_speed_lines = load("res://scripts/visuals/SpeedLines.gd").new()
 	camera.add_child(_speed_lines)
+	var sparks = load("res://scripts/visuals/DamageSparks.gd").new()
+	sparks.radius = 3.0
+	add_child(sparks)
 	
 	GlobalState.target_changed.connect(_on_target_changed)
 	CombatManager.combat_started.connect(_on_combat_started_orbit)

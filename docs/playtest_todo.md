@@ -158,3 +158,6 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Getting hit.** Take a hull hit: the screen edges flash red (harder
       hits, stronger). A hit your shields absorb gives a faint blue flash.
       Drop under 30% hull: a slow red pulse at the edges until repaired.
+- [ ] **Hurt ships spark.** Damage an enemy below about a third of its hull:
+      it throws small bursts of sparks, faster as it gets closer to dying.
+      Same for your own ship when your hull is low.

@@ -385,6 +385,11 @@ func _build_assembled_hull() -> bool:
 	_fit_major_hull(hull_instance)
 	hull_instance.scale *= 1.5
 	_setup_model_points(hull_instance)
+	if get_node_or_null("DamageSparks") == null:
+		var sparks = load("res://scripts/visuals/DamageSparks.gd").new()
+		sparks.name = "DamageSparks"
+		sparks.radius = 6.0
+		add_child(sparks)
 	return true
 
 
