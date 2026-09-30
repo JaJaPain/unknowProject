@@ -218,3 +218,11 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **No stall at 92%.** Begin a new campaign with the voice server and story
       model both running. The load should pass 92% without a long hold. Voice
       pre-caching now waits until the campaign outline is written, then runs.
+- [ ] **Begin animates into loading.** On the title screen press Begin
+      Expedition (or Continue). The menu slides away, the stars stretch into
+      warp streaks, your ship flies off into the middle of them, then a dark
+      "Charting course..." screen holds until the loading screen fades in.
+      Nothing should look frozen.
+- [ ] **Begin animates into loading.** Press Begin Expedition (or Continue):
+      the menu slides away, stars burst into warp streaks, the ship flies into
+      them, then "Charting course..." holds until the loading screen fades in.

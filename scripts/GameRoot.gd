@@ -10700,6 +10700,17 @@ func _run_landing_snapshot() -> void:
 	DirAccess.make_dir_recursive_absolute(out)
 	await get_tree().create_timer(8.0).timeout
 	await _hud_snapshot_save(out.path_join("landing.png"))
+	# The Begin launch animation, frame by frame (no campaign is started).
+	var screen: Node = null
+	for node in find_children("*", "Control", true, false):
+		if node.has_method("_play_launch_sequence"):
+			screen = node
+			break
+	if screen != null:
+		screen.call("_play_launch_sequence")
+		for i in 4:
+			await get_tree().create_timer(0.3).timeout
+			await _hud_snapshot_save(out.path_join("launch_%d.png" % i))
 	get_tree().quit()
 
 

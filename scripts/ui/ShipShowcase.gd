@@ -72,6 +72,23 @@ func _fit(model: Node3D) -> void:
 	model.position = -box.get_center() * s
 
 
+var _launching := false
+
+
+## Title-screen launch: the ship swings its nose away from the camera and
+## boosts off into the distance (about `duration` seconds).
+func launch(duration: float = 1.1) -> void:
+	if _pivot == null:
+		return
+	_launching = true
+	var tween := create_tween()
+	# Face away (the hull's nose is -Z, so a yaw of 0 points it into the screen).
+	var yaw := snappedf(_pivot.rotation.y, TAU)
+	tween.tween_property(_pivot, "rotation:y", yaw, duration * 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(_pivot, "position", Vector3(0.0, -36.4, -140.0), duration * 0.65).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	await tween.finished
+
+
 func _process(delta: float) -> void:
-	if _pivot != null and is_visible_in_tree():
+	if _pivot != null and is_visible_in_tree() and not _launching:
 		_pivot.rotate_y(TURN_SPEED * delta)

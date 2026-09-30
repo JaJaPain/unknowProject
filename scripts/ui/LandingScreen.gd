@@ -17,6 +17,13 @@ var _preserve_landing_music_for_loading := false
 var _rng := RandomNumberGenerator.new()
 var _next_comet_at := 0.0
 var _elapsed := 0.0
+## Begin/Continue plays a short launch before the heavy campaign setup (which
+## freezes frames): the menu slides off, stars stretch into warp streaks, the
+## ship boosts away, then a dark cover hides the freeze until the loading
+## screen takes over. (Abe, 2026-09-30: it used to look like a hang.)
+var _warp := 0.0
+var _layout: Control
+var _showcase: Control
 
 
 func _ready() -> void:
@@ -65,6 +72,7 @@ func _build_interface() -> void:
 	# The captain's ship, large and slowly turning, on the right; the menu
 	# sits left of centre beside it.
 	var showcase: Control = load("res://scripts/ui/ShipShowcase.gd").new()
+	_showcase = showcase
 	showcase.set("camera_distance", 19.0)
 	showcase.anchor_left = 0.5
 	showcase.anchor_right = 0.98
@@ -78,6 +86,7 @@ func _build_interface() -> void:
 	layout.size = Vector2(600.0, 810.0)
 	layout.add_theme_constant_override("separation", 14)
 	add_child(layout)
+	_layout = layout
 
 	var title := Label.new()
 	title.text = "ASTRA ARCANA"
@@ -229,6 +238,7 @@ func _activate_slot(slot_id: String, occupied: bool) -> void:
 		return
 	_action_in_progress = true
 	_status_label.text = "Opening star chart..."
+	await _play_launch_sequence()
 	var game_root := get_tree().current_scene
 	var result: Dictionary = await game_root.launch_campaign_from_landing(
 		slot_id,
@@ -236,6 +246,7 @@ func _activate_slot(slot_id: String, occupied: bool) -> void:
 	)
 	if not bool(result.get("ok", false)):
 		_status_label.text = str(result.get("error", "Campaign could not be opened."))
+		_undo_launch_sequence()
 		_action_in_progress = false
 		refresh_slots()
 		return
@@ -252,6 +263,58 @@ func _finish_launch(loaded_campaign: bool) -> void:
 	tween.tween_property(self, "modulate:a", 0.0, 0.45)
 	await tween.finished
 	queue_free()
+
+
+var _cover: ColorRect
+
+
+## The point the ship flies into: the middle of its showcase panel.
+func _warp_focus() -> Vector2:
+	if _showcase != null and is_instance_valid(_showcase):
+		return _showcase.get_global_rect().get_center()
+	return get_viewport_rect().size * 0.5
+
+
+func _play_launch_sequence() -> void:
+	AudioManager.play_stinger("jump")
+	var tween := create_tween().set_parallel(true)
+	if _layout != null:
+		tween.tween_property(_layout, "position:x", _layout.position.x - 500.0, 0.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+		tween.tween_property(_layout, "modulate:a", 0.0, 0.5)
+	tween.tween_property(self, "_warp", 1.0, 1.0).set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_IN)
+	if _showcase != null and _showcase.has_method("launch"):
+		_showcase.call("launch", 1.1)
+	await get_tree().create_timer(1.0).timeout
+	_cover = ColorRect.new()
+	_cover.color = Color(0.008, 0.02, 0.06, 0.0)
+	_cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_cover.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(_cover)
+	var label := Label.new()
+	label.text = "Charting course..."
+	label.set_anchors_preset(Control.PRESET_CENTER)
+	label.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	label.grow_vertical = Control.GROW_DIRECTION_BOTH
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_color_override("font_color", Color("9fd8f0"))
+	_cover.add_child(label)
+	var fade := create_tween()
+	fade.tween_property(_cover, "color:a", 1.0, 0.4)
+	await fade.finished
+	# Let the covered frame reach the screen before the setup freezes it.
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+
+## A launch that failed: bring the menu back.
+func _undo_launch_sequence() -> void:
+	if _cover != null and is_instance_valid(_cover):
+		_cover.queue_free()
+	_warp = 0.0
+	if _layout != null:
+		_layout.position.x = -640.0
+		_layout.modulate.a = 1.0
 
 
 func _request_delete(slot_id: String, display_name: String) -> void:
@@ -277,8 +340,15 @@ func _confirm_delete() -> void:
 func _process(delta: float) -> void:
 	_elapsed += delta
 	var viewport_size := get_viewport_rect().size
+	var focus := _warp_focus()
 	for star in _stars:
 		star["position"].x -= float(star["speed"]) * delta
+		if _warp > 0.0:
+			# Warp: stars rush outward from where the ship is heading.
+			var away: Vector2 = star["position"] - focus
+			star["position"] += away * delta * _warp * 2.6
+			if not Rect2(Vector2(-40.0, -40.0), viewport_size + Vector2(80.0, 80.0)).has_point(star["position"]):
+				star["position"] = focus + Vector2(_rng.randf_range(-60.0, 60.0), _rng.randf_range(-40.0, 40.0))
 		if star["position"].x < -4.0:
 			star["position"].x = viewport_size.x + 4.0
 			star["position"].y = _rng.randf_range(0.0, viewport_size.y)
@@ -301,7 +371,11 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), Color("020714"))
 	for star in _stars:
 		var brightness := float(star["brightness"]) * (0.78 + sin(_elapsed * 1.5 + float(star["speed"])) * 0.22)
-		draw_circle(star["position"], float(star["size"]), Color(0.72, 0.9, 1.0, brightness))
+		if _warp > 0.02:
+			var tail: Vector2 = (star["position"] - _warp_focus()) * _warp * 0.22
+			draw_line(star["position"] - tail, star["position"], Color(0.72, 0.9, 1.0, minf(1.0, brightness + _warp * 0.4)), float(star["size"]) * (1.0 + _warp))
+		else:
+			draw_circle(star["position"], float(star["size"]), Color(0.72, 0.9, 1.0, brightness))
 	for planet in _planets:
 		var position: Vector2 = planet["position"]
 		var radius := float(planet["radius"])
