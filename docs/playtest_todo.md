@@ -120,3 +120,9 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **O2 relief job.** The board has a "[LIFE SUPPORT] …" job asking for
       N O2 canisters at an outpost. Compress enough, fly there, and it pays.
       Canisters can go through a gate (unlike Fuel Blocks).
+- [ ] **Rare goods aren't everywhere.** Open the Store at two different
+      stations (e.g. the main station and one in the next system). Rare items
+      (Piloted Survey Drone, Anti-Matter Containment Pod) are on the shelves at
+      some stations but not all. Everyday items (Repair Kit, ammo) are at both.
+- [ ] **The fetch card tells the truth.** If the board's rare-item card says
+      "Buy a <item> at <station>", that station's Store has it in stock.

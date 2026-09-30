@@ -8308,6 +8308,10 @@ func _render_store_items() -> void:
 		# the captain has some to sell.
 		if str(item_def.category) == "tech_material" and GlobalState.inventory.get_quantity(item_id) <= 0:
 			continue
+		# Rare goods aren't on every shelf (item_rarity.json), unless a job
+		# sends the captain here for one.
+		if not _store_carries(_store_current_id, str(item_id)):
+			continue
 		var price: int = store.get_price(item_id, rep_tier)
 		var stock: int = store.get_stock(item_id)
 		var owned: int = GlobalState.inventory.get_quantity(item_id)
@@ -8346,6 +8350,51 @@ func _render_store_items() -> void:
 		store_screen.rows = screen_rows
 		if store_screen.visible:
 			store_screen.refresh()
+
+
+const RARE_STOCK_CHANCE := {3.5: 35, 4.0: 25, 4.5: 15, 5.0: 8}
+var _item_rarity_cache: Dictionary = {}
+
+
+## Whether a store stocks an item. Common goods (rarity under 3.5) are
+## everywhere; rarer ones are stocked by a fixed per-store, per-campaign roll.
+## A store always has what an active job, or today's fetch posting, says to
+## buy here: the hint is made true (Abe: the game may cheat to keep it so).
+func _store_carries(store_id: String, item_id: String) -> bool:
+	if _item_rarity_cache.is_empty():
+		var f := FileAccess.open("res://data/content/item_rarity.json", FileAccess.READ)
+		if f != null:
+			var parsed: Variant = JSON.parse_string(f.get_as_text())
+			if parsed is Dictionary:
+				_item_rarity_cache = (parsed as Dictionary).get("rarity", {})
+	var rarity := float(_item_rarity_cache.get(item_id, 1.0))
+	if rarity < 3.5:
+		return true
+	if _job_buys_here(item_id):
+		return true
+	var chance := 8
+	for step in RARE_STOCK_CHANCE:
+		if rarity >= float(step):
+			chance = int(RARE_STOCK_CHANCE[step])
+	return absi(hash("%s|%s|%d" % [store_id, item_id, int(GlobalState.campaign_seed)])) % 100 < chance
+
+
+func _job_buys_here(item_id: String) -> bool:
+	var here := _current_station_contact_id()
+	var quests: Array = []
+	if QuestManager.is_quest_active():
+		quests.append(QuestManager.active_quest)
+	var posted: Dictionary = PublicBoardOfferBuilder._build_fetch_offer(int(CampaignClock.total_minutes))
+	if not posted.is_empty():
+		quests.append(posted.get("quest_data", {}).get("objective", {}))
+	for q in quests:
+		var objective: Dictionary = q.get("objective", q) if q.get("objective", q) is Dictionary else q
+		if str(objective.get("item_id", q.get("item_id", ""))) != item_id:
+			continue
+		var store_at := str(objective.get("store_station_id", q.get("store_station_id", "")))
+		if store_at.is_empty() or store_at == here or store_at == str(GlobalState.current_system_id):
+			return true
+	return false
 
 
 func _get_reputation_tier() -> String:

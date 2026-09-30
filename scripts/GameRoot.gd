@@ -11042,6 +11042,21 @@ func _check_fetch_offers_for_smoke() -> String:
 		kinds[str((quest.get("objective", {}) as Dictionary).get("type", ""))] = true
 	if kinds.size() < 2:
 		return "Fetch offers did not include both store and outpost kinds: %s" % str(kinds.keys())
+	# Store stock by rarity: common goods everywhere, rare goods in some stores,
+	# and a fetch card's item always where the card says to buy it.
+	var ui = GlobalState.get_ui_manager()
+	if not ui._store_carries("store.any", "repair_kit"):
+		return "A common item was missing from a store."
+	var carried := 0
+	for i in 40:
+		if ui._store_carries("store.test%d" % i, "resonant_crystal"):
+			carried += 1
+	if carried == 0 or carried > 20:
+		return "Rarity-5 stock was not rare: %d of 40 stores." % carried
+	var posted: Dictionary = builder._build_fetch_offer(int(CampaignClock.total_minutes))
+	var posted_objective: Dictionary = posted.get("quest_data", {}).get("objective", {})
+	if str(posted_objective.get("type", "")) == "PURCHASE_DELIVERY" and not ui._job_buys_here(str(posted_objective.get("item_id", ""))):
+		return "Today's fetch card sends the captain to buy an item the store does not carry."
 	return ""
 
 
