@@ -197,3 +197,18 @@ Claude adds new items here as work lands (newest section at the bottom).
       react to what you do: gloating when its shield stops your shot, cursing
       a crit, yelling about your drone, panicking when you flank. At most one
       reaction a turn.
+
+## I. Combat pass (added 2026-09-30)
+
+- [ ] **Boost / Reposition = evasive burn.** In a fight, queue Boost and
+      execute: your ship visibly swerves sideways off the enemy's line and
+      "EVASIVE ×1" floats up. Queue it twice for ×2. When the enemy fires,
+      most shots now fly past with a "MISS" marker (about 2 in 3 per dodge).
+- [ ] **Micro-Warp = flowing flank.** Queue Micro-Warp: your ship arcs around
+      the enemy (no snap), with a purple flash where it leaves and lands. The
+      enemy's next shot always misses ("lost their lock"). Your hits that turn
+      do more damage. Cooldown is now 2 turns.
+- [ ] **Wheel hints.** Hover each wedge of the combat wheel: a tooltip says
+      what it does.
+- [ ] **Feel check.** Does a turn of Boost + Fire, or Micro-Warp + Fire, feel
+      like it matters now? Say which one still falls flat.

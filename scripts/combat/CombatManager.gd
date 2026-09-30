@@ -86,6 +86,13 @@ var _taunts_ready: bool = false
 # Shield Reroute new mechanic: auto-faces enemy, blocks first hit 65%.
 # Bypassed if enemy repositions before firing.
 var player_shield_reroute_active: bool = false
+## Evasion (Abe, 2026-09-30: dodge and reposition "didn't hit the mark").
+## Boost banks dodges (max 2): each enemy shot has EVADE_CHANCE to miss while
+## one is banked. A micro-warp breaks the enemy's lock: its next shot misses.
+const EVADE_CHANCE := 0.65
+const MAX_EVADE_CHARGES := 2
+var player_evade_charges: int = 0
+var player_lock_broken: bool = false
 var _shield_dome: MeshInstance3D = null
 # Enemy defensive states — per-enemy arrays; property getters target _target_idx.
 var _enemy_brace:  Array = []   # bool per enemy
@@ -790,6 +797,8 @@ func _reset_fight_state() -> void:
 	for _j in enemy_nodes.size():
 		npc_action_plans.append([])
 	player_shield_reroute_active = false
+	player_evade_charges = 0
+	player_lock_broken = false
 	_despawn_shield_dome()
 	_enemy_brace  = []
 	_enemy_shield = []
@@ -910,6 +919,8 @@ func _begin_planning() -> void:
 
 	# Clear last turn's shield reroute and all enemy defensive states — per-turn commitments.
 	player_shield_reroute_active = false
+	player_evade_charges = 0
+	player_lock_broken = false
 	_despawn_shield_dome()
 	for i in _enemy_brace.size():
 		_enemy_brace[i]  = false
@@ -1234,10 +1245,10 @@ func _dispatch_action(action: Dictionary) -> void:
 		return
 	match t:
 		CombatActionType.Type.FIRE:           await _exec_fire()
-		CombatActionType.Type.BOOST:          _exec_boost(action.get("params", {}))
+		CombatActionType.Type.BOOST:          await _exec_boost(action.get("params", {}))
 		CombatActionType.Type.SHIELD_REROUTE: _exec_shield_reroute(action.get("params", {}))
 		CombatActionType.Type.ATTACK_DRONE:   await _exec_attack_drone()
-		CombatActionType.Type.MICRO_WARP:     _exec_micro_warp()
+		CombatActionType.Type.MICRO_WARP:     await _exec_micro_warp()
 		CombatActionType.Type.REPAIR_KIT:     _exec_repair_kit()
 		CombatActionType.Type.FLEE:           _exec_flee()
 	await _beat(BEAT_POST_ACTION)
@@ -1286,27 +1297,41 @@ func _enemy_status_float(text: String, color: Color) -> void:
 	if parent != null:
 		CombatDamageNumber.spawn(parent, (enemy_node as Node3D).global_position + Vector3(0, 4, 0), text, color, false, 0.5)
 
-func _exec_boost(params: Dictionary) -> void:
-	if is_instance_valid(player_node):
-		_sfx("engine_boost", player_node.global_position)
-	var dir: String = params.get("direction", "closer")
-	if dir == "closer":
-		if range_band == CombatActionType.RangeBand.LONG:
-			range_band = CombatActionType.RangeBand.MID
-		elif range_band == CombatActionType.RangeBand.MID:
-			range_band = CombatActionType.RangeBand.CLOSE
-	else:
-		if range_band == CombatActionType.RangeBand.CLOSE:
-			range_band = CombatActionType.RangeBand.MID
-		elif range_band == CombatActionType.RangeBand.MID:
-			range_band = CombatActionType.RangeBand.LONG
-	var band_names := {
-		CombatActionType.RangeBand.LONG: "LONG",
-		CombatActionType.RangeBand.MID:  "MID",
-		CombatActionType.RangeBand.CLOSE: "CLOSE",
-	}
-	_player_status_float("REPOSITION ▸ %s" % band_names.get(range_band, "MID"), Color(0.95, 0.6, 0.2))
-	GlobalState.emit_chatter("COMBAT", "Reposition — range now %s." % str(band_names.get(range_band, "MID")), Color(0.95, 0.6, 0.2))
+func _exec_boost(_params: Dictionary) -> void:
+	# An evasive burn: the ship swerves off the enemy's firing line and banks a
+	# dodge for this turn's incoming fire. (It used to shift an unseen range
+	# band that scaled both sides' damage equally, so it changed nothing.)
+	if not is_instance_valid(player_node):
+		return
+	_sfx("engine_boost", player_node.global_position)
+	player_evade_charges = mini(player_evade_charges + 1, MAX_EVADE_CHARGES)
+	await _swerve_player()
+	_player_status_float("EVASIVE ×%d" % player_evade_charges, Color(0.95, 0.6, 0.2))
+	GlobalState.emit_chatter("COMBAT", "Evasive burn — %d%% chance their next shot misses." % int(EVADE_CHANCE * 100.0), Color(0.95, 0.6, 0.2))
+
+
+## Sideways jink off the line to the enemy, with a bank into the turn.
+func _swerve_player() -> void:
+	var ship := player_node as Node3D
+	if ship == null:
+		return
+	var to_enemy := Vector3.FORWARD
+	if is_instance_valid(enemy_node):
+		to_enemy = ((enemy_node as Node3D).global_position - ship.global_position)
+		to_enemy.y = 0.0
+		to_enemy = to_enemy.normalized() if to_enemy.length() > 0.01 else Vector3.FORWARD
+	var side := to_enemy.cross(Vector3.UP).normalized() * (1.0 if randf() < 0.5 else -1.0)
+	var target := ship.global_position + side * 16.0 + Vector3(0.0, randf_range(-3.0, 3.0), 0.0)
+	var tween := ship.create_tween()
+	tween.tween_property(ship, "global_position", target, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var vis = ship.get("visual")
+	if vis is Node3D:
+		var roll := 0.55 * (1.0 if side.dot(ship.global_basis.x) > 0.0 else -1.0)
+		var bank := (vis as Node3D).create_tween()
+		bank.tween_property(vis, "rotation:z", roll, 0.2)
+		bank.tween_property(vis, "rotation:z", 0.0, 0.35)
+	await tween.finished
+
 
 func _exec_shield_reroute(_params: Dictionary) -> void:
 	if is_instance_valid(player_node):
@@ -1342,11 +1367,11 @@ func _exec_micro_warp() -> void:
 		_sfx("microwarp", player_node.global_position)
 		var enemy3d := enemy_node as Node3D
 		if enemy3d:
-			var flank_offset: Vector3 = enemy3d.global_transform.basis.x * 18.0
-			player_node.global_position = enemy3d.global_position + flank_offset
+			await _warp_arc_to(enemy3d.global_position + enemy3d.global_transform.basis.x * 18.0, enemy3d.global_position)
 	player_is_flanking = true
+	player_lock_broken = true
 	_play_reaction("flanked")
-	micro_warp_cooldown = 3
+	micro_warp_cooldown = 2
 	range_band = CombatActionType.RangeBand.CLOSE
 	# Flanking nullifies the enemy's shield angle — angle changed.
 	if enemy_shield_angle_active:
@@ -1355,7 +1380,31 @@ func _exec_micro_warp() -> void:
 		emit_signal("enemy_status_changed", enemy_brace_active, false)
 		GlobalState.emit_chatter("SYSTEM", "Flank maneuver — enemy shield angle lost!", Color(1.0, 0.5, 0.2))
 	_player_status_float("MICRO-WARP!", Color(0.6, 0.4, 1.0))
-	GlobalState.emit_chatter("COMBAT", "Micro-warp — flanking the enemy.", Color(0.6, 0.4, 1.0))
+	GlobalState.emit_chatter("COMBAT", "Micro-warp — flanking. They've lost their lock: their next shot will miss.", Color(0.6, 0.4, 1.0))
+
+
+## The micro-warp as a fast curved run around the enemy (it used to snap into
+## place), with a warp flash where it leaves and where it lands.
+func _warp_arc_to(dest: Vector3, around: Vector3) -> void:
+	var ship := player_node as Node3D
+	var start := ship.global_position
+	var parent := ship.get_parent() as Node3D
+	if parent != null:
+		ImpactEffect.spawn_hit(parent, start, Color(0.6, 0.4, 1.0), 1.6)
+	# Bow the path out around the enemy so it reads as a run, not a line.
+	var mid := (start + dest) * 0.5
+	var outward := (mid - around)
+	outward.y = 0.0
+	var control := mid + (outward.normalized() if outward.length() > 0.01 else Vector3.RIGHT) * 22.0
+	var tween := ship.create_tween()
+	tween.tween_method(func(t: float) -> void:
+		var a := start.lerp(control, t)
+		var b := control.lerp(dest, t)
+		ship.global_position = a.lerp(b, t)
+		ship.look_at(around, Vector3.UP), 0.0, 1.0, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tween.finished
+	if parent != null:
+		ImpactEffect.spawn_hit(parent, dest, Color(0.6, 0.4, 1.0), 1.6)
 
 func _exec_repair_kit() -> void:
 	if not is_instance_valid(player_node):
@@ -1514,6 +1563,8 @@ func _execute_npc_action(action: Dictionary, npc_faction: String) -> void:
 	var aparams: Dictionary = action.get("params", {}) as Dictionary
 	match itype:
 		CombatAction.Type.FIRE:
+			if await _npc_shot_evaded():
+				return
 			var base_dmg: float = aparams.get("damage", 10.0)
 			var npc_dmg := _resolve_npc_hit(base_dmg, action)
 			var shield_blocked := _npc_hit_shield_blocked(action)
@@ -1632,8 +1683,42 @@ func _exec_enemy_flee() -> void:
 	end_combat(false)
 
 
+## Whether this enemy shot misses: a broken lock (micro-warp) always makes it
+## miss; a banked evasive charge makes it miss EVADE_CHANCE of the time and is
+## spent either way. A miss is shown: the shot flies past and "MISS" floats up.
+func _npc_shot_evaded() -> bool:
+	var missed := false
+	if player_lock_broken:
+		player_lock_broken = false
+		missed = true
+	elif player_evade_charges > 0:
+		player_evade_charges -= 1
+		missed = randf() < EVADE_CHANCE
+	if not missed or not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+		return false
+	_sfx("weapon_fire", (enemy_node as Node3D).global_position)
+	AudioManager.play_laser((enemy_node as Node3D).global_position)
+	# Aim the visible shot past the ship, then report the miss.
+	var ship := player_node as Node3D
+	var decoy := Node3D.new()
+	ship.get_parent().add_child(decoy)
+	var past := ship.global_position - (enemy_node as Node3D).global_position
+	decoy.global_position = ship.global_position + past.normalized() * 30.0 + past.cross(Vector3.UP).normalized() * 9.0
+	if enemy_node.has_method("spawn_projectile"):
+		enemy_node.spawn_projectile(decoy, true)
+	await _await_travel(enemy_node, player_node)
+	decoy.queue_free()
+	if is_instance_valid(player_node):
+		CombatDamageNumber.spawn(ship.get_parent(), ship.global_position, "MISS", Color(0.95, 0.75, 0.3), false)
+	GlobalState.emit_chatter("COMBAT", "Evaded — the shot goes wide.", Color(0.95, 0.75, 0.3))
+	_play_reaction("blocked")
+	return true
+
+
 func _consume_shield_reroute() -> void:
 	player_shield_reroute_active = false
+	player_evade_charges = 0
+	player_lock_broken = false
 	_despawn_shield_dome()
 
 func _spawn_shield_dome() -> void:

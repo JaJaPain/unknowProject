@@ -28,6 +28,8 @@ var _ui_scale: float = 1.0
 var _btn_radius: float = BTN_RADIUS_BASE
 var _btn_hit: Vector2 = BTN_HIT_BASE
 
+var _wheel_click_area: Control
+
 const ACTION_DEFS := [
 	{ "type": 0, "label": "FIRE\nWEAPONS",       "ap": 2, "color": Color(0.85,0.15,0.15), "angle": -90.0  },
 	{ "type": 1, "label": "BOOST /\nREPOSITION", "ap": 1, "color": Color(0.85,0.45,0.10), "angle": -38.0  },
@@ -486,6 +488,7 @@ func _build_wheel() -> void:
 	click_area.mouse_filter = Control.MOUSE_FILTER_STOP
 	click_area.position = btn_pos
 	click_area.gui_input.connect(_on_wheel_input)
+	_wheel_click_area = click_area
 	click_area.mouse_exited.connect(func(): _update_hover(-1))
 	container.add_child(click_area)
 	click_area.size = Vector2(wheel_sz, wheel_sz)
@@ -702,10 +705,24 @@ const _HOVER_BRIGHT := Color(1.9, 1.9, 1.9)
 const _HOVER_DIM    := Color(0.5, 0.5, 0.5)
 const _HOVER_NORMAL := Color(1.0, 1.0, 1.0)
 
+## What each wedge does, shown as the wheel's tooltip while hovering it.
+const ACTION_HINTS := {
+	0: "Fire your weapons at the target.",
+	1: "Evasive burn: swerve off their firing line. Banks a dodge (up to 2): each enemy shot has a 65% chance to miss.",
+	2: "Raise shields toward the enemy: their first hit this turn is cut by 65%.",
+	3: "Send a strike drone: smaller damage that ignores their brace and angled shields.",
+	4: "Arc around to their flank: +25% damage, strips an angled shield, and their next shot misses (lost lock). 2-turn cooldown.",
+	5: "Patch the hull: +30% of max hull. Uses a Repair Kit, once a turn.",
+	6: "Try to break away and escape the fight.",
+}
+
+
 func _update_hover(idx: int) -> void:
 	if idx == _hover_idx:
 		return
 	_hover_idx = idx
+	if _wheel_click_area != null:
+		_wheel_click_area.tooltip_text = ACTION_HINTS.get(int(ACTION_DEFS[idx]["type"]), "") if idx >= 0 else ""
 	var active_hover: bool = idx >= 0 and idx < _btn_active.size() and not _btn_blocked[idx]
 	for i in _btn_active.size():
 		var target: Color

@@ -319,6 +319,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_first_session_smoke_test")
 	elif "--traffic-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_smoke_test")
+	elif "--evasion-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_evasion_smoke_test")
 	elif "--landing-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_landing_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
@@ -10720,6 +10722,59 @@ func _run_perf_probe() -> void:
 	print("PERF avg_fps=%.1f min_fps=%.1f max_draws=%d vram_mb=%.0f gpu=%s" % [
 		total / samples.size(), samples.min(), draws.max(), vram, RenderingServer.get_video_adapter_name()])
 	get_tree().quit()
+
+
+## Combat evasion (2026-09-30 combat pass): Boost banks a dodge and swerves the
+## ship; Micro-Warp arcs to the flank and breaks the enemy's lock so its next
+## shot misses. -- --evasion-smoke-test --baseline-offline
+func _run_evasion_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	for i in 20:
+		await get_tree().process_frame
+	var npc_scene := load("res://scenes/npc_ship.tscn") as PackedScene
+	var enemy := npc_scene.instantiate()
+	enemy.persistent_id = "entity.test.evasion"
+	enemy.name = "EvasionTarget"
+	enemy.faction = "reavers"
+	enemy.ship_role = "Gunner"
+	get_active_system_root().add_child(enemy)
+	player.global_position = Vector3(2000.0, 0.0, 2000.0)
+	enemy.global_position = Vector3(2060.0, 0.0, 2000.0)
+	await get_tree().process_frame
+	CombatManager.start_combat(player, enemy, true)
+	for i in 30:
+		await get_tree().process_frame
+	var before: Vector3 = player.global_position
+	await CombatManager._exec_boost({})
+	if CombatManager.player_evade_charges != 1:
+		_fail_evasion_smoke_test("Boost did not bank a dodge (%d)." % CombatManager.player_evade_charges)
+		return
+	if player.global_position.distance_to(before) < 8.0:
+		_fail_evasion_smoke_test("Boost did not move the ship off its line.")
+		return
+	CombatManager.micro_warp_cooldown = 0
+	await CombatManager._exec_micro_warp()
+	if not CombatManager.player_lock_broken or not CombatManager.player_is_flanking:
+		_fail_evasion_smoke_test("Micro-warp did not flank and break the lock.")
+		return
+	if player.global_position.distance_to(enemy.global_position) > 40.0:
+		_fail_evasion_smoke_test("Micro-warp did not end beside the enemy.")
+		return
+	var missed: bool = await CombatManager._npc_shot_evaded()
+	if not missed or CombatManager.player_lock_broken:
+		_fail_evasion_smoke_test("A broken lock did not make the next shot miss.")
+		return
+	print("[EvasionSmokeTest] PASS: boost banks a dodge and swerves; micro-warp arcs to the flank and the next shot misses.")
+	CombatManager.end_combat(true)
+	delete_savegame()
+	get_tree().quit()
+
+
+func _fail_evasion_smoke_test(message: String) -> void:
+	push_error("[EvasionSmokeTest] FAIL: " + message)
+	delete_savegame()
+	get_tree().quit(1)
 
 
 func _live_buttons(container: Node) -> Array:
