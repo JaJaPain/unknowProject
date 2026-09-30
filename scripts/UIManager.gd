@@ -15540,6 +15540,19 @@ func _queue_intro_cinematic_voice_cache() -> void:
 		SpeechService.cache(line, "voice.kaelen.v1")
 
 
+## Polls until the cold-open lines are cached (capped at 25 s so a failed
+## request can never hold the load; the cinematic synthesizes live if needed).
+func _poll_intro_voice_ready(started_ms: int) -> void:
+	if not _waiting_for_intro_cinematic_voice_cache:
+		return
+	if TTSInterface.urgent_cache_pending() <= 0 or Time.get_ticks_msec() - started_ms > 25000:
+		_on_intro_cinematic_voice_cache_completed()
+		return
+	get_tree().create_timer(0.25, true, false, true).timeout.connect(
+		func(): _poll_intro_voice_ready(started_ms)
+	)
+
+
 func _on_intro_cinematic_voice_cache_completed() -> void:
 	if SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
 		SpeechService.cache_queue_completed.disconnect(_on_intro_cinematic_voice_cache_completed)
@@ -15547,11 +15560,25 @@ func _on_intro_cinematic_voice_cache_completed() -> void:
 	_finish_loading_after_story_ready()
 
 
+func _poll_bank_voice_ready(started_ms: int) -> void:
+	if not _waiting_for_startup_line_bank_voice_cache:
+		return
+	if TTSInterface.urgent_cache_pending() <= 0 or Time.get_ticks_msec() - started_ms > 25000:
+		_on_startup_line_bank_voice_cache_completed()
+		return
+	get_tree().create_timer(0.25, true, false, true).timeout.connect(
+		func(): _poll_bank_voice_ready(started_ms)
+	)
+
+
 func _on_startup_line_bank_voice_cache_completed() -> void:
 	if SpeechService.cache_queue_completed.is_connected(_on_startup_line_bank_voice_cache_completed):
 		SpeechService.cache_queue_completed.disconnect(_on_startup_line_bank_voice_cache_completed)
 	_waiting_for_startup_line_bank_voice_cache = false
 	_finish_loading_after_story_ready()
+
+
+var _line_bank_cache_urgent := false
 
 
 func _queue_startup_line_bank_voice_cache() -> int:
@@ -15564,11 +15591,14 @@ func _queue_startup_line_bank_voice_cache() -> int:
 	var system_id := str(GlobalState.current_system_id).strip_edges()
 	if system_id.is_empty():
 		return 0
+	# The load blocks on these few lines, so they go to the front of the queue.
+	_line_bank_cache_urgent = true
 	var cached_count := _queue_current_system_line_bank_voice_cache(
 		system_id,
 		"startup",
 		STARTUP_LINE_BANK_BLOCKING_TTS_PER_SPEAKER
 	)
+	_line_bank_cache_urgent = false
 	return cached_count
 
 
@@ -15634,7 +15664,7 @@ func _cache_line_bank_payload_tts(
 		if text.is_empty() or seen.has(text):
 			continue
 		seen[text] = true
-		SpeechService.cache(text, voice_profile_id)
+		SpeechService.cache(text, voice_profile_id, -1.0, _line_bank_cache_urgent)
 		cached_count += 1
 		if max_lines > 0 and cached_count >= max_lines:
 			break
@@ -15846,12 +15876,14 @@ func _finish_loading_after_story_ready() -> void:
 		return
 	if not startup_save_loaded and not _waiting_for_intro_cinematic_voice_cache:
 		_queue_intro_cinematic_voice_cache()
-		if SpeechService.has_pending_cache_work:
+		if TTSInterface.urgent_cache_pending() > 0:
+			# Wait for her cold-open lines only (queued first); the rest of the
+			# background voice queue keeps working during the cinematic. This
+			# used to wait for the WHOLE queue, ~200 lines (Abe, 2026-09-30).
 			_waiting_for_intro_cinematic_voice_cache = true
 			loading_bar.value = 92.0
 			loading_status_label.text = "Pre-caching N.O.V.A. cold-open voice lines..."
-			if not SpeechService.cache_queue_completed.is_connected(_on_intro_cinematic_voice_cache_completed):
-				SpeechService.cache_queue_completed.connect(_on_intro_cinematic_voice_cache_completed)
+			_poll_intro_voice_ready(Time.get_ticks_msec())
 			return
 	if not startup_save_loaded:
 		var game_root := get_tree().current_scene
@@ -15861,12 +15893,12 @@ func _finish_loading_after_story_ready() -> void:
 			game_root.call("queue_narrative_new_campaign_loading_prefetch")
 	if not startup_save_loaded and not _waiting_for_startup_line_bank_voice_cache:
 		var cached_count := _queue_startup_line_bank_voice_cache()
-		if cached_count > 0 and SpeechService.has_pending_cache_work:
+		if cached_count > 0 and TTSInterface.urgent_cache_pending() > 0:
+			# Only the bank lines just queued, not the whole background queue.
 			_waiting_for_startup_line_bank_voice_cache = true
 			loading_bar.value = 96.0
 			loading_status_label.text = "Pre-caching Kaelen and N.O.V.A. story banks..."
-			if not SpeechService.cache_queue_completed.is_connected(_on_startup_line_bank_voice_cache_completed):
-				SpeechService.cache_queue_completed.connect(_on_startup_line_bank_voice_cache_completed)
+			_poll_bank_voice_ready(Time.get_ticks_msec())
 			return
 	# Every completion path funnels through here, so this is the one place to drop
 	# the service-connection signals. Do it before the fade-out tween so a late

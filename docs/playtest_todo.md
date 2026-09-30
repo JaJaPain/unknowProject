@@ -235,3 +235,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       arcing between them, and violent lurches every few seconds (shake, roll,
       a glitch spike), then the white-out throw into the system. No grey slab,
       no full-screen rainbow noise, and no glimpse of the system through the walls.
+- [ ] **Faster 92%/96% stages.** New campaign: "Pre-caching N.O.V.A. cold-open
+      voice lines" and "story banks" should pass in a few seconds, not wait on
+      the whole voice queue. Her and Kaelen's lines should sound like the
+      approved recordings (pre-baked clips are used instead of re-synthesized).

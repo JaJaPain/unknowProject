@@ -99,7 +99,8 @@ static func cache_nova_voice_lines() -> void:
 	if not is_instance_valid(SpeechService):
 		return
 	for line in NOVA_LINES:
-		SpeechService.cache(str(line), NOVA_VOICE_PROFILE_ID)
+		# Urgent: the load waits on these, not on the whole background queue.
+		SpeechService.cache(str(line), NOVA_VOICE_PROFILE_ID, -1.0, true)
 	print("[IntroCinematic] Queued Nova intro voice cache lines: ", NOVA_LINES.size())
 
 

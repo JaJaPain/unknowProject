@@ -33,12 +33,14 @@ func play(text: String, voice_profile_id: StringName, speed_override: float = -1
 	)
 
 
-func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0):
+func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0, urgent: bool = false):
 	var delivery := resolve_delivery(voice_profile_id, speed_override)
 	return TTSInterface.cache_dialogue_audio(
 		text,
 		delivery["provider_voice"],
-		delivery["speed"]
+		delivery["speed"],
+		1.0,
+		urgent
 	)
 
 

@@ -150,13 +150,14 @@ static func speaker_label(profile_id: StringName) -> String:
 func cache(
 	text: String,
 	voice_profile: Variant = KAELEN_PROFILE,
-	speed_override: float = -1.0
+	speed_override: float = -1.0,
+	urgent: bool = false
 ):
 	var profile_id := resolve_voice_profile(voice_profile)
 	var prepared := prepare_text(text, profile_id)
 	if prepared.is_empty():
 		return "empty"
-	return provider.cache(prepared, profile_id, speed_override)
+	return provider.cache(prepared, profile_id, speed_override, urgent)
 
 
 func stop() -> void:

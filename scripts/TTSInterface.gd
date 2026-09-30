@@ -482,7 +482,22 @@ func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", s
 #   cache_dialogue_audio(text, faction)              # legacy, resolves to a provider voice
 #   cache_dialogue_audio(text, voice_id, speed)      # per-NPC, speed is the override
 # Empty voice_id means "use faction". Speed <0 means "default 1.0".
-func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0, style_scale: float = 1.0):
+## Cache keys of lines something is waiting on right now (the cold open);
+## queued at the front, and `urgent_cache_pending()` counts what is left.
+var _urgent_keys: Dictionary = {}
+
+
+func urgent_cache_pending() -> int:
+	var left := 0
+	for key in _urgent_keys.keys():
+		if tts_audio_cache.has(key):
+			_urgent_keys.erase(key)
+		else:
+			left += 1
+	return left
+
+
+func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0, style_scale: float = 1.0, urgent: bool = false):
 	text = text.strip_edges()
 	var clean_text = clean_dialogue_text(text)
 	if clean_text == "":
@@ -506,6 +521,17 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 	clean_text = normalize_tts_pronunciation(clean_text)
 
 	var cache_key := _delivery_cache_key(voice_id, clean_text, speed, -1.0, style_scale)
+	# A pre-baked recording is better than anything we would synthesize and
+	# costs no server time: use it (playback prefers the memory cache, so a
+	# synthesized copy cached here used to REPLACE the approved recording).
+	if not tts_audio_cache.has(cache_key):
+		var baked: AudioStream = cast_stream_for(_cast_character_for_voice(voice_id), clean_text)
+		if baked == null:
+			baked = orpheus_taunt_stream_for(_lead_voice_of(voice_id), clean_text)
+		if baked == null:
+			baked = baked_stream_for(voice_id, clean_text, speed, -1.0)
+		if baked != null:
+			tts_audio_cache[cache_key] = baked
 	if tts_audio_cache.has(cache_key):
 		GenerationDiagnostics.record_lifecycle_timestamp(
 			"tts_cache",
@@ -519,8 +545,10 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 		)
 		return "already_cached"
 		
+	if urgent:
+		_urgent_keys[cache_key] = true
 	if not tts_connected or is_requesting or active_cache_requests >= MAX_BACKGROUND_CACHE_REQUESTS:
-		_enqueue_cache_request(cache_key, clean_text, voice_id, speed, style_scale)
+		_enqueue_cache_request(cache_key, clean_text, voice_id, speed, style_scale, urgent)
 		if not tts_connected:
 			GlobalState.trace("[TRACE] [TTSInterface] Queueing cache request (TTS not connected): %d voice=%s" % [clean_text.hash(), voice_id])
 		else:
@@ -536,18 +564,26 @@ func _enqueue_cache_request(
 	clean_text: String,
 	voice_id: String,
 	speed: float,
-	style_scale: float
+	style_scale: float,
+	urgent: bool = false
 ) -> void:
-	for item in cache_queue:
-		if str(item.get("key", "")) == cache_key:
-			return
-	cache_queue.append({
+	var entry := {
 		"key": cache_key,
 		"text": clean_text,
 		"voice_id": voice_id,
 		"speed": speed,
 		"style_scale": style_scale,
-	})
+	}
+	for i in cache_queue.size():
+		if str(cache_queue[i].get("key", "")) == cache_key:
+			if urgent and i > 0:
+				cache_queue.remove_at(i)
+				cache_queue.push_front(entry)
+			return
+	if urgent:
+		cache_queue.push_front(entry)
+	else:
+		cache_queue.append(entry)
 
 
 func _start_background_cache_request(
