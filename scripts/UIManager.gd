@@ -496,6 +496,8 @@ const TypewriterLabelType := preload("res://scripts/ui/TypewriterLabel.gd")
 const StoreScreenScript := preload("res://scripts/ui/StoreScreen.gd")
 ## The store on the inventory layout (StoreScreen); false brings back the old list.
 const USE_STORE_SCREEN := true
+var dock_subtitle: Label
+var dock_hub_vbox: VBoxContainer
 var store_screen: Control
 const HudStyle := preload("res://scripts/ui/HudStyle.gd")
 var _overview_divider: Control = null
@@ -1388,10 +1390,10 @@ func _update_header_labels():
 func _create_dock_menu():
 	dock_panel = Panel.new()
 	add_child(dock_panel)
-	dock_panel.anchor_left = 0.3
-	dock_panel.anchor_right = 0.7
-	dock_panel.anchor_top = 0.25
-	dock_panel.anchor_bottom = 0.75
+	dock_panel.anchor_left = 0.33
+	dock_panel.anchor_right = 0.67
+	dock_panel.anchor_top = 0.14
+	dock_panel.anchor_bottom = 0.86
 	dock_panel.offset_left = 0
 	dock_panel.offset_right = 0
 	dock_panel.offset_top = 0
@@ -1409,7 +1411,9 @@ func _create_dock_menu():
 	dock_style.corner_radius_top_right = 4
 	dock_style.corner_radius_bottom_right = 4
 	dock_style.corner_radius_bottom_left = 4
-	dock_panel.add_theme_stylebox_override("panel", HudStyle.panel())
+	var hub_style := HudStyle.panel()
+	hub_style.bg_color = Color(0.03, 0.04, 0.055, 0.97)
+	dock_panel.add_theme_stylebox_override("panel", hub_style)
 
 	# Background image (RepairShop.png) — only shown when docked at a repair_shop.
 	# Sized to fill the panel and tinted dark so the foreground buttons stay readable.
@@ -1428,17 +1432,25 @@ func _create_dock_menu():
 	var vbox = VBoxContainer.new()
 	dock_panel.add_child(vbox)
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 10
-	vbox.offset_right = -10
-	vbox.offset_top = 10
-	vbox.offset_bottom = -10
+	vbox.offset_left = 22
+	vbox.offset_right = -22
+	vbox.offset_top = 20
+	vbox.offset_bottom = -20
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 8)
+	dock_hub_vbox = vbox
 
 	dock_label = Label.new()
 	dock_label.text = "STATION SERVICES"
 	dock_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	dock_label.add_theme_font_size_override("font_size", 16)
+	HudStyle.style_label(dock_label, 24, HudStyle.ACCENT)
 	vbox.add_child(dock_label)
+	# Who runs this station, and where: the hub's banner line.
+	dock_subtitle = Label.new()
+	dock_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(dock_subtitle, 12, HudStyle.DIM)
+	vbox.add_child(dock_subtitle)
+	vbox.add_child(HudStyle.rule())
 
 	var dock_label_spacer := Control.new()
 	dock_label_spacer.custom_minimum_size = Vector2(0, 6)
@@ -4721,6 +4733,8 @@ func _reveal_dock_panel() -> void:
 # hangar image shows only while the maintenance submenu is active.
 func _render_dock_submenu() -> void:
 	_refresh_board_delivery_button()
+	_style_hub_buttons()
+	_update_dock_subtitle()
 	# Clear any active docked message so a flavor line from the
 	# previous submenu doesn't bleed into the new one.
 	clear_dock_message()
@@ -4911,6 +4925,39 @@ func _render_dock_submenu() -> void:
 	_maybe_show_station_climate()
 
 
+## The station hub's services as tall tiles (buttons are made once and shown
+## per submenu, so they are styled once, lazily, on first render).
+func _style_hub_buttons() -> void:
+	for b in [agent_service_btn, public_board_btn, station_lounge_btn, maintenance_bay_btn, store_btn,
+			ship_upgrades_btn, repair_btn, deliver_part_btn, back_to_services_btn, undock_btn]:
+		if b == null or not is_instance_valid(b) or b.has_meta("hub_styled"):
+			continue
+		b.set_meta("hub_styled", true)
+		b.custom_minimum_size.y = 46
+		b.add_theme_font_size_override("font_size", 16)
+		b.add_theme_stylebox_override("normal", HudStyle.box(Color(0.06, 0.08, 0.11, 0.92), HudStyle.EDGE_SOFT, 1, 8, 12))
+		b.add_theme_stylebox_override("hover", HudStyle.box(Color(0.08, 0.14, 0.2, 0.95), HudStyle.ACCENT, 1, 8, 12))
+		b.add_theme_stylebox_override("pressed", HudStyle.box(Color(0.08, 0.2, 0.3, 0.95), HudStyle.ACCENT, 1, 8, 12))
+		b.add_theme_stylebox_override("disabled", HudStyle.box(Color(0.04, 0.05, 0.07, 0.8), Color(0.12, 0.15, 0.2), 1, 8, 12))
+	if undock_btn and is_instance_valid(undock_btn):
+		undock_btn.add_theme_stylebox_override("normal", HudStyle.box(Color(0.12, 0.08, 0.05, 0.92), HudStyle.WARN.darkened(0.4), 1, 8, 12))
+		undock_btn.add_theme_stylebox_override("hover", HudStyle.box(Color(0.2, 0.12, 0.06, 0.95), HudStyle.WARN, 1, 8, 12))
+
+
+func _update_dock_subtitle() -> void:
+	if dock_subtitle == null or not is_instance_valid(dock_subtitle):
+		return
+	var parts: Array = []
+	var factions := _get_current_system_faction_ids()
+	if not factions.is_empty():
+		parts.append("Controlled by %s" % GlobalState.faction_display_name(str(factions[0])))
+	var sys_name := _get_current_system_display_name()
+	if not sys_name.is_empty():
+		parts.append(sys_name)
+	dock_subtitle.text = "  ·  ".join(parts)
+	dock_subtitle.visible = current_submenu == DockSubmenu.SERVICES and not parts.is_empty()
+
+
 func _set_dock_panel_lounge_layout(use_lounge_layout: bool) -> void:
 	if not dock_panel or not is_instance_valid(dock_panel):
 		return
@@ -4920,10 +4967,10 @@ func _set_dock_panel_lounge_layout(use_lounge_layout: bool) -> void:
 		dock_panel.anchor_top = 0.10
 		dock_panel.anchor_bottom = 0.86
 	else:
-		dock_panel.anchor_left = 0.3
-		dock_panel.anchor_right = 0.7
-		dock_panel.anchor_top = 0.25
-		dock_panel.anchor_bottom = 0.75
+		dock_panel.anchor_left = 0.33
+		dock_panel.anchor_right = 0.67
+		dock_panel.anchor_top = 0.14
+		dock_panel.anchor_bottom = 0.86
 	dock_panel.offset_left = 0.0
 	dock_panel.offset_right = 0.0
 	dock_panel.offset_top = 0.0

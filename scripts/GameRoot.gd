@@ -7720,9 +7720,14 @@ func _run_dock_snapshot() -> void:
 			break
 	for i in 60:
 		await get_tree().process_frame
+	# Let the station welcome card fade out first (it waits up to 12 s for
+	# N.O.V.A.'s line), or it sits over the first screenshot.
+	await get_tree().create_timer(14.0).timeout
+	# The lounge goes last: opening it takes over the scene, so nothing after
+	# it would ever be captured.
 	var screens := [["menu", ""], ["agent", "_on_talk_to_agent_pressed"], ["board", "_on_public_board_pressed"],
-		["store", "_on_store_pressed"], ["lounge", "_on_station_lounge_pressed"],
-		["maintenance", "_on_maintenance_bay_pressed"], ["upgrades", "_on_ship_upgrades_pressed"]]
+		["store", "_on_store_pressed"], ["maintenance", "_on_maintenance_bay_pressed"],
+		["upgrades", "_on_ship_upgrades_pressed"], ["lounge", "_on_station_lounge_pressed"]]
 	for screen in screens:
 		# Back to the services menu, as the back buttons do.
 		for panel_name in ["agent_panel", "public_board_panel", "store_panel", "store_screen", "ship_upgrades_panel", "inventory_panel"]:
