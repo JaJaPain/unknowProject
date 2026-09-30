@@ -105,6 +105,12 @@ func _can_listen() -> bool:
 	var gs := get_node_or_null("/root/GlobalState")
 	if gs == null or bool(gs.get("intro_cinematic_active")):
 		return false
+	# Not behind the title, loading screen or cinematic: the ship exists (and is
+	# undocked) during a new campaign's load, so the offer and its prompt fired
+	# over the loading screen (Abe, 2026-09-30).
+	var nova := get_node_or_null("/root/Nova")
+	if nova != null and nova.has_method("_world_hidden") and bool(nova.call("_world_hidden")):
+		return false
 	var player = gs.player
 	if not is_instance_valid(player) or bool(player.get("is_docked")) or bool(player.get("destroyed")):
 		return false

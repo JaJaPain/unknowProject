@@ -253,7 +253,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       on your receiver and explains it once (T for the dials; frequency finds
       it, phase cleans it, hold it clear to lock). A pulsing "[T] TUNE
       RECEIVER" prompt stays at the bottom of the screen until you tune in,
-      dock or fight. Press T: the tuning panel opens.
+      dock or fight. Press T: the tuning panel opens. It never shows on the
+      title, loading screen or opening cinematic, and the 30 s only counts
+      once you are flying.
 - [ ] **No dead-end asks.** Her quiet lines no longer ask things you can't act
       on ("want to know how close that was", "check my scoring", "who do we
       know with narrow arms" are now statements).
