@@ -18,10 +18,12 @@ void fragment() {
 	// Horizontal tear bands: more, thinner bands as intensity climbs.
 	float band = floor(uv.y * mix(9.0, 44.0, intensity));
 	float band_roll = rnd(vec2(band, floor(TIME * 9.0)));
-	float shift = (rnd(vec2(band, floor(TIME * 24.0))) - 0.5) * 0.3 * intensity;
-	uv.x = fract(uv.x + shift * step(0.55, band_roll));
+	// Tears only past a threshold, and clamped (wrapping smeared whole bands of
+	// the far screen edge across the frame).
+	float shift = (rnd(vec2(band, floor(TIME * 24.0))) - 0.5) * 0.08 * intensity;
+	uv.x = clamp(uv.x + shift * step(0.8, band_roll) * step(0.25, intensity), 0.0, 1.0);
 	// Occasional whole-frame horizontal jump.
-	uv.x = fract(uv.x + step(0.92, rnd(vec2(floor(TIME * 13.0), 7.0))) * 0.06 * intensity);
+	uv.x = clamp(uv.x + step(0.94, rnd(vec2(floor(TIME * 13.0), 7.0))) * 0.02 * intensity, 0.0, 1.0);
 	// Chromatic aberration.
 	float ab = 0.014 * intensity;
 	float r = texture(screen_tex, uv + vec2(ab, 0.0)).r;
@@ -29,8 +31,8 @@ void fragment() {
 	float b = texture(screen_tex, uv - vec2(ab, 0.0)).b;
 	vec3 col = vec3(r, g, b);
 	// Scanline flicker + noise sparkle.
-	col *= 1.0 - 0.16 * intensity * sin(uv.y * 640.0 + TIME * 60.0);
-	col += (rnd(uv * vec2(917.0, 533.0) + vec2(TIME)) - 0.5) * 0.22 * intensity;
+	col *= 1.0 - 0.08 * intensity * sin(uv.y * 640.0 + TIME * 60.0);
+	col += (rnd(uv * vec2(917.0, 533.0) + vec2(TIME)) - 0.5) * 0.10 * intensity;
 	col = mix(col, vec3(1.0), white_out);
 	COLOR = vec4(col, clamp(max(intensity * 1.1, white_out), 0.0, 1.0));
 }

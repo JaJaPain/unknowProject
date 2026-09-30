@@ -230,3 +230,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       first dock, when you try to leave without repairs, and when she marks
       the enemy ship. (An empty title-screen layer left behind after launch
       made her hold every line.)
+- [ ] **Broken-gate opening.** New campaign: the cinematic is a torn energy
+      tunnel with the gate's shattered ring plates streaming past, lightning
+      arcing between them, and violent lurches every few seconds (shake, roll,
+      a glitch spike), then the white-out throw into the system. No grey slab,
+      no full-screen rainbow noise, and no glimpse of the system through the walls.

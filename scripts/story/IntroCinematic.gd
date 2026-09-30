@@ -64,6 +64,17 @@ var _subtitle: Label = null
 var _stream_label: Label = null
 var _skip_hint: Label = null
 var _tunnel: Node3D = null
+## The broken gate itself (scripts/visuals/BrokenGateEffect.gd), plus the
+## lurches that drive the ride: every few seconds the gate surges and the
+## ship is jolted (shake kick, roll snap, glitch spike).
+var _gate: Node3D = null
+var _surge_timer := 1.2
+var _shake_kick := 0.0
+var _roll := 0.0
+var _roll_target := 0.0
+var _glitch_spike := 0.0
+var _player_visual: Node3D = null
+const GLITCH_BASE := 0.08
 var _tunnel_mat: ShaderMaterial = null
 var _player_camera: Camera3D = null
 var _camera_base_fov := 70.0
@@ -96,6 +107,8 @@ static func cache_nova_voice_lines() -> void:
 # watchdog) we call show_kaelen_intro() on it after a 1s beat.
 func start(ui_manager: Control) -> void:
 	_ui = ui_manager
+	# Run after the JumpTunnel each frame so the shake and roll set here win.
+	process_priority = 10
 	# The opening is a self-contained sequence. Ambient NPC simulation must not
 	# fire weapons or start combat under its dialogue and effects.
 	GlobalState.intro_cinematic_active = true
@@ -336,9 +349,14 @@ func _setup_broken_tunnel(player: CharacterBody3D) -> void:
 	_tunnel.global_position = player.global_position
 	if _tunnel.has_method("setup_real_ship"):
 		_tunnel.call("setup_real_ship", player)
+	_player_visual = player.get_node_or_null("Visual") as Node3D
+	_gate = load("res://scripts/visuals/BrokenGateEffect.gd").new()
+	player.get_parent().add_child(_gate)
+	_gate.global_transform = Transform3D(player.global_basis.orthonormalized(), player.global_position)
+	# The old bore (a plain blue cylinder) stays hidden; the broken gate replaces it.
 	var cylinder := _tunnel.get_node_or_null("TunnelCylinder") as MeshInstance3D
 	if cylinder != null:
-		cylinder.visible = true
+		cylinder.visible = false
 		var mat := cylinder.get_active_material(0) as ShaderMaterial
 		if mat != null:
 			_tunnel_mat = mat.duplicate() as ShaderMaterial
@@ -351,9 +369,13 @@ func _setup_broken_tunnel(player: CharacterBody3D) -> void:
 			cylinder.material_override = _tunnel_mat
 	var particles := _tunnel.get_node_or_null("WarpParticles") as CPUParticles3D
 	if particles != null:
-		particles.amount = 300
-		particles.initial_velocity_min = 360.0
-		particles.initial_velocity_max = 620.0
+		# Fine debris streaks, not a wall of big particles.
+		particles.amount = 110
+		particles.initial_velocity_min = 380.0
+		particles.initial_velocity_max = 600.0
+		particles.scale_amount_min = 0.5
+		particles.scale_amount_max = 0.8
+		particles.emission_box_extents = Vector3(40, 40, 1)
 		particles.emitting = true
 
 
@@ -364,6 +386,11 @@ func _cleanup_tunnel() -> void:
 		_tunnel.queue_free()
 	_tunnel = null
 	_tunnel_mat = null
+	if _gate != null and is_instance_valid(_gate):
+		_gate.queue_free()
+	_gate = null
+	if _player_visual != null and is_instance_valid(_player_visual):
+		_player_visual.rotation.z = 0.0
 
 
 func _start_intro_audio() -> void:
@@ -473,9 +500,26 @@ func _process(delta: float) -> void:
 		return
 	var real_delta := delta / maxf(Engine.time_scale, 0.01)
 	_elapsed += real_delta
+	if _gate != null and is_instance_valid(_gate):
+		_surge_timer -= real_delta
+		if _surge_timer <= 0.0:
+			_surge_timer = randf_range(1.4, 3.4)
+			var power := randf_range(0.55, 1.0)
+			_gate.call("surge", power)
+			_shake_kick = maxf(_shake_kick, 1.6 * power)
+			_glitch_spike = maxf(_glitch_spike, 0.5 * power)
+			_roll_target = randf_range(-0.45, 0.45)
+		_roll_target = move_toward(_roll_target, 0.0, real_delta * 0.25)
+		_roll = lerpf(_roll, _roll_target + sin(_elapsed * 0.9) * 0.08, clampf(real_delta * 5.0, 0.0, 1.0))
+		if _player_visual != null and is_instance_valid(_player_visual):
+			_player_visual.rotation.z = _roll
+		_shake_kick = move_toward(_shake_kick, 0.0, real_delta * 3.5)
+		_glitch_spike = move_toward(_glitch_spike, 0.0, real_delta * 4.0)
+		if _glitch_mat != null and _glitch_mat.get_shader_parameter("white_out") == 0.0:
+			_glitch_mat.set_shader_parameter("intensity", GLITCH_BASE + _glitch_spike)
 	if not _camera_settling and _player_camera != null and is_instance_valid(_player_camera):
 		var decay := clampf(1.0 - (_elapsed / maxf(TUMBLE_DURATION + REVEAL_DURATION, 0.1)), 0.0, 1.0)
-		var shock := 0.35 + sin(_elapsed * 8.0) * 0.18 + randf() * 0.18
+		var shock := 0.12 + sin(_elapsed * 8.0) * 0.05 + randf() * 0.06 + _shake_kick
 		var strength := decay * shock
 		_player_camera.h_offset = _camera_base_h_offset + randf_range(-strength, strength)
 		_player_camera.v_offset = _camera_base_v_offset + randf_range(-strength, strength)
@@ -612,19 +656,14 @@ func _settle_to_gameplay_camera(duration: float = 2.0) -> void:
 func _run() -> void:
 	var p = GlobalState.player
 	# TUMBLE — thrown through a dying gate: violent spin, screaming glitch.
-	if p != null and is_instance_valid(p):
-		var spin := create_tween().set_ignore_time_scale(true)
-		var target: Vector3 = p.rotation + Vector3(
-			TAU * SPIN_TURNS, TAU * (SPIN_TURNS * 0.7), TAU * (SPIN_TURNS * 1.3)
-		)
-		spin.tween_property(p, "rotation", target, TUMBLE_DURATION + REVEAL_DURATION) \
-			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	# (The whole-ship tumble is gone: it swung the chase camera outside the
+	# tunnel. The violence is now surges: shake kicks, roll snaps, glitch spikes.)
 	# All intro tweens ignore time scale to stay in sync with the wall-clock
 	# beats above — otherwise a non-1.0x engine desyncs visuals from dialogue.
 	var flicker := create_tween().set_ignore_time_scale(true)
 	flicker.set_loops(0)  # pulse for the whole tumble; killed at the fling
-	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 0.7, 0.35)
-	flicker.tween_property(_glitch_mat, "shader_parameter/intensity", 1.0, 0.4)
+	flicker.tween_property(self, "_glitch_spike", 0.0, 0.35)
+	flicker.tween_property(self, "_glitch_spike", 0.0, 0.4)
 	var black_fade := create_tween().set_ignore_time_scale(true)
 	black_fade.tween_property(_black, "color:a", 0.0, 1.4)
 	await _beat(1.0)
@@ -650,6 +689,8 @@ func _run() -> void:
 	flicker.kill()
 	if _tunnel != null and is_instance_valid(_tunnel) and _tunnel.has_method("begin_exit_burst"):
 		_tunnel.call("begin_exit_burst", 0.8)
+	if _gate != null and is_instance_valid(_gate):
+		_gate.call("exit_burst", 0.8)
 	_play_intro_one_shot(SFX_FLASH, 4.0)
 	_glitch_mat.set_shader_parameter("white_out", 1.0)
 	await _beat(FLING_FLASH)

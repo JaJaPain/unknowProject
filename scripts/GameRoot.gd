@@ -319,6 +319,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_first_session_smoke_test")
 	elif "--traffic-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_smoke_test")
+	elif "--intro-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_intro_snapshot")
 	elif "--evasion-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_evasion_smoke_test")
 	elif "--landing-snapshot" in OS.get_cmdline_user_args():
@@ -10692,6 +10694,32 @@ func _run_traffic_smoke_test() -> void:
 
 ## The landing (title) screen as the player first sees it (windowed):
 ## -- --landing-snapshot --out=<dir>
+## The opening cinematic (broken gate), windowed, a frame every ~2 s for 22 s:
+## -- --intro-snapshot --baseline-offline --out=<dir>
+func _run_intro_snapshot() -> void:
+	var out := "user://intro_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 30:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	var cinematic: Node = load("res://scripts/story/IntroCinematic.gd").new()
+	ui.add_child(cinematic)
+	cinematic.start(ui)
+	var t := 0.0
+	for shot in [0.8, 1.6, 2.5, 4.0, 6.0, 8.0, 10.0, 12.5, 15.0, 17.5, 20.0, 22.0]:
+		await get_tree().create_timer(shot - t, true, false, true).timeout
+		t = shot
+		await _hud_snapshot_save(out.path_join("intro_%04.1f.png" % shot))
+	get_tree().quit()
+
+
 func _run_landing_snapshot() -> void:
 	var out := "user://landing_snapshots"
 	for arg in OS.get_cmdline_user_args():
