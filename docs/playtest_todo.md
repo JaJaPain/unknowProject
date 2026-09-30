@@ -149,3 +149,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       turning in a job plays the mission-complete stinger.
 - [ ] **Voices over music.** When N.O.V.A. or Kaelen talk, the music dips
       smoothly (no sudden drop) and comes back after.
+
+## H. Title screen (added 2026-09-30)
+
+- [ ] **Title screen.** Launch the game: the campaign list sits left of
+      centre, your ship turns slowly on the right, Continue/Begin buttons are
+      blue, Delete is red. Continue still loads your campaign.

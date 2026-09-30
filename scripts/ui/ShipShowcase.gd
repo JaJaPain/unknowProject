@@ -6,6 +6,8 @@ extends SubViewportContainer
 ## with a key and rim light, so it never touches the game scene.
 
 const TURN_SPEED := 0.25  # rad/s
+## How far back the camera sits (set before adding to the tree).
+var camera_distance := 11.5
 
 var _pivot: Node3D
 
@@ -46,7 +48,7 @@ func _ready() -> void:
 		_fit(model)
 	var cam := Camera3D.new()
 	cam.fov = 32.0
-	cam.position = Vector3(0, 3.0, 11.5)
+	cam.position = Vector3(0, camera_distance * 0.26, camera_distance)
 	viewport.add_child(cam)
 	cam.look_at(Vector3.ZERO)
 

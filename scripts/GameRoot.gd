@@ -319,6 +319,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_first_session_smoke_test")
 	elif "--traffic-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_smoke_test")
+	elif "--landing-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_landing_snapshot")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_hud_snapshot")
 	elif "--dock-snapshot" in OS.get_cmdline_user_args():
@@ -10650,6 +10652,19 @@ func _run_traffic_smoke_test() -> void:
 	push_error("[TrafficSmokeTest] FAIL: docked=%d left=%d after 90 s." % [traffic_director.docked_count, traffic_director.left_count])
 	delete_savegame()
 	get_tree().quit(1)
+
+
+## The landing (title) screen as the player first sees it (windowed):
+## -- --landing-snapshot --out=<dir>
+func _run_landing_snapshot() -> void:
+	var out := "user://landing_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	await get_tree().create_timer(8.0).timeout
+	await _hud_snapshot_save(out.path_join("landing.png"))
+	get_tree().quit()
 
 
 func _live_buttons(container: Node) -> Array:

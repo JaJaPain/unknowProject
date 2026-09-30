@@ -1,4 +1,5 @@
 extends Control
+const HudStyle := preload("res://scripts/ui/HudStyle.gd")
 
 const STAR_COUNT := 180
 const COMET_INTERVAL_MIN := 7.0
@@ -61,9 +62,19 @@ func _build_interface() -> void:
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
 
+	# The captain's ship, large and slowly turning, on the right; the menu
+	# sits left of centre beside it.
+	var showcase: Control = load("res://scripts/ui/ShipShowcase.gd").new()
+	showcase.set("camera_distance", 19.0)
+	showcase.anchor_left = 0.5
+	showcase.anchor_right = 0.98
+	showcase.anchor_top = 0.1
+	showcase.anchor_bottom = 0.9
+	add_child(showcase)
+
 	var layout := VBoxContainer.new()
 	layout.set_anchors_preset(Control.PRESET_CENTER)
-	layout.position = Vector2(-300.0, -405.0)
+	layout.position = Vector2(-640.0, -405.0)
 	layout.size = Vector2(600.0, 810.0)
 	layout.add_theme_constant_override("separation", 14)
 	add_child(layout)
@@ -186,10 +197,15 @@ func _add_slot_card(slot: Dictionary, name_counts: Dictionary = {}) -> void:
 	primary.text = "CONTINUE" if occupied else "BEGIN EXPEDITION"
 	primary.disabled = _action_in_progress
 	primary.pressed.connect(_activate_slot.bind(slot_id, occupied))
+	HudStyle.style_button(primary, 14)
+	primary.custom_minimum_size = Vector2(170, 34)
+	primary.add_theme_stylebox_override("normal", HudStyle.box(Color(0.07, 0.18, 0.28, 0.95), HudStyle.ACCENT.darkened(0.2), 1, 6, 8))
 	actions.add_child(primary)
 	if occupied:
 		var delete_button := Button.new()
 		delete_button.text = "DELETE"
+		HudStyle.style_button(delete_button, 12, HudStyle.DANGER)
+		delete_button.add_theme_color_override("font_color", HudStyle.DANGER.lightened(0.2))
 		delete_button.disabled = _action_in_progress
 		delete_button.pressed.connect(_request_delete.bind(slot_id, str(slot.get("display_name", "this campaign"))))
 		actions.add_child(delete_button)
