@@ -1,6 +1,8 @@
 class_name BranchMapUI
 extends Control
 
+const OreTypesScript := preload("res://scripts/economy/OreTypes.gd")
+
 const NODE_RADIUS := 28.0
 const LINE_WIDTH := 2.5
 const LABEL_OFFSET := Vector2(0, 38)
@@ -228,7 +230,8 @@ func _rebuild_map() -> void:
 		for fid in sys_def.faction_ids:
 			var raw: String = str(fid).get_slice(".", 1)
 			faction_ids.append(raw)
-			faction_names.append(raw.capitalize())
+			# The player-facing name (generated factions read "Generated" before).
+			faction_names.append(GlobalState.faction_display_name(str(fid)))
 		system_nodes[sys_id] = {
 			"position": pos,
 			"display_name": sys_def.display_name,
@@ -573,9 +576,16 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 					if i > 0:
 						text += ", "
 					text += "[color=%s]%s[/color]" % [hex, f_names[i]]
-			var origin: String = data.get("origin", "")
-			if origin == "generated":
-				text += "\nGenerated system"
+			# Ores in the belts, once the captain has been there.
+			var known: Dictionary = StoryManager.story_state.get("known_system_ores", {})
+			var ores: Array = known.get(sys_id, known.get(str(data.get("legacy_id", "")), []))
+			if ores.is_empty():
+				text += "\nOres: unknown until visited"
+			else:
+				var ore_names: Array[String] = []
+				for ore in ores:
+					ore_names.append(OreTypesScript.display(str(ore)))
+				text += "\nOres: " + ", ".join(ore_names)
 			_tooltip_label.text = text
 			var offset := Vector2(15, -_tooltip_panel.size.y - 5)
 			if pos.x + 15 + _tooltip_panel.size.x > WINDOW_SIZE.x:

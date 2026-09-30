@@ -1494,6 +1494,10 @@ func _refresh_local_faction_looks() -> void:
 	if is_instance_valid(premise_director):
 		ores = premise_director.profile_for(world).get("ores", ores)
 	GlobalState.system_ore_mix = ores
+	# Remember what these belts hold, for the star map (saved with the story).
+	var known: Dictionary = StoryManager.story_state.get("known_system_ores", {})
+	known[str(world.get("system_id", ""))] = ores.keys()
+	StoryManager.story_state["known_system_ores"] = known
 	print("[Ores] %s, %d jumps out: %s" % [str(world.get("system_id", "")), int(world.get("system_depth", -1)), str(ores)])
 
 
@@ -6887,6 +6891,9 @@ func _run_jump_smoke_test() -> void:
 		return
 	if not bool(StoryManager.story_state.get("first_jump_done", false)):
 		_fail_jump_smoke_test("The first jump did not unlock the star map (first_jump_done).")
+		return
+	if (StoryManager.story_state.get("known_system_ores", {}) as Dictionary).is_empty():
+		_fail_jump_smoke_test("Arriving did not record the system's ores for the star map.")
 		return
 	if CampaignClock.total_minutes != start_time_minutes + GATE_TRAVEL_MINUTES:
 		_fail_jump_smoke_test("Outbound jump did not advance campaign time.")

@@ -170,3 +170,7 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Stations look different.** In two or three generated systems, the
       stations differ in size, heading and tilt, even when they use the same
       model.
+- [ ] **Star map hover.** Open the star map (M) and hover systems: each
+      shows its stations, factions by their real names (not "Generated"),
+      and "Ores: …" for systems you've visited ("unknown until visited"
+      for the rest).
