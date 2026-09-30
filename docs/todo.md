@@ -618,8 +618,8 @@ sign off on, because the failure mode is "it sounds wrong", not "it errors"._
 - [x] **Phase 6 -- Enemy kit parity** -- BRACE and REPOSITION now in enum; NPC planners use them as real actions with camera beats, SFX, status floats, chatter, and taunts.
 - [x] **Damage type resistance** -- `weapon_dmg_mult` / `drone_dmg_mult` per profile, applied in `_apply_hit()`. Hull composition in sensor scan.
 - [x] **Damage number visual feedback for resistance** -- resisted hits show small dim `RESIST` numbers; vulnerable hits show large bright `WEAK` numbers. Player reads the difference in the moment and learns without being told explicitly.
-- [ ] **Phase 7 -- Boss (mega)** -- DONE (in-game) but needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
-- [ ] **Phase 8 -- Squads** -- DONE (in-game) but needs StoryManager trigger hook (see Story section below)
+- [x] **Phase 7 -- Boss (mega)** -- DONE; the trigger hook exists too (GameRoot.trigger_boss_encounter, see Story section). Was: needs StoryManager trigger hook so scripted story beats can spawn the boss fight (see Story section below)
+- [x] **Phase 8 -- Squads** -- DONE; the trigger hook exists too (GameRoot.trigger_squad_encounter). Was: needs StoryManager trigger hook (see Story section below)
 - [x] **Already true in code (checked 2026-09-30):** the turn runs player actions, then every enemy's plan, and only the next planning phase clears the reroute; a hit it absorbs spends it (65% mitigation, spent-on-use default). It also ends early when an enemy flanks or boosts (angle change), by design. If it still feels like it evaporates in play, say which case. **Shield reroute: hold until it does its job** (Abe, 2026-09-09, run sheet 2.4).
   The reroute should PERSIST until either the enemy fires and the shield absorbs
   that damage, or the turn ends -- whichever comes first. Today it is spent on a
@@ -680,8 +680,8 @@ _Full design in `docs/design_narrative_system.md`. Build in order -- each phase 
 
 ## Navigation / Autopilot
 
-- [ ] **Docking sequence** -- replace instant snap with a 3-second felt transition: input lock -> ship tween into collar -> camera hold + clamp SFX -> fade-in dock UI. Enemies in active pursuit hold at dock initiation (not arrival), re-engage on undock with a warning chatter line. One new file: `DockSequence.gd` state machine; everything else reuses JumpTransitionFX, EngineExhaust, and the existing camera node. Full design in `docs/plan_docking_sequence.md`.
-- [ ] **Fix autopilot avoidance regression** *(see bugs.md for full root-cause analysis)*
+- [x] **Docking sequence** -- DONE (tractor, clamps and pressure procedure; docking camera 2026-09-29). Was: replace instant snap with a 3-second felt transition: input lock -> ship tween into collar -> camera hold + clamp SFX -> fade-in dock UI. Enemies in active pursuit hold at dock initiation (not arrival), re-engage on undock with a warning chatter line. One new file: `DockSequence.gd` state machine; everything else reuses JumpTransitionFX, EngineExhaust, and the existing camera node. Full design in `docs/plan_docking_sequence.md`.
+- [x] **Fix autopilot avoidance regression** (Abe's run sheet 2.6, 2026-09-09: neither the fishtail nor the avoidance regression seen; reopen if it comes back) *(see bugs.md for full root-cause analysis)*
   - Wire `_get_autopilot_avoidance()` back into the autopilot movement block (`PlayerShip.gd:740-754`). It exists and works but is not being called.
   - After `_route_steer_target()` returns a `steer_target`, pass it through `_get_autopilot_avoidance(steer_target, active_target)`. When `is_avoiding` is true, use the avoidance waypoint as the actual steer target.
   - This gives two complementary layers: A* planner handles the macro route, real-time avoidance handles surprises mid-flight.
