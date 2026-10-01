@@ -319,6 +319,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_first_session_smoke_test")
 	elif "--traffic-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_smoke_test")
+	elif "--beacon-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_beacon_snapshot")
 	elif "--wiki-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_wiki_snapshot")
 	elif "--intro-snapshot" in OS.get_cmdline_user_args():
@@ -10723,6 +10725,44 @@ func _run_traffic_smoke_test() -> void:
 
 ## The landing (title) screen as the player first sees it (windowed):
 ## -- --landing-snapshot --out=<dir>
+## A station beacon drone close up through its flash cycle (windowed):
+## -- --beacon-snapshot --baseline-offline --out=<dir>
+func _run_beacon_snapshot() -> void:
+	var out := "user://beacon_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var station := GlobalState.get_primary_station()
+	var lights := station.get_node_or_null("StationLights") if station != null else null
+	if lights == null:
+		push_error("[BeaconSnapshot] no StationLights on the main station")
+		get_tree().quit(1)
+		return
+	var drone: Node3D = lights._beacons[1]["drone"]
+	var away := (drone.global_position - station.global_position)
+	away.y = 0.0
+	var cam := Camera3D.new()
+	cam.fov = 40.0
+	get_active_system_root().add_child(cam)
+	var size := float((lights._beacons[1]["light"] as MeshInstance3D).mesh.get("radius"))
+	cam.global_position = drone.global_position + away.normalized() * size * 22.0 + Vector3(0.0, size * 5.0, 0.0)
+	cam.look_at(drone.global_position, Vector3.UP)
+	cam.make_current()
+	for i in 10:
+		await get_tree().process_frame
+	for i in 6:
+		await _hud_snapshot_save(out.path_join("beacon_%d.png" % i))
+		await get_tree().create_timer(0.27).timeout
+	get_tree().quit()
+
+
 ## The pause menu and the wiki, windowed: -- --wiki-snapshot --baseline-offline --out=<dir>
 func _run_wiki_snapshot() -> void:
 	var out := "user://wiki_snapshots"

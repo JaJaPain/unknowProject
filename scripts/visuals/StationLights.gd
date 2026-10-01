@@ -3,17 +3,32 @@ extends Node3D
 ## Running lights on a station (next_level_plan P5): red and green side
 ## markers, white strobes top and bottom, and a slow amber pulse at the
 ## docking berth. Sized from the station model's bounds, so it fits any hull.
-## Emissive dots with glow, plus a couple of real lights for the berth area.
+##
+## Each light is carried by a small beacon drone holding station off the hull
+## (Abe, 2026-09-30: the bare dots "come from nowhere"). The flash grows out of
+## the drone's centre to full size, holds, and shrinks back into it, so the
+## drone shows between flashes. Drones are plain black primitives for now.
 
 const RED := Color(1.0, 0.18, 0.12)
 const GREEN := Color(0.2, 1.0, 0.35)
 const WHITE := Color(0.95, 0.97, 1.0)
 const AMBER := Color(1.0, 0.7, 0.25)
 
-var _strobes: Array[MeshInstance3D] = []
-var _markers: Array[MeshInstance3D] = []
+## Flash timing, seconds: grow out, hold, shrink back; dark for the rest.
+const MARKER_CYCLE := 1.6
+const MARKER_GROW := 0.18
+const MARKER_HOLD := 0.75
+const MARKER_SHRINK := 0.22
+const STROBE_CYCLE := 2.0
+const STROBE_GROW := 0.05
+const STROBE_HOLD := 0.05
+const STROBE_SHRINK := 0.07
+
+## [{"drone": Node3D, "light": MeshInstance3D, "kind": "marker"|"strobe"|"berth", "base": Vector3, "seed": float}]
+var _beacons: Array[Dictionary] = []
 var _berth_light: OmniLight3D
 var _t := 0.0
+static var _hull_mat: StandardMaterial3D
 
 
 ## Adds lights fitted to `station`'s visible meshes.
@@ -48,13 +63,13 @@ func _build(box: AABB, station: Node3D) -> void:
 	var e := box.size * 0.5
 	var dot := maxf(1.5, box.size.length() * 0.012)
 	# Side markers: red to port (-X), green to starboard (+X).
-	_markers.append(_dot(c + Vector3(-e.x, 0, 0), RED, dot))
-	_markers.append(_dot(c + Vector3(e.x, 0, 0), GREEN, dot))
-	_markers.append(_dot(c + Vector3(-e.x * 0.7, e.y * 0.5, e.z * 0.7), RED, dot * 0.7))
-	_markers.append(_dot(c + Vector3(e.x * 0.7, e.y * 0.5, -e.z * 0.7), GREEN, dot * 0.7))
+	_beacon(c + Vector3(-e.x, 0, 0), RED, dot, "marker")
+	_beacon(c + Vector3(e.x, 0, 0), GREEN, dot, "marker")
+	_beacon(c + Vector3(-e.x * 0.7, e.y * 0.5, e.z * 0.7), RED, dot * 0.7, "marker")
+	_beacon(c + Vector3(e.x * 0.7, e.y * 0.5, -e.z * 0.7), GREEN, dot * 0.7, "marker")
 	# White strobes top and bottom.
-	_strobes.append(_dot(c + Vector3(0, e.y, 0), WHITE, dot * 1.2))
-	_strobes.append(_dot(c + Vector3(0, -e.y, 0), WHITE, dot * 1.2))
+	_beacon(c + Vector3(0, e.y, 0), WHITE, dot * 1.2, "strobe")
+	_beacon(c + Vector3(0, -e.y, 0), WHITE, dot * 1.2, "strobe")
 	# The berth glows amber where ships come in.
 	var berth := c
 	if station.has_method("get_docking_position"):
@@ -65,16 +80,75 @@ func _build(box: AABB, station: Node3D) -> void:
 	_berth_light.light_energy = 1.5
 	_berth_light.position = berth
 	add_child(_berth_light)
-	_dot(berth, AMBER, dot)
+	_beacon(berth, AMBER, dot, "berth")
 
 
-func _dot(pos: Vector3, colour: Color, size: float) -> MeshInstance3D:
+## A beacon drone at `pos` carrying a light of radius `size`.
+func _beacon(pos: Vector3, colour: Color, size: float, kind: String) -> void:
+	var drone := _build_drone(size * 0.45)
+	drone.position = pos
+	add_child(drone)
+	var light := _light_sphere(colour, size)
+	drone.add_child(light)
+	light.scale = Vector3.ONE * 0.001
+	_beacons.append({"drone": drone, "light": light, "kind": kind, "base": pos, "seed": randf() * TAU})
+
+
+## A small drone from primitives, about `r` in radius: a squat body, a ring
+## round its middle, three arms with pods, and an antenna. Black for now.
+func _build_drone(r: float) -> Node3D:
+	if _hull_mat == null:
+		_hull_mat = StandardMaterial3D.new()
+		_hull_mat.albedo_color = Color(0.02, 0.02, 0.025)
+		_hull_mat.metallic = 0.4
+		_hull_mat.roughness = 0.55
+	var drone := Node3D.new()
+	var body := SphereMesh.new()
+	body.radius = r
+	body.height = r * 1.3
+	body.radial_segments = 12
+	body.rings = 6
+	_part(drone, body, Vector3.ZERO, Vector3.ZERO)
+	var ring := TorusMesh.new()
+	ring.inner_radius = r * 1.05
+	ring.outer_radius = r * 1.3
+	ring.rings = 16
+	ring.ring_segments = 6
+	_part(drone, ring, Vector3.ZERO, Vector3.ZERO)
+	for i in 3:
+		var ang := TAU * i / 3.0
+		var dir := Vector3(cos(ang), 0.0, sin(ang))
+		var arm := BoxMesh.new()
+		arm.size = Vector3(r * 1.1, r * 0.14, r * 0.14)
+		_part(drone, arm, dir * r * 1.75, Vector3(0.0, -ang, 0.0))
+		var pod := BoxMesh.new()
+		pod.size = Vector3(r * 0.4, r * 0.3, r * 0.4)
+		_part(drone, pod, dir * r * 2.3, Vector3(0.0, -ang, 0.0))
+	var antenna := CylinderMesh.new()
+	antenna.top_radius = r * 0.04
+	antenna.bottom_radius = r * 0.07
+	antenna.height = r * 1.4
+	antenna.radial_segments = 6
+	_part(drone, antenna, Vector3(0.0, r * 1.2, 0.0), Vector3.ZERO)
+	return drone
+
+
+func _part(parent: Node3D, mesh: Mesh, pos: Vector3, rot: Vector3) -> void:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = _hull_mat
+	mi.position = pos
+	mi.rotation = rot
+	parent.add_child(mi)
+
+
+func _light_sphere(colour: Color, size: float) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	var sphere := SphereMesh.new()
 	sphere.radius = size
 	sphere.height = size * 2.0
-	sphere.radial_segments = 8
-	sphere.rings = 4
+	sphere.radial_segments = 12
+	sphere.rings = 6
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = colour
@@ -84,21 +158,43 @@ func _dot(pos: Vector3, colour: Color, size: float) -> MeshInstance3D:
 	sphere.material = mat
 	mi.mesh = sphere
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	mi.position = pos
-	add_child(mi)
 	return mi
+
+
+## 0..1 light size through one cycle: grow out, hold, shrink back, dark.
+static func _envelope(t: float, grow: float, hold: float, shrink: float) -> float:
+	if t < grow:
+		var k := t / grow
+		return 1.0 - (1.0 - k) * (1.0 - k)  # ease out
+	if t < grow + hold:
+		return 1.0
+	if t < grow + hold + shrink:
+		var k := (t - grow - hold) / shrink
+		return 1.0 - k * k  # ease in
+	return 0.0
 
 
 func _process(delta: float) -> void:
 	_t += delta
-	# Strobes: a quick double flash every 2 s.
-	var phase := fmod(_t, 2.0)
-	var on := phase < 0.08 or (phase > 0.22 and phase < 0.3)
-	for s in _strobes:
-		s.visible = on
-	# Side markers: a slow steady blink.
-	var marker_on := fmod(_t, 1.6) < 1.1
-	for m in _markers:
-		m.visible = marker_on
+	for b in _beacons:
+		var drone: Node3D = b["drone"]
+		var light: MeshInstance3D = b["light"]
+		var offset: float = b["seed"]
+		# Holding station: a slow bob and turn.
+		drone.position = (b["base"] as Vector3) + Vector3(0.0, sin(_t * 0.9 + offset) * 0.25, 0.0)
+		drone.rotation.y = _t * 0.3 + offset
+		var s := 0.0
+		match str(b["kind"]):
+			"strobe":
+				# A quick double flash every cycle.
+				var phase := fmod(_t, STROBE_CYCLE)
+				s = maxf(_envelope(phase, STROBE_GROW, STROBE_HOLD, STROBE_SHRINK),
+					_envelope(phase - 0.22, STROBE_GROW, STROBE_HOLD, STROBE_SHRINK) if phase >= 0.22 else 0.0)
+			"berth":
+				s = 0.6 + 0.4 * (0.5 + 0.5 * sin(_t * 1.8))
+			_:
+				s = _envelope(fmod(_t, MARKER_CYCLE), MARKER_GROW, MARKER_HOLD, MARKER_SHRINK)
+		light.visible = s > 0.01
+		light.scale = Vector3.ONE * maxf(s, 0.001)
 	if _berth_light:
 		_berth_light.light_energy = 1.0 + 0.8 * (0.5 + 0.5 * sin(_t * 1.8))

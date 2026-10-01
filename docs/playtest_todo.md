@@ -265,3 +265,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       button says "WIKI (1 new)" and a comms line says a new entry was added;
       the wiki opens on it marked NEW. First fight adds Combat basics and
       Evasion; first jump adds Jump gates. Esc closes the wiki, not the pause.
+- [ ] **Beacon drones.** Fly close to any station: each red, green, white and
+      amber light is carried by a small black drone (dome, ring, three arms,
+      antenna) that bobs and turns slowly. The light grows out of the drone's
+      centre, holds, and shrinks back into it; between flashes you see the
+      drone. (Black placeholders; real drone art later.)
