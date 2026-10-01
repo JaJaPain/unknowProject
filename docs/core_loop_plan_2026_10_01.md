@@ -292,10 +292,30 @@ gives miners a reason to upgrade weapons and shields, not just fighters.
   warning), and there's always a way to back out.
 - One attacker at a time for rare ore and red rocks; only claims escalate,
   and only if the player stays.
+- **Late game: mining rights.** In later systems, a claim owner sells the
+  rights to some mid-grade minerals in its claims (Abe), so grinding ore for
+  the big upgrades doesn't mean a fight every trip. Rare ore and red rocks are
+  never for sale.
 - No combat cost appears before the first upgrade is fitted (the first
   ~30 minutes are for learning the loop).
 - The economy simulation (3.6) counts the fight time and the repair bills,
   so rung times include the risk.
+
+### 3.8 End game: alloys (direction, Abe 2026-10-01; designed later)
+
+Past the mid tiers, upgrades stop taking raw ore and need **alloys**: made by
+combining different ores at a **dedicated facility** (a foundry), not at
+every station.
+
+- **Recipes combine ores** (for example a common base ore, a rarer ore and a
+  tech-grade material in set ratios), so the player has to gather a mix, which
+  sends them to different belts, depths and claims.
+- **Foundries are rare places** (one in some deep systems, or at a Lodestar),
+  so reaching one is itself a goal on the map.
+- **Where it slots in:** Mk IV-V tiers, and the post-rating-25 seasons
+  (decision 7), replace their raw-ore cost with alloys.
+- Not part of bites 1-12. It gets its own short plan once the ladder and the
+  goal card have been played.
 
 ---
 
@@ -439,11 +459,6 @@ the Lodestar (8-12) builds on a ladder that already works.
 4. **Refunds.** Refunding an upgrade can drop the rating below the current
    class. Recommended: allowed; it only blocks going deeper, never coming
    back.
-5. **Rare-ore attacker: every time, or a chance?** Recommended: every time
-   for rare ore (it's what makes it rare), after a delay long enough to fill
-   part of a hold; a low chance for uncommon cuprite.
-6. **Claims: can the player buy mining rights** (a fee at the claim owner's
-   station) instead of fighting? Recommended: later, as a standing reward.
-7. **After rating 25.** Fully upgraded ships still need a reason to climb in
-   later seasons. Options: Mk VI tiers per season, or rare modules from
-   Lodestar arrivals. Not needed until bite 12.
+5. **Rare-ore attacker: every time, or a chance?** **ANSWERED (Abe, 2026-10-01): yes as recommended**: every time for rare ore, after a delay long enough to fill part of a hold; a low chance for uncommon cuprite.
+6. **Claims: buy mining rights?** **ANSWERED (Abe, 2026-10-01): yes, late game**: in later systems, the rights to some **mid-grade** minerals can be bought from the claim owner, to cut the annoyance of mining for the larger upgrades. Not for rare ore or red rocks.
+7. **After rating 25 / end game.** **Direction (Abe, 2026-10-01):** end-game progression needs **alloys** made by combining different ores, not raw ore, made at a dedicated facility. See 3.8.
