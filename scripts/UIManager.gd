@@ -13945,6 +13945,21 @@ func _on_quest_accepted():
 	# queue, so it isn't still synthesizing then (Abe, 2026-09-30).
 	if is_instance_valid(StoryManager) 			and not bool(StoryManager.story_state.get("intro_repair_target_tip_delivered", false)):
 		SpeechService.cache(INTRO_TARGET_TIP_LINE, Nova.NOVA_VOICE_PROFILE_ID, -1.0, true)
+	# Her reaction to a hunt contract (the pacifist "a contract is not a moral
+	# alibi" lines) plays when the targets show up, often right after undock.
+	# It was queued as background work when the offer was built, so it could
+	# still be waiting behind ~200 other lines: move it to the front now, and
+	# pick one if this contract never got one (Abe, 2026-09-30).
+	if is_instance_valid(Nova) and QuestManager.is_quest_active():
+		var quest: Dictionary = QuestManager.active_quest
+		if str(quest.get("nova_mission_hunt_reaction", "")).strip_edges().is_empty():
+			var prepared: Dictionary = Nova.prepare_mission_hunt_reaction(quest)
+			for key in ["nova_mission_hunt_reaction", "nova_mission_hunt_reaction_stage"]:
+				if prepared.has(key):
+					quest[key] = prepared[key]
+		var reaction := str(quest.get("nova_mission_hunt_reaction", "")).strip_edges()
+		if not reaction.is_empty() and not bool(quest.get("nova_mission_hunt_reaction_played", false)):
+			SpeechService.cache(reaction, Nova.NOVA_VOICE_PROFILE_ID, -1.0, true)
 
 func _on_quest_progress_updated():
 	_update_quest_tracker()
