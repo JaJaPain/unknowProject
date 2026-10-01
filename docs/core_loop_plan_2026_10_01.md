@@ -512,7 +512,7 @@ before the next bite.
 | 6 | Depth scaling: ore value, red-rock share, board pay, enemy tier | Economy smoke |
 | 6b | Mining risk (3.7): claims with hail and reinforcements, rare-ore claim jumper, red-rock guards; ice near stations always unclaimed; none before the first upgrade | Unit tests per rule; a `--mining-risk-smoke-test` that triggers each one |
 | 7 | `--economy-sim` automated captain + first tuning pass against 3.6 | Prints minutes per rung |
-| | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, but decide whether that's intended in this pass. | |
+| | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, **Decided (Abe, 2026-10-01): keep it hidden for now.** | |
 | 8 | Keystone deck, draw, Class IV rule, early hints | Unit tests per keystone |
 | 9 | Lodestar deck (JSON, 6 cards), draw, star map wedge | Unit tests; map snapshot |
 | 10 | Bearings in activities (receiver, drone recorder, anomaly, investigation, Kaelen lead), Lodestar log tab | Per-activity tests |
@@ -530,7 +530,7 @@ the Lodestar (8-12) builds on a ladder that already works.
 
 1. **Ship Rating?** **ANSWERED (Abe, 2026-10-01): yes**, with the rule that one upgrade path alone can't carry the ship forward (2.2: a system counts up to two tiers above the weakest).
 2. **Strict gates, or risky passage?** **ANSWERED (Abe, 2026-10-01): strict**, for now.
-3. **The Lodestar deck.** Approve the six above, swap any, or write your own. (Abe, 2026-10-01: the push forward is two parts, the Lodestar plus N.O.V.A. and Kaelen's unexplained nudge, 4.6. Deck still to approve.)
+3. **The Lodestar deck.** **ANSWERED (Abe, 2026-10-01):** Claude may rewrite the deck to fit what has been built (do it at step 9, keeping it clear of the fixed-cast canon). Was: approve the six above, swap any, or write your own. (Abe, 2026-10-01: the push forward is two parts, the Lodestar plus N.O.V.A. and Kaelen's unexplained nudge, 4.6. Deck still to approve.)
    Each must also be checked against the fixed-cast canon before it ships.
 4. **Refunds.** **ANSWERED (Abe, 2026-10-01):** the ship can always fly back, but going deeper again needs the requirement met (2.4).
 5. **Rare-ore attacker: every time, or a chance?** **ANSWERED (Abe, 2026-10-01): yes as recommended**: every time for rare ore, after a delay long enough to fill part of a hold; a low chance for uncommon cuprite.
