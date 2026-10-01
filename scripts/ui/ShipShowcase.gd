@@ -46,6 +46,7 @@ func _ready() -> void:
 	if model != null:
 		_pivot.add_child(model)
 		_fit(model)
+		_add_thrusters(model)
 	var cam := Camera3D.new()
 	cam.fov = 32.0
 	cam.position = Vector3(0, camera_distance * 0.26, camera_distance)
@@ -73,6 +74,35 @@ func _fit(model: Node3D) -> void:
 
 
 var _launching := false
+## The ship's own engine plumes (ThrusterBank, as PlayerShip uses): a soft
+## idle glow while it turns, full burn with boost when it launches (Abe).
+var _thrusters: Node = null
+var _throttle := 0.12
+var _boosting := false
+
+
+func _add_thrusters(model: Node3D) -> void:
+	var points: Array[Node3D] = []
+	_find_thruster_points(model, points)
+	if points.is_empty():
+		# Same fallback sockets PlayerShip uses for hulls without markers.
+		for x in [-1.4, 1.4]:
+			var socket := Marker3D.new()
+			socket.position = Vector3(x, -0.1, 4.7)
+			socket.set_meta("thruster_radius", 0.55)
+			model.add_child(socket)
+			points.append(socket)
+	_thrusters = load("res://scripts/visuals/ThrusterBank.gd").new()
+	add_child(_thrusters)
+	_thrusters.setup(points, Color(0.18, 0.72, 1.0), 1.0)
+
+
+func _find_thruster_points(node: Node, out: Array[Node3D]) -> void:
+	var lower := str(node.name).to_lower()
+	if node is Marker3D and (lower.begins_with("engine_") or lower.begins_with("thruster_") 			or lower.begins_with("exhaust_") or lower.begins_with("nozzle_")):
+		out.append(node as Node3D)
+	for child in node.get_children():
+		_find_thruster_points(child, out)
 
 
 ## Title-screen launch: the ship swings its nose away from the camera and
@@ -81,6 +111,9 @@ func launch(duration: float = 1.1) -> void:
 	if _pivot == null:
 		return
 	_launching = true
+	_boosting = true
+	var burn := create_tween()
+	burn.tween_property(self, "_throttle", 1.0, duration * 0.3)
 	var tween := create_tween()
 	# Face away (the hull's nose is -Z, so a yaw of 0 points it into the screen).
 	var yaw := snappedf(_pivot.rotation.y, TAU)
@@ -90,5 +123,7 @@ func launch(duration: float = 1.1) -> void:
 
 
 func _process(delta: float) -> void:
+	if _thrusters != null:
+		_thrusters.update_intensity(_throttle, _boosting)
 	if _pivot != null and is_visible_in_tree() and not _launching:
 		_pivot.rotate_y(TURN_SPEED * delta)

@@ -222,7 +222,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       Expedition (or Continue). The menu slides away, the stars stretch into
       warp streaks, your ship flies off into the middle of them, then a dark
       "Charting course..." screen holds until the loading screen fades in.
-      Nothing should look frozen.
+      Nothing should look frozen. The ship's engines light up and burn as it
+      flies off.
 - [ ] **Begin animates into loading.** Press Begin Expedition (or Continue):
       the menu slides away, stars burst into warp streaks, the ship flies into
       them, then "Charting course..." holds until the loading screen fades in.
