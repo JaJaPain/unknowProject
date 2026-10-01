@@ -83,12 +83,23 @@ each class the first time.
 | III | 5-6 | Ship Rating 8 | Older rings, rough folds; a stock ship shakes apart. |
 | IV | 7-9 | Ship Rating 11 + this campaign's **keystone** (2.3) | Deep gates; every campaign's deep space is hostile in its own way. |
 | V | 10-12 | Ship Rating 15 | Half-dead gates. |
-| VI | 13+ | Ship Rating 20 | The edge. Where the Lodestar lives (Section 4). |
+| VI | 13-15 | Ship Rating 20 | The edge of the known map. Where the first Lodestar lives (Section 4). |
+| VII+ | 16+ | by formula (2.3a) | Beyond the charts. |
 
 ### 2.2 Ship Rating, not one fixed upgrade per gate
 
 **Ship Rating = the sum of the five systems' tiers** (weapons, engine,
-shields, mining, cargo). A stock ship is 5; fully upgraded is 25.
+shields, mining, cargo), **where each system counts for at most two tiers
+above your weakest system** (Abe, 2026-10-01: one upgrade path alone must not
+be able to carry the ship forward). A stock ship is 5.
+
+Example: Shields Mk V with everything else stock rates 3+1+1+1+1 = **7**, not
+9. Upgrading cargo to Mk II lifts the cap to Mk IV, and the rating to 9.
+
+The HUD says what's holding the rating back: `Ship Rating 7 · Cargo Mk I is
+your weakest system: upgrades above Mk III don't count until it improves.`
+The rule needs no table, works for any number of tiers (2.5), and keeps every
+system in play for the whole campaign.
 
 Why a rating rather than "Class III needs Engine Mk III":
 
@@ -102,6 +113,21 @@ Why a rating rather than "Class III needs Engine Mk III":
 The fixed requirements are kept small and meaningful: Shields Mk II at Class
 II (the authored tutorial rung that teaches the whole system once) and one
 keystone per campaign at Class IV.
+
+### 2.3a Never fully upgraded: endless tiers and classes (Abe, 2026-10-01)
+
+The campaign is a never-ending story while the Captain lives, so there is no
+top tier and no last gate class:
+
+- **Tiers past Mk V are generated**: each new tier adds a fixed step to its
+  branch's stats and costs more (credits, ore or alloys, materials) on a
+  steady curve. Mk VI, VII and onward exist as soon as the player can afford
+  them.
+- **Gate classes continue past VI** by formula (each class needs a little more
+  rating than the last, at greater depth), so there is always a next class.
+- The breadth rule (2.2) keeps all five systems climbing together.
+- The tables in 2.1 and `UPGRADE_TREE` cover the hand-tuned early game; the
+  formulas take over after them, tuned with the economy simulation.
 
 ### 2.3 The keystone: one requirement drawn per campaign
 
@@ -122,9 +148,11 @@ first Class IV gate is revealed), so it never arrives as a surprise wall.
 
 ### 2.4 Rules that keep it fair
 
-- **Never stranded.** Gates back to visited systems are always open (as now).
-  Every system always has at least one gate the player can currently use, or
-  one class away.
+- **Back is always open; forward always checks** (Abe, 2026-10-01). A gate
+  leading to a shallower or equally deep system is always open. A gate
+  leading deeper checks the requirement every time, even into a system
+  visited before (so a ship whose rating drops, for example by a refund, can
+  retreat but must earn its way forward again).
 - **Visible before it matters.** A gate shows its class and requirement when
   revealed (star map tooltip, gate label on approach), not only when refused.
 - **Refusal teaches.** Trying a gate you can't use opens the same guidance as
@@ -132,8 +160,8 @@ first Class IV gate is revealed), so it never arrives as a surprise wall.
   breakdown (Section 3.3).
 - **No penalty for exploring sideways.** Lateral gates within the same class
   are always open. The ladder only gates going deeper.
-- **Old saves.** Campaigns that already passed Class II keep all visited
-  systems open; the ladder applies from their current depth.
+- **Old saves.** The rules apply from the save's current position: going back
+  is open, going deeper checks.
 
 ---
 
@@ -399,7 +427,8 @@ the Lodestar is always there.
 Campaigns are open-ended (Abe, 2026-09-23). Reaching the Lodestar resolves the
 season: the Showrunner's season-end pass picks the leftover threads, and a new
 Lodestar is drawn further out (depth 20+, with Class VII+ gates and Mk V
-tiers). The ladder and the pull start again, one level up.
+tiers). The ladder and the pull start again, one level up, with no end
+(2.3a).
 
 ---
 
@@ -449,16 +478,13 @@ the Lodestar (8-12) builds on a ladder that already works.
 
 ## 7. Decisions for Abe
 
-1. **Ship Rating (sum of tiers) instead of one specific upgrade per gate?**
-   Recommended: yes, plus the Class II tutorial requirement and the keystone.
+1. **Ship Rating?** **ANSWERED (Abe, 2026-10-01): yes**, with the rule that one upgrade path alone can't carry the ship forward (2.2: a system counts up to two tiers above the weakest).
 2. **Strict gates, or risky passage?** Option: an under-rated ship may force a
    gate and arrive with heavy hull damage. Recommended: strict (clearer, and
    the ladder stays meaningful); revisit later as an upgrade or a story beat.
 3. **The Lodestar deck.** Approve the six above, swap any, or write your own.
    Each must also be checked against the fixed-cast canon before it ships.
-4. **Refunds.** Refunding an upgrade can drop the rating below the current
-   class. Recommended: allowed; it only blocks going deeper, never coming
-   back.
+4. **Refunds.** **ANSWERED (Abe, 2026-10-01):** the ship can always fly back, but going deeper again needs the requirement met (2.4).
 5. **Rare-ore attacker: every time, or a chance?** **ANSWERED (Abe, 2026-10-01): yes as recommended**: every time for rare ore, after a delay long enough to fill part of a hold; a low chance for uncommon cuprite.
 6. **Claims: buy mining rights?** **ANSWERED (Abe, 2026-10-01): yes, late game**: in later systems, the rights to some **mid-grade** minerals can be bought from the claim owner, to cut the annoyance of mining for the larger upgrades. Not for rare ore or red rocks.
-7. **After rating 25 / end game.** **Direction (Abe, 2026-10-01):** end-game progression needs **alloys** made by combining different ores, not raw ore, made at a dedicated facility. See 3.8.
+7. **End game.** **ANSWERED (Abe, 2026-10-01):** never fully upgraded; tiers and gate classes continue procedurally, a never-ending story (2.3a). And: end-game progression needs **alloys** made by combining different ores, not raw ore, made at a dedicated facility. See 3.8.
