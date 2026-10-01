@@ -84,7 +84,7 @@
 			{
 				"shape": "thought_first",
 				"facts": "A minor scrape on the plating was repaired at dock.",
-				"line": "My plating's buffed out. You didn't have to do that by hand. I noticed you did anyway."
+				"line": "My plating's buffed out. Whoever did it had steady hands. I'm told I look almost new."
 			},
 			{
 				"shape": "single_sentence",
@@ -98,11 +98,11 @@
 			},
 			{
 				"shape": "fact_first",
-				"facts": "The Captain performed a repair without assistance. The ship is functional.",
-				"line": "You had your hands in my conduits for an hour... that came out wrong. Nice work, though."
+				"facts": "The Captain used a repair kit to patch the hull mid-flight. The ship is functional.",
+				"line": "Patch is holding. It's ugly and it's holding. I'll take ugly."
 			},
 			{
-				"shape": "question",
+				"shape": "fact_first",
 				"facts": "A pursuing ship lost track of the Captain's vessel during a manoeuvre.",
 				"line": "They've lost us. I won't tell you how close that was. You'd only take it as a challenge."
 			},
@@ -114,7 +114,7 @@
 			{
 				"shape": "single_sentence",
 				"facts": "A near miss occurred. No damage was taken.",
-				"line": "Closer than I'll admit out loud. I'm going to be sulking about my scoring for a week. The paint. I meant the paint."
+				"line": "Closer than I'll admit out loud. Not a mark on me, somehow. I checked the paint twice."
 			},
 			{
 				"shape": "question",
@@ -134,7 +134,7 @@
 			{
 				"shape": "thought_first",
 				"facts": "The ship is booked in for servicing at a station yard.",
-				"line": "Some stranger's going to be elbow-deep in my access ports by morning. I hope he warms his hands."
+				"line": "Some stranger's going to be elbow-deep in my access ports by morning. I hope they warm their hands first."
 			},
 			{
 				"shape": "single_sentence",
@@ -142,7 +142,7 @@
 				"line": "There's scoring the length of my flank and somebody's buffing that out before I'm seen in a dock again."
 			},
 			{
-				"shape": "question",
+				"shape": "thought_first",
 				"facts": "A coolant line is weeping somewhere inaccessible to the ship's automatics.",
 				"line": "I've got a weeping line somewhere behind the main housing. Nobody we know has arms narrow enough to reach it. I'll live."
 			},

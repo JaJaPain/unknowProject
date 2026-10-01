@@ -275,3 +275,10 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Starter target line is instant.** Take Kaelen's starter job, repair,
       undock: N.O.V.A.'s "highlighted that ship in red" line starts right away
       (it's generated when you accept the job, not when it's needed).
+- [ ] **N.O.V.A. says what's true.** Win a fight without taking hull damage:
+      a "no scratch" line. Win after taking some damage: a "dented but fine"
+      line, never "my hull remains untouched". Let an enemy flee (beat it to
+      low hull): she comments on THEM running, not on us retreating.
+- [ ] **Repair warning reads as a choice.** Dock damaged, decline repairs:
+      her warning talks about leaving ("you're about to..."), never as if
+      we'd already launched ("turn back", "stop the thrusters").
