@@ -15467,9 +15467,10 @@ func _create_loading_screen():
 	loading_status_label = Label.new()
 	loading_status_label.text = "Initializing core connection to local LLM..."
 	loading_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	loading_status_label.add_theme_font_size_override("font_size", 11)
+	loading_status_label.add_theme_font_size_override("font_size", 13)
 	loading_status_label.modulate = Color(0.0, 0.8, 0.8)
 	vbox.add_child(loading_status_label)
+	_build_loading_tips(vbox)
 
 func _on_llm_connection_attempt(attempt: int):
 	last_llm_attempt = attempt
@@ -15765,15 +15766,14 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 		_wait_for_chapter_plan_before_gameplay()
 		return
 	var summary := ""
-	var status := "Writing campaign story with large story model..."
+	var status := "Writing your campaign's story. This takes a minute or two on the first launch."
 	if game_root != null and game_root.has_method("campaign_story_status_summary"):
 		summary = str(game_root.call("campaign_story_status_summary"))
-		status += "\n" + summary
+		# The raw status (status=..., source=..., note=...) is for the log, not
+		# the player (Abe's screenshot, 2026-09-30).
+		print("[LoadingScreen] Campaign story: ", summary)
 	if summary.contains("llm_unavailable") or summary.contains("generation_failed"):
-		status = (
-			"Campaign story required. Large story model did not generate the campaign bible.\n"
-			+ summary
-		)
+		status = "The story model didn't produce a campaign story. Retrying..."
 	if summary.contains("timeout") or summary.contains("http_failed"):
 		status = (
 			"Campaign story required, but Ollama is not responding.\n"
@@ -15792,10 +15792,8 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 		if requested is Dictionary:
 			var request_status := str(requested.get("status", ""))
 			if request_status == "requested":
-				loading_status_label.text = (
-					"Writing campaign story with large story model..."
-					+ "\nLarge story request sent. This can take a few minutes."
-				)
+				loading_status_label.text = "Writing your campaign's story. This takes a minute or two on the first launch."
+				_creep_loading_bar(92.0, 120.0)
 				_play_nova_latency_filler("llm_generation", 1.0, 0)
 			elif request_status == "waiting_for_llm_connection":
 				loading_status_label.text = (
@@ -15818,6 +15816,54 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 ## Chapter-plan request statuses that mean the plan is already in place.
 ## Missing "fallback_committed" held new-campaign loads at 92 percent forever.
 const CHAPTER_PLAN_DONE_STATUSES := ["already_generated", "fallback_committed", "already_ready"]
+
+
+## Moves the bar slowly toward `cap` while a long step runs, so a wait reads as
+## progress, not a freeze. Eases out: it never reaches the cap on its own, and
+## the step's real completion sets the bar as before.
+func _creep_loading_bar(cap: float, seconds: float) -> void:
+	if loading_bar == null or not is_instance_valid(loading_bar):
+		return
+	if loading_bar.has_meta("creep") and is_instance_valid(loading_bar.get_meta("creep")):
+		(loading_bar.get_meta("creep") as Tween).kill()
+	var target := loading_bar.value + (cap - loading_bar.value) * 0.85
+	var tween := loading_bar.create_tween()
+	tween.tween_property(loading_bar, "value", target, seconds).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	loading_bar.set_meta("creep", tween)
+
+
+## A rotating tip under the loading status: the first line of each preloaded
+## wiki entry, controls filled in, a new one every 7 seconds.
+var _loading_tip_label: Label = null
+
+
+func _build_loading_tips(parent: Control) -> void:
+	_loading_tip_label = Label.new()
+	_loading_tip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loading_tip_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loading_tip_label.custom_minimum_size = Vector2(620, 0)
+	_loading_tip_label.add_theme_font_size_override("font_size", 14)
+	_loading_tip_label.modulate = Color(0.75, 0.85, 0.95, 0.9)
+	parent.add_child(_loading_tip_label)
+	var tips: Array[String] = []
+	for e in WikiType.all_entries():
+		if not bool(e.get("unlocked", false)):
+			continue
+		var first := WikiType.body_text(e).split("\n")[0]
+		var plain := RegEx.create_from_string("\\[/?[a-z]+\\]").sub(first, "", true).strip_edges()
+		if not plain.is_empty():
+			tips.append("TIP  ·  " + plain)
+	tips.shuffle()
+	_rotate_loading_tip(tips, 0)
+
+
+func _rotate_loading_tip(tips: Array[String], index: int) -> void:
+	if tips.is_empty() or _loading_tip_label == null or not is_instance_valid(_loading_tip_label):
+		return
+	_loading_tip_label.text = tips[index % tips.size()]
+	get_tree().create_timer(7.0, true, false, true).timeout.connect(
+		func(): _rotate_loading_tip(tips, index + 1)
+	)
 
 
 func _wait_for_chapter_plan_before_gameplay() -> void:

@@ -293,3 +293,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       (fuel, fuel blocks, O2) is there from the start, and "Fuel" now says an
       empty tank still flies, slower, but can't jump. The first time the job
       board shows a Loose ends button, a "Loose ends board" entry unlocks.
+- [ ] **Loading wait feels alive.** New campaign: while the story is being
+      written, the status reads in plain English (no "status=..., source=..."
+      debug text), the bar keeps creeping forward instead of sitting at 35%,
+      and a TIP line under it changes every 7 seconds. Afterwards, godot.log
+      has "Campaign bible generated ... in N s": send me N.
