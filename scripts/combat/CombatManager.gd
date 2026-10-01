@@ -40,6 +40,11 @@ signal combat_started(enemy: Node)
 signal planning_started(ap: int, max_ap: int, intent: Dictionary, taunts: Dictionary, npc_plan: Array)
 signal execution_started
 signal combat_ended(player_won: bool)
+## Why the last fight ended, readable by combat_ended listeners: "won",
+## "player_fled", "enemy_fled", "lost_contact" or "unknown". player_won=false
+## alone made N.O.V.A. thank the captain for retreating when the ENEMY ran.
+var last_end_reason := ""
+var _pending_end_reason := ""
 signal ap_changed(current: int, max_ap: int)
 signal action_queued(action: Dictionary)
 signal action_dequeued
@@ -768,6 +773,8 @@ func _on_taunts_ready(data: Dictionary) -> void:
 	_begin_planning()
 
 func end_combat(player_won: bool) -> void:
+	last_end_reason = "won" if player_won else (_pending_end_reason if not _pending_end_reason.is_empty() else "unknown")
+	_pending_end_reason = ""
 	state = State.IDLE
 	_clear_scorches()
 	_lerp_timescale(1.0, 1.0, 600)
@@ -909,6 +916,7 @@ var _lerp_active: bool  = false
 func _begin_planning() -> void:
 	_reacted_this_turn = false
 	if not is_instance_valid(enemy_node) or not is_instance_valid(player_node):
+		_pending_end_reason = "lost_contact"
 		end_combat(false)
 		return
 	state = State.PLANNING
@@ -1437,6 +1445,7 @@ func _exec_flee() -> void:
 	if is_instance_valid(player_node):
 		_sfx("engine_boost", player_node.global_position)
 	if not is_instance_valid(enemy_node):
+		_pending_end_reason = "player_fled"
 		end_combat(false)
 		return
 	var archetype: String = enemy_node.get("ship_role") if enemy_node.get("ship_role") else ""
@@ -1457,6 +1466,7 @@ func _exec_flee() -> void:
 			# Clear the enemy's target so it must re-acquire fresh after the buffer.
 			if enemy_node.has_method("set") and enemy_node.get("target") != null:
 				enemy_node.set("target", null)
+		_pending_end_reason = "player_fled"
 		end_combat(false)
 	else:
 		GlobalState.emit_chatter("SYSTEM", "Escape failed — engines couldn't break their tractor lock.", Color(1.0, 0.4, 0.2))
@@ -1683,6 +1693,7 @@ func _exec_enemy_flee() -> void:
 		fleeing_enemy.global_position += flee_dir * 180.0
 		fleeing_enemy.set("target", null)
 		fleeing_enemy.set("patrol_center", fleeing_enemy.global_position)
+	_pending_end_reason = "enemy_fled"
 	end_combat(false)
 
 

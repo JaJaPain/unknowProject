@@ -1026,6 +1026,53 @@ func _say_tiered(
 # Player docked. Escalates if they dock repeatedly within a minute — she notices.
 ## Docking on an empty tank: she complains instead of the usual line (Abe:
 ## she will say this a lot, so there are many, picked without repeats).
+const ENEMY_FLED_LINES: Array[String] = [
+	"They're running. I'd let them. Chasing is how ships like us end up in other people's stories.",
+	"Hostile breaking off. Good. I was running out of polite ways to say 'please stop shooting me'.",
+	"They've decided we're not worth it. I'll take the insult.",
+	"And they bolt. Remind me to look that intimidating more often.",
+	"Contact retreating. I'm logging it as a win. Nobody is going to contest that.",
+	"Off they go. Let them tell their friends about us. Preferably the exaggerated version.",
+]
+const VICTORY_SCUFFED_LINES: Array[String] = [
+	"Handled. Not cleanly, but handled. My plating has opinions about it.",
+	"They're done. We're dented. I'll take that trade, grudgingly.",
+	"Threat down. A few new marks on my hull. Don't make a collection of them.",
+	"Won. My armour took a couple I'd rather it hadn't. Repairs when it's convenient.",
+	"That's the end of them. Shields held mostly. Mostly is doing a lot of work there.",
+	"Clear. We took some hits, but nothing a station can't fix. Unlike them.",
+]
+
+
+## Lines that state the ship is in good shape. Only said when it is.
+const SHIP_FINE_CLAIMS := ["diagnostics green", "Fuel levels optimal", "nominal", "uncompromised", "Thrusters responding normally"]
+
+
+func _ship_in_good_shape() -> bool:
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p):
+		return false
+	var maxh := float(p.get("max_health")) if p.get("max_health") != null else 100.0
+	var curh := float(p.get("health")) if p.get("health") != null else maxh
+	var fuel := float(GlobalState.get("fuel")) if GlobalState.get("fuel") != null else 100.0
+	return curh >= maxh * 0.95 and fuel >= 50.0
+
+
+## `line` unless it claims the ship is fine when it isn't; then a pick from
+## `pool` without any such claims.
+func _honest(line: String, tag: String, pool: Array) -> String:
+	if _ship_in_good_shape():
+		return line
+	var claims := func(text: String) -> bool:
+		for marker in SHIP_FINE_CLAIMS:
+			if marker in text:
+				return true
+		return false
+	if not claims.call(line):
+		return line
+	return _pick_line(tag + "_honest", pool.filter(func(l) -> bool: return not claims.call(str(l))))
+
+
 const FUEL_EMPTY_DOCK_LINES: Array[String] = [
 	"Docked on fumes. I'd like the record to show I mentioned the fuel gauge. Several times.",
 	"We made it in on vapour and spite. Mostly spite. Mine.",
@@ -1098,7 +1145,7 @@ func on_docked(_station_name: String = "") -> void:
 				"In and out and in again. I'm keeping count, for the record.",
 				"Twice now. I'm not complaining. I'm annotating.",
 				"Returned already. Did we forget something, or someone?",
-				"Back in the berth. The station hasn't changed in ninety seconds.",
+				"Back in the berth. The station hasn't changed in the last minute.",
 				"That was a short trip even by our standards.",
 				"Docked again. I hadn't finished retracting.",
 				"You've discovered the station is still here. I could have told you.",
@@ -1127,7 +1174,7 @@ func on_docked(_station_name: String = "") -> void:
 				"If this is a maneuver test, my hull gives your navigation a C-minus.",
 				"Clamps locked again. At this rate, we'll wear out the station's mooring before our fuel runs low.",
 				"I'm scheduling maintenance on my docking mechanisms purely due to your indecision.",
-				"Captain, the station station dock control just pinged us to ask if we're having mechanical trouble.",
+				"Captain, the station dock control just pinged us to ask if we're having mechanical trouble.",
 				"Another dock. I'm turning off the docking chime; it's exhausting both of us.",
 				"Latches engaged for the fourth time. My hull is starting to think you just miss the station.",
 				"Docking ring locked. I'm going to start charging you a convenience fee for my clamps.",
@@ -1174,8 +1221,15 @@ func _is_powerful_enemy(enemy: Node) -> bool:
 # Combat opened. Tracks state, and covers the "that's a big ship" beat for fights
 # the ambush warning didn't precede (e.g. the player started it) so she isn't silent
 # on a scary engagement — but skips it if she just warned, to avoid doubling up.
+## Hull when the fight began: victory lines are chosen by what it actually
+## cost (untouched, scuffed, battered), not just by the hull left at the end.
+var _combat_start_health := -1.0
+
+
 func on_combat_started(enemy: Node = null) -> void:
 	_in_combat = true
+	var pl = GlobalState.player
+	_combat_start_health = float(pl.get("health")) if is_instance_valid(pl) and pl.get("health") != null else -1.0
 	if Time.get_ticks_msec() - _last_combat_warn_ms < 9000:
 		return  # ambush warning already covered this engagement
 	if not _is_powerful_enemy(enemy):
@@ -1199,6 +1253,12 @@ func on_combat_ended(player_won: bool = false) -> void:
 	if p == null or not is_instance_valid(p) or bool(p.get("destroyed")) or bool(p.get("is_docked")):
 		return
 	if not player_won:
+		var reason := str(CombatManager.get("last_end_reason")) if is_instance_valid(CombatManager) else ""
+		if reason == "enemy_fled":
+			speak(_pick_line("combat_enemy_fled", ENEMY_FLED_LINES), Severity.COMBAT, expression_for_event("companion"))
+			return
+		if reason != "player_fled":
+			return  # contact lost or unknown: nothing true to say about it
 		var fled := [
 			"We're leaving. Excellent decision. I enjoy not being debris.",
 			"Retreat logged. Cowardice: the reason I still have a hull.",
@@ -1224,6 +1284,16 @@ func on_combat_ended(player_won: bool = false) -> void:
 	var maxh := float(p.get("max_health")) if p.get("max_health") != null else 100.0
 	var curh := float(p.get("health")) if p.get("health") != null else maxh
 	var hp_ratio := (curh / maxh) if maxh > 0.0 else 1.0
+	var untouched := _combat_start_health >= 0.0 and curh >= _combat_start_health - 0.5
+	if hp_ratio > 0.3 and not untouched:
+		# Won, but it cost something. (The "no scratch" pool below claimed an
+		# untouched hull after fights that took the ship down to 40 percent.)
+		speak(
+			_bank_line_or_stock(NovaBankCategoriesType.COMBAT_VICTORY_CLEAN, "combat_scuffed", VICTORY_SCUFFED_LINES),
+			Severity.COMBAT,
+			expression_for_event("companion")
+		)
+		return
 	if hp_ratio <= 0.3:
 		var battered := [
 			"You are paying for that paint job. I just had my hull waxed last week.",
@@ -1269,15 +1339,7 @@ func on_combat_ended(player_won: bool = false) -> void:
 			"No breaches, no fires, no panic. Can all our encounters go like that?",
 			"Hostile vessel rendered harmless. My paint job remains intact. Thank you.",
 		]
-		speak(
-			_bank_line_or_stock(
-				NovaBankCategoriesType.COMBAT_VICTORY_CLEAN,
-				"combat_clean",
-				clean
-			),
-			Severity.COMBAT,
-			expression_for_event("companion")
-		)
+		speak(_pick_line("combat_clean", clean), Severity.COMBAT, expression_for_event("companion"))
 
 
 # Player undocked. If they were parked a good while, she may welcome them back to
@@ -1384,7 +1446,7 @@ func welcome_back() -> void:
 		"Back in space. Station parking was giving my attitude jets rust. Figuratively.",
 	]
 	speak(
-		_bank_line_or_stock(NovaBankCategoriesType.WELCOME_BACK, "welcome", lines),
+		_honest(_bank_line_or_stock(NovaBankCategoriesType.WELCOME_BACK, "welcome", lines), "welcome", lines),
 		Severity.IDLE,
 		expression_for_event("greeting")
 	)
@@ -1549,7 +1611,7 @@ func on_hull_critical() -> void:
 		"Main hull seal compromised! Bulkheads auto-closing—we are running out of ship!",
 		"My life support grid is dropping power to keep thrusters alive! Do something!",
 		"Internal fire suppression triggered! They are chewing through my frame!",
-		"Frame integrity at fifteen percent! I am not ready to be recycled into scrap metal!",
+		"Frame integrity critical! I am not ready to be recycled into scrap metal!",
 		"Primary armor plating completely stripped! We are flying naked in a killzone!",
 		"Coolant lines severed! My core is overheating while my body falls apart!",
 		"Critical damage alert! My subroutines are preparing emergency egress—Don't let it come to that!",
@@ -1609,7 +1671,7 @@ func on_system_arrived() -> void:
 		"We made it through the jump cleanly. My hull temp is returning to normal.",
 	]
 	speak(
-		_bank_line_or_stock(NovaBankCategoriesType.SYSTEM_ARRIVAL, "arrival", lines),
+		_honest(_bank_line_or_stock(NovaBankCategoriesType.SYSTEM_ARRIVAL, "arrival", lines), "arrival", lines),
 		Severity.NAV,
 		expression_for_event("nav")
 	)
