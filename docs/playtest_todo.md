@@ -350,3 +350,14 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
 - [ ] **Intercept payout banner.** Finish an ambient intercept (clean or
       partial, or let N.O.V.A. try): a gold REWARD banner shows
       "INTERCEPT SOLD · +N SC" with the sting, as well as the comms line.
+- [ ] **Step 3: the upgrade goal card (STOP AND SHOW).** Top right, under the
+      contract tracker (or in its place): "SUGGESTED GOAL · Shields Mk II
+      (Bulwark) · Ship Rating 5 → 6" with bars for credits, ore and
+      rad-quartz, and a hint for the first one that's short. Mine and bank ore,
+      earn credits, get rad-quartz: the bars fill live; with everything in hand
+      the card turns gold, "READY", "Ready: dock at a station and fit it."
+      On the upgrade screen every option has "Set as goal"; pick one and the
+      card switches to "YOUR GOAL" (that button shows "★ Current goal").
+      After fitting, the card suggests the next step on its own.
+      Note: on a stock powerplant, the second upgrade needs the Powerplant
+      first (the card says so with a red Power row).

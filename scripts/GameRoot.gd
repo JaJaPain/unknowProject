@@ -327,6 +327,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_wiki_snapshot")
 	elif "--intro-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_intro_snapshot")
+	elif "--goal-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_goal_smoke_test")
 	elif "--evasion-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_evasion_smoke_test")
 	elif "--landing-snapshot" in OS.get_cmdline_user_args():
@@ -10922,6 +10924,80 @@ func _run_perf_probe() -> void:
 	var vram := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576.0
 	print("PERF avg_fps=%.1f min_fps=%.1f max_draws=%d vram_mb=%.0f gpu=%s" % [
 		total / samples.size(), samples.min(), draws.max(), vram, RenderingServer.get_video_adapter_name()])
+	get_tree().quit()
+
+
+## Core loop step 3: the upgrade goal card. -- --goal-smoke-test --baseline-offline
+func _run_goal_smoke_test() -> void:
+	await get_tree().process_frame
+	for i in 20:
+		await get_tree().process_frame
+	var Goal = load("res://scripts/domain/UpgradeGoal.gd")
+	var Card = load("res://scripts/ui/UpgradeGoalCard.gd")
+	var saved_upgrades: Dictionary = GlobalState.current_upgrades.duplicate(true)
+	var saved_credits: int = GlobalState.player_credits
+	var saved_bank: float = GlobalState.player_storage_ore
+	for sys in GlobalState.current_upgrades:
+		GlobalState.current_upgrades[sys] = {"tier": 1, "path": "base"}
+	GlobalState.apply_upgrade_stats()
+	GlobalState.player_credits = 0
+	GlobalState.player_storage_ore = 0.0
+	GlobalState.inventory.remove("rad_quartz", GlobalState.inventory.get_quantity("rad_quartz"))
+	StoryManager.story_state.erase(Goal.GOAL_KEY)
+	var fail := func(message: String) -> void:
+		push_error("[GoalSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	# 1. A stock ship is pointed at the tutorial rung.
+	var goal: Dictionary = Card.current_goal()
+	if str(goal.get("sys", "")) != "shields" or int(goal.get("tier", 0)) != 2 or not bool(goal.get("auto", false)):
+		fail.call("A stock ship's suggested goal should be Shields Mk II: %s" % str(goal))
+		return
+	var ids: Array = Goal.rows(GlobalState, goal).map(func(r): return str(r["id"]))
+	if not ids.has("credits") or not ids.has("ore") or not ids.has("rad_quartz"):
+		fail.call("Shields Mk II should show credits, ore and rad-quartz rows: %s" % str(ids))
+		return
+	if Goal.is_ready(GlobalState, goal):
+		fail.call("The goal is ready with nothing in the bank.")
+		return
+	# 2. Everything in hand: ready.
+	var data: Dictionary = Goal.tier_data(GlobalState, goal)
+	GlobalState.player_credits = int(data["cost_cr"])
+	GlobalState.player_storage_ore = float(data["cost_ore"])
+	GlobalState.inventory.add("rad_quartz", int(GlobalState.upgrade_material_cost("shields", 2)["rad_quartz"]), 10)
+	if not Goal.is_ready(GlobalState, goal):
+		fail.call("The goal isn't ready with every cost covered: %s" % str(Goal.rows(GlobalState, goal)))
+		return
+	var ui = GlobalState.get_ui_manager()
+	if ui == null or ui.upgrade_goal_card == null:
+		fail.call("No goal card on the HUD.")
+		return
+	ui.upgrade_goal_card.refresh()
+	if not str(ui.upgrade_goal_card._title.text).begins_with("Shields Mk II") or not str(ui.upgrade_goal_card._tag.text).contains("READY"):
+		fail.call("The card doesn't show the ready Shields goal: '%s' / '%s'" % [ui.upgrade_goal_card._title.text, ui.upgrade_goal_card._tag.text])
+		return
+	# 3. The player's own pick replaces the suggestion.
+	Card.set_goal("weapons", "rapid", 2)
+	goal = Card.current_goal()
+	if str(goal.get("sys", "")) != "weapons" or bool(goal.get("auto", true)):
+		fail.call("Set as goal didn't stick: %s" % str(goal))
+		return
+	# 4. Fitted: the next suggestion is the weakest system.
+	Card.set_goal("shields", "bulwark", 2)
+	if not GlobalState.purchase_upgrade("shields", "bulwark"):
+		fail.call("Couldn't fit Shields Mk II with the costs covered.")
+		return
+	goal = Card.current_goal()
+	if not bool(goal.get("auto", false)) or int(goal.get("tier", 0)) != 2 or str(goal.get("sys", "")) == "shields":
+		fail.call("After fitting, the suggestion should be another system's Mk II: %s" % str(goal))
+		return
+	print("[GoalSmokeTest] PASS: Shields Mk II suggested on a stock ship, rows and READY state, own goal sticks, next suggestion after fitting (%s)." % Goal.title(goal))
+	GlobalState.current_upgrades = saved_upgrades
+	GlobalState.apply_upgrade_stats()
+	GlobalState.player_credits = saved_credits
+	GlobalState.player_storage_ore = saved_bank
+	StoryManager.story_state.erase(Goal.GOAL_KEY)
+	delete_savegame()
 	get_tree().quit()
 
 

@@ -684,6 +684,7 @@ func _process(delta):
 	_update_target_bars()
 	_update_ship_rating_label()
 	_poll_loose_end_rewards(delta)
+	_place_upgrade_goal_card()
 	if _ui_layout_manager:
 		_ui_layout_manager.enforce_layout()
 	if GlobalState.paused: return
@@ -853,6 +854,10 @@ func _create_hud():
 	quest_tracker_panel.custom_minimum_size = Vector2(380, 0)
 	quest_tracker_panel.position = Vector2(20, 220)
 	add_child(quest_tracker_panel)
+	# The upgrade goal card sits under the contract tracker (core loop step 3).
+	upgrade_goal_card = load("res://scripts/ui/UpgradeGoalCard.gd").new()
+	upgrade_goal_card.name = "UpgradeGoalCard"
+	add_child(upgrade_goal_card)
 
 	var tracker_style = StyleBoxFlat.new()
 	tracker_style.bg_color = Color(0.1, 0.1, 0.12, 0.6)
@@ -8270,6 +8275,26 @@ func _poll_loose_end_rewards(delta: float) -> void:
 		show_reward_banner("NEW LEAD", "Added to your Loose ends board (%d noticed). Check it on any station's job board." % count)
 		WikiType.unlock("loose_ends")
 	_known_loose_ends = count
+
+
+var upgrade_goal_card: PanelContainer = null
+
+
+## Under the contract tracker, right edges aligned; in its place when no
+## contract is up. Hidden whenever the HUD is (docked menus, cinematic).
+func _place_upgrade_goal_card() -> void:
+	if upgrade_goal_card == null or not is_instance_valid(upgrade_goal_card):
+		return
+	var hud_up: bool = hud_panel != null and is_instance_valid(hud_panel) and hud_panel.is_visible_in_tree()
+	if not hud_up:
+		upgrade_goal_card.modulate.a = 0.0
+		return
+	upgrade_goal_card.modulate.a = 1.0
+	var right := quest_tracker_panel.position.x + quest_tracker_panel.size.x
+	var top := quest_tracker_panel.position.y
+	if quest_tracker_panel.visible:
+		top += quest_tracker_panel.size.y + 8.0
+	upgrade_goal_card.position = Vector2(right - upgrade_goal_card.size.x, top)
 
 
 ## Gold banner at the top of the screen for something the player earned.
@@ -16638,6 +16663,7 @@ func _on_su_slot_pressed(slot: String) -> void:
 				btn.text += "\nTech-grade: " + first_parts
 			btn.pressed.connect(func(): _attempt_upgrade(slot, path))
 			su_ship_sys_vbox.add_child(btn)
+			_add_set_goal_button(slot, path, 2)
 	else:
 		su_ship_sys_lbl.text = "%s - Tier %d %s\n" % [slot.to_upper(), current_tier, current_path.capitalize()]
 		if is_max:
@@ -16654,6 +16680,7 @@ func _on_su_slot_pressed(slot: String) -> void:
 				btn.text += "\nTech-grade: " + parts
 			btn.pressed.connect(func(): _attempt_upgrade(slot, current_path))
 			su_ship_sys_vbox.add_child(btn)
+			_add_set_goal_button(slot, current_path, next_tier)
 			
 		var ref_btn = Button.new()
 		ref_btn.text = "Refund & Reset Path (50% Back)"
@@ -16697,6 +16724,27 @@ var _insufficient_materials_lines: Array = [
 var _materials_idx: int = 0
 const PremiseVoiceForTwists := preload("res://scripts/story/premise/VoiceDNA.gd")
 const DroneMazeActivityNames := preload("res://scripts/story/activities/DroneMazeActivity.gd")
+
+
+## "Set as goal" under an upgrade on the upgrade screen: the HUD goal card then
+## tracks it (core loop step 3). Shows as the current goal when it already is.
+func _add_set_goal_button(slot: String, path: String, tier: int) -> void:
+	var goal_card_type = load("res://scripts/ui/UpgradeGoalCard.gd")
+	var goal: Dictionary = goal_card_type.current_goal()
+	var is_goal := str(goal.get("sys", "")) == slot and str(goal.get("path", "")) == path \
+		and int(goal.get("tier", 0)) == tier and not bool(goal.get("auto", false))
+	var goal_btn := Button.new()
+	goal_btn.text = "★ Current goal" if is_goal else "Set as goal"
+	goal_btn.disabled = is_goal
+	goal_btn.tooltip_text = "Track this upgrade's costs on the HUD goal card while you fly."
+	HudStyle.style_flat(goal_btn, HudStyle.GOLD if is_goal else HudStyle.ACCENT, 12)
+	goal_btn.pressed.connect(func():
+		goal_card_type.set_goal(slot, path, tier)
+		if upgrade_goal_card != null and is_instance_valid(upgrade_goal_card):
+			upgrade_goal_card.refresh()
+		_on_su_slot_pressed(slot)
+	)
+	su_ship_sys_vbox.add_child(goal_btn)
 
 
 ## "2 Thermal Lattice (have 1), 1 Resonant Crystal (have 0)" for a tier, or "".

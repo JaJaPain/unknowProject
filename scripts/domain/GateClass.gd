@@ -12,7 +12,9 @@ extends RefCounted
 ## - There is no last class: past the table, classes and ratings continue by
 ##   formula (Abe: never fully upgraded, a never-ending story).
 
-## The systems that count. (Storage, sensors and power have no upgrade tree.)
+## The systems that count. Storage, sensors and power are support systems and
+## don't count: power is what lets the others run (an upgrade can be refused
+## for power draw), storage and sensors are conveniences.
 const RATED_SYSTEMS := ["weapons", "engine", "shields", "mining", "cargo"]
 ## A system counts for at most this many tiers above the weakest.
 const BREADTH_LEAD := 2
