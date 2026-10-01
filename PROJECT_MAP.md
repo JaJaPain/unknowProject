@@ -2464,24 +2464,174 @@ Root: `spacegame`
     - 📂 **content/**
       - 📄 [character_trait_axes.json](file:///D:/CodingProjects/spacegame/data/content/character_trait_axes.json)
       - 📄 [factions.json](file:///D:/CodingProjects/spacegame/data/content/factions.json)
+      - 📄 [failure_fallout.json](file:///D:/CodingProjects/spacegame/data/content/failure_fallout.json)
+      - 📂 **fetch_cards/**
+        - 📂 **approved/**
+          - 📄 [batch_01.json](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/approved/batch_01.json)
+          - 📄 [batch_02.json](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/approved/batch_02.json)
+          - 📄 [batch_03.json](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/approved/batch_03.json)
+          - 📄 [batch_04.json](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/approved/batch_04.json)
+          - 📄 [batch_05.json](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/approved/batch_05.json)
+          - 📄 [batch_06.json](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/approved/batch_06.json)
+        - 📂 **incoming/**
+          - 📄 [REVIEW_NOTES.md](file:///D:/CodingProjects/spacegame/data/content/fetch_cards/incoming/REVIEW_NOTES.md)
       - 📄 [fixed_cast_souls.json](file:///D:/CodingProjects/spacegame/data/content/fixed_cast_souls.json)
       - 📄 [fixed_cast_voice_examples.json](file:///D:/CodingProjects/spacegame/data/content/fixed_cast_voice_examples.json)
+      - 📄 [fuel_runs.json](file:///D:/CodingProjects/spacegame/data/content/fuel_runs.json)
+      - 📄 [item_rarity.json](file:///D:/CodingProjects/spacegame/data/content/item_rarity.json)
       - 📄 [llm_dialogue_content.json](file:///D:/CodingProjects/spacegame/data/content/llm_dialogue_content.json)
       - 📄 [local_pressure_tracks.json](file:///D:/CodingProjects/spacegame/data/content/local_pressure_tracks.json)
+      - 📄 [mission_complications.json](file:///D:/CodingProjects/spacegame/data/content/mission_complications.json)
       - 📄 [mission_shapes.json](file:///D:/CodingProjects/spacegame/data/content/mission_shapes.json)
+      - 📄 [mission_twists.json](file:///D:/CodingProjects/spacegame/data/content/mission_twists.json)
       - 📄 [npcs.json](file:///D:/CodingProjects/spacegame/data/content/npcs.json)
+      - 📄 [o2_runs.json](file:///D:/CodingProjects/spacegame/data/content/o2_runs.json)
       - 📄 [portrait_sheets.json](file:///D:/CodingProjects/spacegame/data/content/portrait_sheets.json)
+      - 📂 **premise_cards/**
+        - 📂 **approved/**
+          - 📄 [blood_money_escrow.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/blood_money_escrow.json)
+          - 📄 [dead_gate_patrol.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/dead_gate_patrol.json)
+          - 📄 [false_prophet.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/false_prophet.json)
+          - 📄 [forged_valor.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/forged_valor.json)
+          - 📄 [inherited_obligations.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/inherited_obligations.json)
+          - 📄 [oxygen_tax.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/oxygen_tax.json)
+          - 📄 [pilgrims_toll.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/pilgrims_toll.json)
+          - 📄 [quarantine_loophole.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/quarantine_loophole.json)
+          - 📄 [revoked_charter.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/revoked_charter.json)
+          - 📄 [salvage_registry.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/salvage_registry.json)
+          - 📄 [scrap_iron_memorial.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/scrap_iron_memorial.json)
+          - 📄 [stalled_pilgrims.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/stalled_pilgrims.json)
+          - 📄 [stolen_penance.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/stolen_penance.json)
+          - 📄 [the_abandoned_colony.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_abandoned_colony.json)
+          - 📄 [the_adopted_mine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_adopted_mine.json)
+          - 📄 [the_ancestral_sword.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_ancestral_sword.json)
+          - 📄 [the_asteroid_collision.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_asteroid_collision.json)
+          - 📄 [the_automated_scab.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_automated_scab.json)
+          - 📄 [the_black_hole_tithe.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_black_hole_tithe.json)
+          - 📄 [the_blood_debt.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_blood_debt.json)
+          - 📄 [the_botched_surgery.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_botched_surgery.json)
+          - 📄 [the_broken_oath.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_broken_oath.json)
+          - 📄 [the_broken_vow.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_broken_vow.json)
+          - 📄 [the_buried_saint.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_buried_saint.json)
+          - 📄 [the_calibration_scam.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_calibration_scam.json)
+          - 📄 [the_censored_history.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_censored_history.json)
+          - 📄 [the_chemical_spill.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_chemical_spill.json)
+          - 📄 [the_chosen_successor.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_chosen_successor.json)
+          - 📄 [the_code_of_silence.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_code_of_silence.json)
+          - 📄 [the_collapsing_mine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_collapsing_mine.json)
+          - 📄 [the_crooked_mechanic.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_crooked_mechanic.json)
+          - 📄 [the_dark_zone_relay.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_dark_zone_relay.json)
+          - 📄 [the_death_race.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_death_race.json)
+          - 📄 [the_defector_bounty.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_defector_bounty.json)
+          - 📄 [the_derelict_colony.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_derelict_colony.json)
+          - 📄 [the_derelict_quarantine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_derelict_quarantine.json)
+          - 📄 [the_deserters_sanctuary.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_deserters_sanctuary.json)
+          - 📄 [the_disputed_engine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_disputed_engine.json)
+          - 📄 [the_doomed_affair.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_doomed_affair.json)
+          - 📄 [the_double_agent.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_double_agent.json)
+          - 📄 [the_dying_star_archive.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_dying_star_archive.json)
+          - 📄 [the_empty_casket.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_empty_casket.json)
+          - 📄 [the_empty_vow.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_empty_vow.json)
+          - 📄 [the_exiled_prophet.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_exiled_prophet.json)
+          - 📄 [the_failing_sensor_net.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_failing_sensor_net.json)
+          - 📄 [the_fake_news_drone.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_fake_news_drone.json)
+          - 📄 [the_false_alarm_quarantine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_false_alarm_quarantine.json)
+          - 📄 [the_false_relic.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_false_relic.json)
+          - 📄 [the_falsified_star.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_falsified_star.json)
+          - 📄 [the_forged_masterpiece.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_forged_masterpiece.json)
+          - 📄 [the_forgotten_monument.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_forgotten_monument.json)
+          - 📄 [the_forgotten_oath.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_forgotten_oath.json)
+          - 📄 [the_frozen_convoy.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_frozen_convoy.json)
+          - 📄 [the_gladiator_pit.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_gladiator_pit.json)
+          - 📄 [the_gladiators_debt.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_gladiators_debt.json)
+          - 📄 [the_grave_robbers.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_grave_robbers.json)
+          - 📄 [the_gravity_tomb.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_gravity_tomb.json)
+          - 📄 [the_heaviest_crown.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_heaviest_crown.json)
+          - 📄 [the_hermit_hoard.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_hermit_hoard.json)
+          - 📄 [the_honorable_thief.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_honorable_thief.json)
+          - 📄 [the_honour_debt.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_honour_debt.json)
+          - 📄 [the_hull_breach.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_hull_breach.json)
+          - 📄 [the_ice_famine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_ice_famine.json)
+          - 📄 [the_indentured_engine.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_indentured_engine.json)
+          - 📄 [the_last_rites.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_last_rites.json)
+          - 📄 [the_last_surrender.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_last_surrender.json)
+          - 📄 [the_lost_masterpiece.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_lost_masterpiece.json)
+          - 📄 [the_loyalty_test.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_loyalty_test.json)
+          - 📄 [the_manufactured_hero.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_manufactured_hero.json)
+          - 📄 [the_melting_reactor.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_melting_reactor.json)
+          - 📄 [the_minefield_harvest.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_minefield_harvest.json)
+          - 📄 [the_mutiny_in_the_dark.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_mutiny_in_the_dark.json)
+          - 📄 [the_orphan_cargo.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_orphan_cargo.json)
+          - 📄 [the_pacifist_mercenary.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_pacifist_mercenary.json)
+          - 📄 [the_perpetual_audit.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_perpetual_audit.json)
+          - 📄 [the_phantom_fleet.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_phantom_fleet.json)
+          - 📄 [the_phantom_manifest.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_phantom_manifest.json)
+          - 📄 [the_phantom_regiment.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_phantom_regiment.json)
+          - 📄 [the_plagiarized_equation.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_plagiarized_equation.json)
+          - 📄 [the_plague_cure.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_plague_cure.json)
+          - 📄 [the_poisoned_chalice.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_poisoned_chalice.json)
+          - 📄 [the_prodigal_debt.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_prodigal_debt.json)
+          - 📄 [the_promised_land.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_promised_land.json)
+          - 📄 [the_propaganda_film.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_propaganda_film.json)
+          - 📄 [the_pulsar_cache.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_pulsar_cache.json)
+          - 📄 [the_quarantined_convoy.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_quarantined_convoy.json)
+          - 📄 [the_reactor_meltdown.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_reactor_meltdown.json)
+          - 📄 [the_recycled_ships.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_recycled_ships.json)
+          - 📄 [the_rigged_race.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_rigged_race.json)
+          - 📄 [the_runaway_bride.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_runaway_bride.json)
+          - 📄 [the_sabotaged_shift.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_sabotaged_shift.json)
+          - 📄 [the_sanctuary_ship.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_sanctuary_ship.json)
+          - 📄 [the_smear_campaign.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_smear_campaign.json)
+          - 📄 [the_smugglers_pension.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_smugglers_pension.json)
+          - 📄 [the_smugglers_tithe.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_smugglers_tithe.json)
+          - 📄 [the_smugglers_toll.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_smugglers_toll.json)
+          - 📄 [the_space_madness.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_space_madness.json)
+          - 📄 [the_stolen_bloodline.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_bloodline.json)
+          - 📄 [the_stolen_composition.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_composition.json)
+          - 📄 [the_stolen_medals.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_medals.json)
+          - 📄 [the_stolen_pension.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_pension.json)
+          - 📄 [the_stolen_sentence.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_sentence.json)
+          - 📄 [the_stolen_symphony.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_symphony.json)
+          - 📄 [the_stolen_thesis.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_thesis.json)
+          - 📄 [the_stolen_tickets.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_tickets.json)
+          - 📄 [the_stolen_valor.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stolen_valor.json)
+          - 📄 [the_stowaway_assassin.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_stowaway_assassin.json)
+          - 📄 [the_strikebreaker_blockade.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_strikebreaker_blockade.json)
+          - 📄 [the_syndicate_truce.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_syndicate_truce.json)
+          - 📄 [the_thiefs_apprentice.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_thiefs_apprentice.json)
+          - 📄 [the_toll_road.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_toll_road.json)
+          - 📄 [the_toxic_spill.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_toxic_spill.json)
+          - 📄 [the_unexploded_legacy.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_unexploded_legacy.json)
+          - 📄 [the_unsteady_truce.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_unsteady_truce.json)
+          - 📄 [the_whistleblower_cache.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_whistleblower_cache.json)
+          - 📄 [the_widows_war.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_widows_war.json)
+          - 📄 [the_will_and_testament.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_will_and_testament.json)
+          - 📄 [the_withheld_payout.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/the_withheld_payout.json)
+          - 📄 [underwater_insurance.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/underwater_insurance.json)
+          - 📄 [worthless_scrip.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/approved/worthless_scrip.json)
+        - 📂 **incoming/**
+          - 📄 [REVIEW_NOTES.md](file:///D:/CodingProjects/spacegame/data/content/premise_cards/incoming/REVIEW_NOTES.md)
+          - 📄 [batch_27_crime_and_its_codes.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/incoming/batch_27_crime_and_its_codes.json)
+        - 📂 **superseded/**
+          - 📄 [batch_02_law_and_bureaucracy.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/superseded/batch_02_law_and_bureaucracy.json)
+          - 📄 [retired_2026_09_24_round6.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/superseded/retired_2026_09_24_round6.json)
+          - 📄 [retired_the_quarantine_breach.json](file:///D:/CodingProjects/spacegame/data/content/premise_cards/superseded/retired_the_quarantine_breach.json)
+      - 📄 [prop_items.json](file:///D:/CodingProjects/spacegame/data/content/prop_items.json)
       - 📄 [quiet_moment_beats.json](file:///D:/CodingProjects/spacegame/data/content/quiet_moment_beats.json)
       - 📄 [ship_designs.json](file:///D:/CodingProjects/spacegame/data/content/ship_designs.json)
       - 📄 [store_items.json](file:///D:/CodingProjects/spacegame/data/content/store_items.json)
       - 📄 [store_layouts.json](file:///D:/CodingProjects/spacegame/data/content/store_layouts.json)
       - 📄 [taunt_lines.json](file:///D:/CodingProjects/spacegame/data/content/taunt_lines.json)
+      - 📄 [undercurrent_lines.json](file:///D:/CodingProjects/spacegame/data/content/undercurrent_lines.json)
       - 📄 [voice_provider_kokoro.json](file:///D:/CodingProjects/spacegame/data/content/voice_provider_kokoro.json)
       - 📄 [voices.json](file:///D:/CodingProjects/spacegame/data/content/voices.json)
+      - 📄 [wiki_entries.json](file:///D:/CodingProjects/spacegame/data/content/wiki_entries.json)
     - 📂 **systems/**
       - 📄 [system_registry.json](file:///D:/CodingProjects/spacegame/data/systems/system_registry.json)
   - 📂 **docs/**
     - 📄 [GateMalfunctionWTF.md](file:///D:/CodingProjects/spacegame/docs/GateMalfunctionWTF.md)
+    - 📄 [arc_engine_design.md](file:///D:/CodingProjects/spacegame/docs/arc_engine_design.md)
+    - 📄 [art_batch_2026_09_29.json](file:///D:/CodingProjects/spacegame/docs/art_batch_2026_09_29.json)
     - 📄 [assets_metadata_notes.md](file:///D:/CodingProjects/spacegame/docs/assets_metadata_notes.md)
     - 📄 [attack_mission_flow.md](file:///D:/CodingProjects/spacegame/docs/attack_mission_flow.md)
     - 📄 [audit_boost_thruster.md](file:///D:/CodingProjects/spacegame/docs/audit_boost_thruster.md)
@@ -2498,13 +2648,18 @@ Root: `spacegame`
     - 📄 [claude_handoff_to_codex_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/claude_handoff_to_codex_2026_09_12.md)
     - 📄 [combat_overhaul_plan.md](file:///D:/CodingProjects/spacegame/docs/combat_overhaul_plan.md)
     - 📄 [controller_focus_notes.md](file:///D:/CodingProjects/spacegame/docs/controller_focus_notes.md)
+    - 📄 [core_loop_plan_2026_10_01.md](file:///D:/CodingProjects/spacegame/docs/core_loop_plan_2026_10_01.md)
     - 📄 [critic_fix_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/critic_fix_2026_09_12.md)
     - 📄 [design_end_goal.md](file:///D:/CodingProjects/spacegame/docs/design_end_goal.md)
     - 📄 [design_narrative_system.md](file:///D:/CodingProjects/spacegame/docs/design_narrative_system.md)
     - 📄 [design_parking_lot.md](file:///D:/CodingProjects/spacegame/docs/design_parking_lot.md)
     - 📄 [design_station_lounge_social.md](file:///D:/CodingProjects/spacegame/docs/design_station_lounge_social.md)
     - 📄 [desire_coherence_2026_09_12.md](file:///D:/CodingProjects/spacegame/docs/desire_coherence_2026_09_12.md)
+    - 📄 [fresh_eyes_vision_plan_2026_09_23.md](file:///D:/CodingProjects/spacegame/docs/fresh_eyes_vision_plan_2026_09_23.md)
     - 📄 [future_contacts.md](file:///D:/CodingProjects/spacegame/docs/future_contacts.md)
+    - 📂 **gemini_prompts/**
+      - 📄 [fetch_card_prompt.md](file:///D:/CodingProjects/spacegame/docs/gemini_prompts/fetch_card_prompt.md)
+      - 📄 [premise_card_prompt.md](file:///D:/CodingProjects/spacegame/docs/gemini_prompts/premise_card_prompt.md)
     - 📄 [handoff_anomalies_bounties.md](file:///D:/CodingProjects/spacegame/docs/handoff_anomalies_bounties.md)
     - 📄 [handoff_claude_gemini_campaign_completion_2026_09_14.md](file:///D:/CodingProjects/spacegame/docs/handoff_claude_gemini_campaign_completion_2026_09_14.md)
     - 📄 [handoff_dialogue_alignment.md](file:///D:/CodingProjects/spacegame/docs/handoff_dialogue_alignment.md)
@@ -2513,6 +2668,9 @@ Root: `spacegame`
     - 📄 [handoff_next.md](file:///D:/CodingProjects/spacegame/docs/handoff_next.md)
     - 📄 [handoff_pickup_quest.md](file:///D:/CodingProjects/spacegame/docs/handoff_pickup_quest.md)
     - 📄 [handoff_segment5_map_rework.md](file:///D:/CodingProjects/spacegame/docs/handoff_segment5_map_rework.md)
+    - 📄 [image_generation_prompt.md](file:///D:/CodingProjects/spacegame/docs/image_generation_prompt.md)
+    - 📄 [image_needs.json](file:///D:/CodingProjects/spacegame/docs/image_needs.json)
+    - 📄 [implementation_log.md](file:///D:/CodingProjects/spacegame/docs/implementation_log.md)
     - 📄 [investigation_board_lifecycle_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/investigation_board_lifecycle_2026_09_13.md)
     - 📄 [investigation_playable_loop_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/investigation_playable_loop_2026_09_13.md)
     - 📄 [investigation_runtime_2026_09_13.md](file:///D:/CodingProjects/spacegame/docs/investigation_runtime_2026_09_13.md)
@@ -2520,11 +2678,13 @@ Root: `spacegame`
     - 📄 [known_harmless_warnings.md](file:///D:/CodingProjects/spacegame/docs/known_harmless_warnings.md)
     - 📄 [llm_dialogue_content_editing.md](file:///D:/CodingProjects/spacegame/docs/llm_dialogue_content_editing.md)
     - 📄 [long_term_campaign_architecture.md](file:///D:/CodingProjects/spacegame/docs/long_term_campaign_architecture.md)
+    - 📄 [music_needs.json](file:///D:/CodingProjects/spacegame/docs/music_needs.json)
     - 📂 **narrative/**
       - 📂 **character_souls/**
         - 📄 [KAELEN.md](file:///D:/CodingProjects/spacegame/docs/narrative/character_souls/KAELEN.md)
         - 📄 [NOVA.md](file:///D:/CodingProjects/spacegame/docs/narrative/character_souls/NOVA.md)
     - 📄 [narrative_baseline_2026-07-10.md](file:///D:/CodingProjects/spacegame/docs/narrative_baseline_2026-07-10.md)
+    - 📄 [next_level_plan_2026_09_29.md](file:///D:/CodingProjects/spacegame/docs/next_level_plan_2026_09_29.md)
     - 📄 [p3_corrections_2026_09_14.md](file:///D:/CodingProjects/spacegame/docs/p3_corrections_2026_09_14.md)
     - 📄 [phase_0_baseline_checks.md](file:///D:/CodingProjects/spacegame/docs/phase_0_baseline_checks.md)
     - 📄 [phase_0_baseline_plan.md](file:///D:/CodingProjects/spacegame/docs/phase_0_baseline_plan.md)
@@ -2568,6 +2728,7 @@ Root: `spacegame`
     - 📄 [plan_screenshot_triggers.md](file:///D:/CodingProjects/spacegame/docs/plan_screenshot_triggers.md)
     - 📄 [plan_visual_effects.md](file:///D:/CodingProjects/spacegame/docs/plan_visual_effects.md)
     - 📄 [playtest_checklist.md](file:///D:/CodingProjects/spacegame/docs/playtest_checklist.md)
+    - 📄 [playtest_todo.md](file:///D:/CodingProjects/spacegame/docs/playtest_todo.md)
     - 📄 [polish_notes_misc.md](file:///D:/CodingProjects/spacegame/docs/polish_notes_misc.md)
     - 📄 [problem_critic_always_passes.md](file:///D:/CodingProjects/spacegame/docs/problem_critic_always_passes.md)
     - 📄 [procedural_campaign_uniqueness_plan.md](file:///D:/CodingProjects/spacegame/docs/procedural_campaign_uniqueness_plan.md)
@@ -2852,6 +3013,7 @@ Root: `spacegame`
       - `func generate_for_system(system_id: String, scene_parent: Node3D) -> void`
       - `func mark_activated(anomaly_id: String) -> void`
       - `func clear() -> void`
+      - `static func search_zone(spot: Vector3) -> String`
       - `func get_arrival_rumor() -> Dictionary`
       - `func _rng_for_system(system_id: String) -> RandomNumberGenerator`
       - `func _anomaly_id(system_id: String, index: int) -> String`
@@ -2860,6 +3022,9 @@ Root: `spacegame`
       - `func _fallback_table() -> Array`
     - 📄 [AnomalyRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/AnomalyRegistry.gd.uid)
     - 📄 [Asteroid.gd](file:///D:/CodingProjects/spacegame/scripts/Asteroid.gd)
+      - `static func ore_type_for(id: String, mix: Dictionary) -> String`
+      - `static func is_tech_seam_id(id: String) -> bool`
+      - `static func guaranteed_tech_seam_id(ids: Array) -> String`
       - `func _ready()`
       - `func _physics_process(delta: float)`
       - `func _update_lod(delta: float, force_full_detail: bool) -> void`
@@ -2906,6 +3071,14 @@ Root: `spacegame`
       - `func stop_broken_gate_ambience() -> void`
       - `func resume_music_after_broken_gate() -> void`
       - `func _on_bgm_finished()`
+      - `func set_music_state(state: String) -> void`
+      - `func _play_state_track(streams: Array, crossfade: bool) -> void`
+      - `func _crossfade_to(stream: AudioStream) -> void`
+      - `func _state_streams(state: String) -> Array`
+      - `func _process(delta: float) -> void`
+      - `func _update_tension(delta: float) -> void`
+      - `func _connect_music_events() -> void`
+      - `func play_stinger(stinger_id: String) -> void`
       - `func enter_lounge_music() -> void`
       - `func exit_lounge_music() -> void`
       - `func enter_landing_music() -> void`
@@ -2962,8 +3135,11 @@ Root: `spacegame`
       - `func get_active_system_root() -> Node3D`
       - `func can_begin_jump() -> bool`
       - `func get_jump_block_reason(gate: Node3D) -> String`
+      - `func jump_fuel_cost(gate: Node3D) -> float`
       - `func request_gate_jump(gate: Node3D) -> bool`
       - `func _change_system(destination_system_id: String, arrival_gate_id: String) -> void`
+      - `func _hold_jump_for_writing() -> void`
+      - `func _jump_writing_pending() -> bool`
       - `func _find_gate(system_root: Node3D, gate_id: String) -> Node3D`
       - `func _find_gate_in_tree(node: Node, gate_id: String) -> Node3D`
       - `func _prepare_player_for_system_change() -> void`
@@ -2988,6 +3164,32 @@ Root: `spacegame`
       - `func _system_story_pack_for_definition(sys_def: SystemDefinition) -> Dictionary`
       - `func _human_join(values: Array[String]) -> String`
       - `func _init_ship_behavior_observer() -> void`
+      - `func _init_undercurrent_director() -> void`
+      - `func consume_undercurrent_death_moment() -> Dictionary`
+      - `func _init_premise_director() -> void`
+      - `func _on_generation_window_opened(reason: String) -> void`
+      - `func _premise_radio_tick() -> void`
+      - `func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> void`
+      - `func _on_premise_season_closed(_season: int, _resolution_id: String) -> void`
+      - `func _premise_sync_seed() -> void`
+      - `func _refresh_local_faction_looks() -> void`
+      - `func _premise_on_system_arrived() -> void`
+      - `func premise_board_postings() -> Array`
+      - `func premise_pending_decisions() -> Array`
+      - `func premise_apply_decision(arc_id: String, option_id: String) -> void`
+      - `func premise_main_story_threads() -> Array`
+      - `func premise_main_story_summary() -> Dictionary`
+      - `func premise_pin_thread(thread_id: String, pinned: bool) -> void`
+      - `func _on_premise_decision_ready(_arc_id: String, _decision: Dictionary) -> void`
+      - `func _on_premise_quest_completed(quest_data: Dictionary) -> void`
+      - `func _on_premise_quest_abandoned(quest_data: Dictionary) -> void`
+      - `func _on_premise_quest_expired(quest_data: Dictionary) -> void`
+      - `func _on_reveal_twist_for_leverage(mission_data: Dictionary) -> void`
+      - `func premise_leverage_items() -> Array`
+      - `func premise_use_leverage(entry_id: String, how: String) -> Dictionary`
+      - `func _premise_terminal(quest_data: Dictionary, terminal_state: String) -> void`
+      - `func _record_failure_fallout(quest_data: Dictionary, terminal_state: String) -> void`
+      - `func _refresh_fallout_environment() -> void`
       - `func _init_quiet_moment_director() -> void`
       - `func _on_quiet_moment_combat_ended(player_won: bool) -> void`
       - `func _on_quiet_moment_cargo_changed(new_cargo: float) -> void`
@@ -3165,6 +3367,9 @@ Root: `spacegame`
       - `func _verify_next_outbound_rumor_and_map() -> bool`
       - `func _verify_infinite_generated_system(return_gate: Node3D) -> bool`
       - `func _verify_generated_test_system(return_gate: Node3D) -> bool`
+      - `func _run_hud_snapshot() -> void`
+      - `func _run_dock_snapshot() -> void`
+      - `func _hud_snapshot_save(path: String) -> void`
       - `func _run_core_smoke_test() -> void`
       - `func _run_performance_baseline() -> void`
       - `func _capture_performance_sample(label: String, duration_seconds: float) -> Dictionary`
@@ -3198,9 +3403,24 @@ Root: `spacegame`
       - `func _fail_dock_smoke_test(message: String) -> void`
       - `func _fail_core_smoke_test(message: String) -> void`
       - `func _position_player_for_gate_test(gate: Node3D) -> void`
+      - `func _run_first_session_smoke_test() -> void`
+      - `func _run_traffic_smoke_test() -> void`
+      - `func _run_loading_snapshot() -> void`
+      - `func _run_beacon_snapshot() -> void`
+      - `func _run_wiki_snapshot() -> void`
+      - `func _run_intro_snapshot() -> void`
+      - `func _run_landing_snapshot() -> void`
+      - `func _run_perf_probe() -> void`
+      - `func _run_gallery_snapshot() -> void`
+      - `func _run_goal_smoke_test() -> void`
+      - `func _run_evasion_smoke_test() -> void`
+      - `func _fail_evasion_smoke_test(message: String) -> void`
+      - `func _live_buttons(container: Node) -> Array`
+      - `func _fail_first_session_smoke_test(message: String) -> void`
       - `func _fail_jump_smoke_test(message: String) -> void`
       - `func _run_save_smoke_assertions() -> bool`
       - `func _run_public_board_smoke_test() -> void`
+      - `func _check_fetch_offers_for_smoke() -> String`
       - `func _fail_public_board_smoke_test(message: String) -> void`
       - `func _profile_role_key(role: String) -> String`
       - `func _debug_spawn_boss() -> void`
@@ -3233,6 +3453,7 @@ Root: `spacegame`
       - `static func get_station_mechanic_voice(outpost_id: String) -> String`
       - `func get_delivery_recipient(station_id: String, assigned_name: String = "") -> Dictionary`
       - `static func get_minor_npcs_at_outpost(outpost_id: String) -> Array`
+      - `static func _contact_person_taken(person: String) -> bool`
       - `static func _system_id_from_station_id(station_id: String) -> String`
       - `static func _generated_contact_humor_style(role: String, faction_name: String) -> String`
       - `static func _generated_contact_faction_keys(faction_weights: Dictionary) -> Array`
@@ -3251,16 +3472,33 @@ Root: `spacegame`
       - `static func get_other_flavor_lines_for_npc(npc_name: String, just_played: String) -> Array`
       - `func add_credits(amount: int) -> void`
       - `func spend_credits(amount: int) -> void`
+      - `func is_fuel_empty() -> bool`
+      - `func sip_fuel(amount: float) -> void`
+      - `func spend_fuel(amount: float) -> bool`
+      - `func refine_ice_to_fuel() -> float`
+      - `func fuel_blocks_possible() -> int`
+      - `func fabricate_fuel_blocks() -> int`
+      - `func o2_canisters_possible() -> int`
+      - `func compress_o2_canisters() -> int`
+      - `func no_jump_item() -> String`
+      - `func buy_fuel_to_full() -> float`
+      - `func cargo_ore_mix() -> Dictionary`
+      - `func storage_ore_mix() -> Dictionary`
+      - `func cargo_ore_amount(ore_type: String) -> float`
+      - `func deliverable_ore(ore_type: String) -> float`
+      - `func hand_over_delivery(amount: float, ore_type: String) -> float`
+      - `func cargo_ore_value(rate: float = 1.0) -> int`
       - `func normalize_cargo_state() -> void`
       - `func can_accept_ore() -> bool`
       - `func can_accept_special() -> bool`
-      - `func add_ore(amount: float) -> float`
-      - `func remove_ore(amount: float) -> float`
+      - `func add_ore(amount: float, ore_type: String = "silicate") -> float`
+      - `func remove_ore(amount: float, ore_type: String = "") -> float`
       - `func clear_cargo() -> void`
       - `static func roll_pickup_offer() -> Dictionary`
       - `func buyback_price_per_m3() -> float`
       - `func buyback_ore_at_outpost() -> int`
       - `func cargo_display_text() -> String`
+      - `func environment_value(key: String, default_value: Variant) -> Variant`
       - `func clear_intro_tutorial_player_protection() -> void`
       - `func is_intro_tutorial_player_protection_active() -> bool`
       - `func emit_ship_movement_event(event_id: String, context: Dictionary = {}) -> bool`
@@ -3293,6 +3531,8 @@ Root: `spacegame`
       - `func next_nova_repair_warning_index(band: String, pool_size: int) -> int`
       - `func apply_upgrade_stats()`
       - `func get_current_power_draw() -> float`
+      - `static func upgrade_material_cost(sys: String, tier: int) -> Dictionary`
+      - `func has_upgrade_materials(sys: String, tier: int) -> bool`
       - `func purchase_upgrade(sys: String, path: String) -> bool`
       - `func refund_upgrade(sys: String)`
       - `func deposit_ore(amount: float) -> bool`
@@ -3425,6 +3665,8 @@ Root: `spacegame`
       - `func _reconcile_ore_amount(quest_data: Dictionary, dialogue: String, obj: Dictionary)`
       - `func _trigger_fallback_with_reason(reason: String) -> void`
       - `func _trigger_fallback()`
+      - `func _factions_in_current_system() -> Array`
+      - `func _fallback_target_present(template: Dictionary, present_factions: Array) -> bool`
       - `func get_chatter_line(type: String, context: Dictionary = {}) -> String`
       - `func _build_chatter_context(extra: Dictionary = {}) -> Dictionary`
       - `func fetch_chatter_background(type: String, context: Dictionary = {})`
@@ -3588,8 +3830,10 @@ Root: `spacegame`
       - `func _create_nose_raycast() -> void`
       - `func sync_camera_to_ship() -> void`
       - `func _on_combat_started_orbit(enemy: Node) -> void`
-      - `func _on_planning_started_orbit(_ap: int, _max: int, _intent: Dictionary, _taunts: Dictionary) -> void`
+      - `func _on_planning_started_orbit(_ap: int, _max: int, _intent: Dictionary, _taunts: Dictionary, _npc_plan: Array = []) -> void`
       - `func _enter_orbit(enemy: Node) -> void`
+      - `func begin_docking_camera(station: Node3D) -> void`
+      - `func end_docking_camera() -> void`
       - `func _on_combat_ended_orbit(_won: bool) -> void`
       - `func _release_mouse_capture() -> void`
       - `func _on_action_telegraphed_cam(action_type: int, source: Node, target: Node) -> void`
@@ -3603,6 +3847,7 @@ Root: `spacegame`
       - `func _end_drone_pov() -> void`
       - `func _frame_action(source: Node, target: Node, flip: bool = false) -> void`
       - `func _process(delta: float) -> void`
+      - `func _update_boost_feel(delta: float) -> void`
       - `func _find_safe_orbit_radius(enemy: Node, ship_sep: float) -> float`
       - `func _cam_pos_clear(space: PhysicsDirectSpaceState3D, excl: Array, pos: Vector3, targets: Array) -> bool`
       - `func _on_target_changed(new_target: Node3D)`
@@ -3679,6 +3924,7 @@ Root: `spacegame`
     - 📄 [PlayerShip.gd.uid](file:///D:/CodingProjects/spacegame/scripts/PlayerShip.gd.uid)
     - 📄 [Projectile.gd](file:///D:/CodingProjects/spacegame/scripts/Projectile.gd)
       - `func _ready()`
+      - `func _aim_and_flash() -> void`
       - `func _physics_process(delta: float)`
       - `func _on_body_entered(body: Node)`
     - 📄 [Projectile.gd.uid](file:///D:/CodingProjects/spacegame/scripts/Projectile.gd.uid)
@@ -3687,6 +3933,13 @@ Root: `spacegame`
       - `func cancel_investigation_scan() -> void`
       - `func dispatch_investigation_command(command: Dictionary) -> Dictionary`
       - `func _physics_process(delta: float) -> void`
+      - `func spawn_investigation_ambush(mission_id: String, at: Vector3) -> void`
+      - `func _tick_ambush(delta: float) -> void`
+      - `func spawn_raiders(at: Vector3, count: int, tag: String, radius: float = 160.0) -> int`
+      - `func _tick_reveal_twist(delta: float) -> void`
+      - `func _tick_race(focused, delta: float) -> void`
+      - `func _tick_law_run(focused, delta: float) -> void`
+      - `func resolve_reveal_twist(choice: String) -> void`
       - `func reconcile_investigation_sites() -> void`
       - `func investigation_site_target(mission_id: String, site_id: String) -> Node3D`
       - `func investigation_revealed_sites(mission_id: String) -> Array`
@@ -3805,8 +4058,10 @@ Root: `spacegame`
       - `func cast_stream_for(character: String, clean_text: String) -> AudioStream`
       - `func orpheus_taunt_stream_for(lead_voice: String, clean_text: String) -> AudioStream`
       - `func _load_baked_manifest() -> void`
+      - `func _ensure_comms_bus() -> void`
       - `func play_dialogue_audio(text: String, voice_id_override: Variant = "neutral", speed_override: float = -1.0, style_scale: float = 1.0, pause_seconds: float = -1.0)`
-      - `func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0, style_scale: float = 1.0)`
+      - `func urgent_cache_pending() -> int`
+      - `func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral", speed: float = -1.0, style_scale: float = 1.0, urgent: bool = false)`
       - `func _drain_cache_queue() -> void`
       - `func _is_known_faction(s: String) -> bool`
       - `func clean_dialogue_text(text: String) -> String`
@@ -3817,6 +4072,11 @@ Root: `spacegame`
       - `func _on_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray)`
       - `func load_wav_from_buffer(bytes: PackedByteArray) -> AudioStreamWAV`
       - `func _discover_and_verify_tts()`
+      - `func _take_ownership_of_tts_server() -> void`
+      - `func _stop_leftover_tts_servers() -> int`
+      - `func _stop_owned_tts_server() -> void`
+      - `func _notification(what: int) -> void`
+      - `func _exit_tree() -> void`
       - `func _launch_tts_server_process()`
       - `func _resolve_python_launcher() -> Dictionary`
       - `func _resolve_python_executable(candidate: String) -> String`
@@ -3844,6 +4104,7 @@ Root: `spacegame`
       - `func _create_hud()`
       - `func _create_target_panel()`
       - `func _create_overview()`
+      - `func _hud_command_button(text: String, key: String) -> Button`
       - `func _create_overview_filter_button(icon: String, tooltip: String, callback: Callable) -> Button`
       - `func _on_overview_mission_targets_pressed() -> void`
       - `func _on_overview_ships_pressed() -> void`
@@ -3862,6 +4123,9 @@ Root: `spacegame`
       - `func _create_context_menu()`
       - `func _create_pause_menu()`
       - `func _make_pause_card(title_text: String) -> PanelContainer`
+      - `func open_gallery() -> void`
+      - `func open_wiki() -> void`
+      - `func refresh_wiki_button() -> void`
       - `func _maybe_show_combat_tutorial() -> void`
       - `func _show_combat_tutorial_popup(_from_pause: bool = false) -> void`
       - `func _add_bloom_row(parent: Control) -> void`
@@ -3896,6 +4160,8 @@ Root: `spacegame`
       - `func _on_target_icon_gui_input(event: InputEvent)`
       - `func _on_credits_changed(new_credits: int)`
       - `func _on_campaign_time_changed(_total_minutes: int) -> void`
+      - `func _on_fuel_changed(new_fuel: float) -> void`
+      - `func _set_fuel_flashing(on: bool) -> void`
       - `func _on_cargo_changed(new_cargo: float)`
       - `func _on_pause_changed(is_paused: bool)`
       - `func begin_docking_procedure(station: Node3D, ship: Node3D) -> void`
@@ -3906,10 +4172,19 @@ Root: `spacegame`
       - `func _ensure_docking_procedure_panel() -> void`
       - `func _ensure_station_welcome_overlay() -> void`
       - `func _show_station_welcome(station: Node3D, is_outpost: bool) -> void`
-      - `func _release_station_welcome(serial: int) -> void`
+      - `func _release_station_welcome(serial: int, force: bool = false) -> void`
       - `func _dismiss_station_welcome() -> void`
       - `func _reveal_dock_panel() -> void`
       - `func _render_dock_submenu() -> void`
+      - `func _style_hub_buttons() -> void`
+      - `func show_system_title_card() -> void`
+      - `func _ship_standing(ship: Node) -> String`
+      - `func _gate_access(gate: Node) -> Dictionary`
+      - `func _build_ship_rating_label() -> void`
+      - `func _update_ship_rating_label() -> void`
+      - `func _update_target_bars() -> void`
+      - `func flash_damage(fraction: float, shield: bool) -> void`
+      - `func _update_dock_subtitle() -> void`
       - `func _set_dock_panel_lounge_layout(use_lounge_layout: bool) -> void`
       - `func _maybe_show_station_climate() -> void`
       - `func _render_bounty_board(should_show: bool) -> void`
@@ -4010,20 +4285,28 @@ Root: `spacegame`
       - `func _on_station_lounge_pressed() -> void`
       - `func _on_back_to_services_pressed() -> void`
       - `func _on_public_board_pressed() -> void`
+      - `func _refresh_loose_ends_button() -> void`
+      - `func _poll_loose_end_rewards(delta: float) -> void`
+      - `func _maybe_open_ready_goal() -> void`
+      - `func _place_upgrade_goal_card() -> void`
+      - `func show_reward_banner(headline: String, detail: String) -> void`
+      - `func _refresh_leverage_button() -> void`
+      - `func _on_leverage_pressed() -> void`
+      - `func _on_loose_ends_pressed() -> void`
+      - `func _show_premise_decision(decision: Dictionary) -> void`
+      - `func _on_premise_decision_option(arc_id: String, option_id: String) -> void`
       - `func _on_public_board_back_pressed() -> void`
       - `func _on_store_pressed() -> void`
       - `func _on_store_back_pressed() -> void`
       - `func _on_inventory_pressed() -> void`
       - `func _on_inventory_back_pressed() -> void`
       - `func _close_inventory_panel() -> void`
-      - `func _on_inventory_filter_toggled() -> void`
       - `func _render_inventory_items() -> void`
-      - `func _build_inventory_section_label(text: String) -> Label`
       - `func _build_item_icon(item_def) -> TextureRect`
-      - `func _build_inventory_cargo_row() -> VBoxContainer`
-      - `func _build_inventory_item_row(item_id: String, quantity: int, item_def) -> VBoxContainer`
       - `func _on_inventory_use_pressed(item_id: String) -> void`
       - `func _render_store_items() -> void`
+      - `func _store_carries(store_id: String, item_id: String) -> bool`
+      - `func _job_buys_here(item_id: String) -> bool`
       - `func _get_reputation_tier() -> String`
       - `func _on_store_buy(item_id: String) -> void`
       - `func _on_store_sell(item_id: String) -> void`
@@ -4033,8 +4316,13 @@ Root: `spacegame`
       - `func _on_public_board_turn_in_pressed() -> void`
       - `func _mission_can_turn_in_at_current_station(mission_data: Dictionary) -> bool`
       - `func _board_delivery_recipient() -> Dictionary`
+      - `func _ready_local_delivery(mission) -> bool`
+      - `func _local_delivery_mission()`
+      - `func _on_local_delivery_pressed() -> void`
+      - `func _delivery_recipient(mission) -> Dictionary`
       - `func _refresh_board_delivery_button() -> void`
       - `func _try_local_board_delivery() -> bool`
+      - `func _try_local_delivery(mission) -> bool`
       - `func _current_turn_in_station_id() -> String`
       - `func _worst_reputation_tier() -> String`
       - `func _best_reputation_tier() -> String`
@@ -4073,6 +4361,9 @@ Root: `spacegame`
       - `func _show_nova_repair_undock_prompt() -> bool`
       - `func _on_nova_repair_prompt_repairs() -> void`
       - `func _on_nova_repair_prompt_undock() -> void`
+      - `func _goal_ore_shortfall() -> int`
+      - `func _bank_ore() -> void`
+      - `func _update_bank_button() -> void`
       - `func _sell_ore()`
       - `func _close_context_menu() -> void`
       - `func _command_selected_target(mode: String) -> bool`
@@ -4110,6 +4401,7 @@ Root: `spacegame`
       - `func _command_context_target(mode: String) -> bool`
       - `func activate_selected_jumpgate() -> void`
       - `func show_death_screen()`
+      - `func _play_undercurrent_death_moment(moment: Dictionary) -> void`
       - `func _input(event: InputEvent)`
       - `func _on_resize_handle_input(event: InputEvent)`
       - `func show_target_marker(pos: Vector3)`
@@ -4118,8 +4410,11 @@ Root: `spacegame`
       - `func _update_selection_marker_position()`
       - `func _on_selection_marker_draw()`
       - `func _on_intro_handhold_arrow_draw() -> void`
+      - `func _apply_hud_style() -> void`
+      - `static func _thousands(n: int) -> String`
       - `func _update_hud_health()`
       - `func _update_hud_reputations()`
+      - `func _update_local_rep_labels(sys_factions: Array[String], core_shown: bool) -> void`
       - `func _update_faction_rep_label(label_name: String, faction_id: String)`
       - `func _set_rep_label_visible(label_name: String, vis: bool) -> void`
       - `func _exit_tree() -> void`
@@ -4146,11 +4441,21 @@ Root: `spacegame`
       - `func _nova_portrait_texture(expression: String) -> Texture2D`
       - `func _nova_alert_portrait() -> Texture2D`
       - `func _show_nova_talk_portrait(expression: String) -> void`
+      - `func _watch_talk_portrait(serial: int, shown_ms: int) -> void`
       - `func _fade_nova_talk_portrait() -> void`
       - `func _kill_talk_portrait_fade() -> void`
       - `func show_nova_ambush_alert(enemy: Node, message: String) -> void`
       - `func _set_dock_message_choices(choices: Array, color: Color) -> void`
       - `func clear_dock_message() -> void`
+      - `func _restyle_agent_choices() -> void`
+      - `func _press_agent_reply(index: int) -> bool`
+      - `func _agent_trade_button(callback: Callable) -> Button`
+      - `func _sync_trade_tooltips() -> void`
+      - `func _update_fuel_buttons() -> void`
+      - `func _on_compress_o2_pressed() -> void`
+      - `func _on_fabricate_blocks_pressed() -> void`
+      - `func _on_refine_fuel_pressed() -> void`
+      - `func _on_buy_fuel_pressed() -> void`
       - `func _update_sell_button()`
       - `func _update_repair_button()`
       - `func _repair_ship()`
@@ -4226,6 +4531,7 @@ Root: `spacegame`
       - `func _create_comms_hail_panel() -> void`
       - `func _on_comms_reversal_triggered(mission_data: Dictionary) -> void`
       - `func _show_comms_hail(mission_data: Dictionary) -> void`
+      - `func _on_reveal_twist_triggered(mission_data: Dictionary) -> void`
       - `func _resolve_comms_hail(branch_id: String) -> void`
       - `func _fallback_comms_line(faction: String) -> String`
       - `func _kaelen_mood_portrait_id(mood: String) -> String`
@@ -4255,12 +4561,17 @@ Root: `spacegame`
       - `func _finish_loading_without_contract() -> void`
       - `func _on_tts_cache_completed()`
       - `func _queue_intro_cinematic_voice_cache() -> void`
+      - `func _poll_intro_voice_ready(started_ms: int) -> void`
       - `func _on_intro_cinematic_voice_cache_completed() -> void`
+      - `func _poll_bank_voice_ready(started_ms: int) -> void`
       - `func _on_startup_line_bank_voice_cache_completed() -> void`
       - `func _queue_startup_line_bank_voice_cache() -> int`
       - `func _queue_startup_line_bank_background_voice_cache() -> int`
       - `func _campaign_story_ready_for_gameplay() -> bool`
       - `func _wait_for_campaign_story_before_gameplay() -> void`
+      - `func _creep_loading_bar(cap: float, seconds: float) -> void`
+      - `func _build_loading_tips(parent: Control) -> void`
+      - `func _rotate_loading_tip(tips: Array[String], index: int) -> void`
       - `func _wait_for_chapter_plan_before_gameplay() -> void`
       - `func _on_campaign_story_gate_result(ok: bool, status: String) -> void`
       - `func _on_chapter_plan_gate_result(ok: bool, status: String) -> void`
@@ -4274,6 +4585,8 @@ Root: `spacegame`
       - `func _refresh_upgrade_ui()`
       - `func _format_ore_bank_max() -> String`
       - `func _on_su_slot_pressed(slot: String) -> void`
+      - `func _add_set_goal_button(slot: String, path: String, tier: int) -> void`
+      - `func _upgrade_materials_text(slot: String, tier: int) -> String`
       - `func _attempt_upgrade(slot: String, path: String)`
     - 📄 [UIManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/UIManager.gd.uid)
     - 📄 [WarpExitBubble.gd](file:///D:/CodingProjects/spacegame/scripts/WarpExitBubble.gd)
@@ -4298,6 +4611,7 @@ Root: `spacegame`
           - `static func _array_or_empty(value: Variant) -> Array`
           - `static func _default_opposing_force_dossier() -> Dictionary`
           - `static func _normalized_opposing_force_dossier(value: Variant) -> Dictionary`
+          - `static func _check_fixed_cast_roles(packet: Dictionary, result: ValidationResult) -> void`
       - 📄 [ChapterNarrativeDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/ChapterNarrativeDirector.gd.uid)
       - 📄 [ContextBlockBuilder.gd](file:///D:/CodingProjects/spacegame/scripts/ai/ContextBlockBuilder.gd)
         - 🏛️ **global class ContextBlockBuilder**
@@ -4310,8 +4624,17 @@ Root: `spacegame`
           - `static func kaelen_block(story_state: Dictionary) -> String`
           - `static func director_block(story_state: Dictionary) -> String`
       - 📄 [ContextBlockBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/ContextBlockBuilder.gd.uid)
+      - 📄 [GenerationWindow.gd](file:///D:/CodingProjects/spacegame/scripts/ai/GenerationWindow.gd)
+        - 🏛️ **global class GenerationWindow**
+          - `func is_open() -> bool`
+          - `func reason() -> String`
+          - `func _process(_delta: float) -> void`
+          - `func _current_reason() -> String`
+          - `func _unload_small_model() -> void`
+      - 📄 [GenerationWindow.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ai/GenerationWindow.gd.uid)
       - 📄 [LocalModelGateway.gd](file:///D:/CodingProjects/spacegame/scripts/ai/LocalModelGateway.gd)
         - 🏛️ **global class LocalModelGateway**
+          - `static func note_request(source: String) -> void`
           - `static func profile_for_capability(capability: String) -> String`
           - `static func request_timeout(capability: String) -> float`
           - `static func diagnostics_context(capability: String, selected_model: String) -> Dictionary`
@@ -4361,6 +4684,11 @@ Root: `spacegame`
         - `static func expression_for_event(event_kind: String) -> String`
         - `static func should_preempt(incoming: int, current: int) -> bool`
         - `func _ready() -> void`
+        - `func _on_gate_state_changed(_gate_id: String, _old_state: String, new_state: String) -> void`
+        - `func _can_tell_no_home_ice() -> bool`
+        - `func react_to_news() -> void`
+        - `func _world_hidden() -> bool`
+        - `func _hold_until_visible(line: String, severity: int, expression: String) -> void`
         - `func set_campaign_quirk(quirk: String) -> void`
         - `func set_memory_glitch_lines(lines: Array) -> void`
         - `func reset_for_restart() -> void`
@@ -4383,6 +4711,8 @@ Root: `spacegame`
         - `func _curated_line_for_category(category: String) -> String`
         - `func _curated_line_for_situation(situation: String, category: String = "") -> String`
         - `func _reactive_streak(tag: String, window_ms: int) -> int`
+        - `func _ship_in_good_shape() -> bool`
+        - `func _honest(line: String, tag: String, pool: Array) -> String`
         - `func on_docked(_station_name: String = "") -> void`
         - `func on_intro_first_dock() -> void`
         - `func _is_powerful_enemy(enemy: Node) -> bool`
@@ -4394,6 +4724,8 @@ Root: `spacegame`
         - `func welcome_back() -> void`
         - `func on_combat_tutorial() -> void`
         - `func on_gate_transition() -> void`
+        - `func ask_captain(text: String, expression_event: String = "mystery") -> bool`
+        - `func on_gate_hold() -> void`
         - `func on_semantic_movement_event(event_id: String, context: Dictionary) -> void`
         - `func _on_action_impact(target: Node, _pos: Vector3, _damage: float, lethal: bool, _blocked: bool, _crit: bool) -> void`
         - `func on_hull_critical() -> void`
@@ -4422,6 +4754,8 @@ Root: `spacegame`
         - `func release_opening_taunt() -> void`
         - `func _play_combat_taunt() -> void`
         - `func _play_npc_action_taunt(key: String) -> void`
+        - `func _play_reaction(kind: String) -> void`
+        - `func _play_desperate_taunt() -> void`
         - `func _play_npc_flee_taunt() -> void`
         - `func _record_combat_fallback(content_type: String, reason: String, context: Dictionary = {}) -> void`
         - `func _is_comms_reversal_target() -> bool`
@@ -4447,6 +4781,10 @@ Root: `spacegame`
         - `func _intent_is_attack(intent: Dictionary) -> bool`
         - `func _beat(sec: float) -> void`
         - `func _await_travel(from: Node, to: Node) -> void`
+        - `func _spawn_hit_fx(target, center: Vector3, blocked: bool, crit: bool) -> void`
+        - `func _add_scorch(target, contact: Vector3, toward: Vector3, radius: float) -> void`
+        - `func _clear_scorches() -> void`
+        - `func _hit_radius(target) -> float`
         - `func _apply_hit(target, attacker_faction: String, dmg: float, crit: bool, blocked: bool, is_drone: bool = false) -> void`
         - `func _hit_stop(freeze_sec: float) -> void`
         - `func _kill_and_end(victim, player_won: bool, skip_end: bool = false) -> void`
@@ -4457,10 +4795,12 @@ Root: `spacegame`
         - `func _exec_fire() -> void`
         - `func _player_status_float(text: String, color: Color) -> void`
         - `func _enemy_status_float(text: String, color: Color) -> void`
-        - `func _exec_boost(params: Dictionary) -> void`
+        - `func _exec_boost(_params: Dictionary) -> void`
+        - `func _swerve_player() -> void`
         - `func _exec_shield_reroute(_params: Dictionary) -> void`
         - `func _exec_attack_drone() -> void`
         - `func _exec_micro_warp() -> void`
+        - `func _warp_arc_to(dest: Vector3, around: Vector3) -> void`
         - `func _exec_repair_kit() -> void`
         - `func _exec_flee() -> void`
         - `func _resolve_player_hit(base_dmg: float) -> float`
@@ -4470,6 +4810,7 @@ Root: `spacegame`
         - `func _execute_npc_intent() -> void`
         - `func _execute_npc_action(action: Dictionary, npc_faction: String) -> void`
         - `func _exec_enemy_flee() -> void`
+        - `func _npc_shot_evaded() -> bool`
         - `func _consume_shield_reroute() -> void`
         - `func _spawn_shield_dome() -> void`
         - `func _despawn_shield_dome() -> void`
@@ -4603,6 +4944,16 @@ Root: `spacegame`
           - `static func _optional_id(value: Variant) -> StringName`
           - `static func _color(value: Variant, result: ValidationResult, path: String) -> Color`
       - 📄 [FactionDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/FactionDefinition.gd.uid)
+      - 📄 [GateClass.gd](file:///D:/CodingProjects/spacegame/scripts/domain/GateClass.gd)
+        - `static func class_for_depth(depth: int) -> int`
+        - `static func rating_for_class(gate_class: int) -> int`
+        - `static func class_name_of(gate_class: int) -> String`
+        - `static func tiers_of(upgrades: Dictionary) -> Dictionary`
+        - `static func weakest_tier(tiers: Dictionary) -> int`
+        - `static func ship_rating(tiers: Dictionary) -> int`
+        - `static func limiting_system(tiers: Dictionary) -> String`
+        - `static func check(from_depth: int, dest_depth: int, tiers: Dictionary) -> Dictionary`
+      - 📄 [GateClass.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/GateClass.gd.uid)
       - 📄 [GateDefinition.gd](file:///D:/CodingProjects/spacegame/scripts/domain/GateDefinition.gd)
         - 🏛️ **global class GateDefinition**
           - `func to_dict() -> Dictionary`
@@ -4843,10 +5194,21 @@ Root: `spacegame`
           - `static func _apply_story_intent_priority(offers: Array[Dictionary]) -> void`
           - `static func _offer_matches_intent(offer: Dictionary, intent: String) -> bool`
           - `static func _build_ore_offer(current_time_minutes: int) -> Dictionary`
+          - `static func _build_fuel_offer(current_time_minutes: int) -> Dictionary`
+          - `static func _build_fuel_block_offer(current_time_minutes: int) -> Dictionary`
+          - `static func _build_o2_offer(current_time_minutes: int) -> Dictionary`
+          - `static func _build_fetch_offer(current_time_minutes: int) -> Dictionary`
+          - `static func _build_fetch_pickup_offer(card: Dictionary, rng: RandomNumberGenerator) -> Dictionary`
+          - `static func _item_rarity() -> Dictionary`
+          - `static func _prop_name(item_id: String) -> String`
+          - `static func _fetch_cards() -> Array`
+          - `static func _store_item(item_id: String) -> Dictionary`
+          - `static func _fuel_run_deck() -> Dictionary`
           - `static func _build_pickup_offer(current_time_minutes: int) -> Dictionary`
           - `static func _build_courier_offer(current_time_minutes: int) -> Dictionary`
           - `static func _build_purchase_offer(current_time_minutes: int) -> Dictionary`
           - `static func _build_recovery_preview() -> Dictionary`
+          - `static func _cause_for(offer_kind: String) -> Dictionary`
           - `static func _story_board_context(_offer_kind: String) -> String`
           - `static func _withhold_incoherent_desire(quest_data: Dictionary, desire: Dictionary) -> bool`
           - `static func _withhold_invalid_offers(offers: Array[Dictionary]) -> void`
@@ -4963,6 +5325,18 @@ Root: `spacegame`
           - `func to_dict() -> Dictionary`
           - `func _load_gates(data: Dictionary, result: ValidationResult) -> void`
       - 📄 [SystemDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/SystemDefinition.gd.uid)
+      - 📄 [UpgradeGoal.gd](file:///D:/CodingProjects/spacegame/scripts/domain/UpgradeGoal.gd)
+        - `static func is_live(gs, goal: Dictionary) -> bool`
+        - `static func next_tier_goal(gs, sys: String, auto: bool = false) -> Dictionary`
+        - `static func suggest(gs) -> Dictionary`
+        - `static func tier_data(gs, goal: Dictionary) -> Dictionary`
+        - `static func power_short(gs, goal: Dictionary) -> int`
+        - `static func ore_available(gs) -> float`
+        - `static func rows(gs, goal: Dictionary) -> Array`
+        - `static func material_label(item: String) -> String`
+        - `static func is_ready(gs, goal: Dictionary) -> bool`
+        - `static func title(goal: Dictionary) -> String`
+        - `static func rating_change(gs, goal: Dictionary) -> Array`
       - 📄 [ValidationResult.gd](file:///D:/CodingProjects/spacegame/scripts/domain/ValidationResult.gd)
         - 🏛️ **global class ValidationResult**
           - `func is_valid() -> bool`
@@ -5091,6 +5465,24 @@ Root: `spacegame`
         - `static func derive_combat_ap(powerplant_tier: int) -> int`
         - `static func derive_max_health(hull_tier: int) -> float`
       - 📄 [FactionRegistry.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/FactionRegistry.gd.uid)
+      - 📄 [Fuel.gd](file:///D:/CodingProjects/spacegame/scripts/economy/Fuel.gd)
+        - `static func jump_cost(destination_depth: int) -> float`
+        - `static func refine(ice: float, fuel: float) -> Array`
+        - `static func buy_to_full(fuel: float, credits: int) -> Array`
+      - 📄 [Fuel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/Fuel.gd.uid)
+      - 📄 [OreTypes.gd](file:///D:/CodingProjects/spacegame/scripts/economy/OreTypes.gd)
+        - `static func is_known(ore_type: String) -> bool`
+        - `static func normalize(ore_type: String) -> String`
+        - `static func display(ore_type: String) -> String`
+        - `static func price(ore_type: String) -> float`
+        - `static func tint(ore_type: String) -> Color`
+        - `static func icon(ore_type: String) -> Texture2D`
+        - `static func glow(ore_type: String) -> float`
+        - `static func reconcile(mix: Dictionary, total: float) -> Dictionary`
+        - `static func take(mix: Dictionary, total: float, amount: float, ore_type: String = "") -> Array`
+        - `static func value(mix: Dictionary, rate: float = 1.0) -> int`
+        - `static func summary(mix: Dictionary) -> String`
+      - 📄 [OreTypes.gd.uid](file:///D:/CodingProjects/spacegame/scripts/economy/OreTypes.gd.uid)
       - 📄 [PlayerInventory.gd](file:///D:/CodingProjects/spacegame/scripts/economy/PlayerInventory.gd)
         - `func slot_count() -> int`
         - `func is_full() -> bool`
@@ -5220,6 +5612,7 @@ Root: `spacegame`
           - `static func load_or_create() -> CampaignSystemNames`
           - `func next_name() -> String`
           - `func peek_next() -> String`
+          - `static func generated_name(n: int) -> String`
           - `func remaining() -> int`
           - `func set_names(names: Array[String]) -> void`
           - `static func reset() -> void`
@@ -5262,6 +5655,7 @@ Root: `spacegame`
           - `static func generate_recipe(role: String, seed_value: int, hull_override: String = "", weapon_override: String = "", engine_override: String = "") -> Dictionary`
           - `static func build_from_recipe(recipe: Dictionary, faction: String = "", apply_mat: bool = true) -> Node3D`
           - `static func _add_thruster_socket_markers(root: Node3D, part_root: Node3D, start_index: int) -> int`
+          - `static func _socket_radius(socket: Node3D) -> float`
           - `static func _collect_thruster_socket_nodes(node: Node, out: Array[Node3D]) -> void`
           - `static func _node_name_is_thruster_socket(node_name: String) -> bool`
           - `static func _local_transform_to_ancestor(ancestor: Node3D, node: Node3D) -> Transform3D`
@@ -5269,6 +5663,9 @@ Root: `spacegame`
           - `static func build(faction: String, role: String, seed_value: int, apply_mat: bool = true) -> Node3D`
           - `static func _ensure_catalog() -> void`
           - `static func pick_design(role: String, seed_value: int) -> Dictionary`
+          - `static func pick_design_for_silhouette(role: String, seed_value: int, silhouette: String) -> Dictionary`
+          - `static func build_catalog_ship_with_look(faction: String, role: String, seed_value: int, look: Dictionary) -> Node3D`
+          - `static func apply_look(root: Node3D, look: Dictionary) -> void`
           - `static func build_catalog_ship(faction: String, role: String, seed_value: int, apply_mat: bool = true) -> Node3D`
           - `static func catalog_roles() -> Array`
           - `static func design_count(role: String) -> int`
@@ -5871,7 +6268,7 @@ Root: `spacegame`
           - `func has_pending_cache_work() -> bool`
           - `func is_requesting() -> bool`
           - `func play(text: String, voice_profile_id: StringName, speed_override: float = -1.0) -> void`
-          - `func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0)`
+          - `func cache(text: String, voice_profile_id: StringName, speed_override: float = -1.0, urgent: bool = false)`
           - `func stop() -> void`
       - 📄 [KokoroSpeechProvider.gd.uid](file:///D:/CodingProjects/spacegame/scripts/speech/KokoroSpeechProvider.gd.uid)
       - 📄 [SpeechService.gd](file:///D:/CodingProjects/spacegame/scripts/speech/SpeechService.gd)
@@ -5879,6 +6276,8 @@ Root: `spacegame`
         - `func _connect_playback_finished() -> void`
         - `func _on_playback_finished() -> void`
         - `func start_interaction(interaction_name: String) -> void`
+        - `func play_on_comms(text: String, voice_profile: Variant = DEFAULT_PROFILE, speaker: String = "") -> void`
+        - `static func speaker_label(profile_id: StringName) -> String`
         - `func stop() -> void`
         - `func is_busy() -> bool`
         - `func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> bool`
@@ -6070,6 +6469,12 @@ Root: `spacegame`
           - `static func _is_known_tough(mission: Dictionary) -> bool`
           - `static func _entry(score: int) -> Dictionary`
       - 📄 [FixedCastRapport.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastRapport.gd.uid)
+      - 📄 [FixedCastRoleGuard.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastRoleGuard.gd)
+        - `static func is_cast_entity(entity_id: String) -> bool`
+        - `static func kaelen_third_person(line: String) -> bool`
+        - `static func _names_cast(lower: String) -> bool`
+        - `static func _has_word(lower: String, word: String) -> bool`
+      - 📄 [FixedCastRoleGuard.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastRoleGuard.gd.uid)
       - 📄 [FixedCastSoulRegistry.gd](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastSoulRegistry.gd)
         - 🏛️ **global class FixedCastSoulRegistry**
           - `static func load_registry() -> Dictionary`
@@ -6096,6 +6501,30 @@ Root: `spacegame`
           - `static func _normalized_line(line: String) -> String`
           - `static func _shares_word_run(candidate: String, reference: String, word_count: int) -> bool`
       - 📄 [FixedCastVoiceBank.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/FixedCastVoiceBank.gd.uid)
+      - 📄 [GateRatingGuide.gd](file:///D:/CodingProjects/spacegame/scripts/story/GateRatingGuide.gd)
+        - `func to_dict() -> Dictionary`
+        - `func load_from_dict(data: Dictionary) -> void`
+        - `func _tiers() -> Dictionary`
+        - `func ship_rating() -> int`
+        - `func gate_class_to(destination_system_id: String) -> int`
+        - `func reset_for_new_campaign() -> void`
+        - `func stage() -> String`
+        - `func note_system(system_id: String) -> void`
+        - `func is_rated() -> bool`
+        - `func access_to(destination_system_id: String) -> Dictionary`
+        - `func next_rung() -> Dictionary`
+        - `func block_reason(destination_system_id: String) -> String`
+        - `func is_rating_block(reason: String) -> bool`
+        - `func on_refused() -> void`
+        - `func _explain_class(result: Dictionary) -> void`
+        - `func _shields_goal() -> Dictionary`
+        - `func _short_list(include_material: bool = true) -> String`
+        - `func _cost_line() -> String`
+        - `func _start_walkthrough() -> void`
+        - `func _process(delta: float) -> void`
+        - `func advance() -> void`
+        - `func _say(text: String) -> void`
+      - 📄 [GateRatingGuide.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/GateRatingGuide.gd.uid)
       - 📄 [IntroCinematic.gd](file:///D:/CodingProjects/spacegame/scripts/story/IntroCinematic.gd)
         - `static func cache_nova_voice_lines() -> void`
         - `func start(ui_manager: Control) -> void`
@@ -6340,6 +6769,13 @@ Root: `spacegame`
           - `func to_save_dict() -> Dictionary`
           - `func load_from_dict(data: Dictionary) -> void`
       - 📄 [NovaAnatomySlip.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NovaAnatomySlip.gd.uid)
+      - 📄 [NovaInvestigationLines.gd](file:///D:/CodingProjects/spacegame/scripts/story/NovaInvestigationLines.gd)
+        - `static func decision(recipe: String, verification_scanned: bool, codes_match: bool, pick: int) -> String`
+        - `static func committed(ambush: bool, pick: int) -> String`
+        - `static func extracted(pick: int) -> String`
+        - `static func filed(pick: int) -> String`
+        - `static func _pick(pool: Array, pick: int) -> String`
+      - 📄 [NovaInvestigationLines.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/NovaInvestigationLines.gd.uid)
       - 📄 [NovaLineBankCategories.gd](file:///D:/CodingProjects/spacegame/scripts/story/NovaLineBankCategories.gd)
         - 🏛️ **global class NovaLineBankCategories**
           - `static func is_valid(category: String) -> bool`
@@ -6425,6 +6861,18 @@ Root: `spacegame`
           - `func load_from_dict(data: Dictionary) -> void`
           - `func clear() -> void`
       - 📄 [QuietMomentSelector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/QuietMomentSelector.gd.uid)
+      - 📄 [RecurringEncounterRunner.gd](file:///D:/CodingProjects/spacegame/scripts/story/RecurringEncounterRunner.gd)
+        - `func _process(delta: float) -> void`
+        - `func _can_happen(gs: Node) -> bool`
+        - `func play(encounter: Dictionary) -> Node`
+        - `func _give(gift: Dictionary, from_name: String) -> void`
+        - `func _spawn_enemy(encounter: Dictionary) -> Node`
+        - `func feud_over(person_id: String, display_name: String, system_id: String) -> void`
+      - 📄 [RecurringEncounterRunner.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/RecurringEncounterRunner.gd.uid)
+      - 📄 [ReservedTopics.gd](file:///D:/CodingProjects/spacegame/scripts/story/ReservedTopics.gd)
+        - 🏛️ **global class ReservedTopics**
+          - `static func is_clean(text: String) -> bool`
+      - 📄 [ReservedTopics.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/ReservedTopics.gd.uid)
       - 📄 [ShipBehaviorObserver.gd](file:///D:/CodingProjects/spacegame/scripts/story/ShipBehaviorObserver.gd)
         - 🏛️ **global class ShipBehaviorObserver**
           - `func state_snapshot() -> Dictionary`
@@ -6653,6 +7101,386 @@ Root: `spacegame`
           - `static func capture_deferred(campaign_path: String, tag: String) -> void`
           - `static func _capture_now(campaign_path: String, tag: String) -> void`
       - 📄 [StoryScreenshots.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/StoryScreenshots.gd.uid)
+      - 📂 **activities/**
+        - 📄 [CrackMesher.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/CrackMesher.gd)
+          - `static func build(cracks: Dictionary, seed_value: int) -> Dictionary`
+          - `static func to_mesh(built: Dictionary) -> ArrayMesh`
+          - `static func _sdf(p: Vector3, segs: Array, buckets: Dictionary, noise: FastNoiseLite) -> float`
+          - `static func _segments(cracks: Dictionary) -> Array`
+          - `static func _buckets(segs: Array) -> Dictionary`
+        - 📄 [CrackMesher.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/activities/CrackMesher.gd.uid)
+        - 📄 [DroneMazeActivity.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/DroneMazeActivity.gd)
+          - `func _ready() -> void`
+          - `func _process(delta: float) -> void`
+          - `func _maybe_teach() -> void`
+          - `func _update_prompt(delta: float) -> void`
+          - `func _build_prompt() -> void`
+          - `func _hint_for(target: Node) -> String`
+          - `func _unhandled_input(event: InputEvent) -> void`
+          - `func drones_aboard() -> int`
+          - `func eligible_target() -> Node3D`
+          - `static func kind_of(node: Node) -> String`
+          - `static func _id_for(node: Node) -> String`
+          - `static func material_for(node: Node) -> String`
+          - `static func material_name(item_id: String) -> String`
+          - `func launch(target: Node3D) -> bool`
+          - `static func haul(outcome_id: String, state: Dictionary, material: String, rng: RandomNumberGenerator) -> Dictionary`
+          - `func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenerator = null) -> void`
+          - `func _on_player_kill(_faction_name: String, roll: float = -1.0) -> void`
+          - `func _line(key: String) -> String`
+          - `func _nova(text: String) -> void`
+        - 📄 [DroneMazeActivity.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/activities/DroneMazeActivity.gd.uid)
+        - 📄 [DroneMazeModel.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/DroneMazeModel.gd)
+          - `static func start(seed_value: int, kind: String = "asteroid", with_recorder: bool = false) -> Dictionary`
+          - `static func _key(c: Vector2i) -> String`
+          - `static func _cracks(grid: Array, rng: RandomNumberGenerator, pockets: Dictionary) -> Dictionary`
+          - `static func _edge_radius(ra: float, rb: float, pinch: float, t: float) -> float`
+          - `static func crack_probe(cracks: Dictionary, p: Vector2) -> Dictionary`
+          - `static func _carve(cells: Vector2i, rng: RandomNumberGenerator, loops: float) -> Array`
+          - `static func _far_cells(grid: Array, from: Vector2i) -> Array`
+          - `static func _tour_length(grid: Array, from: Vector2i, targets: Array) -> int`
+          - `static func _distances(grid: Array, from: Vector2i) -> Dictionary`
+          - `static func scanner(state: Dictionary) -> Dictionary`
+          - `static func target_at(t: Dictionary) -> Vector2`
+          - `static func route_to(state: Dictionary, goal: Vector2) -> Array`
+          - `static func _nearest_chamber(grid: Array, p: Vector2, cracks: Dictionary) -> Vector2i`
+          - `static func is_open(grid: Array, x: int, y: int) -> bool`
+          - `static func step(state: Dictionary, dt: float, throttle: float, turn: float) -> Dictionary`
+          - `static func _hits(grid: Array, p: Vector2) -> bool`
+          - `static func target_in_reach(state: Dictionary) -> Dictionary`
+          - `static func extract(state: Dictionary) -> Dictionary`
+          - `static func recall(state: Dictionary) -> Dictionary`
+          - `static func extracted_count(state: Dictionary) -> int`
+          - `static func has_extracted(state: Dictionary, target_kind: String) -> bool`
+          - `static func outcome(state: Dictionary) -> String`
+        - 📄 [DroneMazeModel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/activities/DroneMazeModel.gd.uid)
+        - 📄 [FaintTransmissions.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/FaintTransmissions.gd)
+          - `static func thread_candidates(state: Dictionary, system_id: String, surfaces: Array = HEARD_SURFACES) -> Array`
+          - `static func pick(state: Dictionary, system_id: String, system_display: String, heard_ambient: Array, seed_value: int) -> Dictionary`
+          - `static func _name_of(cast: Dictionary, entity_id: String) -> String`
+          - `static func _speaker(cast: Dictionary, seed_value: int) -> String`
+        - 📄 [FaintTransmissions.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/activities/FaintTransmissions.gd.uid)
+        - 📄 [SignalTuningActivity.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/SignalTuningActivity.gd)
+          - `func _taught() -> bool`
+          - `func _process(delta: float) -> void`
+          - `func _unhandled_input(event: InputEvent) -> void`
+          - `func _near_station() -> bool`
+          - `func has_offer() -> bool`
+          - `func _can_listen() -> bool`
+          - `func _threat_nearby() -> bool`
+          - `func _try_offer() -> void`
+          - `func offer(item: Dictionary) -> void`
+          - `func pick_difficulty() -> String`
+          - `func _current_depth() -> int`
+          - `func _update_prompt(delta: float) -> void`
+          - `func _build_prompt() -> void`
+          - `func open_tuning() -> void`
+          - `func _on_finished(outcome_id: String, clarity: float) -> void`
+          - `func _line(key: String) -> String`
+          - `func _nova(text: String) -> void`
+        - 📄 [SignalTuningActivity.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/activities/SignalTuningActivity.gd.uid)
+        - 📄 [SignalTuningModel.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/SignalTuningModel.gd)
+          - `static func start(seed_value: int, interference: float = 1.0) -> Dictionary`
+          - `static func quality(state: Dictionary, freq: float, phase: float) -> float`
+          - `static func step(state: Dictionary, dt: float, freq: float, phase: float) -> Dictionary`
+          - `static func outcome(state: Dictionary) -> String`
+          - `static func clarity_for(outcome_id: String, state: Dictionary) -> float`
+          - `static func garble(text: String, clarity: float, seed_value: int) -> String`
+        - 📄 [SignalTuningModel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/activities/SignalTuningModel.gd.uid)
+      - 📂 **premise/**
+        - 📄 [ArcEngine.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/ArcEngine.gd)
+          - 🏛️ **global class ArcEngine**
+            - `static func empty_state() -> Dictionary`
+            - `static func start_arc(state: Dictionary, card: Dictionary, system_id: String, cast: Dictionary, now_minute: int) -> Dictionary`
+            - `static func arc(state: Dictionary, arc_id: String) -> Dictionary`
+            - `static func pending_decision(state: Dictionary, library, arc_id: String) -> Dictionary`
+            - `static func outcome_tag_for(mission: Dictionary, terminal_state: String, branch_id: String = "") -> String`
+            - `static func apply_finding(state: Dictionary, library, arc_id: String, tag: String, now_minute: int) -> Dictionary`
+            - `static func apply_choice(state: Dictionary, library, arc_id: String, option_id: String, now_minute: int) -> Dictionary`
+            - `static func resolve(state: Dictionary, library, arc_id: String, resolution_id: String, now_minute: int) -> Dictionary`
+            - `static func mark_shown(state: Dictionary, arc_id: String) -> Dictionary`
+            - `static func live_states(state: Dictionary, base_profile: Dictionary) -> Array`
+            - `static func humanize(tag: String) -> String`
+            - `static func _settle_mission(next: Dictionary, library, arc_id: String, mission_index: int, tag: String, now_minute: int) -> Dictionary`
+            - `static func _follow(next: Dictionary, library, arc_id: String, target: String, now_minute: int, from_choice: bool) -> Dictionary`
+            - `static func _after_beat(next: Dictionary, library, arc_id: String, now_minute: int) -> Dictionary`
+            - `static func _enter_beat(next: Dictionary, library, arc_id: String, beat_n: int, now_minute: int) -> Dictionary`
+            - `static func _has_word(tag: String, words: Array) -> bool`
+            - `static func _ledger(next: Dictionary, line: String) -> void`
+        - 📄 [ArcEngine.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/ArcEngine.gd.uid)
+        - 📄 [FactionDNA.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/FactionDNA.gd)
+          - 🏛️ **global class FactionDNA**
+            - `static func for_faction(faction_id: String) -> Dictionary`
+            - `static func ship_look(dna: Dictionary) -> Dictionary`
+            - `static func person_name(dna: Dictionary, rng: RandomNumberGenerator) -> String`
+            - `static func ship_name(dna: Dictionary, rng: RandomNumberGenerator) -> String`
+            - `static func judge_deed(dna: Dictionary, deed_tag: String) -> String`
+            - `static func deed_signal(deed_tag: String) -> Dictionary`
+            - `static func _word(lang: Dictionary, rng: RandomNumberGenerator, syllables: int) -> String`
+            - `static func _pick(rng: RandomNumberGenerator, options: Array) -> String`
+        - 📄 [FactionDNA.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/FactionDNA.gd.uid)
+        - 📄 [FailureFallout.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/FailureFallout.gd)
+          - `static func deck() -> Dictionary`
+          - `static func family_for(objective_type: String) -> String`
+          - `static func for_mission(quest_data: Dictionary, terminal_state: String, now_minute: int, names: Dictionary) -> Dictionary`
+          - `static func _fallback(key: String) -> String`
+          - `static func active(records: Array, system_id: String, now_minute: int) -> Array`
+          - `static func environment(records: Array) -> Dictionary`
+          - `static func prune(records: Array, now_minute: int) -> Array`
+        - 📄 [FailureFallout.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/FailureFallout.gd.uid)
+        - 📄 [HiddenHand.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/HiddenHand.gd)
+          - 🏛️ **global class HiddenHand**
+            - `static func main_story(state: Dictionary) -> Dictionary`
+            - `static func is_active(state: Dictionary) -> bool`
+            - `static func begin_season(state: Dictionary, seed_value: int, now_minute: int, method_coverage: Dictionary = {}) -> Dictionary`
+            - `static func seed_threads(state: Dictionary, card: Dictionary, arc_id: String, seed_value: int) -> Dictionary`
+            - `static func mark_arc_threads_seen(state: Dictionary, arc_id: String, now_minute: int, max_new: int = -1) -> Dictionary`
+            - `static func set_seen(state: Dictionary, thread_id: String, now_minute: int) -> Dictionary`
+            - `static func set_pinned(state: Dictionary, thread_id: String, pinned: bool) -> Dictionary`
+            - `static func seen_threads(state: Dictionary) -> Array`
+            - `static func threads_for_arc(state: Dictionary, arc_id: String) -> Array`
+            - `static func candidates(state: Dictionary) -> Array`
+            - `static func seen_trace_count(state: Dictionary) -> int`
+            - `static func update_draft(state: Dictionary) -> Dictionary`
+            - `static func ready_to_lock(state: Dictionary) -> bool`
+            - `static func _prime_suspect_busy(state: Dictionary) -> bool`
+            - `static func evidence_systems(state: Dictionary) -> int`
+            - `static func proposal(state: Dictionary) -> Array`
+            - `static func lock(state: Dictionary, choice: Dictionary, now_minute: int) -> Dictionary`
+            - `static func lock_by_code(state: Dictionary, now_minute: int) -> Dictionary`
+            - `static func method_coverage(library) -> Dictionary`
+            - `static func _usable_methods(methods: Array, coverage: Dictionary) -> Array`
+            - `static func _shuffle(items: Array, rng: RandomNumberGenerator) -> void`
+        - 📄 [HiddenHand.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/HiddenHand.gd.uid)
+        - 📄 [HiddenHandForge.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/HiddenHandForge.gd)
+          - 🏛️ **global class HiddenHandForge**
+            - `static func card_id_for(season: int) -> String`
+            - `static func is_forged(card_id: String) -> bool`
+            - `static func forge(state: Dictionary, world: Dictionary) -> Dictionary`
+        - 📄 [HiddenHandForge.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/HiddenHandForge.gd.uid)
+        - 📄 [Leverage.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/Leverage.gd)
+          - `static func from_twist(mission_data: Dictionary, now_minute: int) -> Dictionary`
+          - `static func make(kind: String, id: String, subject: String, summary: String, system_id: String, now_minute: int, subject_faction: String = "") -> Dictionary`
+          - `static func add(entries: Array, entry: Dictionary) -> Array`
+          - `static func unused(entries: Array) -> Array`
+          - `static func value_of(entry: Dictionary) -> int`
+          - `static func use(entry: Dictionary, how: String, world: Dictionary, lawful_faction: Dictionary) -> Dictionary`
+          - `static func blackmail_offer(entry: Dictionary, world: Dictionary) -> Dictionary`
+          - `static func mark_used(entries: Array, entry_id: String, how: String) -> Array`
+        - 📄 [Leverage.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/Leverage.gd.uid)
+        - 📄 [LineWriter.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/LineWriter.gd)
+          - 🏛️ **global class LineWriter**
+            - `static func build_briefing_request(brief: Dictionary, model: String = "") -> Dictionary`
+            - `static func check_line(response_text: String, brief: Dictionary, private_fact: String = "") -> Dictionary`
+            - `static func brief_for_offer(offer: Dictionary, card: Dictionary, cast: Dictionary, world: Dictionary) -> Dictionary`
+            - `static func task_text(objective: Dictionary) -> String`
+            - `static func response_text(body: String) -> String`
+        - 📄 [LineWriter.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/LineWriter.gd.uid)
+        - 📄 [MissionComplications.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/MissionComplications.gd)
+          - `static func deck() -> Dictionary`
+          - `static func roll(verb: String, quirks: Array, seed_key: String) -> Dictionary`
+          - `static func apply(offer: Dictionary, complication: Dictionary, requester_name: String) -> Dictionary`
+        - 📄 [MissionComplications.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/MissionComplications.gd.uid)
+        - 📄 [MissionTwists.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/MissionTwists.gd)
+          - `static func deck() -> Dictionary`
+          - `static func is_readable_fact(fact: String) -> bool`
+          - `static func roll(verb: String, seed_key: String, has_private_fact: bool = false) -> Dictionary`
+          - `static func apply(offer: Dictionary, twist: Dictionary, requester_name: String, target_name: String, context: Dictionary = {}) -> Dictionary`
+          - `static func _apply_reveal(offer: Dictionary, twist: Dictionary, requester_name: String, context: Dictionary) -> Dictionary`
+          - `static func deed_for(branch_id: String, target_name: String) -> Dictionary`
+        - 📄 [MissionTwists.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/MissionTwists.gd.uid)
+        - 📄 [NameForge.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/NameForge.gd)
+          - 🏛️ **global class NameForge**
+            - `static func person_name(rng: RandomNumberGenerator) -> String`
+            - `static func ship_name(rng: RandomNumberGenerator) -> String`
+            - `static func _pick(rng: RandomNumberGenerator, options: Array) -> String`
+        - 📄 [NameForge.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/NameForge.gd.uid)
+        - 📄 [PremiseCardHistoryStore.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCardHistoryStore.gd)
+          - 🏛️ **global class PremiseCardHistoryStore**
+            - `static func empty_history() -> Dictionary`
+            - `static func load_history(path: String = DEFAULT_PATH) -> Dictionary`
+            - `static func save_history(history: Dictionary, path: String = DEFAULT_PATH) -> Dictionary`
+            - `static func record_shown(history: Dictionary, card_id: String) -> Dictionary`
+            - `static func used_this_cycle(history: Dictionary, card_id: String) -> bool`
+            - `static func last_seq(history: Dictionary, card_id: String) -> int`
+            - `static func is_recent(history: Dictionary, card_id: String, window: int = RECENT_WINDOW) -> bool`
+            - `static func advance_cycle_if_due(history: Dictionary, deck_ids: Array) -> Dictionary`
+            - `static func _shuffle_key(seed_value: int, card_id: String) -> String`
+        - 📄 [PremiseCardHistoryStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCardHistoryStore.gd.uid)
+        - 📄 [PremiseCardLibrary.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCardLibrary.gd)
+          - 🏛️ **global class PremiseCardLibrary**
+            - `func load_from_dir(dir_path: String = DEFAULT_DIR) -> ValidationResult`
+            - `func load_from_array(source: Array) -> ValidationResult`
+            - `static func card_problem(card: Dictionary) -> String`
+            - `func has_card(card_id: String) -> bool`
+            - `func get_card(card_id: String) -> Dictionary`
+            - `func size() -> int`
+            - `static func role(card: Dictionary, role_id: String) -> Dictionary`
+            - `static func beat(card: Dictionary, beat_n: int) -> Dictionary`
+            - `static func resolution(card: Dictionary, resolution_id: String) -> Dictionary`
+        - 📄 [PremiseCardLibrary.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCardLibrary.gd.uid)
+        - 📄 [PremiseCardSelector.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCardSelector.gd)
+          - 🏛️ **global class PremiseCardSelector**
+            - `static func rejection(card: Dictionary, situation: Dictionary) -> String`
+            - `static func score(card: Dictionary, situation: Dictionary) -> int`
+            - `static func _history_group(history: Dictionary, card_id: String) -> int`
+            - `static func _compare_keys(a: Array, b: Array) -> bool`
+            - `static func _shuffle_key(seed_value: int, card_id: String) -> String`
+        - 📄 [PremiseCardSelector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCardSelector.gd.uid)
+        - 📄 [PremiseCasting.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCasting.gd)
+          - 🏛️ **global class PremiseCasting**
+            - `static func cast_card(card: Dictionary, world: Dictionary, seed_value: int, arc_id: String = "arc") -> Dictionary`
+            - `static func fill_text(text: String, cast: Dictionary, world: Dictionary) -> String`
+            - `static func _first_faction_role(cast: Dictionary) -> String`
+            - `static func _owner_faction_role(ship_role_id: String, cast: Dictionary) -> String`
+            - `static func _humanize(role_id: String) -> String`
+            - `static func _weighted_index(known: Array, rng: RandomNumberGenerator) -> int`
+        - 📄 [PremiseCasting.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseCasting.gd.uid)
+        - 📄 [PremiseDirector.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseDirector.gd)
+          - 🏛️ **global class PremiseDirector**
+            - `func _window_open() -> bool`
+            - `func _init() -> void`
+            - `func reset_for_new_campaign(seed_value: int = 0) -> void`
+            - `func to_dict() -> Dictionary`
+            - `func load_from_dict(data: Dictionary) -> void`
+            - `func profile_for(world: Dictionary) -> Dictionary`
+            - `static func line_key(arc_id: String, offer: Dictionary) -> String`
+            - `func written_line(arc_id: String, offer: Dictionary) -> String`
+            - `func prepare_lines(world: Dictionary) -> void`
+            - `static func line_job(key: String, offer: Dictionary, card: Dictionary, cast: Dictionary, world: Dictionary) -> Dictionary`
+            - `func _pump_lines() -> void`
+            - `func store_line(job: Dictionary, checked: Dictionary) -> void`
+            - `func _precache_voice(line: String, job: Dictionary) -> void`
+            - `func _odd_details(arc_id: String, arc_record: Dictionary, world: Dictionary) -> String`
+            - `func record_failure(quest_data: Dictionary, terminal_state: String, now_minute: int, names: Dictionary) -> Dictionary`
+            - `func on_arrival_encounter(system_id: String) -> Dictionary`
+            - `func end_feud(person_id: String, display_name: String, system_id: String) -> void`
+            - `func record_leverage(mission_data: Dictionary, now_minute: int) -> Dictionary`
+            - `func record_leverage_entry(entry: Dictionary) -> Dictionary`
+            - `func leverage_items() -> Array`
+            - `func use_leverage(entry_id: String, how: String, world: Dictionary, now_minute: int) -> Dictionary`
+            - `func lawful_faction(world: Dictionary) -> Dictionary`
+            - `func active_fallout(system_id: String, now_minute: int) -> Array`
+            - `func next_radio_item(world: Dictionary, now_minute: int) -> Dictionary`
+            - `func faint_transmission(world: Dictionary, seed_value: int) -> Dictionary`
+            - `func recorder_thread(world: Dictionary) -> Dictionary`
+            - `func overhear(item: Dictionary, now_minute: int) -> void`
+            - `func main_story_threads() -> Array`
+            - `func main_story_summary() -> Dictionary`
+            - `func pin_thread(thread_id: String, pinned: bool) -> void`
+            - `func _maybe_lock(world: Dictionary, now_minute: int) -> void`
+            - `func _request_showrunner(world: Dictionary, now_minute: int) -> void`
+            - `static func unload_request(model: String = "") -> Dictionary`
+            - `func _send_showrunner(world: Dictionary, now_minute: int) -> void`
+            - `static func LocalModelGatewayURL() -> String`
+            - `func _apply_lock(locked: Dictionary, world: Dictionary, now_minute: int) -> void`
+            - `func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_minute: int) -> bool`
+            - `func _record_culprit_leverage(ref: Dictionary, quest_data: Dictionary, now_minute: int) -> void`
+            - `func apply_decision(arc_id: String, option_id: String, now_minute: int) -> void`
+            - `func tick(now_minute: int) -> void`
+            - `func _start_one(world: Dictionary, profile: Dictionary, scale: String, now_minute: int) -> String`
+            - `func _with_known_people(world: Dictionary) -> Dictionary`
+            - `func _posting(arc_id: String, ref: Dictionary, offer: Dictionary) -> Dictionary`
+            - `static func _arc_ref(quest_data: Dictionary) -> Dictionary`
+            - `func _after_change(arc_id: String) -> void`
+            - `func _ensure_history() -> void`
+            - `func _record_shown(arc_id: String, card_id: String) -> void`
+        - 📄 [PremiseDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseDirector.gd.uid)
+        - 📄 [PremiseMissionComposer.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseMissionComposer.gd)
+          - 🏛️ **global class PremiseMissionComposer**
+            - `static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, world: Dictionary, seed_value: int) -> Dictionary`
+            - `static func _courier(item: String, main: Dictionary, target: Dictionary, reward: int) -> Dictionary`
+            - `static func _item_name(card: Dictionary, cast: Dictionary, mission: Dictionary) -> String`
+            - `static func _requester_faction(card: Dictionary, cast: Dictionary) -> String`
+            - `static func _first_hostile(world: Dictionary) -> String`
+            - `static func _title(verb: String, target: Dictionary, item: String, mission: Dictionary) -> String`
+            - `static func _accept_choice() -> Dictionary`
+            - `static func recipe_for(reason: String, cast: Dictionary) -> String`
+        - 📄 [PremiseMissionComposer.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseMissionComposer.gd.uid)
+        - 📄 [PremiseWorldSnapshot.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseWorldSnapshot.gd)
+          - 🏛️ **global class PremiseWorldSnapshot**
+            - `static func capture(now_minute: int) -> Dictionary`
+            - `static func _system_depth(system_id: String) -> int`
+            - `static func _is_home() -> bool`
+            - `static func _post_tutorial() -> bool`
+            - `static func _global_state() -> Node`
+        - 📄 [PremiseWorldSnapshot.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/PremiseWorldSnapshot.gd.uid)
+        - 📄 [RadioBroadcaster.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/RadioBroadcaster.gd)
+          - 🏛️ **global class RadioBroadcaster**
+            - `static func deed_reaction(deed_tag: String, factions: Array, index: int) -> String`
+        - 📄 [RadioBroadcaster.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/RadioBroadcaster.gd.uid)
+        - 📄 [RecurringCast.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/RecurringCast.gd)
+          - 🏛️ **global class RecurringCast**
+            - `static func people(state: Dictionary) -> Dictionary`
+            - `static func attitude(fates: Array) -> String`
+            - `static func candidates(state: Dictionary) -> Array`
+            - `static func busy_ids(state: Dictionary) -> Dictionary`
+            - `static func history_note(state: Dictionary, person_id: String, system_names: Dictionary, current_arc_id: String = "") -> String`
+        - 📄 [RecurringCast.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/RecurringCast.gd.uid)
+        - 📄 [RecurringEncounters.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/RecurringEncounters.gd)
+          - `static func empty_log() -> Dictionary`
+          - `static func on_arrival(state: Dictionary, log: Dictionary, system_names: Dictionary, seed_value: int) -> Dictionary`
+          - `static func feud_ended(state: Dictionary, person_id: String, display_name: String, system_id: String) -> Dictionary`
+        - 📄 [RecurringEncounters.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/RecurringEncounters.gd.uid)
+        - 📄 [Showrunner.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/Showrunner.gd)
+          - 🏛️ **global class Showrunner**
+            - `static func build_request(state: Dictionary, library, names: Dictionary = {}) -> Dictionary`
+            - `static func parse_response(response_text: String, state: Dictionary) -> Dictionary`
+            - `static func _match_candidate(answer: String, proposal: Array) -> String`
+            - `static func response_text(body: String) -> String`
+        - 📄 [Showrunner.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/Showrunner.gd.uid)
+        - 📄 [SystemProfile.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/SystemProfile.gd)
+          - 🏛️ **global class SystemProfile**
+            - `static func generate(system_id: String, seed_value: int, star_type: String, is_first_system: bool = false, depth: int = -1) -> Dictionary`
+            - `static func ore_mix(system_id: String, seed_value: int, star_type: String, quirks: Array, depth: int = -1) -> Dictionary`
+            - `static func _scale_rarity(mix: Dictionary, depth: int) -> Dictionary`
+            - `static func gate_depth(links: Dictionary, start: String, target: String) -> int`
+            - `static func apply_changes(profile: Dictionary, add: Array, remove: Array) -> Dictionary`
+            - `static func _weighted_pick(rng: RandomNumberGenerator, bonus: Dictionary, taken: Array[String]) -> String`
+        - 📄 [SystemProfile.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/SystemProfile.gd.uid)
+        - 📄 [VoiceDNA.gd](file:///D:/CodingProjects/spacegame/scripts/story/premise/VoiceDNA.gd)
+          - 🏛️ **global class VoiceDNA**
+            - `static func for_person(entity_id: String, faction_id: String = "", force_female: int = -1) -> Dictionary`
+            - `static func for_radio_host(system_id: String) -> Dictionary`
+            - `static func register(voice: Dictionary) -> String`
+            - `static func profile_id_for(voice: Dictionary) -> String`
+        - 📄 [VoiceDNA.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/premise/VoiceDNA.gd.uid)
+      - 📂 **quirks/**
+        - 📄 [SystemQuirkEffects.gd](file:///D:/CodingProjects/spacegame/scripts/story/quirks/SystemQuirkEffects.gd)
+          - 🏛️ **global class SystemQuirkEffects**
+            - `static func effects_for(quirks: Array) -> Dictionary`
+            - `static func phase(hazard: Dictionary, t: float) -> Dictionary`
+            - `static func pulsar_drain(hazard: Dictionary, shield_capacity: float, current_shield: float) -> float`
+            - `static func environment_at(effects: Dictionary, t: float) -> Dictionary`
+        - 📄 [SystemQuirkEffects.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/quirks/SystemQuirkEffects.gd.uid)
+        - 📄 [SystemQuirkRunner.gd](file:///D:/CodingProjects/spacegame/scripts/story/quirks/SystemQuirkRunner.gd)
+          - 🏛️ **global class SystemQuirkRunner**
+            - `func _gs() -> Node`
+            - `func enter_system(quirks: Array) -> void`
+            - `func leave_system() -> void`
+            - `func _process(delta: float) -> void`
+            - `func _on_phase(h: Dictionary, state: String, was: String, ship: Node) -> void`
+            - `func _flash(color: Color) -> void`
+        - 📄 [SystemQuirkRunner.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/quirks/SystemQuirkRunner.gd.uid)
+      - 📂 **undercurrent/**
+        - 📄 [EchoLedgerStore.gd](file:///D:/CodingProjects/spacegame/scripts/story/undercurrent/EchoLedgerStore.gd)
+          - 🏛️ **global class EchoLedgerStore**
+            - `static func empty() -> Dictionary`
+            - `static func load_ledger(path: String = DEFAULT_PATH) -> Dictionary`
+            - `static func save_ledger(ledger: Dictionary, path: String = DEFAULT_PATH) -> bool`
+        - 📄 [EchoLedgerStore.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/undercurrent/EchoLedgerStore.gd.uid)
+        - 📄 [UndercurrentDirector.gd](file:///D:/CodingProjects/spacegame/scripts/story/undercurrent/UndercurrentDirector.gd)
+          - 🏛️ **global class UndercurrentDirector**
+            - `func _init() -> void`
+            - `func _ready() -> void`
+            - `func _process(delta: float) -> void`
+            - `func _exit_tree() -> void`
+            - `func on_player_death() -> bool`
+            - `func consume_death_moment() -> Dictionary`
+            - `func _eligible_death_line(prior_deaths: int) -> Dictionary`
+            - `func _load_lines() -> Array`
+            - `static func load_line_audio(res_path: String) -> AudioStream`
+        - 📄 [UndercurrentDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/undercurrent/UndercurrentDirector.gd.uid)
     - 📂 **systems/**
       - 📄 [IllegalMiningEnforcement.gd](file:///D:/CodingProjects/spacegame/scripts/systems/IllegalMiningEnforcement.gd)
         - 🏛️ **global class IllegalMiningEnforcement**
@@ -6729,6 +7557,7 @@ Root: `spacegame`
           - `func _draw_route_label(pos: Vector2, text: String, color: Color) -> void`
           - `func _gui_input(event: InputEvent) -> void`
           - `func _update_hover_tooltip(hover_pos: Vector2) -> void`
+          - `func _gate_class_line(sys_id: String) -> String`
           - `func _handle_click(click_pos: Vector2) -> void`
           - `func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void`
           - `func _show_route_detail(route: Dictionary, pos: Vector2) -> void`
@@ -6789,6 +7618,11 @@ Root: `spacegame`
         - `func _remove_last_queue_chip() -> void`
         - `func _clear_queue_chips() -> void`
       - 📄 [CombatPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/CombatPanel.gd.uid)
+      - 📄 [DamageVignette.gd](file:///D:/CodingProjects/spacegame/scripts/ui/DamageVignette.gd)
+        - `func _ready() -> void`
+        - `func hit(fraction: float, shield: bool) -> void`
+        - `func _process(delta: float) -> void`
+      - 📄 [DamageVignette.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/DamageVignette.gd.uid)
       - 📄 [DevPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/DevPanel.gd)
         - 🏛️ **global class DevPanel**
           - `func add_action_button(label: String, callback: Callable) -> Button`
@@ -6796,6 +7630,9 @@ Root: `spacegame`
           - `func set_story_debug_provider(provider: Callable) -> void`
           - `func _ready() -> void`
           - `func _build_chrome() -> void`
+          - `func _dev_bump_upgrade(sys: String) -> void`
+          - `func _dev_stock_upgrades() -> void`
+          - `func _dev_report_rating(prefix: String) -> void`
           - `func _build_story_debug_tab() -> void`
           - `func _refresh_sensor_reveal() -> void`
           - `func _build_sensor_reveal_tab() -> void`
@@ -6844,12 +7681,89 @@ Root: `spacegame`
           - `func _make_panel_style() -> StyleBoxFlat`
           - `func _style_action_btn(btn: Button) -> void`
       - 📄 [DevPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/DevPanel.gd.uid)
+      - 📄 [DroneMazeView.gd](file:///D:/CodingProjects/spacegame/scripts/ui/DroneMazeView.gd)
+        - `func begin(seed_value: int, kind: String, with_recorder: bool, material: String = "") -> void`
+        - `func _build_world() -> void`
+        - `func _build_corridors(grid: Array, wall_mat: Material, rng: RandomNumberGenerator) -> void`
+        - `func _build_cracks(wall_mat: Material) -> void`
+        - `func is_ready_to_fly() -> bool`
+        - `func finish_loading() -> void`
+        - `func _exit_tree() -> void`
+        - `func _floor_at(t: Dictionary) -> float`
+        - `func _add_rubble(grid: Array, mat: Material, rng: RandomNumberGenerator) -> void`
+        - `func _add_wreck_dressing(grid: Array, rng: RandomNumberGenerator) -> void`
+        - `static func _touches_open(grid: Array, x: int, y: int) -> bool`
+        - `static func _wall_material(kind: String) -> StandardMaterial3D`
+        - `static func _target_node(kind: String, tint: Color = Color(0, 0, 0, 0)) -> Node3D`
+        - `func _build_hud() -> void`
+        - `func _hud_label(parent: Control, font_size: int) -> Label`
+        - `func _process(delta: float) -> void`
+        - `func _axis(a: Key, b: Key) -> float`
+        - `func _input(event: InputEvent) -> void`
+        - `func _sync_camera() -> void`
+        - `func _hide_extracted() -> void`
+        - `func _update_hud() -> void`
+        - `static func _noun(kind: String) -> String`
+        - `func _play_bump() -> void`
+        - `func _finish() -> void`
+      - 📄 [DroneMazeView.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/DroneMazeView.gd.uid)
+      - 📄 [GalleryScreen.gd](file:///D:/CodingProjects/spacegame/scripts/ui/GalleryScreen.gd)
+        - `func _ready() -> void`
+        - `func _fill() -> void`
+        - `func _thumbnail(path: String) -> Texture2D`
+        - `func _build_viewer() -> void`
+        - `func _open(index: int) -> void`
+        - `func _step(direction: int) -> void`
+        - `func _delete_current() -> void`
+        - `func _unhandled_input(event: InputEvent) -> void`
+        - `func _close() -> void`
+      - 📄 [HudStyle.gd](file:///D:/CodingProjects/spacegame/scripts/ui/HudStyle.gd)
+        - `static func box(bg: Color, border: Color, width: int = 1, radius: int = 8, pad: int = 0) -> StyleBoxFlat`
+        - `static func panel() -> StyleBoxFlat`
+        - `static func style_panel(control: Control) -> void`
+        - `static func style_label(label: Label, size: int, colour: Color) -> void`
+        - `static func style_bar(bar: ProgressBar, fill: Color, height: int = 8) -> void`
+        - `static func style_button(button: BaseButton, font_size: int = 13, accent: Color = ACCENT) -> void`
+        - `static func style_row(button: Button) -> void`
+        - `static func selected_row() -> StyleBoxFlat`
+        - `static func style_flat(button: Button, colour: Color = DIM, size: int = 12) -> void`
+        - `static func make_theme() -> Theme`
+        - `static func rule(colour: Color = Color(0.2, 0.45, 0.7, 0.4), height: int = 1) -> ColorRect`
+      - 📄 [HudStyle.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/HudStyle.gd.uid)
+      - 📄 [InventoryScreen.gd](file:///D:/CodingProjects/spacegame/scripts/ui/InventoryScreen.gd)
+        - `func _ready() -> void`
+        - `func refresh() -> void`
+        - `func _screen_title() -> String`
+        - `func set_tab(tab_id: String) -> void`
+        - `func _build() -> void`
+        - `func _fill_grid(gs: Node) -> void`
+        - `func _slot(item_id: String, quantity: int, def) -> Control`
+        - `func _empty_socket(locked: bool) -> Control`
+        - `func _fill_detail(gs: Node) -> void`
+        - `func _fill_hold(gs: Node) -> void`
+        - `func _gs() -> Node`
+        - `func _tab_of(def) -> String`
+        - `func _category_color(def) -> Color`
+        - `func _category_name(def) -> String`
+        - `func _sort_key(def, id: String) -> String`
+        - `func _ore_icon(ore_id: String, px: int) -> TextureRect`
+        - `func _ore_color(ore_id: String) -> Color`
+        - `func _icon(def) -> Texture2D`
+        - `func _initials(def, id: String) -> String`
+        - `func _chip(text: String, colour: Color) -> Control`
+        - `func _label(text: String, size: int, colour: Color) -> Label`
+        - `func _rule() -> Control`
+        - `func _box(bg: Color, border: Color, width: int, radius: int, pad: int = 0) -> StyleBoxFlat`
+        - `static func _thousands(n: int) -> String`
+      - 📄 [InventoryScreen.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/InventoryScreen.gd.uid)
       - 📄 [InvestigationPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/InvestigationPanel.gd)
         - `func setup(owner_ui: Control, quest_manager: Node) -> void`
         - `func open_mission(id: String) -> void`
         - `func _process(delta: float) -> void`
         - `func _refresh() -> void`
         - `func _scan_status(report: Dictionary) -> void`
+        - `func _ask_decision() -> void`
+        - `func _nova_say(text: String, event: String) -> void`
         - `func _button(text: String, reason: String, action: Callable) -> void`
         - `func _label(text: String) -> void`
         - `static func _reason(reason: String) -> String`
@@ -6864,11 +7778,20 @@ Root: `spacegame`
         - `func _card_style(occupied: bool) -> StyleBoxFlat`
         - `func _activate_slot(slot_id: String, occupied: bool) -> void`
         - `func _finish_launch(loaded_campaign: bool) -> void`
+        - `func _warp_focus() -> Vector2`
+        - `func _play_launch_sequence() -> void`
+        - `func _undo_launch_sequence() -> void`
         - `func _request_delete(slot_id: String, display_name: String) -> void`
         - `func _confirm_delete() -> void`
         - `func _process(delta: float) -> void`
         - `func _draw() -> void`
       - 📄 [LandingScreen.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/LandingScreen.gd.uid)
+      - 📄 [LeveragePanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/LeveragePanel.gd)
+        - 🏛️ **global class LeveragePanel**
+          - `func _ready() -> void`
+          - `func show_entries(entries: Array) -> void`
+          - `func show_result(message: String) -> void`
+      - 📄 [LeveragePanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/LeveragePanel.gd.uid)
       - 📄 [LoadingWarpStarfield.gd](file:///D:/CodingProjects/spacegame/scripts/ui/LoadingWarpStarfield.gd)
         - `func set_vanishing_target(target: Control) -> void`
         - `func _ready() -> void`
@@ -6893,10 +7816,70 @@ Root: `spacegame`
           - `func _aabb(node: Node3D) -> AABB`
           - `func _collect(node: Node, out: Array) -> void`
       - 📄 [ModelViewer.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/ModelViewer.gd.uid)
+      - 📄 [PinBoardPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/PinBoardPanel.gd)
+        - 🏛️ **global class PinBoardPanel**
+          - `func _ready() -> void`
+          - `func show_threads(threads: Array, summary: Dictionary = {}) -> void`
+          - `func board_text() -> String`
+          - `func _render() -> void`
+          - `func _thread_row(t: Dictionary, revealed: bool) -> Control`
+          - `func _on_pin(thread_id: String, pinned: bool) -> void`
+      - 📄 [PinBoardPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/PinBoardPanel.gd.uid)
+      - 📄 [Screenshots.gd](file:///D:/CodingProjects/spacegame/scripts/ui/Screenshots.gd)
+        - `static func folder() -> String`
+        - `static func delete(path: String) -> void`
+        - `static func base_name() -> String`
+        - `func _unhandled_input(event: InputEvent) -> void`
+        - `func take(clean: bool = false) -> String`
+        - `func _hud_layers() -> Array`
+        - `func _flash() -> void`
+        - `func _click() -> void`
+        - `static func _make_shutter() -> AudioStreamWAV`
+      - 📄 [ShipShowcase.gd](file:///D:/CodingProjects/spacegame/scripts/ui/ShipShowcase.gd)
+        - `func _ready() -> void`
+        - `func _fit(model: Node3D) -> void`
+        - `func _add_thrusters(model: Node3D) -> void`
+        - `func _find_thruster_points(node: Node, out: Array[Node3D]) -> void`
+        - `func launch(duration: float = 1.1) -> void`
+        - `func _process(delta: float) -> void`
+      - 📄 [ShipShowcase.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/ShipShowcase.gd.uid)
+      - 📄 [SignalTuningPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/SignalTuningPanel.gd)
+        - `func begin(seed_value: int, interference: float, seconds: float = 0.0) -> void`
+        - `func _build() -> void`
+        - `func _build_timer(box: VBoxContainer) -> void`
+        - `static func timer_colour(fraction: float) -> Color`
+        - `func _update_timer() -> void`
+        - `func _slider(box: VBoxContainer, label_text: String) -> HSlider`
+        - `func _process(delta: float) -> void`
+        - `func _draw_scope() -> void`
+        - `func _start_hiss() -> void`
+        - `func _feed_hiss(amount: float) -> void`
+        - `func _finish(outcome_id: String) -> void`
+        - `func abort() -> void`
+      - 📄 [SignalTuningPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/SignalTuningPanel.gd.uid)
+      - 📄 [StoreScreen.gd](file:///D:/CodingProjects/spacegame/scripts/ui/StoreScreen.gd)
+        - `func _screen_title() -> String`
+        - `func _row(item_id: String) -> Dictionary`
+        - `func _fill_grid(_gs: Node) -> void`
+        - `func _fill_detail(gs: Node) -> void`
+        - `func _trade_button(text: String, bg: Color, edge: Color) -> Button`
+      - 📄 [StoreScreen.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/StoreScreen.gd.uid)
+      - 📄 [SubtitleOverlay.gd](file:///D:/CodingProjects/spacegame/scripts/ui/SubtitleOverlay.gd)
+        - 🏛️ **global class SubtitleOverlay**
+          - `func _ready() -> void`
+          - `func show_line(text: String, speaker: String = "", seconds: float = -1.0) -> void`
+          - `func current_text() -> String`
+      - 📄 [SubtitleOverlay.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/SubtitleOverlay.gd.uid)
+      - 📄 [TypewriterLabel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/TypewriterLabel.gd)
+        - `func _ready() -> void`
+        - `func _process(delta: float) -> void`
+        - `func finish() -> void`
+        - `func is_typing() -> bool`
+      - 📄 [TypewriterLabel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/TypewriterLabel.gd.uid)
       - 📄 [UILayoutManager.gd](file:///D:/CodingProjects/spacegame/scripts/ui/UILayoutManager.gd)
         - `func _disconnect_layout() -> void`
         - `func register_panel(id: String, panel: Control) -> void`
-        - `func reset_defaults() -> void`
+        - `func reset_defaults(persist: bool = true) -> void`
         - `func _content_minimum(panel: Control) -> Vector2`
         - `func enforce_layout() -> void`
         - `static func solve_layout(viewport: Vector2, entries: Array, quest_size: Vector2) -> Dictionary`
@@ -6908,6 +7891,36 @@ Root: `spacegame`
         - `func _save_layout() -> void`
         - `func _load_layout() -> void`
       - 📄 [UILayoutManager.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/UILayoutManager.gd.uid)
+      - 📄 [UpgradeGoalCard.gd](file:///D:/CodingProjects/spacegame/scripts/ui/UpgradeGoalCard.gd)
+        - `func _ready() -> void`
+        - `func _process(delta: float) -> void`
+        - `static func current_goal() -> Dictionary`
+        - `static func set_goal(sys: String, path: String, tier: int) -> void`
+        - `func refresh() -> void`
+      - 📄 [Wiki.gd](file:///D:/CodingProjects/spacegame/scripts/ui/Wiki.gd)
+        - `static func data() -> Dictionary`
+        - `static func using_controller() -> bool`
+        - `static func control_label(control_id: String) -> String`
+        - `static func body_text(e: Dictionary) -> String`
+        - `static func categories() -> Array`
+        - `static func all_entries() -> Array`
+        - `static func entry(id: String) -> Dictionary`
+        - `static func _story_state() -> Dictionary`
+        - `static func is_unlocked(id: String) -> bool`
+        - `static func is_unread(id: String) -> bool`
+        - `static func mark_read(id: String) -> void`
+        - `static func unlocked_entries() -> Array`
+        - `static func unread_count() -> int`
+        - `static func unlock(id: String) -> bool`
+      - 📄 [Wiki.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/Wiki.gd.uid)
+      - 📄 [WikiScreen.gd](file:///D:/CodingProjects/spacegame/scripts/ui/WikiScreen.gd)
+        - `func _ready() -> void`
+        - `func _build_list() -> void`
+        - `func _refresh_labels() -> void`
+        - `func _show(id: String) -> void`
+        - `func _unhandled_input(event: InputEvent) -> void`
+        - `func _close() -> void`
+      - 📄 [WikiScreen.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/WikiScreen.gd.uid)
     - 📂 **visuals/**
       - 📄 [AsteroidModels.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/AsteroidModels.gd)
         - 🏛️ **global class AsteroidModels**
@@ -6916,20 +7929,48 @@ Root: `spacegame`
           - `static func apply_model_index(mesh_instance: MeshInstance3D, idx: int) -> void`
           - `static func model_index_for_seed(rng_seed: int) -> int`
           - `static func material_for_index(idx: int) -> Material`
+          - `static func ore_material_for_index(idx: int, ore_type: String) -> Material`
           - `static func fragment_scene_path_for_index(idx: int) -> String`
       - 📄 [AsteroidModels.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/AsteroidModels.gd.uid)
+      - 📄 [BrokenGateEffect.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/BrokenGateEffect.gd)
+        - `func _ready() -> void`
+        - `func _build_bore() -> void`
+        - `func _build_materials() -> void`
+        - `func _build_ring() -> Node3D`
+        - `func _build_arcs() -> void`
+        - `func _process(delta: float) -> void`
+        - `func _strike_arc(rejitter: bool = false) -> void`
+        - `func _shed_plate(ring: Node3D) -> void`
+        - `func surge(strength: float = 1.0) -> void`
+        - `func exit_burst(duration: float) -> void`
+      - 📄 [BrokenGateEffect.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/BrokenGateEffect.gd.uid)
       - 📄 [CombatDamageNumber.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/CombatDamageNumber.gd)
         - 🏛️ **global class CombatDamageNumber**
           - `static func spawn(parent: Node, pos: Vector3, text: String, color: Color, big: bool = false, scale: float = 1.0) -> void`
       - 📄 [CombatDamageNumber.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/CombatDamageNumber.gd.uid)
+      - 📄 [DamageSparks.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/DamageSparks.gd)
+        - `func _process(delta: float) -> void`
+      - 📄 [DamageSparks.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/DamageSparks.gd.uid)
       - 📄 [EngineExhaust.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/EngineExhaust.gd)
         - 🏛️ **global class EngineExhaust**
       - 📄 [EngineExhaust.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/EngineExhaust.gd.uid)
       - 📄 [ImpactEffect.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/ImpactEffect.gd)
         - 🏛️ **global class ImpactEffect**
-          - `static func spawn_hit(parent: Node3D, pos: Vector3, col: Color) -> void`
+          - `static func spawn_hit(parent: Node3D, pos: Vector3, col: Color, size: float = 1.0) -> void`
+          - `static func spawn_shield_ripple(parent: Node3D, center: Vector3, radius: float, contact: Vector3, col: Color = Color(0.35, 0.85, 1.0)) -> void`
           - `static func spawn_explosion(parent: Node3D, pos: Vector3, col: Color, size: float = 1.0) -> void`
+          - `static func _add_fireball(container: Node3D, size: float) -> void`
+          - `static func _add_blast_light(container: Node3D, col: Color, size: float) -> void`
+          - `static func _add_shockwave(container: Node3D, size: float) -> void`
+          - `static func _add_hull_chunks(container: Node3D, col: Color, size: float) -> void`
+          - `static func _add_smoke(container: Node3D, size: float) -> void`
       - 📄 [ImpactEffect.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/ImpactEffect.gd.uid)
+      - 📄 [NpcEngineGlow.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/NpcEngineGlow.gd)
+        - 🏛️ **global class NpcEngineGlow**
+          - `static func is_engine_point(node: Node) -> bool`
+          - `static func build(visual: Node3D, points: Array[Node3D], color: Color) -> Dictionary`
+          - `static func animate(glow: MultiMeshInstance3D, material: StandardMaterial3D, bases: Array[Transform3D], speed_ratio: float) -> void`
+      - 📄 [NpcEngineGlow.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/NpcEngineGlow.gd.uid)
       - 📄 [PlanetRotation.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/PlanetRotation.gd)
         - `func _ready() -> void`
         - `func _process(delta: float) -> void`
@@ -6938,10 +7979,28 @@ Root: `spacegame`
       - 📄 [SkyFollower.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/SkyFollower.gd)
         - `func _process(_delta: float) -> void`
       - 📄 [SkyFollower.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/SkyFollower.gd.uid)
+      - 📄 [SpeedLines.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/SpeedLines.gd)
+        - `func _ready() -> void`
+        - `func _process(delta: float) -> void`
+        - `func _make_dust() -> GPUParticles3D`
+        - `func _make_streaks() -> GPUParticles3D`
+      - 📄 [SpeedLines.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/SpeedLines.gd.uid)
+      - 📄 [StationLights.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/StationLights.gd)
+        - `static func attach(station: Node3D) -> void`
+        - `static func _bounds(station: Node3D) -> AABB`
+        - `func _build(box: AABB, station: Node3D) -> void`
+        - `func _beacon(pos: Vector3, colour: Color, size: float, kind: String) -> void`
+        - `func _build_drone(r: float) -> Node3D`
+        - `func _part(parent: Node3D, mesh: Mesh, pos: Vector3, rot: Vector3) -> void`
+        - `func _light_sphere(colour: Color, size: float) -> Node3D`
+        - `static func _envelope(t: float, grow: float, hold: float, shrink: float) -> float`
+        - `func _process(delta: float) -> void`
+      - 📄 [StationLights.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/StationLights.gd.uid)
       - 📄 [SystemAmbience.gd](file:///D:/CodingProjects/spacegame/scripts/visuals/SystemAmbience.gd)
         - `static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D`
         - `static func add_starfield(system_root: Node3D, config: Dictionary = {}) -> MeshInstance3D`
         - `static func add_nebula(system_root: Node3D, config: Dictionary = {}) -> Node3D`
+        - `static func apply_nebula_sky(env: Environment, system_id: String, star_type: String = "yellow") -> void`
         - `static func apply_glow(env: Environment, connect_toggle: bool = true) -> void`
         - `static func apply_bloom_amount(env: Environment, amount: float) -> void`
       - 📄 [SystemAmbience.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/SystemAmbience.gd.uid)
@@ -6959,9 +8018,26 @@ Root: `spacegame`
           - `func _set_node_visible(effect: Dictionary, visible: bool) -> void`
       - 📄 [ThrusterBank.gd.current_best_backup](file:///D:/CodingProjects/spacegame/scripts/visuals/ThrusterBank.gd.current_best_backup)
       - 📄 [ThrusterBank.gd.uid](file:///D:/CodingProjects/spacegame/scripts/visuals/ThrusterBank.gd.uid)
+    - 📂 **world/**
+      - 📄 [TrafficDirector.gd](file:///D:/CodingProjects/spacegame/scripts/world/TrafficDirector.gd)
+        - `func _process(delta: float) -> void`
+        - `func spawn_now() -> void`
+        - `func _spawn() -> void`
+        - `func _tick_ship(entry: Dictionary) -> void`
+        - `func _local_faction() -> String`
+        - `func clear() -> void`
+      - 📄 [TrafficDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/world/TrafficDirector.gd.uid)
   - 📂 **shaders/**
+    - 📄 [beacon_halo.gdshader](file:///D:/CodingProjects/spacegame/shaders/beacon_halo.gdshader)
+    - 📄 [beacon_halo.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/beacon_halo.gdshader.uid)
+    - 📄 [broken_gate_tunnel.gdshader](file:///D:/CodingProjects/spacegame/shaders/broken_gate_tunnel.gdshader)
+    - 📄 [broken_gate_tunnel.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/broken_gate_tunnel.gdshader.uid)
+    - 📄 [damage_vignette.gdshader](file:///D:/CodingProjects/spacegame/shaders/damage_vignette.gdshader)
+    - 📄 [damage_vignette.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/damage_vignette.gdshader.uid)
     - 📄 [distortion.gdshader](file:///D:/CodingProjects/spacegame/shaders/distortion.gdshader)
     - 📄 [distortion.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/distortion.gdshader.uid)
+    - 📄 [flipbook_additive.gdshader](file:///D:/CodingProjects/spacegame/shaders/flipbook_additive.gdshader)
+    - 📄 [flipbook_additive.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/flipbook_additive.gdshader.uid)
     - 📄 [hyperspace_tunnel.gdshader](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel.gdshader)
     - 📄 [hyperspace_tunnel.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel.gdshader.uid)
     - 📄 [hyperspace_tunnel_3d.gdshader](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel_3d.gdshader)
@@ -6970,6 +8046,10 @@ Root: `spacegame`
     - 📄 [intro_glitch.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/intro_glitch.gdshader.uid)
     - 📄 [nebula.gdshader](file:///D:/CodingProjects/spacegame/shaders/nebula.gdshader)
     - 📄 [nebula.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/nebula.gdshader.uid)
+    - 📄 [nebula_sky.gdshader](file:///D:/CodingProjects/spacegame/shaders/nebula_sky.gdshader)
+    - 📄 [nebula_sky.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/nebula_sky.gdshader.uid)
+    - 📄 [shield_ripple.gdshader](file:///D:/CodingProjects/spacegame/shaders/shield_ripple.gdshader)
+    - 📄 [shield_ripple.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/shield_ripple.gdshader.uid)
     - 📄 [starfield.gdshader](file:///D:/CodingProjects/spacegame/shaders/starfield.gdshader)
     - 📄 [starfield.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/starfield.gdshader.uid)
     - 📄 [warp_exit_bubble.gdshader](file:///D:/CodingProjects/spacegame/shaders/warp_exit_bubble.gdshader)
@@ -7169,11 +8249,17 @@ Root: `spacegame`
         - `func _test_json_codec() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_domain_foundation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_domain_foundation_tests.gd.uid)
+      - 📄 [run_gate_class_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_gate_class_tests.gd)
+        - `func _initialize() -> void`
+        - `func _tiers(weapons: int, engine: int, shields: int, mining: int, cargo: int) -> Dictionary`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_gate_class_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_gate_class_tests.gd.uid)
       - 📄 [run_hud_layout_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_hud_layout_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _check_rects(rects: Array[Rect2], viewport: Vector2) -> void`
         - `func _expect(ok: bool, message: String) -> void`
+      - 📄 [run_hud_layout_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_hud_layout_tests.gd.uid)
       - 📄 [run_intro_handhold_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_intro_handhold_tests.gd)
         - `func _initialize() -> void`
         - `func _test_dock_command_hides_intro_arrow_until_docking() -> void`
@@ -7222,6 +8308,7 @@ Root: `spacegame`
         - `func _expect(condition: bool, message: String)`
         - `func _test_local_context(context: Dictionary)`
         - `func _finish_board_job(quests: Node, gs: Node, pilot: CharacterBody3D, ui: Control, station: Node3D)`
+        - `func _test_board_save_with_ordinary_posting(context: Dictionary)`
         - `func _test_board_save_aliases(context: Dictionary)`
       - 📄 [run_investigation_board_lifecycle_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_board_lifecycle_tests.gd.uid)
       - 📄 [run_investigation_offer_tests.gd](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_offer_tests.gd)
@@ -7260,6 +8347,8 @@ Root: `spacegame`
         - `func _test_wrong_certification_and_report_escape()`
         - `func _test_inventory_replay_and_turn_in()`
         - `func _test_corrupt_restore_is_atomic()`
+        - `func _test_unstable_archive()`
+        - `func _test_transmitter_lure()`
         - `func _expect(ok: bool, message: String)`
         - `func _test_canonical_save_roundtrip()`
       - 📄 [run_investigation_runtime_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/domain/run_investigation_runtime_tests.gd.uid)
@@ -8153,6 +9242,22 @@ Root: `spacegame`
         - `func _test_story_manager_topic_bookkeeping() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_ambient_chat_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ambient_chat_tests.gd.uid)
+      - 📄 [run_arc_engine_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_arc_engine_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _m(verb: String, tags: Array, routes: Dictionary) -> Dictionary`
+        - `func _library_with(card: Dictionary)`
+        - `func _base(card_id: String, beats: Array, resolutions: Array, default_res: String) -> Dictionary`
+        - `func _cast() -> Dictionary`
+        - `func _start(lib, card_id: String) -> Dictionary`
+        - `func _test_two_mission_beat_waits_for_both() -> void`
+        - `func _test_competing_contracts() -> void`
+        - `func _test_finding_then_choice_then_resolution() -> void`
+        - `func _test_comms_reversal_mapping() -> void`
+        - `func _test_failure_falls_to_default_or_failure_tag() -> void`
+        - `func _test_consequences_applied_to_cast() -> void`
+        - `func _test_whole_deck_always_resolves() -> void`
+      - 📄 [run_arc_engine_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_arc_engine_tests.gd.uid)
       - 📄 [run_board_delivery_recipient_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_board_delivery_recipient_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
@@ -8310,6 +9415,10 @@ Root: `spacegame`
         - `func _test_posting_generation() -> void`
         - `func _test_posting_withholding() -> void`
       - 📄 [run_collection_contract_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_collection_contract_tests.gd.uid)
+      - 📄 [run_comms_bus_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_comms_bus_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_comms_bus_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_comms_bus_tests.gd.uid)
       - 📄 [run_conversation_slicing_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_conversation_slicing_tests.gd)
         - `func _initialize() -> void`
         - `func _plan(intent_count: int) -> Dictionary`
@@ -8321,6 +9430,10 @@ Root: `spacegame`
         - `func _test_slice_prompt_asks_for_one_thing_only() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_conversation_slicing_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_conversation_slicing_tests.gd.uid)
+      - 📄 [run_crack_mesher_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_crack_mesher_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_crack_mesher_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_crack_mesher_tests.gd.uid)
       - 📄 [run_desire_progress_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_desire_progress_tests.gd)
         - `func _initialize()`
         - `func _run()`
@@ -8394,11 +9507,47 @@ Root: `spacegame`
         - `func _test_rewrite_budget_is_bounded() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_dialogue_quality_gate_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_dialogue_quality_gate_tests.gd.uid)
+      - 📄 [run_drone_maze_activity_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_drone_maze_activity_tests.gd)
+        - 🏛️ **FakeShip**
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_drone_maze_activity_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_drone_maze_activity_tests.gd.uid)
+      - 📄 [run_drone_maze_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_drone_maze_tests.gd)
+        - `func _initialize() -> void`
+        - `func _all_cells_reachable(grid: Array) -> bool`
+        - `func _fly_to_next(state: Dictionary) -> Dictionary`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_drone_maze_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_drone_maze_tests.gd.uid)
+      - 📄 [run_engine_thruster_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_engine_thruster_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_engine_thruster_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_engine_thruster_tests.gd.uid)
       - 📄 [run_faction_agent_role_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_faction_agent_role_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
         - `func _expect(ok: bool, message: String) -> void`
       - 📄 [run_faction_agent_role_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_faction_agent_role_tests.gd.uid)
+      - 📄 [run_faction_dna_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_faction_dna_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _test_records() -> void`
+        - `func _test_names() -> void`
+        - `func _test_deeds() -> void`
+      - 📄 [run_faction_dna_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_faction_dna_tests.gd.uid)
+      - 📄 [run_faction_look_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_faction_look_tests.gd)
+        - `func _initialize() -> void`
+        - `func _first_hull_material(root: Node3D) -> StandardMaterial3D`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_faction_look_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_faction_look_tests.gd.uid)
+      - 📄 [run_failure_fallout_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_failure_fallout_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_failure_fallout_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_failure_fallout_tests.gd.uid)
+      - 📄 [run_faint_transmission_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_faint_transmission_tests.gd)
+        - `func _state() -> Dictionary`
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_faint_transmission_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_faint_transmission_tests.gd.uid)
       - 📄 [run_fallback_line_bank_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fallback_line_bank_tests.gd)
         - `func _initialize() -> void`
         - `func _test_create_bank_caps_at_target_and_marks_fallbacks() -> void`
@@ -8422,6 +9571,11 @@ Root: `spacegame`
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_fixed_cast_rapport_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_rapport_tests.gd.uid)
+      - 📄 [run_fixed_cast_role_guard_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_role_guard_tests.gd)
+        - `func _initialize() -> void`
+        - `func _has_code(result, code: String, field: String) -> bool`
+        - `func _expect(ok: bool, message: String) -> void`
+      - 📄 [run_fixed_cast_role_guard_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_role_guard_tests.gd.uid)
       - 📄 [run_fixed_cast_soul_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_soul_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8434,6 +9588,35 @@ Root: `spacegame`
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_fixed_cast_voice_bank_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fixed_cast_voice_bank_tests.gd.uid)
+      - 📄 [run_fuel_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_fuel_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_fuel_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_fuel_tests.gd.uid)
+      - 📄 [run_gate_rating_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_gate_rating_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_gate_rating_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_gate_rating_tests.gd.uid)
+      - 📄 [run_generation_window_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_generation_window_tests.gd)
+        - 🏛️ **FakeShip**
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_generation_window_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_generation_window_tests.gd.uid)
+      - 📄 [run_hidden_hand_forge_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_hidden_hand_forge_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _world() -> Dictionary`
+        - `func _test_forged_card_is_valid_and_playable() -> void`
+      - 📄 [run_hidden_hand_forge_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_hidden_hand_forge_tests.gd.uid)
+      - 📄 [run_hidden_hand_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_hidden_hand_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _test_begin_season() -> void`
+        - `func _card_with_threads(method: String) -> Dictionary`
+        - `func _test_seeding_traces_and_decoys() -> void`
+        - `func _test_seen_and_pinned() -> void`
+        - `func _test_whole_deck_traces() -> void`
+        - `func _test_candidates_draft_and_lock() -> void`
+      - 📄 [run_hidden_hand_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_hidden_hand_tests.gd.uid)
       - 📄 [run_intro_dock_gating_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_intro_dock_gating_tests.gd)
         - `func _initialize() -> void`
         - `func _test_first_dock_line_is_once_per_campaign() -> void`
@@ -8479,6 +9662,10 @@ Root: `spacegame`
         - `func _test_known_facts_sync_legacy_player_knows() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_knowledge_ledger_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_knowledge_ledger_tests.gd.uid)
+      - 📄 [run_leverage_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_leverage_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_leverage_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_leverage_tests.gd.uid)
       - 📄 [run_line_bank_refill_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_line_bank_refill_tests.gd)
         - `func _initialize() -> void`
         - `func _refill_jobs(scheduler: RefCounted) -> Array`
@@ -8486,6 +9673,15 @@ Root: `spacegame`
         - `func _test_nova_bank_seed_wiring() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_line_bank_refill_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_line_bank_refill_tests.gd.uid)
+      - 📄 [run_line_writer_live.gd](file:///D:/CodingProjects/spacegame/tests/story/run_line_writer_live.gd)
+        - `func _initialize() -> void`
+        - `func _send() -> void`
+        - `func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void`
+      - 📄 [run_line_writer_live.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_line_writer_live.gd.uid)
+      - 📄 [run_line_writer_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_line_writer_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_line_writer_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_line_writer_tests.gd.uid)
       - 📄 [run_local_pressure_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_local_pressure_tests.gd)
         - `func _initialize()`
         - `func _run()`
@@ -8553,6 +9749,11 @@ Root: `spacegame`
         - `func _run() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_mission_card_delivery_route_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_card_delivery_route_tests.gd.uid)
+      - 📄 [run_mission_complication_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_complication_tests.gd)
+        - `func _offer(objective: Dictionary) -> Dictionary`
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_mission_complication_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_complication_tests.gd.uid)
       - 📄 [run_mission_conversation_compiler_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_conversation_compiler_tests.gd)
         - `func _initialize() -> void`
         - `func _test_required_keys_are_flat_and_intent_owned() -> void`
@@ -8644,6 +9845,13 @@ Root: `spacegame`
         - `func _test_select_best_candidate_or_withhold_for_alternate() -> void`
         - `func _packet() -> Dictionary`
       - 📄 [run_mission_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_director_tests.gd.uid)
+      - 📄 [run_mission_freshness_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_freshness_tests.gd)
+        - `func _initialize() -> void`
+        - `func _campaign(index: int) -> Dictionary`
+        - `func _world(system_n: int) -> Dictionary`
+        - `func _top(counts: Dictionary, n: int) -> String`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_mission_freshness_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_freshness_tests.gd.uid)
       - 📄 [run_mission_history_ledger_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_history_ledger_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8669,6 +9877,12 @@ Root: `spacegame`
         - `func _test_code_owned_fields() -> void`
         - `func _test_effects() -> void`
       - 📄 [run_mission_outcome_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_outcome_tests.gd.uid)
+      - 📄 [run_mission_twist_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_mission_twist_tests.gd)
+        - 🏛️ **FakeShip**
+        - `func _kill_offer() -> Dictionary`
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_mission_twist_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_mission_twist_tests.gd.uid)
       - 📄 [run_narrative_cache_invalidation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_narrative_cache_invalidation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_store_and_scheduler_discard_stale_disposable_work() -> void`
@@ -8761,6 +9975,10 @@ Root: `spacegame`
       - 📄 [run_nova_anatomy_slip_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_nova_anatomy_slip_tests.gd)
         - `func _initialize() -> void`
       - 📄 [run_nova_anatomy_slip_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_nova_anatomy_slip_tests.gd.uid)
+      - 📄 [run_nova_investigation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_nova_investigation_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_nova_investigation_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_nova_investigation_tests.gd.uid)
       - 📄 [run_nova_line_bank_category_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_nova_line_bank_category_tests.gd)
         - `func _initialize() -> void`
         - `func _test_registry_contents() -> void`
@@ -8782,6 +10000,10 @@ Root: `spacegame`
         - `func _test_history_integrity() -> void`
         - `func _test_opening_history() -> void`
       - 📄 [run_novelty_history_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_novelty_history_tests.gd.uid)
+      - 📄 [run_ore_type_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_ore_type_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_ore_type_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ore_type_tests.gd.uid)
       - 📄 [run_outcome_callback_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_outcome_callback_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
@@ -8799,6 +10021,10 @@ Root: `spacegame`
         - `func _test_persisted_outcome_memories() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_outcome_reaction_projector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_outcome_reaction_projector_tests.gd.uid)
+      - 📄 [run_pin_board_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_pin_board_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_pin_board_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_pin_board_tests.gd.uid)
       - 📄 [run_player_address_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_player_address_tests.gd)
         - `func _initialize() -> void`
         - `func _test_strips_every_position() -> void`
@@ -8807,6 +10033,65 @@ Root: `spacegame`
         - `func _test_leaves_ordinary_text_alone() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_player_address_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_player_address_tests.gd.uid)
+      - 📄 [run_premise_card_history_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_premise_card_history_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _deck(n: int) -> Array`
+        - `func _test_fresh_cards_come_first() -> void`
+        - `func _test_recent_cards_are_held_back() -> void`
+        - `func _test_cycle_advances_and_keeps_recency() -> void`
+        - `func _test_order_is_stable_per_seed() -> void`
+        - `func _test_save_load_and_corruption() -> void`
+      - 📄 [run_premise_card_history_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_premise_card_history_tests.gd.uid)
+      - 📄 [run_premise_card_library_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_premise_card_library_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _test_real_deck_loads_completely() -> void`
+        - `func _minimal_card(card_id: String) -> Dictionary`
+        - `func _test_bad_cards_are_skipped_not_fatal() -> void`
+        - `func _test_helpers() -> void`
+      - 📄 [run_premise_card_library_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_premise_card_library_tests.gd.uid)
+      - 📄 [run_premise_card_selector_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_premise_card_selector_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _card(card_id: String, extra: Dictionary = {}) -> Dictionary`
+        - `func _library(cards: Array)`
+        - `func _test_hard_requirements() -> void`
+        - `func _test_freshness_beats_fit() -> void`
+        - `func _test_fit_orders_equally_fresh_cards() -> void`
+        - `func _test_campaign_exclusion() -> void`
+        - `func _test_real_deck() -> void`
+      - 📄 [run_premise_card_selector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_premise_card_selector_tests.gd.uid)
+      - 📄 [run_premise_casting_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_premise_casting_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _world() -> Dictionary`
+        - `func _all_text(card: Dictionary) -> String`
+        - `func _test_every_card_casts_and_fills() -> void`
+        - `func _test_reuse_and_distinct_places() -> void`
+        - `func _test_deterministic() -> void`
+      - 📄 [run_premise_casting_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_premise_casting_tests.gd.uid)
+      - 📄 [run_premise_composer_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_premise_composer_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _world() -> Dictionary`
+        - `func _test_every_mission_composes_into_a_valid_offer() -> void`
+        - `func _investigation_world() -> Dictionary`
+        - `func _test_investigations_become_real() -> void`
+      - 📄 [run_premise_composer_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_premise_composer_tests.gd.uid)
+      - 📄 [run_premise_director_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_premise_director_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _world(system_n: int) -> Dictionary`
+        - `func _director()`
+        - `func _test_no_arcs_before_the_tutorial_ends() -> void`
+        - `func _test_campaign_simulation() -> void`
+        - `func _test_save_reload_keeps_arcs() -> void`
+        - `func _test_ignored_arcs_settle() -> void`
+        - `func _test_main_story_season() -> void`
+        - `func _test_written_lines() -> void`
+      - 📄 [run_premise_director_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_premise_director_tests.gd.uid)
+      - 📄 [run_premise_suite.sh](file:///D:/CodingProjects/spacegame/tests/story/run_premise_suite.sh)
       - 📄 [run_pressure_card_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_pressure_card_tests.gd)
         - `func _initialize()`
         - `func _run()`
@@ -8898,6 +10183,26 @@ Root: `spacegame`
         - `func _test_persistence_round_trip() -> void`
         - `func _test_replace_last_line() -> void`
       - 📄 [run_quiet_moment_selector_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_quiet_moment_selector_tests.gd.uid)
+      - 📄 [run_radio_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_radio_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _card(card_id: String) -> Dictionary`
+        - `func _test_broadcast_contents() -> void`
+        - `func _test_director_airs_each_item_once() -> void`
+      - 📄 [run_radio_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_radio_tests.gd.uid)
+      - 📄 [run_recurring_cast_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_recurring_cast_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _person(eid: String, name: String) -> Dictionary`
+        - `func _test_rules() -> void`
+        - `func _test_campaign() -> void`
+        - `func _world(n: int) -> Dictionary`
+      - 📄 [run_recurring_cast_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_recurring_cast_tests.gd.uid)
+      - 📄 [run_recurring_encounter_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_recurring_encounter_tests.gd)
+        - `func _state() -> Dictionary`
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_recurring_encounter_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_recurring_encounter_tests.gd.uid)
       - 📄 [run_scheduler_slice_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_scheduler_slice_tests.gd)
         - `func _initialize() -> void`
         - `func _plan(intent_count: int) -> Dictionary`
@@ -8910,6 +10215,13 @@ Root: `spacegame`
         - `func _test_waiting_is_distinguishable_from_stalled() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_scheduler_slice_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_scheduler_slice_tests.gd.uid)
+      - 📄 [run_secret_leak_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_secret_leak_tests.gd)
+        - `func _initialize() -> void`
+        - `func _test_detector() -> void`
+        - `func _scan_dir(path: String, extension: String, strings_only: bool) -> void`
+        - `func _scan_file(path: String, strings_only: bool) -> void`
+        - `func _quoted_strings(line: String) -> String`
+      - 📄 [run_secret_leak_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_secret_leak_tests.gd.uid)
       - 📄 [run_ship_behavior_observer_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_ship_behavior_observer_tests.gd)
         - `func _initialize() -> void`
         - `func _capture(observer: Node) -> Array`
@@ -8931,6 +10243,26 @@ Root: `spacegame`
         - `func _test_remaining_emitters_are_wired() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_ship_movement_event_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ship_movement_event_tests.gd.uid)
+      - 📄 [run_showrunner_live.gd](file:///D:/CodingProjects/spacegame/tests/story/run_showrunner_live.gd)
+        - `func _initialize() -> void`
+        - `func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void`
+      - 📄 [run_showrunner_live.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_showrunner_live.gd.uid)
+      - 📄 [run_showrunner_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_showrunner_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `static func build_fixture() -> Dictionary`
+        - `func _test_request(fixture: Dictionary) -> void`
+        - `func _answer(candidate: String, thread_ids: Array, truth: String = "") -> String`
+        - `func _test_parse(fixture: Dictionary) -> void`
+      - 📄 [run_showrunner_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_showrunner_tests.gd.uid)
+      - 📄 [run_signal_tuning_activity_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_signal_tuning_activity_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_signal_tuning_activity_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_signal_tuning_activity_tests.gd.uid)
+      - 📄 [run_signal_tuning_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_signal_tuning_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_signal_tuning_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_signal_tuning_tests.gd.uid)
       - 📄 [run_story_agent_offer_builder_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_story_agent_offer_builder_tests.gd)
         - `func _initialize() -> void`
         - `func _expect(condition: bool, message: String) -> void`
@@ -8975,6 +10307,25 @@ Root: `spacegame`
         - `func _test_headless_capture_is_safe() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_story_screenshot_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_story_screenshot_tests.gd.uid)
+      - 📄 [run_subtitle_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_subtitle_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_subtitle_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_subtitle_tests.gd.uid)
+      - 📄 [run_system_profile_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_system_profile_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _test_deterministic() -> void`
+        - `func _test_first_system_is_clean() -> void`
+        - `func _test_distribution_and_star_bias() -> void`
+        - `func _test_apply_changes() -> void`
+      - 📄 [run_system_profile_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_system_profile_tests.gd.uid)
+      - 📄 [run_system_quirk_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_system_quirk_tests.gd)
+        - 🏛️ **FakeShip**
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _test_rules() -> void`
+        - `func _test_runner() -> void`
+      - 📄 [run_system_quirk_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_system_quirk_tests.gd.uid)
       - 📄 [run_terminal_transaction_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_terminal_transaction_tests.gd)
         - 🏛️ **World**
           - `func request_safe_checkpoint(reason: String, _station: Node) -> bool`
@@ -9001,6 +10352,22 @@ Root: `spacegame`
         - `func _test_staged_callback_applies_once() -> void`
         - `func _test_in_flight_pending() -> void`
       - 📄 [run_terminal_transaction_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_terminal_transaction_tests.gd.uid)
+      - 📄 [run_tts_priority_live.gd](file:///D:/CodingProjects/spacegame/tests/story/run_tts_priority_live.gd)
+        - `func _initialize() -> void`
+      - 📄 [run_tts_priority_live.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_tts_priority_live.gd.uid)
+      - 📄 [run_undercurrent_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_undercurrent_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+        - `func _director(play_hours: float, deaths: int, seed_value: int)`
+        - `func _test_never_early() -> void`
+        - `func _test_rarity() -> void`
+        - `func _test_once_per_machine() -> void`
+        - `func _test_audio_and_ledger_persist() -> void`
+      - 📄 [run_undercurrent_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_undercurrent_tests.gd.uid)
+      - 📄 [run_voice_dna_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_voice_dna_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_voice_dna_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_voice_dna_tests.gd.uid)
     - 📂 **systems/**
       - 📄 [run_illegal_mining_enforcement_tests.gd](file:///D:/CodingProjects/spacegame/tests/systems/run_illegal_mining_enforcement_tests.gd)
         - `func _initialize() -> void`
@@ -9204,13 +10571,47 @@ Root: `spacegame`
         - `func _settle(frames: int) -> void`
         - `func _shot(out_dir: String, tag: String) -> void`
       - 📄 [viewer_test.gd.uid](file:///D:/CodingProjects/spacegame/tools/assembler_preview/viewer_test.gd.uid)
+    - 📄 [asteroid_ore_snapshot.gd](file:///D:/CodingProjects/spacegame/tools/asteroid_ore_snapshot.gd)
+      - `func _initialize() -> void`
+    - 📄 [asteroid_ore_snapshot.gd.uid](file:///D:/CodingProjects/spacegame/tools/asteroid_ore_snapshot.gd.uid)
     - 📄 [bake_taunt_audio.py](file:///D:/CodingProjects/spacegame/tools/bake_taunt_audio.py)
       - `def render_wav(text, voice, speed, pause)`
       - `def to_ogg(wav_bytes, path)`
       - `def main()`
+    - 📄 [bake_undercurrent_audio.py](file:///D:/CodingProjects/spacegame/tools/bake_undercurrent_audio.py)
+      - `def render(text, voice)`
+      - `def spoken(text, clones)`
+      - `def render_part(part, line, mappings, clones)`
+      - `def res_to_path(res_path)`
+      - `def install_take(line_id, take_path)`
+      - `def main()`
+    - 📄 [combat_fx_snapshot.gd](file:///D:/CodingProjects/spacegame/tools/combat_fx_snapshot.gd)
+      - `func _initialize() -> void`
+      - `func _stage() -> Node3D`
+      - `func _run() -> void`
+      - `func _wait(seconds: float) -> void`
+      - `func _frames(n: int) -> void`
+      - `func _shot(name: String) -> void`
+    - 📄 [combat_fx_snapshot.gd.uid](file:///D:/CodingProjects/spacegame/tools/combat_fx_snapshot.gd.uid)
+    - 📄 [compose_icon_sheet.py](file:///D:/CodingProjects/spacegame/tools/compose_icon_sheet.py)
+      - `def main()`
     - 📄 [cut_taunt_line.py](file:///D:/CodingProjects/spacegame/tools/cut_taunt_line.py)
       - `def main()`
+    - 📄 [engine_glow_snapshot.gd](file:///D:/CodingProjects/spacegame/tools/engine_glow_snapshot.gd)
+      - `func _initialize() -> void`
+      - `func _light(ship: Node3D, color: Color) -> void`
+      - `func _collect(node: Node, out: Array[Node3D]) -> void`
+      - `func _place(world: Node3D, ship: Node3D, at: Vector3, fit: float) -> void`
+    - 📄 [engine_glow_snapshot.gd.uid](file:///D:/CodingProjects/spacegame/tools/engine_glow_snapshot.gd.uid)
     - 📄 [export_lounge_reviews.bat](file:///D:/CodingProjects/spacegame/tools/export_lounge_reviews.bat)
+    - 📄 [f5_render.py](file:///D:/CodingProjects/spacegame/tools/f5_render.py)
+      - `def trailing_ms(mono, sr)`
+      - `def fix_tail(data, sr)`
+      - `def main()`
+    - 📂 **fetch_cards/**
+      - 📄 [check_fetch_cards.py](file:///D:/CodingProjects/spacegame/tools/fetch_cards/check_fetch_cards.py)
+        - `def load_items()`
+        - `def main(paths)`
     - 📄 [generate_asteroid_fragments.py](file:///D:/CodingProjects/spacegame/tools/generate_asteroid_fragments.py)
       - `def clear_scene()`
       - `def import_mesh(filepath)`
@@ -9226,6 +10627,9 @@ Root: `spacegame`
       - `func _initialize() -> void`
     - 📄 [import_and_scan.gd.uid](file:///D:/CodingProjects/spacegame/tools/import_and_scan.gd.uid)
     - 📄 [init_cache.ps1](file:///D:/CodingProjects/spacegame/tools/init_cache.ps1)
+    - 📄 [inventory_snapshot.gd](file:///D:/CodingProjects/spacegame/tools/inventory_snapshot.gd)
+      - `func _initialize() -> void`
+    - 📄 [inventory_snapshot.gd.uid](file:///D:/CodingProjects/spacegame/tools/inventory_snapshot.gd.uid)
     - 📄 [lounge.bat](file:///D:/CodingProjects/spacegame/tools/lounge.bat)
     - 📂 **lounge_review/**
       - 📄 [curate_selected_lounge_reviews.py](file:///D:/CodingProjects/spacegame/tools/lounge_review/curate_selected_lounge_reviews.py)
@@ -9263,6 +10667,14 @@ Root: `spacegame`
           - `def do_POST(self)`
         - 🏛️ **ReusableThreadingHTTPServer**
       - 📄 [rewrite_review.html](file:///D:/CodingProjects/spacegame/tools/lounge_review/rewrite_review.html)
+    - 📄 [make_voice_ref.py](file:///D:/CodingProjects/spacegame/tools/make_voice_ref.py)
+      - `def main()`
+    - 📄 [maze_snapshot.gd](file:///D:/CodingProjects/spacegame/tools/maze_snapshot.gd)
+      - `func _initialize() -> void`
+      - `func _shoot(kind: String, seed_value: int, recorder: bool) -> void`
+      - `func _frames(n: int) -> void`
+      - `func _save(name: String) -> void`
+    - 📄 [maze_snapshot.gd.uid](file:///D:/CodingProjects/spacegame/tools/maze_snapshot.gd.uid)
     - 📄 [measure_phase_2_storage.gd](file:///D:/CodingProjects/spacegame/tools/measure_phase_2_storage.gd)
       - `func _initialize() -> void`
       - `func _runtime_state(credits: int) -> Dictionary`
@@ -9274,6 +10686,53 @@ Root: `spacegame`
       - `func _remove_directory(path: String) -> void`
       - `func _fail(message: String) -> void`
     - 📄 [measure_phase_2_storage.gd.uid](file:///D:/CodingProjects/spacegame/tools/measure_phase_2_storage.gd.uid)
+    - 📄 [orpheus_clone.py](file:///D:/CodingProjects/spacegame/tools/orpheus_clone.py)
+      - `def encode_reference(snac, torch, path)`
+      - `def decode_audio(snac, torch, tokens)`
+      - `def tidy(data)`
+      - `def main()`
+    - 📂 **premise_cards/**
+      - 📄 [apply_core_why_backfill.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/apply_core_why_backfill.py)
+        - `def main(argv)`
+      - 📄 [apply_private_fact_rewrites.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/apply_private_fact_rewrites.py)
+        - `def load_cards()`
+        - `def find_mission(card, beat_n, index)`
+        - `def main(argv)`
+      - 📄 [approve_premise_cards.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/approve_premise_cards.py)
+        - `def main(ids)`
+      - 📄 [deck_report.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/deck_report.py)
+        - `def load()`
+        - `def line(title, counter, vocab)`
+        - `def main()`
+      - 📄 [depth_check.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/depth_check.py)
+        - `def load(d)`
+        - `def texts(c)`
+        - `def grams(s, n)`
+        - `def strip(t)`
+      - 📄 [review_sheet.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/review_sheet.py)
+        - `def cards_in(paths)`
+        - `def sheet(c)`
+        - `def main(argv)`
+      - 📄 [triage.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/triage.py)
+        - `def load(d)`
+        - `def text(c)`
+        - `def words(c)`
+      - 📄 [validate_premise_cards.py](file:///D:/CodingProjects/spacegame/tools/premise_cards/validate_premise_cards.py)
+        - 🏛️ **Report**
+          - `def __init__(self)`
+          - `def add(self, level, card_id, message)`
+          - `def count(self, level)`
+        - `def words(text)`
+        - `def card_grams(card)`
+        - `def title_words(card)`
+        - `def check_vocab(report, card_id, value, vocab, where)`
+        - `def check_count(report, card_id, items, low, high, where, level)`
+        - `def require(report, card_id, card, field, kind)`
+        - `def parse_target(value)`
+        - `def validate_card(card, report)`
+        - `def batch_checks(summaries, report, label)`
+        - `def load(path, report)`
+        - `def main(argv)`
     - 📂 **quality_eval/**
       - 📄 [CriticCorpus.gd](file:///D:/CodingProjects/spacegame/tools/quality_eval/CriticCorpus.gd)
         - 🏛️ **global class CriticCorpus**
@@ -9314,6 +10773,11 @@ Root: `spacegame`
         - `func _write(records: Array, summary: Dictionary) -> void`
         - `func _print_summary(summary: Dictionary, records: Array) -> void`
       - 📄 [run_writer_eval.gd.uid](file:///D:/CodingProjects/spacegame/tools/quality_eval/run_writer_eval.gd.uid)
+    - 📄 [recolor_ore_atlas.py](file:///D:/CodingProjects/spacegame/tools/recolor_ore_atlas.py)
+      - `def rgb_to_hsv(rgb)`
+      - `def hsv_to_rgb(h, s, v)`
+      - `def recolor(src_path, hue_degrees)`
+      - `def main()`
     - 📄 [render_taunt_audition.py](file:///D:/CodingProjects/spacegame/tools/render_taunt_audition.py)
       - `def find_bank()`
       - `def render(text, voice, out_path)`
@@ -9364,3 +10828,13 @@ Root: `spacegame`
           - 📄 [badge_sheets_metadata.json](file:///D:/CodingProjects/spacegame/tools/ship_generator/textures/badges/badge_sheets_metadata.json)
         - 📂 **metals/**
           - 📄 [ShipPaint_Textures.json](file:///D:/CodingProjects/spacegame/tools/ship_generator/textures/metals/ShipPaint_Textures.json)
+    - 📄 [ship_look_snapshot.gd](file:///D:/CodingProjects/spacegame/tools/ship_look_snapshot.gd)
+      - `func _initialize() -> void`
+      - `func _place(world: Node3D, ship: Node3D, at: Vector3) -> void`
+    - 📄 [ship_look_snapshot.gd.uid](file:///D:/CodingProjects/spacegame/tools/ship_look_snapshot.gd.uid)
+    - 📄 [strip_icon_label.py](file:///D:/CodingProjects/spacegame/tools/strip_icon_label.py)
+      - `def strip(path)`
+    - 📂 **voice_refs/**
+      - 📄 [README.md](file:///D:/CodingProjects/spacegame/tools/voice_refs/README.md)
+      - 📄 [clones.json](file:///D:/CodingProjects/spacegame/tools/voice_refs/clones.json)
+      - 📄 [nova_original.txt](file:///D:/CodingProjects/spacegame/tools/voice_refs/nova_original.txt)
