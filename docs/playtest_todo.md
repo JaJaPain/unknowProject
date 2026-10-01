@@ -269,7 +269,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       amber light is carried by a small black drone (dome, ring, three arms,
       antenna) that bobs and turns slowly. The light grows out of the drone's
       centre, holds, and shrinks back into it; between flashes you see the
-      drone. (Black placeholders; real drone art later.)
+      drone. (Black placeholders; real drone art later.) The flash is a
+      glossy core in a soft see-through halo, like the ship's own drones,
+      and it lights the drone and nearby hull.
 - [ ] **No receiver near stations.** Within 1000 m of a station the receiver
       prompt hides and T does nothing; fly clear and it comes back.
 - [ ] **Starter target line is instant.** Take Kaelen's starter job, repair,

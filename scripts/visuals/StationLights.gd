@@ -24,7 +24,7 @@ const STROBE_GROW := 0.05
 const STROBE_HOLD := 0.05
 const STROBE_SHRINK := 0.07
 
-## [{"drone": Node3D, "light": MeshInstance3D, "kind": "marker"|"strobe"|"berth", "base": Vector3, "seed": float}]
+## [{"drone": Node3D, "light": Node3D, "kind": "marker"|"strobe"|"berth", "base": Vector3, "seed": float}]
 var _beacons: Array[Dictionary] = []
 var _berth_light: OmniLight3D
 var _t := 0.0
@@ -99,7 +99,7 @@ func _beacon(pos: Vector3, colour: Color, size: float, kind: String) -> void:
 func _build_drone(r: float) -> Node3D:
 	if _hull_mat == null:
 		_hull_mat = StandardMaterial3D.new()
-		_hull_mat.albedo_color = Color(0.02, 0.02, 0.025)
+		_hull_mat.albedo_color = Color(0.07, 0.07, 0.08)
 		_hull_mat.metallic = 0.4
 		_hull_mat.roughness = 0.55
 	var drone := Node3D.new()
@@ -142,23 +142,50 @@ func _part(parent: Node3D, mesh: Mesh, pos: Vector3, rot: Vector3) -> void:
 	parent.add_child(mi)
 
 
-func _light_sphere(colour: Color, size: float) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = size
-	sphere.height = size * 2.0
-	sphere.radial_segments = 12
-	sphere.rings = 6
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = colour
-	mat.emission_enabled = true
-	mat.emission = colour
-	mat.emission_energy_multiplier = 4.0
-	sphere.material = mat
-	mi.mesh = sphere
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	return mi
+## The flash, styled like the player's orbiting drones: a small glossy
+## glowing core, a soft see-through halo (shaders/beacon_halo.gdshader) and a
+## real light that spills onto the drone and the hull. Scaled 0..1 by the
+## flash envelope; the light's energy follows it.
+func _light_sphere(colour: Color, size: float) -> Node3D:
+	var flash := Node3D.new()
+	var core_mesh := SphereMesh.new()
+	core_mesh.radius = size * 0.32
+	core_mesh.height = size * 0.64
+	core_mesh.radial_segments = 16
+	core_mesh.rings = 8
+	var core_mat := StandardMaterial3D.new()
+	core_mat.albedo_color = colour
+	core_mat.metallic = 0.9
+	core_mat.roughness = 0.15
+	core_mat.emission_enabled = true
+	core_mat.emission = colour
+	core_mat.emission_energy_multiplier = 3.0
+	core_mesh.material = core_mat
+	var core := MeshInstance3D.new()
+	core.mesh = core_mesh
+	core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	flash.add_child(core)
+	var halo_mesh := SphereMesh.new()
+	halo_mesh.radius = size
+	halo_mesh.height = size * 2.0
+	halo_mesh.radial_segments = 24
+	halo_mesh.rings = 12
+	var halo_mat := ShaderMaterial.new()
+	halo_mat.shader = load("res://shaders/beacon_halo.gdshader")
+	halo_mat.set_shader_parameter("glow_color", colour)
+	halo_mesh.material = halo_mat
+	var halo := MeshInstance3D.new()
+	halo.mesh = halo_mesh
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	flash.add_child(halo)
+	var lamp := OmniLight3D.new()
+	lamp.name = "Lamp"
+	lamp.light_color = colour
+	lamp.omni_range = size * 9.0
+	lamp.light_energy = 0.0
+	lamp.set_meta("full_energy", 7.0)
+	flash.add_child(lamp)
+	return flash
 
 
 ## 0..1 light size through one cycle: grow out, hold, shrink back, dark.
@@ -178,7 +205,7 @@ func _process(delta: float) -> void:
 	_t += delta
 	for b in _beacons:
 		var drone: Node3D = b["drone"]
-		var light: MeshInstance3D = b["light"]
+		var light: Node3D = b["light"]
 		var offset: float = b["seed"]
 		# Holding station: a slow bob and turn.
 		drone.position = (b["base"] as Vector3) + Vector3(0.0, sin(_t * 0.9 + offset) * 0.25, 0.0)
@@ -196,5 +223,7 @@ func _process(delta: float) -> void:
 				s = _envelope(fmod(_t, MARKER_CYCLE), MARKER_GROW, MARKER_HOLD, MARKER_SHRINK)
 		light.visible = s > 0.01
 		light.scale = Vector3.ONE * maxf(s, 0.001)
+		var lamp := light.get_node("Lamp") as OmniLight3D
+		lamp.light_energy = float(lamp.get_meta("full_energy")) * s
 	if _berth_light:
 		_berth_light.light_energy = 1.0 + 0.8 * (0.5 + 0.5 * sin(_t * 1.8))

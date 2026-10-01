@@ -10751,7 +10751,7 @@ func _run_beacon_snapshot() -> void:
 	var cam := Camera3D.new()
 	cam.fov = 40.0
 	get_active_system_root().add_child(cam)
-	var size := float((lights._beacons[1]["light"] as MeshInstance3D).mesh.get("radius"))
+	var size := float(((lights._beacons[1]["light"] as Node3D).get_child(1) as MeshInstance3D).mesh.get("radius"))
 	cam.global_position = drone.global_position + away.normalized() * size * 22.0 + Vector3(0.0, size * 5.0, 0.0)
 	cam.look_at(drone.global_position, Vector3.UP)
 	cam.make_current()
