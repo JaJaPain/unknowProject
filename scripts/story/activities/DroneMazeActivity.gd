@@ -61,6 +61,15 @@ var world_provider: Callable = Callable()
 var _worked: Dictionary = {}
 var _hinted: Dictionary = {}
 var _view: Node = null
+## Taught like the receiver (Abe, 2026-09-30: players never knew it existed).
+## A prompt stays on screen while a target is in reach; the first time ever,
+## N.O.V.A. explains the drone bay once (saved in story_state).
+const TAUGHT_FLAG := "drone_maze_taught"
+const TEACH_LINE := "That one's worth a closer look, and not with the mining laser. We carry piloted survey drones for this. Press %s and I'll hand you one: fly it in slowly, pick up what you find, and bring it back out. Each flight uses up a drone, and if you crash it, its load is gone with it."
+var _prompt_layer: CanvasLayer = null
+var _prompt: PanelContainer = null
+var _prompt_label: Label = null
+var _prompt_t := 0.0
 var _recorder_item: Dictionary = {}
 var _material := ""
 
@@ -71,7 +80,8 @@ func _ready() -> void:
 		gs.player_kill.connect(_on_player_kill)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_update_prompt(delta)
 	if _view != null:
 		return
 	var target := eligible_target()
@@ -83,6 +93,67 @@ func _process(_delta: float) -> void:
 			if gs != null:
 				gs.emit_chatter("DRONE BAY", _hint_for(target), Color(0.5, 0.95, 0.85))
 			load("res://scripts/ui/Wiki.gd").unlock("drone_maze")
+			_maybe_teach()
+
+
+func _maybe_teach() -> void:
+	var story := get_node_or_null("/root/StoryManager")
+	if story == null or bool(story.story_state.get(TAUGHT_FLAG, false)):
+		return
+	story.story_state[TAUGHT_FLAG] = true
+	_nova(TEACH_LINE % OS.get_keycode_string(LAUNCH_KEY))
+
+
+## "[G] LAUNCH SURVEY DRONE" at the bottom of the screen while a target is in
+## reach (above the receiver prompt when both show). With no drones aboard it
+## says where to get one instead.
+func _update_prompt(delta: float) -> void:
+	var show := _view == null and eligible_target() != null
+	if show and _prompt == null:
+		_build_prompt()
+	if _prompt == null:
+		return
+	_prompt.visible = show
+	if not show:
+		return
+	var drones := drones_aboard()
+	if drones > 0:
+		_prompt_label.text = "[%s]  LAUNCH SURVEY DRONE   ·   %d aboard" % [OS.get_keycode_string(LAUNCH_KEY), drones]
+		_prompt_t += delta
+		_prompt.modulate.a = 0.75 + 0.25 * sin(_prompt_t * 3.0)
+	else:
+		_prompt_label.text = "No survey drones aboard   ·   station stores sell them"
+		_prompt.modulate.a = 0.7
+
+
+func _build_prompt() -> void:
+	_prompt_layer = CanvasLayer.new()
+	_prompt_layer.layer = 5
+	add_child(_prompt_layer)
+	_prompt = PanelContainer.new()
+	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_prompt.anchor_left = 0.5
+	_prompt.anchor_right = 0.5
+	_prompt.anchor_top = 1.0
+	_prompt.anchor_bottom = 1.0
+	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_prompt.offset_top = -205.0
+	_prompt.offset_bottom = -165.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.08, 0.1, 0.85)
+	style.border_color = Color(0.5, 0.95, 0.85, 0.9)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 18.0
+	style.content_margin_right = 18.0
+	style.content_margin_top = 8.0
+	style.content_margin_bottom = 8.0
+	_prompt.add_theme_stylebox_override("panel", style)
+	_prompt_label = Label.new()
+	_prompt_label.add_theme_font_size_override("font_size", 18)
+	_prompt_label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.92))
+	_prompt.add_child(_prompt_label)
+	_prompt_layer.add_child(_prompt)
 
 
 func _hint_for(target: Node) -> String:

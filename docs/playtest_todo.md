@@ -284,3 +284,8 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Repair warning reads as a choice.** Dock damaged, decline repairs:
       her warning talks about leaving ("you're about to..."), never as if
       we'd already launched ("turn back", "stop the thrusters").
+- [ ] **Drone bay is taught.** New campaign: target any asteroid and fly
+      close. N.O.V.A. explains the survey drones once (G, fly in slowly, bring
+      it back; each flight uses a drone). A pulsing "[G] LAUNCH SURVEY DRONE ·
+      N aboard" prompt stays while the rock is in reach; with no drones it
+      reads "No survey drones aboard · station stores sell them".
