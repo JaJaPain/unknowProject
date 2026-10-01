@@ -66,10 +66,27 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 	if not purchase_offer.is_empty():
 		offers.append(purchase_offer)
 	offers.append(_build_recovery_preview())
+	_scale_pay_by_depth(offers)
 	_withhold_invalid_offers(offers)
 	_apply_story_intent_priority(offers)
 	_apply_cooldowns(offers)
 	return offers
+
+
+## Deeper systems pay more (core loop step 6): the board's figure and the
+## contract's reward together, so what's posted is what's paid.
+static func _scale_pay_by_depth(offers: Array[Dictionary]) -> void:
+	var factor: float = preload("res://scripts/domain/DepthScaling.gd").pay_factor(
+		preload("res://scripts/domain/DepthScaling.gd").current_depth())
+	if is_equal_approx(factor, 1.0):
+		return
+	for offer in offers:
+		if offer.has("base_reward"):
+			offer["base_reward"] = int(round(float(offer["base_reward"]) * factor))
+		var quest: Dictionary = offer.get("quest_data", {}) if offer.get("quest_data", {}) is Dictionary else {}
+		var objective: Dictionary = quest.get("objective", {}) if quest.get("objective", {}) is Dictionary else {}
+		if objective.has("reward_credits"):
+			objective["reward_credits"] = int(round(float(objective["reward_credits"]) * factor))
 
 
 static func _apply_cooldowns(offers: Array[Dictionary]) -> void:

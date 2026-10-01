@@ -509,7 +509,7 @@ before the next bite.
 | 4 | **DONE 2026-10-01** Ore: **Sell / Bank** side by side, Bank highlighted when the goal is short | Services smoke |
 | 5 | **DONE 2026-10-01** First rung fully guided (steps 1-6 in 3.4) + wiki "Upgrades and gate classes" | Walkthrough unit tests; first-session smoke extended |
 | | **Stop and show: the whole first rung, from refusal to fitted** | |
-| 6 | Depth scaling: ore value, red-rock share, board pay, enemy tier | Economy smoke |
+| 6 | **DONE 2026-10-02** Depth scaling (ore value already existed in SystemProfile): ore value, red-rock share, board pay, enemy tier | Economy smoke |
 | 6b | Mining risk (3.7): claims with hail and reinforcements, rare-ore claim jumper, red-rock guards; ice near stations always unclaimed; none before the first upgrade | Unit tests per rule; a `--mining-risk-smoke-test` that triggers each one |
 | 7 | `--economy-sim` automated captain + first tuning pass against 3.6 | Prints minutes per rung |
 | | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, **Decided (Abe, 2026-10-01): keep it hidden for now.** | |

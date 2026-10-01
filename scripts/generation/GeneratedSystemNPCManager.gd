@@ -139,7 +139,7 @@ func _spawn_replacement() -> void:
 	npc.faction = faction_name
 	npc.speed = 13.0
 	npc.ship_role = role
-	npc.difficulty_multiplier = config.difficulty_multiplier
+	npc.difficulty_multiplier = config.difficulty_multiplier * _depth_threat()
 	npc.persistent_id = _next_id("incoming")
 	npc.name = faction_name.to_upper() + "_Incoming_" + str(randi() % 1000)
 	system_root.add_child(npc)
@@ -172,7 +172,7 @@ func _spawn_minor_roamer() -> void:
 	var npc := _npc_ship_scene.instantiate() as Node3D
 	npc.faction = faction_name
 	npc.speed = randf_range(10.0, 14.0)
-	npc.difficulty_multiplier = config.difficulty_multiplier
+	npc.difficulty_multiplier = config.difficulty_multiplier * _depth_threat()
 	npc.persistent_id = _next_id("roaming")
 	npc.name = faction_name.to_upper() + "_Roaming_" + str(randi() % 1000)
 	system_root.add_child(npc)
@@ -200,7 +200,7 @@ func _spawn_ship(
 	npc.faction = faction_name
 	npc.ship_role = role
 	npc.speed = randf_range(10.0, 15.0)
-	npc.difficulty_multiplier = config.difficulty_multiplier
+	npc.difficulty_multiplier = config.difficulty_multiplier * _depth_threat()
 	npc.persistent_id = _next_id(category)
 	npc.name = faction_name.to_upper() + "_Patrol_" + str(randi() % 1000)
 	var model_seed: String = "ship_%d_%d" % [config.seed_value, runtime_ship_sequence]
@@ -416,3 +416,11 @@ func _apply_npc_profile(npc: Node, faction_name: String) -> void:
 		profile = FactionRegistry.get_faction_for_danger_level(tier, faction_idx)
 	if not profile.is_empty():
 		npc.apply_faction_profile(profile)
+
+
+## Deeper systems field tougher ships (core loop step 6): hull and damage
+## scale with depth on top of the system's own tier.
+func _depth_threat() -> float:
+	var scaling := preload("res://scripts/domain/DepthScaling.gd")
+	var sid := config.system_id if config != null and not config.system_id.is_empty() else str(GlobalState.current_system_id)
+	return scaling.threat_factor(scaling.depth_of(sid))

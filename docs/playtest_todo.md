@@ -395,3 +395,9 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       (or the Delete key), BACK (or Esc). OPEN FOLDER opens the files.
 - [ ] **Per campaign.** Another campaign's gallery is its own. Deleting a
       campaign warns that its screenshots go with it.
+- [ ] **Step 6: deeper is richer.** Compare the start system with one 4-5
+      jumps out: the job board's pay is higher (+15% per jump of depth, the
+      posted figure and the payout match), red rocks are a bit more common
+      (about 1% near the start, 3% by depth 10), and enemy ships hit harder
+      and take more to kill (+8% per depth). Belts deeper out already carry
+      rarer ore (thorium only from depth 3).

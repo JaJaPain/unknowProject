@@ -9,6 +9,9 @@ var destroyed: bool = false
 ## 2026-09-25). They are tinted red, only a piloted survey drone can work
 ## them (the drone maze), and a mining laser shatters them at once.
 const TECH_SEAM_PERCENT := 1
+## Red rocks per thousand in the current system, set by depth when a system
+## loads (DepthScaling: about 1% near the start, up to 3% deep).
+static var tech_seam_permille := 10
 const TECH_SEAM_GROUP := "tech_seam_asteroid"
 const TECH_SEAM_TINT := Color(0.85, 0.12, 0.06, 0.4)
 var tech_seam := false
@@ -38,7 +41,7 @@ static func ore_type_for(id: String, mix: Dictionary) -> String:
 
 
 static func is_tech_seam_id(id: String) -> bool:
-	return not id.is_empty() and posmod((id + ":tech_seam").hash(), 100) < TECH_SEAM_PERCENT
+	return not id.is_empty() and posmod((id + ":tech_seam").hash(), 1000) < tech_seam_permille
 
 
 ## For a field of rocks: the id that must be a red rock so the field has at

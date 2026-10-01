@@ -1,4 +1,4 @@
-﻿extends Node3D
+extends Node3D
 
 signal system_changed(system_id: String, arrival_gate_id: String)
 signal startup_load_completed(save_loaded: bool)
@@ -1352,6 +1352,8 @@ const PremiseVoiceDNAType := preload("res://scripts/story/premise/VoiceDNA.gd")
 const SignalTuningActivityType := preload("res://scripts/story/activities/SignalTuningActivity.gd")
 const DroneMazeActivityType := preload("res://scripts/story/activities/DroneMazeActivity.gd")
 const GateRatingGuideType := preload("res://scripts/story/GateRatingGuide.gd")
+const DepthScalingType := preload("res://scripts/domain/DepthScaling.gd")
+const AsteroidScriptForDepth := preload("res://scripts/Asteroid.gd")
 const RecurringEncounterRunnerType := preload("res://scripts/story/RecurringEncounterRunner.gd")
 const PremiseFalloutType := preload("res://scripts/story/premise/FailureFallout.gd")
 const PremiseFactionDNAType := preload("res://scripts/story/premise/FactionDNA.gd")
@@ -1511,6 +1513,9 @@ func _refresh_local_faction_looks() -> void:
 	if is_instance_valid(premise_director):
 		ores = premise_director.profile_for(world).get("ores", ores)
 	GlobalState.system_ore_mix = ores
+	# Deeper systems have more red rocks (core loop step 6).
+	AsteroidScriptForDepth.tech_seam_permille = DepthScalingType.tech_seam_permille(
+		DepthScalingType.depth_of(str(world.get("system_id", ""))))
 	# Remember what these belts hold, for the star map (saved with the story).
 	var known: Dictionary = StoryManager.story_state.get("known_system_ores", {})
 	known[str(world.get("system_id", ""))] = ores.keys()
