@@ -502,7 +502,11 @@ func mine():
 	# 1. Player's mining yield
 	# 2. Remaining asteroid resources
 	# 3. Space left in cargo (Top-off logic!)
-	var amount_to_mine = min(GlobalState.mining_yield, resources)
+	# Rarer ore cuts slower, in proportion to its value: the laser earns the
+	# same credits per second on any rock (Abe, 2026-10-02).
+	var cut: float = GlobalState.mining_yield / maxf(OreTypesScript.price(ore_type), 0.01) \
+		* float(GlobalState.mining_ore_affinity.get(ore_type, 1.0))
+	var amount_to_mine = min(cut, resources)
 	amount_to_mine = min(amount_to_mine, space_left)
 
 	if amount_to_mine > 0.0:

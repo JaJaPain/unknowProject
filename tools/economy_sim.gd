@@ -145,7 +145,7 @@ func _work_towards(goal: Dictionary) -> void:
 func _earn_credits() -> void:
 	# Whichever pays more per second here: a board job, or mining and selling.
 	var job_rate := JOB_BASE_PAY * job_mult * Scaling.pay_factor(_depth) / JOB_TIME_S
-	var mine_rate := _hold_value() / _mining_trip_time()
+	var mine_rate := _hold_value() / _mining_trip_time(false)
 	if job_rate >= mine_rate:
 		_t += JOB_TIME_S
 		gs.player_credits += int(JOB_BASE_PAY * job_mult * Scaling.pay_factor(_depth))
@@ -155,7 +155,7 @@ func _earn_credits() -> void:
 
 
 func _mine(bank: bool) -> void:
-	_t += _mining_trip_time()
+	_t += _mining_trip_time(bank)
 	_counts["mining_trips"] += 1
 	var hold: float = gs.cargo_max
 	if bank:
@@ -189,10 +189,14 @@ func _fight() -> void:
 	_counts["fights"] += 1
 
 
-func _mining_trip_time() -> float:
-	var rate: float = gs.mining_yield / maxf(gs.mining_cooldown, 0.05)
+## The laser earns a fixed SC/s whatever the ore (rarer ore cuts slower). To
+## bank, the captain cuts the fastest ore (silicate: the bank counts m³); to
+## sell, a typical belt, which takes its value / SC-rate to fill.
+func _mining_trip_time(bank: bool) -> float:
+	var sc_rate: float = gs.mining_yield / maxf(gs.mining_cooldown, 0.05)
 	var hold: float = gs.cargo_max
-	return MINING_TRAVEL_S + hold / rate + ceil(hold / ROCK_SIZE_M3) * ROCK_SWITCH_S
+	var cutting := hold / sc_rate if bank else _hold_value() / ore_mult / sc_rate
+	return MINING_TRAVEL_S + cutting + ceil(hold / ROCK_SIZE_M3) * ROCK_SWITCH_S
 
 
 ## A hold of this depth's typical belt, sold.

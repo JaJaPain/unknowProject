@@ -415,3 +415,11 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       - **Red rocks:** some have a "Reaver Seam Guard" parked beside them;
         target the rock and N.O.V.A. calls it out; get close and it attacks.
       - The wiki gains "Mining risks" the first time any of this happens.
+- [ ] **Mining pays a steady rate (Abe, 2026-10-02).** A stock laser earns
+      about 1 SC per second on any rock: rarer ore cuts slower in proportion to
+      its price (thorium at a quarter of silicate's m³ per second, but each m³
+      is worth 4x). Mining laser upgrades raise it slowly: Mk II 1.2, Mk III
+      1.4, Mk IV 1.6, Mk V 1.8 SC/s, on both branches (Rapid cuts small and
+      often, Deep big and slow). **Cargo Mk II now actually grows the hold to
+      150 m³** (cargo upgrades never did before: a stat-name bug, also fixed
+      for the Deep laser).

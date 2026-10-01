@@ -83,19 +83,24 @@ const UPGRADE_TREE = {
 		}
 	},
 	"mining": {
+		# The laser earns a steady value per second whatever the ore (Abe,
+		# 2026-10-02): 1.0 SC/s stock, then 1.2 / 1.4 / 1.6 / 1.8 by Mk V on
+		# both branches (yield = rate x cooldown). Rapid cuts small and often,
+		# Deep cuts big and slow. Rarer ore cuts slower in proportion to its
+		# price (Asteroid.mine), so SC/s holds.
 		"base_power": 80,
 		"branches": {
 			"rapid": {
-				2: { "cost_cr": 150, "cost_ore": 50, "power": 115, "stats": {"mining_cooldown": 0.8, "mining_laser_yield": 1.0} },
-				3: { "cost_cr": 300, "cost_ore": 100, "power": 140, "stats": {"mining_cooldown": 0.6, "mining_laser_yield": 1.0} },
-				4: { "cost_cr": 600, "cost_ore": 200, "power": 165, "stats": {"mining_cooldown": 0.4, "mining_laser_yield": 1.0} },
-				5: { "cost_cr": 1200, "cost_ore": 400, "power": 195, "stats": {"mining_cooldown": 0.2, "mining_laser_yield": 1.0, "has_max_rapid_mining": true} }
+				2: { "cost_cr": 150, "cost_ore": 50, "power": 115, "stats": {"mining_cooldown": 0.8, "mining_laser_yield": 0.96} },
+				3: { "cost_cr": 300, "cost_ore": 100, "power": 140, "stats": {"mining_cooldown": 0.6, "mining_laser_yield": 0.84} },
+				4: { "cost_cr": 600, "cost_ore": 200, "power": 165, "stats": {"mining_cooldown": 0.4, "mining_laser_yield": 0.64} },
+				5: { "cost_cr": 1200, "cost_ore": 400, "power": 195, "stats": {"mining_cooldown": 0.2, "mining_laser_yield": 0.36, "has_max_rapid_mining": true} }
 			},
 			"deep": {
-				2: { "cost_cr": 150, "cost_ore": 100, "power": 115, "stats": {"mining_cooldown": 1.2, "mining_laser_yield": 2.0} },
-				3: { "cost_cr": 300, "cost_ore": 200, "power": 140, "stats": {"mining_cooldown": 1.5, "mining_laser_yield": 4.0} },
-				4: { "cost_cr": 600, "cost_ore": 400, "power": 165, "stats": {"mining_cooldown": 1.8, "mining_laser_yield": 8.0} },
-				5: { "cost_cr": 1200, "cost_ore": 800, "power": 195, "stats": {"mining_cooldown": 2.5, "mining_laser_yield": 15.0, "has_max_deep_mining": true} }
+				2: { "cost_cr": 150, "cost_ore": 100, "power": 115, "stats": {"mining_cooldown": 1.2, "mining_laser_yield": 1.44} },
+				3: { "cost_cr": 300, "cost_ore": 200, "power": 140, "stats": {"mining_cooldown": 1.5, "mining_laser_yield": 2.1} },
+				4: { "cost_cr": 600, "cost_ore": 400, "power": 165, "stats": {"mining_cooldown": 1.8, "mining_laser_yield": 2.88} },
+				5: { "cost_cr": 1200, "cost_ore": 800, "power": 195, "stats": {"mining_cooldown": 2.5, "mining_laser_yield": 4.5, "has_max_deep_mining": true} }
 			}
 		}
 	},
@@ -1804,6 +1809,11 @@ var current_upgrades: Dictionary = {
 var cargo_max: float = SHIP_BASE_STATS["cargo_max_m3"]
 var mining_yield: float = SHIP_BASE_STATS["mining_laser_yield"]
 var mining_cooldown: float = SHIP_BASE_STATS["mining_cooldown"]
+## Per-ore cutting bonus from a specialised laser (Abe, 2026-10-02: "a specific
+## laser can cut X mineral faster"): ore id -> multiplier on top of the usual
+## cut. Empty = no specialisation. An upgrade sets it through its stats
+## ("mining_ore_affinity": {"thorium": 1.5}); apply_upgrade_stats resets it.
+var mining_ore_affinity: Dictionary = {}
 var weapon_damage: float = SHIP_BASE_STATS["weapon_damage"]
 var weapon_cooldown: float = SHIP_BASE_STATS["weapon_cooldown"]
 var shield_capacity: float = SHIP_BASE_STATS["shield_capacity"]
@@ -2632,6 +2642,7 @@ func reset_for_restart():
 	apply_upgrade_stats()
 	mining_yield = SHIP_BASE_STATS["mining_laser_yield"]
 	mining_cooldown = SHIP_BASE_STATS["mining_cooldown"]
+	mining_ore_affinity = {}
 	weapon_damage = SHIP_BASE_STATS["weapon_damage"]
 	weapon_cooldown = SHIP_BASE_STATS["weapon_cooldown"]
 	shield_capacity = SHIP_BASE_STATS["shield_capacity"]
@@ -2700,11 +2711,16 @@ func next_nova_repair_warning_index(band: String, pool_size: int) -> int:
 
 # ── Ship Upgrade Logic ────────────────────────────────────────────────────────
 
+## Upgrade data keys that name a differently called variable.
+const STAT_KEY_TO_VAR := {"mining_laser_yield": "mining_yield", "cargo_max_m3": "cargo_max"}
+
+
 func apply_upgrade_stats():
 	# Reset stats to base first
 	cargo_max = SHIP_BASE_STATS["cargo_max_m3"]
 	mining_yield = SHIP_BASE_STATS["mining_laser_yield"]
 	mining_cooldown = SHIP_BASE_STATS["mining_cooldown"]
+	mining_ore_affinity = {}
 	weapon_damage = SHIP_BASE_STATS["weapon_damage"]
 	weapon_cooldown = SHIP_BASE_STATS["weapon_cooldown"]
 	shield_capacity = SHIP_BASE_STATS["shield_capacity"]
@@ -2741,7 +2757,15 @@ func apply_upgrade_stats():
 					power_capacity = float(tier_data["capacity"])
 				if tier_data.has("stats"):
 					for stat_key in tier_data["stats"].keys():
-						set(stat_key, tier_data["stats"][stat_key])
+						# Some data keys differ from the variable they set; set()
+						# drops unknown names silently, which for months meant
+						# cargo upgrades never grew the hold and Deep lasers
+						# never raised their yield (found 2026-10-02).
+						var var_name: String = STAT_KEY_TO_VAR.get(stat_key, stat_key)
+						if not var_name in self:
+							push_warning("[GlobalState] Upgrade stat '%s' has no variable to set." % stat_key)
+							continue
+						set(var_name, tier_data["stats"][stat_key])
 
 	# Sync inventory slot capacity and ore bank
 	inventory.max_slots = inventory_slots
