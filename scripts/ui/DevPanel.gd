@@ -178,7 +178,41 @@ func _build_chrome() -> void:
 		if is_instance_valid(AmbientChat) and AmbientChat.has_method("debug_fire_now"):
 			print("[DevPanel] %s" % str(AmbientChat.debug_fire_now()))
 	)
+	# Gate ladder (docs/core_loop_plan_2026_10_01.md): move tiers quickly to
+	# test gate classes and the Ship Rating's weakest-system rule.
+	for sys in ["weapons", "engine", "shields", "mining", "cargo"]:
+		add_action_button("+1 %s" % sys.capitalize(), func(): _dev_bump_upgrade(sys))
+	add_action_button("Upgrades to stock", func(): _dev_stock_upgrades())
 	# ── Add more quick actions here in future sessions ──
+
+func _dev_bump_upgrade(sys: String) -> void:
+	var info: Dictionary = GlobalState.current_upgrades.get(sys, {"tier": 1, "path": "base"})
+	var tier := int(info.get("tier", 1))
+	if tier >= 5:
+		_dev_report_rating("%s is at Mk V (tiers past V aren't built yet)." % sys.capitalize())
+		return
+	var path := str(info.get("path", "base"))
+	if path == "base":
+		path = str((GlobalState.UPGRADE_TREE[sys]["branches"] as Dictionary).keys()[0])
+	GlobalState.current_upgrades[sys] = {"tier": tier + 1, "path": path}
+	GlobalState.apply_upgrade_stats()
+	_dev_report_rating("%s Mk %d." % [sys.capitalize(), tier + 1])
+
+
+func _dev_stock_upgrades() -> void:
+	for sys in ["weapons", "engine", "shields", "mining", "cargo"]:
+		GlobalState.current_upgrades[sys] = {"tier": 1, "path": "base"}
+	GlobalState.apply_upgrade_stats()
+	_dev_report_rating("All systems stock.")
+
+
+func _dev_report_rating(prefix: String) -> void:
+	var gate_class = load("res://scripts/domain/GateClass.gd")
+	var tiers: Dictionary = gate_class.tiers_of(GlobalState.current_upgrades)
+	var text := "%s Ship Rating %d." % [prefix, gate_class.ship_rating(tiers)]
+	print("[DevPanel] " + text)
+	GlobalState.emit_chatter("DEV", text, Color(1.0, 0.8, 0.3))
+
 
 # ── Faction tuning tab ────────────────────────────────────────────────────────
 func _build_story_debug_tab() -> void:

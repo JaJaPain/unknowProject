@@ -94,7 +94,8 @@ above your weakest system** (Abe, 2026-10-01: one upgrade path alone must not
 be able to carry the ship forward). A stock ship is 5.
 
 Example: Shields Mk V with everything else stock rates 3+1+1+1+1 = **7**, not
-9. Upgrading cargo to Mk II lifts the cap to Mk IV, and the rating to 9.
+9. Upgrading cargo to Mk II adds one (8); the cap itself only rises when
+every Mk I system is improved, because it follows the weakest.
 
 The HUD says what's holding the rating back: `Ship Rating 7 · Cargo Mk I is
 your weakest system: upgrades above Mk III don't count until it improves.`
@@ -501,7 +502,7 @@ before the next bite.
 
 | # | Bite | Tests |
 |---|---|---|
-| 1 | Gate class table + Ship Rating; `GateRatingGuide` becomes depth-based (Class II keeps Shields Mk II); old saves keep visited systems | Unit tests: class per depth, block reasons, never-stranded rule |
+| 1 | **DONE 2026-10-01** Gate class table + Ship Rating; `GateRatingGuide` becomes depth-based (Class II keeps Shields Mk II); old saves keep visited systems | Unit tests: class per depth, block reasons, never-stranded rule |
 | 2 | Class shown before it matters: star map tooltip, gate label on approach, HUD `Ship Rating N · next class M` | Jump smoke checks labels |
 | 3 | **Upgrade goal**: model, HUD goal card with three bars and "where to get it", `Set as goal`, auto-goal | New `--goal-smoke-test` |
 | | **Stop and show: the goal card** | |

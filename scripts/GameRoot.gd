@@ -455,7 +455,7 @@ func jump_fuel_cost(gate: Node3D) -> float:
 func request_gate_jump(gate: Node3D) -> bool:
 	var block := get_jump_block_reason(gate)
 	if block != "":
-		if is_instance_valid(gate_rating_guide) and block == gate_rating_guide.BLOCK_REASON:
+		if is_instance_valid(gate_rating_guide) and gate_rating_guide.is_rating_block(block):
 			gate_rating_guide.on_refused()
 		return false
 	var identity_validation := _validate_persistent_entities(

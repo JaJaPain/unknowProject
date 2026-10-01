@@ -1,11 +1,14 @@
 extends Node
 
 ## Pushes the captain into the upgrade system instead of leaving them to guess
-## (Abe, 2026-09-25). After the first two jumps, gates into systems the ship
-## has never visited need hardened shields (Shields Mk II): the transit field
-## on the deeper gates strips unhardened shields, and N.O.V.A. (who hates the
-## gates anyway) will not go through without them. Going back to a system the
-## ship has already visited is always allowed, so nobody is ever stranded.
+## (Abe, 2026-09-25). Since 2026-10-01 this is the gate ladder of
+## docs/core_loop_plan_2026_10_01.md: every gate has a class from the depth of
+## the system it leads to (rules in scripts/domain/GateClass.gd). Going back,
+## or sideways, is always open; going deeper checks the class every time, even
+## into a system visited before. Class II (depth 3-4) is the tutorial rung: it
+## needs Shields Mk II, because the deeper gates' transit field strips
+## unhardened shields, and N.O.V.A. (who hates the gates anyway) will not go
+## through without them. Higher classes need a Ship Rating.
 ##
 ## N.O.V.A. then walks them through it, one step at a time:
 ##   1. At the blocked gate she explains, and hands over a first survey drone
@@ -16,15 +19,25 @@ extends Node
 ##   4. With the shields fitted, she grumbles and opens the gates.
 ## Hand-written lines; no model.
 
+const GateClassType := preload("res://scripts/domain/GateClass.gd")
 const REQUIRED_SYSTEM := "shields"
 const REQUIRED_TIER := 2
-## Systems the ship may reach before the rating is needed (the start system
-## and the first two jumps).
-const FREE_SYSTEMS := 3
 const MATERIAL := "rad_quartz"
 const DRONE_ITEM := "survey_drone"
 
 const BLOCK_REASON := "The transit field on this gate needs hardened shields (Shields Mk II)."
+## Rating refusals start with this, so the jump code can tell them apart.
+const RATING_BLOCK_PREFIX := "Class "
+
+## Depth of a system id from the start (-1 unknown). Swappable for tests;
+## defaults to the gate graph (PremiseWorldSnapshot._system_depth).
+var depth_of: Callable = func(system_id: String) -> int:
+	return preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")._system_depth(system_id)
+## The system the ship is in. Swappable for tests.
+var current_system_of: Callable = func() -> String:
+	var loop := Engine.get_main_loop()
+	var gs: Node = (loop as SceneTree).root.get_node_or_null("GlobalState") if loop is SceneTree else null
+	return str(gs.current_system_id) if gs != null else ""
 
 const LINES := {
 	"blocked": [
@@ -36,6 +49,15 @@ const LINES := {
 	"have_material": ["Rad-quartz aboard. Dock and have the mechanic fit Shields Mk II, then we can talk about that gate."],
 	"rated": ["Shields hardened. Fine. The deeper gates will take us now. I still hate them."],
 	"reminder": ["We still need Shields Mk II for that gate. Rad-quartz, from a red rock's cracks."],
+	# First refusal at each higher class: N.O.V.A. says what this class asks.
+	# %s = class numeral, %d = rating needed, %d = ours.
+	"class_3": ["Class %s gate. Older ring, rougher fold: a stock frame shakes apart in there. I want a Ship Rating of %d before I take it. We're at %d."],
+	"class_4": ["Class %s. Deep gate. These ones don't forgive anything. Ship Rating %d, Captain; we're at %d."],
+	"class_5": ["Class %s. Half the ring is dead and the other half is angry. Rating %d or we stay. We're at %d."],
+	"class_6": ["Class %s. The edge of anything anyone charted. Rating %d. We're at %d. I'm not arguing about this one."],
+	"class_deep": ["Class %s. Further than the charts go. Rating %d; we're at %d. Every gate out here asks for more."],
+	# Appended when one system is holding the rating back. %s = system name.
+	"breadth": ["And upgrading the same thing again won't do it. Our %s is the weak spot; everything else counts only so far above it."],
 }
 
 var _visited: Array = []
@@ -44,10 +66,14 @@ var _drone_given := false
 var _red_rock_told := false
 var _last_reminder_ms := -100000000
 var _poll := 0.0
+## Gate classes N.O.V.A. has already explained (first refusal at each).
+var _classes_told: Array = []
+## The last refusal's details (GateClass.check), for on_refused().
+var _last_check: Dictionary = {}
 
 
 func to_dict() -> Dictionary:
-	return {"visited": _visited.duplicate(), "stage": _stage, "drone_given": _drone_given, "red_rock_told": _red_rock_told}
+	return {"visited": _visited.duplicate(), "stage": _stage, "drone_given": _drone_given, "red_rock_told": _red_rock_told, "classes_told": _classes_told.duplicate()}
 
 
 func load_from_dict(data: Dictionary) -> void:
@@ -55,6 +81,22 @@ func load_from_dict(data: Dictionary) -> void:
 	_stage = str(data.get("stage", ""))
 	_drone_given = bool(data.get("drone_given", false))
 	_red_rock_told = bool(data.get("red_rock_told", false))
+	_classes_told = (data.get("classes_told", []) as Array).duplicate() if data.get("classes_told", []) is Array else []
+
+
+## The ship's current tiers (GateClass shape).
+func _tiers() -> Dictionary:
+	var gs := get_node_or_null("/root/GlobalState")
+	return GateClassType.tiers_of(gs.current_upgrades if gs != null else {})
+
+
+func ship_rating() -> int:
+	return GateClassType.ship_rating(_tiers())
+
+
+## The class of a gate leading to `destination_system_id`.
+func gate_class_to(destination_system_id: String) -> int:
+	return GateClassType.class_for_depth(int(depth_of.call(destination_system_id)))
 
 
 func reset_for_new_campaign() -> void:
@@ -80,16 +122,40 @@ func is_rated() -> bool:
 
 
 ## "" when the ship may jump to `destination_system_id`, else why not. No
-## side effects: the UI asks this every frame.
+## side effects beyond remembering the details: the UI asks this every frame.
 func block_reason(destination_system_id: String) -> String:
-	if is_rated() or _visited.has(destination_system_id) or _visited.size() < FREE_SYSTEMS:
+	var dest_depth := int(depth_of.call(destination_system_id))
+	var from_depth := int(depth_of.call(str(current_system_of.call())))
+	if dest_depth < 0:
+		# Not on the graph yet: treat it as one step further out.
+		dest_depth = maxi(from_depth, 0) + 1
+	var tiers := _tiers()
+	var result: Dictionary = GateClassType.check(from_depth, dest_depth, tiers)
+	if bool(result["ok"]):
 		return ""
-	return BLOCK_REASON
+	result["limiting"] = GateClassType.limiting_system(tiers)
+	_last_check = result
+	if bool(result["needs_shields_mk2"]):
+		return BLOCK_REASON
+	var reason := "Class %s gate: needs Ship Rating %d (ours is %d)." % [
+		GateClassType.class_name_of(int(result["class"])), int(result["needs_rating"]), int(result["rating"])]
+	if not str(result["limiting"]).is_empty():
+		reason += " %s is the weakest system; others count only two tiers above it." % str(result["limiting"]).capitalize()
+	return reason
+
+
+## True when `reason` is one of this guide's refusals.
+func is_rating_block(reason: String) -> bool:
+	return reason == BLOCK_REASON or reason.begins_with(RATING_BLOCK_PREFIX)
 
 
 ## The captain actually tried the gate and was refused: the first time starts
 ## N.O.V.A.'s walkthrough; later tries get a reminder now and then.
 func on_refused() -> void:
+	# A higher class with shields already hardened: explain that class once.
+	if not _last_check.is_empty() and not bool(_last_check.get("needs_shields_mk2", false)):
+		_explain_class(_last_check)
+		return
 	if _stage.is_empty():
 		_start_walkthrough()
 	elif _stage != "done":
@@ -97,6 +163,19 @@ func on_refused() -> void:
 		if now - _last_reminder_ms > 60000:
 			_last_reminder_ms = now
 			_say(LINES["reminder"][0])
+
+
+func _explain_class(result: Dictionary) -> void:
+	var gate_class := int(result.get("class", 3))
+	if _classes_told.has(gate_class):
+		return
+	_classes_told.append(gate_class)
+	var key := "class_%d" % gate_class if LINES.has("class_%d" % gate_class) else "class_deep"
+	var line: String = str(LINES[key][0]) % [GateClassType.class_name_of(gate_class), int(result.get("needs_rating", 0)), int(result.get("rating", 0))]
+	var limiting := str(result.get("limiting", ""))
+	if not limiting.is_empty():
+		line += " " + str(LINES["breadth"][0]) % limiting
+	_say(line)
 
 
 func _start_walkthrough() -> void:

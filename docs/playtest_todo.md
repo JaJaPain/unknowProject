@@ -299,3 +299,21 @@ Claude adds new items here as work lands (newest section at the bottom).
       debug text), the bar keeps creeping forward instead of sitting at 35%,
       and a TIP line under it changes every 7 seconds. Afterwards, godot.log
       has "Campaign bible generated ... in N s": send me N.
+
+## K. Gate ladder, step 1 (added 2026-10-01)
+
+Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
+"Upgrades to stock" change tiers instantly and print the Ship Rating.
+
+- [ ] **Class II still teaches shields.** New campaign, stock ship: the first
+      gate leading to depth 3 refuses with the hardened-shields message and
+      N.O.V.A.'s walkthrough starts (drone advance, red rock, mechanic).
+- [ ] **Class III asks for a rating.** With only Shields Mk II, a gate leading
+      to depth 5 refuses: "Class III gate: needs Ship Rating 8 (ours is 6)."
+      N.O.V.A. explains Class III once. Two more +1s (any systems) and it opens.
+- [ ] **One path isn't enough.** "Upgrades to stock", then +1 Shields four
+      times (Mk V): the dev line says Ship Rating 7, and the Class III refusal
+      names the weakest system.
+- [ ] **Back is always open.** Deep in, press "Upgrades to stock": gates back
+      toward the start still work; gates deeper refuse again, even to a system
+      you've already visited.
