@@ -10745,21 +10745,28 @@ func _run_beacon_snapshot() -> void:
 		push_error("[BeaconSnapshot] no StationLights on the main station")
 		get_tree().quit(1)
 		return
-	var drone: Node3D = lights._beacons[1]["drone"]
-	var away := (drone.global_position - station.global_position)
-	away.y = 0.0
+	# One beacon of each colour: red marker, green marker, white strobe, amber berth.
 	var cam := Camera3D.new()
 	cam.fov = 40.0
 	get_active_system_root().add_child(cam)
-	var size := float(((lights._beacons[1]["light"] as Node3D).get_child(1) as MeshInstance3D).mesh.get("radius"))
-	cam.global_position = drone.global_position + away.normalized() * size * 22.0 + Vector3(0.0, size * 5.0, 0.0)
-	cam.look_at(drone.global_position, Vector3.UP)
 	cam.make_current()
-	for i in 10:
-		await get_tree().process_frame
-	for i in 6:
-		await _hud_snapshot_save(out.path_join("beacon_%d.png" % i))
-		await get_tree().create_timer(0.27).timeout
+	for index in [0, 1, 4, 6]:
+		if index >= lights._beacons.size():
+			continue
+		var drone: Node3D = lights._beacons[index]["drone"]
+		var size := float(((lights._beacons[index]["light"] as Node3D).get_child(1) as MeshInstance3D).mesh.get("radius"))
+		var away := (drone.global_position - station.global_position)
+		if away.length() < 0.01:
+			away = Vector3.FORWARD
+		cam.global_position = drone.global_position + away.normalized() * size * 22.0 + Vector3(0.0, size * 5.0, 0.0)
+		cam.look_at(drone.global_position, Vector3.UP)
+		# Shoot at the brightest moment of this beacon's flash.
+		for i in 240:
+			await get_tree().process_frame
+			var sc := ((lights._beacons[index]["light"] as Node3D).scale.x)
+			if sc > 0.95:
+				break
+		await _hud_snapshot_save(out.path_join("beacon_%d.png" % index))
 	get_tree().quit()
 
 
