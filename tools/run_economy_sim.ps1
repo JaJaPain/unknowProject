@@ -8,10 +8,9 @@ $logs = Join-Path $root ".tmp_godot_user\test_logs"
 New-Item -ItemType Directory -Force -Path $logs | Out-Null
 $scenarios = [ordered]@{
   "current_numbers"            = @()
-  "ore_x3_jobs_x2"             = @("--ore-mult=3", "--job-mult=2")
-  "ore_x3_jobs_x2_yield_2"     = @("--ore-mult=3", "--job-mult=2", "--dive-yield=2")
-  "ore_x3_jobs_x2_drone_400"   = @("--ore-mult=3", "--job-mult=2", "--drone-price=400")
-  "ore_x3_jobs_x2_drone_400_y2"= @("--ore-mult=3", "--job-mult=2", "--drone-price=400", "--dive-yield=2")
+  "jobs_x2"                    = @("--job-mult=2")
+  "jobs_x2_drone_400"          = @("--job-mult=2", "--drone-price=400")
+  "old_one_per_dive"           = @("--dive-yield=1")
 }
 $rows = @{}
 foreach ($name in $scenarios.Keys) {

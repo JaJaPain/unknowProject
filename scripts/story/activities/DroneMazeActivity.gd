@@ -38,6 +38,11 @@ const TECH_MATERIALS: Array[String] = ["thermal_lattice", "rad_quartz", "cryo_fe
 ## the ore is at least this intact: cracked, it is only common ore.
 const SEAM_MATERIAL_CHANCE := 0.5
 const MATERIAL_MIN_INTEGRITY := 0.6
+## A clean run (everything out, drone home intact) brings home at least this
+## many of the rock's material (Abe, 2026-10-02: drones stay 800 SC and
+## special, a good dive pays double; the economy sim showed one per dive made
+## the climb need ~65 drones).
+const MATERIALS_PER_CLEAN_DIVE := 2
 ## Wreck crates rarely carry one.
 const CRATE_MATERIAL_CHANCE := 0.1
 ## The top-tier material: sometimes, from a clean run with the ore nearly whole.
@@ -269,9 +274,10 @@ static func haul(outcome_id: String, state: Dictionary, material: String, rng: R
 	credits = int(round(credits * integrity))
 	if outcome_id == "clean":
 		credits += CLEAN_BONUS
-		# A clean run through the cracks always brings home at least one.
-		if not material.is_empty() and integrity >= MATERIAL_MIN_INTEGRITY and not materials.has(material):
-			materials.append(material)
+		# A clean run through the cracks always brings home at least two.
+		if not material.is_empty() and integrity >= MATERIAL_MIN_INTEGRITY:
+			while materials.count(material) < MATERIALS_PER_CLEAN_DIVE:
+				materials.append(material)
 		if not material.is_empty() and integrity >= CRYSTAL_INTEGRITY and rng.randf() < CRYSTAL_CHANCE:
 			materials.append(CRYSTAL_ITEM)
 	return {"credits": credits, "materials": materials}

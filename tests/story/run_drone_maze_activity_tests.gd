@@ -133,7 +133,9 @@ func _initialize() -> void:
 		crystals += (r["materials"] as Array).count("resonant_crystal")
 		mats += (r["materials"] as Array).count("thermal_lattice")
 	_check(crystals > 150 and crystals < 250, "a resonant crystal in about half of clean runs (%d/400)" % crystals)
-	_check(mats > 600 and mats < 800, "about 1.75 of the rock's material per clean run (%d/400)" % mats)
+	# At least two per clean run (MATERIALS_PER_CLEAN_DIVE), sometimes a third
+	# from the seams: about 2.15 on average.
+	_check(mats >= 800 and mats < 960, "at least 2 (about 2.15) of the rock's material per clean run (%d/400)" % mats)
 	var credits: int = gs.player_credits
 	activity._material = "cryo_ferrite"
 	activity._on_finished("clean", clean, rng)

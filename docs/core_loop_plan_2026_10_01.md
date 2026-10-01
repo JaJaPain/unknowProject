@@ -573,3 +573,19 @@ in proportion to its price; imported ore sells x1.5. So the "ore x3" lever is
 off the table. Re-run after the cargo/Deep-laser stat fix, same columns:
 current 108 / 210 / 359 / 621 / 1015+ min. The remaining levers are job pay,
 drones and materials, the first-drone safety net, and the late-rung targets.
+
+**Update 2026-10-02 (Abe): a clean drone dive brings home 2 materials**
+(`DroneMazeActivity.MATERIALS_PER_CLEAN_DIVE`); drones stay 800 SC. Average
+minutes per rung, 4 seeds:
+
+| Scenario | II | III | IV | V | VI |
+|---|---|---|---|---|---|
+| **Target (3.6)** | 20-30 | 30-40 | 45-60 | 60-75 | 75-90 |
+| Old: 1 material per dive | 93 | 197 | 335 | 662 | 1057+ |
+| **Now: 2 per clean dive** | 93 | 104 | 174 | 378 | 839 |
+| ... + job pay x2 | 71 | 58 | 132 | 239 | 510 |
+| ... + job pay x2, drones 400 SC | 48 | 50 | 107 | 200 | 429 |
+
+Still open for Abe: job pay x2, N.O.V.A. replacing a failed first drone
+(Class II is slow mostly because an empty first dive means saving 800 SC),
+and whether Class V-VI should be 2-4 h rungs rather than 60-90 min.

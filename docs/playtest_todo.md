@@ -299,6 +299,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       debug text), the bar keeps creeping forward instead of sitting at 35%,
       and a TIP line under it changes every 7 seconds. Afterwards, godot.log
       has "Campaign bible generated ... in N s": send me N.
+- [ ] **A clean drone dive brings home two.** Dive a red rock and come out
+      with the drone in good shape: the haul lists at least 2 of the rock's
+      material (a badly scraped drone can still bring home fewer).
 
 ## K. Gate ladder, step 1 (added 2026-10-01)
 
