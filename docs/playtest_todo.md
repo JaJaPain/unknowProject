@@ -289,3 +289,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       it back; each flight uses a drone). A pulsing "[G] LAUNCH SURVEY DRONE ·
       N aboard" prompt stays while the rock is in reach; with no drones it
       reads "No survey drones aboard · station stores sell them".
+- [ ] **Wiki covers refining and loose ends.** Esc > Wiki: "Refining ice"
+      (fuel, fuel blocks, O2) is there from the start, and "Fuel" now says an
+      empty tank still flies, slower, but can't jump. The first time the job
+      board shows a Loose ends button, a "Loose ends board" entry unlocks.

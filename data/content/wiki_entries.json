@@ -126,7 +126,7 @@
 			"category": "Ship",
 			"title": "Fuel",
 			"unlocked": true,
-			"body": "Jumps and boosting burn fuel. Keep an eye on the FUEL bar.\n\nDocked, use [b]Buy Fuel[/b] in the station menu to top up. Some stations post fuel runs on their job boards. Running dry far from a station is a bad day."
+			"body": "Jumps cost fuel (more for gates that lead deeper out), and so does boosting. Flying around inside a system only sips it.\n\nAn empty tank still flies, slower and with no boost, but it cannot jump. So you can always mine water ice, refine it at a station and leave.\n\nDocked, use [b]Buy Fuel[/b] to top up, or refine your own ice (see [b]Refining ice[/b]). Some stations post fuel runs on their job boards."
 		},
 		{
 			"id": "hull",
@@ -141,6 +141,13 @@
 			"title": "Contracts",
 			"unlocked": true,
 			"body": "Job boards post contracts: deliveries, fetch jobs, bounties and more. Accepted contracts show at the top right with their current step.\n\nWhen a contract says [i]payment pending[/i], dock where it tells you to collect."
+		},
+		{
+			"id": "refining",
+			"category": "Stations & Trade",
+			"title": "Refining ice",
+			"unlocked": true,
+			"body": "Water ice is the most useful rock out there. Mine it, dock, and the station's trade panel turns it into:\n\n[b]Refine Fuel[/b]  Fuel for your tank, cheaper than buying it.\n[b]Fabricate Fuel Blocks[/b]  Generator fuel for stations. Too unstable for a jump drive: blocks cannot go through a gate, so they are made and used in the same system.\n[b]Compress O2[/b]  Oxygen canisters. These can go through gates, so they are what relief runs carry.\n\nFuel blocks and O2 are mostly wanted by job-board deliveries."
 		},
 		{
 			"id": "nova",
@@ -197,6 +204,13 @@
 			"title": "Investigations",
 			"unlocked": false,
 			"body": "Some jobs are investigations. N.O.V.A. reads what you find and gives you choices: file what you have for part of the pay, or push on to the next site for the full picture. Each choice comes up as a button."
+		},
+		{
+			"id": "loose_ends",
+			"category": "Story",
+			"title": "The loose ends board",
+			"unlocked": false,
+			"body": "Odd details you notice (a recording off the receiver, a wreck's flight recorder, something that didn't sit right in a job) go on the [b]Loose ends[/b] board, with where and when you found them. The button appears on a station's job board once there is something on it.\n\nPin the notes you think connect. Pinned notes sit on top and weigh on who the story settles on. The board never tells you which notes matter, until the truth comes out; then each one shows how it connected, or that it was a dead end."
 		}
 	]
 }

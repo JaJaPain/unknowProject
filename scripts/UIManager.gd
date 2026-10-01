@@ -8183,6 +8183,8 @@ func _refresh_loose_ends_button() -> void:
 	var root := get_tree().current_scene
 	var threads: Array = root.premise_main_story_threads() if root != null and root.has_method("premise_main_story_threads") else []
 	loose_ends_btn.visible = not threads.is_empty()
+	if not threads.is_empty():
+		WikiType.unlock("loose_ends")
 	var pinned := threads.filter(func(t): return bool(t.get("pinned", false))).size()
 	loose_ends_btn.text = "Loose ends (%d noticed, %d pinned)" % [threads.size(), pinned]
 
