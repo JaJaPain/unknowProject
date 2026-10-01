@@ -302,6 +302,9 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **A clean drone dive brings home two.** Dive a red rock and come out
       with the drone in good shape: the haul lists at least 2 of the rock's
       material (a badly scraped drone can still bring home fewer).
+      Quick way, no campaign: `powershell -File tools/play_drone_maze.ps1`
+      drops you straight into dives (G rock, W wreck, Esc quit) and shows
+      each haul under the game's real rules.
 
 ## K. Gate ladder, step 1 (added 2026-10-01)
 
