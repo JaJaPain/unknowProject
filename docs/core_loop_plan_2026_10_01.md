@@ -536,3 +536,33 @@ the Lodestar (8-12) builds on a ladder that already works.
 5. **Rare-ore attacker: every time, or a chance?** **ANSWERED (Abe, 2026-10-01): yes as recommended**: every time for rare ore, after a delay long enough to fill part of a hold; a low chance for uncommon cuprite.
 6. **Claims: buy mining rights?** **ANSWERED (Abe, 2026-10-01): yes, late game**: in later systems, the rights to some **mid-grade** minerals can be bought from the claim owner, to cut the annoyance of mining for the larger upgrades. Not for rare ore or red rocks.
 7. **End game.** **ANSWERED (Abe, 2026-10-01):** never fully upgraded; tiers and gate classes continue procedurally, a never-ending story (2.3a). And: end-game progression needs **alloys** made by combining different ores, not raw ore, made at a dedicated facility. See 3.8.
+
+---
+
+## 8. Economy simulation results (step 7, 2026-10-02)
+
+`tools/economy_sim.gd` plays an automated captain on the game's real numbers
+(`powershell -File tools/run_economy_sim.ps1` runs every scenario over
+several seeds and prints the averages). Average minutes per rung, 3 seeds:
+
+| Scenario | II | III | IV | V | VI |
+|---|---|---|---|---|---|
+| **Target (3.6)** | 20-30 | 30-40 | 45-60 | 60-75 | 75-90 |
+| Current numbers | 108 | 196 | 382 | 613 | never in 40 h |
+| Ore value x3, job pay x2 | 54 | 90 | 176 | 358 | 884 |
+| ... + 2 materials per successful dive | 54 | 54 | 96 | 254 | 573 |
+| ... + drones at 400 SC | 41 | 68 | 139 | 285 | 731 |
+| ... + both | 41 | 49 | 79 | 191 | 487 |
+
+**What drives it:**
+
+- **Income is low.** A full 100 m³ hold of silicate sells for ~100 SC; a
+  board job pays ~140. The captain earns about 1 SC a second.
+- **Drones dominate the cost.** Every tier needs tech-grade materials (the
+  powerplant too), each material costs a dive, and each dive after the first
+  costs an 800 SC drone: ~65 drones (~52,000 SC) to reach Class VI.
+- **The first rung can stall.** If N.O.V.A.'s free drone comes home empty, the
+  next one costs 800 SC, which is why Class II averages 108 min, not ~15.
+- **Later tiers grow exponentially** (credits double, materials 1/2/4/8 plus
+  crystals), so Class V-VI stay hours long under every scenario. That may be
+  fine for an endless game; the 60-90 min targets were a guess.
