@@ -232,6 +232,71 @@ best-paying board job, bank vs sell by the goal rule, buy the goal upgrade)
 and prints the simulated minutes to each rung. Tuning the tables happens
 against that report and then against Abe's playtests.
 
+### 3.7 Risk follows reward: the combat cost of mining (Abe, 2026-10-01)
+
+The rarer the ore, the more it costs to take, in a fight. Common ore stays a
+calm activity; rare ore and tech-grade materials are contested. This also
+gives miners a reason to upgrade weapons and shields, not just fighters.
+
+| What you mine | Combat cost | How it's telegraphed |
+|---|---|---|
+| **Common ore** (silicate, water ice, ferrite) in open space | None | (calm) |
+| **Common ore inside a claim** | The claim's miners call reinforcements | A claim label on the belt; their hail first |
+| **Rare ore** (thorium, and the rarer ores deeper out) | One ship comes for you, and for the ore | N.O.V.A. hears it coming, with time to choose |
+| **Red rocks** (tech-grade materials) | Sometimes a ship is already there, waiting | Visible on the overview before you get close |
+
+**Claims (common ore).**
+
+- Some belts, or parts of them, are **claimed** by a local faction's mining
+  crews (the faction ships that already fly in each system). The overview and
+  the belt's label show it: `Ferrite belt · Zenith claim`.
+- Start mining inside a claim while their miners are working it and you're
+  **hailed first**: "This is a Zenith claim. Move off." That is a 20-second
+  grace.
+- Keep mining and they **call reinforcements**: one or two escorts arrive
+  (fewer and weaker in shallow systems). Leave the claim and nothing happens.
+  Trespassing costs standing with that faction; a fight costs more.
+- **Never trapped for fuel:** in every system, the water ice nearest each
+  station is unclaimed open space. The fuel loop's "never stranded" rule
+  outranks claims.
+
+**Rare ore: the claim jumper.**
+
+- Mining rare ore puts out a signature. After a short delay, **one ship**
+  comes for you and the ore (a raider, a rival prospector, a local enforcer,
+  depending on the system's factions).
+- N.O.V.A. warns with time to act: "Someone's picked up the thorium. One
+  ship, inbound, about forty seconds." The player can keep cutting, leave
+  with what they have, or set up for the fight.
+- The attacker is **one ship, scaled to the system's depth, not to the
+  player**, so upgrades make these fights easier, which is the point of
+  upgrading.
+- Beating it pays: its hold has some of the same ore, a bounty, and the
+  existing rare chance of an intact survey drone.
+
+**Red rocks: the guard.**
+
+- A red rock may have a ship **already parked beside it**, waiting. It shows
+  on the overview from a distance, and N.O.V.A. calls it out when the rock is
+  targeted: "There's a ship sitting on that rock. It hasn't moved. It's
+  waiting."
+- The guard engages when you come within range of the rock. Players can scout
+  first, pick a different rock, or come back stronger.
+- Guard chance scales with depth (about 30% in Class I-II systems, rising to
+  about 70% deep). **The campaign's first red rock (the tutorial rung) is
+  never guarded**: one new thing at a time.
+
+**Fairness rules.**
+
+- Every combat cost is telegraphed before it starts (a label, a hail, a
+  warning), and there's always a way to back out.
+- One attacker at a time for rare ore and red rocks; only claims escalate,
+  and only if the player stays.
+- No combat cost appears before the first upgrade is fitted (the first
+  ~30 minutes are for learning the loop).
+- The economy simulation (3.6) counts the fight time and the repair bills,
+  so rung times include the risk.
+
 ---
 
 ## 4. Pillar C: the pull outward (the Season loop)
@@ -348,6 +413,7 @@ before the next bite.
 | 5 | First rung fully guided (steps 1-6 in 3.4) + wiki "Upgrades and gate classes" | Walkthrough unit tests; first-session smoke extended |
 | | **Stop and show: the whole first rung, from refusal to fitted** | |
 | 6 | Depth scaling: ore value, red-rock share, board pay, enemy tier | Economy smoke |
+| 6b | Mining risk (3.7): claims with hail and reinforcements, rare-ore claim jumper, red-rock guards; ice near stations always unclaimed; none before the first upgrade | Unit tests per rule; a `--mining-risk-smoke-test` that triggers each one |
 | 7 | `--economy-sim` automated captain + first tuning pass against 3.6 | Prints minutes per rung |
 | 8 | Keystone deck, draw, Class IV rule, early hints | Unit tests per keystone |
 | 9 | Lodestar deck (JSON, 6 cards), draw, star map wedge | Unit tests; map snapshot |
@@ -373,6 +439,11 @@ the Lodestar (8-12) builds on a ladder that already works.
 4. **Refunds.** Refunding an upgrade can drop the rating below the current
    class. Recommended: allowed; it only blocks going deeper, never coming
    back.
-5. **After rating 25.** Fully upgraded ships still need a reason to climb in
+5. **Rare-ore attacker: every time, or a chance?** Recommended: every time
+   for rare ore (it's what makes it rare), after a delay long enough to fill
+   part of a hold; a low chance for uncommon cuprite.
+6. **Claims: can the player buy mining rights** (a fee at the claim owner's
+   station) instead of fighting? Recommended: later, as a standing reward.
+7. **After rating 25.** Fully upgraded ships still need a reason to climb in
    later seasons. Options: Mk VI tiers per season, or rare modules from
    Lodestar arrivals. Not needed until bite 12.
