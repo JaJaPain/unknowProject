@@ -52,7 +52,7 @@ const RESULT_LINES := {
 	"partial": ["Drone's home with part of it. Better than nothing.", "Some of it. The rest can stay in the dark."],
 	"failed_empty": ["Drone's home, hands empty.", "Nothing worth the trip. The drone's back, at least."],
 	"lost": ["Lost the drone, and everything it was carrying.", "Signal's gone. So is the drone. And its load."],
-	"recorder": ["The recorder's intact. I'm putting what's on it on the loose ends board.", "Got the flight recorder. There's something on it you'll want to see."],
+	"recorder": ["The recorder's intact. I'm putting what's on it on the loose ends board.", "Got the flight recorder. There's something on it; it's on the loose ends board."],
 	"free_drone": ["There's an intact survey drone in that debris. Free. I love free.", "Look at that. A survey drone, not a scratch on it. Their loss."],
 }
 

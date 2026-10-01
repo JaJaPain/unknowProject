@@ -28,7 +28,7 @@ const BLOCK_REASON := "The transit field on this gate needs hardened shields (Sh
 
 const LINES := {
 	"blocked": [
-		"Captain, stop. This gate runs deeper than the last two. Its transit field strips unhardened shields, and I'm not taking us through without Shields Mk II.",
+		"Captain, stop. This gate runs deeper than any we've used. Its transit field strips unhardened shields, and I'm not taking us through without Shields Mk II.",
 		"Hardened shields need rad-quartz. Nobody sells it; you mine it. It grows in the cracks of the red rocks in the asteroid fields.",
 		"A mining laser shatters those rocks, so it's a job for a survey drone. I've put one in the bay. Call it an advance.",
 	],
