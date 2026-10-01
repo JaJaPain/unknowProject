@@ -512,6 +512,7 @@ before the next bite.
 | 6 | Depth scaling: ore value, red-rock share, board pay, enemy tier | Economy smoke |
 | 6b | Mining risk (3.7): claims with hail and reinforcements, rare-ore claim jumper, red-rock guards; ice near stations always unclaimed; none before the first upgrade | Unit tests per rule; a `--mining-risk-smoke-test` that triggers each one |
 | 7 | `--economy-sim` automated captain + first tuning pass against 3.6 | Prints minutes per rung |
+| | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, but decide whether that's intended in this pass. | |
 | 8 | Keystone deck, draw, Class IV rule, early hints | Unit tests per keystone |
 | 9 | Lodestar deck (JSON, 6 cards), draw, star map wedge | Unit tests; map snapshot |
 | 10 | Bearings in activities (receiver, drone recorder, anomaly, investigation, Kaelen lead), Lodestar log tab | Per-activity tests |
