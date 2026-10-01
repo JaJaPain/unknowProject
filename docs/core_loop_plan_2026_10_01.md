@@ -430,6 +430,52 @@ Lodestar is drawn further out (depth 20+, with Class VII+ gates and Mk V
 tiers). The ladder and the pull start again, one level up, with no end
 (2.3a).
 
+### 4.6 The second push: N.O.V.A. and Kaelen want you further out (Abe, 2026-10-01)
+
+The push forward comes in **two parts**:
+
+1. **The Lodestar** (4.1): the *explained* pull. A mystery the player chooses
+   to chase.
+2. **The undercurrent**: the *unexplained* one. N.O.V.A. and Kaelen both keep
+   nudging the Captain deeper, constantly and lightly, for reasons that are
+   never given.
+
+The reason belongs to the fixed-cast canon, which is director-only: it is not
+written here, never goes into a prompt, and never appears in player-visible
+text. This section covers only what the player sees and hears.
+
+**N.O.V.A.**
+
+- Uneasy when the ship lingers in systems shallower than the deepest it has
+  reached: "We've been here a while. I don't like standing still." Calmer, even
+  curious, the deeper they go, though she still hates the gates themselves.
+- When a new gate class opens: a line that sounds a little like relief.
+- If the Captain asks why (in a conversation that touches it), she deflects
+  or doesn't know herself. She never explains, and **she never gives orders**
+  (her register forbids it): the nudge is a feeling she voices, not an
+  instruction.
+
+**Kaelen**
+
+- Her leads always point deeper. She is quicker and cheaper with gate reveals
+  that go outward, and pays more for survey data from the deep.
+- After an upgrade is fitted: "Good. Now go." Back in a shallow system for too
+  long: "You don't belong back here, Shiny."
+- Never says why. Changes the subject like a broker closing a deal.
+
+**Rules**
+
+- **Authored lines only**, no model generation, so nothing about the reason
+  can leak through a prompt. Abe reviews every line against the canon before
+  it ships.
+- **Light and rate-limited**: at most one nudge from each of them per system
+  visit, more often only when the player has been sitting shallow for a long
+  time. It must read as character, not as a quest marker.
+- **They never contradict each other**, and neither is ever shown the other's
+  nudges in dialogue: the player is the only one who notices both are doing it.
+- The nudges are a hint tier of the undercurrent (vision doc Section 5.4):
+  they add to the mystery, they never resolve it.
+
 ---
 
 ## 5. What changes from campaign to campaign
@@ -437,6 +483,7 @@ tiers). The ladder and the pull start again, one level up, with no end
 | Layer | Drawn per campaign | Effect on the loop |
 |---|---|---|
 | Lodestar | 1 of the deck | What the long pull is about; where bearings hide |
+| Undercurrent nudge | (constant) | N.O.V.A. and Kaelen keep pushing outward, never saying why |
 | Keystone | 1 of 5 | Which upgrade deep space demands (Class IV) |
 | Premise + Hidden Hand | (exists) | The main story the bearings and loose ends weave into |
 | Galaxy | (exists, generated) | Which ores, quirks and factions each depth holds |
@@ -469,6 +516,7 @@ before the next bite.
 | 10 | Bearings in activities (receiver, drone recorder, anomaly, investigation, Kaelen lead), Lodestar log tab | Per-activity tests |
 | | **Stop and show: the Lodestar wedge and first two bearings** | |
 | 11 | Short pulls: map teasers, survey data sale, firsts | Jump smoke |
+| 11b | Undercurrent nudge (4.6): authored N.O.V.A. and Kaelen pools, triggers (lingering shallow, class opened, upgrade fitted), rate limits, Kaelen's deeper-lead pricing. **Abe reviews the lines against the canon first.** | Unit tests for triggers and limits |
 | 12 | First Lodestar arrival set piece + season rollover | Smoke on a debug-jumped save |
 
 Bites 1-5 are the foundation (one rung, taught well) and should land first;
@@ -479,10 +527,8 @@ the Lodestar (8-12) builds on a ladder that already works.
 ## 7. Decisions for Abe
 
 1. **Ship Rating?** **ANSWERED (Abe, 2026-10-01): yes**, with the rule that one upgrade path alone can't carry the ship forward (2.2: a system counts up to two tiers above the weakest).
-2. **Strict gates, or risky passage?** Option: an under-rated ship may force a
-   gate and arrive with heavy hull damage. Recommended: strict (clearer, and
-   the ladder stays meaningful); revisit later as an upgrade or a story beat.
-3. **The Lodestar deck.** Approve the six above, swap any, or write your own.
+2. **Strict gates, or risky passage?** **ANSWERED (Abe, 2026-10-01): strict**, for now.
+3. **The Lodestar deck.** Approve the six above, swap any, or write your own. (Abe, 2026-10-01: the push forward is two parts, the Lodestar plus N.O.V.A. and Kaelen's unexplained nudge, 4.6. Deck still to approve.)
    Each must also be checked against the fixed-cast canon before it ships.
 4. **Refunds.** **ANSWERED (Abe, 2026-10-01):** the ship can always fly back, but going deeper again needs the requirement met (2.4).
 5. **Rare-ore attacker: every time, or a chance?** **ANSWERED (Abe, 2026-10-01): yes as recommended**: every time for rare ore, after a delay long enough to fill part of a hold; a low chance for uncommon cuprite.
