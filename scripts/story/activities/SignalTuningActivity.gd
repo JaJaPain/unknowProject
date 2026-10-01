@@ -85,16 +85,33 @@ func _process(delta: float) -> void:
 	if not _can_listen():
 		return
 	_flight_s += delta
-	if not _decided and _flight_s >= _offer_at:
+	# Never offered beside a station: its traffic and dock chatter drown out
+	# anything faint (Abe, 2026-09-30). The clock waits until we're clear.
+	if not _decided and _flight_s >= _offer_at and not _near_station():
 		_decided = true
 		_try_offer()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == TUNE_KEY:
-		if not _offered.is_empty() and _panel == null and _can_listen():
+		if not _offered.is_empty() and _panel == null and _can_listen() and not _near_station():
 			open_tuning()
 			get_viewport().set_input_as_handled()
+
+
+## No receiver work within this range of any station.
+const STATION_QUIET_RANGE := 1000.0
+
+
+func _near_station() -> bool:
+	var gs := get_node_or_null("/root/GlobalState")
+	var player = gs.player if gs != null else null
+	if not is_instance_valid(player):
+		return false
+	for station in get_tree().get_nodes_in_group("station"):
+		if station is Node3D and is_instance_valid(station) 				and (station as Node3D).global_position.distance_to((player as Node3D).global_position) < STATION_QUIET_RANGE:
+			return true
+	return false
 
 
 func has_offer() -> bool:
@@ -149,7 +166,7 @@ func offer(item: Dictionary) -> void:
 ## "[T] TUNE RECEIVER" at the bottom of the screen, gently pulsing, for as long
 ## as the offer is open and the player is free to take it.
 func _update_prompt(delta: float) -> void:
-	var show := not _offered.is_empty() and _panel == null and _can_listen()
+	var show := not _offered.is_empty() and _panel == null and _can_listen() and not _near_station()
 	if show and _prompt == null:
 		_build_prompt()
 	if _prompt == null:

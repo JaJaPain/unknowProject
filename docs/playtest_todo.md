@@ -248,8 +248,8 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Combat camera re-orbits each turn.** In a fight, each new planning
       turn the camera settles back into its slow orbit around the enemy (a
       signal mismatch used to skip this with an error every turn).
-- [ ] **Receiver is taught.** New campaign, after the tutorial, fly undocked
-      and out of combat for 30 seconds: N.O.V.A. says a faint transmission is
+- [ ] **Receiver is taught.** New campaign, after the tutorial, fly undocked,
+      out of combat and at least 1000 m from any station for 30 seconds: N.O.V.A. says a faint transmission is
       on your receiver and explains it once (T for the dials; frequency finds
       it, phase cleans it, hold it clear to lock). A pulsing "[T] TUNE
       RECEIVER" prompt stays at the bottom of the screen until you tune in,
@@ -270,3 +270,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       antenna) that bobs and turns slowly. The light grows out of the drone's
       centre, holds, and shrinks back into it; between flashes you see the
       drone. (Black placeholders; real drone art later.)
+- [ ] **No receiver near stations.** Within 1000 m of a station the receiver
+      prompt hides and T does nothing; fly clear and it comes back.
+- [ ] **Starter target line is instant.** Take Kaelen's starter job, repair,
+      undock: N.O.V.A.'s "highlighted that ship in red" line starts right away
+      (it's generated when you accept the job, not when it's needed).

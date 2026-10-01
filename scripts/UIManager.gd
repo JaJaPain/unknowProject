@@ -10002,6 +10002,9 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 # If they took the sensible route and repaired first, give them one concise
 # orientation line immediately after the clamps release, with the overview now
 # open and the Reaver already highlighted by its hostile row color.
+const INTRO_TARGET_TIP_LINE := "I am not sure I am happy about being used to blow someone up, but I highlighted that ship in red on our overview. Click it, and if you decide to blow it up, that is on your conscience, not mine. I hope you know what you are doing."
+
+
 func _maybe_play_intro_repair_target_tip() -> void:
 	if not _repaired_this_dock or not _should_flash_undock():
 		return
@@ -10017,7 +10020,7 @@ func _maybe_play_intro_repair_target_tip() -> void:
 	if QuestManager.is_quest_active():
 		QuestManager.active_quest["nova_mission_hunt_reaction_played"] = true
 	Nova.speak(
-		"I am not sure I am happy about being used to blow someone up, but I highlighted that ship in red on our overview. Click it, and if you decide to blow it up, that is on your conscience, not mine. I hope you know what you are doing.",
+		INTRO_TARGET_TIP_LINE,
 		Nova.Severity.THREAT,
 		Nova.expression_for_event("worried")
 	)
@@ -13937,6 +13940,11 @@ func _on_partial_delivery_pressed(deliverable: float):
 func _on_quest_accepted():
 	_update_quest_tracker()
 	_refresh_visible_npc_attention_buttons()
+	# Her "highlighted that ship in red" line plays the moment the clamps
+	# release after the starter job; generate it now, at the front of the voice
+	# queue, so it isn't still synthesizing then (Abe, 2026-09-30).
+	if is_instance_valid(StoryManager) 			and not bool(StoryManager.story_state.get("intro_repair_target_tip_delivered", false)):
+		SpeechService.cache(INTRO_TARGET_TIP_LINE, Nova.NOVA_VOICE_PROFILE_ID, -1.0, true)
 
 func _on_quest_progress_updated():
 	_update_quest_tracker()
