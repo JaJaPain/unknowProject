@@ -327,7 +327,7 @@ func _request_delete(slot_id: String, display_name: String) -> void:
 	if _action_in_progress:
 		return
 	_pending_delete_slot = slot_id
-	_confirm_dialog.dialog_text = "Delete '%s' and every checkpoint in it? This cannot be undone." % display_name
+	_confirm_dialog.dialog_text = "Delete '%s', every checkpoint in it and its screenshots? This cannot be undone." % display_name
 	_confirm_dialog.popup_centered()
 
 

@@ -858,6 +858,14 @@ func _create_hud():
 	upgrade_goal_card = load("res://scripts/ui/UpgradeGoalCard.gd").new()
 	upgrade_goal_card.name = "UpgradeGoalCard"
 	add_child(upgrade_goal_card)
+	# F12 screenshots; lives on the scene root so hiding the HUD for a clean
+	# shot doesn't hide (or pause) the taker itself.
+	screenshots = get_tree().root.get_node_or_null("Screenshots")
+	if screenshots == null:
+		screenshots = load("res://scripts/ui/Screenshots.gd").new()
+		screenshots.name = "Screenshots"
+		screenshots.process_mode = Node.PROCESS_MODE_ALWAYS
+		get_tree().root.call_deferred("add_child", screenshots)
 
 	var tracker_style = StyleBoxFlat.new()
 	tracker_style.bg_color = Color(0.1, 0.1, 0.12, 0.6)
@@ -2603,6 +2611,7 @@ func _create_pause_menu():
 	var actions := actions_card.get_child(0) as VBoxContainer
 	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
 	pause_wiki_button = _add_pause_action(actions, "WIKI", open_wiki)
+	_add_pause_action(actions, "GALLERY", open_gallery)
 	_add_pause_action(actions, "COMBAT HELP", func(): _show_combat_tutorial_popup(true))
 	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
 	pause_new_campaign_button = _add_pause_action(
@@ -2739,6 +2748,18 @@ func _make_pause_card(title_text: String) -> PanelContainer:
 const WikiType := preload("res://scripts/ui/Wiki.gd")
 var pause_wiki_button: Button = null
 var _wiki_screen: Node = null
+
+
+## Screenshots (F12) and the pause menu's Gallery (Abe, 2026-10-01).
+var _gallery_screen: Node = null
+var screenshots: Node = null
+
+
+func open_gallery() -> void:
+	if _gallery_screen != null and is_instance_valid(_gallery_screen):
+		return
+	_gallery_screen = load("res://scripts/ui/GalleryScreen.gd").new()
+	add_child(_gallery_screen)
 
 
 func open_wiki() -> void:
@@ -3413,12 +3434,12 @@ func _request_campaign_delete(slot_id: String) -> void:
 	campaign_confirm_dialog.dialog_text = (
 		(
 			"Delete the campaign you are currently playing? "
-			+ "This ends the current session and deletes all of its saves. "
+			+ "This ends the current session and deletes all of its saves and screenshots. "
 			+ "This cannot be undone."
 		)
 		if deleting_active
 		else (
-			"Delete this campaign and all of its checkpoints? "
+			"Delete this campaign, all of its checkpoints and its screenshots? "
 			+ "This cannot be undone."
 		)
 	)
@@ -3701,6 +3722,9 @@ func _unhandled_input(event: InputEvent):
 			_wiki_screen.call("_close")
 			get_viewport().set_input_as_handled()
 			return
+		if _gallery_screen != null and is_instance_valid(_gallery_screen):
+			get_viewport().set_input_as_handled()
+			return  # the gallery handles Esc itself (viewer first, then close)
 		if branch_map and branch_map.visible:
 			branch_map._close()
 			return

@@ -384,3 +384,14 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       6. Dock: the upgrade screen opens on Shields by itself, "Everything for
          Shields Mk II is aboard. Fit it here." Fit it: she grumbles, the gate
          opens, and the wiki gains "Upgrades and gate classes".
+
+## L. Screenshots (added 2026-10-01)
+
+- [ ] **F12 takes a screenshot.** While flying, press F12: a quick white flash
+      and a shutter click, and a SYSTEM line "Screenshot saved: Day001_<System>_0800.png
+      (Esc > Gallery)". Shift+F12 takes one without the HUD.
+- [ ] **Gallery.** Esc > GALLERY: this campaign's shots, newest first, as
+      thumbnails. Click one for full screen; PREV/NEXT (or Left/Right), DELETE
+      (or the Delete key), BACK (or Esc). OPEN FOLDER opens the files.
+- [ ] **Per campaign.** Another campaign's gallery is its own. Deleting a
+      campaign warns that its screenshots go with it.

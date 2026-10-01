@@ -327,6 +327,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_wiki_snapshot")
 	elif "--intro-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_intro_snapshot")
+	elif "--gallery-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_gallery_snapshot")
 	elif "--goal-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_goal_smoke_test")
 	elif "--evasion-smoke-test" in OS.get_cmdline_user_args():
@@ -10931,6 +10933,53 @@ func _run_perf_probe() -> void:
 	var vram := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576.0
 	print("PERF avg_fps=%.1f min_fps=%.1f max_draws=%d vram_mb=%.0f gpu=%s" % [
 		total / samples.size(), samples.min(), draws.max(), vram, RenderingServer.get_video_adapter_name()])
+	get_tree().quit()
+
+
+## Screenshots and the Gallery, windowed: two shots (HUD and clean), the
+## gallery grid, the viewer. -- --gallery-snapshot --baseline-offline --out=<dir>
+func _run_gallery_snapshot() -> void:
+	var out := "user://gallery_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 90:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	var shots = get_tree().root.get_node_or_null("Screenshots")
+	print("[GallerySnapshot] folder: ", load("res://scripts/ui/Screenshots.gd").folder())
+	if shots == null:
+		push_error("[GallerySnapshot] no Screenshots node")
+		get_tree().quit(1)
+		return
+	var first: String = await shots.take(false)
+	for i in 30:
+		await get_tree().process_frame
+	var second: String = await shots.take(true)
+	print("[GallerySnapshot] took: ", first, " | ", second)
+	if first.is_empty() or second.is_empty():
+		push_error("[GallerySnapshot] a screenshot failed")
+		get_tree().quit(1)
+		return
+	for i in 20:
+		await get_tree().process_frame
+	GlobalState.paused = true
+	ui.open_gallery()
+	for i in 20:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("gallery_grid.png"))
+	ui._gallery_screen._open(0)
+	for i in 10:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("gallery_viewer.png"))
+	# Leave the folder as we found it.
+	load("res://scripts/ui/Screenshots.gd").delete(first)
+	load("res://scripts/ui/Screenshots.gd").delete(second)
 	get_tree().quit()
 
 
