@@ -7820,6 +7820,13 @@ func _run_dock_snapshot() -> void:
 	# Let the station welcome card fade out first (it waits up to 12 s for
 	# N.O.V.A.'s line), or it sits over the first screenshot.
 	await get_tree().create_timer(14.0).timeout
+	# Ore in the hold, so the trade panel's Sell / Bank pair shows live values.
+	GlobalState.clear_cargo()
+	GlobalState.add_ore(60.0)
+	# --post-tutorial: as after the starter contract (trade buttons showing).
+	if "--post-tutorial" in OS.get_cmdline_user_args():
+		StoryManager.story_state["first_contract_handed_in"] = true
+		GlobalState.kaelen_briefing_seen = true
 	# The lounge goes last: opening it takes over the scene, so nothing after
 	# it would ever be captured.
 	var screens := [["menu", ""], ["agent", "_on_talk_to_agent_pressed"], ["board", "_on_public_board_pressed"],
@@ -10976,6 +10983,24 @@ func _run_goal_smoke_test() -> void:
 	if not str(ui.upgrade_goal_card._title.text).begins_with("Shields Mk II") or not str(ui.upgrade_goal_card._tag.text).contains("READY"):
 		fail.call("The card doesn't show the ready Shields goal: '%s' / '%s'" % [ui.upgrade_goal_card._title.text, ui.upgrade_goal_card._tag.text])
 		return
+	# 2b. Step 4: Bank beside Sell, highlighted while the goal needs ore.
+	GlobalState.player_storage_ore = 0.0
+	GlobalState.clear_cargo()
+	GlobalState.add_ore(40.0)
+	StoryManager.story_state["ore_bank_taught"] = true
+	ui._update_sell_button()
+	if ui.bank_ore_btn == null or ui.bank_ore_btn.disabled or not str(ui.bank_ore_btn.text).begins_with("★"):
+		fail.call("Bank isn't offered and highlighted while the goal needs ore: '%s'" % (ui.bank_ore_btn.text if ui.bank_ore_btn != null else "none"))
+		return
+	ui._bank_ore()
+	if not is_equal_approx(GlobalState.player_storage_ore, 40.0) or GlobalState.cargo > 0.0:
+		fail.call("Banking didn't move the hold's ore into the bank (bank %.1f, hold %.1f)." % [GlobalState.player_storage_ore, GlobalState.cargo])
+		return
+	var ore_row: Array = Goal.rows(GlobalState, goal).filter(func(r): return str(r["id"]) == "ore")
+	if ore_row.is_empty() or int(ore_row[0]["have"]) != 40:
+		fail.call("The goal's ore bar didn't count the banked ore: %s" % str(ore_row))
+		return
+	GlobalState.player_storage_ore = float(data["cost_ore"])
 	# 3. The player's own pick replaces the suggestion.
 	Card.set_goal("weapons", "rapid", 2)
 	goal = Card.current_goal()

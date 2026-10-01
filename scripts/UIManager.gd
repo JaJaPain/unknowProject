@@ -1,4 +1,4 @@
-﻿extends Control
+extends Control
 
 const PublicBoardOfferBuilderType := preload(
 	"res://scripts/domain/PublicBoardOfferBuilder.gd"
@@ -1962,6 +1962,11 @@ func _create_dock_menu():
 	sell_btn = _agent_trade_button(_sell_ore)
 	sell_btn.text = "Sell Ore (Hold Empty)"
 	sell_btn.disabled = true
+	# Beside Sell, so keeping ore for upgrades is a visible choice (core loop
+	# step 4). It used to live only inside the upgrade screen.
+	bank_ore_btn = _agent_trade_button(_bank_ore)
+	bank_ore_btn.text = "Bank Ore (Hold Empty)"
+	bank_ore_btn.disabled = true
 	# Fuel: refine the hold's water ice (cheap), or buy it (dear).
 	refine_fuel_btn = _agent_trade_button(_on_refine_fuel_pressed)
 	buy_fuel_btn = _agent_trade_button(_on_buy_fuel_pressed)
@@ -8286,6 +8291,10 @@ func _place_upgrade_goal_card() -> void:
 	if upgrade_goal_card == null or not is_instance_valid(upgrade_goal_card):
 		return
 	var hud_up: bool = hud_panel != null and is_instance_valid(hud_panel) and hud_panel.is_visible_in_tree()
+	# Docked, the station panels own the screen (and the upgrade screen shows
+	# the costs itself).
+	if GlobalState.player != null and is_instance_valid(GlobalState.player) and bool(GlobalState.player.get("is_docked")):
+		hud_up = false
 	if not hud_up:
 		upgrade_goal_card.modulate.a = 0.0
 		return
@@ -10307,6 +10316,76 @@ func _on_nova_repair_prompt_repairs() -> void:
 func _on_nova_repair_prompt_undock() -> void:
 	_hide_nova_repair_decision()
 	undock_player(true)
+
+var bank_ore_btn: Button = null
+const BANK_TAUGHT_FLAG := "ore_bank_taught"
+
+
+## Ore the upgrade goal still needs from the bank (0 when none, or no goal).
+func _goal_ore_shortfall() -> int:
+	var Goal = load("res://scripts/domain/UpgradeGoal.gd")
+	var goal: Dictionary = load("res://scripts/ui/UpgradeGoalCard.gd").current_goal()
+	if goal.is_empty():
+		return 0
+	for row in Goal.rows(GlobalState, goal):
+		if str(row["id"]) == "ore":
+			return maxi(0, int(row["need"]) - int(row["have"]))
+	return 0
+
+
+## Move the hold's ore into the ore bank (as much as fits).
+func _bank_ore() -> void:
+	if GlobalState.cargo_type != GlobalState.CargoType.ORE or GlobalState.cargo <= 0.0:
+		return
+	var room := maxf(0.0, GlobalState.player_storage_max - GlobalState.player_storage_ore)
+	var amount := minf(GlobalState.cargo, room)
+	if amount <= 0.0 or not GlobalState.deposit_ore(amount):
+		show_dock_message("The ore bank is full. Upgrade cargo to make it bigger.", "", Color(1.0, 0.6, 0.4))
+		return
+	AudioManager.play_sell_ore()
+	show_dock_message("Banked %d m³ of ore for upgrades. Ore bank: %d / %d." % [int(amount), int(GlobalState.player_storage_ore), int(GlobalState.player_storage_max)], "", Color(0.6, 0.95, 0.8))
+	_update_sell_button()
+	if upgrade_goal_card != null and is_instance_valid(upgrade_goal_card):
+		upgrade_goal_card.refresh()
+
+
+func _update_bank_button() -> void:
+	if bank_ore_btn == null or not is_instance_valid(bank_ore_btn):
+		return
+	var has_ore: bool = GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0
+	var room := maxf(0.0, GlobalState.player_storage_max - GlobalState.player_storage_ore)
+	var bank := "bank %d/%d" % [int(GlobalState.player_storage_ore), int(GlobalState.player_storage_max)]
+	if not has_ore:
+		bank_ore_btn.text = "Bank Ore (%s)" % bank
+		bank_ore_btn.disabled = true
+	elif room <= 0.0:
+		bank_ore_btn.text = "Bank Full (%s)" % bank
+		bank_ore_btn.disabled = true
+	else:
+		bank_ore_btn.text = "Bank %d m³ (%s)" % [int(minf(GlobalState.cargo, room)), bank]
+		bank_ore_btn.disabled = false
+	# The goal is short on ore: banking is the better choice, so say so.
+	var wanted: bool = has_ore and room > 0.0 and _goal_ore_shortfall() > 0
+	# Same size as its neighbours; gold border and text when it's the better choice.
+	if wanted:
+		bank_ore_btn.add_theme_stylebox_override("normal", HudStyle.box(Color(0.14, 0.11, 0.03, 0.95), HudStyle.GOLD, 2, 4, 6))
+		bank_ore_btn.add_theme_stylebox_override("hover", HudStyle.box(Color(0.22, 0.17, 0.05, 0.95), HudStyle.GOLD, 2, 4, 6))
+		bank_ore_btn.add_theme_color_override("font_color", HudStyle.GOLD)
+		bank_ore_btn.add_theme_color_override("font_hover_color", Color(1.0, 0.92, 0.6))
+	else:
+		for style in ["normal", "hover"]:
+			bank_ore_btn.remove_theme_stylebox_override(style)
+		bank_ore_btn.remove_theme_color_override("font_color")
+		bank_ore_btn.remove_theme_color_override("font_hover_color")
+	if wanted:
+		bank_ore_btn.text = "★ " + bank_ore_btn.text
+		var story := get_node_or_null("/root/StoryManager")
+		# Only once the button is actually on screen (not during Kaelen's briefing,
+		# when the trade buttons are hidden).
+		if story != null and bank_ore_btn.is_visible_in_tree() and not bool(story.story_state.get(BANK_TAUGHT_FLAG, false)):
+			story.story_state[BANK_TAUGHT_FLAG] = true
+			Nova.speak("Keep the ore, Captain. Bank it, and the mechanic takes it as payment for the upgrade we're after. Selling it just turns it into credits you'll spend getting more ore.", Nova.Severity.NAV, Nova.expression_for_event("nav"))
+
 
 func _sell_ore():
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
@@ -12363,9 +12442,11 @@ func _agent_trade_button(callback: Callable) -> Button:
 
 
 func _sync_trade_tooltips() -> void:
-	for button in [sell_btn, refine_fuel_btn, buy_fuel_btn, fabricate_blocks_btn, compress_o2_btn]:
+	for button in [sell_btn, bank_ore_btn, refine_fuel_btn, buy_fuel_btn, fabricate_blocks_btn, compress_o2_btn]:
 		if button != null and is_instance_valid(button):
 			button.tooltip_text = button.text
+	if bank_ore_btn != null and is_instance_valid(bank_ore_btn):
+		bank_ore_btn.tooltip_text += "\nKeep the hold's ore in your ore bank. The mechanic takes banked ore as payment for ship upgrades, at any station."
 
 
 func _update_fuel_buttons() -> void:
@@ -12441,6 +12522,7 @@ func _on_buy_fuel_pressed() -> void:
 
 func _update_sell_button():
 	_update_fuel_buttons()
+	_update_bank_button()
 	if not sell_btn:
 		return
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
@@ -12624,8 +12706,10 @@ func _on_talk_to_agent_pressed():
 	if public_board_panel:
 		public_board_panel.visible = false
 	agent_panel.visible = true
-	_update_sell_button()
+	# Visibility first: the buttons' update checks whether Bank is on screen
+	# before N.O.V.A. explains it.
 	agent_trade_grid.visible = GlobalState.kaelen_briefing_seen
+	_update_sell_button()
 
 	# Clear previous choice buttons
 	for child in agent_choices_container.get_children():
@@ -16575,7 +16659,7 @@ func _create_ship_upgrades_panel() -> void:
 	su_ore_bank_lbl = Label.new()
 	storage_vbox.add_child(su_ore_bank_lbl)
 	var dep_btn = Button.new()
-	dep_btn.text = "Deposit Ore from Ship"
+	dep_btn.text = "Bank Ore from Hold"
 	dep_btn.tooltip_text = "Store your raw ore securely here. Banked ore is saved to your account and can be used later to fabricate ship upgrades."
 	_style_action_button(dep_btn)
 	dep_btn.pressed.connect(func():

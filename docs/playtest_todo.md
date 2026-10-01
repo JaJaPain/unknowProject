@@ -361,3 +361,10 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       After fitting, the card suggests the next step on its own.
       Note: on a stock powerplant, the second upgrade needs the Powerplant
       first (the card says so with a red Power row).
+- [ ] **Step 4: Sell or Bank.** After the tutorial, dock with ore in the hold
+      and talk to Kaelen: "Sell Ore (N m³ → X SC)" sits beside "Bank N m³
+      (bank X/Y)". While your goal still needs ore, Bank is gold with a ★, and
+      the first time N.O.V.A. says to keep the ore for the mechanic (never
+      during Kaelen's tutorial briefing). Bank it: the goal card's ore bar
+      fills. The upgrade screen's button now says "Bank Ore from Hold".
+      The goal card hides while you're docked.

@@ -506,7 +506,7 @@ before the next bite.
 | 2 | **DONE 2026-10-01** Class shown before it matters: star map tooltip, gate label on approach, HUD `Ship Rating N · next class M` | Jump smoke checks labels |
 | 3 | **DONE 2026-10-01** **Upgrade goal**: model, HUD goal card with three bars and "where to get it", `Set as goal`, auto-goal | New `--goal-smoke-test` |
 | | **Stop and show: the goal card** | |
-| 4 | Ore: **Sell / Bank** side by side, Bank highlighted when the goal is short | Services smoke |
+| 4 | **DONE 2026-10-01** Ore: **Sell / Bank** side by side, Bank highlighted when the goal is short | Services smoke |
 | 5 | First rung fully guided (steps 1-6 in 3.4) + wiki "Upgrades and gate classes" | Walkthrough unit tests; first-session smoke extended |
 | | **Stop and show: the whole first rung, from refusal to fitted** | |
 | 6 | Depth scaling: ore value, red-rock share, board pay, enemy tier | Economy smoke |
