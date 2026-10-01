@@ -942,7 +942,7 @@ func _begin_planning() -> void:
 	# Build each enemy's AP-driven action plan for this turn.
 	npc_action_plans = []
 	for i in enemy_nodes.size():
-		var e: Node = enemy_nodes[i]
+		var e = enemy_nodes[i]
 		var plan: Array = e.generate_action_plan() if is_instance_valid(e) and e.has_method("generate_action_plan") else []
 		npc_action_plans.append(plan)
 	# npc_action_plan kept pointing at the targeted enemy's plan for UI / compat.
@@ -1535,7 +1535,7 @@ func _execute_npc_intent() -> void:
 	for i in enemy_nodes.size():
 		if state == State.IDLE or not is_instance_valid(player_node):
 			return
-		var exec_enemy: Node = enemy_nodes[i]
+		var exec_enemy = enemy_nodes[i]
 		if not is_instance_valid(exec_enemy) or exec_enemy.get("destroyed"):
 			continue
 		var plan: Array = npc_action_plans[i] if i < npc_action_plans.size() else []
@@ -1907,14 +1907,17 @@ func _after_npc_turn() -> void:
 func _remove_dead_enemies() -> void:
 	var dead_indices: Array = []
 	for i in enemy_nodes.size():
-		var e: Node = enemy_nodes[i]
+		# Untyped on purpose: a typed Node variable can't even hold an enemy
+		# that was freed mid-fight, and the turn died right here (Abe's crash,
+		# 2026-10-01).
+		var e = enemy_nodes[i]
 		if not is_instance_valid(e) or e.get("destroyed") == true:
 			dead_indices.append(i)
 
 	# Remove in reverse order so indices stay valid as we remove.
 	for i in range(dead_indices.size() - 1, -1, -1):
 		var idx: int = dead_indices[i]
-		var dead_enemy: Node = enemy_nodes[idx]
+		var dead_enemy = enemy_nodes[idx]
 		enemy_nodes.remove_at(idx)
 		if idx < _enemy_brace.size():  _enemy_brace.remove_at(idx)
 		if idx < _enemy_shield.size(): _enemy_shield.remove_at(idx)

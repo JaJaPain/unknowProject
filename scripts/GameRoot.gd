@@ -10959,7 +10959,17 @@ func _run_evasion_smoke_test() -> void:
 	if not missed or CombatManager.player_lock_broken:
 		_fail_evasion_smoke_test("A broken lock did not make the next shot miss.")
 		return
-	print("[EvasionSmokeTest] PASS: boost banks a dodge and swerves; micro-warp arcs to the flank and the next shot misses.")
+	# Regression (Abe's crash, 2026-10-01): an enemy freed mid-fight must be
+	# dropped from the fight, not stop the turn.
+	var ghost := Node3D.new()
+	get_active_system_root().add_child(ghost)
+	CombatManager.enemy_nodes.append(ghost)
+	ghost.free()
+	await CombatManager._remove_dead_enemies()
+	if CombatManager.enemy_nodes.size() != 1 or not is_instance_valid(CombatManager.enemy_nodes[0]):
+		_fail_evasion_smoke_test("A ship freed mid-fight wasn't dropped cleanly (%d left)." % CombatManager.enemy_nodes.size())
+		return
+	print("[EvasionSmokeTest] PASS: boost banks a dodge and swerves; micro-warp arcs to the flank and the next shot misses; a ship freed mid-fight is dropped cleanly.")
 	CombatManager.end_combat(true)
 	delete_savegame()
 	get_tree().quit()
