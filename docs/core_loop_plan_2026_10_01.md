@@ -566,3 +566,10 @@ several seeds and prints the averages). Average minutes per rung, 3 seeds:
 - **Later tiers grow exponentially** (credits double, materials 1/2/4/8 plus
   crystals), so Class V-VI stay hours long under every scenario. That may be
   fine for an endless game; the 60-90 min targets were a guess.
+
+**Update 2026-10-02 (Abe):** mining keeps ~1 SC/s by design, with the laser
+tiers raising it slowly (1.2 / 1.4 / 1.6 / 1.8) and rarer ore cutting slower
+in proportion to its price; imported ore sells x1.5. So the "ore x3" lever is
+off the table. Re-run after the cargo/Deep-laser stat fix, same columns:
+current 108 / 210 / 359 / 621 / 1015+ min. The remaining levers are job pay,
+drones and materials, the first-drone safety net, and the late-rung targets.
