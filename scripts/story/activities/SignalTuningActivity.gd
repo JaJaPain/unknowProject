@@ -327,6 +327,11 @@ func _on_finished(outcome_id: String, clarity: float) -> void:
 		var pay := int(round(float(FaintType.AMBIENT_PAY.get(outcome_id, 0)) * float(DIFFICULTY_PAY.get(str(item.get("difficulty", "easy")), 1.0))))
 		gs.add_credits(pay)
 		gs.emit_chatter("RECEIVER", "Intercept sold to a data broker: %d credits." % pay, Color(0.5, 0.95, 0.85))
+		# The same gold banner a new loose end gets, so a payout feels like one.
+		var ui = gs.get_ui_manager() if gs.has_method("get_ui_manager") else null
+		if ui != null and ui.has_method("show_reward_banner"):
+			ui.show_reward_banner("INTERCEPT SOLD  ·  +%d SC" % pay,
+				"%s copy sold to a data broker." % ("A clean" if outcome_id == "clean" else "A partial"))
 	# She comments once the intercept has played.
 	var line := _line("%s_%s" % [kind, grade])
 	var wait := 2.0 + heard.split(" ").size() * 0.35

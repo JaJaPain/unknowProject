@@ -347,3 +347,6 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
 - [ ] **Loose ends feel like a reward.** When a new entry lands on the Loose
       ends board (a clean thread intercept, a drone flight recorder...), a gold
       REWARD banner says "NEW LEAD" with a sting.
+- [ ] **Intercept payout banner.** Finish an ambient intercept (clean or
+      partial, or let N.O.V.A. try): a gold REWARD banner shows
+      "INTERCEPT SOLD · +N SC" with the sting, as well as the comms line.
