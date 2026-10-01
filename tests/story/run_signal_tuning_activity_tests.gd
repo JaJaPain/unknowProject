@@ -32,6 +32,37 @@ func _initialize() -> void:
 			break
 	_check(_panel_result.size() == 1 and _panel_result[0][0] == "clean" and float(_panel_result[0][1]) == 1.0, "following the source locks clean: %s" % str(_panel_result))
 
+	# The timer (Abe, 2026-10-01): run out with the dials off the source and
+	# the transmission fades; nothing was heard.
+	_panel_result.clear()
+	var timed = PanelType.new()
+	root.add_child(timed)
+	timed.finished.connect(func(o: String, c: float) -> void: _panel_result.append([o, c]))
+	timed.begin(22, 1.0, 15.0)
+	for i in range(170):
+		timed._freq.value = fmod(float(timed.state["target_freq"]) + 0.5, 1.0)
+		timed._process(0.1)
+		if not _panel_result.is_empty():
+			break
+	_check(_panel_result.size() == 1 and _panel_result[0][0] == "failed", "the timer runs out and the signal fades: %s" % str(_panel_result))
+	_check(PanelType.timer_colour(1.0).g > 0.8 and PanelType.timer_colour(1.0).r < 0.5, "the timer starts green")
+	_check(PanelType.timer_colour(0.5).r > 0.9 and PanelType.timer_colour(0.5).g > 0.8, "turns yellow at half")
+	_check(PanelType.timer_colour(0.0).r > 0.9 and PanelType.timer_colour(0.0).g < 0.4, "and red at the end")
+	# Difficulty: times, pay and lines per difficulty; the start system is easy.
+	_check(ActivityType.DIFFICULTY_SECONDS["easy"] == 40.0 and ActivityType.DIFFICULTY_SECONDS["medium"] == 25.0 and ActivityType.DIFFICULTY_SECONDS["hard"] == 15.0, "40 / 25 / 15 seconds")
+	_check(ActivityType.DIFFICULTY_PAY["hard"] > ActivityType.DIFFICULTY_PAY["medium"] and ActivityType.DIFFICULTY_PAY["medium"] > ActivityType.DIFFICULTY_PAY["easy"], "harder pays more")
+	var all_lines: Array = []
+	for d in ["easy", "medium", "hard"]:
+		for line in ActivityType.OFFER_LINES[d]:
+			_check(not all_lines.has(line), "each difficulty has its own lines")
+			_check(not str(line).to_lower().contains(d), "she never names the difficulty: %s" % line)
+			all_lines.append(line)
+	var start_probe = ActivityType.new()
+	root.add_child(start_probe)
+	for i in range(20):
+		_check(start_probe.pick_difficulty() == "easy", "the first system is always easy")
+	start_probe.free()
+
 	# The director hears it.
 	var director = DirectorType.new()
 	root.add_child(director)

@@ -334,3 +334,16 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       one shows up. Kill the target / get clear and it comes back.
 - [ ] **Combat no longer freezes** when an enemy ship vanishes mid-fight (the
       crash from 2026-10-01).
+- [ ] **Receiver timer and difficulty.** Open the receiver (T): a bar and
+      seconds counter under the title drains green to yellow to red. Easy
+      gives 40 s, medium 25 s, hard 15 s; when it runs out the transmission
+      fades (partial if you were past half a lock). In the start system every
+      transmission is easy. N.O.V.A.'s offer line hints at difficulty without
+      naming it: easy ones are "close by and fairly steady", medium ones
+      "drifting", hard ones "slipping already" / "won't last". Harder ambient
+      intercepts pay more (x1.6 medium, x2.5 hard).
+- [ ] **SYSTEM prompt each offer.** Every receiver offer also puts a SYSTEM
+      line in comms: "Press T to TUNE RECEIVER: faint transmission nearby."
+- [ ] **Loose ends feel like a reward.** When a new entry lands on the Loose
+      ends board (a clean thread intercept, a drone flight recorder...), a gold
+      REWARD banner says "NEW LEAD" with a sting.

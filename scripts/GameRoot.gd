@@ -7756,6 +7756,13 @@ func _run_hud_snapshot() -> void:
 	for i in 4:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("hud_hit.png"))
+	# A reward: the gold banner (a new loose end).
+	for i in 60:
+		await get_tree().process_frame
+	title_ui.show_reward_banner("NEW LEAD", "Added to your Loose ends board (3 noticed). Check it on any station's job board.")
+	for i in 30:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("hud_reward.png"))
 	print("HUDSHOT done")
 	get_tree().quit()
 

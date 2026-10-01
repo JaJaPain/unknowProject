@@ -683,6 +683,7 @@ func refresh_restored_state() -> void:
 func _process(delta):
 	_update_target_bars()
 	_update_ship_rating_label()
+	_poll_loose_end_rewards(delta)
 	if _ui_layout_manager:
 		_ui_layout_manager.enforce_layout()
 	if GlobalState.paused: return
@@ -8246,6 +8247,69 @@ func _refresh_loose_ends_button() -> void:
 		WikiType.unlock("loose_ends")
 	var pinned := threads.filter(func(t): return bool(t.get("pinned", false))).size()
 	loose_ends_btn.text = "Loose ends (%d noticed, %d pinned)" % [threads.size(), pinned]
+
+
+## A new loose end is a reward, and should feel like one (Abe, 2026-10-01): a
+## gold REWARD banner and a sting whenever the board gains an entry, from any
+## source (receiver, drone recorder, investigation, anomaly). Polled once a
+## second because the story director has no "thread seen" signal.
+var _known_loose_ends := -1
+var _loose_ends_poll := 0.0
+
+
+func _poll_loose_end_rewards(delta: float) -> void:
+	_loose_ends_poll += delta
+	if _loose_ends_poll < 1.0:
+		return
+	_loose_ends_poll = 0.0
+	var root := get_tree().current_scene
+	if root == null or not root.has_method("premise_main_story_threads"):
+		return
+	var count: int = (root.premise_main_story_threads() as Array).size()
+	if _known_loose_ends >= 0 and count > _known_loose_ends:
+		show_reward_banner("NEW LEAD", "Added to your Loose ends board (%d noticed). Check it on any station's job board." % count)
+		WikiType.unlock("loose_ends")
+	_known_loose_ends = count
+
+
+## Gold banner at the top of the screen for something the player earned.
+func show_reward_banner(headline: String, detail: String) -> void:
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.offset_top = 96
+	panel.add_theme_stylebox_override("panel", HudStyle.box(Color(0.1, 0.08, 0.02, 0.92), HudStyle.GOLD, 2, 8, 14))
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 2)
+	panel.add_child(box)
+	var tag := Label.new()
+	tag.text = "REWARD"
+	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(tag, 12, HudStyle.GOLD)
+	box.add_child(tag)
+	var head := Label.new()
+	head.text = headline
+	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(head, 24, Color(1.0, 0.92, 0.6))
+	box.add_child(head)
+	var sub := Label.new()
+	sub.text = detail
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(sub, 14, HudStyle.TEXT)
+	box.add_child(sub)
+	add_child(panel)
+	if is_instance_valid(AudioManager) and AudioManager.has_method("play_stinger"):
+		AudioManager.play_stinger("mission")
+	panel.modulate.a = 0.0
+	panel.scale = Vector2(0.9, 0.9)
+	var tween := panel.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.3)
+	tween.tween_property(panel, "scale", Vector2.ONE, 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.chain().tween_interval(3.5)
+	tween.chain().tween_property(panel, "modulate:a", 0.0, 1.0)
+	tween.chain().tween_callback(panel.queue_free)
 
 
 func _refresh_leverage_button() -> void:

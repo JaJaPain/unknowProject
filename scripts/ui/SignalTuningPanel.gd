@@ -19,12 +19,21 @@ var _hiss: AudioStreamPlayer
 var _hiss_playback: AudioStreamGeneratorPlayback
 var _done := false
 var _t := 0.0
+## Seconds to get the lock before the transmission fades (Abe, 2026-10-01:
+## easy 40, medium 25, hard 15). 0 = no limit.
+var time_limit := 0.0
+var _time_left := 0.0
+var _timer_label: Label
+var _timer_bar: ProgressBar
+var _timer_fill: StyleBoxFlat
 
 
 ## `interference` comes from the system environment (an ion storm raises it).
-func begin(seed_value: int, interference: float) -> void:
+func begin(seed_value: int, interference: float, seconds: float = 0.0) -> void:
 	state = Model.start(seed_value, interference)
 	_done = false
+	time_limit = seconds
+	_time_left = seconds
 	_build()
 
 
@@ -54,6 +63,8 @@ func _build() -> void:
 	hint.text = "Frequency finds it. Phase clears it. Hold it clear to lock."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(hint)
+	if time_limit > 0.0:
+		_build_timer(box)
 	_scope = Control.new()
 	_scope.custom_minimum_size = Vector2(480, 120)
 	_scope.draw.connect(_draw_scope)
@@ -81,6 +92,56 @@ func _build() -> void:
 	stop.pressed.connect(func() -> void: _finish(Model.outcome(state)))
 	row.add_child(stop)
 	_start_hiss()
+
+
+## The countdown: a bar that drains and a seconds readout, green to yellow to
+## red as it runs out.
+func _build_timer(box: VBoxContainer) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	box.add_child(row)
+	_timer_bar = ProgressBar.new()
+	_timer_bar.max_value = 1.0
+	_timer_bar.step = 0.001
+	_timer_bar.value = 1.0
+	_timer_bar.show_percentage = false
+	_timer_bar.custom_minimum_size = Vector2(0, 10)
+	_timer_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_timer_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var back := StyleBoxFlat.new()
+	back.bg_color = Color(0.08, 0.1, 0.12)
+	_timer_bar.add_theme_stylebox_override("background", back)
+	_timer_fill = StyleBoxFlat.new()
+	_timer_fill.bg_color = Color(0.3, 0.9, 0.45)
+	_timer_bar.add_theme_stylebox_override("fill", _timer_fill)
+	row.add_child(_timer_bar)
+	_timer_label = Label.new()
+	_timer_label.custom_minimum_size.x = 56
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_timer_label.add_theme_font_size_override("font_size", 18)
+	row.add_child(_timer_label)
+	_update_timer()
+
+
+## Green above half, through yellow, to red near the end.
+static func timer_colour(fraction: float) -> Color:
+	var green := Color(0.3, 0.9, 0.45)
+	var yellow := Color(1.0, 0.85, 0.25)
+	var red := Color(1.0, 0.3, 0.25)
+	if fraction > 0.5:
+		return yellow.lerp(green, (fraction - 0.5) / 0.5)
+	return red.lerp(yellow, clampf(fraction / 0.5, 0.0, 1.0))
+
+
+func _update_timer() -> void:
+	if _timer_bar == null:
+		return
+	var fraction := clampf(_time_left / maxf(time_limit, 0.01), 0.0, 1.0)
+	var colour := timer_colour(fraction)
+	_timer_bar.value = fraction
+	_timer_fill.bg_color = colour
+	_timer_label.text = "%d s" % int(ceil(_time_left))
+	_timer_label.add_theme_color_override("font_color", colour)
 
 
 func _slider(box: VBoxContainer, label_text: String) -> HSlider:
@@ -111,6 +172,13 @@ func _process(delta: float) -> void:
 	_feed_hiss(1.0 - q)
 	if bool(state["locked"]):
 		_finish(Model.outcome(state))
+		return
+	if time_limit > 0.0:
+		_time_left = maxf(0.0, _time_left - delta)
+		_update_timer()
+		if _time_left <= 0.0:
+			# Faded out: keep whatever was heard (past half a lock is partial).
+			_finish(Model.outcome(state))
 
 
 ## One trace: a clean sine buried under noise in proportion to how far off the

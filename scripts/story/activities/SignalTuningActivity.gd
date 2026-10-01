@@ -22,13 +22,31 @@ const OFFER_AFTER_MAX_S := 110.0
 const AMBIENT_OFFER_CHANCE := 0.5
 const TUNE_KEY := KEY_T
 
-const OFFER_LINES: Array[String] = [
-	# Statements that point at the receiver prompt, never an open question the
-	# player can't see how to answer (Abe, 2026-09-30).
-	"Something faint under the static, close by. I've routed it to your receiver. Tune it and we might get words.",
-	"There's a voice down in the noise floor. Someone isn't meant to be heard. It's on your receiver now.",
-	"Faint transmission, very quiet. I've patched it through to your receiver. It's yours to tune.",
-]
+## Difficulty (Abe, 2026-10-01): seconds to get the lock, and what an ambient
+## intercept pays relative to FaintTransmissions.AMBIENT_PAY. The start system
+## is always easy.
+const DIFFICULTY_SECONDS := {"easy": 40.0, "medium": 25.0, "hard": 15.0}
+const DIFFICULTY_PAY := {"easy": 1.0, "medium": 1.6, "hard": 2.5}
+## Each difficulty has its own offer lines, so a player learns to hear how hard
+## one will be. She never names the difficulty. Statements that point at the
+## receiver, never an open question (Abe, 2026-09-30).
+const OFFER_LINES := {
+	"easy": [
+		"Something under the static, close by and fairly steady. I've routed it to your receiver.",
+		"A voice in the noise floor, not far off. It's holding still for now. It's on your receiver.",
+		"Transmission nearby, faint but patient. I've patched it through to your receiver.",
+	],
+	"medium": [
+		"Something faint under the static, and it's drifting. I've routed it to your receiver. Don't dawdle.",
+		"There's a voice down in the noise floor. Someone isn't meant to be heard. It's on your receiver now.",
+		"Faint transmission, very quiet, coming and going. I've patched it through to your receiver.",
+	],
+	"hard": [
+		"Barely anything there, and it's slipping already. It's on your receiver. Quickly.",
+		"A whisper under a lot of static, fading as I listen. Your receiver has it, for now.",
+		"Something's transmitting on the edge of nothing. It won't last. Receiver's yours.",
+	],
+}
 const RESULT_LINES := {
 	"thread_clean": ["Got all of it. I've put it on the loose ends board.", "Clean copy. That one's going on the board."],
 	"thread_partial": ["Most of it. I kept the recording for the board.", "Patchy, but enough. It's on the board."],
@@ -61,7 +79,9 @@ func _taught() -> bool:
 	var story := get_node_or_null("/root/StoryManager")
 	return story != null and bool(story.story_state.get(TAUGHT_FLAG, false))
 
-const TEACH_LINE := "First time on the receiver, so here's how it works. Press T and I'll hand you the dials. Frequency finds the voice, phase cleans it up, and if you hold it clear it locks. Recordings sell, and now and then one leads somewhere."
+const TEACH_LINE := "First time on the receiver, so here's how it works. Press T and I'll hand you the dials. Frequency finds the voice, phase cleans it up, and if you hold it clear it locks. They fade, so don't take all day. Recordings sell, and now and then one leads somewhere."
+## The system line that goes with every offer (the prompt's own name).
+const SYSTEM_PROMPT_LINE := "Press T to TUNE RECEIVER: faint transmission nearby."
 
 
 func _process(delta: float) -> void:
@@ -180,15 +200,41 @@ func _try_offer() -> void:
 ## Make `item` available to tune into, and have her mention it.
 func offer(item: Dictionary) -> void:
 	_offered = item
+	if not _offered.has("difficulty"):
+		_offered["difficulty"] = pick_difficulty()
 	var story := get_node_or_null("/root/StoryManager")
 	var taught := story != null and bool(story.story_state.get(TAUGHT_FLAG, false))
-	_nova(OFFER_LINES[randi() % OFFER_LINES.size()] + ("" if taught else " " + TEACH_LINE))
+	var pool: Array = OFFER_LINES[str(_offered["difficulty"])]
+	_nova(str(pool[randi() % pool.size()]) + ("" if taught else " " + TEACH_LINE))
 	if story != null and not taught:
 		story.story_state[TAUGHT_FLAG] = true
 	load("res://scripts/ui/Wiki.gd").unlock("receiver")
 	var gs := get_node_or_null("/root/GlobalState")
 	if gs != null:
-		gs.emit_chatter("RECEIVER", "Faint transmission. Press T to tune in.", Color(0.5, 0.95, 0.85))
+		# A SYSTEM line every time, not hers (Abe, 2026-10-01).
+		gs.emit_chatter("SYSTEM", SYSTEM_PROMPT_LINE, Color(0.5, 0.95, 0.85))
+
+
+## Easy in the start system; further out, harder ones turn up more often.
+func pick_difficulty() -> String:
+	var depth := _current_depth()
+	if depth <= 0:
+		return "easy"
+	var roll := randf()
+	var hard_share := clampf(0.1 + 0.05 * depth, 0.1, 0.4)
+	var medium_share := 0.4
+	if roll < hard_share:
+		return "hard"
+	if roll < hard_share + medium_share:
+		return "medium"
+	return "easy"
+
+
+func _current_depth() -> int:
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null:
+		return 0
+	return maxi(0, int(preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")._system_depth(str(gs.current_system_id))))
 
 
 ## "[T] TUNE RECEIVER" at the bottom of the screen, gently pulsing, for as long
@@ -242,7 +288,8 @@ func open_tuning() -> void:
 	add_child(_panel)
 	_panel.finished.connect(_on_finished)
 	var interference := float(gs.environment_value("signal_interference", 1.0)) if gs != null else 1.0
-	_panel.begin(randi(), interference)
+	var seconds := float(DIFFICULTY_SECONDS.get(str(_offered.get("difficulty", "easy")), 40.0))
+	_panel.begin(randi(), interference, seconds)
 
 
 func _on_finished(outcome_id: String, clarity: float) -> void:
@@ -277,7 +324,7 @@ func _on_finished(outcome_id: String, clarity: float) -> void:
 	var kind := "thread" if str(item.get("kind", "")) == "thread" else "ambient"
 	var grade := "clean" if outcome_id == "clean" else "partial"
 	if kind == "ambient" and gs != null:
-		var pay := int(FaintType.AMBIENT_PAY.get(outcome_id, 0))
+		var pay := int(round(float(FaintType.AMBIENT_PAY.get(outcome_id, 0)) * float(DIFFICULTY_PAY.get(str(item.get("difficulty", "easy")), 1.0))))
 		gs.add_credits(pay)
 		gs.emit_chatter("RECEIVER", "Intercept sold to a data broker: %d credits." % pay, Color(0.5, 0.95, 0.85))
 	# She comments once the intercept has played.
