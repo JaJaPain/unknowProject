@@ -619,8 +619,10 @@ func _physics_process(delta: float):
 
 		var is_code_enforcement := bool(get_meta("is_code_enforcement", false))
 
-		# Elite reinforcements and active code-enforcement ships target the player immediately.
-		if (is_reinforcement or is_code_enforcement) \
+		# Elite reinforcements and active code-enforcement ships target the player
+		# immediately; so does a ship sent after the player (a claim jumper,
+		# core loop 6b), without the elite stats.
+		if (is_reinforcement or is_code_enforcement or bool(get_meta("hunts_player", false))) \
 					and not GlobalState.is_intro_tutorial_player_protection_active() \
 					and not _should_redirect_from_player_engagement() \
 				and Time.get_ticks_msec() >= _combat_queue_redirect_until_msec:

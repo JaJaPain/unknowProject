@@ -122,6 +122,13 @@
 			"body": "Target an asteroid and press [b]{action}[/b]. The ship flies in and its mining laser starts cutting; ore goes straight into your hold.\n\nDifferent belts hold different ores, and some are worth far more than others. The star map shows which ores a system's belts carry. Sell ore at a station market."
 		},
 		{
+			"id": "mining_risk",
+			"category": "Ship",
+			"title": "Mining risks",
+			"unlocked": false,
+			"body": "Common ore in open space is safe to mine. The rarer the ore, the more it can cost you.\n\n[b]Claims[/b]  Some belts are claimed by a faction's mining crews (the overview shows \"· <Faction> claim\" while they're working it). Mine there and they hail you first; move off within 20 seconds and nothing happens. Keep mining and they call enforcement. Water ice near a station is never claimed.\n\n[b]Rare ore[/b]  Cutting thorium puts out a signature: one ship comes for you and the ore. N.O.V.A. hears it about forty seconds out, so you can keep cutting, leave, or get ready. Cuprite only sometimes draws one.\n\n[b]Red rocks[/b]  Some have a ship parked beside them, waiting. It shows on the overview, and N.O.V.A. calls it out when you target the rock. Get close and it comes for you.\n\nNone of this starts until you've fitted your first upgrade."
+		},
+		{
 			"id": "fuel",
 			"category": "Ship",
 			"title": "Fuel",

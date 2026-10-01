@@ -2223,11 +2223,60 @@ func _mission_route_position(node: Node3D) -> Vector3:
 	return node.global_position if node.is_inside_tree() else node.position
 
 
+## Claims (core loop step 6b): not before the first upgrade, never on the
+## fuel ice near a station, and a hail with a grace period before anyone is
+## sent. Hails are per claim (system + belt) and last a few minutes.
+const CLAIM_GRACE_MS := 20000
+const CLAIM_HAIL_MEMORY_MS := 300000
+const FUEL_ICE_FREE_RADIUS := 3000.0
+var _claim_hails: Dictionary = {}
+
+
+func _mining_risk_active() -> bool:
+	var gate_class = load("res://scripts/domain/GateClass.gd")
+	return gate_class.ship_rating(gate_class.tiers_of(current_upgrades)) > 5
+
+
+func _is_fuel_ice_near_station(asteroid: Node3D) -> bool:
+	if str(asteroid.get("ore_type")) != "water_ice" or get_tree() == null:
+		return false
+	for station in get_tree().get_nodes_in_group("station"):
+		if station is Node3D and is_instance_valid(station) \
+				and (station as Node3D).global_position.distance_to(_node3d_position(asteroid)) < FUEL_ICE_FREE_RADIUS:
+			return true
+	return false
+
+
+## The owner of a claim whose crews are working near this rock right now, or
+## "" (for the overview's "· <Faction> claim" tag).
+func worked_claim_owner(asteroid: Node3D) -> String:
+	if asteroid == null or not is_instance_valid(asteroid) or _is_fuel_ice_near_station(asteroid):
+		return ""
+	var owner_faction := _asteroid_owner_faction(asteroid)
+	for entity in active_system_entities:
+		if entity == null or not is_instance_valid(entity) or entity.get("destroyed"):
+			continue
+		var miner := str(entity.get("ship_role")) == "MiningHauler" or bool(entity.get_meta("is_mining_witness", false))
+		if miner and str(entity.get("faction")) == owner_faction \
+				and _node3d_position(entity).distance_to(_node3d_position(asteroid)) <= ILLEGAL_MINING_WITNESS_RADIUS * 3.0:
+			return owner_faction
+	return ""
+
+
 func report_player_mined_asteroid(asteroid: Node3D) -> Dictionary:
 	if asteroid == null or not is_instance_valid(asteroid):
 		return {}
+	var tree := get_tree()
+	var root_scene = tree.current_scene if tree != null else null
+	var risk = root_scene.get("mining_risk") if root_scene != null else null
+	if risk != null and is_instance_valid(risk):
+		risk.on_mined(asteroid)
 	var owner_faction := _asteroid_owner_faction(asteroid)
 	var belt_id := _asteroid_belt_id(asteroid)
+	if not _mining_risk_active():
+		return {"accepted": false, "dispatch": false, "reason": "before_first_upgrade", "faction": owner_faction, "belt_id": belt_id}
+	if _is_fuel_ice_near_station(asteroid):
+		return {"accepted": false, "dispatch": false, "reason": "fuel_ice", "faction": owner_faction, "belt_id": belt_id}
 	if not _has_illegal_mining_witness(owner_faction):
 		return {
 			"accepted": false,
@@ -2236,6 +2285,21 @@ func report_player_mined_asteroid(asteroid: Node3D) -> Dictionary:
 			"faction": owner_faction,
 			"belt_id": belt_id,
 		}
+	# Hail first, with a grace period: leave and nothing happens.
+	var claim_key := "%s|%s" % [current_system_id, belt_id]
+	var now_ms := Time.get_ticks_msec()
+	var hailed_at := int(_claim_hails.get(claim_key, 0))
+	if not _claim_hails.has(claim_key) or now_ms - hailed_at > CLAIM_HAIL_MEMORY_MS:
+		_claim_hails[claim_key] = now_ms
+		emit_chatter(faction_display_name(owner_faction).to_upper() + " MINER",
+			"This is a %s claim. Move off, or we call it in." % faction_display_name(owner_faction), Color(1.0, 0.72, 0.25))
+		load("res://scripts/ui/Wiki.gd").unlock("mining_risk")
+		var ui_hail: Control = get_ui_manager()
+		if ui_hail and ui_hail.has_method("show_hud_warning"):
+			ui_hail.show_hud_warning("%s CLAIM: move off within 20 s or they call enforcement." % faction_display_name(owner_faction).to_upper())
+		return {"accepted": false, "dispatch": false, "reason": "hailed", "faction": owner_faction, "belt_id": belt_id}
+	if now_ms - hailed_at < CLAIM_GRACE_MS:
+		return {"accepted": false, "dispatch": false, "reason": "grace", "faction": owner_faction, "belt_id": belt_id}
 	var result: Dictionary = illegal_mining_enforcement.report_violation(
 		current_system_id,
 		belt_id,

@@ -327,6 +327,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_wiki_snapshot")
 	elif "--intro-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_intro_snapshot")
+	elif "--mining-risk-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_mining_risk_smoke_test")
 	elif "--gallery-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_gallery_snapshot")
 	elif "--goal-smoke-test" in OS.get_cmdline_user_args():
@@ -1380,10 +1382,15 @@ func _init_undercurrent_director() -> void:
 	traffic_director = load("res://scripts/world/TrafficDirector.gd").new()
 	traffic_director.name = "TrafficDirector"
 	add_child(traffic_director)
+	# Rare ore and red rocks cost a fight (core loop step 6b).
+	mining_risk = load("res://scripts/world/MiningRisk.gd").new()
+	mining_risk.name = "MiningRisk"
+	add_child(mining_risk)
 
 
 ## The rare death moment, if this death earned one (consumed once).
 var traffic_director: Node
+var mining_risk: Node
 
 
 func consume_undercurrent_death_moment() -> Dictionary:
@@ -10938,6 +10945,81 @@ func _run_perf_probe() -> void:
 	var vram := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_VIDEO_MEM_USED) / 1048576.0
 	print("PERF avg_fps=%.1f min_fps=%.1f max_draws=%d vram_mb=%.0f gpu=%s" % [
 		total / samples.size(), samples.min(), draws.max(), vram, RenderingServer.get_video_adapter_name()])
+	get_tree().quit()
+
+
+## Core loop step 6b: rare ore draws a claim jumper (announced), red rocks get
+## guards, nothing before the first upgrade. -- --mining-risk-smoke-test --baseline-offline
+func _run_mining_risk_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	for i in 30:
+		await get_tree().process_frame
+	var fail := func(message: String) -> void:
+		push_error("[MiningRiskSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	var saved_upgrades: Dictionary = GlobalState.current_upgrades.duplicate(true)
+	for sys in GlobalState.current_upgrades:
+		GlobalState.current_upgrades[sys] = {"tier": 1, "path": "base"}
+	var rock: Node3D = null
+	for node in get_tree().get_nodes_in_group("asteroid"):
+		if node is Node3D and get_active_system_root().is_ancestor_of(node) and not node.is_in_group("tech_seam_asteroid"):
+			rock = node
+			break
+	if rock == null:
+		fail.call("No asteroid in the system.")
+		return
+	rock.set("ore_type", "thorium")
+	# 1. Stock ship: no jumper.
+	mining_risk.on_mined(rock)
+	if mining_risk._jumper_pending:
+		fail.call("A claim jumper came before the first upgrade.")
+		return
+	# 2. After the first upgrade: thorium draws one, announced.
+	GlobalState.current_upgrades["shields"] = {"tier": 2, "path": "bulwark"}
+	mining_risk.on_mined(rock)
+	if not mining_risk._jumper_pending:
+		fail.call("Mining thorium after the first upgrade didn't draw a claim jumper.")
+		return
+	mining_risk.on_mined(rock)  # same rock again: still just the one
+	mining_risk._spawn_jumper()
+	var jumper: Node3D = mining_risk.last_jumper
+	if jumper == null or not is_instance_valid(jumper) or not bool(jumper.get_meta("hunts_player", false)) or bool(jumper.get("is_reinforcement")) or not jumper.is_inside_tree():
+		fail.call("Expected a claim jumper locking on.")
+		return
+	print("[MiningRiskSmokeTest] claim jumper: %s" % jumper.name)
+	if player.global_position.distance_to(jumper.global_position) < 1000.0:
+		fail.call("The claim jumper spawned on top of the player instead of inbound.")
+		return
+	# 3. Red rocks get a guard parked beside them; N.O.V.A. calls it out.
+	mining_risk.force_guard_all = true
+	mining_risk._place_guards()
+	var red: Node3D = null
+	for node in get_tree().get_nodes_in_group("tech_seam_asteroid"):
+		if node is Node3D and get_active_system_root().is_ancestor_of(node):
+			red = node
+			break
+	if red == null:
+		fail.call("No red rock in the system (every field should have one).")
+		return
+	var guard = mining_risk._guards.get(str(red.get("persistent_id")), null)
+	if guard == null or not is_instance_valid(guard) or guard.global_position.distance_to(red.global_position) > 150.0:
+		fail.call("The red rock has no guard parked beside it.")
+		return
+	GlobalState.active_target = red
+	mining_risk._call_out_guard()
+	if not mining_risk._guard_told.has(str(red.get("persistent_id"))):
+		fail.call("N.O.V.A. didn't call out the guarded rock.")
+		return
+	# 4. The overview names the ore.
+	var ui = GlobalState.get_ui_manager()
+	if not str(ui._asteroid_type_label(rock)).contains("Thorium"):
+		fail.call("The overview doesn't name the rock's ore: '%s'" % ui._asteroid_type_label(rock))
+		return
+	print("[MiningRiskSmokeTest] PASS: no risk before the first upgrade, one announced claim jumper for thorium, a guard beside a red rock and N.O.V.A.'s call-out, ore on the overview.")
+	GlobalState.current_upgrades = saved_upgrades
+	delete_savegame()
 	get_tree().quit()
 
 

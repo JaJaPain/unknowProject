@@ -401,3 +401,17 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       (about 1% near the start, 3% by depth 10), and enemy ships hit harder
       and take more to kill (+8% per depth). Belts deeper out already carry
       rarer ore (thorium only from depth 3).
+- [ ] **Step 6b: mining has a combat cost (after your first upgrade).**
+      Nothing here happens before Shields Mk II (or any first upgrade).
+      - **Overview:** asteroids show their ore ("Asteroid · Thorium") and,
+        when a faction's crews are working nearby, "· <Faction> claim".
+      - **Claims:** mine next to a faction's mining hauler: their miner hails
+        you ("This is a <Faction> claim. Move off...") with a red banner; stop
+        within 20 s and nothing happens; keep cutting and enforcement comes.
+        Water ice within 3 km of a station is never claimed.
+      - **Rare ore:** cut thorium: N.O.V.A. says one ship is inbound in about
+        40 s; then a "Reaver Claim Jumper" (a normal ship, not an elite) closes
+        in. At most one every 4 minutes. Cuprite only sometimes.
+      - **Red rocks:** some have a "Reaver Seam Guard" parked beside them;
+        target the rock and N.O.V.A. calls it out; get close and it attacks.
+      - The wiki gains "Mining risks" the first time any of this happens.

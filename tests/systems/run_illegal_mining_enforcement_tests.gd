@@ -146,8 +146,15 @@ func _test_unwitnessed_global_report_does_not_dispatch() -> void:
 	gs.player = player_node
 	asteroid.set_meta("belt_owner_faction", "zenith")
 	asteroid.set_meta("belt_id", "quiet_belt")
+	var saved_upgrades: Dictionary = gs.current_upgrades.duplicate(true)
+	# Core loop 6b: a stock ship is never reported (first upgrade not fitted).
+	var stock: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	_expect(str(stock.get("reason", "")) == "before_first_upgrade",
+		"claims: nothing before the first upgrade. result=%s" % str(stock))
+	gs.current_upgrades["shields"] = {"tier": 2, "path": "bulwark"}
 
 	var result: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	gs.current_upgrades = saved_upgrades
 	_expect(
 		not bool(result.get("dispatch", false))
 			and str(result.get("reason", "")) == "unwitnessed",
@@ -187,8 +194,19 @@ func _test_witnessed_global_report_dispatches_and_spawns() -> void:
 	witness.set_meta("is_mining_witness", true)
 	witness.set("faction", "zenith")
 	gs.active_system_entities.append(witness)
+	var saved_upgrades: Dictionary = gs.current_upgrades.duplicate(true)
+	gs.current_upgrades["shields"] = {"tier": 2, "path": "bulwark"}
+	gs._claim_hails.clear()
 
+	# Core loop 6b: hailed first, then a grace period, then enforcement.
+	var hail: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	_expect(str(hail.get("reason", "")) == "hailed" and not bool(hail.get("dispatch", false)),
+		"claims: the first witnessed cut is a hail, not a dispatch. result=%s" % str(hail))
+	var grace: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	_expect(str(grace.get("reason", "")) == "grace", "claims: still inside the grace period. result=%s" % str(grace))
+	gs._claim_hails["system.test|watched_belt"] = Time.get_ticks_msec() - gs.CLAIM_GRACE_MS - 1000
 	var result: Dictionary = gs.report_player_mined_asteroid(asteroid)
+	gs.current_upgrades = saved_upgrades
 	var enforcement_count := 0
 	for entity in system_root.get_children():
 		if EnforcementType.is_enforcement_ship(entity):

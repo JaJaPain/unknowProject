@@ -3813,7 +3813,7 @@ func update_overview_list(entities: Array):
 			type_lbl.add_theme_font_size_override("font_size", 13)
 			var type_str = "Celestial"
 			if entity.is_in_group("asteroid"):
-				type_str = "Asteroid"
+				type_str = _asteroid_type_label(entity)
 			elif entity.is_in_group("jumpgate"):
 				var gate_state: String = entity.get("knowledge_state") if entity.get("knowledge_state") else "known"
 				match gate_state:
@@ -8351,6 +8351,21 @@ func _place_upgrade_goal_card() -> void:
 	if quest_tracker_panel.visible:
 		top += quest_tracker_panel.size.y + 8.0
 	upgrade_goal_card.position = Vector2(right - upgrade_goal_card.size.x, top)
+
+
+## "Asteroid · Thorium · Zenith claim": the ore (rare ore draws a fight) and
+## the claim when its crews are working it (core loop step 6b).
+func _asteroid_type_label(rock: Node) -> String:
+	var text := "Asteroid"
+	if rock.is_in_group("tech_seam_asteroid"):
+		return "Asteroid · tech-grade seams"
+	var ore := str(rock.get("ore_type"))
+	if not ore.is_empty() and ore != "silicate" and ore != "<null>":
+		text += " · " + load("res://scripts/economy/OreTypes.gd").display(ore)
+	var claim := str(GlobalState.worked_claim_owner(rock as Node3D))
+	if not claim.is_empty():
+		text += " · %s claim" % GlobalState.faction_display_name(claim)
+	return text
 
 
 ## Gold banner at the top of the screen for something the player earned.
