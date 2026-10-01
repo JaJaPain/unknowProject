@@ -119,11 +119,27 @@ static func take(mix: Dictionary, total: float, amount: float, ore_type: String 
 	return [left, minf(amount, all)]
 
 
-## What a mix sells for at `rate` SC per m³ of silicate.
-static func value(mix: Dictionary, rate: float = 1.0) -> int:
+## Ore this system's belts don't carry sells for more here (Abe, 2026-10-02):
+## hauling it in from where it's mined is a trade run. Silicate is everywhere.
+const IMPORT_PREMIUM := 1.5
+
+
+## Whether `ore_type` fetches the import premium in a system with `local_mix`
+## (its belts, type -> share). An empty local mix means unknown: no premium.
+static func is_imported(ore_type: String, local_mix: Dictionary) -> bool:
+	var id := normalize(ore_type)
+	if local_mix.is_empty() or id == "silicate":
+		return false
+	return float(local_mix.get(id, 0.0)) <= 0.0
+
+
+## What a mix sells for at `rate` SC per m³ of silicate; in a system whose
+## belts are `local_mix`, ores it doesn't have earn IMPORT_PREMIUM.
+static func value(mix: Dictionary, rate: float = 1.0, local_mix: Dictionary = {}) -> int:
 	var total := 0.0
 	for id in mix:
-		total += float(mix[id]) * price(str(id)) * rate
+		var premium := IMPORT_PREMIUM if is_imported(str(id), local_mix) else 1.0
+		total += float(mix[id]) * price(str(id)) * rate * premium
 	return int(round(total))
 
 

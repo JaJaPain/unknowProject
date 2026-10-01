@@ -119,7 +119,7 @@
 			"category": "Ship",
 			"title": "Mining",
 			"unlocked": true,
-			"body": "Target an asteroid and press [b]{action}[/b]. The ship flies in and its mining laser starts cutting; ore goes straight into your hold.\n\nDifferent belts hold different ores, and some are worth far more than others. The star map shows which ores a system's belts carry. Sell ore at a station market."
+			"body": "Target an asteroid and press [b]{action}[/b]. The ship flies in and its mining laser starts cutting; ore goes straight into your hold.\n\nDifferent belts hold different ores, and some are worth far more than others. The star map shows which ores a system's belts carry. Sell ore at a station market. Rarer ore cuts more slowly but is worth more, so the laser earns about the same per second on any rock. Ore that a system's belts don't carry sells for half as much again there, so hauling it in is a trade run."
 		},
 		{
 			"id": "mining_risk",

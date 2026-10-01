@@ -1530,7 +1530,16 @@ func hand_over_delivery(amount: float, ore_type: String) -> float:
 
 ## What the hold's ore sells for at `rate` SC per m³ of silicate.
 func cargo_ore_value(rate: float = 1.0) -> int:
-	return OreTypesScript.value(cargo_ore_mix(), rate)
+	return OreTypesScript.value(cargo_ore_mix(), rate, system_ore_mix)
+
+
+## Ores in the hold that fetch the import premium here (none mined locally).
+func imported_ores_in_hold() -> Array[String]:
+	var out: Array[String] = []
+	for id in cargo_ore_mix():
+		if OreTypesScript.is_imported(str(id), system_ore_mix):
+			out.append(OreTypesScript.display(str(id)))
+	return out
 
 # Active test pickup-quest state. Empty dict when no test quest is active.
 # Used by the Grease Monkeys maintenance-bay debug buttons. Keys:

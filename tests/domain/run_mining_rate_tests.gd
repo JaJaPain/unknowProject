@@ -51,6 +51,13 @@ func _initialize() -> void:
 	favoured.free()
 	gs.mining_ore_affinity = saved_affinity
 	gs.clear_cargo()
+	# Ore this system doesn't have sells for more (Abe, 2026-10-02).
+	var no_thorium := {"silicate": 0.8, "ferrite": 0.2}
+	var has_thorium := {"silicate": 0.8, "thorium": 0.2}
+	_check(Ores.value({"thorium": 10.0}, 1.0, no_thorium) == int(round(10.0 * Ores.price("thorium") * Ores.IMPORT_PREMIUM)), "thorium sells x1.5 where none is mined")
+	_check(Ores.value({"thorium": 10.0}, 1.0, has_thorium) == int(round(10.0 * Ores.price("thorium"))), "and at its normal price where it is")
+	_check(Ores.value({"silicate": 10.0}, 1.0, no_thorium) == 10, "silicate never earns the premium")
+	_check(Ores.value({"thorium": 10.0}, 1.0, {}) == int(round(10.0 * Ores.price("thorium"))), "no premium when the system's belts are unknown")
 	if _failures.is_empty():
 		print("[PASS] Mining rates")
 		quit(0)

@@ -423,3 +423,8 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       often, Deep big and slow). **Cargo Mk II now actually grows the hold to
       150 m³** (cargo upgrades never did before: a stat-name bug, also fixed
       for the Deep laser).
+- [ ] **Imported ore sells for more (Abe, 2026-10-02).** Mine an ore in one
+      system and sell it in a system whose belts don't carry it: it sells at
+      x1.5. The Sell button's tooltip says which ores get the premium here, and
+      the sale line adds "[<Ore> sold at x1.5: none is mined in this system]".
+      Silicate never gets it. Water ice is worth hauling into the start system.

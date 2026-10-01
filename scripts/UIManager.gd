@@ -10380,6 +10380,7 @@ func _on_nova_repair_prompt_undock() -> void:
 	undock_player(true)
 
 var bank_ore_btn: Button = null
+const OreTypesForPremium := preload("res://scripts/economy/OreTypes.gd")
 const BANK_TAUGHT_FLAG := "ore_bank_taught"
 
 
@@ -10454,6 +10455,7 @@ func _sell_ore():
 		var ore_amount := int(GlobalState.cargo)
 		# Rarer ores sell for more than silicate (OreTypes).
 		var earnings := GlobalState.cargo_ore_value()
+		var imported: Array[String] = GlobalState.imported_ores_in_hold()
 		GlobalState.add_credits(earnings)
 		GlobalState.clear_cargo()
 		_update_sell_button()
@@ -10466,6 +10468,8 @@ func _sell_ore():
 		)
 		if agent_dialogue_label and is_instance_valid(agent_dialogue_label):
 			agent_dialogue_label.text = line + "\n\n[Sold %d m³ ore for %d SC]" % [ore_amount, earnings]
+			if not imported.is_empty():
+				agent_dialogue_label.text += "\n[%s sold at x%.1f: none is mined in this system]" % [", ".join(imported), OreTypesForPremium.IMPORT_PREMIUM]
 		_update_agent_portrait("neutral", "", "amused")
 		agent_name_label.text = "BROKER KAELEN"
 		agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
@@ -12507,6 +12511,10 @@ func _sync_trade_tooltips() -> void:
 	for button in [sell_btn, bank_ore_btn, refine_fuel_btn, buy_fuel_btn, fabricate_blocks_btn, compress_o2_btn]:
 		if button != null and is_instance_valid(button):
 			button.tooltip_text = button.text
+	if sell_btn != null and is_instance_valid(sell_btn):
+		var imported: Array[String] = GlobalState.imported_ores_in_hold()
+		if not imported.is_empty():
+			sell_btn.tooltip_text += "\n%s sells at x%.1f here: none is mined in this system." % [", ".join(imported), OreTypesForPremium.IMPORT_PREMIUM]
 	if bank_ore_btn != null and is_instance_valid(bank_ore_btn):
 		bank_ore_btn.tooltip_text += "\nKeep the hold's ore in your ore bank. The mechanic takes banked ore as payment for ship upgrades, at any station."
 
