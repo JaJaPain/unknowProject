@@ -20,6 +20,10 @@ extends Node
 ## Hand-written lines; no model.
 
 const GateClassType := preload("res://scripts/domain/GateClass.gd")
+const UpgradeGoalType := preload("res://scripts/domain/UpgradeGoal.gd")
+const UpgradeGoalCardType := preload("res://scripts/ui/UpgradeGoalCard.gd")
+## Seconds after the refusal before she names the rest of the bill.
+const COST_LINE_DELAY_S := 22.0
 const REQUIRED_SYSTEM := "shields"
 const REQUIRED_TIER := 2
 const MATERIAL := "rad_quartz"
@@ -46,9 +50,15 @@ const LINES := {
 		"A mining laser shatters those rocks, so it's a job for a survey drone. I've put one in the bay. Call it an advance.",
 	],
 	"red_rock": ["That red one. Tech-grade seams in the cracks. Get close, press G, and fly the drone in slowly. The ore is fragile."],
-	"have_material": ["Rad-quartz aboard. Dock and have the mechanic fit Shields Mk II, then we can talk about that gate."],
+	"have_material": ["That's everything the mechanic needs: credits, ore and the rad-quartz. Dock and have them fit Shields Mk II, then we can talk about that gate."],
+	# A little after the refusal: the rest of the bill (core loop step 5).
+	# Built from what's actually short; see _cost_line().
+	"costs_intro": ["The rad-quartz isn't the whole bill. The mechanic will want %s as well."],
+	"costs_tail_ore": ["Any rock gives ore; bank it when we dock and it counts towards the upgrade."],
+	"costs_tail_credits": ["The station boards pay credits, and so does ore you don't need."],
+	"costs_card": ["I've pinned the whole list top right, so you don't have to remember it."],
 	"rated": ["Shields hardened. Fine. The deeper gates will take us now. I still hate them."],
-	"reminder": ["We still need Shields Mk II for that gate. Rad-quartz, from a red rock's cracks."],
+	"reminder": ["We still need Shields Mk II for that gate. Still short: %s. It's all on the card, top right."],
 	# First refusal at each higher class: N.O.V.A. says what this class asks.
 	# %s = class numeral, %d = rating needed, %d = ours.
 	"class_3": ["Class %s gate. Older ring, rougher fold: a stock frame shakes apart in there. I want a Ship Rating of %d before I take it. We're at %d."],
@@ -64,6 +74,7 @@ var _visited: Array = []
 var _stage := ""  # "", "need_material", "need_fit", "done"
 var _drone_given := false
 var _red_rock_told := false
+var _material_told := false
 var _last_reminder_ms := -100000000
 var _poll := 0.0
 ## Gate classes N.O.V.A. has already explained (first refusal at each).
@@ -73,7 +84,7 @@ var _last_check: Dictionary = {}
 
 
 func to_dict() -> Dictionary:
-	return {"visited": _visited.duplicate(), "stage": _stage, "drone_given": _drone_given, "red_rock_told": _red_rock_told, "classes_told": _classes_told.duplicate()}
+	return {"visited": _visited.duplicate(), "stage": _stage, "drone_given": _drone_given, "red_rock_told": _red_rock_told, "material_told": _material_told, "classes_told": _classes_told.duplicate()}
 
 
 func load_from_dict(data: Dictionary) -> void:
@@ -81,6 +92,7 @@ func load_from_dict(data: Dictionary) -> void:
 	_stage = str(data.get("stage", ""))
 	_drone_given = bool(data.get("drone_given", false))
 	_red_rock_told = bool(data.get("red_rock_told", false))
+	_material_told = bool(data.get("material_told", false))
 	_classes_told = (data.get("classes_told", []) as Array).duplicate() if data.get("classes_told", []) is Array else []
 
 
@@ -196,7 +208,8 @@ func on_refused() -> void:
 		var now := Time.get_ticks_msec()
 		if now - _last_reminder_ms > 60000:
 			_last_reminder_ms = now
-			_say(LINES["reminder"][0])
+			var short := _short_list(true)
+			_say(str(LINES["reminder"][0]) % (short if not short.is_empty() else "nothing; dock and fit it"))
 
 
 func _explain_class(result: Dictionary) -> void:
@@ -212,11 +225,65 @@ func _explain_class(result: Dictionary) -> void:
 	_say(line)
 
 
+## The Shields Mk II goal the walkthrough works towards.
+func _shields_goal() -> Dictionary:
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null:
+		return {}
+	return UpgradeGoalType.next_tier_goal(gs, REQUIRED_SYSTEM, false) if is_rated() == false else {}
+
+
+## What the shields goal is still short of, as words: "200 credits and 100 ore".
+func _short_list(include_material: bool = true) -> String:
+	var gs := get_node_or_null("/root/GlobalState")
+	var goal := _shields_goal()
+	if gs == null or goal.is_empty():
+		return ""
+	var parts: Array[String] = []
+	for row in UpgradeGoalType.rows(gs, goal):
+		var missing := int(row["need"]) - int(row["have"])
+		if missing <= 0 or str(row["id"]) == "power":
+			continue
+		if str(row["id"]) == "credits":
+			parts.append("%d credits" % missing)
+		elif str(row["id"]) == "ore":
+			parts.append("%d ore" % missing)
+		elif include_material:
+			parts.append("%d %s" % [missing, str(row["label"]).to_lower()])
+	if parts.size() > 1:
+		return ", ".join(parts.slice(0, parts.size() - 1)) + " and " + parts[-1]
+	return parts[0] if not parts.is_empty() else ""
+
+
+## The rest of the bill, said once a little after the refusal.
+func _cost_line() -> String:
+	var short := _short_list(false)
+	if short.is_empty():
+		return ""
+	var line := str(LINES["costs_intro"][0]) % short
+	if short.contains("ore"):
+		line += " " + str(LINES["costs_tail_ore"][0])
+	if short.contains("credits"):
+		line += " " + str(LINES["costs_tail_credits"][0])
+	return line + " " + str(LINES["costs_card"][0])
+
+
 func _start_walkthrough() -> void:
 	_stage = "need_material"
 	_last_reminder_ms = Time.get_ticks_msec()
 	var lines: Array = LINES["blocked"]
 	_say(" ".join(lines))
+	# Shields Mk II becomes the goal on the HUD card, and a little later she
+	# names the rest of the bill (core loop step 5).
+	var goal := _shields_goal()
+	if not goal.is_empty():
+		UpgradeGoalCardType.set_goal(str(goal["sys"]), str(goal["path"]), int(goal["tier"]))
+	if is_inside_tree():
+		get_tree().create_timer(COST_LINE_DELAY_S).timeout.connect(func() -> void:
+			if _stage != "done":
+				var cost := _cost_line()
+				if not cost.is_empty():
+					_say(cost))
 	var gs := get_node_or_null("/root/GlobalState")
 	if not _drone_given and gs != null and gs.inventory != null and gs.inventory.add(DRONE_ITEM, 1, 3):
 		_drone_given = true
@@ -248,12 +315,24 @@ func advance() -> void:
 	if is_rated():
 		_stage = "done"
 		_say(LINES["rated"][0])
+		load("res://scripts/ui/Wiki.gd").unlock("upgrades")
 		return
+	var goal := _shields_goal()
+	var ready := not goal.is_empty() and UpgradeGoalType.is_ready(gs, goal)
+	if _stage == "need_fit" and not ready:
+		_stage = "need_material"  # spent something on the way: back to gathering
 	if _stage == "need_material":
-		var needed: int = int(gs.upgrade_material_cost(REQUIRED_SYSTEM, REQUIRED_TIER).get(MATERIAL, 1))
-		if gs.inventory != null and gs.inventory.get_quantity(MATERIAL) >= needed:
+		# "Dock and fit it" only when the whole bill is covered, not just the
+		# rad-quartz (core loop step 5).
+		if ready:
 			_stage = "need_fit"
 			_say(LINES["have_material"][0])
+			return
+		var needed: int = int(gs.upgrade_material_cost(REQUIRED_SYSTEM, REQUIRED_TIER).get(MATERIAL, 1))
+		if not _material_told and gs.inventory != null and gs.inventory.get_quantity(MATERIAL) >= needed:
+			_material_told = true
+			var short := _short_list(false)
+			_say("Rad-quartz aboard. That's the hard part done. Still short: %s." % short if not short.is_empty() else "Rad-quartz aboard.")
 			return
 		var target = gs.active_target
 		if not _red_rock_told and is_instance_valid(target) and (target as Node).is_in_group("tech_seam_asteroid"):

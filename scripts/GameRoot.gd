@@ -10983,6 +10983,21 @@ func _run_goal_smoke_test() -> void:
 	if not str(ui.upgrade_goal_card._title.text).begins_with("Shields Mk II") or not str(ui.upgrade_goal_card._tag.text).contains("READY"):
 		fail.call("The card doesn't show the ready Shields goal: '%s' / '%s'" % [ui.upgrade_goal_card._title.text, ui.upgrade_goal_card._tag.text])
 		return
+	# 2a. Step 5: docking with the bill covered opens the upgrade screen on it.
+	var saved_handed_in = StoryManager.story_state.get("first_contract_handed_in", false)
+	StoryManager.story_state["first_contract_handed_in"] = true
+	StoryManager.story_state.erase("goal_opened_for")
+	player.is_docked = true
+	ui._maybe_open_ready_goal()
+	await get_tree().create_timer(2.0).timeout
+	var opened: bool = ui.ship_upgrades_panel != null and is_instance_valid(ui.ship_upgrades_panel) and ui.ship_upgrades_panel.visible
+	if is_instance_valid(ui.ship_upgrades_panel):
+		ui.ship_upgrades_panel.visible = false
+	player.is_docked = false
+	StoryManager.story_state["first_contract_handed_in"] = saved_handed_in
+	if not opened:
+		fail.call("Docking with the goal ready didn't open the upgrade screen.")
+		return
 	# 2b. Step 4: Bank beside Sell, highlighted while the goal needs ore.
 	GlobalState.player_storage_ore = 0.0
 	GlobalState.clear_cargo()

@@ -136,6 +136,13 @@
 			"body": "The HULL bar is your ship's health. At zero the ship is lost.\n\nDamage stays until you pay for repairs at a station. N.O.V.A. will remind you if you try to leave a station with a damaged hull."
 		},
 		{
+			"id": "upgrades",
+			"category": "Ship",
+			"title": "Upgrades and gate classes",
+			"unlocked": false,
+			"body": "Every jump gate has a [b]class[/b], from how deep the system it leads to is. Deeper gates are older and harsher, and they need a stronger ship. The class and what it needs show on the gate's target tag and on the star map, in green (you can go) or red (not yet). Gates back the way you came are always open.\n\nClass II needs [b]Shields Mk II[/b]. From Class III on, a gate needs a [b]Ship Rating[/b]: the tiers of weapons, engine, shields, mining and cargo added up. A system only counts up to two tiers above your weakest one, so upgrading the same thing over and over won't get you through. The top-left panel shows your rating and what the next class needs.\n\n[b]Paying for upgrades[/b]: credits, ore and a tech-grade material. Ore you bank at a station (Bank, beside Sell) counts towards upgrades. Tech-grade materials come from red rocks, with a survey drone.\n\nThe [b]goal card[/b] (top right) tracks one upgrade: what it costs, what you have, and where to get the rest. Pick your own with [b]Set as goal[/b] on the upgrade screen. Some upgrades draw more power than the ship has; then the Powerplant comes first."
+		},
+		{
 			"id": "contracts",
 			"category": "Stations & Trade",
 			"title": "Contracts",

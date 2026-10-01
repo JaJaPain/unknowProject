@@ -368,3 +368,19 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       during Kaelen's tutorial briefing). Bank it: the goal card's ore bar
       fills. The upgrade screen's button now says "Bank Ore from Hold".
       The goal card hides while you're docked.
+- [ ] **Step 5: the first rung, fully guided (STOP AND SHOW, play it start to
+      finish).** New campaign; after the tutorial, try a gate leading to depth 3
+      with a stock ship:
+      1. N.O.V.A. refuses (hardened shields), gives a survey drone, and the goal
+         card switches to "YOUR GOAL · Shields Mk II".
+      2. About 20 s later she names the rest of the bill: the credits and ore
+         you're short of, where to get them, and that it's all on the card.
+      3. Target a red rock: she tells you how to work it (G, fly slowly).
+      4. With the rad-quartz aboard but credits/ore short: "Rad-quartz aboard.
+         That's the hard part done. Still short: ...". Refusing the gate again
+         later names what's still missing.
+      5. Bank ore when docked (gold Bank button). With everything covered she
+         says "That's everything the mechanic needs" and the card turns gold.
+      6. Dock: the upgrade screen opens on Shields by itself, "Everything for
+         Shields Mk II is aboard. Fit it here." Fit it: she grumbles, the gate
+         opens, and the wiki gains "Upgrades and gate classes".

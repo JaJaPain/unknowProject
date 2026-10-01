@@ -4608,6 +4608,8 @@ func toggle_dock_menu(
 			StoryQuestManager.on_docked(station)
 		if fresh_dock and not procedure_completed:
 			_begin_lounge_dock_preparation()
+		if fresh_dock and not is_outpost:
+			_maybe_open_ready_goal()
 		var game_root := get_tree().current_scene
 		if create_checkpoint \
 				and game_root \
@@ -8283,6 +8285,27 @@ func _poll_loose_end_rewards(delta: float) -> void:
 
 
 var upgrade_goal_card: PanelContainer = null
+
+
+## Docking with the goal's whole bill in hand opens the upgrade screen on it,
+## once per goal (core loop 3.3 / step 5). Not during the starter tutorial,
+## and only once the docking settles.
+func _maybe_open_ready_goal() -> void:
+	var Goal = load("res://scripts/domain/UpgradeGoal.gd")
+	var goal: Dictionary = load("res://scripts/ui/UpgradeGoalCard.gd").current_goal()
+	if goal.is_empty() or not Goal.is_ready(GlobalState, goal) or _starter_contract_pending():
+		return
+	var sig := "%s|%s|%d" % [str(goal["sys"]), str(goal["path"]), int(goal["tier"])]
+	if str(StoryManager.story_state.get("goal_opened_for", "")) == sig:
+		return
+	StoryManager.story_state["goal_opened_for"] = sig
+	get_tree().create_timer(1.5, true, false, true).timeout.connect(func() -> void:
+		if GlobalState.player == null or not bool(GlobalState.player.get("is_docked")):
+			return
+		_on_ship_upgrades_pressed()
+		_on_su_slot_pressed(str(goal["sys"]))
+		show_dock_message("Everything for %s is aboard. Fit it here." % Goal.title(goal), "", HudStyle.GOLD)
+	)
 
 
 ## Under the contract tracker, right edges aligned; in its place when no

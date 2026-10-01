@@ -34,9 +34,20 @@ func _initialize() -> void:
 	_check(guide.block_reason("sys.one") == "", "going back is always allowed")
 	_check(guide.stage() == "", "asking is not trying: no walkthrough yet")
 
+	var story: Node = root.get_node("StoryManager")
+	var saved_goal = story.story_state.get("upgrade_goal", {})
+	var saved_credits: int = gs.player_credits
+	var saved_bank: float = gs.player_storage_ore
+	gs.player_credits = 0
+	gs.player_storage_ore = 0.0
 	guide.on_refused()
 	_check(guide.stage() == "need_material", "trying the gate starts the walkthrough")
 	_check(gs.inventory.get_quantity("survey_drone") == 1, "with a first drone as an advance")
+	var goal: Dictionary = story.story_state.get("upgrade_goal", {})
+	_check(str(goal.get("sys", "")) == "shields" and int(goal.get("tier", 0)) == 2 and not bool(goal.get("auto", true)),
+		"and Shields Mk II becomes the goal on the card: %s" % str(goal))
+	var bill: String = guide._cost_line()
+	_check(bill.contains("credits") and bill.contains("ore"), "she names the rest of the bill: %s" % bill)
 	guide.on_refused()
 	_check(gs.inventory.get_quantity("survey_drone") == 1, "only once")
 
@@ -49,7 +60,13 @@ func _initialize() -> void:
 
 	gs.inventory.add("rad_quartz", 1, 10)
 	guide.advance()
-	_check(guide.stage() == "need_fit", "with the rad-quartz aboard, off to the mechanic")
+	_check(guide.stage() == "need_material" and bool(guide.to_dict()["material_told"]),
+		"rad-quartz alone isn't the whole bill: she says what's still short")
+	var data: Dictionary = gs.UPGRADE_TREE["shields"]["branches"][str(goal.get("path", "bulwark"))][2]
+	gs.player_credits = int(data["cost_cr"])
+	gs.player_storage_ore = float(data["cost_ore"])
+	guide.advance()
+	_check(guide.stage() == "need_fit", "with the whole bill covered, off to the mechanic")
 
 	var saved: Dictionary = guide.to_dict()
 	var reloaded = GuideType.new()
@@ -86,6 +103,9 @@ func _initialize() -> void:
 
 	gs.active_target = saved_target
 	gs.current_upgrades = saved_upgrades
+	gs.player_credits = saved_credits
+	gs.player_storage_ore = saved_bank
+	story.story_state["upgrade_goal"] = saved_goal
 	gs.inventory.remove("survey_drone", gs.inventory.get_quantity("survey_drone"))
 	gs.inventory.remove("rad_quartz", gs.inventory.get_quantity("rad_quartz"))
 	red.free()
