@@ -10067,7 +10067,11 @@ const INTRO_TARGET_TIP_LINE := "I am not sure I am happy about being used to blo
 
 
 func _maybe_play_intro_repair_target_tip() -> void:
-	if not _repaired_this_dock or not _should_flash_undock():
+	# Plays on the first undock with the starter contract active, repaired or
+	# not: it is the tutorial's own target line, and the generic pacifist hunt
+	# reaction stays silent for this contract (Abe, 2026-10-01: both used to
+	# play, the pacifist one first).
+	if not _should_flash_undock():
 		return
 	if not is_instance_valid(StoryManager) or not is_instance_valid(Nova):
 		return
@@ -11507,6 +11511,10 @@ func _maybe_announce_mission_hunt_targets(entities: Array) -> void:
 		return
 	var mission := QuestManager.active_quest
 	if bool(mission.get("nova_mission_hunt_reaction_played", false)):
+		return
+	# The tutorial contract has its own line (_maybe_play_intro_repair_target_tip);
+	# her pacifist hunt reactions start with the first contract after it.
+	if _is_intro_starter_contract(mission):
 		return
 	for entity in entities:
 		if _is_overview_mission_target(entity):
@@ -14012,7 +14020,7 @@ func _on_quest_accepted():
 	# It was queued as background work when the offer was built, so it could
 	# still be waiting behind ~200 other lines: move it to the front now, and
 	# pick one if this contract never got one (Abe, 2026-09-30).
-	if is_instance_valid(Nova) and QuestManager.is_quest_active():
+	if is_instance_valid(Nova) and QuestManager.is_quest_active() 			and not _is_intro_starter_contract(QuestManager.active_quest):
 		var quest: Dictionary = QuestManager.active_quest
 		if str(quest.get("nova_mission_hunt_reaction", "")).strip_edges().is_empty():
 			var prepared: Dictionary = Nova.prepare_mission_hunt_reaction(quest)

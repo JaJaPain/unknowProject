@@ -324,3 +324,13 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       Ship Rating 8 (ours 6)", "· open", or "· back the way we came, open".
       Star map: hover a system, and the line under its name says the same, in
       green (you can go) or red (not yet).
+- [ ] **Tutorial target line only.** New campaign, take Kaelen's job, undock
+      (repaired or not): N.O.V.A. says only the tutorial line ("I am not sure I
+      am happy about being used to blow someone up..."), no pacifist hunt line
+      before it. Her pacifist hunt lines start with the next hunt contract.
+- [ ] **No receiver with red ships around.** While a contract's red target is
+      alive in the system, or a hostile is within 3 km or locked onto you, the
+      receiver prompt hides and T does nothing; an open tuning panel closes if
+      one shows up. Kill the target / get clear and it comes back.
+- [ ] **Combat no longer freezes** when an enemy ship vanishes mid-fight (the
+      crash from 2026-10-01).

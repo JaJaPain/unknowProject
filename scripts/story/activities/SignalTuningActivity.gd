@@ -132,7 +132,35 @@ func _can_listen() -> bool:
 	if not is_instance_valid(player) or bool(player.get("is_docked")) or bool(player.get("destroyed")):
 		return false
 	var combat := get_node_or_null("/root/CombatManager")
-	return combat == null or int(combat.get("state")) == 0
+	if combat != null and int(combat.get("state")) != 0:
+		return false
+	return not _threat_nearby()
+
+
+## No receiver work while a fight is coming (Abe, 2026-10-01: "if a ship is in
+## red highlight either we are about to attack or they are"): any of the
+## contract's red targets alive in the system, or a hostile ship close by or
+## locked onto us. Uses the overview's own rules, so "red on the overview" and
+## "no receiver" always agree.
+const HOSTILE_QUIET_RANGE := 3000.0
+
+
+func _threat_nearby() -> bool:
+	var gs := get_node_or_null("/root/GlobalState")
+	var player = gs.player if gs != null else null
+	if not is_instance_valid(player):
+		return false
+	var ui = gs.get_ui_manager() if gs.has_method("get_ui_manager") else null
+	for ship in get_tree().get_nodes_in_group("ship"):
+		if ship == player or not is_instance_valid(ship) or bool(ship.get("destroyed")):
+			continue
+		if ui != null and ui.has_method("_is_overview_mission_target") and ui._is_overview_mission_target(ship):
+			return true
+		if ship.get("target") == player:
+			return true
+		if ui != null and ui.has_method("_ship_standing") and ui._ship_standing(ship) == "Hostile" 				and (ship as Node3D).global_position.distance_to((player as Node3D).global_position) < HOSTILE_QUIET_RANGE:
+			return true
+	return false
 
 
 func _try_offer() -> void:
