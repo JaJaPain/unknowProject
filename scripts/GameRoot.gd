@@ -6913,6 +6913,17 @@ func _run_jump_smoke_test() -> void:
 	if (StoryManager.story_state.get("known_system_ores", {}) as Dictionary).is_empty():
 		_fail_jump_smoke_test("Arriving did not record the system's ores for the star map.")
 		return
+	# Gate ladder step 2: the way home reads as open, and the HUD shows the rating.
+	var home_access: Dictionary = gate_rating_guide.access_to(system_registry.runtime_system_id("start_system"))
+	print("[JumpSmokeTest] gate home: ", home_access.get("label", ""))
+	if not bool(home_access.get("back", false)) or not bool(home_access.get("ok", false)):
+		_fail_jump_smoke_test("The gate back toward the start isn't shown as open: %s" % str(home_access))
+		return
+	var hud_ui = GlobalState.get_ui_manager()
+	if hud_ui != null and hud_ui.ship_rating_label != null and not str(hud_ui.ship_rating_label.text).begins_with("SHIP RATING"):
+		_fail_jump_smoke_test("HUD Ship Rating line missing: '%s'" % str(hud_ui.ship_rating_label.text))
+		return
+	print("[JumpSmokeTest] HUD: ", hud_ui.ship_rating_label.text if hud_ui != null and hud_ui.ship_rating_label != null else "(no HUD)")
 	var zone: String = load("res://scripts/AnomalyRegistry.gd").search_zone(Vector3(2600.0, 0.0, -1800.0))
 	print("[JumpSmokeTest] search zone sample: ", zone)
 	if zone.is_empty() or RegEx.create_from_string("[0-9]").search(zone) != null:

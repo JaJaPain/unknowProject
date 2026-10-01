@@ -682,6 +682,7 @@ func refresh_restored_state() -> void:
 
 func _process(delta):
 	_update_target_bars()
+	_update_ship_rating_label()
 	if _ui_layout_manager:
 		_ui_layout_manager.enforce_layout()
 	if GlobalState.paused: return
@@ -4153,7 +4154,11 @@ func _on_target_changed(new_target: Node3D):
 				"hidden": type_str = "Unknown Gate — Scan Required"
 				"blocked": type_str = "Locked Gate — Access Denied"
 				"damaged": type_str = "Damaged Gate — Repair Required"
-				_: type_str = "Jumpgate to " + str(new_target.get("destination_display_name"))
+				_:
+					type_str = "Jumpgate to " + str(new_target.get("destination_display_name"))
+					var access := _gate_access(new_target)
+					if not access.is_empty():
+						type_str += " · " + str(access["label"])
 			icon_index = 3
 		elif new_target.is_in_group("ship"):
 			type_str = _ship_standing(new_target)
@@ -5097,6 +5102,60 @@ func _ship_standing(ship: Node) -> String:
 	if rep > 20.0:
 		return "Friendly"
 	return "Neutral"
+
+
+## Gate ladder (docs/core_loop_plan_2026_10_01.md step 2): a targeted gate's
+## class and requirement, the same check the jump uses. {} if unknown.
+func _gate_access(gate: Node) -> Dictionary:
+	var root := get_tree().current_scene
+	var guide = root.get("gate_rating_guide") if root != null else null
+	if guide == null or not is_instance_valid(guide) or not guide.has_method("access_to"):
+		return {}
+	var dest := str(gate.get("destination_system_id"))
+	if dest.is_empty():
+		return {}
+	var registry = root.get("system_registry")
+	if registry != null and registry.has_method("runtime_system_id"):
+		dest = str(registry.runtime_system_id(dest))
+	return guide.access_to(dest)
+
+
+## "SHIP RATING 6 · CLASS III NEEDS 8" under the REP row, so the next rung of
+## the ladder is always on screen.
+var ship_rating_label: Label = null
+
+
+func _build_ship_rating_label() -> void:
+	if hud_panel == null or ship_rating_label != null:
+		return
+	var rep := hud_panel.find_child("ZenRepLabel", true, false) as Node
+	var row := rep.get_parent() if rep != null else null
+	var column := row.get_parent() if row != null else null
+	if column == null:
+		return
+	ship_rating_label = Label.new()
+	ship_rating_label.name = "ShipRatingLabel"
+	HudStyle.style_label(ship_rating_label, 12, HudStyle.DIM)
+	column.add_child(ship_rating_label)
+	column.move_child(ship_rating_label, row.get_index() + 1)
+	_update_ship_rating_label()
+
+
+func _update_ship_rating_label() -> void:
+	if ship_rating_label == null or not is_instance_valid(ship_rating_label):
+		return
+	var root := get_tree().current_scene
+	var guide = root.get("gate_rating_guide") if root != null else null
+	if guide == null or not is_instance_valid(guide) or not guide.has_method("next_rung"):
+		ship_rating_label.visible = false
+		return
+	var rung: Dictionary = guide.next_rung()
+	var numeral: String = load("res://scripts/domain/GateClass.gd").class_name_of(int(rung["next_class"]))
+	var need := "SHIELDS MK II" if bool(rung["needs_shields_mk2"]) else str(int(rung["next_needs"]))
+	var text := "SHIP RATING %d  ·  CLASS %s NEEDS %s" % [int(rung["rating"]), numeral, need]
+	if ship_rating_label.text != text:
+		ship_rating_label.text = text
+	ship_rating_label.visible = true
 
 
 func _update_target_bars() -> void:
@@ -11158,6 +11217,7 @@ func _apply_hud_style() -> void:
 		if (l as Label).text == "Rep: ":
 			(l as Label).text = "REP  "
 			HudStyle.style_label(l, 12, HudStyle.DIM)
+	_build_ship_rating_label()
 	_on_fuel_changed(GlobalState.fuel)
 	_on_credits_changed(GlobalState.player_credits)
 	if time_label:

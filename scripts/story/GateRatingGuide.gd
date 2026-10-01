@@ -121,9 +121,12 @@ func is_rated() -> bool:
 	return int(info.get("tier", 1)) >= REQUIRED_TIER
 
 
-## "" when the ship may jump to `destination_system_id`, else why not. No
-## side effects beyond remembering the details: the UI asks this every frame.
-func block_reason(destination_system_id: String) -> String:
+## Everything the UI shows about a gate to `destination_system_id`, from the
+## same check the jump uses: GateClass.check's fields plus "back" (it leads
+## shallower or level, so it is always open), "limiting" (the weakest system
+## when it holds the rating back) and "label" (a short line for the target
+## panel and the star map). No side effects.
+func access_to(destination_system_id: String) -> Dictionary:
 	var dest_depth := int(depth_of.call(destination_system_id))
 	var from_depth := int(depth_of.call(str(current_system_of.call())))
 	if dest_depth < 0:
@@ -131,9 +134,40 @@ func block_reason(destination_system_id: String) -> String:
 		dest_depth = maxi(from_depth, 0) + 1
 	var tiers := _tiers()
 	var result: Dictionary = GateClassType.check(from_depth, dest_depth, tiers)
+	result["back"] = from_depth >= 0 and dest_depth <= from_depth
+	result["limiting"] = GateClassType.limiting_system(tiers)
+	var numeral := GateClassType.class_name_of(int(result["class"]))
+	if bool(result["back"]):
+		result["label"] = "Class %s · back the way we came, open" % numeral
+	elif bool(result["ok"]):
+		result["label"] = "Class %s · open (Ship Rating %d)" % [numeral, int(result["rating"])]
+	elif bool(result["needs_shields_mk2"]):
+		result["label"] = "Class %s · needs Shields Mk II" % numeral
+	else:
+		result["label"] = "Class %s · needs Ship Rating %d (ours %d)" % [numeral, int(result["needs_rating"]), int(result["rating"])]
+	return result
+
+
+## The ship's rating and the first gate class it can't open yet:
+## {"rating", "next_class", "next_needs"}, for the HUD line.
+func next_rung() -> Dictionary:
+	var tiers := _tiers()
+	var rating := GateClassType.ship_rating(tiers)
+	var c := 2
+	while c < 200:
+		var blocked_by_shields := c == 2 and int(tiers.get("shields", 1)) < 2
+		if blocked_by_shields or rating < GateClassType.rating_for_class(c):
+			break
+		c += 1
+	return {"rating": rating, "next_class": c, "next_needs": GateClassType.rating_for_class(c), "needs_shields_mk2": c == 2 and int(tiers.get("shields", 1)) < 2}
+
+
+## "" when the ship may jump to `destination_system_id`, else why not. No
+## side effects beyond remembering the details: the UI asks this every frame.
+func block_reason(destination_system_id: String) -> String:
+	var result := access_to(destination_system_id)
 	if bool(result["ok"]):
 		return ""
-	result["limiting"] = GateClassType.limiting_system(tiers)
 	_last_check = result
 	if bool(result["needs_shields_mk2"]):
 		return BLOCK_REASON

@@ -503,7 +503,7 @@ before the next bite.
 | # | Bite | Tests |
 |---|---|---|
 | 1 | **DONE 2026-10-01** Gate class table + Ship Rating; `GateRatingGuide` becomes depth-based (Class II keeps Shields Mk II); old saves keep visited systems | Unit tests: class per depth, block reasons, never-stranded rule |
-| 2 | Class shown before it matters: star map tooltip, gate label on approach, HUD `Ship Rating N · next class M` | Jump smoke checks labels |
+| 2 | **DONE 2026-10-01** Class shown before it matters: star map tooltip, gate label on approach, HUD `Ship Rating N · next class M` | Jump smoke checks labels |
 | 3 | **Upgrade goal**: model, HUD goal card with three bars and "where to get it", `Set as goal`, auto-goal | New `--goal-smoke-test` |
 | | **Stop and show: the goal card** | |
 | 4 | Ore: **Sell / Bank** side by side, Bank highlighted when the goal is short | Services smoke |

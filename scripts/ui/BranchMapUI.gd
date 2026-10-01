@@ -556,12 +556,15 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 			if data.get("is_placeholder", false):
 				text += "\nStatus: %s" % str(data.get("state", "unknown")).capitalize()
 				text += "\nDestination details unavailable"
+				text += _gate_class_line(sys_id)
 				_tooltip_label.text = text
 				_tooltip_panel.position = pos + Vector2(15, -_tooltip_panel.size.y - 5)
 				_tooltip_panel.visible = true
 				return
 			if data.get("is_current", false):
 				text += "  (current)"
+			else:
+				text += _gate_class_line(sys_id)
 			var sc: int = data.get("station_count", 0)
 			if sc > 0:
 				text += "\nStations: %d" % sc
@@ -594,6 +597,18 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 			_tooltip_panel.visible = true
 			return
 	_tooltip_panel.visible = false
+
+
+## The gate class to reach `sys_id` and whether the ship can open it, from the
+## same check the jump uses (green open, red not yet).
+func _gate_class_line(sys_id: String) -> String:
+	var root := get_tree().current_scene
+	var guide = root.get("gate_rating_guide") if root != null else null
+	if guide == null or not is_instance_valid(guide) or not guide.has_method("access_to"):
+		return ""
+	var access: Dictionary = guide.access_to(sys_id)
+	var colour := "#59d98c" if bool(access.get("ok", true)) else "#ff6b5e"
+	return "\n[color=%s]%s[/color]" % [colour, str(access.get("label", ""))]
 
 
 func _handle_click(click_pos: Vector2) -> void:

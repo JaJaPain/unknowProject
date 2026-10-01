@@ -317,3 +317,10 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
 - [ ] **Back is always open.** Deep in, press "Upgrades to stock": gates back
       toward the start still work; gates deeper refuse again, even to a system
       you've already visited.
+- [ ] **Step 2: requirements before you reach the gate.** The top-left panel
+      shows "SHIP RATING N · CLASS X NEEDS M" (or "NEEDS SHIELDS MK II") and
+      it updates the moment an upgrade is fitted (dev panel +1 buttons work
+      too). Target a gate: its tag reads "Jumpgate to … · Class III · needs
+      Ship Rating 8 (ours 6)", "· open", or "· back the way we came, open".
+      Star map: hover a system, and the line under its name says the same, in
+      green (you can go) or red (not yet).
