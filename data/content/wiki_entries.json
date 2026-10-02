@@ -203,7 +203,7 @@
 			"category": "Exploration",
 			"title": "Survey drones",
 			"unlocked": false,
-			"body": "Some targets, like big red rocks and wrecks, can be flown into with a survey drone. When one is in range the DRONE BAY tells you: press [b]{drone}[/b] to launch.\n\nFly the drone with [b]{drone_fly}[/b]. Collect what you find and bring the drone back out. Lose the drone and you lose its load. Drones are used up, so buy more at stores."
+			"body": "Some targets, like big red rocks and wrecks, can be flown into with a survey drone. When one is in range the DRONE BAY tells you: press [b]{drone}[/b] to launch.\n\nFly the drone with [b]{drone_fly}[/b]. Collect what you find and bring the drone back out. Lose the drone and you lose its load. Drones are used up, so buy more at stores.\n\nThe list above the controls shows the nearest target of each kind and how far the drone has to fly to reach it. Inside a rock everything is tiny, so prospectors measure in [b]nicks[/b] (nk): a fraction of a millimetre."
 		},
 		{
 			"id": "anomalies",

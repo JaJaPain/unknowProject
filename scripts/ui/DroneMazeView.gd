@@ -47,8 +47,11 @@ var _mouse_mode_before := -1
 var _hud_targets: RichTextLabel
 var _targets_t := 0.0
 const TARGETS_REFRESH_S := 0.2
-## The drone's world is in tiles; the HUD calls a tile a metre.
-const METRES_PER_TILE := 1.0
+## Inside the rock the drone is a few millimetres across, so distances are in
+## nicks (nk), a made-up prospectors' unit (Abe, 2026-10-02: micro-mining, not
+## metres). Twelve to a tile, so the numbers feel fine-grained.
+const NICKS_PER_TILE := 12.0
+const DISTANCE_UNIT := "nk"
 const CONTROLS_TEXT := "MOUSE   turn\nW / S   forward / back\nA / D   slide sideways\n← / →   turn\nE   extract\nR   recall the drone"
 
 
@@ -499,7 +502,7 @@ func _update_targets() -> void:
 		if bool(r["aboard"]):
 			lines.append("[color=#%s]◆[/color] [color=#8aa]%s   aboard[/color]" % [hex, r["label"]])
 		else:
-			lines.append("[color=#%s]◆ %s[/color]   %d m" % [hex, r["label"], int(round(float(r["distance"]) * METRES_PER_TILE))])
+			lines.append("[color=#%s]◆ %s[/color]   %d %s" % [hex, r["label"], int(round(float(r["distance"]) * NICKS_PER_TILE)), DISTANCE_UNIT])
 	_hud_targets.text = "\n".join(lines)
 
 
