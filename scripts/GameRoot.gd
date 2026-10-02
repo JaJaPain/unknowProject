@@ -10958,12 +10958,23 @@ func _run_gas_giant_snapshot() -> void:
 	var ui = GlobalState.get_ui_manager()
 	if ui != null:
 		ui.visible = false
+	# For the pictures, the biggest storm faces the camera (in the planet's own
+	# frame, which turns).
+	var facing := func() -> Vector3:
+		return (giant.global_transform.basis.inverse() * (shot.global_position - giant.global_position)).normalized() \
+			+ Vector3(0.25, 0.1, 0.0)
 	for seed_value in [1, 2, 3, 4, 5, 6]:
 		Look.apply(giant, seed_value)
+		var mesh := giant.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		(mesh.material_override as ShaderMaterial).set_shader_parameter("storm_dir_1", facing.call())
 		print("GIANTSHOT seed %d: %s" % [seed_value, Look.look_for(seed_value)["palette"]])
 		for i in 20:
 			await get_tree().process_frame
 		await _hud_snapshot_save(out.path_join("gas_giant_%d.png" % seed_value))
+		if seed_value == 3:
+			# The same storm a few seconds on: it churns.
+			await get_tree().create_timer(3.0).timeout
+			await _hud_snapshot_save(out.path_join("gas_giant_3_later.png"))
 	get_tree().quit()
 
 

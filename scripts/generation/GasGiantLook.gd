@@ -28,9 +28,18 @@ static func look_for(seed_value: int) -> Dictionary:
 	var names := PALETTES.keys()
 	var name := str(names[rng.randi() % names.size()])
 	var colors: Array = PALETTES[name]
-	var storm := rng.randf() < 0.55
-	var storm_dir := Vector3(rng.randf_range(-1.0, 1.0), rng.randf_range(-0.45, 0.45), rng.randf_range(-1.0, 1.0)).normalized()
-	# The storm in the palette's darkest tone or a warm contrast.
+	# A few churning storms (Abe, 2026-10-02: "think Jupiter's storm"): two or
+	# three, the first the biggest, each turning its own way.
+	var storm_count := rng.randi_range(2, 3)
+	var storm_dirs: Array[Vector3] = []
+	var sizes := Vector3.ZERO
+	var spins := Vector3.ONE
+	for i in 3:
+		storm_dirs.append(Vector3(rng.randf_range(-1.0, 1.0), rng.randf_range(-0.5, 0.5), rng.randf_range(-1.0, 1.0)).normalized())
+		if i < storm_count:
+			sizes[i] = rng.randf_range(0.16, 0.26) if i == 0 else rng.randf_range(0.06, 0.14)
+		spins[i] = rng.randf_range(0.6, 1.4) * (1.0 if rng.randf() < 0.5 else -1.0)
+	# The storms in the palette's darkest tone or a warm contrast.
 	var storm_color: Color = colors[3] if rng.randf() < 0.5 else Color(0.85, 0.45, 0.3).lerp(colors[2], 0.3)
 	return {
 		"palette": name,
@@ -38,8 +47,12 @@ static func look_for(seed_value: int) -> Dictionary:
 		"band_count": snappedf(rng.randf_range(5.0, 16.0), 0.5),
 		"turbulence": rng.randf_range(0.3, 1.2),
 		"band_sharpness": rng.randf_range(0.6, 1.2),
-		"storm_size": rng.randf_range(0.12, 0.28) if storm else 0.0,
-		"storm_dir": storm_dir,
+		"storm_count": storm_count,
+		"storm_dir_1": storm_dirs[0],
+		"storm_dir_2": storm_dirs[1],
+		"storm_dir_3": storm_dirs[2],
+		"storm_sizes": sizes,
+		"storm_spins": spins,
 		"storm_color": storm_color,
 		"rim_color": (colors[1] as Color).lightened(0.35),
 		"seed_offset": Vector3(rng.randf_range(0.0, 100.0), rng.randf_range(0.0, 100.0), rng.randf_range(0.0, 100.0)),
@@ -55,7 +68,7 @@ static func material_for(seed_value: int) -> ShaderMaterial:
 	material.set_shader_parameter("color_b", colors[1])
 	material.set_shader_parameter("color_c", colors[2])
 	material.set_shader_parameter("color_d", colors[3])
-	for key in ["band_count", "turbulence", "band_sharpness", "storm_size", "storm_dir", "storm_color", "rim_color", "seed_offset"]:
+	for key in ["band_count", "turbulence", "band_sharpness", "storm_dir_1", "storm_dir_2", "storm_dir_3", "storm_sizes", "storm_spins", "storm_color", "rim_color", "seed_offset"]:
 		material.set_shader_parameter(key, look[key])
 	material.set_meta("palette", look["palette"])
 	return material

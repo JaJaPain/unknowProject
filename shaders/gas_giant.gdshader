@@ -2,7 +2,7 @@ shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
 // Procedural gas giant (playtest 2026-10-02: every gas giant looked like
-// Jupiter). Latitude bands warped by noise, fine streaks, an optional storm,
+// Jupiter). Latitude bands warped by noise, fine streaks, churning storms,
 // a soft atmosphere rim, and a slow drift. Works on the object-space surface
 // direction, so there is no UV seam and no pinching at the poles. The look
 // (palette, bands, turbulence, storm) comes from GasGiantLook.gd per planet.
@@ -16,9 +16,15 @@ uniform float turbulence = 0.6;
 uniform float band_sharpness = 1.0;
 uniform float flow_speed = 0.004;
 uniform vec3 seed_offset = vec3(0.0);
-uniform vec3 storm_dir = vec3(0.0, 0.2, 1.0);
-uniform float storm_size = 0.0; // 0 = no storm
+// Up to three storms (Abe, 2026-10-02: "think Jupiter's storm"): rough,
+// roughly circular vortices of swirling noise that keep turning. Size 0 = off.
+uniform vec3 storm_dir_1 = vec3(0.0, 0.2, 1.0);
+uniform vec3 storm_dir_2 = vec3(1.0, -0.25, 0.0);
+uniform vec3 storm_dir_3 = vec3(-0.7, 0.1, -0.7);
+uniform vec3 storm_sizes = vec3(0.0); // one size per storm
+uniform vec3 storm_spins = vec3(1.0, -1.0, 1.0); // turn direction and speed
 uniform vec3 storm_color : source_color = vec3(0.8, 0.45, 0.3);
+uniform float storm_speed = 0.25;
 uniform vec3 rim_color : source_color = vec3(0.6, 0.7, 0.9);
 uniform float rim_strength = 0.35;
 
@@ -66,6 +72,43 @@ vec3 palette(float v) {
 	return mix(color_c, color_d, (v - 0.66) / 0.34);
 }
 
+// One storm: a vortex of swirling noise around centre_dir on the surface,
+// with a rough, wobbling edge. The swirl turns with time, fastest near the
+// eye, so the inside churns rather than sitting still.
+vec3 storm(vec3 p, vec3 centre_dir, float size, float spin, float id, float time, vec3 col) {
+	if (size <= 0.0) {
+		return col;
+	}
+	vec3 c = normalize(centre_dir);
+	vec3 offset = p - c * dot(p, c);
+	vec3 axis_u = normalize(cross(c, abs(c.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
+	vec3 axis_v = cross(c, axis_u);
+	// Squashed east-west a little, like real storms riding a band.
+	vec2 local = vec2(dot(offset, axis_u) * 0.75, dot(offset, axis_v));
+	if (dot(p, c) < 0.0) {
+		return col;
+	}
+	float r = length(local);
+	float angle = atan(local.y, local.x);
+	float t = time * storm_speed;
+	// A rough edge that breathes slowly.
+	float edge = size * (0.75 + 0.5 * fbm(vec3(cos(angle) * 1.6, sin(angle) * 1.6, t * 0.4 + id * 7.0)));
+	float inside = smoothstep(edge, edge * 0.55, r);
+	if (inside <= 0.0) {
+		return col;
+	}
+	// The swirl: turn the noise faster towards the eye.
+	float twist = spin * t * (1.6 - clamp(r / size, 0.0, 1.0)) + r / size * 3.0 * spin;
+	float a = angle + twist;
+	vec2 swirled = vec2(cos(a), sin(a)) * r / size;
+	float churn = fbm(vec3(swirled * 3.5, id * 11.0 + t * 0.3) + seed_offset);
+	float rings = 0.5 + 0.5 * sin(r / size * 13.0 - spin * t * 2.0 + churn * 3.0);
+	vec3 storm_col = mix(storm_color * 0.7, storm_color * 1.25, churn) * (0.8 + 0.25 * rings);
+	// The storm's own wake: the band colours dragged into it near the rim.
+	vec3 dragged = mix(col, storm_col, smoothstep(0.0, 0.7, churn + (1.0 - r / edge) * 0.6));
+	return mix(col, dragged, inside);
+}
+
 void fragment() {
 	vec3 p = surface_dir;
 	float t = TIME * flow_speed;
@@ -82,15 +125,9 @@ void fragment() {
 	float streaks = fbm(vec3(p.x * 2.0, lat * 30.0, p.z * 2.0) + seed_offset);
 	float v = clamp(0.5 + 0.5 * bands * band_sharpness + (streaks - 0.5) * 0.28, 0.0, 1.0);
 	vec3 col = palette(v);
-	// A storm: an oval vortex with rings, sitting on one band.
-	if (storm_size > 0.0) {
-		vec3 c = normalize(storm_dir);
-		vec3 d3 = p - c;
-		float d = length(vec2(length(d3.xz) * 0.7, d3.y * 1.4));
-		float inside = smoothstep(storm_size, storm_size * 0.35, d);
-		float rings = 0.65 + 0.35 * sin(d / storm_size * 14.0 + warp_a * 4.0);
-		col = mix(col, storm_color * rings, inside * 0.85);
-	}
+	col = storm(p, storm_dir_1, storm_sizes.x, storm_spins.x, 1.0, TIME, col);
+	col = storm(p, storm_dir_2, storm_sizes.y, storm_spins.y, 2.0, TIME, col);
+	col = storm(p, storm_dir_3, storm_sizes.z, storm_spins.z, 3.0, TIME, col);
 	ALBEDO = col;
 	ROUGHNESS = 0.92;
 	SPECULAR = 0.15;

@@ -568,6 +568,6 @@ campaign. Getting there takes a while; checks for when you do:
       pickup and delivering a part all still work from here.
 - [ ] **Gas giants look different.** Start two new campaigns: the start
       system's gas giant has different colours and bands each time (cream,
-      ice blue, teal, violet, rust, sage, rose or slate; some with a storm
-      spot). Jump around: other systems' gas giants differ too. Bands drift
+      ice blue, teal, violet, rust, sage, rose or slate) and two or three
+      storms: rough, roughly round spots whose insides keep swirling. Jump around: other systems' gas giants differ too. Bands drift
       very slowly, and the edge has a soft glow.

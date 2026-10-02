@@ -13,15 +13,19 @@ func _initialize() -> void:
 	_check(Look.PALETTES.size() >= 8, "at least eight palettes")
 	_check(Look.look_for(42) == Look.look_for(42), "the same seed, the same planet")
 	var palettes := {}
-	var storms := 0
+	var three := 0
 	for s in 200:
 		var look: Dictionary = Look.look_for(s)
 		palettes[str(look["palette"])] = true
 		_check(float(look["band_count"]) >= 5.0 and float(look["band_count"]) <= 16.0, "band count in range")
-		if float(look["storm_size"]) > 0.0:
-			storms += 1
+		# A few churning storms, the first the biggest (Abe: "think Jupiter's storm").
+		var sizes: Vector3 = look["storm_sizes"]
+		var count := int(look["storm_count"])
+		_check(count >= 2 and count <= 3 and sizes.x > sizes.y and (count == 3) == (sizes.z > 0.0), "two or three storms, the first the biggest: %s" % str(sizes))
+		if count == 3:
+			three += 1
 	_check(palettes.size() == Look.PALETTES.size(), "every palette turns up (%d)" % palettes.size())
-	_check(storms > 60 and storms < 160, "some have storms, some don't (%d/200)" % storms)
+	_check(three > 40 and three < 160, "some have three storms (%d/200)" % three)
 	var material: ShaderMaterial = Look.material_for(7)
 	_check(material.shader == Look.SHADER and material.get_shader_parameter("band_count") == Look.look_for(7)["band_count"], "the material carries the look")
 	if _failures.is_empty():
