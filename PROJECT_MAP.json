@@ -7869,6 +7869,11 @@
         },
         {
           "type": "file",
+          "name": "playtest_fixes_2026_10_02.md",
+          "path": "docs/playtest_fixes_2026_10_02.md"
+        },
+        {
+          "type": "file",
           "name": "playtest_todo.md",
           "path": "docs/playtest_todo.md"
         },
@@ -9190,6 +9195,7 @@
             "func _capture_quiet_moment_state() -> Dictionary",
             "func _on_quiet_moment_silent(beat_id: String, reasons: Array) -> void",
             "func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void",
+            "static func quiet_moment_beat_for_payout(quest_data: Dictionary) -> String",
             "func _player_is_docked() -> bool",
             "func flush_pending_quiet_moment() -> void",
             "func _on_quiet_moment_quest_abandoned(_quest_data: Dictionary) -> void",
@@ -9401,6 +9407,8 @@
             "func _run_loading_snapshot() -> void",
             "func _run_beacon_snapshot() -> void",
             "func _run_wiki_snapshot() -> void",
+            "func _run_gas_giant_snapshot() -> void",
+            "func _run_route_smoke_test() -> void",
             "func _run_map_snapshot() -> void",
             "func _run_intro_snapshot() -> void",
             "func _run_landing_snapshot() -> void",
@@ -9765,6 +9773,7 @@
           "path": "scripts/MainScene.gd",
           "classes": [],
           "functions": [
+            "static func start_gas_giant_seed() -> int",
             "func _ready()",
             "func _populate_overview()",
             "func _spawn_salvager()",
@@ -9980,6 +9989,7 @@
             "func can_activate_boost() -> bool",
             "func engage_evasive_maneuver(attacker: Node3D) -> bool",
             "func _unhandled_input(event: InputEvent)",
+            "func _selectable_entity(collider: Node) -> Node",
             "func _mouse_pick_should_pass_through(collider: Variant) -> bool",
             "func _physics_process(delta: float)",
             "func _planet_has_orbiting_asteroids(planet: Node3D) -> bool",
@@ -10540,6 +10550,10 @@
             "func _mechanic_faction_subtext(worst_tier: String, best_tier: String) -> String",
             "static func _mechanic_line_leaks_faction_standing(line: String) -> bool",
             "func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary = {}) -> String",
+            "func _present_mechanic_on_agent_panel() -> void",
+            "func _press_mechanic_mirror(source: Button) -> void",
+            "func _refresh_mechanic_mode() -> void",
+            "func _end_mechanic_mode() -> void",
             "func _render_mechanic_intro() -> void",
             "func _on_test_pickup_pressed() -> void",
             "func _on_test_deliver_pressed() -> void",
@@ -11398,6 +11412,11 @@
             },
             {
               "type": "file",
+              "name": "DepthScaling.gd.uid",
+              "path": "scripts/domain/DepthScaling.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "DomainDefinition.gd",
               "path": "scripts/domain/DomainDefinition.gd",
               "classes": [
@@ -11710,6 +11729,11 @@
             },
             {
               "type": "file",
+              "name": "Keystone.gd.uid",
+              "path": "scripts/domain/Keystone.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "Lodestar.gd",
               "path": "scripts/domain/Lodestar.gd",
               "classes": [],
@@ -11725,6 +11749,11 @@
                 "static func bearing_class(index: int) -> int",
                 "static func last_bearing_text(s: Dictionary) -> String"
               ]
+            },
+            {
+              "type": "file",
+              "name": "Lodestar.gd.uid",
+              "path": "scripts/domain/Lodestar.gd.uid"
             },
             {
               "type": "file",
@@ -13143,6 +13172,17 @@
             },
             {
               "type": "file",
+              "name": "GasGiantLook.gd",
+              "path": "scripts/generation/GasGiantLook.gd",
+              "classes": [],
+              "functions": [
+                "static func look_for(seed_value: int) -> Dictionary",
+                "static func material_for(seed_value: int) -> ShaderMaterial",
+                "static func apply(planet: Node3D, seed_value: int) -> void"
+              ]
+            },
+            {
+              "type": "file",
               "name": "GeneratedSystemNPCManager.gd",
               "path": "scripts/generation/GeneratedSystemNPCManager.gd",
               "classes": [
@@ -13439,6 +13479,16 @@
               "type": "file",
               "name": "NavigationRoutePlanner.gd.uid",
               "path": "scripts/navigation/NavigationRoutePlanner.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "ObstacleBounds.gd",
+              "path": "scripts/navigation/ObstacleBounds.gd",
+              "classes": [],
+              "functions": [
+                "static func visual_radius(node: Node3D) -> float",
+                "static func collision_radius(node: Node3D) -> float"
+              ]
             },
             {
               "type": "file",
@@ -14386,11 +14436,13 @@
                 "func _connect_playback_finished() -> void",
                 "func _on_playback_finished() -> void",
                 "func start_interaction(interaction_name: String) -> void",
+                "func urgent_cache_pending() -> int",
                 "func play_on_comms(text: String, voice_profile: Variant = DEFAULT_PROFILE, speaker: String = \"\") -> void",
                 "static func speaker_label(profile_id: StringName) -> String",
                 "func stop() -> void",
                 "func is_busy() -> bool",
-                "func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> bool",
+                "func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE, comms: bool = false, speaker: String = \"\") -> bool",
+                "func _play_ambient_now(text: String, voice_profile: Variant, comms: bool, speaker: String) -> void",
                 "func has_pending_ambient() -> bool",
                 "func _process(delta: float) -> void",
                 "func _drain_ambient_queue() -> void",
@@ -15097,6 +15149,11 @@
                 "func current() -> Dictionary",
                 "func try_introduce() -> bool"
               ]
+            },
+            {
+              "type": "file",
+              "name": "LodestarGuide.gd.uid",
+              "path": "scripts/story/LodestarGuide.gd.uid"
             },
             {
               "type": "file",
@@ -16158,6 +16215,13 @@
                     "func _taught() -> bool",
                     "func _process(delta: float) -> void",
                     "func _unhandled_input(event: InputEvent) -> void",
+                    "func press_tune() -> String",
+                    "func listen_block_reason() -> String",
+                    "func _flying() -> bool",
+                    "func _show_status(text: String, scanning: bool, seconds: float) -> void",
+                    "func _hide_status() -> void",
+                    "func _update_status(delta: float) -> void",
+                    "func _build_status() -> void",
                     "func _near_station() -> bool",
                     "func has_offer() -> bool",
                     "func _can_listen() -> bool",
@@ -16773,6 +16837,10 @@
                       "name": "global class VoiceDNA",
                       "methods": [
                         "static func for_person(entity_id: String, faction_id: String = \"\", force_female: int = -1) -> Dictionary",
+                        "static func reserved_blends() -> Array",
+                        "static func blend_weights(provider_voice: String) -> Dictionary",
+                        "static func blend_distance(a: String, b: String) -> float",
+                        "static func nearest_reserved_distance(provider_voice: String) -> float",
                         "static func for_radio_host(system_id: String) -> Dictionary",
                         "static func register(voice: Dictionary) -> String",
                         "static func profile_id_for(voice: Dictionary) -> String"
@@ -17668,9 +17736,15 @@
               "functions": [
                 "func _ready() -> void",
                 "func _process(delta: float) -> void",
+                "func set_collapsed(value: bool) -> void",
+                "func is_showing_detail() -> bool",
+                "func _apply_collapse() -> void",
+                "static func load_collapsed() -> bool",
+                "static func save_collapsed(value: bool) -> void",
                 "static func current_goal() -> Dictionary",
                 "static func set_goal(sys: String, path: String, tier: int) -> void",
-                "func refresh() -> void"
+                "func refresh() -> void",
+                "static func compact_line(goal: Dictionary, rows: Array, ready: bool) -> String"
               ]
             },
             {
@@ -18022,6 +18096,11 @@
             },
             {
               "type": "file",
+              "name": "MiningRisk.gd.uid",
+              "path": "scripts/world/MiningRisk.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "TrafficDirector.gd",
               "path": "scripts/world/TrafficDirector.gd",
               "classes": [],
@@ -18096,6 +18175,11 @@
           "type": "file",
           "name": "flipbook_additive.gdshader.uid",
           "path": "shaders/flipbook_additive.gdshader.uid"
+        },
+        {
+          "type": "file",
+          "name": "gas_giant.gdshader",
+          "path": "shaders/gas_giant.gdshader"
         },
         {
           "type": "file",
@@ -18588,6 +18672,11 @@
             },
             {
               "type": "file",
+              "name": "run_depth_scaling_tests.gd.uid",
+              "path": "tests/domain/run_depth_scaling_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_domain_foundation_tests.gd",
               "path": "tests/domain/run_domain_foundation_tests.gd",
               "classes": [],
@@ -18894,6 +18983,11 @@
                 "func _initialize() -> void",
                 "func _check(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_mining_rate_tests.gd.uid",
+              "path": "tests/domain/run_mining_rate_tests.gd.uid"
             },
             {
               "type": "file",
@@ -19575,6 +19669,16 @@
           "children": [
             {
               "type": "file",
+              "name": "run_gas_giant_look_tests.gd",
+              "path": "tests/generation/run_gas_giant_look_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _check(condition: bool, message: String) -> void"
+              ]
+            },
+            {
+              "type": "file",
               "name": "run_system_factory_tests.gd",
               "path": "tests/generation/run_system_factory_tests.gd",
               "classes": [],
@@ -19693,6 +19797,7 @@
                 "func _test_closed_loop_does_not_stall() -> void",
                 "func _test_long_range_and_crowded_fields() -> void",
                 "func _test_moving_target_is_caught() -> void",
+                "func _test_game_scale_gas_giant() -> void",
                 "func _expect(condition: bool, message: String) -> void"
               ]
             },
@@ -20424,6 +20529,17 @@
           "type": "directory",
           "name": "speech",
           "children": [
+            {
+              "type": "file",
+              "name": "run_cloned_cast_tests.gd",
+              "path": "tests/speech/run_cloned_cast_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _flatten(value, out: Dictionary) -> void",
+                "func _check(condition: bool, message: String) -> void"
+              ]
+            },
             {
               "type": "file",
               "name": "run_speech_service_tests.gd",
@@ -21438,6 +21554,11 @@
             },
             {
               "type": "file",
+              "name": "run_keystone_tests.gd.uid",
+              "path": "tests/story/run_keystone_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_knowledge_ledger_tests.gd",
               "path": "tests/story/run_knowledge_ledger_tests.gd",
               "classes": [],
@@ -21561,6 +21682,11 @@
                 "func _initialize() -> void",
                 "func _check(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_lodestar_tests.gd.uid",
+              "path": "tests/story/run_lodestar_tests.gd.uid"
             },
             {
               "type": "file",
@@ -22217,6 +22343,16 @@
               "type": "file",
               "name": "run_outcome_reaction_projector_tests.gd.uid",
               "path": "tests/story/run_outcome_reaction_projector_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_payout_comment_tests.gd",
+              "path": "tests/story/run_payout_comment_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _check(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",
@@ -23723,6 +23859,11 @@
         },
         {
           "type": "file",
+          "name": "drone_maze_practice.gd.uid",
+          "path": "tools/drone_maze_practice.gd.uid"
+        },
+        {
+          "type": "file",
           "name": "economy_sim.gd",
           "path": "tools/economy_sim.gd",
           "classes": [],
@@ -23740,6 +23881,11 @@
             "func _report(reached: Dictionary) -> void",
             "func _rung_class(rating: int) -> int"
           ]
+        },
+        {
+          "type": "file",
+          "name": "economy_sim.gd.uid",
+          "path": "tools/economy_sim.gd.uid"
         },
         {
           "type": "file",

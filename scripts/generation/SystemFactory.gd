@@ -209,6 +209,9 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.name = "MeshInstance3D"
 	mesh_instance.mesh = mesh
+	if is_gas:
+		# Its own bands, colours and storms, not the one Jupiter texture.
+		mesh_instance.material_override = preload("res://scripts/generation/GasGiantLook.gd").material_for(config.seed_value * 31 + index)
 	planet.add_child(mesh_instance)
 
 	var shape := SphereShape3D.new()

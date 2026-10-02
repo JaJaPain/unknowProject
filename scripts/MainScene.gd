@@ -3,6 +3,12 @@ extends Node3D
 const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
 const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
 const AnomalyRegistryScript = preload("res://scripts/AnomalyRegistry.gd")
+const GasGiantLookType := preload("res://scripts/generation/GasGiantLook.gd")
+
+
+## The start system's gas giant look for this campaign.
+static func start_gas_giant_seed() -> int:
+	return hash("start_gas_giant:%d" % int(GlobalState.campaign_seed))
 
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
@@ -28,6 +34,8 @@ func _ready():
 	rotation_rng.seed = 4172026
 	PlanetRotation.apply(gas_giant, true, rotation_rng)
 	PlanetRotation.apply(rocky_planet, false, rotation_rng)
+	# Each campaign's start system has its own gas giant (playtest 2026-10-02).
+	GasGiantLookType.apply(gas_giant, start_gas_giant_seed())
 
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
 	_spawn_asteroid_ring(gas_giant, 850.0, 150.0, 75, "GasGiantBelt")

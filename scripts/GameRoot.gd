@@ -342,6 +342,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_map_snapshot")
 	elif "--route-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_route_smoke_test")
+	elif "--gas-giant-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_gas_giant_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -1532,6 +1534,13 @@ func _refresh_local_faction_looks() -> void:
 	# Deeper systems have more red rocks (core loop step 6).
 	AsteroidScriptForDepth.tech_seam_permille = DepthScalingType.tech_seam_permille(
 		DepthScalingType.depth_of(str(world.get("system_id", ""))))
+	# The start system's gas giant looks different each campaign; a new
+	# campaign's seed is set after that scene loaded, so dress it here too.
+	var start_root := get_active_system_root()
+	if start_root != null and start_root.has_method("start_gas_giant_seed"):
+		var giant := start_root.get_node_or_null("GasGiant") as Node3D
+		if giant != null:
+			preload("res://scripts/generation/GasGiantLook.gd").apply(giant, start_root.start_gas_giant_seed())
 	# Remember what these belts hold, for the star map (saved with the story).
 	var known: Dictionary = StoryManager.story_state.get("known_system_ores", {})
 	known[str(world.get("system_id", ""))] = ores.keys()
@@ -10916,6 +10925,45 @@ func _run_wiki_snapshot() -> void:
 	for i in 5:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("wiki_movement.png"))
+	get_tree().quit()
+
+
+## Playtest 2026-10-02: gas giant variety. The start system's gas giant under
+## six seeds, windowed: -- --gas-giant-snapshot --baseline-offline --out=<dir>
+func _run_gas_giant_snapshot() -> void:
+	var out := "user://gas_giant_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var giant := get_active_system_root().get_node_or_null("GasGiant") as Node3D
+	if giant == null:
+		print("GIANTSHOT no gas giant")
+		get_tree().quit(1)
+		return
+	var Look := preload("res://scripts/generation/GasGiantLook.gd")
+	# A camera of its own, framing the whole planet with the sun to one side.
+	var shot := Camera3D.new()
+	shot.far = 20000.0
+	get_active_system_root().add_child(shot)
+	shot.global_position = giant.global_position + Vector3(-800, 300, -950)
+	shot.look_at(giant.global_position, Vector3.UP)
+	shot.current = true
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	for seed_value in [1, 2, 3, 4, 5, 6]:
+		Look.apply(giant, seed_value)
+		print("GIANTSHOT seed %d: %s" % [seed_value, Look.look_for(seed_value)["palette"]])
+		for i in 20:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("gas_giant_%d.png" % seed_value))
 	get_tree().quit()
 
 

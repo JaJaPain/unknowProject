@@ -1,0 +1,70 @@
+extends RefCounted
+
+## What a gas giant looks like, from a seed (playtest 2026-10-02: every one
+## looked like Jupiter; Abe's call: shader only). Picks one of a handful of
+## original palettes and varies the band count, turbulence and storms, then
+## builds the material from shaders/gas_giant.gdshader.
+
+const SHADER := preload("res://shaders/gas_giant.gdshader")
+
+## Four colours each, light to dark and back; names are for tests and logs.
+const PALETTES := {
+	"ochre": [Color(0.93, 0.86, 0.72), Color(0.78, 0.62, 0.44), Color(0.62, 0.38, 0.24), Color(0.95, 0.92, 0.85)],
+	"ice_blue": [Color(0.80, 0.91, 0.96), Color(0.56, 0.75, 0.88), Color(0.34, 0.54, 0.76), Color(0.90, 0.96, 0.99)],
+	"teal_storm": [Color(0.38, 0.72, 0.70), Color(0.20, 0.45, 0.50), Color(0.58, 0.84, 0.76), Color(0.13, 0.29, 0.36)],
+	"violet_haze": [Color(0.68, 0.58, 0.82), Color(0.46, 0.36, 0.63), Color(0.82, 0.72, 0.90), Color(0.30, 0.22, 0.45)],
+	"rust_ember": [Color(0.78, 0.42, 0.26), Color(0.56, 0.26, 0.18), Color(0.92, 0.62, 0.40), Color(0.36, 0.16, 0.12)],
+	"sage_cream": [Color(0.83, 0.85, 0.69), Color(0.62, 0.68, 0.50), Color(0.91, 0.89, 0.79), Color(0.45, 0.50, 0.38)],
+	"rose_gold": [Color(0.91, 0.72, 0.63), Color(0.76, 0.51, 0.46), Color(0.96, 0.86, 0.76), Color(0.55, 0.32, 0.30)],
+	"slate_storm": [Color(0.62, 0.66, 0.72), Color(0.41, 0.45, 0.53), Color(0.80, 0.82, 0.86), Color(0.25, 0.28, 0.35)],
+}
+
+
+## The look for a seed: {palette, colors, band_count, turbulence,
+## band_sharpness, storm_size, storm_dir, storm_color, rim_color, seed_offset}.
+static func look_for(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("gas_giant:%d" % seed_value)
+	var names := PALETTES.keys()
+	var name := str(names[rng.randi() % names.size()])
+	var colors: Array = PALETTES[name]
+	var storm := rng.randf() < 0.55
+	var storm_dir := Vector3(rng.randf_range(-1.0, 1.0), rng.randf_range(-0.45, 0.45), rng.randf_range(-1.0, 1.0)).normalized()
+	# The storm in the palette's darkest tone or a warm contrast.
+	var storm_color: Color = colors[3] if rng.randf() < 0.5 else Color(0.85, 0.45, 0.3).lerp(colors[2], 0.3)
+	return {
+		"palette": name,
+		"colors": colors,
+		"band_count": snappedf(rng.randf_range(5.0, 16.0), 0.5),
+		"turbulence": rng.randf_range(0.3, 1.2),
+		"band_sharpness": rng.randf_range(0.6, 1.2),
+		"storm_size": rng.randf_range(0.12, 0.28) if storm else 0.0,
+		"storm_dir": storm_dir,
+		"storm_color": storm_color,
+		"rim_color": (colors[1] as Color).lightened(0.35),
+		"seed_offset": Vector3(rng.randf_range(0.0, 100.0), rng.randf_range(0.0, 100.0), rng.randf_range(0.0, 100.0)),
+	}
+
+
+static func material_for(seed_value: int) -> ShaderMaterial:
+	var look := look_for(seed_value)
+	var material := ShaderMaterial.new()
+	material.shader = SHADER
+	var colors: Array = look["colors"]
+	material.set_shader_parameter("color_a", colors[0])
+	material.set_shader_parameter("color_b", colors[1])
+	material.set_shader_parameter("color_c", colors[2])
+	material.set_shader_parameter("color_d", colors[3])
+	for key in ["band_count", "turbulence", "band_sharpness", "storm_size", "storm_dir", "storm_color", "rim_color", "seed_offset"]:
+		material.set_shader_parameter(key, look[key])
+	material.set_meta("palette", look["palette"])
+	return material
+
+
+## Dresses an existing gas giant (its MeshInstance3D child) with this look.
+static func apply(planet: Node3D, seed_value: int) -> void:
+	if planet == null:
+		return
+	for child in planet.find_children("*", "MeshInstance3D", true, false):
+		(child as MeshInstance3D).material_override = material_for(seed_value)
+		return

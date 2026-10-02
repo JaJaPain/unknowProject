@@ -566,3 +566,8 @@ campaign. Getting there takes a while; checks for when you do:
       at the bottom. Ship Upgrades opens and Return brings you back to the
       bay; Back to Services returns to the station menu. Repair, accepting a
       pickup and delivering a part all still work from here.
+- [ ] **Gas giants look different.** Start two new campaigns: the start
+      system's gas giant has different colours and bands each time (cream,
+      ice blue, teal, violet, rust, sage, rose or slate; some with a storm
+      spot). Jump around: other systems' gas giants differ too. Bands drift
+      very slowly, and the edge has a soft glow.
