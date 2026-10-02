@@ -51,6 +51,22 @@ const CRYSTAL_CHANCE := 0.5
 const CRYSTAL_INTEGRITY := 0.8
 ## A free drone from an enemy's debris.
 const KILL_DRONE_CHANCE := 0.03
+## The first rung is guided (core loop 3.4): until the first rock dive is done,
+## red rocks carry the material Shields Mk II needs, so the walkthrough never
+## sends the captain into the wrong rock.
+const FIRST_DIVE_FLAG := "first_rock_dive_done"
+const FIRST_DIVE_MATERIAL := "rad_quartz"
+## If that first dive comes home without it, N.O.V.A. produces a spare, once
+## (Abe, 2026-10-02: "make up a reason she has a spare... give it some flair").
+const SPARE_FLAG := "nova_spare_drone_given"
+## ...and if it does bring it home, she makes sure the captain knows that was
+## the easy one (Abe, 2026-10-02).
+const LUCKY_LINES := [
+	"Don't get used to that. We lucked out: the seam was sitting right by the mouth of the crack. They're never that easy. Next time it'll be deep in, and the rock will fight you for every gram.",
+]
+const SPARE_LINES := [
+	"Don't panic. I have a spare. Back at our first dock there was a survey drone drifting loose past the cargo ring, blinking its little light at nobody. It looked lonely. So I nicked it. It's in the bay. Please don't crash this one, I've named it Pebble.",
+]
 
 const RESULT_LINES := {
 	"clean": ["Everything's aboard. Nicely flown.", "Full haul, and the drone's still in one piece. I'm almost impressed."],
@@ -165,7 +181,7 @@ func _hint_for(target: Node) -> String:
 	var drones := drones_aboard()
 	var what := ""
 	if kind_of(target) == "asteroid":
-		what = " Tech-grade %s in its cracks; a mining laser would shatter it." % material_name(material_for(target))
+		what = " Tech-grade %s in its cracks; a mining laser would shatter it." % material_name(rock_material(target))
 	if drones > 0:
 		return "Press G to fly a survey drone inside (%d aboard).%s" % [drones, what]
 	return "A piloted survey drone could get inside.%s" % what
@@ -229,6 +245,23 @@ static func material_for(node: Node) -> String:
 	return TECH_MATERIALS[posmod(_id_for(node).hash(), TECH_MATERIALS.size())]
 
 
+## What this rock's cracks carry in this campaign: the first rock dive is
+## always FIRST_DIVE_MATERIAL, after that the rock's own.
+func rock_material(node: Node) -> String:
+	return FIRST_DIVE_MATERIAL if not _story_flag(FIRST_DIVE_FLAG) else material_for(node)
+
+
+func _story_flag(flag: String) -> bool:
+	var story := get_node_or_null("/root/StoryManager")
+	return story != null and bool(story.story_state.get(flag, false))
+
+
+func _set_story_flag(flag: String) -> void:
+	var story := get_node_or_null("/root/StoryManager")
+	if story != null:
+		story.story_state[flag] = true
+
+
 static func material_name(item_id: String) -> String:
 	return item_id.replace("_", " ").capitalize().replace("Rad Quartz", "Rad-Quartz").replace("Cryo Ferrite", "Cryo-Ferrite")
 
@@ -240,7 +273,7 @@ func launch(target: Node3D) -> bool:
 		return false
 	var kind := kind_of(target)
 	_worked[_id_for(target)] = true
-	_material = material_for(target) if kind == "asteroid" else ""
+	_material = rock_material(target) if kind == "asteroid" else ""
 	_recorder_item = {}
 	if kind == "wreck" and director != null and is_instance_valid(director) and world_provider.is_valid():
 		var world: Dictionary = world_provider.call()
@@ -249,7 +282,9 @@ func launch(target: Node3D) -> bool:
 	_view = ViewType.new()
 	add_child(_view)
 	_view.finished.connect(_on_finished)
-	_view.begin(hash(_id_for(target)) ^ randi(), kind, not _recorder_item.is_empty(), _material)
+	# The campaign's first rock dive is an easy one (Maze.EASY).
+	var easy := kind == "asteroid" and not _story_flag(FIRST_DIVE_FLAG)
+	_view.begin(hash(_id_for(target)) ^ randi(), kind, not _recorder_item.is_empty(), _material, easy)
 	return true
 
 
@@ -287,24 +322,24 @@ static func haul(outcome_id: String, state: Dictionary, material: String, rng: R
 func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenerator = null) -> void:
 	_view = null
 	var gs := get_node_or_null("/root/GlobalState")
+	var first_rock_dive := not _material.is_empty() and not _story_flag(FIRST_DIVE_FLAG)
+	if not _material.is_empty():
+		_set_story_flag(FIRST_DIVE_FLAG)
 	if str(state.get("end", "")) in ["wrecked", "timed_out"]:
 		if gs != null:
 			gs.emit_chatter("DRONE BAY", "Drone lost with its load.", Color(1.0, 0.5, 0.4))
-		_nova(_line("lost"))
+		if not (first_rock_dive and _give_spare()):
+			_nova(_line("lost"))
 		return
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	var result := haul(outcome_id, state, _material, rng)
-	var integrity := float(state.get("ore_integrity", 1.0))
-	var pay := int(result["credits"])
-	if pay > 0 and gs != null:
-		gs.add_credits(pay)
-		var cracked := "" if integrity >= 1.0 else " (%d%% of the ore survived)" % int(integrity * 100.0)
-		gs.emit_chatter("DRONE BAY", "Common ore and salvage sold: %d credits%s." % [pay, cracked], Color(0.5, 0.95, 0.85))
-	for item: String in result["materials"]:
-		if gs != null and gs.inventory != null and gs.inventory.add(item, 1, 10):
-			gs.emit_chatter("DRONE BAY", "Tech-grade material recovered: %s." % material_name(item), Color(1.0, 0.85, 0.3))
+	if first_rock_dive and not (result["materials"] as Array).has(_material) and _give_spare():
+		# She speaks for this one; the haul below still pays out quietly.
+		_pay_out(result, state, gs)
+		return
+	_pay_out(result, state, gs)
 	if Maze.has_extracted(state, "recorder") and not _recorder_item.is_empty():
 		var now := int(get_node("/root/CampaignClock").total_minutes) if has_node("/root/CampaignClock") else 0
 		director.overhear(_recorder_item, now)
@@ -317,7 +352,35 @@ func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenera
 			gs.emit_chatter("FLIGHT RECORDER", str(_recorder_item["text"]), Color(0.6, 0.85, 0.8))
 		_nova(_line("recorder"))
 		return
+	if first_rock_dive and (result["materials"] as Array).has(_material):
+		_nova(str(LUCKY_LINES[randi() % LUCKY_LINES.size()]))
+		return
 	_nova(_line("failed_empty" if outcome_id == "failed" else outcome_id))
+
+
+func _pay_out(result: Dictionary, state: Dictionary, gs: Node) -> void:
+	var integrity := float(state.get("ore_integrity", 1.0))
+	var pay := int(result["credits"])
+	if pay > 0 and gs != null:
+		gs.add_credits(pay)
+		var cracked := "" if integrity >= 1.0 else " (%d%% of the ore survived)" % int(integrity * 100.0)
+		gs.emit_chatter("DRONE BAY", "Common ore and salvage sold: %d credits%s." % [pay, cracked], Color(0.5, 0.95, 0.85))
+	for item: String in result["materials"]:
+		if gs != null and gs.inventory != null and gs.inventory.add(item, 1, 10):
+			gs.emit_chatter("DRONE BAY", "Tech-grade material recovered: %s." % material_name(item), Color(1.0, 0.85, 0.3))
+
+
+## N.O.V.A.'s stolen spare, once per campaign. True if she handed it over.
+func _give_spare() -> bool:
+	if _story_flag(SPARE_FLAG):
+		return false
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null or gs.inventory == null or not gs.inventory.add(DRONE_ITEM, 1, 3):
+		return false
+	_set_story_flag(SPARE_FLAG)
+	gs.emit_chatter("DRONE BAY", "N.O.V.A. put a survey drone in the bay. It has a name written on it.", Color(1.0, 0.85, 0.3))
+	_nova(str(SPARE_LINES[randi() % SPARE_LINES.size()]))
+	return true
 
 
 ## Now and then the debris of a kill holds an intact survey drone.

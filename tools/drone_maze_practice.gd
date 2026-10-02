@@ -1,10 +1,11 @@
-﻿extends Node
+extends Node
 
 ## Drone maze practice: the survey-drone dive on its own, no campaign needed.
 ## Each dive is a fresh random rock (or wreck); after it, the haul it would
 ## have paid in the game is shown (DroneMazeActivity.haul, the real rules).
 ##   powershell -File tools/play_drone_maze.ps1
-## Keys between dives: G = dive a red rock, W = dive a wreck, Esc = quit.
+## Keys between dives: G = dive a red rock, F = the campaign's easy first dive,
+## W = dive a wreck, Esc = quit.
 
 const ViewType := preload("res://scripts/ui/DroneMazeView.gd")
 const Activity := preload("res://scripts/story/activities/DroneMazeActivity.gd")
@@ -56,7 +57,7 @@ func _show_menu(result: String) -> void:
 	if _dives > 0:
 		lines.append("Dives: %d   ·   tech-grade materials so far: %d" % [_dives, _materials_total])
 		lines.append("")
-	lines.append("[G] dive a red rock      [W] dive a wreck      [Esc] quit")
+	lines.append("[G] dive a red rock      [F] the easy first dive      [W] dive a wreck      [Esc] quit")
 	_label.text = "\n".join(lines)
 
 
@@ -69,18 +70,20 @@ func _unhandled_input(event: InputEvent) -> void:
 	match key.physical_keycode:
 		KEY_G, KEY_ENTER, KEY_SPACE:
 			_dive("asteroid")
+		KEY_F:
+			_dive("asteroid", true)
 		KEY_W:
 			_dive("wreck")
 		KEY_ESCAPE:
 			get_tree().quit()
 
 
-func _dive(kind: String) -> void:
+func _dive(kind: String, easy: bool = false) -> void:
 	_material = Activity.TECH_MATERIALS[randi() % Activity.TECH_MATERIALS.size()] if kind == "asteroid" else ""
 	_view = ViewType.new()
 	add_child(_view)
 	_view.finished.connect(_on_finished)
-	_view.begin(randi(), kind, false, _material)
+	_view.begin(randi(), kind, false, _material, easy)
 
 
 func _on_finished(outcome_id: String, state: Dictionary) -> void:

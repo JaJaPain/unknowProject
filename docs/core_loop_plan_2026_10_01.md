@@ -511,7 +511,7 @@ before the next bite.
 | | **Stop and show: the whole first rung, from refusal to fitted** | |
 | 6 | **DONE 2026-10-02** Depth scaling (ore value already existed in SystemProfile): ore value, red-rock share, board pay, enemy tier | Economy smoke |
 | 6b | **DONE 2026-10-02** Mining risk (3.7; claims extended the existing illegal-mining enforcement): claims with hail and reinforcements, rare-ore claim jumper, red-rock guards; ice near stations always unclaimed; none before the first upgrade | Unit tests per rule; a `--mining-risk-smoke-test` that triggers each one |
-| 7 | `--economy-sim` automated captain + first tuning pass against 3.6 | Prints minutes per rung |
+| 7 | **DONE 2026-10-02** `--economy-sim` automated captain + first tuning pass against 3.6 (section 8) | Prints minutes per rung |
 | | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, **Decided (Abe, 2026-10-01): keep it hidden for now.** | |
 | 8 | Keystone deck, draw, Class IV rule, early hints | Unit tests per keystone |
 | 9 | Lodestar deck (JSON, 6 cards), draw, star map wedge | Unit tests; map snapshot |
@@ -589,3 +589,27 @@ minutes per rung, 4 seeds:
 Still open for Abe: job pay x2, N.O.V.A. replacing a failed first drone
 (Class II is slow mostly because an empty first dive means saving 800 SC),
 and whether Class V-VI should be 2-4 h rungs rather than 60-90 min.
+
+**Update 2026-10-02: first tuning pass (Abe: "i trust you on your call for
+this first pass", to be checked in playtesting):**
+
+- **Board pay x2** (`DepthScaling.BOARD_PAY_BASE`), still +15% per depth.
+- **The first rock dive is guided:** it always carries rad-quartz (the
+  material Shields Mk II needs) and is an easy rock (`DroneMazeModel.EASY`:
+  smaller, two seams near the mouth, hull 6, extra time). If it comes home
+  without the rad-quartz, N.O.V.A. hands over a spare she "nicked" from our
+  first dock, once (`DroneMazeActivity.SPARE_FLAG`). If it succeeds, she
+  says we lucked out and they're never that easy.
+- **Late rungs are allowed to be long.** In an endless campaign Class V and
+  VI are revised to about 2-4 h and 4-8 h of play; the earlier targets stand.
+
+| Scenario (4 seeds) | II | III | IV | V | VI |
+|---|---|---|---|---|---|
+| **Target** | 20-30 | 30-40 | 45-60 | 120-240 | 240-480 |
+| **Now** | 32 | 94 | 137 | 247 | 524 |
+| ... with board pay x1 | 39 | 146 | 186 | 350 | 820 |
+| ... with drones at 400 SC | 25 | 74 | 112 | 207 | 438 |
+
+Classes III and IV are still about twice their targets (drones for the
+1-2-4 materials per tier). Left for playtesting: the sim's guesses (dive
+success 75%, the right material 60% of the time) matter more than any price.

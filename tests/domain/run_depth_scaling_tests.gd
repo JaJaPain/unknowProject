@@ -33,9 +33,9 @@ func _initialize() -> void:
 		_check(absf(share - permille) < permille * 0.25, "%d per thousand gives about that many red rocks (%.1f)" % [permille, share])
 	AsteroidScript.tech_seam_permille = saved
 	# Pay and threat.
-	_check(is_equal_approx(Scaling.pay_factor(0), 1.0) and is_equal_approx(Scaling.pay_factor(10), 2.5), "pay x1 at the start, x2.5 at depth 10")
+	_check(is_equal_approx(Scaling.pay_factor(0), 2.0) and is_equal_approx(Scaling.pay_factor(10), 5.0), "pay x2 at the start, x5 at depth 10")
 	_check(is_equal_approx(Scaling.threat_factor(0), 1.0) and is_equal_approx(Scaling.threat_factor(10), 1.8), "threat x1 at the start, x1.8 at depth 10")
-	_check(Scaling.pay_factor(-1) == 1.0 and Scaling.threat_factor(-1) == 1.0, "unknown depth counts as the start")
+	_check(Scaling.pay_factor(-1) == 2.0 and Scaling.threat_factor(-1) == 1.0, "unknown depth counts as the start")
 	if _failures.is_empty():
 		print("[PASS] Depth scaling")
 		quit(0)

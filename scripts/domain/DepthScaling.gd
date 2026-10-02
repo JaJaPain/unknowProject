@@ -13,7 +13,10 @@ const TECH_SEAM_PERMILLE_BASE := 10
 const TECH_SEAM_PERMILLE_PER_DEPTH := 2.5
 const TECH_SEAM_PERMILLE_FROM_DEPTH := 2
 const TECH_SEAM_PERMILLE_MAX := 30
-## Board pay: +15% per depth.
+## Board pay: double the authored figures everywhere (economy sim, 2026-10-02:
+## income was ~1 SC/s and the ladder ran 3-6x too slow; Abe left the call to
+## Claude for the first pass), then +15% per depth.
+const BOARD_PAY_BASE := 2.0
 const PAY_PER_DEPTH := 0.15
 ## Enemy hull and damage: +8% per depth, on top of a system's own tier.
 const THREAT_PER_DEPTH := 0.08
@@ -25,7 +28,7 @@ static func tech_seam_permille(depth: int) -> int:
 
 
 static func pay_factor(depth: int) -> float:
-	return 1.0 + PAY_PER_DEPTH * float(maxi(depth, 0))
+	return BOARD_PAY_BASE * (1.0 + PAY_PER_DEPTH * float(maxi(depth, 0)))
 
 
 static func threat_factor(depth: int) -> float:

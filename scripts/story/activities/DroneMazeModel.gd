@@ -47,6 +47,10 @@ const KINDS := {
 	"asteroid": {"cells": Vector2i(7, 7), "targets": 3, "hull": 5, "loops": 0.15},
 	"wreck": {"cells": Vector2i(6, 8), "targets": 3, "hull": 4, "loops": 0.08},
 }
+## The campaign's first rock dive (Abe, 2026-10-02: "make the first one less
+## difficult to reach the material"): a smaller rock, two seams near the mouth
+## of the crack instead of the far end, a sturdier drone, extra time.
+const EASY := {"cells": Vector2i(5, 5), "targets": 2, "hull": 6, "loops": 0.15, "margin": 25.0}
 ## The countdown comes from the maze itself: the shortest tour of every target
 ## at full speed, times this, plus a margin. Fair on a long maze, tense on a
 ## short one. The captain explores; the tour assumes they already know the way.
@@ -54,15 +58,18 @@ const TIME_PER_TOUR := 2.2
 const TIME_MARGIN := 20.0
 
 
-static func start(seed_value: int, kind: String = "asteroid", with_recorder: bool = false) -> Dictionary:
+static func start(seed_value: int, kind: String = "asteroid", with_recorder: bool = false, easy: bool = false) -> Dictionary:
 	var spec: Dictionary = KINDS.get(kind, KINDS["asteroid"])
+	easy = easy and kind == "asteroid"
+	if easy:
+		spec = EASY
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var cells: Vector2i = spec["cells"]
 	var grid := _carve(cells, rng, float(spec["loops"]))
 	var start_tile := Vector2i(1, 1)
 	var targets: Array = []
-	var far := _far_cells(grid, start_tile)
+	var far := _far_cells(grid, start_tile, easy)
 	var count := int(spec["targets"])
 	for i in mini(count, far.size()):
 		var t: Vector2i = far[i]
@@ -71,9 +78,9 @@ static func start(seed_value: int, kind: String = "asteroid", with_recorder: boo
 		if kind == "wreck" and with_recorder and i == 0:
 			target_kind = "recorder"
 		targets.append({"id": "target.%d" % i, "tile": [t.x, t.y], "kind": target_kind, "extracted": false})
-	var time_total := TIME_MARGIN + TIME_PER_TOUR * float(_tour_length(grid, start_tile, targets)) / SPEED
+	var time_total := float(spec.get("margin", TIME_MARGIN)) + TIME_PER_TOUR * float(_tour_length(grid, start_tile, targets)) / SPEED
 	var state := {
-		"seed": seed_value, "kind": kind, "grid": grid,
+		"seed": seed_value, "kind": kind, "grid": grid, "easy": easy,
 		"pos": [start_tile.x + 0.5, start_tile.y + 0.5], "heading": 0.0,
 		"targets": targets, "time_left": time_total, "time_total": time_total,
 		"hull": int(spec["hull"]), "hull_max": int(spec["hull"]), "bump_cooldown": 0.0,
@@ -203,8 +210,9 @@ static func _carve(cells: Vector2i, rng: RandomNumberGenerator, loops: float) ->
 	return out
 
 
-## Cell centres (odd tiles), farthest first by walking distance from `from`.
-static func _far_cells(grid: Array, from: Vector2i) -> Array:
+## Cell centres (odd tiles), farthest first by walking distance from `from`
+## (nearest first for the easy first dive; never the start itself).
+static func _far_cells(grid: Array, from: Vector2i, nearest_first: bool = false) -> Array:
 	var dist := {from: 0}
 	var queue: Array[Vector2i] = [from]
 	while not queue.is_empty():
@@ -220,6 +228,10 @@ static func _far_cells(grid: Array, from: Vector2i) -> Array:
 			centres.append(c)
 	centres.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
 		return int(dist[a]) > int(dist[b]) or (int(dist[a]) == int(dist[b]) and (a.x < b.x or (a.x == b.x and a.y < b.y))))
+	if nearest_first:
+		# Close, but still a short flight: not the chamber next to the mouth.
+		centres.reverse()
+		centres = centres.filter(func(c: Vector2i) -> bool: return int(dist[c]) > 2)
 	# Spread them out: no two targets in neighbouring cells.
 	var picked: Array = []
 	for c: Vector2i in centres:

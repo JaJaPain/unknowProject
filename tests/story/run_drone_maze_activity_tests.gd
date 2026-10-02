@@ -91,6 +91,12 @@ func _initialize() -> void:
 	_check(not activity.launch(rock) and activity._view == null, "no survey drone, no launch")
 	_check(activity.eligible_target() == rock, "a refused launch does not use up the asteroid")
 	gs.inventory.add("survey_drone", 2)
+	# A fresh campaign: the first rock dive carries rad-quartz (the material the
+	# guided first upgrade, Shields Mk II, needs).
+	var story: Node = root.get_node("StoryManager")
+	story.story_state.erase(ActivityType.FIRST_DIVE_FLAG)
+	story.story_state.erase(ActivityType.SPARE_FLAG)
+	_check(activity.rock_material(rock) == "rad_quartz", "the first red rock dived carries rad-quartz")
 	# The view pauses the game, and recalling gives it back.
 	_check(activity.launch(rock), "a drone aboard launches")
 	_check(gs.inventory.get_quantity("survey_drone") == 1, "the launch uses one drone")
@@ -104,6 +110,12 @@ func _initialize() -> void:
 	view._process(0.1)
 	_check(not paused and _results.size() == 1 and _results[0][0] == "failed", "recalling empty-handed ends it and unpauses: %s" % str(_results))
 	_check(activity.eligible_target() == null, "each asteroid is worked once")
+	# That first rock dive came home without its rad-quartz: N.O.V.A. hands
+	# over the spare she nicked, once per campaign.
+	_check(gs.inventory.get_quantity("survey_drone") == 2 and bool(story.story_state.get(ActivityType.SPARE_FLAG, false)), "an empty first rock dive gets N.O.V.A.'s spare")
+	gs.inventory.remove("survey_drone", 1)
+	_check(not activity._give_spare(), "only once")
+	_check(bool(story.story_state.get(ActivityType.FIRST_DIVE_FLAG, false)) and activity.rock_material(rock) == ActivityType.material_for(rock), "after the first dive, rocks carry their own material")
 
 	# Every rock carries one tech-grade material, fixed per rock.
 	var mat := ActivityType.material_for(rock)

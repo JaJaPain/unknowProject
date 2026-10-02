@@ -25,14 +25,14 @@ func _initialize() -> void:
 
 	# A careful pilot: follow the tunnels to each target and extract it.
 	for seed_value in [1234, 77, 2026]:
-		for kind in ["asteroid", "wreck"]:
-			var s := Maze.start(seed_value, kind, kind == "wreck")
+		for kind in ["asteroid", "wreck", "easy"]:
+			var s := Maze.start(seed_value, "asteroid", false, true) if kind == "easy" else Maze.start(seed_value, kind, kind == "wreck")
 			var hull := int(s["hull"])
 			for i in (s["targets"] as Array).size():
 				s = _fly_to_next(s)
 			_check(Maze.outcome(s) == "clean" and s["end"] == "complete", "%s %d: everything extracted (%s, %d/%d)" % [kind, seed_value, s["end"], Maze.extracted_count(s), (s["targets"] as Array).size()])
 			var spare := float(s["time_left"]) / float(s["time_total"])
-			_check(spare > 0.35 and spare < 0.75, "%s %d: the clock leaves a perfect pilot about half (%.0f of %.0f s)" % [kind, seed_value, float(s["time_left"]), float(s["time_total"])])
+			_check(spare > 0.35 and spare < (0.9 if kind == "easy" else 0.75), "%s %d: the clock leaves a perfect pilot about half (%.0f of %.0f s)" % [kind, seed_value, float(s["time_left"]), float(s["time_total"])])
 			_check(int(s["hull"]) == hull, "%s %d: no scratches on a careful run (hull %d)" % [kind, seed_value, int(s["hull"])])
 
 	# The scanner points the way and goes quiet when everything is out.
@@ -89,6 +89,19 @@ func _initialize() -> void:
 	c = Maze.step(c, 999.0, 0.0, 0.0)
 	_check(c["end"] == "timed_out" and Maze.outcome(c) == "failed", "out of time, the drone and its load are lost")
 	_check(Maze.extract(Maze.start(77))["targets"] == Maze.start(77)["targets"], "nothing in reach, nothing taken")
+	# The first rock dive is easy: smaller rock, two seams, nearer the mouth.
+	for seed_value in [11, 12, 13]:
+		var hard := Maze.start(seed_value, "asteroid")
+		var easy := Maze.start(seed_value, "asteroid", false, true)
+		var hard_near := INF
+		for t in hard["targets"]:
+			hard_near = minf(hard_near, Maze.path_distance(hard, Maze.target_at(t)))
+		var easy_far := 0.0
+		for t in easy["targets"]:
+			easy_far = maxf(easy_far, Maze.path_distance(easy, Maze.target_at(t)))
+		_check(bool(easy["easy"]) and (easy["targets"] as Array).size() == 2 and int(easy["hull"]) > int(hard["hull"]), "seed %d: the easy dive has two seams and a sturdier drone" % seed_value)
+		_check(easy_far < hard_near + 0.001 or easy_far < 6.0, "seed %d: the easy seams are close (farthest %.1f, normal nearest %.1f)" % [seed_value, easy_far, hard_near])
+		_check(not bool(Maze.start(seed_value, "wreck", false, true)["easy"]), "wrecks are never easy")
 	# A/D slide sideways without turning (Abe, 2026-10-02): right is a quarter
 	# turn clockwise of the heading, and the diagonal is no faster.
 	var side := Maze.start(2026, "asteroid")

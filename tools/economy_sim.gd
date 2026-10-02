@@ -172,8 +172,16 @@ func _dive(material: String) -> void:
 	_counts["dives"] += 1
 	if _risk_active() and randf() < preload("res://scripts/world/MiningRisk.gd").guard_chance(_depth):
 		_fight()
-	if randf() < DIVE_SUCCESS:
-		var got: String = material if randf() < DIVE_RIGHT_MATERIAL or material == "resonant_crystal" else ["thermal_lattice", "rad_quartz", "cryo_ferrite"][randi() % 3]
+	var first_dive: bool = int(_counts["dives"]) == 1
+	if randf() >= DIVE_SUCCESS:
+		# N.O.V.A.'s spare (DroneMazeActivity.SPARE_FLAG): the very first dive
+		# coming home empty gets one more drone, once.
+		if first_dive:
+			_drones += 1
+		return
+	if true:
+		# The first rock dive always carries rad-quartz (DroneMazeActivity.FIRST_DIVE_MATERIAL).
+		var got: String = material if first_dive or randf() < DIVE_RIGHT_MATERIAL or material == "resonant_crystal" else ["thermal_lattice", "rad_quartz", "cryo_ferrite"][randi() % 3]
 		if got == "resonant_crystal":
 			got = "rad_quartz" if randf() < 0.5 else "thermal_lattice"
 			if randf() < DIVE_CRYSTAL:

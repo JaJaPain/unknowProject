@@ -56,8 +56,8 @@ const CONTROLS_TEXT := "MOUSE   turn\nW / S   forward / back\nA / D   slide side
 
 
 ## `material` (a tech-grade material id) tints the crystal seams.
-func begin(seed_value: int, kind: String, with_recorder: bool, material: String = "") -> void:
-	state = Maze.start(seed_value, kind, with_recorder)
+func begin(seed_value: int, kind: String, with_recorder: bool, material: String = "", easy: bool = false) -> void:
+	state = Maze.start(seed_value, kind, with_recorder, easy)
 	_material = material
 	layer = 125
 	process_mode = Node.PROCESS_MODE_ALWAYS

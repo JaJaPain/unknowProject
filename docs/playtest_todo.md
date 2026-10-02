@@ -316,6 +316,20 @@ Claude adds new items here as work lands (newest section at the bottom).
       distance to the NEAREST one along the tunnels, shrinking as you fly
       to it. Extract it and the row jumps to the next one; when all of a
       kind are out it reads "aboard". A wreck dive lists Salvage.
+- [ ] **The first red rock is the easy one.** New campaign, get to the Shields
+      Mk II walkthrough and target your first red rock: the DRONE BAY hint says
+      Rad-Quartz. The dive is a small rock with 2 seams close to the start
+      (list shows two short distances), 6 hull squares. (Practice scene: F.)
+- [ ] **N.O.V.A. says we lucked out.** Bring that first dive home with the
+      rad-quartz: instead of her usual result line she says we got lucky and
+      they're never that easy.
+- [ ] **N.O.V.A.'s stolen spare.** New campaign again, and on that first dive
+      press R straight away (or crash): she gives you the spare drone she
+      nicked at our first dock (named Pebble), and DRONE BAY shows a drone
+      added. Fail a later dive: no second spare.
+- [ ] **Board jobs pay double.** The job board's figures are about twice what
+      they were (a ~140 job now ~280 at the start), and the contract pays what
+      the board said.
 
 ## K. Gate ladder, step 1 (added 2026-10-01)
 
