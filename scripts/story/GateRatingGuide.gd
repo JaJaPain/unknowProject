@@ -22,6 +22,7 @@ extends Node
 const GateClassType := preload("res://scripts/domain/GateClass.gd")
 const UpgradeGoalType := preload("res://scripts/domain/UpgradeGoal.gd")
 const UpgradeGoalCardType := preload("res://scripts/ui/UpgradeGoalCard.gd")
+const KeystoneType := preload("res://scripts/domain/Keystone.gd")
 ## Seconds after the refusal before she names the rest of the bill.
 const COST_LINE_DELAY_S := 22.0
 const REQUIRED_SYSTEM := "shields"
@@ -37,6 +38,12 @@ const RATING_BLOCK_PREFIX := "Class "
 ## defaults to the gate graph (PremiseWorldSnapshot._system_depth).
 var depth_of: Callable = func(system_id: String) -> int:
 	return preload("res://scripts/story/premise/PremiseWorldSnapshot.gd")._system_depth(system_id)
+## This campaign's keystone card (Keystone.gd, drawn from the campaign seed).
+## Swappable for tests.
+var keystone_of: Callable = func() -> Dictionary:
+	var loop := Engine.get_main_loop()
+	var gs: Node = (loop as SceneTree).root.get_node_or_null("GlobalState") if loop is SceneTree else null
+	return KeystoneType.draw(int(gs.campaign_seed)) if gs != null else {}
 ## The system the ship is in. Swappable for tests.
 var current_system_of: Callable = func() -> String:
 	var loop := Engine.get_main_loop()
@@ -65,6 +72,8 @@ const LINES := {
 	"class_4": ["Class %s. Deep gate. These ones don't forgive anything. Ship Rating %d, Captain; we're at %d."],
 	"class_5": ["Class %s. Half the ring is dead and the other half is angry. Rating %d or we stay. We're at %d."],
 	"class_6": ["Class %s. The edge of anything anyone charted. Rating %d. We're at %d. I'm not arguing about this one."],
+	# The rating is fine but the keystone isn't (the keystone line follows).
+	"class_rating_ok": ["Class %s. Deep gate. Our rating's good enough; that's not the problem."],
 	"class_deep": ["Class %s. Further than the charts go. Rating %d; we're at %d. Every gate out here asks for more."],
 	# Appended when one system is holding the rating back. %s = system name.
 	"breadth": ["And upgrading the same thing again won't do it. Our %s is the weak spot; everything else counts only so far above it."],
@@ -81,10 +90,12 @@ var _poll := 0.0
 var _classes_told: Array = []
 ## The last refusal's details (GateClass.check), for on_refused().
 var _last_check: Dictionary = {}
+## Keystone lines already said: "rumour", "reveal", "refusal", "met".
+var _keystone_told: Array = []
 
 
 func to_dict() -> Dictionary:
-	return {"visited": _visited.duplicate(), "stage": _stage, "drone_given": _drone_given, "red_rock_told": _red_rock_told, "material_told": _material_told, "classes_told": _classes_told.duplicate()}
+	return {"visited": _visited.duplicate(), "stage": _stage, "drone_given": _drone_given, "red_rock_told": _red_rock_told, "material_told": _material_told, "classes_told": _classes_told.duplicate(), "keystone_told": _keystone_told.duplicate()}
 
 
 func load_from_dict(data: Dictionary) -> void:
@@ -94,6 +105,7 @@ func load_from_dict(data: Dictionary) -> void:
 	_red_rock_told = bool(data.get("red_rock_told", false))
 	_material_told = bool(data.get("material_told", false))
 	_classes_told = (data.get("classes_told", []) as Array).duplicate() if data.get("classes_told", []) is Array else []
+	_keystone_told = (data.get("keystone_told", []) as Array).duplicate() if data.get("keystone_told", []) is Array else []
 
 
 ## The ship's current tiers (GateClass shape).
@@ -123,6 +135,33 @@ func stage() -> String:
 func note_system(system_id: String) -> void:
 	if not system_id.is_empty() and not _visited.has(system_id):
 		_visited.append(system_id)
+		_keystone_hint(int(depth_of.call(system_id)))
+
+
+## The keystone never arrives as a surprise wall (plan 2.3): a rumour on first
+## reaching depth 4-5, the reveal at depth 6, each once. Skipped when the ship
+## already has it.
+func _keystone_hint(depth: int) -> void:
+	var card: Dictionary = keystone_of.call()
+	if card.is_empty() or KeystoneType.is_met(card, _tiers()):
+		return
+	var key := ""
+	if depth >= KeystoneType.REVEAL_DEPTH:
+		key = "reveal"
+	elif depth in KeystoneType.RUMOUR_DEPTHS:
+		key = "rumour"
+	if key.is_empty() or _keystone_told.has(key):
+		return
+	_keystone_told.append(key)
+	if key == "reveal" and not _keystone_told.has("rumour"):
+		_keystone_told.append("rumour")
+	_say(str(card[key]))
+	load("res://scripts/ui/Wiki.gd").unlock("keystone")
+
+
+## The keystone the captain has heard of ({} before the first hint).
+func known_keystone() -> Dictionary:
+	return keystone_of.call() if not _keystone_told.is_empty() else {}
 
 
 func is_rated() -> bool:
@@ -145,16 +184,23 @@ func access_to(destination_system_id: String) -> Dictionary:
 		# Not on the graph yet: treat it as one step further out.
 		dest_depth = maxi(from_depth, 0) + 1
 	var tiers := _tiers()
-	var result: Dictionary = GateClassType.check(from_depth, dest_depth, tiers)
+	var card: Dictionary = keystone_of.call()
+	var result: Dictionary = GateClassType.check(from_depth, dest_depth, tiers, card)
 	result["back"] = from_depth >= 0 and dest_depth <= from_depth
 	result["limiting"] = GateClassType.limiting_system(tiers)
+	result["keystone"] = card
 	var numeral := GateClassType.class_name_of(int(result["class"]))
+	var rating_short := int(result["rating"]) < int(result["needs_rating"])
 	if bool(result["back"]):
 		result["label"] = "Class %s · back the way we came, open" % numeral
 	elif bool(result["ok"]):
 		result["label"] = "Class %s · open (Ship Rating %d)" % [numeral, int(result["rating"])]
 	elif bool(result["needs_shields_mk2"]):
 		result["label"] = "Class %s · needs Shields Mk II" % numeral
+	elif bool(result["needs_keystone"]) and rating_short:
+		result["label"] = "Class %s · needs Ship Rating %d (ours %d) + %s" % [numeral, int(result["needs_rating"]), int(result["rating"]), KeystoneType.requirement(card)]
+	elif bool(result["needs_keystone"]):
+		result["label"] = "Class %s · needs %s (%s)" % [numeral, KeystoneType.requirement(card), str(card["name"]).to_lower()]
 	else:
 		result["label"] = "Class %s · needs Ship Rating %d (ours %d)" % [numeral, int(result["needs_rating"]), int(result["rating"])]
 	return result
@@ -165,13 +211,18 @@ func access_to(destination_system_id: String) -> Dictionary:
 func next_rung() -> Dictionary:
 	var tiers := _tiers()
 	var rating := GateClassType.ship_rating(tiers)
+	var card: Dictionary = keystone_of.call()
+	var keystone_short := not KeystoneType.is_met(card, tiers)
 	var c := 2
 	while c < 200:
 		var blocked_by_shields := c == 2 and int(tiers.get("shields", 1)) < 2
-		if blocked_by_shields or rating < GateClassType.rating_for_class(c):
+		var blocked_by_keystone := KeystoneType.applies(c) and keystone_short
+		if blocked_by_shields or blocked_by_keystone or rating < GateClassType.rating_for_class(c):
 			break
 		c += 1
-	return {"rating": rating, "next_class": c, "next_needs": GateClassType.rating_for_class(c), "needs_shields_mk2": c == 2 and int(tiers.get("shields", 1)) < 2}
+	return {"rating": rating, "next_class": c, "next_needs": GateClassType.rating_for_class(c),
+		"needs_shields_mk2": c == 2 and int(tiers.get("shields", 1)) < 2,
+		"needs_keystone": KeystoneType.applies(c) and keystone_short, "keystone": card}
 
 
 ## "" when the ship may jump to `destination_system_id`, else why not. No
@@ -183,9 +234,16 @@ func block_reason(destination_system_id: String) -> String:
 	_last_check = result
 	if bool(result["needs_shields_mk2"]):
 		return BLOCK_REASON
-	var reason := "Class %s gate: needs Ship Rating %d (ours is %d)." % [
-		GateClassType.class_name_of(int(result["class"])), int(result["needs_rating"]), int(result["rating"])]
-	if not str(result["limiting"]).is_empty():
+	var numeral := GateClassType.class_name_of(int(result["class"]))
+	var rating_short := int(result["rating"]) < int(result["needs_rating"])
+	var reason := ""
+	if rating_short:
+		reason = "Class %s gate: needs Ship Rating %d (ours is %d)." % [numeral, int(result["needs_rating"]), int(result["rating"])]
+	if bool(result["needs_keystone"]):
+		var card: Dictionary = result["keystone"]
+		var keystone_line := "%s %s needed." % [str(card["reason"]), KeystoneType.requirement(card)]
+		reason = (reason + " " + keystone_line) if rating_short else "Class %s gate: %s" % [numeral, keystone_line]
+	if rating_short and not str(result["limiting"]).is_empty():
 		reason += " %s is the weakest system; others count only two tiers above it." % str(result["limiting"]).capitalize()
 	return reason
 
@@ -214,15 +272,49 @@ func on_refused() -> void:
 
 func _explain_class(result: Dictionary) -> void:
 	var gate_class := int(result.get("class", 3))
-	if _classes_told.has(gate_class):
+	var numeral := GateClassType.class_name_of(gate_class)
+	var rating_short := int(result.get("rating", 0)) < int(result.get("needs_rating", 0))
+	var parts: Array[String] = []
+	if not _classes_told.has(gate_class):
+		_classes_told.append(gate_class)
+		if rating_short:
+			var key := "class_%d" % gate_class if LINES.has("class_%d" % gate_class) else "class_deep"
+			var line: String = str(LINES[key][0]) % [numeral, int(result.get("needs_rating", 0)), int(result.get("rating", 0))]
+			var limiting := str(result.get("limiting", ""))
+			if not limiting.is_empty():
+				line += " " + str(LINES["breadth"][0]) % limiting
+			parts.append(line)
+		else:
+			parts.append(str(LINES["class_rating_ok"][0]) % numeral)
+	# The keystone, once: what this campaign's deep space wants, and it becomes
+	# the goal on the HUD card.
+	var card: Dictionary = result.get("keystone", {})
+	if bool(result.get("needs_keystone", false)) and not card.is_empty() and not _keystone_told.has("refusal"):
+		if parts.is_empty():
+			parts.append("Class %s gate." % numeral)
+		parts.append(str(card["refusal"]))
+		for key in ["rumour", "refusal"]:
+			if not _keystone_told.has(key):
+				_keystone_told.append(key)
+		load("res://scripts/ui/Wiki.gd").unlock("keystone")
+		var gs := get_node_or_null("/root/GlobalState")
+		if gs != null:
+			var goal := UpgradeGoalType.next_tier_goal(gs, str(card["sys"]), false)
+			if not goal.is_empty():
+				UpgradeGoalCardType.set_goal(str(goal["sys"]), str(goal["path"]), int(goal["tier"]))
+	if not parts.is_empty():
+		_say(" ".join(parts))
+
+
+## Once the keystone the captain was told about is fitted, she says so.
+func _keystone_met_check() -> void:
+	if _keystone_told.is_empty() or _keystone_told.has("met"):
 		return
-	_classes_told.append(gate_class)
-	var key := "class_%d" % gate_class if LINES.has("class_%d" % gate_class) else "class_deep"
-	var line: String = str(LINES[key][0]) % [GateClassType.class_name_of(gate_class), int(result.get("needs_rating", 0)), int(result.get("rating", 0))]
-	var limiting := str(result.get("limiting", ""))
-	if not limiting.is_empty():
-		line += " " + str(LINES["breadth"][0]) % limiting
-	_say(line)
+	var card: Dictionary = keystone_of.call()
+	if card.is_empty() or not KeystoneType.is_met(card, _tiers()):
+		return
+	_keystone_told.append("met")
+	_say(KeystoneType.MET_LINE % str(card["sys"]).capitalize())
 
 
 ## The Shields Mk II goal the walkthrough works towards.
@@ -301,6 +393,7 @@ func _process(delta: float) -> void:
 	if gs != null:
 		note_system(str(gs.current_system_id))
 	advance()
+	_keystone_met_check()
 
 
 ## One step of the walkthrough (public for tests).

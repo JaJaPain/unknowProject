@@ -24,7 +24,7 @@ foreach ($name in $scenarios.Keys) {
 }
 Write-Host ""
 Write-Host ("{0,-30} {1,8} {2,8} {3,8} {4,8} {5,8}" -f "scenario (avg min per rung)", "II", "III", "IV", "V", "VI")
-Write-Host ("{0,-30} {1,8} {2,8} {3,8} {4,8} {5,8}" -f "target", "20-30", "30-40", "45-60", "60-75", "75-90")
+Write-Host ("{0,-30} {1,8} {2,8} {3,8} {4,8} {5,8}" -f "target", "20-30", "30-40", "45-60", "120-240", "240-480")
 foreach ($name in $scenarios.Keys) {
   $cols = @()
   for ($c = 0; $c -lt 5; $c++) {

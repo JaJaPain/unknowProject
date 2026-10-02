@@ -5189,6 +5189,9 @@ func _update_ship_rating_label() -> void:
 	var rung: Dictionary = guide.next_rung()
 	var numeral: String = load("res://scripts/domain/GateClass.gd").class_name_of(int(rung["next_class"]))
 	var need := "SHIELDS MK II" if bool(rung["needs_shields_mk2"]) else str(int(rung["next_needs"]))
+	if bool(rung.get("needs_keystone", false)):
+		# This campaign's keystone (core loop step 8): "11 + ENGINE MK III".
+		need += " + " + load("res://scripts/domain/Keystone.gd").requirement(rung["keystone"]).to_upper()
 	var text := "SHIP RATING %d  ·  CLASS %s NEEDS %s" % [int(rung["rating"]), numeral, need]
 	if ship_rating_label.text != text:
 		ship_rating_label.text = text

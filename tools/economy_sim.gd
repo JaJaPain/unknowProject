@@ -42,8 +42,9 @@ const FIGHT_TIME_S := 180.0
 const FIGHT_REPAIR := 60.0
 ## Share of mining trips that cut rare ore (and so draw a claim jumper).
 const RARE_TRIP_SHARE_AT_DEPTH := 0.08
-## Plan 3.6 targets: minutes to afford each rung from the previous one.
-const TARGETS := {6: [20, 30], 8: [30, 40], 11: [45, 60], 15: [60, 75], 20: [75, 90]}
+## Plan 3.6 targets: minutes to afford each rung from the previous one
+## (Classes V-VI revised to hours, 2026-10-02: section 8 of the plan).
+const TARGETS := {6: [20, 30], 8: [30, 40], 11: [45, 60], 15: [120, 240], 20: [240, 480]}
 const MAX_HOURS := 40.0
 
 var gs: Node

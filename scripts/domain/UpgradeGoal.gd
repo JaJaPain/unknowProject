@@ -45,14 +45,20 @@ static func next_tier_goal(gs, sys: String, auto: bool = false) -> Dictionary:
 
 
 ## What to suggest with no goal set: Shields Mk II until Class II is open,
+## then (once Class III is open) this campaign's keystone until it's fitted,
 ## then the next tier of the weakest rated system; the powerplant first when
 ## that upgrade would draw more power than the ship has.
 static func suggest(gs) -> Dictionary:
 	var tiers: Dictionary = GateClass.tiers_of(gs.current_upgrades)
 	var goal := {}
+	var keystone: Dictionary = preload("res://scripts/domain/Keystone.gd").draw(int(gs.campaign_seed) if "campaign_seed" in gs else 0)
 	if int(tiers["shields"]) < 2:
 		goal = next_tier_goal(gs, "shields", true)
-	else:
+	elif GateClass.ship_rating(tiers) >= GateClass.rating_for_class(preload("res://scripts/domain/Keystone.gd").KEYSTONE_CLASS - 1) \
+			and not preload("res://scripts/domain/Keystone.gd").is_met(keystone, tiers):
+		# Class III is open, so the deep gates are next: work on the keystone.
+		goal = next_tier_goal(gs, str(keystone["sys"]), true)
+	if goal.is_empty() and int(tiers["shields"]) >= 2:
 		var low := GateClass.weakest_tier(tiers)
 		for sys in GateClass.RATED_SYSTEMS:
 			if int(tiers[sys]) == low:

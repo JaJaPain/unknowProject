@@ -8,6 +8,7 @@ extends RefCounted
 ##   where a system counts for at most two tiers above the weakest one (Abe:
 ##   one upgrade path alone must never carry the ship forward).
 ## - Class II also needs Shields Mk II (the tutorial rung).
+## - Class IV and deeper also need this campaign's keystone (Keystone.gd).
 ## - Back is always open; going deeper always checks (Abe).
 ## - There is no last class: past the table, classes and ratings continue by
 ##   formula (Abe: never fully upgraded, a never-ending story).
@@ -99,12 +100,13 @@ static func limiting_system(tiers: Dictionary) -> String:
 ## What a gate into a system `dest_depth` deep wants from a ship flying out of
 ## a system `from_depth` deep. "" when the ship may go.
 ## Returns {"ok": bool, "class": int, "needs_rating": int, "rating": int,
-## "needs_shields_mk2": bool}.
-static func check(from_depth: int, dest_depth: int, tiers: Dictionary) -> Dictionary:
+## "needs_shields_mk2": bool, "needs_keystone": bool}. `keystone` is this
+## campaign's Keystone card ({} = none): from Class IV on it is needed too.
+static func check(from_depth: int, dest_depth: int, tiers: Dictionary, keystone: Dictionary = {}) -> Dictionary:
 	var gate_class := class_for_depth(dest_depth)
 	var rating := ship_rating(tiers)
 	var needs := rating_for_class(gate_class)
-	var result := {"ok": true, "class": gate_class, "needs_rating": needs, "rating": rating, "needs_shields_mk2": false}
+	var result := {"ok": true, "class": gate_class, "needs_rating": needs, "rating": rating, "needs_shields_mk2": false, "needs_keystone": false}
 	# Back (or sideways) is always open.
 	if dest_depth >= 0 and from_depth >= 0 and dest_depth <= from_depth:
 		return result
@@ -113,4 +115,8 @@ static func check(from_depth: int, dest_depth: int, tiers: Dictionary) -> Dictio
 		result["needs_shields_mk2"] = true
 	if rating < needs:
 		result["ok"] = false
+	var Keystone := preload("res://scripts/domain/Keystone.gd")
+	if Keystone.applies(gate_class) and not Keystone.is_met(keystone, tiers):
+		result["ok"] = false
+		result["needs_keystone"] = true
 	return result

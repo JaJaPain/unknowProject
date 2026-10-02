@@ -459,3 +459,25 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       x1.5. The Sell button's tooltip says which ores get the premium here, and
       the sale line adds "[<Ore> sold at x1.5: none is mined in this system]".
       Silicate never gets it. Water ice is worth hauling into the start system.
+
+## M. The keystone (added 2026-10-02, core loop step 8)
+
+Each campaign's deep gates (Class IV on) want one upgrade at Mk III on top of
+the Ship Rating: Shields, Engine, Weapons, Cargo or Mining, depending on the
+campaign. Getting there takes a while; checks for when you do:
+
+- [ ] **Rumour.** The first time you arrive in a system 4-5 jumps deep,
+      N.O.V.A. passes on a rumour about the deep gates (radiation, a gravity
+      shear, a picket, the long dark, or hard ore). Esc > Wiki: "The deep
+      gates' keystone" is unlocked.
+- [ ] **Reveal.** First arrival 6 deep: she confirms it and names the upgrade.
+      (If you already have it at Mk III, neither line plays.)
+- [ ] **HUD and gate labels.** Once Class III is open, the rating line reads
+      like "CLASS IV NEEDS 11 + ENGINE MK III", and a Class IV gate's label
+      names the upgrade too.
+- [ ] **Refusal.** Try a Class IV gate without it: she explains (one line,
+      once), and the goal card switches to that system's next tier.
+- [ ] **Fitted.** Fit the Mk III: she says that's the price paid, and the HUD
+      drops the "+ ..." part. Going back through any gate is always open.
+- [ ] **Different campaigns differ.** Start two new campaigns and reach depth
+      4-5 in each: the rumours are usually about different things.

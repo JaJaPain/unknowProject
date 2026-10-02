@@ -143,6 +143,13 @@
 			"body": "The HULL bar is your ship's health. At zero the ship is lost.\n\nDamage stays until you pay for repairs at a station. N.O.V.A. will remind you if you try to leave a station with a damaged hull."
 		},
 		{
+			"id": "keystone",
+			"category": "Ship",
+			"title": "The deep gates' keystone",
+			"unlocked": false,
+			"body": "From [b]Class IV[/b] on, a gate wants more than a Ship Rating. Deep space is hostile in its own way in every campaign, and the deep gates ask for one upgrade at [b]Mk III[/b] to match: hardened shields against radiation, a stronger drive for steep folds, guns for a picket, a bigger hold for the long dark, or a better laser for hard ore.\n\nN.O.V.A. hears about it before you get there. The HUD's rating line and the gate labels show what this campaign's deep gates need."
+		},
+		{
 			"id": "upgrades",
 			"category": "Ship",
 			"title": "Upgrades and gate classes",

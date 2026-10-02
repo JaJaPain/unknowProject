@@ -513,7 +513,7 @@ before the next bite.
 | 6b | **DONE 2026-10-02** Mining risk (3.7; claims extended the existing illegal-mining enforcement): claims with hail and reinforcements, rare-ore claim jumper, red-rock guards; ice near stations always unclaimed; none before the first upgrade | Unit tests per rule; a `--mining-risk-smoke-test` that triggers each one |
 | 7 | **DONE 2026-10-02** `--economy-sim` automated captain + first tuning pass against 3.6 (section 8) | Prints minutes per rung |
 | | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, **Decided (Abe, 2026-10-01): keep it hidden for now.** | |
-| 8 | Keystone deck, draw, Class IV rule, early hints | Unit tests per keystone |
+| 8 | **DONE 2026-10-02** Keystone deck, draw, Class IV rule, early hints (`scripts/domain/Keystone.gd`; drawn from the campaign seed, so no save data; applies to Class IV and every class past it; the goal card suggests it once Class III is open; wiki "The deep gates' keystone") | `run_keystone_tests` (every card) |
 | 9 | Lodestar deck (JSON, 6 cards), draw, star map wedge | Unit tests; map snapshot |
 | 10 | Bearings in activities (receiver, drone recorder, anomaly, investigation, Kaelen lead), Lodestar log tab | Per-activity tests |
 | | **Stop and show: the Lodestar wedge and first two bearings** | |
