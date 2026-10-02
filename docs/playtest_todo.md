@@ -559,3 +559,10 @@ campaign. Getting there takes a while; checks for when you do:
 - [ ] **It peeks when something changes.** With it rolled up, earn credits
       past the goal's amount (or bank enough ore, or set a new goal): it opens
       for about 6 seconds, then rolls back up.
+- [ ] **The maintenance bay matches Kaelen's screen.** Dock at a main station,
+      Maintenance Bay: the mechanic's large portrait on the left, name and
+      role, her greeting, any offer as numbered replies (keys 1-2, "Not this
+      one." last), Repair and Ship Upgrades as buttons, "Back to Services"
+      at the bottom. Ship Upgrades opens and Return brings you back to the
+      bay; Back to Services returns to the station menu. Repair, accepting a
+      pickup and delivering a part all still work from here.

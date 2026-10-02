@@ -1559,7 +1559,7 @@ func _create_dock_menu():
 	offer_btns_hbox.add_child(mechanic_pickup_accept_btn)
 
 	mechanic_pickup_decline_btn = Button.new()
-	mechanic_pickup_decline_btn.text = "Not Now"
+	mechanic_pickup_decline_btn.text = "Not this one."
 	mechanic_pickup_decline_btn.visible = false
 	mechanic_pickup_decline_btn.pressed.connect(_on_mechanic_pickup_decline_pressed)
 	offer_btns_hbox.add_child(mechanic_pickup_decline_btn)
@@ -4902,6 +4902,7 @@ func _render_dock_submenu() -> void:
 		# immediately so the chat box is never empty.
 		if not is_outpost:
 			_render_mechanic_intro()
+			_present_mechanic_on_agent_panel()
 		else:
 			if mechanic_intro_panel and is_instance_valid(mechanic_intro_panel):
 				mechanic_intro_panel.visible = false
@@ -9786,6 +9787,92 @@ func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tie
 		line = line.replace("{outpost}", offer.get("outpost_display", "the outpost"))
 	return line.replace("{ship}", ship)
 
+## The maintenance bay in the same layout as Kaelen's screen (playtest
+## 2026-10-02, consistency): large portrait, name and role, the greeting, the
+## bay's dialogue actions as numbered replies, its services as buttons. The
+## dock panel's own maintenance buttons stay the source of truth: these mirror
+## whichever are showing and press them, so every flow (pickup offers, parts,
+## repairs, upgrades) runs exactly as before.
+var _mechanic_mode := false
+var _mechanic_grid: GridContainer = null
+
+
+func _present_mechanic_on_agent_panel() -> void:
+	if agent_panel == null or not is_instance_valid(agent_panel):
+		return
+	if _mechanic_grid == null:
+		_mechanic_grid = GridContainer.new()
+		_mechanic_grid.name = "MechanicServices"
+		_mechanic_grid.columns = 2
+		_mechanic_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_mechanic_grid.add_theme_constant_override("h_separation", 6)
+		_mechanic_grid.add_theme_constant_override("v_separation", 6)
+		var parent := agent_trade_grid.get_parent()
+		parent.add_child(_mechanic_grid)
+		parent.move_child(_mechanic_grid, agent_trade_grid.get_index() + 1)
+		agent_panel.visibility_changed.connect(func() -> void:
+			if not agent_panel.visible:
+				_end_mechanic_mode())
+	_mechanic_mode = true
+	var profile: Dictionary = _cached_mechanic_profile if not _cached_mechanic_profile.is_empty() else _current_mechanic_profile()
+	dock_panel.visible = false
+	agent_panel.visible = true
+	agent_trade_grid.visible = false
+	_mechanic_grid.visible = true
+	_show_agent_portrait(true)
+	agent_portrait.texture = mechanic_portrait.texture
+	if agent_client_logo != null:
+		agent_client_logo.texture = null
+	agent_name_label.text = str(profile.get("name", "Jenna Kross")).to_upper()
+	agent_subtitle_label.text = _title_case_words(str(profile.get("role", "Station mechanic")))
+	agent_dialogue_label.text = mechanic_line_label.text
+	for child in agent_choices_container.get_children():
+		child.queue_free()
+	for source in [mechanic_pickup_accept_btn, mechanic_pickup_decline_btn, deliver_part_btn]:
+		if source != null and is_instance_valid(source) and source.visible:
+			var reply := Button.new()
+			reply.text = source.text
+			reply.disabled = source.disabled
+			reply.pressed.connect(_press_mechanic_mirror.bind(source))
+			agent_choices_container.add_child(reply)
+	for child in _mechanic_grid.get_children():
+		child.queue_free()
+	for source in [repair_btn, ship_upgrades_btn, test_pickup_btn, test_deliver_btn]:
+		if source == null or not is_instance_valid(source) or not source.visible:
+			continue
+		var service := Button.new()
+		service.text = source.text
+		service.disabled = source.disabled
+		service.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		service.custom_minimum_size = Vector2(0, 32)
+		service.clip_text = true
+		service.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		service.tooltip_text = source.text
+		service.pressed.connect(_press_mechanic_mirror.bind(source))
+		_mechanic_grid.add_child(service)
+	agent_back_btn.visible = true
+
+
+func _press_mechanic_mirror(source: Button) -> void:
+	source.pressed.emit()
+	# Whatever it did (repair, an accepted offer, a delivered part), show the
+	# bay as it is now, unless it took us somewhere else (the upgrade screen).
+	call_deferred("_refresh_mechanic_mode")
+
+
+func _refresh_mechanic_mode() -> void:
+	if _mechanic_mode and current_submenu == DockSubmenu.MAINTENANCE and agent_panel.visible:
+		_present_mechanic_on_agent_panel()
+
+
+func _end_mechanic_mode() -> void:
+	if not _mechanic_mode:
+		return
+	_mechanic_mode = false
+	if _mechanic_grid != null:
+		_mechanic_grid.visible = false
+
+
 func _render_mechanic_intro() -> void:
 	if not mechanic_intro_panel or not is_instance_valid(mechanic_intro_panel):
 		return
@@ -9826,8 +9913,11 @@ func _render_mechanic_intro() -> void:
 	if line != _last_played_mechanic_line:
 		line_changed = true
 		_last_played_mechanic_line = line
-		
+
 	mechanic_line_label.text = line
+	if _mechanic_mode and agent_dialogue_label != null:
+		# A late greeting (the model's) lands on the bay's own screen too.
+		agent_dialogue_label.text = line
 	mechanic_intro_panel.visible = true
 
 	# Mark the first meeting HERE, where the line actually reaches the player,
@@ -12804,6 +12894,7 @@ func _on_talk_to_agent_pressed():
 		if store_screen != null: store_screen.visible = false
 	if public_board_panel:
 		public_board_panel.visible = false
+	_end_mechanic_mode()
 	agent_panel.visible = true
 	# Visibility first: the buttons' update checks whether Bank is on screen
 	# before N.O.V.A. explains it.
@@ -14058,6 +14149,14 @@ func _store_authored_tutorial_kaelen_bundle(runtime_id: String, reason: String) 
 func _on_agent_back_pressed():
 	# Stop voice dialogue audio
 	SpeechService.stop()
+	if _mechanic_mode:
+		# The maintenance bay in Kaelen's layout: back to the station's services.
+		_end_mechanic_mode()
+		agent_panel.visible = false
+		dock_panel.visible = true
+		current_submenu = DockSubmenu.SERVICES
+		_render_dock_submenu()
+		return
 	_agent_more_work_check_playing = false
 	_agent_more_work_deferred_pending = false
 	_agent_more_work_deferred_result = {}
@@ -16673,6 +16772,9 @@ func _create_ship_upgrades_panel() -> void:
 	close_btn.pressed.connect(func():
 		ship_upgrades_panel.visible = false
 		dock_panel.visible = true
+		# Opened from the maintenance bay: back to the bay's own screen.
+		if current_submenu == DockSubmenu.MAINTENANCE:
+			_render_dock_submenu()
 	)
 	ship_upgrades_panel.add_child(close_btn)
 	
@@ -16785,6 +16887,10 @@ func _create_ship_upgrades_panel() -> void:
 
 func _on_ship_upgrades_pressed() -> void:
 	dock_panel.visible = false
+	# From the maintenance bay's own screen: it steps aside, and closing the
+	# upgrades brings it back (see the close button).
+	if _mechanic_mode and agent_panel != null:
+		agent_panel.visible = false
 	ship_upgrades_panel.visible = true
 	_refresh_upgrade_ui()
 
