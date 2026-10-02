@@ -508,7 +508,7 @@ func cache_dialogue_audio(text: String, voice_id_or_faction: String = "neutral",
 		voice_id = get_voice_for_faction(voice_id_or_faction)
 		speed = 1.0
 	else:
-		voice_id = voice_id_or_faction if voice_id_or_faction != "" else "af_aoede"
+		voice_id = voice_id_or_faction if voice_id_or_faction != "" else "af_kore[0.5]+af_nicole[0.5]"
 		if speed < 0.0:
 			speed = 1.0
 
@@ -715,7 +715,7 @@ func _drain_cache_queue() -> void:
 		_start_background_cache_request(
 			cache_key,
 			str(item.get("text", "")),
-			str(item.get("voice_id", "af_aoede")),
+			str(item.get("voice_id", "af_kore[0.5]+af_nicole[0.5]")),
 			float(item.get("speed", 1.0)),
 			float(item.get("style_scale", 1.0))
 		)
@@ -1110,7 +1110,7 @@ func get_voice_for_faction(faction: String) -> String:
 		"vanguard":
 			return "am_michael"
 		"neutral", _:
-			return "af_aoede"
+			return "af_kore[0.5]+af_nicole[0.5]"
 
 func _on_audio_player_finished():
 	AudioManager.unduck_audio()

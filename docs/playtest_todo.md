@@ -540,3 +540,9 @@ campaign. Getting there takes a while; checks for when you do:
       voice, and a Broker Kaelen line in the feed), not as if in the cockpit.
 - [ ] **N.O.V.A. teases board work.** Finish a public board job and undock:
       N.O.V.A. (not Kaelen) has a dry line about wall postings.
+- [ ] **Jenna sounds like only Jenna.** Dock at a few stations and outposts,
+      listen to dock control, the station radio, board "Play message"
+      buttons and lounge strangers: none of them should sound like Jenna
+      (the Grease Monkeys mechanic). Jenna herself is unchanged. If one
+      still does, note where; godot.log also lists any "unknown voice"
+      falling back to the neutral one.

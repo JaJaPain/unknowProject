@@ -2438,6 +2438,11 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 		listen.text = "Play message"
 		var voice_profile := str(posting.get("voice_profile", ""))
 		var poster_name := str(posting.get("poster", ""))
+		if voice_profile.is_empty():
+			# Their own voice, never the generic fallback (which sounded like
+			# Jenna's, playtest 2026-10-02).
+			var VoiceDNA = load("res://scripts/story/premise/VoiceDNA.gd")
+			voice_profile = VoiceDNA.register(VoiceDNA.for_person("poster|%s" % poster_name, str(posting.get("faction", ""))))
 		listen.pressed.connect(func(): SpeechService.play_on_comms(voice_line, voice_profile, poster_name))
 		vbox.add_child(listen)
 

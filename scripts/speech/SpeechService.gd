@@ -421,7 +421,15 @@ func resolve_voice_profile(value: Variant) -> StringName:
 		var mapping: Dictionary = registry.provider_voice_mappings[profile_id]
 		if str(mapping.get("provider_voice", "")) == raw:
 			return DomainId.canonicalize(profile_id)
+	# Visible once per voice, so callers still landing on the generic voice can
+	# be found and given their own (playtest 2026-10-02).
+	if not _unknown_voices_logged.has(raw):
+		_unknown_voices_logged[raw] = true
+		print("[SpeechService] unknown voice '%s': using the neutral voice" % raw)
 	return DEFAULT_PROFILE
+
+
+var _unknown_voices_logged := {}
 
 
 var _sequential_queue: Array[String] = []
