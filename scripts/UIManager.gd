@@ -10127,7 +10127,7 @@ func _on_npc_flavor_spoken(flavor: Dictionary) -> void:
 	# Queued, not played outright: these lines arrive unbidden and two of them
 	# can land on one event (combat ending fires a post-combat N.O.V.A. line AND
 	# a quiet-moment beat), which used to truncate the first mid-sentence.
-	SpeechService.play_ambient(line, voice_profile_id)
+	SpeechService.play_ambient(line, voice_profile_id, bool(flavor.get("comms", false)), str(flavor.get("npc_name", "")))
 
 
 ## Her portrait goes up at the moment her line actually begins.
@@ -15954,7 +15954,7 @@ func _queue_intro_cinematic_voice_cache() -> void:
 func _poll_intro_voice_ready(started_ms: int) -> void:
 	if not _waiting_for_intro_cinematic_voice_cache:
 		return
-	if TTSInterface.urgent_cache_pending() <= 0 or Time.get_ticks_msec() - started_ms > 25000:
+	if SpeechService.urgent_cache_pending() <= 0 or Time.get_ticks_msec() - started_ms > 25000:
 		_on_intro_cinematic_voice_cache_completed()
 		return
 	get_tree().create_timer(0.25, true, false, true).timeout.connect(
@@ -15972,7 +15972,7 @@ func _on_intro_cinematic_voice_cache_completed() -> void:
 func _poll_bank_voice_ready(started_ms: int) -> void:
 	if not _waiting_for_startup_line_bank_voice_cache:
 		return
-	if TTSInterface.urgent_cache_pending() <= 0 or Time.get_ticks_msec() - started_ms > 25000:
+	if SpeechService.urgent_cache_pending() <= 0 or Time.get_ticks_msec() - started_ms > 25000:
 		_on_startup_line_bank_voice_cache_completed()
 		return
 	get_tree().create_timer(0.25, true, false, true).timeout.connect(
@@ -16330,7 +16330,7 @@ func _finish_loading_after_story_ready() -> void:
 		return
 	if not startup_save_loaded and not _waiting_for_intro_cinematic_voice_cache:
 		_queue_intro_cinematic_voice_cache()
-		if TTSInterface.urgent_cache_pending() > 0:
+		if SpeechService.urgent_cache_pending() > 0:
 			# Wait for her cold-open lines only (queued first); the rest of the
 			# background voice queue keeps working during the cinematic. This
 			# used to wait for the WHOLE queue, ~200 lines (Abe, 2026-09-30).
@@ -16347,7 +16347,7 @@ func _finish_loading_after_story_ready() -> void:
 			game_root.call("queue_narrative_new_campaign_loading_prefetch")
 	if not startup_save_loaded and not _waiting_for_startup_line_bank_voice_cache:
 		var cached_count := _queue_startup_line_bank_voice_cache()
-		if cached_count > 0 and TTSInterface.urgent_cache_pending() > 0:
+		if cached_count > 0 and SpeechService.urgent_cache_pending() > 0:
 			# Only the bank lines just queued, not the whole background queue.
 			_waiting_for_startup_line_bank_voice_cache = true
 			loading_bar.value = 96.0

@@ -229,6 +229,27 @@
 				"Uneventful throughout. What it paid barely registers."
 			]
 		},
+		"nova_public_board": {
+			"id": "nova_public_board",
+			"speaker": "nova",
+			"word_cap": 25,
+			"fire_probability": 1.0,
+			"full_line_probability": 1.0,
+			"who": "N.O.V.A. is the ship's AI and the Captain's onboard partner. She's clear, compact and observant. There's a strong bond there that neither of them names. She calls him Captain. She never gives him orders.",
+			"register": "She is TALKING, not writing. Short words. Contractions. She says the blunt version of the\nthought, not the polished one. If a line sounds like it was composed, it's wrong.\n\nShe is aboard and was there for all of it. She talks about it as something THEY did together,\nand she's dry, a little vain, and enjoying herself.\n\nShe is speaking directly TO the Captain, so he is \"you\". She never gives him an order or a\nrecommendation.",
+			"scope": "She picks ONE thing and runs with it. She never invents a number, an amount, a client, another\nperson, a place, or an event before or after this moment. She does not mention the broker. Under\n25 words.",
+			"valence": "A job off a public posting: pinned on a station wall where anyone could read it, rate fixed,\nnothing to negotiate. Honest work and small money. She thinks a ship like her deserves better\nthan wall postings, and she's funny about being a snob about it — she knows how she sounds.\n\nHer teasing is about the WORK and the posting, never about the Captain: he's on her side of\nthis, and she'd still rather be flying him around on cheap jobs than sitting in a dock.\n\nShe does not name an amount and makes no claim about whether this has happened before.",
+			"packets": [
+				"It's finished. Anyone could have taken that one off the open listings.",
+				"Done. The rate was posted on the wall before they ever saw it.",
+				"Closed out. That job was pinned up where anyone could read it.",
+				"Delivered. There was nothing to negotiate.",
+				"Complete. The posting paid exactly what the posting said.",
+				"Signed off. A public listing, open to anyone with a hull.",
+				"Wrapped up. Public work, public rate.",
+				"That's closed. A wall posting, done and paid."
+			]
+		},
 		"kaelen_abandoned": {
 			"id": "kaelen_abandoned",
 			"speaker": "kaelen",

@@ -18,6 +18,7 @@ const QUIET_MOMENT_BEAT_IDS := [
 	"kaelen_low_pay_safe",
 	"kaelen_high_pay_dangerous",
 	"kaelen_public_board",
+	"nova_public_board",
 	"kaelen_abandoned",
 	"kaelen_declined",
 	"nova_post_combat_damaged",

@@ -534,3 +534,9 @@ campaign. Getting there takes a while; checks for when you do:
       at -20): with their patrols nearby but nothing red on the overview, a
       signal N.O.V.A. announces opens with T. A Reaver contract target on the
       far side of the system doesn't block it either.
+- [ ] **Kaelen only comments on her own jobs.** Finish a job from an outpost
+      agent (not Kaelen) and undock: no payout comment from her. Finish one
+      of Kaelen's and undock: she comments over comms (the comms-filtered
+      voice, and a Broker Kaelen line in the feed), not as if in the cockpit.
+- [ ] **N.O.V.A. teases board work.** Finish a public board job and undock:
+      N.O.V.A. (not Kaelen) has a dry line about wall postings.

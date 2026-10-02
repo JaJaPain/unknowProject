@@ -1789,14 +1789,9 @@ func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
 		return
 	if not is_instance_valid(quiet_moment_director):
 		return
-	var reward := int(quest_data.get("reward_credits", 0))
-	var beat_id := "kaelen_low_pay_safe"
-	if bool(quest_data.get("public_board", false)):
-		# Her snobbery about board work outranks the payout band: the joke is
-		# that it was beneath them, whatever it paid.
-		beat_id = "kaelen_public_board"
-	elif reward >= 300 or bool(quest_data.get("known_tough", false)):
-		beat_id = "kaelen_high_pay_dangerous"
+	var beat_id := quiet_moment_beat_for_payout(quest_data)
+	if beat_id.is_empty():
+		return
 	# A turn-in is not a quiet moment. Firing here put Kaelen's payout comment on
 	# top of the agent who just handled the hand-off, so the game said two
 	# different things about one event and talked over its own NPC. Hold the beat
@@ -1805,6 +1800,21 @@ func _on_quiet_moment_quest_completed(quest_data: Dictionary) -> void:
 		_pending_quiet_moment_beat = beat_id
 		return
 	quiet_moment_director.try_fire(beat_id)
+
+
+## Who comments on a job's payout (playtest 2026-10-02): Kaelen only on jobs
+## she brokered, never on outpost or board work someone else paid for. Board
+## work gets N.O.V.A.'s snobbery instead (she's aboard; Abe's call). Anything
+## else paid by someone else passes without comment ("").
+static func quiet_moment_beat_for_payout(quest_data: Dictionary) -> String:
+	if bool(quest_data.get("public_board", false)):
+		return "nova_public_board"
+	if not str(quest_data.get("agent_name", "")).to_lower().contains("kaelen"):
+		return ""
+	var reward := int(quest_data.get("reward_credits", 0))
+	if reward >= 300 or bool(quest_data.get("known_tough", false)):
+		return "kaelen_high_pay_dangerous"
+	return "kaelen_low_pay_safe"
 
 
 func _player_is_docked() -> bool:
@@ -1845,10 +1855,13 @@ func _on_quiet_moment_ready(speaker: String, _beat_id: String, line: String) -> 
 			Nova.speak(line)
 		return
 	if speaker == "kaelen" and is_instance_valid(GlobalState):
+		# She isn't aboard: in flight she reaches us over comms (the comms filter
+		# and a line in the feed), never as if she were in the cockpit.
 		GlobalState.emit_npc_flavor({
 			"npc_name": "Broker Kaelen",
 			"voice_profile_id": GlobalState.KAELEN_VOICE_PROFILE_ID,
 			"line": line,
+			"comms": not _player_is_docked(),
 		})
 
 

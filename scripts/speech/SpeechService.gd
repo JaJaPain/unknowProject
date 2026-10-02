@@ -126,6 +126,11 @@ func play(
 
 ## Plays a line as heard over a ship's radio (narrow band, a little grit):
 ## premise contacts on comms and the system radio host.
+## Lines the loading screen is waiting on (the 92%/96% voice stages).
+func urgent_cache_pending() -> int:
+	return int(TTSInterface.urgent_cache_pending())
+
+
 func play_on_comms(text: String, voice_profile: Variant = DEFAULT_PROFILE, speaker: String = "") -> void:
 	TTSInterface.next_dialogue_bus = TTSInterface.COMMS_BUS
 	_next_subtitle_speaker = speaker
@@ -190,7 +195,7 @@ func is_busy() -> bool:
 ## Player-INITIATED speech still uses play() and still cuts in — when the player
 ## clicks something, the response to that click is what they want to hear, and
 ## making them wait out an ambient line would feel unresponsive.
-func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> bool:
+func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE, comms: bool = false, speaker: String = "") -> bool:
 	if text.strip_edges().is_empty():
 		return false
 	if _sequential_active or is_busy():
@@ -201,12 +206,23 @@ func play_ambient(text: String, voice_profile: Variant = DEFAULT_PROFILE) -> boo
 		_ambient_queue.append({
 			"text": text,
 			"voice": voice_profile,
+			"comms": comms,
+			"speaker": speaker,
 			"queued_ms": Time.get_ticks_msec(),
 		})
 		return true
-	play(text, voice_profile)
-	ambient_line_started.emit(text)
+	_play_ambient_now(text, voice_profile, comms, speaker)
 	return true
+
+
+## Someone who isn't aboard (Kaelen after we've undocked) speaks over comms:
+## the comms filter, not the cockpit (playtest 2026-10-02).
+func _play_ambient_now(text: String, voice_profile: Variant, comms: bool, speaker: String) -> void:
+	if comms:
+		play_on_comms(text, voice_profile, speaker)
+	else:
+		play(text, voice_profile)
+	ambient_line_started.emit(text)
 
 
 ## True while ambient lines are still waiting for their turn. Callers that hold
@@ -248,9 +264,8 @@ func _drain_ambient_queue() -> void:
 		var entry: Dictionary = _ambient_queue.pop_front()
 		if now - int(entry.get("queued_ms", now)) > AMBIENT_QUEUE_STALE_MS:
 			continue
-		var started_text := str(entry.get("text", ""))
-		play(started_text, entry.get("voice", DEFAULT_PROFILE))
-		ambient_line_started.emit(started_text)
+		_play_ambient_now(str(entry.get("text", "")), entry.get("voice", DEFAULT_PROFILE),
+			bool(entry.get("comms", false)), str(entry.get("speaker", "")))
 		return
 
 
