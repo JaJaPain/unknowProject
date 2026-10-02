@@ -72,7 +72,7 @@ static func intent_registry() -> Dictionary:
 		INTENT_DECLINE: {
 			"id": INTENT_DECLINE,
 			"kind": "terminal",
-			"label": "Decline",
+			"label": "Not this one.",
 		},
 		INTENT_INFORMED_FOLLOWUP: {
 			"id": INTENT_INFORMED_FOLLOWUP,
@@ -344,7 +344,7 @@ static func _terminal_intents(
 	if bool(mechanical.get("can_decline", true)):
 		result.append(_terminal_intent(
 			INTENT_DECLINE,
-			"Decline",
+			"Not this one.",
 			mission_plan,
 			relationship,
 			mechanical

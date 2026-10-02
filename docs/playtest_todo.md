@@ -549,3 +549,7 @@ campaign. Getting there takes a while; checks for when you do:
 - [ ] **Kaelen's pace is back.** New campaign: her intro and the tutorial
       turn-in ("Handled, quiet, no trail...") sound like her old self, not
       rushed. N.O.V.A. still sounds like her cloned voice.
+- [ ] **The way out is last.** Talk to any agent offering a normal job: the
+      options end with "Not this one.", after "Terms / other questions".
+      Open "Terms / other questions": "Not this one." is last there too.
+      Picking it closes the offer and takes you back to the agent's menu.

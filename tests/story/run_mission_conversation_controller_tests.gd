@@ -46,6 +46,10 @@ func _test_opening_uses_more_options_navigation_for_extra_intents() -> void:
 	_expect(str(options.get("mode", "")) == "options", "More-options navigation did not enter options mode.")
 	_expect(_choice_ids(option_choices).has("ask_why"), "Options view did not expose hidden question.")
 	_expect(_choice_ids(option_choices).has("request_hazard_pay"), "Options view did not expose hidden terminal.")
+	# The way out is always last (playtest 2026-10-02), on the opening menu
+	# (after "Terms / other questions") and in the options view.
+	_expect(_choice_ids(choices)[-1] == "decline", "Opening: decline should be last, got %s" % str(_choice_ids(choices)))
+	_expect(_choice_ids(option_choices)[-1] == "decline", "Options: decline should be last, got %s" % str(_choice_ids(option_choices)))
 
 
 func _test_question_answer_returns_to_remaining_choices_without_terminal() -> void:

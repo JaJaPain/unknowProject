@@ -146,9 +146,25 @@ static func _choices_for_state(state: Dictionary) -> Array[Dictionary]:
 		if state.get("bundle", {}) is Dictionary else {}
 	var asked: Array = state.get("asked_intents", []) \
 		if state.get("asked_intents", []) is Array else []
-	var choices: Array[Dictionary] = []
 	if str(state.get("mode", "opening")) == "opening":
 		return _opening_choices(plan, bundle)
+	return _decline_last(_listed_choices(plan, bundle, asked))
+
+
+## Declining is always the last option, whatever order the plan listed things
+## in (playtest 2026-10-02).
+static func _decline_last(choices: Array[Dictionary]) -> Array[Dictionary]:
+	for i in choices.size():
+		if str(choices[i].get("intent_id", "")) == PlanType.INTENT_DECLINE:
+			var decline: Dictionary = choices[i]
+			choices.remove_at(i)
+			choices.append(decline)
+			break
+	return choices
+
+
+static func _listed_choices(plan: Dictionary, bundle: Dictionary, asked: Array) -> Array[Dictionary]:
+	var choices: Array[Dictionary] = []
 	for intent in _intents(plan):
 		var intent_id := str(intent.get("id", ""))
 		if intent_id.is_empty():
@@ -183,15 +199,18 @@ static func _opening_choices(
 	if not accept.is_empty():
 		choices.append(accept)
 	var decline := _choice_by_intent_id(all_choices, PlanType.INTENT_DECLINE)
-	if not decline.is_empty():
-		choices.append(decline)
-	if all_choices.size() > choices.size():
+	var shown := choices.size() + (0 if decline.is_empty() else 1)
+	if all_choices.size() > shown:
 		choices.append({
 			"intent_id": NAV_MORE_OPTIONS,
 			"kind": "navigation",
 			"text": "Terms / other questions",
 			"choice_id": "",
 		})
+	# The way out is always the last option, so the thumb learns where "no"
+	# lives (playtest 2026-10-02).
+	if not decline.is_empty():
+		choices.append(decline)
 	return choices
 
 
