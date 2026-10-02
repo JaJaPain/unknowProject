@@ -37,6 +37,13 @@ const MATERIAL_COLORS := {"thermal_lattice": Color(1.0, 0.55, 0.15), "rad_quartz
 var _mesh_task := -1
 var _mesh_result: Dictionary = {}
 var _crack_material: StandardMaterial3D
+## Mouse look: radians of turn per pixel of mouse travel. The mouse is held
+## for the dive and handed back as it was when the drone comes home.
+const MOUSE_TURN_PER_PIXEL := 0.004
+var _mouse_turn := 0.0
+var _mouse_mode_before := -1
+## Always on screen, bottom right (Abe, 2026-10-02).
+const CONTROLS_TEXT := "MOUSE   turn\nW / S   forward / back\nA / D   slide sideways\n← / →   turn\nE   extract\nR   recall the drone"
 
 
 ## `material` (a tech-grade material id) tints the crystal seams.
@@ -47,6 +54,8 @@ func begin(seed_value: int, kind: String, with_recorder: bool, material: String 
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_world()
 	_build_hud()
+	_mouse_mode_before = Input.mouse_mode
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	if is_inside_tree() and not get_tree().paused:
 		get_tree().paused = true
 		_paused_by_us = true
@@ -167,7 +176,9 @@ func _build_cracks(wall_mat: Material) -> void:
 	_crack_material.normal_scale = 1.6
 	var cracks: Dictionary = state["cracks"]
 	var seed_value := int(state["seed"])
-	_mesh_task = WorkerThreadPool.add_task(func() -> void: _mesh_result = Mesher.build(cracks, seed_value))
+	# High priority: the low-priority pool can be busy with the game's
+	# background work (voice caching), and the player is waiting on this.
+	_mesh_task = WorkerThreadPool.add_task(func() -> void: _mesh_result = Mesher.build(cracks, seed_value), true, "drone crack mesh")
 
 
 ## True once the rock is in place and the drone can fly.
@@ -191,6 +202,7 @@ func finish_loading() -> void:
 
 
 func _exit_tree() -> void:
+	_release_mouse()
 	if _mesh_task >= 0:
 		WorkerThreadPool.wait_for_task_completion(_mesh_task)
 		_mesh_task = -1
@@ -396,12 +408,43 @@ func _build_hud() -> void:
 	_arrow.pivot_offset = Vector2(14, 26)
 	hud.add_child(_arrow)
 	_hud_prompt = _hud_label(hud, 22)
-	_hud_prompt.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_hud_prompt.position = Vector2(-160, -120)
-	var help := _hud_label(hud, 16)
-	help.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-	help.position = Vector2(24, -40)
-	help.text = "W/S throttle   A/D turn   E extract   R recall the drone"
+	# Offsets, not position: the HUD is already sized here, so a position
+	# would be absolute and land off-screen.
+	_hud_prompt.anchor_left = 0.0
+	_hud_prompt.anchor_right = 1.0
+	_hud_prompt.anchor_top = 1.0
+	_hud_prompt.anchor_bottom = 1.0
+	_hud_prompt.offset_top = -140.0
+	_hud_prompt.offset_bottom = -100.0
+	_hud_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var panel := PanelContainer.new()
+	panel.name = "Controls"
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.anchor_left = 1.0
+	panel.anchor_right = 1.0
+	panel.anchor_top = 1.0
+	panel.anchor_bottom = 1.0
+	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	panel.offset_right = -24.0
+	panel.offset_bottom = -24.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.08, 0.1, 0.7)
+	style.border_color = Color(0.5, 0.95, 0.85, 0.6)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(12.0)
+	panel.add_theme_stylebox_override("panel", style)
+	hud.add_child(panel)
+	var help := _hud_label(panel, 16)
+	help.text = CONTROLS_TEXT
+
+
+func _release_mouse() -> void:
+	if _mouse_mode_before < 0:
+		return
+	Input.mouse_mode = _mouse_mode_before as Input.MouseMode
+	_mouse_mode_before = -1
 
 
 func _hud_label(parent: Control, font_size: int) -> Label:
@@ -425,8 +468,13 @@ func _process(delta: float) -> void:
 			return
 		finish_loading()
 	var throttle := _axis(KEY_W, KEY_UP) - _axis(KEY_S, KEY_DOWN)
-	var turn := _axis(KEY_D, KEY_RIGHT) - _axis(KEY_A, KEY_LEFT)
-	state = Maze.step(state, delta, throttle, turn)
+	var turn := _axis(KEY_RIGHT, KEY_RIGHT) - _axis(KEY_LEFT, KEY_LEFT)
+	var strafe := _axis(KEY_D, KEY_D) - _axis(KEY_A, KEY_A)
+	# The mouse turns the drone directly (Abe, 2026-10-02).
+	if _mouse_turn != 0.0:
+		state["heading"] = fposmod(float(state["heading"]) + _mouse_turn, TAU)
+		_mouse_turn = 0.0
+	state = Maze.step(state, delta, throttle, turn, strafe)
 	if bool(state.get("bumped", false)):
 		_shake = 0.25
 		_flash.color.a = 0.35
@@ -444,7 +492,19 @@ func _axis(a: Key, b: Key) -> float:
 
 
 func _input(event: InputEvent) -> void:
-	if _done or not event is InputEventKey:
+	if _done:
+		return
+	if event is InputEventMouseMotion:
+		get_viewport().set_input_as_handled()
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+			_mouse_turn += (event as InputEventMouseMotion).relative.x * MOUSE_TURN_PER_PIXEL
+		return
+	if event is InputEventMouseButton:
+		# Clicking back into the window takes the mouse again.
+		get_viewport().set_input_as_handled()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		return
+	if not event is InputEventKey:
 		return
 	var key := event as InputEventKey
 	# The drone has the controls; nothing reaches the ship.
@@ -518,6 +578,7 @@ func _finish() -> void:
 	if _done:
 		return
 	_done = true
+	_release_mouse()
 	if _paused_by_us and is_inside_tree():
 		get_tree().paused = false
 	finished.emit(Maze.outcome(state), state)

@@ -89,6 +89,18 @@ func _initialize() -> void:
 	c = Maze.step(c, 999.0, 0.0, 0.0)
 	_check(c["end"] == "timed_out" and Maze.outcome(c) == "failed", "out of time, the drone and its load are lost")
 	_check(Maze.extract(Maze.start(77))["targets"] == Maze.start(77)["targets"], "nothing in reach, nothing taken")
+	# A/D slide sideways without turning (Abe, 2026-10-02): right is a quarter
+	# turn clockwise of the heading, and the diagonal is no faster.
+	var side := Maze.start(2026, "asteroid")
+	var h0 := float(side["heading"])
+	var p0 := Vector2(float(side["pos"][0]), float(side["pos"][1]))
+	var slid := Maze.step(side, 0.05, 0.0, 0.0, 1.0)
+	var d := Vector2(float(slid["pos"][0]), float(slid["pos"][1])) - p0
+	_check(is_equal_approx(float(slid["heading"]), h0), "strafing keeps the heading")
+	_check(d.length() > 0.0 and absf(d.normalized().dot(Vector2(-sin(h0), cos(h0)))) > 0.99, "strafing moves sideways (%s)" % str(d))
+	var diag := Maze.step(side, 0.05, 1.0, 0.0, 1.0)
+	var dd := Vector2(float(diag["pos"][0]), float(diag["pos"][1])) - p0
+	_check(dd.length() <= Maze.SPEED * 0.05 + 0.0001, "forward plus sideways is no faster than forward")
 
 	if _failures.is_empty():
 		print("[PASS] Drone maze model")

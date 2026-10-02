@@ -1,4 +1,4 @@
-extends Node
+﻿extends Node
 
 ## Drone maze practice: the survey-drone dive on its own, no campaign needed.
 ## Each dive is a fresh random rock (or wreck); after it, the haul it would
@@ -34,6 +34,18 @@ func _ready() -> void:
 	_show_menu("")
 	# Straight into the first dive.
 	_dive("asteroid")
+	# -- --snapshot: save one frame of the dive and quit (for checking the HUD).
+	if "--snapshot" in OS.get_cmdline_user_args():
+		var t0 := Time.get_ticks_msec()
+		while _view != null and not _view.is_ready_to_fly() and Time.get_ticks_msec() - t0 < 30000:
+			await get_tree().process_frame
+		print("Drone ready to fly after %d ms" % (Time.get_ticks_msec() - t0))
+		await get_tree().create_timer(1.0, true, false, true).timeout
+		await RenderingServer.frame_post_draw
+		var path := ProjectSettings.globalize_path("res://.tmp_godot_user/drone_maze_practice.png")
+		get_viewport().get_texture().get_image().save_png(path)
+		print("Saved snapshot: %s" % path)
+		get_tree().quit()
 
 
 func _show_menu(result: String) -> void:
@@ -44,8 +56,6 @@ func _show_menu(result: String) -> void:
 	if _dives > 0:
 		lines.append("Dives: %d   ·   tech-grade materials so far: %d" % [_dives, _materials_total])
 		lines.append("")
-	lines.append("In the dive: W/S thrust, A/D turn, E extract, R recall the drone")
-	lines.append("")
 	lines.append("[G] dive a red rock      [W] dive a wreck      [Esc] quit")
 	_label.text = "\n".join(lines)
 

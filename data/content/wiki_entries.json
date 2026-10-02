@@ -67,7 +67,7 @@
 			"controller": ""
 		},
 		"drone_fly": {
-			"keyboard": "W A S D (or the arrow keys)",
+			"keyboard": "the mouse to turn, W/S forward and back, A/D sideways (the controls show bottom right)",
 			"controller": ""
 		}
 	},

@@ -305,6 +305,12 @@ Claude adds new items here as work lands (newest section at the bottom).
       Quick way, no campaign: `powershell -File tools/play_drone_maze.ps1`
       drops you straight into dives (G rock, W wreck, Esc quit) and shows
       each haul under the game's real rules.
+- [ ] **Drone dive controls.** In a dive (practice scene is fine): the mouse
+      turns the drone, A/D slide sideways without turning, W/S forward and
+      back, arrow keys still turn. A controls box sits bottom right the whole
+      dive, and "E  extract the crystal seam" appears above the bottom
+      centre when a seam is in reach. When the dive ends the mouse cursor
+      comes back.
 
 ## K. Gate ladder, step 1 (added 2026-10-01)
 

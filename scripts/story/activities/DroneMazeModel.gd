@@ -344,8 +344,9 @@ static func is_open(grid: Array, x: int, y: int) -> bool:
 	return y >= 0 and y < grid.size() and x >= 0 and x < str(grid[y]).length() and str(grid[y])[x] == OPEN
 
 
-## Advance: `throttle` -1..1 (back/forward), `turn` -1..1 (left/right).
-static func step(state: Dictionary, dt: float, throttle: float, turn: float) -> Dictionary:
+## Advance: `throttle` -1..1 (back/forward), `turn` -1..1 (left/right),
+## `strafe` -1..1 (slide left/right without turning; Abe, 2026-10-02).
+static func step(state: Dictionary, dt: float, throttle: float, turn: float, strafe: float = 0.0) -> Dictionary:
 	var s := state.duplicate(true)
 	if bool(s["done"]):
 		return s
@@ -353,7 +354,11 @@ static func step(state: Dictionary, dt: float, throttle: float, turn: float) -> 
 	s["bump_cooldown"] = maxf(0.0, float(s["bump_cooldown"]) - dt)
 	s["heading"] = fposmod(float(s["heading"]) + clampf(turn, -1.0, 1.0) * TURN_SPEED * dt, TAU)
 	var h := float(s["heading"])
-	var move := Vector2(cos(h), sin(h)) * clampf(throttle, -1.0, 1.0) * SPEED * dt
+	# Forward plus sideways (right is a quarter turn clockwise, the way +turn
+	# goes), no faster on the diagonal.
+	var drive := Vector2(clampf(throttle, -1.0, 1.0), clampf(strafe, -1.0, 1.0)).limit_length(1.0)
+	var move := (Vector2(cos(h), sin(h)) * drive.x + Vector2(-sin(h), cos(h)) * drive.y) * SPEED * dt
+	throttle = drive.length()
 	var pos := Vector2(float(s["pos"][0]), float(s["pos"][1]))
 	s["throttle"] = clampf(throttle, -1.0, 1.0)
 	var blocked := false
