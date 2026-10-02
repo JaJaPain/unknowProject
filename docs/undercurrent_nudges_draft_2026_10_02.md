@@ -33,7 +33,9 @@ minutes of play.
 3. "I keep plotting routes out of here. Just habit. Ignore me."
 4. "It's quiet back here. Too quiet for me, anyway."
 5. "Do you ever get the feeling a place has already said everything it's going to say?"
-6. "I'm not complaining. I'm noticing. There's a difference."
+
+(Cut 2026-10-02, Abe: "I'm not complaining. I'm noticing." didn't move the
+player forward.)
 
 ### 1b. A new gate class opens
 
@@ -100,7 +102,23 @@ deeper than where you are (outward), and the same as now otherwise.
 1. "Deep charts. Now that's worth something. Bring me more of these."
 2. "Further out pays better. You've noticed that by now."
 
-### 2e. If you ask why
+### 2e. In her job pitches (added 2026-10-02, Abe)
+
+**When:** at the end of some of her mission offers, not all: about **1 in 4**,
+never two offers in a row, never on the tutorial job. Her pitch itself is
+unchanged; one authored line is added after it, so no model ever writes or
+sees the nudge. None of these claims anything about the job itself (who the
+client is, where they're from), so they can't contradict the mission.
+
+1. "Work like this is drying up back here. The good jobs are moving outward."
+2. "Do this one well and I'll have something further out for you next."
+3. "Small job. The real ones are a few jumps further out."
+4. "Take it, get paid, then let's talk about lanes you haven't flown."
+5. "Clients this close to home pay like it. Remember that."
+6. "Think of this one as fuel money for somewhere further out."
+7. "Everyone back here wants it cheap. Out there they pay for good pilots."
+
+### 2f. If you ask why
 
 There's no "ask her" option in the game today, so nothing here yet. If one is
 added, she changes the subject like closing a deal, e.g. "Why does anyone want
