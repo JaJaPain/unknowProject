@@ -58,7 +58,7 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## C. Flight and combat feel
 
-- [ ] **Boost.** Boost (with fuel): the view widens a little and light
+- [x] **Boost.** Boost (with fuel): the view widens a little and light
       streaks rush past from the centre of the screen, then it eases back.
 - [ ] **Space dust.** In normal flight, faint specks drift past so you
       can feel you are moving.
