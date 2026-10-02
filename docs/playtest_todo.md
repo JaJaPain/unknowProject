@@ -553,3 +553,9 @@ campaign. Getting there takes a while; checks for when you do:
       options end with "Not this one.", after "Terms / other questions".
       Open "Terms / other questions": "Not this one." is last there too.
       Picking it closes the offer and takes you back to the agent's menu.
+- [ ] **Goal card rolls up.** Click the "−" top right of the goal card: it
+      shrinks to one line ("Shields Mk II (Bulwark) · Credits 65/300"), and "+"
+      opens it again. Quit and reload: it stays as you left it.
+- [ ] **It peeks when something changes.** With it rolled up, earn credits
+      past the goal's amount (or bank enough ore, or set a new goal): it opens
+      for about 6 seconds, then rolls back up.

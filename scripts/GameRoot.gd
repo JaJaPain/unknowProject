@@ -7816,6 +7816,16 @@ func _run_hud_snapshot() -> void:
 			await get_tree().process_frame
 		await _hud_snapshot_save(out.path_join("hud_receiver_scan.png"))
 		signal_tuning_activity.flying_override = Callable()
+	# The goal card rolled up (playtest 2026-10-02); the player's own setting is
+	# put back afterwards.
+	var goal_card = title_ui.get("upgrade_goal_card")
+	if goal_card != null and is_instance_valid(goal_card):
+		var was_collapsed: bool = goal_card.collapsed
+		goal_card.set_collapsed(true)
+		for i in 10:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("hud_goal_collapsed.png"))
+		goal_card.set_collapsed(was_collapsed)
 	print("HUDSHOT done")
 	get_tree().quit()
 
