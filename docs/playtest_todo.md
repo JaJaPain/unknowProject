@@ -497,3 +497,17 @@ campaign. Getting there takes a while; checks for when you do:
       different Lodestar and the wedge points another way.
 - [ ] **Read the six cards** (data/content/lodestars.json): do the hints and
       N.O.V.A.'s lines sound right to you? (Bearings show up from step 10.)
+- [ ] **First bearing (Class II).** After Shields Mk II, in any system 3-4
+      jumps deep, finish a receiver intercept, a drone dive that brings
+      something home, an anomaly, an investigation, or buy a gate from Kaelen:
+      a gold REWARD banner "<LODESTAR>  ·  BEARING 1 OF 5", a LODESTAR line in
+      the feed saying where it came from, and N.O.V.A. reacts a few seconds
+      later. The star map wedge is narrower.
+- [ ] **Skip the activities.** Instead, just visit a second new system of
+      that depth: the bearing arrives as a "Dockside rumour" anyway.
+- [ ] **Second bearing (Class III).** Same again 5-6 jumps deep. Nothing extra
+      turns up before you reach the next class.
+- [ ] **Lodestar log.** Dock, open the job board: the Loose ends button now
+      says "Lodestar 2/5" (it shows even with no loose ends). It opens on a
+      board with two tabs; "Lodestar log" lists the rumour and each bearing
+      in order, and says where the next one can turn up.

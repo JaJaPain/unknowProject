@@ -4300,6 +4300,7 @@ Root: `spacegame`
       - `func _refresh_leverage_button() -> void`
       - `func _on_leverage_pressed() -> void`
       - `func _on_loose_ends_pressed() -> void`
+      - `func lodestar_log() -> Dictionary`
       - `func _show_premise_decision(decision: Dictionary) -> void`
       - `func _on_premise_decision_option(arc_id: String, option_id: String) -> void`
       - `func _on_public_board_back_pressed() -> void`
@@ -6649,7 +6650,16 @@ Root: `spacegame`
         - `static func _persistable(value: Dictionary) -> Dictionary`
       - 📄 [LocalPressureDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/LocalPressureDirector.gd.uid)
       - 📄 [LodestarGuide.gd](file:///D:/CodingProjects/spacegame/scripts/story/LodestarGuide.gd)
+        - `func _ready() -> void`
         - `func _process(delta: float) -> void`
+        - `static func offer_from(source: String) -> bool`
+        - `func _on_quest_completed(quest_data: Dictionary) -> void`
+        - `func _current_class() -> int`
+        - `func pending_bearing() -> int`
+        - `func offer(source: String) -> bool`
+        - `func note_arrival() -> void`
+        - `func _calm() -> bool`
+        - `func _nova(text: String) -> void`
         - `func current() -> Dictionary`
         - `func try_introduce() -> bool`
       - 📄 [LoungeConversation.gd](file:///D:/CodingProjects/spacegame/scripts/story/LoungeConversation.gd)
@@ -7876,9 +7886,13 @@ Root: `spacegame`
       - 📄 [PinBoardPanel.gd](file:///D:/CodingProjects/spacegame/scripts/ui/PinBoardPanel.gd)
         - 🏛️ **global class PinBoardPanel**
           - `func _ready() -> void`
-          - `func show_threads(threads: Array, summary: Dictionary = {}) -> void`
-          - `func board_text() -> String`
+          - `func show_threads(threads: Array, summary: Dictionary = {}, lodestar: Dictionary = {}) -> void`
+          - `func show_tab(tab: String) -> void`
           - `func _render() -> void`
+          - `func _render_lodestar() -> void`
+          - `func _log_row(heading: String, text: String) -> Control`
+          - `func board_text() -> String`
+          - `func _render_loose_ends() -> void`
           - `func _thread_row(t: Dictionary, revealed: bool) -> Control`
           - `func _on_pin(thread_id: String, pinned: bool) -> void`
       - 📄 [PinBoardPanel.gd.uid](file:///D:/CodingProjects/spacegame/scripts/ui/PinBoardPanel.gd.uid)

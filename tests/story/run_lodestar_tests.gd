@@ -81,6 +81,71 @@ func _initialize() -> void:
 	_check(guide.try_introduce() and bool(guide.current()["known"]), "first trip away from home: she passes on the hint")
 	_check(not guide.try_introduce(), "only once")
 
+	# --- Bearings (step 10) -------------------------------------------------------
+	# Depths: 1-2 Class I, 3-4 Class II, 5-6 Class III, 7-9 Class IV.
+	for id in ["d3", "d5", "d5b", "d5c", "d7", "d10", "d13"]:
+		depths[id] = int(id.substr(1, 2))
+	_check(guide.pending_bearing() == -1 and not guide.offer("receiver"), "no bearing in a Class I system")
+	gs.current_system_id = "d3"
+	_check(guide.pending_bearing() == 0, "Class II: the first bearing is waiting")
+	_check(guide.offer("receiver") and Lodestar.bearings_found(guide.current()) == 1, "the receiver carries it")
+	_check(not guide.offer("drone"), "one bearing per class: the next needs Class III")
+	# Investigations finish as quests with investigation data.
+	gs.current_system_id = "d5"
+	guide._on_quest_completed({"title": "A delivery"})
+	_check(Lodestar.bearings_found(guide.current()) == 1, "an ordinary job carries nothing")
+	guide._on_quest_completed({"investigation": {"branch_id": "x"}})
+	_check(Lodestar.bearings_found(guide.current()) == 2, "an investigation carries the Class III bearing")
+	# Never missed: the second new system of the class with it still waiting.
+	gs.current_system_id = "d7"
+	guide.note_arrival()
+	_check(Lodestar.bearings_found(guide.current()) == 2, "first Class IV system: still waiting for an activity")
+	gs.current_system_id = "d7"
+	guide.note_arrival()
+	_check(Lodestar.bearings_found(guide.current()) == 2, "the same system again doesn't count")
+	depths["d8"] = 8
+	gs.current_system_id = "d8"
+	guide.note_arrival()
+	_check(Lodestar.bearings_found(guide.current()) == 3, "second new Class IV system: it arrives as a rumour")
+	gs.current_system_id = "d10"
+	_check(guide.offer("anomaly"), "Class V: an anomaly")
+	gs.current_system_id = "d13"
+	_check(guide.offer("kaelen") and Lodestar.bearings_found(guide.current()) == 5, "Class VI: Kaelen's lead, and that's all five")
+	_check(Lodestar.wedge_degrees(Lodestar.bearings_found(guide.current())) == 0.0 and guide.pending_bearing() == -1, "the place is marked; nothing more to find")
+	_check(guide.current()["bearings"] == [0, 1, 2, 3, 4], "found in order")
+
+	# The shared entry point finds the guide on the running scene.
+	_check(not GuideType.offer_from("drone"), "no game scene, no bearing (and no crash)")
+	var scene_script := GDScript.new()
+	scene_script.source_code = "extends Node\nvar lodestar_guide: Node = null\n"
+	scene_script.reload()
+	var fake_scene: Node = scene_script.new()
+	root.add_child(fake_scene)
+	fake_scene.lodestar_guide = guide
+	current_scene = fake_scene
+	sm.story_state.erase(Lodestar.STATE_KEY)
+	guide.current()["known"] = true
+	gs.current_system_id = "d3"
+	_check(GuideType.offer_from("drone"), "an activity reaches the guide through offer_from")
+	current_scene = null
+	fake_scene.free()
+	# Each activity is wired to it.
+	for wiring in [["res://scripts/story/activities/SignalTuningActivity.gd", "receiver"], ["res://scripts/story/activities/DroneMazeActivity.gd", "drone"],
+			["res://scripts/SpaceAnomaly.gd", "anomaly"], ["res://scripts/navigation/GateDiscoveryManager.gd", "kaelen"]]:
+		var text := FileAccess.get_file_as_string(str(wiring[0]))
+		_check(text.contains("offer_from(\"%s\")" % wiring[1]), "%s offers the %s bearing" % [str(wiring[0]).get_file(), wiring[1]])
+
+	# The Lodestar log tab on the loose ends board.
+	var board = load("res://scripts/ui/PinBoardPanel.gd").new()
+	root.add_child(board)
+	var card: Dictionary = Lodestar.card_of(guide.current())
+	board.show_threads([], {}, {"title": card["title"], "first_hint": card["first_hint"], "bearings": [card["bearings"][0]["text"]], "found": 1, "total": 5, "next_class": "III"})
+	var text: String = board.board_text()
+	_check(text.contains(str(card["bearings"][0]["text"])) and text.contains("Bearings 1 of 5"), "the log shows what's been found: %s" % text.left(120))
+	board.show_threads([{"id": "t1", "text": "Odd cargo"}], {}, {})
+	_check(not board._tabs.visible, "no Lodestar yet, no tab")
+	board.free()
+
 	guide.free()
 	gs.current_system_id = saved_system
 	sm.story_state = saved_story

@@ -238,6 +238,8 @@ func _finish() -> void:
 	_record_persistent_state()
 	GlobalState.active_system_entities.erase(self)
 	GlobalState.entities_changed.emit()
+	# Its readings may carry a Lodestar bearing (core loop step 10).
+	load("res://scripts/story/LodestarGuide.gd").offer_from("anomaly")
 	# Fade out light before freeing
 	if _light and is_instance_valid(_light):
 		_light.light_energy = 0.0

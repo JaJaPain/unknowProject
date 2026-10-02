@@ -336,6 +336,9 @@ func _on_finished(outcome_id: String, clarity: float) -> void:
 	var line := _line("%s_%s" % [kind, grade])
 	var wait := 2.0 + heard.split(" ").size() * 0.35
 	get_tree().create_timer(wait).timeout.connect(func() -> void: _nova(line))
+	# A Lodestar bearing may be buried in it (core loop step 10).
+	get_tree().create_timer(wait + 3.0).timeout.connect(func() -> void:
+		load("res://scripts/story/LodestarGuide.gd").offer_from("receiver"))
 
 
 func _line(key: String) -> String:

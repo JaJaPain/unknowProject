@@ -24,6 +24,12 @@ var _rows: VBoxContainer
 var _header: Label
 var _threads: Array = []
 var _summary: Dictionary = {}
+## The Lodestar log tab (core loop step 10): {title, first_hint, bearings:
+## [text], found, total, next_class} or {} while the captain hasn't heard of it.
+var _lodestar: Dictionary = {}
+var _tab := "loose"
+var _tabs: HBoxContainer
+var _title: Label
 
 
 func _ready() -> void:
@@ -40,12 +46,23 @@ func _ready() -> void:
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 10)
 	add_child(layout)
-	var title := Label.new()
-	title.text = "LOOSE ENDS"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", PIN_COLOR)
-	layout.add_child(title)
+	_title = Label.new()
+	_title.text = "LOOSE ENDS"
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.add_theme_font_size_override("font_size", 20)
+	_title.add_theme_color_override("font_color", PIN_COLOR)
+	layout.add_child(_title)
+	_tabs = HBoxContainer.new()
+	_tabs.alignment = BoxContainer.ALIGNMENT_CENTER
+	_tabs.add_theme_constant_override("separation", 8)
+	layout.add_child(_tabs)
+	for tab in [["loose", "Loose ends"], ["lodestar", "Lodestar log"]]:
+		var b := Button.new()
+		b.name = "Tab_" + str(tab[0])
+		b.text = str(tab[1])
+		b.toggle_mode = true
+		b.pressed.connect(func() -> void: show_tab(str(tab[0])))
+		_tabs.add_child(b)
 	_header = Label.new()
 	_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_header.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -69,11 +86,76 @@ func _ready() -> void:
 	layout.add_child(back)
 
 
-func show_threads(threads: Array, summary: Dictionary = {}) -> void:
+func show_threads(threads: Array, summary: Dictionary = {}, lodestar: Dictionary = {}) -> void:
 	_threads = threads.duplicate(true)
 	_summary = summary.duplicate(true)
+	_lodestar = lodestar.duplicate(true)
+	if _lodestar.is_empty():
+		_tab = "loose"
+	elif _threads.is_empty():
+		_tab = "lodestar"
 	visible = true
 	_render()
+
+
+func show_tab(tab: String) -> void:
+	_tab = "lodestar" if tab == "lodestar" and not _lodestar.is_empty() else "loose"
+	_render()
+
+
+func _render() -> void:
+	_tabs.visible = not _lodestar.is_empty()
+	for b in _tabs.get_children():
+		(b as Button).set_pressed_no_signal(str(b.name) == "Tab_" + _tab)
+	if _tab == "lodestar":
+		_render_lodestar()
+	else:
+		_title.text = "LOOSE ENDS"
+		_render_loose_ends()
+
+
+## What's known about the campaign's Lodestar: the rumour, then every bearing
+## found, oldest first.
+func _render_lodestar() -> void:
+	for child in _rows.get_children():
+		_rows.remove_child(child)
+		child.queue_free()
+	_title.text = "LODESTAR LOG"
+	var found := int(_lodestar.get("found", 0))
+	var total := int(_lodestar.get("total", 5))
+	if found >= total:
+		_header.text = "%s. Every bearing found: it's marked on the star map." % str(_lodestar.get("title", ""))
+	else:
+		_header.text = "%s. Bearings %d of %d. The next can turn up past the Class %s gates: any receiver, drone dive, anomaly, investigation or lead of Kaelen's there." % [
+			str(_lodestar.get("title", "")), found, total, str(_lodestar.get("next_class", ""))]
+	_rows.add_child(_log_row("The rumour", str(_lodestar.get("first_hint", ""))))
+	var bearings: Array = _lodestar.get("bearings", [])
+	for i in bearings.size():
+		_rows.add_child(_log_row("Bearing %d" % (i + 1), str(bearings[i])))
+
+
+func _log_row(heading: String, text: String) -> Control:
+	var card := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.1, 0.085, 0.05, 0.9)
+	style.set_border_width_all(1)
+	style.border_color = Color(PIN_COLOR, 0.55)
+	style.set_corner_radius_all(3)
+	style.set_content_margin_all(10)
+	card.add_theme_stylebox_override("panel", style)
+	var box := VBoxContainer.new()
+	card.add_child(box)
+	var head := Label.new()
+	head.text = heading.to_upper()
+	head.add_theme_font_size_override("font_size", 11)
+	head.add_theme_color_override("font_color", PIN_COLOR)
+	box.add_child(head)
+	var body := Label.new()
+	body.text = text
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.add_theme_color_override("font_color", NOTE_COLOR)
+	box.add_child(body)
+	return card
 
 
 ## Plain text of what is on the board (tests, and a future read-aloud).
@@ -85,7 +167,7 @@ func board_text() -> String:
 	return "\n".join(lines)
 
 
-func _render() -> void:
+func _render_loose_ends() -> void:
 	for child in _rows.get_children():
 		_rows.remove_child(child)
 		child.queue_free()

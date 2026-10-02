@@ -8281,11 +8281,15 @@ func _refresh_loose_ends_button() -> void:
 		return
 	var root := get_tree().current_scene
 	var threads: Array = root.premise_main_story_threads() if root != null and root.has_method("premise_main_story_threads") else []
-	loose_ends_btn.visible = not threads.is_empty()
+	# The Lodestar log lives on the same board (core loop step 10).
+	var lodestar_info := lodestar_log()
+	loose_ends_btn.visible = not threads.is_empty() or not lodestar_info.is_empty()
 	if not threads.is_empty():
 		WikiType.unlock("loose_ends")
 	var pinned := threads.filter(func(t): return bool(t.get("pinned", false))).size()
 	loose_ends_btn.text = "Loose ends (%d noticed, %d pinned)" % [threads.size(), pinned]
+	if not lodestar_info.is_empty():
+		loose_ends_btn.text += "  ·  Lodestar %d/%d" % [int(lodestar_info["found"]), int(lodestar_info["total"])]
 
 
 ## A new loose end is a reward, and should feel like one (Abe, 2026-10-01): a
@@ -8471,7 +8475,24 @@ func _on_loose_ends_pressed() -> void:
 			public_board_panel.visible = true
 			_refresh_loose_ends_button())
 	public_board_panel.visible = false
-	pin_board_panel.show_threads(root.premise_main_story_threads(), root.premise_main_story_summary())
+	pin_board_panel.show_threads(root.premise_main_story_threads(), root.premise_main_story_summary(), lodestar_log())
+
+
+## The Lodestar log tab's data (core loop step 10), {} until N.O.V.A. has
+## passed on the first hint.
+func lodestar_log() -> Dictionary:
+	var Lodestar = load("res://scripts/domain/Lodestar.gd")
+	var s: Dictionary = Lodestar.state(StoryManager.story_state, int(GlobalState.campaign_seed))
+	var card: Dictionary = Lodestar.card_of(s)
+	if card.is_empty() or not bool(s.get("known", false)):
+		return {}
+	var texts: Array = []
+	for index in s.get("bearings", []):
+		texts.append(str(card["bearings"][int(index)]["text"]))
+	var found: int = Lodestar.bearings_found(s)
+	return {"title": str(card["title"]), "first_hint": str(card["first_hint"]), "bearings": texts,
+		"found": found, "total": Lodestar.BEARINGS,
+		"next_class": load("res://scripts/domain/GateClass.gd").class_name_of(Lodestar.bearing_class(found))}
 
 
 ## Shows one premise-arc decision (a finding to report, or a story choice)

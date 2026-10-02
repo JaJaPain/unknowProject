@@ -49,6 +49,8 @@ const CRATE_MATERIAL_CHANCE := 0.1
 const CRYSTAL_ITEM := "resonant_crystal"
 const CRYSTAL_CHANCE := 0.5
 const CRYSTAL_INTEGRITY := 0.8
+## A Lodestar bearing in the haul shows up after the haul's own lines.
+const BEARING_DELAY_S := 5.0
 ## A free drone from an enemy's debris.
 const KILL_DRONE_CHANCE := 0.03
 ## The first rung is guided (core loop 3.4): until the first rock dive is done,
@@ -331,6 +333,10 @@ func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenera
 		if not (first_rock_dive and _give_spare()):
 			_nova(_line("lost"))
 		return
+	# Anything brought home may carry a Lodestar bearing (core loop step 10).
+	if Maze.extracted_count(state) > 0 and is_inside_tree():
+		get_tree().create_timer(BEARING_DELAY_S).timeout.connect(func() -> void:
+			load("res://scripts/story/LodestarGuide.gd").offer_from("drone"))
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()

@@ -97,6 +97,8 @@ func kaelen_reveal(gate_id: String, cost: int) -> Dictionary:
 
 	_last_kaelen_offer_time = CampaignClock.total_minutes
 	gate_state_changed.emit(gate_id, current_state, "known")
+	# Her leads can carry a Lodestar bearing too (core loop step 10).
+	load("res://scripts/story/LodestarGuide.gd").offer_from("kaelen")
 	return {"ok": true, "old_state": current_state, "cost": cost}
 
 
