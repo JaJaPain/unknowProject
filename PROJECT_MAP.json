@@ -9172,6 +9172,7 @@
             "func _premise_sync_seed() -> void",
             "func _refresh_local_faction_looks() -> void",
             "func _premise_on_system_arrived() -> void",
+            "func _short_pulls_on_arrival(world: Dictionary, quirks: Array) -> void",
             "func premise_board_postings() -> Array",
             "func premise_pending_decisions() -> Array",
             "func premise_apply_decision(arc_id: String, option_id: String) -> void",
@@ -10661,6 +10662,8 @@
             "func clear_dock_message() -> void",
             "func _restyle_agent_choices() -> void",
             "func _press_agent_reply(index: int) -> bool",
+            "func _update_survey_button() -> void",
+            "func _on_sell_survey_pressed() -> void",
             "func _agent_trade_button(callback: Callable) -> Button",
             "func _sync_trade_tooltips() -> void",
             "func _update_fuel_buttons() -> void",
@@ -12446,6 +12449,25 @@
             },
             {
               "type": "file",
+              "name": "ShortPulls.gd",
+              "path": "scripts/domain/ShortPulls.gd",
+              "classes": [],
+              "functions": [
+                "static func teaser_from_profile(profile: Dictionary, system_id: String) -> String",
+                "static func richest_ore(ores: Dictionary) -> String",
+                "static func profile_for_system(config, system_id: String, depth: int) -> Dictionary",
+                "static func survey_value(base: int, depth: int) -> int",
+                "static func record_visit(story_state: Dictionary, system_id: String, depth: int) -> Dictionary",
+                "static func record_anomaly(story_state: Dictionary, anomaly_id: String, depth: int) -> Dictionary",
+                "static func _add(story_state: Dictionary, entry: Dictionary) -> Dictionary",
+                "static func unsold(story_state: Dictionary) -> Dictionary",
+                "static func sell_all(story_state: Dictionary) -> int",
+                "static func note_firsts(story_state: Dictionary, quirks: Array) -> Dictionary",
+                "static func wiki_id(quirk: String) -> String"
+              ]
+            },
+            {
+              "type": "file",
               "name": "SiteRevealModel.gd",
               "path": "scripts/domain/SiteRevealModel.gd",
               "classes": [
@@ -13183,6 +13205,11 @@
             },
             {
               "type": "file",
+              "name": "GasGiantLook.gd.uid",
+              "path": "scripts/generation/GasGiantLook.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "GeneratedSystemNPCManager.gd",
               "path": "scripts/generation/GeneratedSystemNPCManager.gd",
               "classes": [
@@ -13489,6 +13516,11 @@
                 "static func visual_radius(node: Node3D) -> float",
                 "static func collision_radius(node: Node3D) -> float"
               ]
+            },
+            {
+              "type": "file",
+              "name": "ObstacleBounds.gd.uid",
+              "path": "scripts/navigation/ObstacleBounds.gd.uid"
             },
             {
               "type": "file",
@@ -17131,6 +17163,7 @@
                     "func _process(_delta: float) -> void",
                     "func _lodestar_hit(p: Vector2) -> bool",
                     "func _draw_lodestar() -> void",
+                    "func _teaser_line(sys_id: String) -> String",
                     "func _gate_class_line(sys_id: String) -> String",
                     "func _handle_click(click_pos: Vector2) -> void",
                     "func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void",
@@ -18180,6 +18213,11 @@
           "type": "file",
           "name": "gas_giant.gdshader",
           "path": "shaders/gas_giant.gdshader"
+        },
+        {
+          "type": "file",
+          "name": "gas_giant.gdshader.uid",
+          "path": "shaders/gas_giant.gdshader.uid"
         },
         {
           "type": "file",
@@ -19679,6 +19717,11 @@
             },
             {
               "type": "file",
+              "name": "run_gas_giant_look_tests.gd.uid",
+              "path": "tests/generation/run_gas_giant_look_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_system_factory_tests.gd",
               "path": "tests/generation/run_system_factory_tests.gd",
               "classes": [],
@@ -20539,6 +20582,11 @@
                 "func _flatten(value, out: Dictionary) -> void",
                 "func _check(condition: bool, message: String) -> void"
               ]
+            },
+            {
+              "type": "file",
+              "name": "run_cloned_cast_tests.gd.uid",
+              "path": "tests/speech/run_cloned_cast_tests.gd.uid"
             },
             {
               "type": "file",
@@ -22356,6 +22404,11 @@
             },
             {
               "type": "file",
+              "name": "run_payout_comment_tests.gd.uid",
+              "path": "tests/story/run_payout_comment_tests.gd.uid"
+            },
+            {
+              "type": "file",
               "name": "run_pin_board_tests.gd",
               "path": "tests/story/run_pin_board_tests.gd",
               "classes": [],
@@ -22848,6 +22901,21 @@
               "type": "file",
               "name": "run_ship_movement_event_tests.gd.uid",
               "path": "tests/story/run_ship_movement_event_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_short_pulls_tests.gd",
+              "path": "tests/story/run_short_pulls_tests.gd",
+              "classes": [
+                {
+                  "name": "FakeConfig",
+                  "methods": []
+                }
+              ],
+              "functions": [
+                "func _initialize() -> void",
+                "func _check(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",

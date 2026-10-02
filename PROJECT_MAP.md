@@ -3176,6 +3176,7 @@ Root: `spacegame`
       - `func _premise_sync_seed() -> void`
       - `func _refresh_local_faction_looks() -> void`
       - `func _premise_on_system_arrived() -> void`
+      - `func _short_pulls_on_arrival(world: Dictionary, quirks: Array) -> void`
       - `func premise_board_postings() -> Array`
       - `func premise_pending_decisions() -> Array`
       - `func premise_apply_decision(arc_id: String, option_id: String) -> void`
@@ -4467,6 +4468,8 @@ Root: `spacegame`
       - `func clear_dock_message() -> void`
       - `func _restyle_agent_choices() -> void`
       - `func _press_agent_reply(index: int) -> bool`
+      - `func _update_survey_button() -> void`
+      - `func _on_sell_survey_pressed() -> void`
       - `func _agent_trade_button(callback: Callable) -> Button`
       - `func _sync_trade_tooltips() -> void`
       - `func _update_fuel_buttons() -> void`
@@ -5349,6 +5352,18 @@ Root: `spacegame`
         - 🏛️ **global class ShipDesignDefinition**
           - `func load_from_dict(data: Dictionary) -> ValidationResult`
       - 📄 [ShipDesignDefinition.gd.uid](file:///D:/CodingProjects/spacegame/scripts/domain/ShipDesignDefinition.gd.uid)
+      - 📄 [ShortPulls.gd](file:///D:/CodingProjects/spacegame/scripts/domain/ShortPulls.gd)
+        - `static func teaser_from_profile(profile: Dictionary, system_id: String) -> String`
+        - `static func richest_ore(ores: Dictionary) -> String`
+        - `static func profile_for_system(config, system_id: String, depth: int) -> Dictionary`
+        - `static func survey_value(base: int, depth: int) -> int`
+        - `static func record_visit(story_state: Dictionary, system_id: String, depth: int) -> Dictionary`
+        - `static func record_anomaly(story_state: Dictionary, anomaly_id: String, depth: int) -> Dictionary`
+        - `static func _add(story_state: Dictionary, entry: Dictionary) -> Dictionary`
+        - `static func unsold(story_state: Dictionary) -> Dictionary`
+        - `static func sell_all(story_state: Dictionary) -> int`
+        - `static func note_firsts(story_state: Dictionary, quirks: Array) -> Dictionary`
+        - `static func wiki_id(quirk: String) -> String`
       - 📄 [SiteRevealModel.gd](file:///D:/CodingProjects/spacegame/scripts/domain/SiteRevealModel.gd)
         - 🏛️ **global class SiteRevealModel**
           - `static func anomaly_reveal_range() -> float`
@@ -5669,6 +5684,7 @@ Root: `spacegame`
         - `static func look_for(seed_value: int) -> Dictionary`
         - `static func material_for(seed_value: int) -> ShaderMaterial`
         - `static func apply(planet: Node3D, seed_value: int) -> void`
+      - 📄 [GasGiantLook.gd.uid](file:///D:/CodingProjects/spacegame/scripts/generation/GasGiantLook.gd.uid)
       - 📄 [GeneratedSystemNPCManager.gd](file:///D:/CodingProjects/spacegame/scripts/generation/GeneratedSystemNPCManager.gd)
         - 🏛️ **global class GeneratedSystemNPCManager**
           - `func initialize(system_config: SystemConfig) -> void`
@@ -5813,6 +5829,7 @@ Root: `spacegame`
       - 📄 [ObstacleBounds.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/ObstacleBounds.gd)
         - `static func visual_radius(node: Node3D) -> float`
         - `static func collision_radius(node: Node3D) -> float`
+      - 📄 [ObstacleBounds.gd.uid](file:///D:/CodingProjects/spacegame/scripts/navigation/ObstacleBounds.gd.uid)
       - 📄 [TangentNavigator.gd](file:///D:/CodingProjects/spacegame/scripts/navigation/TangentNavigator.gd)
         - 🏛️ **global class TangentNavigator**
           - `static func segment_clears_sphere(a: Vector3, b: Vector3, c: Vector3, radius: float) -> bool`
@@ -7654,6 +7671,7 @@ Root: `spacegame`
           - `func _process(_delta: float) -> void`
           - `func _lodestar_hit(p: Vector2) -> bool`
           - `func _draw_lodestar() -> void`
+          - `func _teaser_line(sys_id: String) -> String`
           - `func _gate_class_line(sys_id: String) -> String`
           - `func _handle_click(click_pos: Vector2) -> void`
           - `func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void`
@@ -8164,6 +8182,7 @@ Root: `spacegame`
     - 📄 [flipbook_additive.gdshader](file:///D:/CodingProjects/spacegame/shaders/flipbook_additive.gdshader)
     - 📄 [flipbook_additive.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/flipbook_additive.gdshader.uid)
     - 📄 [gas_giant.gdshader](file:///D:/CodingProjects/spacegame/shaders/gas_giant.gdshader)
+    - 📄 [gas_giant.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/gas_giant.gdshader.uid)
     - 📄 [hyperspace_tunnel.gdshader](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel.gdshader)
     - 📄 [hyperspace_tunnel.gdshader.uid](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel.gdshader.uid)
     - 📄 [hyperspace_tunnel_3d.gdshader](file:///D:/CodingProjects/spacegame/shaders/hyperspace_tunnel_3d.gdshader)
@@ -8919,6 +8938,7 @@ Root: `spacegame`
       - 📄 [run_gas_giant_look_tests.gd](file:///D:/CodingProjects/spacegame/tests/generation/run_gas_giant_look_tests.gd)
         - `func _initialize() -> void`
         - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_gas_giant_look_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/generation/run_gas_giant_look_tests.gd.uid)
       - 📄 [run_system_factory_tests.gd](file:///D:/CodingProjects/spacegame/tests/generation/run_system_factory_tests.gd)
         - `func _initialize() -> void`
         - `func _run() -> void`
@@ -9348,6 +9368,7 @@ Root: `spacegame`
         - `func _initialize() -> void`
         - `func _flatten(value, out: Dictionary) -> void`
         - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_cloned_cast_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/speech/run_cloned_cast_tests.gd.uid)
       - 📄 [run_speech_service_tests.gd](file:///D:/CodingProjects/spacegame/tests/speech/run_speech_service_tests.gd)
         - `func _initialize() -> void`
         - `func _check_gameplay_caller(path: String) -> void`
@@ -10175,6 +10196,7 @@ Root: `spacegame`
       - 📄 [run_payout_comment_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_payout_comment_tests.gd)
         - `func _initialize() -> void`
         - `func _check(condition: bool, message: String) -> void`
+      - 📄 [run_payout_comment_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_payout_comment_tests.gd.uid)
       - 📄 [run_pin_board_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_pin_board_tests.gd)
         - `func _initialize() -> void`
         - `func _check(condition: bool, message: String) -> void`
@@ -10397,6 +10419,10 @@ Root: `spacegame`
         - `func _test_remaining_emitters_are_wired() -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_ship_movement_event_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_ship_movement_event_tests.gd.uid)
+      - 📄 [run_short_pulls_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_short_pulls_tests.gd)
+        - 🏛️ **FakeConfig**
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
       - 📄 [run_showrunner_live.gd](file:///D:/CodingProjects/spacegame/tests/story/run_showrunner_live.gd)
         - `func _initialize() -> void`
         - `func _on_done(result: int, code: int, _headers: PackedStringArray, body: PackedByteArray) -> void`

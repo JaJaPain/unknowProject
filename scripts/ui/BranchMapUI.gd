@@ -368,6 +368,7 @@ func _ensure_unknown_destination_node(
 		"gate_id": gate_id,
 		"gate_name": str(gate_def.display_name),
 		"state": state,
+		"destination_system_id": str(gate_def.destination_system_id),
 	}
 	_create_system_label(UNKNOWN_DESTINATION_LABEL, pos, false)
 	return placeholder_id
@@ -557,7 +558,8 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 			var text: String = data["display_name"]
 			if data.get("is_placeholder", false):
 				text += "\nStatus: %s" % str(data.get("state", "unknown")).capitalize()
-				text += "\nDestination details unavailable"
+				var hint := _teaser_line(str(data.get("destination_system_id", "")))
+				text += ("\n[color=#9fe0ff]Scans: %s.[/color]" % hint) if not hint.is_empty() else "\nDestination details unavailable"
 				text += _gate_class_line(sys_id)
 				_tooltip_label.text = text
 				_tooltip_panel.position = pos + Vector2(15, -_tooltip_panel.size.y - 5)
@@ -585,7 +587,9 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 			var known: Dictionary = StoryManager.story_state.get("known_system_ores", {})
 			var ores: Array = known.get(sys_id, known.get(str(data.get("legacy_id", "")), []))
 			if ores.is_empty():
-				text += "\nOres: unknown until visited"
+				# One true thing before you go (core loop step 11).
+				var teaser := _teaser_line(sys_id)
+				text += ("\n[color=#9fe0ff]Scans: %s.[/color]" % teaser) if not teaser.is_empty() else "\nOres: unknown until visited"
 			else:
 				var ore_names: Array[String] = []
 				for ore in ores:
@@ -703,6 +707,27 @@ func _draw_lodestar() -> void:
 	label_at.x = clampf(label_at.x, 6.0, WINDOW_SIZE.x - size.x - 6.0)
 	label_at.y = clampf(label_at.y, TITLE_BAR_HEIGHT + 16.0, WINDOW_SIZE.y - 8.0)
 	draw_string(font, label_at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(gold, 0.9))
+
+## One true thing the long-range scans see in an unvisited system: a quirk or
+## its richest ore, from the profile it will have when you arrive. "" when
+## there's nothing to say (or no generated config yet).
+func _teaser_line(sys_id: String) -> String:
+	if sys_id.is_empty():
+		return ""
+	var root := get_tree().current_scene
+	var registry = root.get("system_registry") if root != null else null
+	if registry == null:
+		return ""
+	var runtime := str(registry.runtime_system_id(sys_id)) if registry.has_method("runtime_system_id") else ""
+	if runtime.is_empty():
+		runtime = sys_id
+	var config = registry.get_generated_config(runtime)
+	if config == null:
+		config = registry.get_generated_config(sys_id)
+	var depth: int = load("res://scripts/story/premise/PremiseWorldSnapshot.gd")._system_depth(runtime)
+	var ShortPulls := load("res://scripts/domain/ShortPulls.gd")
+	return ShortPulls.teaser_from_profile(ShortPulls.profile_for_system(config, runtime, depth), runtime)
+
 
 ## The gate class to reach `sys_id` and whether the ship can open it, from the
 ## same check the jump uses (green open, red not yet).

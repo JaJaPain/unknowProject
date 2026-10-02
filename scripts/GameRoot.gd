@@ -1557,13 +1557,37 @@ func _premise_on_system_arrived() -> void:
 	premise_director.tick(now)
 	var world := PremiseWorldSnapshotType.capture(now)
 	premise_director.ensure_arcs(world, now)
+	# The tutorial stays an ordinary system.
+	var quirks: Array = premise_director.profile_for(world).get("quirks", []) if bool(world.get("post_tutorial", false)) else []
 	if is_instance_valid(system_quirk_runner):
-		# The tutorial stays an ordinary system.
-		var quirks: Array = premise_director.profile_for(world).get("quirks", []) if bool(world.get("post_tutorial", false)) else []
 		system_quirk_runner.enter_system(quirks)
+	_short_pulls_on_arrival(world, quirks)
 	# Write this system's lines in the background, so they are ready (and
 	# voiced) by the time the pilot opens the board.
 	premise_director.prepare_lines(world)
+
+
+## Core loop step 11 on arrival: a new system is survey data Kaelen buys, and
+## the first of each kind of system gets N.O.V.A.'s reaction and a wiki entry.
+const ShortPullsType := preload("res://scripts/domain/ShortPulls.gd")
+const FIRST_LINE_DELAY_S := 9.0
+
+
+func _short_pulls_on_arrival(world: Dictionary, quirks: Array) -> void:
+	var entry: Dictionary = ShortPullsType.record_visit(StoryManager.story_state, str(world.get("system_id", "")), int(world.get("system_depth", -1)))
+	if not entry.is_empty():
+		print("[Survey] %s charted: %d SC of data" % [str(entry["id"]), int(entry["value"])])
+		GlobalState.emit_chatter("SURVEY", "New system charted. Kaelen will pay %d SC for the data." % int(entry["value"]), Color(0.55, 0.9, 1.0))
+		load("res://scripts/ui/Wiki.gd").unlock("survey_data")
+	var firsts: Dictionary = ShortPullsType.note_firsts(StoryManager.story_state, quirks)
+	for quirk in firsts["new"]:
+		load("res://scripts/ui/Wiki.gd").unlock(ShortPullsType.wiki_id(str(quirk)))
+	var line := str(firsts["line"])
+	if not line.is_empty():
+		# After the arrival card and the system's own notes.
+		get_tree().create_timer(FIRST_LINE_DELAY_S).timeout.connect(func() -> void:
+			if is_instance_valid(Nova) and Nova.has_method("ask_captain"):
+				Nova.ask_captain(line, "nav"))
 
 
 ## Board postings for the current system's premise arcs (read by UIManager).
@@ -11062,6 +11086,17 @@ func _run_map_snapshot() -> void:
 	for i in 10:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("map_tooltip.png"))
+	# Core loop step 11: the scans' teaser over a system not yet visited.
+	for node_id in ui.branch_map.system_nodes:
+		var node_data: Dictionary = ui.branch_map.system_nodes[node_id]
+		if bool(node_data.get("is_current", false)):
+			continue
+		ui.branch_map._update_hover_tooltip(node_data["position"])
+		print("[MapSnapshot] teaser on ", node_id, ": ", ui.branch_map._tooltip_label.text.replace("\n", " | "))
+		for i in 10:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("map_teaser.png"))
+		break
 	get_tree().quit()
 
 

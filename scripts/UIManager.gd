@@ -250,6 +250,7 @@ var refine_fuel_btn: Button
 ## choices; hidden while Kaelen gives the tutorial briefing.
 var agent_trade_grid: GridContainer
 var compress_o2_btn: Button
+var sell_survey_btn: Button
 var buy_fuel_btn: Button
 var fabricate_blocks_btn: Button
 var repair_btn: Button
@@ -1982,6 +1983,8 @@ func _create_dock_menu():
 	fabricate_blocks_btn = _agent_trade_button(_on_fabricate_blocks_pressed)
 	# O2 canisters for relief jobs, compressed here from the hold's ice.
 	compress_o2_btn = _agent_trade_button(_on_compress_o2_pressed)
+	# Survey data from new systems and anomalies (core loop step 11).
+	sell_survey_btn = _agent_trade_button(_on_sell_survey_pressed)
 
 	agent_back_btn = Button.new()
 	agent_back_btn.text = "Back to Services"
@@ -12615,6 +12618,32 @@ func _press_agent_reply(index: int) -> bool:
 	return false
 
 
+## Kaelen buys survey data: new systems charted, anomalies scanned (core loop
+## step 11). Exploring is income, not only cost.
+func _update_survey_button() -> void:
+	if sell_survey_btn == null or not is_instance_valid(sell_survey_btn):
+		return
+	var waiting: Dictionary = load("res://scripts/domain/ShortPulls.gd").unsold(StoryManager.story_state)
+	if int(waiting["count"]) > 0:
+		sell_survey_btn.text = "Sell Survey Data (%d → %d SC)" % [int(waiting["count"]), int(waiting["value"])]
+		sell_survey_btn.disabled = false
+	else:
+		sell_survey_btn.text = "Sell Survey Data (none yet)"
+		sell_survey_btn.disabled = true
+	sell_survey_btn.tooltip_text = "New systems and scanned anomalies. Kaelen pays more for data from deeper out."
+
+
+func _on_sell_survey_pressed() -> void:
+	var credits: int = load("res://scripts/domain/ShortPulls.gd").sell_all(StoryManager.story_state)
+	if credits <= 0:
+		return
+	GlobalState.add_credits(credits)
+	if is_instance_valid(AudioManager) and AudioManager.has_method("play_sell_ore"):
+		AudioManager.play_sell_ore()
+	GlobalState.emit_chatter("SURVEY", "Survey data sold to Kaelen: %d SC." % credits, Color(0.55, 0.9, 1.0))
+	_update_sell_button()
+
+
 func _agent_trade_button(callback: Callable) -> Button:
 	var button := Button.new()
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -12712,6 +12741,7 @@ func _on_buy_fuel_pressed() -> void:
 func _update_sell_button():
 	_update_fuel_buttons()
 	_update_bank_button()
+	_update_survey_button()
 	if not sell_btn:
 		return
 	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:

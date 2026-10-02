@@ -238,6 +238,11 @@ func _finish() -> void:
 	_record_persistent_state()
 	GlobalState.active_system_entities.erase(self)
 	GlobalState.entities_changed.emit()
+	# Its readings are survey data Kaelen buys (core loop step 11).
+	var depth: int = load("res://scripts/domain/DepthScaling.gd").current_depth()
+	var entry: Dictionary = load("res://scripts/domain/ShortPulls.gd").record_anomaly(StoryManager.story_state, get_world_id(), depth)
+	if not entry.is_empty():
+		GlobalState.emit_chatter("SURVEY", "Anomaly readings logged. Kaelen will pay %d SC for them." % int(entry["value"]), Color(0.55, 0.9, 1.0))
 	# Its readings may carry a Lodestar bearing (core loop step 10).
 	load("res://scripts/story/LodestarGuide.gd").offer_from("anomaly")
 	# Fade out light before freeing

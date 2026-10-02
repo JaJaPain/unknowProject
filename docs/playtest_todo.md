@@ -574,3 +574,19 @@ campaign. Getting there takes a while; checks for when you do:
       ice blue, teal, violet, rust, sage, rose or slate) and two or three
       storms: rough, roughly round spots whose insides keep swirling. Jump around: other systems' gas giants differ too. Bands drift
       very slowly, and the edge has a soft glow.
+
+## P. Short pulls (added 2026-10-02, core loop step 11)
+
+- [ ] **Scans before you go.** Open the star map (M) and hover over a system
+      you haven't visited, or an "Uncharted Signal": a blue "Scans: ..."
+      line says one thing about it (a nebula, ion storms, a dying star, "Its
+      belts carry thorium"...). Jump there: it's true.
+- [ ] **Survey data.** Jump to a system you've never been to: a blue SURVEY
+      line says the system is charted and what Kaelen will pay. Fly into an
+      anomaly: another SURVEY line. Dock at a main station, Talk to Agent:
+      "Sell Survey Data (N → X SC)" pays it out. Deeper systems pay more.
+      Esc > Wiki: "Survey data" is unlocked.
+- [ ] **Firsts.** The first time you arrive in a system with a nebula (or a
+      pulsar, ion storms, a dying star...), N.O.V.A. says something about it
+      a few seconds after arriving, once per kind. Esc > Wiki: a "Kinds of
+      system" section with that entry.

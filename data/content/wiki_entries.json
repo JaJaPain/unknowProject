@@ -6,6 +6,7 @@
 		"Stations & Trade",
 		"Combat",
 		"Exploration",
+		"Kinds of system",
 		"Story"
 	],
 	"controls": {
@@ -141,6 +142,76 @@
 			"title": "Hull and repairs",
 			"unlocked": true,
 			"body": "The HULL bar is your ship's health. At zero the ship is lost.\n\nDamage stays until you pay for repairs at a station. N.O.V.A. will remind you if you try to leave a station with a damaged hull."
+		},
+		{
+			"id": "survey_data",
+			"category": "Exploration",
+			"title": "Survey data",
+			"unlocked": false,
+			"body": "The first time you arrive in a system, its charts are [b]survey data[/b]. So are the readings from each anomaly you fly into. Kaelen buys it: Talk to Agent at a main station and press [b]Sell Survey Data[/b]. Data from deeper systems pays more.\n\nBefore you jump, hover over an unvisited system on the star map: the long-range scans show one true thing about it, like a nebula, a dying star, or its richest ore."
+		},
+		{
+			"id": "quirk_pulsar",
+			"category": "Kinds of system",
+			"title": "Pulsar",
+			"unlocked": false,
+			"body": "A pulsar sweeps the system on a regular beat. A warning comes a few seconds before each pass, and every pass drains some of your shields. It never touches the hull. Keep shields topped up between sweeps."
+		},
+		{
+			"id": "quirk_nebula",
+			"category": "Kinds of system",
+			"title": "Nebula",
+			"unlocked": false,
+			"body": "Dense gas cuts everyone's sensor range: hostile ships notice you from shorter distances, and faint signals are harder to tune on the receiver."
+		},
+		{
+			"id": "quirk_ion_storm",
+			"category": "Kinds of system",
+			"title": "Ion storms",
+			"unlocked": false,
+			"body": "Ion storms roll through now and then, with a warning first. While one is overhead your shields recharge slowly and the receiver struggles to hold a signal. They pass."
+		},
+		{
+			"id": "quirk_relay_dark_zone",
+			"category": "Kinds of system",
+			"title": "Relay dark zone",
+			"unlocked": false,
+			"body": "The relay network is dark here, so there's no system radio."
+		},
+		{
+			"id": "quirk_dense_debris",
+			"category": "Kinds of system",
+			"title": "Debris fields",
+			"unlocked": false,
+			"body": "Heavy debris from something that happened here long ago. Its belts tend to carry more ferrite."
+		},
+		{
+			"id": "quirk_dying_star",
+			"category": "Kinds of system",
+			"title": "Dying star",
+			"unlocked": false,
+			"body": "The system's star is dying. People here know it, and it shows: evacuations and high prices are common. Its belts tend to carry thorium."
+		},
+		{
+			"id": "quirk_black_hole_proximity",
+			"category": "Kinds of system",
+			"title": "Something massive nearby",
+			"unlocked": false,
+			"body": "Something massive sits past the edge of the system, close enough to bend the starlight."
+		},
+		{
+			"id": "quirk_dead_system",
+			"category": "Kinds of system",
+			"title": "Dead system",
+			"unlocked": false,
+			"body": "No beacons and little chatter. Systems this quiet are often short of supplies."
+		},
+		{
+			"id": "quirk_gravity_tides",
+			"category": "Kinds of system",
+			"title": "Gravity tides",
+			"unlocked": false,
+			"body": "Strong gravity tides from the system's bodies pull at everything in it."
 		},
 		{
 			"id": "lodestar",
