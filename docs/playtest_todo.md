@@ -69,9 +69,9 @@ Claude adds new items here as work lands (newest section at the bottom).
       glowing chunks tumbling away and cooling, then smoke.
       The fireball is now an animated flipbook (white core, orange fire,
       then smoke). Note: does it look right at game distance?
-- [x] **Shake slider.** Pause > settings: "Camera shake" slider. Set it
+- [ ] **Shake slider.** Pause > settings: "Camera shake" slider. Set it
       to 0 and get hit: no shake.
-- [ ] **Enemies face forward.** Enemy ships fly and shoot nose-first.
+- [x] **Enemies face forward.** Enemy ships fly and shoot nose-first.
 
 ## D. Jumping and other systems
 
