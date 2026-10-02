@@ -523,3 +523,14 @@ campaign. Getting there takes a while; checks for when you do:
       targeted (the target panel's name) and roughly where.
 - [ ] **Clicking a planet selects the planet.** Click the gas giant: the
       target panel names the planet, never "SystemContainer [Object]".
+- [ ] **T always answers.** Undock and fly out past 1 km from any station,
+      with no signal announced: press T. A RECEIVER readout appears where the
+      T prompt goes, "Scanning for signals..." with a bar sweeping along its
+      bottom, then "Nothing on the band." and it fades.
+- [ ] **T says why it can't.** Press T within 1 km of a station: "Too much
+      station noise. Move further out." During a fight: "Not in the middle of
+      a fight." With a red ship close: "Hostiles close...".
+- [ ] **Peaceful patrols don't block it.** New campaign (Aurelia and Vanguard
+      at -20): with their patrols nearby but nothing red on the overview, a
+      signal N.O.V.A. announces opens with T. A Reaver contract target on the
+      far side of the system doesn't block it either.

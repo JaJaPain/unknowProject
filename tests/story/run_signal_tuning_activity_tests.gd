@@ -99,6 +99,32 @@ func _initialize() -> void:
 	reloaded.load_from_dict(saved)
 	_check((reloaded.state.get("heard_intercepts", []) as Array).has(ambient["id"]), "heard intercepts survive a save")
 
+	# T always answers (playtest 2026-10-02).
+	var flying := [false]
+	activity.flying_override = func() -> bool: return flying[0]
+	_check(activity.press_tune() == "", "docked or loading: T means nothing")
+	flying[0] = true
+	_check(activity.press_tune() == "scanning" and activity._status.visible and activity._status_label.text == ActivityType.SCANNING_TEXT, "no signal: it scans")
+	activity._update_status(ActivityType.SCAN_SECONDS + 0.1)
+	_check(activity._status_label.text == ActivityType.NOTHING_TEXT, "then reports nothing on the band")
+	var saved_player = gs.player
+	var ship := Node3D.new()
+	root.add_child(ship)
+	gs.player = ship
+	var station := Node3D.new()
+	station.add_to_group("station")
+	root.add_child(station)
+	ship.global_position = Vector3(300, 0, 0)
+	activity.offer(director.faint_transmission({"system_id": "sys.z"}, 9))
+	_check(activity.press_tune() == "blocked" and activity._status_label.text.contains("station noise"), "a signal by a station: it says why: %s" % activity._status_label.text)
+	ship.global_position = Vector3(5000, 0, 0)
+	_check(activity.press_tune() == "tuning" and activity._panel != null, "clear of the station: the tuner opens")
+	if activity._panel != null:
+		activity._panel.abort()
+	station.free()
+	ship.free()
+	gs.player = saved_player
+
 	# Harder in a nebula; much harder under an active ion storm.
 	var nebula := Quirks.environment_at(Quirks.effects_for(["nebula"]), 0.0)
 	_check(float(nebula["signal_interference"]) == 1.5, "a nebula muddies the signal")

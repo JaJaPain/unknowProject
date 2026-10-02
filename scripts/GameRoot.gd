@@ -7788,6 +7788,21 @@ func _run_hud_snapshot() -> void:
 	for i in 30:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("hud_reward.png"))
+	# T with no signal: the receiver scans (playtest 2026-10-02).
+	if is_instance_valid(signal_tuning_activity):
+		signal_tuning_activity.flying_override = func() -> bool: return true
+		print("HUDSHOT receiver by the station: ", signal_tuning_activity.press_tune())
+		for i in 20:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("hud_receiver_blocked.png"))
+		# Out in open space, no signal: the scan.
+		player.global_position += Vector3(6000, 0, -6000)
+		signal_tuning_activity._hide_status()
+		print("HUDSHOT receiver in open space: ", signal_tuning_activity.press_tune())
+		for i in 40:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("hud_receiver_scan.png"))
+		signal_tuning_activity.flying_override = Callable()
 	print("HUDSHOT done")
 	get_tree().quit()
 

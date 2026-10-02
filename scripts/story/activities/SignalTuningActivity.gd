@@ -98,6 +98,7 @@ func _process(delta: float) -> void:
 		_decided = false
 		_offered = {}
 	_update_prompt(delta)
+	_update_status(delta)
 	if _panel != null:
 		if not _can_listen():
 			_panel.abort()
@@ -114,9 +115,157 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == TUNE_KEY:
-		if not _offered.is_empty() and _panel == null and _can_listen() and not _near_station():
-			open_tuning()
+		if press_tune():
 			get_viewport().set_input_as_handled()
+
+
+## T always answers (playtest 2026-10-02: it was silently ignored whenever
+## something blocked the receiver, even with a signal she had announced).
+## Returns what happened: "tuning", "blocked", "scanning", or "" when the ship
+## isn't flying (docked, loading, cinematic) and T means nothing.
+func press_tune() -> String:
+	if _panel != null or not _flying():
+		return ""
+	var reason := listen_block_reason()
+	if not reason.is_empty():
+		_show_status(reason, false, STATUS_SECONDS)
+		return "blocked"
+	if not _offered.is_empty():
+		_hide_status()
+		open_tuning()
+		return "tuning"
+	_show_status(SCANNING_TEXT, true, SCAN_SECONDS)
+	return "scanning"
+
+
+## Tests stand in for "the ship is flying" here.
+var flying_override: Callable = Callable()
+const SCANNING_TEXT :="RECEIVER   ·   Scanning for signals..."
+const NOTHING_TEXT := "RECEIVER   ·   Nothing on the band."
+const SCAN_SECONDS := 3.0
+const STATUS_SECONDS := 3.5
+
+
+## Why the receiver can't be used right now ("" when it can). The ship must be
+## flying for any of these to apply.
+func listen_block_reason() -> String:
+	var combat := get_node_or_null("/root/CombatManager")
+	if combat != null and int(combat.get("state")) != 0:
+		return "RECEIVER   ·   Not in the middle of a fight."
+	if _threat_nearby():
+		return "RECEIVER   ·   Hostiles close. Can't hold a weak signal with them around."
+	if _near_station():
+		return "RECEIVER   ·   Too much station noise. Move further out."
+	return ""
+
+
+## Undocked, alive, and the world on screen (not the title, loading or a
+## cinematic).
+func _flying() -> bool:
+	if flying_override.is_valid():
+		return bool(flying_override.call())
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null or bool(gs.get("intro_cinematic_active")):
+		return false
+	var nova := get_node_or_null("/root/Nova")
+	if nova != null and nova.has_method("_world_hidden") and bool(nova.call("_world_hidden")):
+		return false
+	var player = gs.player
+	return is_instance_valid(player) and not bool(player.get("is_docked")) and not bool(player.get("destroyed"))
+
+
+var _status_layer: CanvasLayer = null
+var _status: PanelContainer = null
+var _status_label: Label = null
+var _status_sweep: ColorRect = null
+var _status_left := 0.0
+var _status_scanning := false
+var _status_t := 0.0
+
+
+## A small receiver readout where the T prompt sits: a scan with a sweeping
+## bar, or a one-line reason.
+func _show_status(text: String, scanning: bool, seconds: float) -> void:
+	if _status == null:
+		_build_status()
+	_status_label.text = text
+	_status_scanning = scanning
+	_status_left = seconds
+	_status_t = 0.0
+	_status.visible = true
+	_status.modulate.a = 1.0
+	if _prompt != null:
+		_prompt.visible = false
+
+
+func _hide_status() -> void:
+	if _status != null:
+		_status.visible = false
+	_status_left = 0.0
+
+
+func _update_status(delta: float) -> void:
+	if _status == null or not _status.visible:
+		if _status_sweep != null:
+			_status_sweep.visible = false
+		return
+	_status_t += delta
+	_status_sweep.visible = _status_scanning
+	if _status_scanning:
+		# The sweep: a bright bar sliding along the readout, back and forth.
+		var track := maxf(_status.size.x - 36.0 - _status_sweep.size.x, 1.0)
+		_status_sweep.position = _status.position + Vector2(18.0 + track * (0.5 - 0.5 * cos(_status_t * 3.2)), _status.size.y - 6.0)
+		_status_label.modulate.a = 0.7 + 0.3 * sin(_status_t * 6.0)
+	else:
+		_status_label.modulate.a = 1.0
+	_status_left -= delta
+	if _status_left <= 0.0:
+		if _status_scanning:
+			# The scan found nothing (a signal would already be on offer).
+			_show_status(NOTHING_TEXT, false, STATUS_SECONDS * 0.7)
+			return
+		_status.modulate.a = maxf(0.0, _status.modulate.a - delta * 3.0)
+		if _status.modulate.a <= 0.0:
+			_status.visible = false
+
+
+func _build_status() -> void:
+	_status_layer = CanvasLayer.new()
+	_status_layer.layer = 5
+	add_child(_status_layer)
+	_status = PanelContainer.new()
+	_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status.anchor_left = 0.5
+	_status.anchor_right = 0.5
+	_status.anchor_top = 1.0
+	_status.anchor_bottom = 1.0
+	_status.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_status.offset_top = -150.0
+	_status.offset_bottom = -110.0
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.02, 0.08, 0.1, 0.85)
+	style.border_color = Color(0.5, 0.95, 0.85, 0.6)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 18.0
+	style.content_margin_right = 18.0
+	style.content_margin_top = 8.0
+	style.content_margin_bottom = 10.0
+	_status.add_theme_stylebox_override("panel", style)
+	_status_label = Label.new()
+	_status_label.add_theme_font_size_override("font_size", 18)
+	_status_label.add_theme_color_override("font_color", Color(0.6, 1.0, 0.92))
+	_status.add_child(_status_label)
+	_status_layer.add_child(_status)
+	# Beside the panel, not inside it (a container would stretch it): placed
+	# each frame along the panel's bottom edge.
+	_status_sweep = ColorRect.new()
+	_status_sweep.color = Color(0.6, 1.0, 0.92, 0.85)
+	_status_sweep.size = Vector2(46.0, 2.0)
+	_status_sweep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status_layer.add_child(_status_sweep)
+	_status.visible = false
+	_status_sweep.visible = false
 
 
 ## No receiver work within this range of any station.
@@ -158,9 +307,9 @@ func _can_listen() -> bool:
 
 
 ## No receiver work while a fight is coming (Abe, 2026-10-01: "if a ship is in
-## red highlight either we are about to attack or they are"): any of the
-## contract's red targets alive in the system, or a hostile ship close by or
-## locked onto us. Uses the overview's own rules, so "red on the overview" and
+## red highlight either we are about to attack or they are"): what the overview
+## shows red (a contract's target close by, anything locked onto us), plus
+## pirates close by. Uses the overview's own rules, so "red on the overview" and
 ## "no receiver" always agree.
 const HOSTILE_QUIET_RANGE := 3000.0
 
@@ -174,11 +323,20 @@ func _threat_nearby() -> bool:
 	for ship in get_tree().get_nodes_in_group("ship"):
 		if ship == player or not is_instance_valid(ship) or bool(ship.get("destroyed")):
 			continue
-		if ui != null and ui.has_method("_is_overview_mission_target") and ui._is_overview_mission_target(ship):
+		var near := (ship as Node3D).global_position.distance_to((player as Node3D).global_position) < HOSTILE_QUIET_RANGE
+		# A contract target counts when it's close, like any hostile: one on the
+		# far side of the system blocked the receiver for the whole contract
+		# (playtest 2026-10-02).
+		if near and ui != null and ui.has_method("_is_overview_mission_target") and ui._is_overview_mission_target(ship):
 			return true
 		if ship.get("target") == player:
 			return true
-		if ui != null and ui.has_method("_ship_standing") and ui._ship_standing(ship) == "Hostile" 				and (ship as Node3D).global_position.distance_to((player as Node3D).global_position) < HOSTILE_QUIET_RANGE:
+		# Pirates close by attack on sight. A patrol whose faction merely dislikes
+		# us does not: a new campaign starts at -20 with two factions, so every
+		# peaceful patrol near the start blocked the receiver (playtest
+		# 2026-10-02), though the overview showed nothing red.
+		var faction := str(ship.get("faction")) if ship.get("faction") != null else ""
+		if near and gs.has_method("is_minor_faction") and not faction.is_empty() and gs.is_minor_faction(faction):
 			return true
 	return false
 
