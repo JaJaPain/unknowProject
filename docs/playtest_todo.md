@@ -62,14 +62,14 @@ Claude adds new items here as work lands (newest section at the bottom).
       streaks rush past from the centre of the screen, then it eases back.
 - [ ] **Space dust.** In normal flight, faint specks drift past so you
       can feel you are moving.
-- [ ] **Hits.** In a fight: shots on a shielded ship make a glowing
+- [x] **Hits.** In a fight: shots on a shielded ship make a glowing
       shell with a bright spot where they hit; hull hits spark on the side
       facing the shooter; crits are bigger and whiter.
 - [ ] **Explosions.** A kill: bright flash, a ring that expands outward,
       glowing chunks tumbling away and cooling, then smoke.
       The fireball is now an animated flipbook (white core, orange fire,
       then smoke). Note: does it look right at game distance?
-- [ ] **Shake slider.** Pause > settings: "Camera shake" slider. Set it
+- [x] **Shake slider.** Pause > settings: "Camera shake" slider. Set it
       to 0 and get hit: no shake.
 - [ ] **Enemies face forward.** Enemy ships fly and shoot nose-first.
 
