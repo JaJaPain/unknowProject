@@ -340,6 +340,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_landing_snapshot")
 	elif "--map-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_map_snapshot")
+	elif "--route-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_route_smoke_test")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -10877,6 +10879,54 @@ func _run_wiki_snapshot() -> void:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("wiki_movement.png"))
 	get_tree().quit()
+
+
+## Playtest 2026-10-02: the autopilot flew through the gas giant and through
+## outposts, and clicking the planet targeted "SystemContainer". In the real
+## start system: routes past the gas giant and both outposts must stay outside
+## what the player SEES, and clicking a body selects that body.
+##   -- --route-smoke-test --baseline-offline
+func _run_route_smoke_test() -> void:
+	for i in 90:
+		await get_tree().process_frame
+	GlobalState.paused = false
+	var Bounds := preload("res://scripts/navigation/ObstacleBounds.gd")
+	var root := get_active_system_root()
+	var failures: Array[String] = []
+	var original := player.global_transform
+	for body_name in ["GasGiant", "IronReachOutpost", "KovaStation"]:
+		var body := root.get_node_or_null(body_name) as Node3D
+		if body == null:
+			failures.append("%s missing from the start system" % body_name)
+			continue
+		var seen := Bounds.visual_radius(body)
+		var keep_out: float = player.call("_keepout_radius", body)
+		print("[RouteSmokeTest] %s: visible radius %.0f, autopilot keep-out %.0f" % [body_name, seen, keep_out])
+		# Straight through the middle, from well outside on one side to the other,
+		# in two directions.
+		for dir in [Vector3(1, 0, 0.2).normalized(), Vector3(-0.3, 0, 1).normalized()]:
+			var reach: float = maxf(seen, keep_out) * 1.6 + 250.0
+			player.global_position = body.global_position + dir * reach
+			var dest: Vector3 = body.global_position - dir * reach
+			player.call("_clear_autopilot_path")
+			var probe: Dictionary = player.call("autopilot_probe", dest, null)
+			var path: PackedVector3Array = probe.get("path", PackedVector3Array())
+			var closest: float = preload("res://scripts/navigation/TangentNavigator.gd").route_min_clearance(path, body.global_position)
+			if closest < seen:
+				failures.append("%s: route passes %.0f from its centre, inside what you see (%.0f)" % [body_name, closest, seen])
+		# Clicking it selects it, not the system's container.
+		var picked = player.call("_selectable_entity", body)
+		if picked != body:
+			failures.append("clicking %s selects %s" % [body_name, str(picked.name) if picked != null else "nothing"])
+	player.global_transform = original
+	player.call("_clear_autopilot_path")
+	if failures.is_empty():
+		print("[RouteSmokeTest] PASS: routes clear the gas giant and both outposts as seen; clicks select the body.")
+		get_tree().quit(0)
+		return
+	for f in failures:
+		push_error("[RouteSmokeTest] FAIL: " + f)
+	get_tree().quit(1)
 
 
 ## Core loop step 9: the Lodestar wedge on the star map, windowed, at 0, 3 and

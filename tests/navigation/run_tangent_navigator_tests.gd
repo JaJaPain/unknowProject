@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_closed_loop_does_not_stall()
 	_test_long_range_and_crowded_fields()
 	_test_moving_target_is_caught()
+	_test_game_scale_gas_giant()
 	if _failures.is_empty():
 		print("[PASS] Tangent navigator tests")
 		quit(0)
@@ -300,6 +301,20 @@ func _test_moving_target_is_caught() -> void:
 		caught,
 		"Moving target was never caught (closest %.0f)" % closest
 	)
+
+
+# Abe's playtest 2026-10-02: "Fly to" a Reaver on the far side of the start
+# system's gas giant (body 600, keep-out 1125) cut straight through the planet.
+# Going round is ~5.5 km; the march used to stop after 60 x 50 m = 3 km and
+# then join the destination in a straight line through the body.
+func _test_game_scale_gas_giant() -> void:
+	var center := Vector3(0, 0, -2000)
+	var giant := {"center": center, "radius": 1125.0, "physical": 600.0}
+	for dest in [Vector3(0, 0, -4000), Vector3(400, 0, -4200), Vector3(-1500, 0, -3600)]:
+		var path: PackedVector3Array = Nav.march_waypoints(Vector3.ZERO, dest, [giant])
+		_expect(path[path.size() - 1].distance_to(dest) < 1.0, "game-scale route ends at the destination")
+		var clearance: float = Nav.route_min_clearance(path, center)
+		_expect(clearance >= 600.0 + Nav.INSIDE_BODY_CLEARANCE, "game-scale route to %s stays out of the planet (closest %.0f, body 600)" % [dest, clearance])
 
 
 func _expect(condition: bool, message: String) -> void:

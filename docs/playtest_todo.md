@@ -511,3 +511,15 @@ campaign. Getting there takes a while; checks for when you do:
       says "Lodestar 2/5" (it shows even with no loose ends). It opens on a
       board with two tabs; "Lodestar log" lists the rumour and each bearing
       in order, and says where the next one can turn up.
+
+## O. Playtest fixes 2026-10-02
+
+- [ ] **Autopilot around outposts.** In the start system, Fly to Greywake
+      Station from beyond Iron Reach or Kova (so the outpost is in between):
+      the ship swings well clear of the outpost's model, never through it.
+- [ ] **Autopilot around the gas giant.** Fly to something on the far side of
+      the gas giant (a Reaver or an asteroid in its belt): the ship goes
+      round, never into the planet. If it still dives in, tell me what was
+      targeted (the target panel's name) and roughly where.
+- [ ] **Clicking a planet selects the planet.** Click the gas giant: the
+      target panel names the planet, never "SystemContainer [Object]".

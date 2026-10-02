@@ -995,10 +995,7 @@ func _unhandled_input(event: InputEvent):
 				# Short RMB click: Try targeting / open context menu
 				var hit = get_mouse_raycast_hit(rmb_press_position)
 				if hit.has("collider"):
-					var entity: Node = hit.collider
-					var system_root := GlobalState.get_system_root()
-					while entity and system_root and entity.get_parent() != system_root:
-						entity = entity.get_parent()
+					var entity: Node = _selectable_entity(hit.collider)
 					if entity and entity != self:
 						var ui = GlobalState.get_ui_manager()
 						if ui and ui.has_method("show_context_menu"):
@@ -1041,11 +1038,31 @@ func _unhandled_input(event: InputEvent):
 			# Single click selection
 			var hit = get_mouse_raycast_hit()
 			if hit.has("collider"):
-				var entity = hit.collider
-				while entity and entity.get_parent() != get_parent():
-					entity = entity.get_parent()
+				var entity = _selectable_entity(hit.collider)
 				if entity and entity != self:
 					GlobalState.active_target = entity
+
+## The thing a click on `collider` means: the object sitting directly in the
+## system (planet, station, ship, rock), never the system's own container.
+## Clicking climbed until it met the player's siblings, and the system root
+## lives inside SystemContainer, which IS a sibling: so clicking the gas giant
+## targeted "SystemContainer [Object]" (playtest 2026-10-02). Right-click
+## already stopped at the system root; both use this now.
+func _selectable_entity(collider: Node) -> Node:
+	var system_root := GlobalState.get_system_root()
+	var entity: Node = collider
+	if system_root != null:
+		while entity != null and entity.get_parent() != system_root:
+			entity = entity.get_parent()
+		if entity != null:
+			return entity
+	# Not under the system (the player's own siblings, e.g. NPC ships parented
+	# beside it): the old rule, but never the container itself.
+	entity = collider
+	while entity != null and entity.get_parent() != get_parent():
+		entity = entity.get_parent()
+	return null if entity == null or entity == system_root or (system_root != null and entity.is_ancestor_of(system_root)) else entity
+
 
 func get_mouse_raycast_hit(
 	screen_position: Variant = null
@@ -2134,6 +2151,15 @@ func is_target_physically_visible(target: Node3D) -> bool:
 	return true
 
 func _get_obstacle_radius(obstacle: Node3D) -> float:
+	# Stations, outposts, gates, rocks and ships: as big as they LOOK. Their
+	# models dwarf their collision boxes, and a route sized from the box flew
+	# through the outposts (playtest 2026-10-02). Planets keep their spheres,
+	# which match the body exactly (a sphere's bounding box overstates it).
+	if not obstacle.is_in_group("celestial"):
+		var Bounds := preload("res://scripts/navigation/ObstacleBounds.gd")
+		var measured := maxf(Bounds.collision_radius(obstacle), Bounds.visual_radius(obstacle))
+		if measured > 0.0:
+			return measured
 	var collision := obstacle.find_child("CollisionShape3D", true, false) as CollisionShape3D
 	if not collision or not collision.shape:
 		return 12.0
