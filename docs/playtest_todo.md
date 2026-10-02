@@ -36,13 +36,13 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## B. Station screens
 
-- [ ] **Turning down an offer.** At a main station, Talk to Agent and get a
+- [x] **Turning down an offer.** At a main station, Talk to Agent and get a
       normal job offer (not the tutorial one). Look at the numbered replies:
       the LAST one reads "Not this one." (it comes after "Terms / other
       questions"). Pick it. Pass: the offer closes and you're back on the
       agent's menu. (Reworded 2026-10-02; the old wording was unclear.)
 - [x] **No debug text.** No "[Offline Backup]" anywhere in an offer.
-- [ ] **Public board.** Cards have a coloured stripe on the left (amber =
+- [x] **Public board.** Cards have a coloured stripe on the left (amber =
       urgent). Payouts are gold. Fuel jobs say "fuel", never "fuel Ore".
 - [x] **Fetch card.** One card is a rare-item request ("… Needed",
       posted by a person like "A frantic rescue coordinator"), with a red,
