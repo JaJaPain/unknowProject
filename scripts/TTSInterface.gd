@@ -235,10 +235,16 @@ func _lead_voice_of(voice_id: String) -> String:
 	return BakedIndex.lead_voice_of(voice_id)
 
 
-## A baked N.O.V.A. or Kaelen line, or null to synthesize live.
-## `character` is "nova" or "kaelen".
+## A baked cloned-voice line, or null to synthesize live.
+## `character` is "nova" or "kaelen". Only N.O.V.A. is cloned: Kaelen stays on
+## Kokoro (Abe, 2026-09-24). Her old F5 takes (2026-09-10) are still in the
+## manifest, and since the 2026-09-30 loading change served them, she spoke
+## about 25% too fast (3.65 words/s against Kokoro's ~2.9; playtest 2026-10-02).
+const CLONED_CAST := ["nova"]
+
+
 func cast_stream_for(character: String, clean_text: String) -> AudioStream:
-	if not _is_english_locale():
+	if not _is_english_locale() or not character.to_lower() in CLONED_CAST:
 		return null
 	var clips := _flat_clips(CAST_MANIFEST, "cast")
 	var key := BakedIndex.cast_key(character, clean_text)

@@ -546,3 +546,6 @@ campaign. Getting there takes a while; checks for when you do:
       (the Grease Monkeys mechanic). Jenna herself is unchanged. If one
       still does, note where; godot.log also lists any "unknown voice"
       falling back to the neutral one.
+- [ ] **Kaelen's pace is back.** New campaign: her intro and the tutorial
+      turn-in ("Handled, quiet, no trail...") sound like her old self, not
+      rushed. N.O.V.A. still sounds like her cloned voice.
