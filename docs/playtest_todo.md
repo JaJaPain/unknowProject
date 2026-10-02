@@ -311,6 +311,11 @@ Claude adds new items here as work lands (newest section at the bottom).
       dive, and "E  extract the crystal seam" appears above the bottom
       centre when a seam is in reach. When the dive ends the mouse cursor
       comes back.
+- [ ] **Haul list in the dive.** Above the controls box: one row per kind
+      of target (e.g. "Rad-Quartz seam  52 m", in the seam's colour), the
+      distance to the NEAREST one along the tunnels, shrinking as you fly
+      to it. Extract it and the row jumps to the next one; when all of a
+      kind are out it reads "aboard". A wreck dive lists Salvage.
 
 ## K. Gate ladder, step 1 (added 2026-10-01)
 

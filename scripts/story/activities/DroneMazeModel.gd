@@ -325,6 +325,17 @@ static func route_to(state: Dictionary, goal: Vector2) -> Array:
 	return out
 
 
+## How far the drone has to fly to reach `goal` along the tunnels (in tiles,
+## shown as metres), for the haul list on the HUD.
+static func path_distance(state: Dictionary, goal: Vector2) -> float:
+	var at := Vector2(float(state["pos"][0]), float(state["pos"][1]))
+	var total := 0.0
+	for p in route_to(state, goal):
+		total += at.distance_to(p)
+		at = p
+	return total
+
+
 static func _nearest_chamber(grid: Array, p: Vector2, cracks: Dictionary) -> Vector2i:
 	if cracks.is_empty():
 		return Vector2i(int(floor(p.x)), int(floor(p.y)))

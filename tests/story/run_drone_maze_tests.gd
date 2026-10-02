@@ -98,6 +98,12 @@ func _initialize() -> void:
 	var d := Vector2(float(slid["pos"][0]), float(slid["pos"][1])) - p0
 	_check(is_equal_approx(float(slid["heading"]), h0), "strafing keeps the heading")
 	_check(d.length() > 0.0 and absf(d.normalized().dot(Vector2(-sin(h0), cos(h0)))) > 0.99, "strafing moves sideways (%s)" % str(d))
+	# The HUD's haul list: flying distance along the tunnels, never shorter
+	# than straight through the rock.
+	for t in side["targets"]:
+		var goal := Maze.target_at(t)
+		var flown := Maze.path_distance(side, goal)
+		_check(flown > 0.0 and flown >= p0.distance_to(goal) - 0.001, "path distance %.1f >= straight line %.1f" % [flown, p0.distance_to(goal)])
 	var diag := Maze.step(side, 0.05, 1.0, 0.0, 1.0)
 	var dd := Vector2(float(diag["pos"][0]), float(diag["pos"][1])) - p0
 	_check(dd.length() <= Maze.SPEED * 0.05 + 0.0001, "forward plus sideways is no faster than forward")

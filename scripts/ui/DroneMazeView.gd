@@ -43,6 +43,12 @@ const MOUSE_TURN_PER_PIXEL := 0.004
 var _mouse_turn := 0.0
 var _mouse_mode_before := -1
 ## Always on screen, bottom right (Abe, 2026-10-02).
+## The haul list (bottom right, above the controls; Abe, 2026-10-02).
+var _hud_targets: RichTextLabel
+var _targets_t := 0.0
+const TARGETS_REFRESH_S := 0.2
+## The drone's world is in tiles; the HUD calls a tile a metre.
+const METRES_PER_TILE := 1.0
 const CONTROLS_TEXT := "MOUSE   turn\nW / S   forward / back\nA / D   slide sideways\n← / →   turn\nE   extract\nR   recall the drone"
 
 
@@ -56,6 +62,7 @@ func begin(seed_value: int, kind: String, with_recorder: bool, material: String 
 	_build_hud()
 	_mouse_mode_before = Input.mouse_mode
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_update_targets()
 	if is_inside_tree() and not get_tree().paused:
 		get_tree().paused = true
 		_paused_by_us = true
@@ -417,17 +424,41 @@ func _build_hud() -> void:
 	_hud_prompt.offset_top = -140.0
 	_hud_prompt.offset_bottom = -100.0
 	_hud_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# Bottom right: what's in the rock and how far, above the controls.
+	var column := VBoxContainer.new()
+	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.anchor_left = 1.0
+	column.anchor_right = 1.0
+	column.anchor_top = 1.0
+	column.anchor_bottom = 1.0
+	column.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	column.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	column.offset_right = -24.0
+	column.offset_bottom = -24.0
+	column.add_theme_constant_override("separation", 10)
+	hud.add_child(column)
+	var haul_panel := _side_panel(column, "Targets")
+	_hud_targets = RichTextLabel.new()
+	_hud_targets.bbcode_enabled = true
+	_hud_targets.fit_content = true
+	_hud_targets.scroll_active = false
+	_hud_targets.autowrap_mode = TextServer.AUTOWRAP_OFF
+	_hud_targets.custom_minimum_size = Vector2(250, 0)
+	_hud_targets.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_hud_targets.add_theme_font_size_override("normal_font_size", 16)
+	_hud_targets.add_theme_color_override("default_color", Color(0.75, 1.0, 0.9))
+	_hud_targets.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_hud_targets.add_theme_constant_override("outline_size", 4)
+	haul_panel.add_child(_hud_targets)
+	var controls := _side_panel(column, "Controls")
+	var help := _hud_label(controls, 16)
+	help.text = CONTROLS_TEXT
+
+
+func _side_panel(parent: Control, panel_name: String) -> PanelContainer:
 	var panel := PanelContainer.new()
-	panel.name = "Controls"
+	panel.name = panel_name
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.anchor_left = 1.0
-	panel.anchor_right = 1.0
-	panel.anchor_top = 1.0
-	panel.anchor_bottom = 1.0
-	panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	panel.offset_right = -24.0
-	panel.offset_bottom = -24.0
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.02, 0.08, 0.1, 0.7)
 	style.border_color = Color(0.5, 0.95, 0.85, 0.6)
@@ -435,9 +466,41 @@ func _build_hud() -> void:
 	style.set_corner_radius_all(6)
 	style.set_content_margin_all(12.0)
 	panel.add_theme_stylebox_override("panel", style)
-	hud.add_child(panel)
-	var help := _hud_label(panel, 16)
-	help.text = CONTROLS_TEXT
+	parent.add_child(panel)
+	return panel
+
+
+## One row per kind of target: its name in its colour and the flying
+## distance along the tunnels to the nearest one. Nearest first.
+func _update_targets() -> void:
+	if _hud_targets == null:
+		return
+	var rows: Array = []
+	for t in state["targets"]:
+		var kind := str(t["kind"])
+		var colour: Color = TARGET_COLORS.get(kind, Color.WHITE)
+		var label := _noun(kind).capitalize()
+		if kind == "mineral" and not _material.is_empty():
+			colour = MATERIAL_COLORS.get(_material, colour)
+			label = _material.replace("_", " ").capitalize().replace("Rad Quartz", "Rad-Quartz").replace("Cryo Ferrite", "Cryo-Ferrite") + " seam"
+		var aboard := bool(t["extracted"])
+		var distance := INF if aboard else Maze.path_distance(state, Maze.target_at(t))
+		rows.append({"label": label, "colour": colour, "aboard": aboard, "distance": distance})
+	rows.sort_custom(func(a, b): return float(a["distance"]) < float(b["distance"]))
+	# One row per type (Abe, 2026-10-02): the nearest one still in the rock,
+	# or "aboard" once every one of that type is out.
+	var shown := {}
+	var lines: Array[String] = []
+	for r in rows:
+		if shown.has(r["label"]):
+			continue
+		shown[r["label"]] = true
+		var hex := (r["colour"] as Color).to_html(false)
+		if bool(r["aboard"]):
+			lines.append("[color=#%s]◆[/color] [color=#8aa]%s   aboard[/color]" % [hex, r["label"]])
+		else:
+			lines.append("[color=#%s]◆ %s[/color]   %d m" % [hex, r["label"], int(round(float(r["distance"]) * METRES_PER_TILE))])
+	_hud_targets.text = "\n".join(lines)
 
 
 func _release_mouse() -> void:
@@ -483,6 +546,10 @@ func _process(delta: float) -> void:
 	_flash.color.a = maxf(0.0, _flash.color.a - delta * 1.2)
 	_sync_camera()
 	_update_hud()
+	_targets_t += delta
+	if _targets_t >= TARGETS_REFRESH_S:
+		_targets_t = 0.0
+		_update_targets()
 	if bool(state["done"]):
 		_finish()
 
@@ -516,6 +583,7 @@ func _input(event: InputEvent) -> void:
 		state = Maze.extract(state)
 		if Maze.extracted_count(state) > before:
 			_hide_extracted()
+			_update_targets()
 			if bool(state["done"]):
 				_finish()
 	elif key.physical_keycode == KEY_R:
