@@ -41,17 +41,17 @@ Claude adds new items here as work lands (newest section at the bottom).
       the LAST one reads "Not this one." (it comes after "Terms / other
       questions"). Pick it. Pass: the offer closes and you're back on the
       agent's menu. (Reworded 2026-10-02; the old wording was unclear.)
-- [ ] **No debug text.** No "[Offline Backup]" anywhere in an offer.
+- [x] **No debug text.** No "[Offline Backup]" anywhere in an offer.
 - [ ] **Public board.** Cards have a coloured stripe on the left (amber =
       urgent). Payouts are gold. Fuel jobs say "fuel", never "fuel Ore".
-- [ ] **Fetch card.** One card is a rare-item request ("… Needed",
+- [x] **Fetch card.** One card is a rare-item request ("… Needed",
       posted by a person like "A frantic rescue coordinator"), with a red,
       gold or blue stripe.
 - [x] **Store.** Station Store opens a grid of item icons like the
       inventory. Click an item: big picture, stock, BUY with a price.
       Buy one cheap item; your credits drop and "You have 1" appears.
       If you own something sellable, a SELL button shows its price.
-- [ ] **Maintenance bay.** Replaced 2026-10-02: the bay now uses Kaelen's
+- [x] **Maintenance bay.** Replaced 2026-10-02: the bay now uses Kaelen's
       layout; see "The maintenance bay matches Kaelen's screen" in section O.
 - [x] **Crash fix.** Accept a board courier/delivery job, then undock:
       no crash.
