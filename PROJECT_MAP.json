@@ -6618,6 +6618,11 @@
             },
             {
               "type": "file",
+              "name": "lodestars.json",
+              "path": "data/content/lodestars.json"
+            },
+            {
+              "type": "file",
               "name": "mission_complications.json",
               "path": "data/content/mission_complications.json"
             },
@@ -9396,6 +9401,7 @@
             "func _run_loading_snapshot() -> void",
             "func _run_beacon_snapshot() -> void",
             "func _run_wiki_snapshot() -> void",
+            "func _run_map_snapshot() -> void",
             "func _run_intro_snapshot() -> void",
             "func _run_landing_snapshot() -> void",
             "func _run_perf_probe() -> void",
@@ -11699,6 +11705,24 @@
                 "static func applies(gate_class: int) -> bool",
                 "static func is_met(card: Dictionary, tiers: Dictionary) -> bool",
                 "static func requirement(card: Dictionary) -> String"
+              ]
+            },
+            {
+              "type": "file",
+              "name": "Lodestar.gd",
+              "path": "scripts/domain/Lodestar.gd",
+              "classes": [],
+              "functions": [
+                "static func deck() -> Array",
+                "static func by_id(id: String) -> Dictionary",
+                "static func draw(campaign_seed: int) -> Dictionary",
+                "static func state(story_state: Dictionary, campaign_seed: int) -> Dictionary",
+                "static func card_of(s: Dictionary) -> Dictionary",
+                "static func bearings_found(s: Dictionary) -> int",
+                "static func wedge_degrees(found: int) -> float",
+                "static func wedge_angle(campaign_seed: int) -> float",
+                "static func bearing_class(index: int) -> int",
+                "static func last_bearing_text(s: Dictionary) -> String"
               ]
             },
             {
@@ -15055,6 +15079,17 @@
             },
             {
               "type": "file",
+              "name": "LodestarGuide.gd",
+              "path": "scripts/story/LodestarGuide.gd",
+              "classes": [],
+              "functions": [
+                "func _process(delta: float) -> void",
+                "func current() -> Dictionary",
+                "func try_introduce() -> bool"
+              ]
+            },
+            {
+              "type": "file",
               "name": "LoungeConversation.gd",
               "path": "scripts/story/LoungeConversation.gd",
               "classes": [
@@ -17012,6 +17047,12 @@
                     "func _draw_route_label(pos: Vector2, text: String, color: Color) -> void",
                     "func _gui_input(event: InputEvent) -> void",
                     "func _update_hover_tooltip(hover_pos: Vector2) -> void",
+                    "func _lodestar_state() -> Dictionary",
+                    "func _lodestar_band() -> Dictionary",
+                    "func _lodestar_point(band: Dictionary, a: float, t: float) -> Vector2",
+                    "func _process(_delta: float) -> void",
+                    "func _lodestar_hit(p: Vector2) -> bool",
+                    "func _draw_lodestar() -> void",
                     "func _gate_class_line(sys_id: String) -> String",
                     "func _handle_click(click_pos: Vector2) -> void",
                     "func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void",
@@ -21496,6 +21537,16 @@
               "type": "file",
               "name": "run_local_pressure_tests.gd.uid",
               "path": "tests/story/run_local_pressure_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_lodestar_tests.gd",
+              "path": "tests/story/run_lodestar_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _check(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",

@@ -2481,6 +2481,7 @@ Root: `spacegame`
       - 📄 [item_rarity.json](file:///D:/CodingProjects/spacegame/data/content/item_rarity.json)
       - 📄 [llm_dialogue_content.json](file:///D:/CodingProjects/spacegame/data/content/llm_dialogue_content.json)
       - 📄 [local_pressure_tracks.json](file:///D:/CodingProjects/spacegame/data/content/local_pressure_tracks.json)
+      - 📄 [lodestars.json](file:///D:/CodingProjects/spacegame/data/content/lodestars.json)
       - 📄 [mission_complications.json](file:///D:/CodingProjects/spacegame/data/content/mission_complications.json)
       - 📄 [mission_shapes.json](file:///D:/CodingProjects/spacegame/data/content/mission_shapes.json)
       - 📄 [mission_twists.json](file:///D:/CodingProjects/spacegame/data/content/mission_twists.json)
@@ -3408,6 +3409,7 @@ Root: `spacegame`
       - `func _run_loading_snapshot() -> void`
       - `func _run_beacon_snapshot() -> void`
       - `func _run_wiki_snapshot() -> void`
+      - `func _run_map_snapshot() -> void`
       - `func _run_intro_snapshot() -> void`
       - `func _run_landing_snapshot() -> void`
       - `func _run_perf_probe() -> void`
@@ -5049,6 +5051,17 @@ Root: `spacegame`
         - `static func applies(gate_class: int) -> bool`
         - `static func is_met(card: Dictionary, tiers: Dictionary) -> bool`
         - `static func requirement(card: Dictionary) -> String`
+      - 📄 [Lodestar.gd](file:///D:/CodingProjects/spacegame/scripts/domain/Lodestar.gd)
+        - `static func deck() -> Array`
+        - `static func by_id(id: String) -> Dictionary`
+        - `static func draw(campaign_seed: int) -> Dictionary`
+        - `static func state(story_state: Dictionary, campaign_seed: int) -> Dictionary`
+        - `static func card_of(s: Dictionary) -> Dictionary`
+        - `static func bearings_found(s: Dictionary) -> int`
+        - `static func wedge_degrees(found: int) -> float`
+        - `static func wedge_angle(campaign_seed: int) -> float`
+        - `static func bearing_class(index: int) -> int`
+        - `static func last_bearing_text(s: Dictionary) -> String`
       - 📄 [MissionAdapter.gd](file:///D:/CodingProjects/spacegame/scripts/domain/MissionAdapter.gd)
         - 🏛️ **global class MissionAdapter**
           - `static func validate_active_state(source: Dictionary) -> ValidationResult`
@@ -6635,6 +6648,10 @@ Root: `spacegame`
         - `static func _is_non_negative_int(value: Variant) -> bool`
         - `static func _persistable(value: Dictionary) -> Dictionary`
       - 📄 [LocalPressureDirector.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/LocalPressureDirector.gd.uid)
+      - 📄 [LodestarGuide.gd](file:///D:/CodingProjects/spacegame/scripts/story/LodestarGuide.gd)
+        - `func _process(delta: float) -> void`
+        - `func current() -> Dictionary`
+        - `func try_introduce() -> bool`
       - 📄 [LoungeConversation.gd](file:///D:/CodingProjects/spacegame/scripts/story/LoungeConversation.gd)
         - 🏛️ **global class LoungeConversation**
           - `static func _shared_rules(npc: Dictionary, flavor_block: String) -> Array`
@@ -7587,6 +7604,12 @@ Root: `spacegame`
           - `func _draw_route_label(pos: Vector2, text: String, color: Color) -> void`
           - `func _gui_input(event: InputEvent) -> void`
           - `func _update_hover_tooltip(hover_pos: Vector2) -> void`
+          - `func _lodestar_state() -> Dictionary`
+          - `func _lodestar_band() -> Dictionary`
+          - `func _lodestar_point(band: Dictionary, a: float, t: float) -> Vector2`
+          - `func _process(_delta: float) -> void`
+          - `func _lodestar_hit(p: Vector2) -> bool`
+          - `func _draw_lodestar() -> void`
           - `func _gate_class_line(sys_id: String) -> String`
           - `func _handle_click(click_pos: Vector2) -> void`
           - `func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void`
@@ -9758,6 +9781,9 @@ Root: `spacegame`
         - `func _test_determinism_and_persistence() -> void`
         - `func _test_pacing_families() -> void`
       - 📄 [run_local_pressure_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_local_pressure_tests.gd.uid)
+      - 📄 [run_lodestar_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_lodestar_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
       - 📄 [run_lounge_conversation_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_lounge_conversation_tests.gd)
         - `func _initialize() -> void`
         - `func _test_parse_turn() -> void`

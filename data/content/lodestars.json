@@ -1,0 +1,95 @@
+{
+	"_comment": "Core loop step 9: the Lodestar deck (docs/core_loop_plan_2026_10_01.md 4.1). One card per campaign, drawn from the campaign seed. first_hint and bearings are player-facing; director is for the story director. Bearing N becomes findable once gate class N+1 is open (Class II..VI); the fifth marks the system. Authored, original, and clear of the fixed-cast canon (checked by run_secret_leak_tests and run_lodestar_tests).",
+	"cards": [
+		{
+			"id": "lighthouse",
+			"title": "The Lighthouse",
+			"first_hint": "A navigation beacon on repeat, sending course corrections for gates that aren't on any chart.",
+			"nova_first": "Hear that? Someone out past the deep gates is still giving directions to ships that stopped coming generations ago. That's either very sad or very useful.",
+			"director": "A beacon station older than the current gate charts. A salvage clan has kept it running for generations, trading its old network maps for supplies. It still knows routes nobody else remembers.",
+			"bearings": [
+				{"text": "The beacon's corrections are for a gate network laid out before the present charts. Its maps are older than ours.", "nova": "Old maps that still work. I hate how much I want them."},
+				{"text": "Its signal is stronger past the Class III gates. Someone boosts it now and then: a person, not an automatic relay.", "nova": "Somebody is maintaining that thing. By hand. Out there."},
+				{"text": "Traders who reached it say a family runs it, and pays for spare parts in charts no registry has.", "nova": "A whole family living on a beacon. And selling the way out, one chart at a time."},
+				{"text": "The beacon's own course corrections point back at itself: follow them in reverse and they converge.", "nova": "It's telling every ship where to go, and where it is, in the same breath. Clever."},
+				{"text": "The corrections converge on one system past the edge of the charts. The Lighthouse is there.", "nova": "That's it. That's where it's been shouting from all this time."}
+			],
+			"arrival": "The clan's elder trades the old network map for news of the gates the Captain has crossed. The map shows the next horizon."
+		},
+		{
+			"id": "silent_fleet",
+			"title": "The Silent Fleet",
+			"first_hint": "Ships reported missing out here are all last seen heading the same way, and none of them ever called for help.",
+			"nova_first": "Ships vanish all the time. They don't usually all vanish in the same direction, politely, without a single distress call.",
+			"director": "A colony convoy that chose to go dark: they jumped beyond the charts to escape a war, and switched off every transponder so nobody could follow. Their descendants still live there, and very much want to stay hidden.",
+			"bearings": [
+				{"text": "An old registry lists forty ships that left together and never arrived anywhere. All of them were civilian.", "nova": "Forty ships of families, not soldiers. Nobody sends a fleet like that into nothing."},
+				{"text": "A deep-space buoy logged them passing in formation, with every transponder switched off by hand.", "nova": "They turned themselves off. On purpose. That's not an accident, that's a decision."},
+				{"text": "A freighter captain swears she saw lights on a world past the deep gates where no colony is registered.", "nova": "Lights where nobody lives. Either she was drunk, or somebody does."},
+				{"text": "Someone out there buys medicine and seed stock through brokers, always paying in very old coin.", "nova": "They're alive. And careful. And running low on things you can't grow."},
+				{"text": "The brokers' deliveries all go to one quiet system past the edge of the charts. The fleet is there.", "nova": "Found them. Let's be gentle about it. They went to a lot of trouble not to be found."}
+			],
+			"arrival": "The fleet's settlement, wary but polite. They ask the Captain to keep their secret, and offer something rare in return."
+		},
+		{
+			"id": "humming_gate",
+			"title": "The Humming Gate",
+			"first_hint": "Gate techs whisper about a ring out past the deep gates that still works perfectly. Every other gate is falling apart.",
+			"nova_first": "A gate that works perfectly. You know how I feel about gates. I'd still like to see one that isn't trying to kill us.",
+			"director": "An intact gate from before the network's decline, still humming at full strength. Several factions want control of it, because whoever holds it can repair the others.",
+			"bearings": [
+				{"text": "Gate techs say every ring was once tuned from one master gate, and that it was never found broken.", "nova": "One gate that set the tune for all the others. That explains why they're all out of tune now."},
+				{"text": "The deeper the gate, the more its fold drifts toward a single frequency: the hum.", "nova": "They're all leaning toward it. Like plants toward a window."},
+				{"text": "A repair crew went looking for the master gate and came back with perfect tuning data, then refused to say where from.", "nova": "Somebody's been there. And somebody paid them to forget."},
+				{"text": "Two factions are quietly buying gate parts in bulk, both shipping them the same way.", "nova": "Nobody buys that many gate parts unless they're planning to fix a lot of gates. Or own the one that can."},
+				{"text": "The hum is loudest at one system past the edge of the charts. The Humming Gate is there.", "nova": "That's the one. Listen to it. It sounds healthy. I didn't know they could."}
+			],
+			"arrival": "The ring itself, perfect and quiet, with two factions' ships already circling. Who gets it is the next season's question."
+		},
+		{
+			"id": "cartographer",
+			"title": "The Cartographer's Chart",
+			"first_hint": "A dead surveyor's chart turned up at auction with one system circled, and its name scratched off the registry.",
+			"nova_first": "Someone scratched a whole system out of the registry. You can't lose a star by accident. Somebody wanted it gone.",
+			"director": "A famous surveyor found a system rich in rare ore and a navigable route beyond it, and a powerful consortium erased it from the registry to mine it in secret. The surveyor's notes survive in pieces.",
+			"bearings": [
+				{"text": "The surveyor's last expedition filed every system but one. The missing entry was deleted by a registry clerk the same week.", "nova": "Deleted in a week. That's not bureaucracy, that's an order."},
+				{"text": "A page of the surveyor's notes describes ore readings no known belt matches.", "nova": "If those readings are real, that rock is worth more than this whole sector."},
+				{"text": "A consortium has been running unmarked haulers deep, and their manifests never list a destination.", "nova": "Unmarked haulers, blank manifests. Somebody found the surveyor's system first."},
+				{"text": "The scratched-out name survives in an old fuel log: the surveyor refuelled there twice.", "nova": "Twice. So it's real, and you can get back from it."},
+				{"text": "The fuel log's coordinates match one system past the edge of the charts. The circled system is there.", "nova": "There it is. Let's go and see what was worth erasing."}
+			],
+			"arrival": "The erased system: a consortium's secret mine, and the surveyor's route beyond it. The Captain decides who learns it exists."
+		},
+		{
+			"id": "garden",
+			"title": "The Garden",
+			"first_hint": "Ice haulers swear there's a green world past the dark, where nothing should be able to grow.",
+			"nova_first": "A green world out past the deep gates. Haulers say a lot of things after a long run. They don't usually all say the same thing.",
+			"director": "A living world around a dim star, warmed by a natural quirk of its orbit. A small group of botanists settled it long ago and has kept it off every map to protect it from mining.",
+			"bearings": [
+				{"text": "Haulers deep out report seed pods frozen in the ice they cut: real ones, not from any known world.", "nova": "Seeds in the ice. They came from somewhere that grows things."},
+				{"text": "A botanist's paper, decades old, describes a world that should be frozen but keeps itself warm.", "nova": "A world that keeps itself warm. I'd like to know how. I'd like to know how for us."},
+				{"text": "Somebody out there trades fresh fruit for metal tools, and only through one hauler family.", "nova": "Fresh fruit. Out here. I don't even eat and I'm jealous."},
+				{"text": "Mining consortiums have been asking about the hauler family. Not kindly.", "nova": "And now the miners have noticed. Of course they have."},
+				{"text": "The hauler family's routes all end at one system past the edge of the charts. The Garden is there.", "nova": "Found it. Let's get there before the people with drills do."}
+			],
+			"arrival": "The Garden: a green world and its quiet keepers, and the mining fleet two jumps behind. What the Captain does next shapes the season."
+		},
+		{
+			"id": "quiet_war",
+			"title": "The Quiet War",
+			"first_hint": "Salvagers trade rumours of a battlefield past the deep gates that nobody remembers fighting.",
+			"nova_first": "A whole battle nobody remembers. Wars are loud, Captain. Somebody had to work very hard to make one this quiet.",
+			"director": "Two factions fought a short, brutal war over a deep system and then agreed to erase it from their histories. The wrecks still guard what they fought over: a cache of pre-decline technology.",
+			"bearings": [
+				{"text": "Salvagers sell hull plates from ships of two factions that, officially, have never fought.", "nova": "Two navies that never fought, and here are their pieces in the same crate."},
+				{"text": "Both factions' records skip the same eight months, as if nothing happened in that time.", "nova": "Same eight months missing on both sides. That's not a gap, that's a treaty."},
+				{"text": "A veteran in a deep station bar says the fight was over something neither side wanted the other to have.", "nova": "They'd rather nobody had it than the other side. That's how most bad things start."},
+				{"text": "The salvage gets newer, and better, the deeper it was found. The wrecks were guarding something.", "nova": "The closer to the middle, the better the ships. They put their best around whatever it was."},
+				{"text": "The wreck fields thicken around one system past the edge of the charts. The battlefield is there.", "nova": "That's the battlefield. Fly carefully. Some of those wrecks may still have opinions."}
+			],
+			"arrival": "The silent battlefield and what it guarded. Both factions' salvagers arrive within days, and they remember everything."
+		}
+	]
+}

@@ -369,16 +369,16 @@ A Lodestar card defines:
 - **The arrival**: a hand-made set piece in the Lodestar system that resolves
   this season, and which loose ends it connects to.
 
-Deck (first six, all original):
+Deck (six, all original; **written 2026-10-02 at step 9**, in `data/content/lodestars.json` with five bearings and an arrival each; the Lighthouse's keeper was changed to an ordinary salvage clan to stay clear of the fixed-cast canon):
 
 | Lodestar | First hint | What's there |
 |---|---|---|
-| The Lighthouse | A distress beacon on a loop, older than any gate charts | A station that has been broadcasting for two hundred years, and who is still keeping it running |
+| The Lighthouse | A navigation beacon on repeat, sending corrections for gates on no chart | A beacon station older than the charts, kept running for generations by a salvage clan, which still knows routes nobody else remembers |
 | The Silent Fleet | Ships reported missing all head the same way | Where the fleet went, and why they stopped transmitting |
 | The Humming Gate | Gate techs whisper about a ring that still works perfectly | An intact ancient gate, and who wants control of it |
 | The Cartographer's Chart | A dead surveyor's chart with one system circled | What the surveyor found, and who erased it from the registry |
 | The Garden | Ice haulers swear there's a green world past the dark | A living world where none should be |
-| The Wreck Field | Salvagers' rumours of a battle nobody remembers | Whose war it was, and what they were guarding |
+| The Quiet War | Salvagers' rumours of a battlefield nobody remembers fighting | Two factions erased a short war from their histories; the wrecks still guard what they fought over |
 
 Each draw is checked against the campaign's premise and Hidden Hand so the
 Lodestar and the main story can share threads (a bearing can also be a loose
@@ -514,7 +514,7 @@ before the next bite.
 | 7 | **DONE 2026-10-02** `--economy-sim` automated captain + first tuning pass against 3.6 (section 8) | Prints minutes per rung |
 | | **Found in step 3:** a stock powerplant draws 255 of 300 MW; Shields Mk II brings it to exactly 300, so every second upgrade first needs Powerplant Mk II (500 SC, 200 ore). The goal card handles it, **Decided (Abe, 2026-10-01): keep it hidden for now.** | |
 | 8 | **DONE 2026-10-02** Keystone deck, draw, Class IV rule, early hints (`scripts/domain/Keystone.gd`; drawn from the campaign seed, so no save data; applies to Class IV and every class past it; the goal card suggests it once Class III is open; wiki "The deep gates' keystone") | `run_keystone_tests` (every card) |
-| 9 | Lodestar deck (JSON, 6 cards), draw, star map wedge | Unit tests; map snapshot |
+| 9 | **DONE 2026-10-02** Lodestar deck (`data/content/lodestars.json`, 6 cards), draw from the campaign seed (`scripts/domain/Lodestar.gd`, state in story_state), N.O.V.A.'s first hint after the tutorial on the first trip away from home (`LodestarGuide`), star map wedge with tooltip, wiki "The Lodestar" | `run_lodestar_tests` (deck checked against the reserved topics); `--map-snapshot` |
 | 10 | Bearings in activities (receiver, drone recorder, anomaly, investigation, Kaelen lead), Lodestar log tab | Per-activity tests |
 | | **Stop and show: the Lodestar wedge and first two bearings** | |
 | 11 | Short pulls: map teasers, survey data sale, firsts | Jump smoke |

@@ -2,6 +2,7 @@ class_name BranchMapUI
 extends Control
 
 const OreTypesScript := preload("res://scripts/economy/OreTypes.gd")
+const LodestarScript := preload("res://scripts/domain/Lodestar.gd")
 
 const NODE_RADIUS := 28.0
 const LINE_WIDTH := 2.5
@@ -410,6 +411,7 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, Vector2(WINDOW_SIZE.x, TITLE_BAR_HEIGHT)), Color(0.06, 0.08, 0.14))
 	draw_line(Vector2(0, TITLE_BAR_HEIGHT), Vector2(WINDOW_SIZE.x, TITLE_BAR_HEIGHT), Color(0.0, 0.5, 0.7, 0.6), 1.0)
 	draw_rect(Rect2(Vector2.ZERO, WINDOW_SIZE), Color(0.0, 0.5, 0.7, 0.4), false, 1.0)
+	_draw_lodestar()
 
 	for route in route_data:
 		var from_pos: Vector2 = system_nodes[route["from"]]["position"]
@@ -596,8 +598,111 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 			_tooltip_panel.position = pos + offset
 			_tooltip_panel.visible = true
 			return
+	if _lodestar_hit(hover_pos):
+		var s := _lodestar_state()
+		var card: Dictionary = LodestarScript.card_of(s)
+		var found := LodestarScript.bearings_found(s)
+		var text := "[color=#ffd273]%s[/color]\n%s\nSomewhere past the edge of the charts (Class VI gates)." % [str(card["title"]), str(card["first_hint"])]
+		text += "\nBearings: %d of %d" % [found, LodestarScript.BEARINGS]
+		var last := LodestarScript.last_bearing_text(s)
+		if not last.is_empty():
+			text += "\nLatest: " + last
+		_tooltip_label.text = text
+		var at := hover_pos + Vector2(15, -_tooltip_panel.size.y - 5)
+		at.x = clampf(at.x, 4.0, WINDOW_SIZE.x - _tooltip_panel.size.x - 4.0)
+		at.y = clampf(at.y, TITLE_BAR_HEIGHT + 4.0, WINDOW_SIZE.y - _tooltip_panel.size.y - 4.0)
+		_tooltip_panel.position = at
+		_tooltip_panel.visible = true
+		return
 	_tooltip_panel.visible = false
 
+
+# --- The Lodestar wedge (core loop step 9) -------------------------------------
+
+## The campaign's Lodestar state, or {} while the captain hasn't heard of it.
+func _lodestar_state() -> Dictionary:
+	var s: Dictionary = LodestarScript.state(StoryManager.story_state, int(GlobalState.campaign_seed))
+	return s if bool(s.get("known", false)) and not LodestarScript.card_of(s).is_empty() else {}
+
+
+## The band the wedge sits in: an ellipse following the map window's shape,
+## from INNER_FRAC of the way out to just inside the border, so it stays in the
+## margin past the known systems.
+const LODESTAR_INNER_FRAC := 0.84
+
+
+func _lodestar_band() -> Dictionary:
+	var content_h: float = WINDOW_SIZE.y - TITLE_BAR_HEIGHT
+	var centre := Vector2(WINDOW_SIZE.x / 2.0, TITLE_BAR_HEIGHT + content_h / 2.0) + _pan_offset
+	return {"centre": centre, "rx": WINDOW_SIZE.x / 2.0 - 6.0, "ry": content_h / 2.0 - 6.0}
+
+
+## A point on the band: `a` the ellipse angle, `t` 0 (centre) to 1 (edge).
+func _lodestar_point(band: Dictionary, a: float, t: float) -> Vector2:
+	return (band["centre"] as Vector2) + Vector2(cos(a) * float(band["rx"]), sin(a) * float(band["ry"])) * t
+
+
+## The wedge pulses gently while the map is open.
+func _process(_delta: float) -> void:
+	if visible and not _lodestar_state().is_empty():
+		queue_redraw()
+
+
+func _lodestar_hit(p: Vector2) -> bool:
+	var s := _lodestar_state()
+	if s.is_empty():
+		return false
+	var band := _lodestar_band()
+	var to: Vector2 = p - (band["centre"] as Vector2)
+	var q := Vector2(to.x / float(band["rx"]), to.y / float(band["ry"]))
+	if q.length() < LODESTAR_INNER_FRAC or q.length() > 1.0:
+		return false
+	var half := deg_to_rad(maxf(LodestarScript.wedge_degrees(LodestarScript.bearings_found(s)), 10.0)) / 2.0
+	return absf(wrapf(q.angle() - LodestarScript.wedge_angle(int(GlobalState.campaign_seed)), -PI, PI)) <= half
+
+
+## A faint gold wedge at the edge of the map: roughly which way. Each bearing
+## narrows it; the last marks the place.
+func _draw_lodestar() -> void:
+	var s := _lodestar_state()
+	if s.is_empty():
+		return
+	var band := _lodestar_band()
+	var angle := LodestarScript.wedge_angle(int(GlobalState.campaign_seed))
+	var width := deg_to_rad(LodestarScript.wedge_degrees(LodestarScript.bearings_found(s)))
+	var gold := Color(1.0, 0.82, 0.45)
+	var pulse := 0.75 + 0.25 * sin(Time.get_ticks_msec() / 600.0)
+	var mid := (LODESTAR_INNER_FRAC + 1.0) * 0.5
+	if width <= 0.0:
+		var at := _lodestar_point(band, angle, mid)
+		draw_circle(at, 9.0, Color(gold, 0.9 * pulse))
+		draw_arc(at, 15.0, 0, TAU, 24, Color(gold, 0.6 * pulse), 2.0)
+	else:
+		# Brighter towards the edge, in three steps: soft, not a hard sector.
+		var steps := 24
+		for layer in 3:
+			var t0 := lerpf(LODESTAR_INNER_FRAC, 1.0, float(layer) / 3.0)
+			var t1 := lerpf(LODESTAR_INNER_FRAC, 1.0, float(layer + 1) / 3.0)
+			var points := PackedVector2Array()
+			for i in steps + 1:
+				points.append(_lodestar_point(band, angle - width / 2.0 + width * float(i) / float(steps), t0))
+			for i in range(steps, -1, -1):
+				points.append(_lodestar_point(band, angle - width / 2.0 + width * float(i) / float(steps), t1))
+			draw_colored_polygon(points, Color(gold, (0.08 + 0.06 * layer) * pulse))
+		var rim := PackedVector2Array()
+		for i in steps + 1:
+			rim.append(_lodestar_point(band, angle - width / 2.0 + width * float(i) / float(steps), 1.0))
+		draw_polyline(rim, Color(gold, 0.7 * pulse), 2.0)
+	var font := get_theme_default_font()
+	var title := str(LodestarScript.card_of(s)["title"]).to_upper()
+	var size := font.get_string_size(title, HORIZONTAL_ALIGNMENT_LEFT, -1, 13)
+	# Just inside the band, towards the centre, so it never sits on the border.
+	var label_at := _lodestar_point(band, angle, LODESTAR_INNER_FRAC - 0.06) - Vector2(size.x / 2.0, -4.0)
+	if width <= 0.0:
+		label_at = _lodestar_point(band, angle, mid) + Vector2(-size.x / 2.0, 32.0)  # under the marker
+	label_at.x = clampf(label_at.x, 6.0, WINDOW_SIZE.x - size.x - 6.0)
+	label_at.y = clampf(label_at.y, TITLE_BAR_HEIGHT + 16.0, WINDOW_SIZE.y - 8.0)
+	draw_string(font, label_at, title, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(gold, 0.9))
 
 ## The gate class to reach `sys_id` and whether the ship can open it, from the
 ## same check the jump uses (green open, red not yet).

@@ -481,3 +481,19 @@ campaign. Getting there takes a while; checks for when you do:
       drops the "+ ..." part. Going back through any gate is always open.
 - [ ] **Different campaigns differ.** Start two new campaigns and reach depth
       4-5 in each: the rumours are usually about different things.
+
+## N. The Lodestar (added 2026-10-02, core loop step 9)
+
+- [ ] **First hint.** New campaign: finish the tutorial contract, then jump to
+      any other system. Once you're undocked and out of combat, a gold
+      LODESTAR line appears in the comms feed (the place's name and the
+      rumour) and N.O.V.A. reacts, ending with "I've marked the rough
+      direction on the star map". It happens once.
+- [ ] **Wedge on the star map.** Open the star map (M): a faint gold wedge
+      pulses at the edge of the map with the place's name, clear of the
+      systems. Hover it: the rumour, "Bearings: 0 of 5", Class VI.
+- [ ] **Wiki.** Esc > Wiki: "The Lodestar" is unlocked and makes sense.
+- [ ] **Different campaigns differ.** A second new campaign usually gets a
+      different Lodestar and the wedge points another way.
+- [ ] **Read the six cards** (data/content/lodestars.json): do the hints and
+      N.O.V.A.'s lines sound right to you? (Bearings show up from step 10.)

@@ -184,6 +184,7 @@ var generation_window: Node = null
 var signal_tuning_activity: Node = null
 var drone_maze_activity: Node = null
 var gate_rating_guide: Node = null
+var lodestar_guide: Node = null
 var recurring_encounter_runner: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
@@ -337,6 +338,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_evasion_smoke_test")
 	elif "--landing-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_landing_snapshot")
+	elif "--map-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_map_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -1433,6 +1436,10 @@ func _init_premise_director() -> void:
 	gate_rating_guide = GateRatingGuideType.new()
 	gate_rating_guide.name = "GateRatingGuide"
 	add_child(gate_rating_guide)
+	# The campaign's Lodestar: the far pull (core loop step 9).
+	lodestar_guide = load("res://scripts/story/LodestarGuide.gd").new()
+	lodestar_guide.name = "LodestarGuide"
+	add_child(lodestar_guide)
 	# The recurring cast in person: old grudges and old debts find the captain.
 	recurring_encounter_runner = RecurringEncounterRunnerType.new()
 	recurring_encounter_runner.name = "RecurringEncounterRunner"
@@ -10869,6 +10876,45 @@ func _run_wiki_snapshot() -> void:
 	for i in 5:
 		await get_tree().process_frame
 	await _hud_snapshot_save(out.path_join("wiki_movement.png"))
+	get_tree().quit()
+
+
+## Core loop step 9: the Lodestar wedge on the star map, windowed, at 0, 3 and
+## 5 bearings: -- --map-snapshot --baseline-offline --out=<dir>
+func _run_map_snapshot() -> void:
+	var out := "user://map_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var Lodestar := load("res://scripts/domain/Lodestar.gd")
+	var s: Dictionary = Lodestar.state(StoryManager.story_state, int(GlobalState.campaign_seed))
+	s["known"] = true
+	s["bearings"] = []
+	print("[MapSnapshot] lodestar: ", s["id"], " angle ", rad_to_deg(Lodestar.wedge_angle(int(GlobalState.campaign_seed))))
+	var ui = GlobalState.get_ui_manager()
+	ui._toggle_branch_map()
+	for frames_and_bearings in [[20, []], [10, [0, 1, 2]], [10, [0, 1, 2, 3, 4]]]:
+		s["bearings"] = frames_and_bearings[1]
+		ui.branch_map.refresh()
+		for i in int(frames_and_bearings[0]):
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("map_bearings_%d.png" % (frames_and_bearings[1] as Array).size()))
+	# The tooltip over the wedge.
+	s["bearings"] = [0]
+	var band: Dictionary = ui.branch_map._lodestar_band()
+	var angle: float = Lodestar.wedge_angle(int(GlobalState.campaign_seed))
+	var over: Vector2 = ui.branch_map._lodestar_point(band, angle, 0.92)
+	ui.branch_map._update_hover_tooltip(over)
+	for i in 10:
+		await get_tree().process_frame
+	await _hud_snapshot_save(out.path_join("map_tooltip.png"))
 	get_tree().quit()
 
 
