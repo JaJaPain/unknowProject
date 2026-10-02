@@ -117,3 +117,19 @@ All gas giants use one texture with a tint, so they all look like Jupiter.
 
 Rewrite checks that read like the "Not this one." item: say what to do, what
 you should see, and what counts as a pass.
+
+## Status (2026-10-02): all eleven done
+
+| # | Fix | Commit | What it turned out to be |
+|---|---|---|---|
+| 1 | Autopilot through outposts / gas giant | 86511d4 | Outposts' collision boxes were a third of what you see; the autopilot now sizes non-planets by their visible models (`--route-smoke-test`). The gas giant routes clear in tests; the odd route was likely the SystemContainer target (2). |
+| 2 | "SystemContainer" targetable | 86511d4 | Single-click climbed to the player's siblings; now stops at the object in the system, like right-click. |
+| 3 | T silent | c034e84 | Any faction below -10 counted as hostile, and new campaigns start at -20 with two; now follows the overview's red. T always answers (scan readout, or the reason). |
+| 4 | Kaelen on others' payouts | 88cf41c | Her own jobs only, over comms; board jobs get N.O.V.A. |
+| 5 | Jenna's voice everywhere | afca75f | Neutral fallback was 0.4 from Jenna; new neutral and reserved-voice rule. |
+| 6 | Kaelen too fast | 68f5d14 | Old cloned takes (never meant for use) served since 2026-09-30; only N.O.V.A. uses cloned takes now. |
+| 7 | Decline last | 05dc97e | "Not this one." last everywhere. |
+| 8 | Goal card rolls up | 2e83bcd | +/- toggle, remembered, peeks on change. |
+| 9 | Bay in Kaelen's layout | ee6fdcc | Mechanic mode on the agent panel. |
+| 10 | Gas giant variety | 7904a50, e1936e8 | Procedural shader, 8 palettes, plus churning storms (Abe's add-on). |
+| 11 | Unclear checks | this commit | "Turning down an offer" reworded; outdated bay check replaced. |

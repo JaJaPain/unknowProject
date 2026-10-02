@@ -27,7 +27,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       text that types itself out (click the text to show it all at once),
       and ONLY two replies: "1 Let's hear it." and "2 Not right now. I need
       to get my bearings first." No Sell/Fuel buttons, no Back button.
-- [ ] **Number keys.** Press 1 on your keyboard: it picks "Let's hear it."
+- [x] **Number keys.** Press 1 on your keyboard: it picks "Let's hear it."
 - [x] **One Reaver.** Take Kaelen's job, undock right away, and watch the
       overview for a minute: exactly ONE Reaver (pinned red). Kill it.
 - [x] **Kaelen's role.** Nothing anyone says treats Kaelen as someone you
@@ -36,21 +36,24 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## B. Station screens
 
-- [ ] **Offers have a "No".** Talk to Agent for a normal job: the last
-      reply is always "Not this one." and it takes you back to the menu.
+- [ ] **Turning down an offer.** At a main station, Talk to Agent and get a
+      normal job offer (not the tutorial one). Look at the numbered replies:
+      the LAST one reads "Not this one." (it comes after "Terms / other
+      questions"). Pick it. Pass: the offer closes and you're back on the
+      agent's menu. (Reworded 2026-10-02; the old wording was unclear.)
 - [ ] **No debug text.** No "[Offline Backup]" anywhere in an offer.
 - [ ] **Public board.** Cards have a coloured stripe on the left (amber =
       urgent). Payouts are gold. Fuel jobs say "fuel", never "fuel Ore".
 - [ ] **Fetch card.** One card is a rare-item request ("… Needed",
       posted by a person like "A frantic rescue coordinator"), with a red,
       gold or blue stripe.
-- [ ] **Store.** Station Store opens a grid of item icons like the
+- [x] **Store.** Station Store opens a grid of item icons like the
       inventory. Click an item: big picture, stock, BUY with a price.
       Buy one cheap item; your credits drop and "You have 1" appears.
       If you own something sellable, a SELL button shows its price.
-- [ ] **Maintenance bay.** Same look as the hub, over the bay picture,
-      with Jenna's card.
-- [ ] **Crash fix.** Accept a board courier/delivery job, then undock:
+- [ ] **Maintenance bay.** Replaced 2026-10-02: the bay now uses Kaelen's
+      layout; see "The maintenance bay matches Kaelen's screen" in section O.
+- [x] **Crash fix.** Accept a board courier/delivery job, then undock:
       no crash.
 
 ## C. Flight and combat feel
@@ -99,8 +102,8 @@ Claude adds new items here as work lands (newest section at the bottom).
       Note: the start station's lights never showed clearly in Claude's
       screenshots; say if you can't see them.
 - [ ] **Radio voices.** The system radio / local channel in two different
-      systems uses two different voices, and neither sounds like
-      N.O.V.A. or Kaelen.
+      systems uses two different voices, and none sounds like N.O.V.A.,
+      Kaelen or Jenna.
 
 ## F. Added 2026-09-30
 
