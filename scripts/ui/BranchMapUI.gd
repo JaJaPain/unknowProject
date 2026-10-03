@@ -766,7 +766,12 @@ func _gate_class_line(sys_id: String) -> String:
 		return ""
 	var access: Dictionary = guide.access_to(sys_id)
 	var colour := "#59d98c" if bool(access.get("ok", true)) else "#ff6b5e"
-	return "\n[color=%s]%s[/color]" % [colour, str(access.get("label", ""))]
+	var line := "\n[color=%s]%s[/color]" % [colour, str(access.get("label", ""))]
+	# Deeper systems burn more fuel cruising (playtest 2026-10-03 finding 9).
+	var depth: int = load("res://scripts/domain/DepthScaling.gd").depth_of(sys_id)
+	if depth > 0:
+		line += "\nFuel burn: %s" % load("res://scripts/economy/Fuel.gd").cruise_label(depth)
+	return line
 
 
 func _handle_click(click_pos: Vector2) -> void:

@@ -19,6 +19,14 @@ const REFINE_FEE := 0.5
 ## Flying in a system sips fuel: this much per second at full speed,
 ## scaled by speed (Abe: "just sips it").
 const CRUISE_SIP_PER_SECOND := 0.01
+## Deeper systems burn more just flying around (Abe, playtest 2026-10-03
+## finding 9): by gate depth from home, Abe's numbers for the first five
+## systems; past that it keeps climbing (each step 0.2 bigger), up to a cap.
+## Cruising only: jumps already scale with depth, boost is flat.
+const CRUISE_MULT_BY_DEPTH := [1.0, 1.1, 1.5, 2.0, 2.8]
+const CRUISE_MULT_STEP := 1.0
+const CRUISE_MULT_STEP_GROWTH := 0.2
+const CRUISE_MULT_MAX := 6.0
 ## An empty tank still flies, at this share of top speed, with no boost.
 const EMPTY_SPEED_MULT := 0.6
 ## Below this the tank counts as empty.
@@ -40,6 +48,22 @@ const O2_LITRES := 10
 const NO_JUMP_ITEMS := ["fuel_booster"]
 ## Buying fuel outright at a station.
 const BUY_PRICE := 3.0
+
+
+static func cruise_multiplier(depth: int) -> float:
+	if depth < CRUISE_MULT_BY_DEPTH.size():
+		return float(CRUISE_MULT_BY_DEPTH[maxi(depth, 0)])
+	var mult := float(CRUISE_MULT_BY_DEPTH[-1])
+	var step := CRUISE_MULT_STEP
+	for i in depth - (CRUISE_MULT_BY_DEPTH.size() - 1):
+		mult += step
+		step += CRUISE_MULT_STEP_GROWTH
+	return minf(mult, CRUISE_MULT_MAX)
+
+
+## "x1.5" for the HUD and the map.
+static func cruise_label(depth: int) -> String:
+	return "x%s" % String.num(cruise_multiplier(depth), 1)
 
 
 static func jump_cost(destination_depth: int) -> float:

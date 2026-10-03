@@ -4330,6 +4330,13 @@ func _on_fuel_changed(new_fuel: float) -> void:
 		if target != null and is_instance_valid(target) and target is Node3D and (target as Node3D).is_in_group("jumpgate") \
 				and root != null and root.has_method("jump_fuel_cost"):
 			text += " (jump %d)" % int(ceil(float(root.call("jump_fuel_cost", target))))
+		# Deeper systems burn more cruising (finding 9).
+		var depth: int = load("res://scripts/domain/DepthScaling.gd").current_depth()
+		var mult: float = fuel_script.cruise_multiplier(depth)
+		if mult > 1.0 and not empty:
+			text += "  ·  burn %s" % fuel_script.cruise_label(depth)
+		fuel_label.tooltip_text = "Cruising here burns fuel at %s the home rate (deeper systems burn more). Jumps cost more the deeper they lead; boost is flat." % fuel_script.cruise_label(depth)
+		fuel_label.mouse_filter = Control.MOUSE_FILTER_PASS
 		if empty:
 			text += "  EMPTY: 60% speed, no boost, no jumps"
 		fuel_label.text = text

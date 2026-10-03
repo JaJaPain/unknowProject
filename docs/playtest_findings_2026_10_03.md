@@ -299,7 +299,7 @@ project. The wiki entry `nova` (`data/content/wiki_entries.json:259`) starts
   canon, not the director-only secret, but every N.O.V.A. text change gets
   the check).
 
-### 9. Deeper systems burn more fuel in normal flight
+### 9. **FIXED 2026-10-03** Deeper systems burn more fuel in normal flight
 
 **Abe:** each system past the first uses incrementally more fuel for
 regular flight, e.g. system 2 x1.1, system 3 x1.5, system 4 x2, system 5
@@ -719,3 +719,13 @@ What changed:
 - Not done yet (still on the list): the wider every-quest-type reachability
   test (14b item 5), the Station/Outpost label (problem 5).
 - Lines for Abe's review (small batch) are in `PickupHunt.gd`.
+
+#### 9b. Built with defaults (Abe's three questions weren't answered before the playtest ended)
+- Past system 5: keeps climbing (+1.0, +1.2, +1.4 ...: x3.8, x5.0, then the
+  cap), **capped at x6** (`Fuel.CRUISE_MULT_MAX`).
+- Base burn rate unchanged (0.01 per second at full speed), so a full tank
+  still lasts ~1 hour of full-speed cruising at system 5. Raise
+  `CRUISE_SIP_PER_SECOND` if it should bite more.
+- Boost unaffected (cruising only, as Abe said).
+- Shown next to the HUD fuel ("burn x1.5", with a tooltip), on the star map
+  tooltip ("Fuel burn: x1.5") and in the wiki's Fuel entry.

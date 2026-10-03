@@ -712,3 +712,7 @@ through the marked gate and flies you in):
       "WIKI · N NEW" button appears under Inventory / Star Map and pulses;
       clicking it opens the wiki. Esc > WIKI pulses too. Reading the new
       entries makes both go quiet.
+- [ ] **Deeper systems burn more fuel.** At home the fuel line is plain;
+      one jump out it says "burn x1.1", then x1.5, x2.0, x2.8 further out
+      (hover for the explanation). The star map tooltip shows "Fuel burn" for
+      other systems. Does it bite enough? (Base rate unchanged; cap x6.)

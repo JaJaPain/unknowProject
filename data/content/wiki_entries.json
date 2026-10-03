@@ -134,7 +134,7 @@
 			"category": "Ship",
 			"title": "Fuel",
 			"unlocked": true,
-			"body": "Jumps cost fuel (more for gates that lead deeper out), and so does boosting. Flying around inside a system only sips it.\n\nAn empty tank still flies, slower and with no boost, but it cannot jump. So you can always mine water ice, refine it at a station and leave.\n\nDocked, use [b]Buy Fuel[/b] to top up, or refine your own ice (see [b]Refining ice[/b]). Some stations post fuel runs on their job boards."
+			"body": "Jumps cost fuel (more for gates that lead deeper out), and so does boosting. Flying around inside a system only sips it, but deeper systems sip harder: one jump out from home burns x1.1, then x1.5, x2.0, x2.8 and on up (shown next to your fuel and on the star map).\n\nAn empty tank still flies, slower and with no boost, but it cannot jump. So you can always mine water ice, refine it at a station and leave.\n\nDocked, use [b]Buy Fuel[/b] to top up, or refine your own ice (see [b]Refining ice[/b]). Some stations post fuel runs on their job boards."
 		},
 		{
 			"id": "hull",

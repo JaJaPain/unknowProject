@@ -859,6 +859,20 @@ func hard_stop() -> void:
 	cancel_autopilot(true)
 
 
+## Deeper systems burn more fuel cruising (finding 9). The depth walk is
+## cached per system, not done every physics frame.
+var _cruise_mult_system := ""
+var _cruise_mult := 1.0
+
+
+func _cruise_fuel_mult() -> float:
+	var here := str(GlobalState.current_system_id)
+	if here != _cruise_mult_system:
+		_cruise_mult_system = here
+		_cruise_mult = GlobalState.FuelScript.cruise_multiplier(load("res://scripts/domain/DepthScaling.gd").current_depth())
+	return _cruise_mult
+
+
 func activate_boost() -> bool:
 	var no_fuel := GlobalState.is_fuel_empty() or GlobalState.fuel + 0.0001 < GlobalState.FuelScript.BOOST_COST
 	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0 or no_fuel:
@@ -1443,7 +1457,7 @@ func _physics_process(delta: float):
 		move_and_slide()
 		# Cruising sips fuel, more the faster we go.
 		var full_speed := maxf(1.0, max_speed * GlobalState.engine_speed_mult)
-		GlobalState.sip_fuel(GlobalState.FuelScript.CRUISE_SIP_PER_SECOND * clampf(current_speed / full_speed, 0.0, 1.5) * delta)
+		GlobalState.sip_fuel(GlobalState.FuelScript.CRUISE_SIP_PER_SECOND * _cruise_fuel_mult() * clampf(current_speed / full_speed, 0.0, 1.5) * delta)
 
 		if global_position.distance_to(dest) < 2.0 \
 				and nav_mode == "MOVE_TO_POINT":

@@ -17,6 +17,18 @@ func _initialize() -> void:
 
 	_check(Fuel.jump_cost(1) < Fuel.jump_cost(4) and Fuel.jump_cost(30) == Fuel.JUMP_MAX, "jumps further out cost more, up to a cap")
 	_check(Fuel.TANK_MAX / Fuel.jump_cost(1) >= 8.0, "a full tank covers several early jumps")
+	# Deeper systems burn more cruising (Abe, playtest 2026-10-03 finding 9).
+	var abe := [1.0, 1.1, 1.5, 2.0, 2.8]
+	for depth in abe.size():
+		_check(is_equal_approx(Fuel.cruise_multiplier(depth), float(abe[depth])), "system %d burns x%s (Abe's numbers)" % [depth + 1, abe[depth]])
+	var last := Fuel.cruise_multiplier(4)
+	for depth in range(5, 30):
+		var m := Fuel.cruise_multiplier(depth)
+		_check(m >= last and m <= Fuel.CRUISE_MULT_MAX, "keeps climbing, capped (depth %d: x%.1f)" % [depth, m])
+		last = m
+	_check(is_equal_approx(Fuel.cruise_multiplier(5), 3.8) and is_equal_approx(Fuel.cruise_multiplier(30), Fuel.CRUISE_MULT_MAX), "x3.8 one past Abe's table; the cap holds")
+	_check(Fuel.cruise_label(2) == "x1.5", "the label")
+	_check(FileAccess.get_file_as_string("res://scripts/PlayerShip.gd").contains("CRUISE_SIP_PER_SECOND * _cruise_fuel_mult()"), "cruising uses it")
 	var r: Array = Fuel.refine(40.0, 90.0)
 	_check(is_equal_approx(float(r[0]), 10.0) and is_equal_approx(float(r[1]), 10.0), "refining stops at a full tank and uses only the ice it needs")
 	_check(Fuel.REFINE_FEE < Fuel.BUY_PRICE and Fuel.FUEL_PER_ICE * 1.3 < Fuel.BUY_PRICE, "mining ice is the cheap way (cheaper than buying, better than selling the ice)")
