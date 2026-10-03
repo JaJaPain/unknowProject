@@ -679,3 +679,13 @@ through the marked gate and flies you in):
       stay cagey about it; others may say who's acting cagey.
 - [ ] **Jenna's parts runs are unchanged:** the outpost contact is named and
       hands it over directly (services button, or "Pick up" on their card).
+
+## U. Music (added 2026-10-03, playtest findings 1-2)
+
+- [ ] **Stingers duck the music.** Landing page: press Continue; the jump
+      stinger plays over clearly quieter music, and once it ends the music
+      swells back in over a couple of seconds (no snap). Same for the danger
+      sting when a fight starts and the victory sting when you win.
+- [ ] **Music never drops out.** Fly toward a Reaver (tension music), let it
+      lose and regain you: the music changes smoothly and never stops. If it
+      ever goes silent it comes back on its own within a few seconds.

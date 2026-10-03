@@ -19,6 +19,18 @@ const STINGERS := {
 	"danger": "Stinger_Danger.mp3",
 }
 const MUSIC_CROSSFADE_S := 2.0
+const MUSIC_BED_BUS := "MusicBed"
+## Stingers duck the music, then it fades back in slowly once they're done
+## (Abe, playtest 2026-10-03: "fades back in, not just returns to full").
+const STINGER_DUCK_DB := -12.0
+const STINGER_DUCK_IN_S := 0.2
+const STINGER_RESTORE_S := 2.5
+## Tension music needs the threat to hold, and to be gone a while, so a
+## flickering lock doesn't flip the music (finding 2).
+const TENSION_ENTER_S := 2.0
+const TENSION_LEAVE_S := 5.0
+## Nothing playing this long when music should be: start it again.
+const MUSIC_WATCHDOG_S := 3.0
 var music_state := "explore"
 var _bgm_alt: AudioStreamPlayer
 var _stinger_player: AudioStreamPlayer
@@ -92,6 +104,16 @@ func _ready():
 		music_bus_idx = AudioServer.get_bus_count() - 1
 		AudioServer.set_bus_name(music_bus_idx, "Music")
 		
+	# The music bed: the tracks play here, under the Music bus, so a stinger
+	# (on Music itself) can duck them without ducking itself (playtest
+	# 2026-10-03 finding 1). The music slider still sets both.
+	var bed_idx = AudioServer.get_bus_index(MUSIC_BED_BUS)
+	if bed_idx == -1:
+		AudioServer.add_bus()
+		bed_idx = AudioServer.get_bus_count() - 1
+		AudioServer.set_bus_name(bed_idx, MUSIC_BED_BUS)
+	AudioServer.set_bus_send(bed_idx, "Music")
+
 	var sfx_bus_idx = AudioServer.get_bus_index("SFX")
 	if sfx_bus_idx == -1:
 		AudioServer.add_bus()
@@ -100,11 +122,11 @@ func _ready():
 	
 	# Setup BGM Player
 	bgm_player = AudioStreamPlayer.new()
-	bgm_player.bus = "Music"
+	bgm_player.bus = MUSIC_BED_BUS
 	add_child(bgm_player)
 	bgm_player.finished.connect(_on_bgm_finished)
 	_bgm_alt = AudioStreamPlayer.new()
-	_bgm_alt.bus = "Music"
+	_bgm_alt.bus = MUSIC_BED_BUS
 	add_child(_bgm_alt)
 	_bgm_alt.finished.connect(_on_bgm_finished)
 	_stinger_player = AudioStreamPlayer.new()
@@ -279,18 +301,31 @@ func _play_state_track(streams: Array, crossfade: bool) -> void:
 		bgm_player.play()
 
 
+var _crossfade_tween: Tween
+
+
 func _crossfade_to(stream: AudioStream) -> void:
+	# A crossfade still running is cancelled first: its "stop the old player"
+	# step used to land on the player that had just become current, and the
+	# music went silent (playtest 2026-10-03 finding 2).
+	if _crossfade_tween != null and _crossfade_tween.is_valid():
+		_crossfade_tween.kill()
 	var old := bgm_player
 	bgm_player = _bgm_alt
 	_bgm_alt = old
+	bgm_player.stop()
 	bgm_player.stream = stream
 	bgm_player.volume_db = -40.0
 	bgm_player.play()
-	var tween := create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(bgm_player, "volume_db", 0.0, MUSIC_CROSSFADE_S)
-	tween.tween_property(old, "volume_db", -40.0, MUSIC_CROSSFADE_S)
-	tween.chain().tween_callback(old.stop)
+	GlobalState.trace("[TRACE] [Music] crossfade to %s (%s)" % [stream.resource_path.get_file() if stream != null else "?", music_state])
+	var fading := old
+	_crossfade_tween = create_tween()
+	_crossfade_tween.set_parallel(true)
+	_crossfade_tween.tween_property(bgm_player, "volume_db", 0.0, MUSIC_CROSSFADE_S)
+	_crossfade_tween.tween_property(fading, "volume_db", -40.0, MUSIC_CROSSFADE_S)
+	_crossfade_tween.chain().tween_callback(func() -> void:
+		if fading != bgm_player:
+			fading.stop())
 
 
 func _state_streams(state: String) -> Array:
@@ -305,11 +340,36 @@ func _state_streams(state: String) -> Array:
 
 
 var _tension_check_timer := 0.0
+var _threat_held_s := 0.0
+var _clear_held_s := 0.0
 
 
 func _process(delta: float) -> void:
 	if GlobalState != null and not GlobalState.paused:
 		_update_tension(delta)
+	_music_watchdog(delta)
+
+
+var _silent_s := 0.0
+
+
+## Music should always be playing outside the landing/lounge tracks' own
+## handling and the broken-gate silence. If nothing has played for a few
+## seconds, start the right track again (finding 2).
+func _music_watchdog(delta: float) -> void:
+	if bgm_player == null or _music_suspended_for_broken_gate or tracks.is_empty():
+		_silent_s = 0.0
+		return
+	if bgm_player.playing or (_bgm_alt != null and _bgm_alt.playing):
+		_silent_s = 0.0
+		return
+	_silent_s += delta
+	if _silent_s < MUSIC_WATCHDOG_S:
+		return
+	_silent_s = 0.0
+	GlobalState.trace("[TRACE] [Music] silent for %.0f s in state %s: restarting" % [MUSIC_WATCHDOG_S, music_state])
+	bgm_player.volume_db = 0.0
+	_on_bgm_finished()
 
 
 ## Tension: a live ship has locked onto the player outside turn combat.
@@ -329,9 +389,12 @@ func _update_tension(delta: float) -> void:
 		if is_instance_valid(entity) and entity is Node and entity != player and entity.get("destroyed") != true and entity.get("target") == player:
 			threatened = true
 			break
-	if threatened and music_state == "explore":
+	# Held a while either way before the music moves (finding 2).
+	_threat_held_s = (_threat_held_s + 1.0) if threatened else 0.0
+	_clear_held_s = 0.0 if threatened else (_clear_held_s + 1.0)
+	if music_state == "explore" and _threat_held_s >= TENSION_ENTER_S:
 		set_music_state("tension")
-	elif not threatened and music_state == "tension":
+	elif music_state == "tension" and _clear_held_s >= TENSION_LEAVE_S:
 		set_music_state("explore")
 
 
@@ -361,6 +424,38 @@ func play_stinger(stinger_id: String) -> void:
 		return
 	_stinger_player.stream = load(path)
 	_stinger_player.play()
+	_duck_bed_for(_stinger_player.stream.get_length() if _stinger_player.stream != null else 2.0)
+
+
+var _bed_tween: Tween
+var _bed_serial := 0
+
+
+## Duck the music bed now, hold it for `seconds`, then fade it back in
+## slowly (eased, so the start of the swell is gentle). A new stinger while
+## ducked restarts the hold.
+func _duck_bed_for(seconds: float) -> void:
+	var idx := AudioServer.get_bus_index(MUSIC_BED_BUS)
+	if idx == -1:
+		return
+	_bed_serial += 1
+	var serial := _bed_serial
+	if _bed_tween != null and _bed_tween.is_valid():
+		_bed_tween.kill()
+	var set_db := func(db: float) -> void: AudioServer.set_bus_volume_db(idx, db)
+	_bed_tween = create_tween()
+	_bed_tween.tween_method(set_db, AudioServer.get_bus_volume_db(idx), STINGER_DUCK_DB, STINGER_DUCK_IN_S)
+	_bed_tween.tween_interval(maxf(0.1, seconds - STINGER_DUCK_IN_S))
+	_bed_tween.tween_callback(func() -> void:
+		if serial == _bed_serial:
+			GlobalState.trace("[TRACE] [Music] stinger done, music fading back in"))
+	_bed_tween.tween_method(set_db, STINGER_DUCK_DB, 0.0, STINGER_RESTORE_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## The music bed's volume now, dB (for tests).
+func music_bed_db() -> float:
+	var idx := AudioServer.get_bus_index(MUSIC_BED_BUS)
+	return AudioServer.get_bus_volume_db(idx) if idx != -1 else 0.0
 
 func enter_lounge_music() -> void:
 	if bgm_player == null or bgm_lounge == null:

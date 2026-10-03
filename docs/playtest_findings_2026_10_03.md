@@ -6,7 +6,7 @@ what Abe saw, what the code says (cause, with file:line), and a proposed fix.
 
 ## Findings
 
-### 1. Landing page: duck the music under the stinger, then bring it back slowly
+### 1. **FIXED 2026-10-03** Landing page: duck the music under the stinger, then bring it back slowly
 
 **Abe:** on the landing page, duck the audio when the stinger plays, then
 slowly bring it back up to volume after the stinger finishes.
@@ -52,7 +52,7 @@ slowly bring it back up to volume after the stinger finishes.
   `play_next_bgm`) while the duck is restoring; with the duck on its own bus
   that's independent of the crossfade.
 
-### 2. Music stopped while flying to the Reaver in the tutorial
+### 2. **FIXED 2026-10-03** Music stopped while flying to the Reaver in the tutorial
 
 **Abe:** the music stopped playing during the flight to the Reaver in the
 tutorial.
