@@ -649,3 +649,14 @@ through the marked gate and flies you in):
       somewhere else, further out (Class VIII-ish gates).
 - [ ] **It stays.** Fly back to the reached system later: the landmark is
       still there (no scene this time) and its gold ring stays on the map.
+
+## S. Never nothing to do (added 2026-10-02, core loop step 13)
+
+- [ ] **No job, N.O.V.A. helps.** After the tutorial, undock with no job and
+      just fly around for about 2.5 minutes: N.O.V.A. suggests something,
+      e.g. "No job on the books, Captain. The station board always has
+      something." Not again for about 10 minutes.
+- [ ] **She picks the best thing.** With your upgrade goal fully paid for
+      (goal card says READY), the line is about docking to fit it instead.
+- [ ] **She leaves you alone when busy.** With a job active, or docked, she
+      never says these.

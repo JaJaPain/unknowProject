@@ -186,6 +186,7 @@ var drone_maze_activity: Node = null
 var gate_rating_guide: Node = null
 var lodestar_guide: Node = null
 var undercurrent_nudge: Node = null
+var now_horizon: Node = null
 var recurring_encounter_runner: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
@@ -1454,6 +1455,10 @@ func _init_premise_director() -> void:
 	undercurrent_nudge = load("res://scripts/story/UndercurrentNudge.gd").new()
 	undercurrent_nudge.name = "UndercurrentNudge"
 	add_child(undercurrent_nudge)
+	# No job for a while: N.O.V.A. points at something worth doing (step 13).
+	now_horizon = load("res://scripts/story/NowHorizon.gd").new()
+	now_horizon.name = "NowHorizon"
+	add_child(now_horizon)
 	# The recurring cast in person: old grudges and old debts find the captain.
 	recurring_encounter_runner = RecurringEncounterRunnerType.new()
 	recurring_encounter_runner.name = "RecurringEncounterRunner"
