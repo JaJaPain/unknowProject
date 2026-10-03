@@ -12634,9 +12634,18 @@ func _update_survey_button() -> void:
 
 
 func _on_sell_survey_pressed() -> void:
-	var credits: int = load("res://scripts/domain/ShortPulls.gd").sell_all(StoryManager.story_state)
+	var ShortPulls = load("res://scripts/domain/ShortPulls.gd")
+	var deepest_sold: int = ShortPulls.deepest_unsold(StoryManager.story_state)
+	var credits: int = ShortPulls.sell_all(StoryManager.story_state)
 	if credits <= 0:
 		return
+	# Deep charts get a word from her (step 11b), in person: this is her screen.
+	var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
+	var undercurrent = get_tree().current_scene.get("undercurrent_nudge")
+	if deepest_sold >= Nudge.DEEP_SURVEY_DEPTH and undercurrent != null and is_instance_valid(undercurrent):
+		var line: String = Nudge.next_line(undercurrent.current(), "kaelen_deep_survey")
+		agent_dialogue_label.text = line
+		SpeechService.play(line, "voice.kaelen.v1")
 	GlobalState.add_credits(credits)
 	if is_instance_valid(AudioManager) and AudioManager.has_method("play_sell_ore"):
 		AudioManager.play_sell_ore()
@@ -13461,6 +13470,14 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 					"quest_is_fallback": is_fallback,
 				}
 			)
+	# Now and then she nudges deeper at the end of a pitch (step 11b; authored,
+	# about 1 in 4 offers, never two in a row, never the tutorial job).
+	var undercurrent = get_tree().current_scene.get("undercurrent_nudge") if get_tree().current_scene != null else null
+	if undercurrent != null and is_instance_valid(undercurrent) \
+			and bool(StoryManager.story_state.get("first_contract_handed_in", false)):
+		var tail: String = load("res://scripts/story/UndercurrentNudge.gd").pitch_tail(undercurrent.current(), randf())
+		if not tail.is_empty():
+			handoff_line = handoff_line.strip_edges() + " " + tail
 	# Flash incoming call notification in the chat bar
 	add_chat_message("COMMS", "Incoming voice transmission...", Color(0.0, 0.9, 0.9))
 
@@ -13500,7 +13517,7 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	if GateDiscovery and GateDiscovery.is_kaelen_gate_eligible():
 		var revealable := GateDiscovery.get_revealable_gates()
 		if not revealable.is_empty():
-			var gate_id: String = revealable[0]
+			var gate_id: String = _kaelen_pick_gate(revealable)
 			var cost: int = GateDiscovery.get_kaelen_reveal_cost(gate_id)
 			var intel_btn := Button.new()
 			intel_btn.text = "[ Ask about new routes — %d SC ]" % cost
@@ -13601,7 +13618,7 @@ func _add_kaelen_gate_intel_button() -> void:
 	var revealable := GateDiscovery.get_revealable_gates()
 	if revealable.is_empty():
 		return
-	var gate_id: String = revealable[0]
+	var gate_id: String = _kaelen_pick_gate(revealable)
 	var cost: int = GateDiscovery.get_kaelen_reveal_cost(gate_id)
 	var intel_btn := Button.new()
 	intel_btn.text = "[ Ask about new routes - %d SC ]" % cost
@@ -13667,7 +13684,18 @@ func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void:
 		StoryManager.mark_chapter_beat_state(beat_id, "offered", "Offer presented.")
 
 
+## Her leads point deeper (core loop step 11b): an outward gate first.
+func _kaelen_pick_gate(revealable: Array) -> String:
+	var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
+	for gate_id in revealable:
+		if Nudge.gate_is_outward(str(gate_id)):
+			return str(gate_id)
+	return str(revealable[0])
+
+
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
+	var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
+	var outward: bool = Nudge.gate_is_outward(gate_id)
 	var result := GateDiscovery.kaelen_reveal(gate_id, cost)
 	if result.get("ok", false):
 		_update_agent_portrait("neutral", "", "intrigued")
@@ -13675,6 +13703,10 @@ func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 			"\"I've got a contact who owes me — they mapped a route "
 			+ "nobody else has charted. It's yours now. Gate coordinates uploaded to your nav system.\""
 		)
+		if outward:
+			var undercurrent = get_tree().current_scene.get("undercurrent_nudge")
+			if undercurrent != null and is_instance_valid(undercurrent):
+				agent_dialogue_label.text += " " + Nudge.next_line(undercurrent.current(), "kaelen_outward_lead")
 		SpeechService.play(agent_dialogue_label.text, "voice.kaelen.v1")
 		show_hud_info("New route unlocked — check your map.", Color(0.2, 0.9, 0.6))
 		for child in agent_choices_container.get_children():

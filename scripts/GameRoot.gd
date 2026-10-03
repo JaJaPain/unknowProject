@@ -185,6 +185,7 @@ var signal_tuning_activity: Node = null
 var drone_maze_activity: Node = null
 var gate_rating_guide: Node = null
 var lodestar_guide: Node = null
+var undercurrent_nudge: Node = null
 var recurring_encounter_runner: Node = null
 # Fixed-cast undercurrent moments (director-only; plan Section 5).
 var undercurrent_director: Node = null
@@ -1444,6 +1445,10 @@ func _init_premise_director() -> void:
 	lodestar_guide = load("res://scripts/story/LodestarGuide.gd").new()
 	lodestar_guide.name = "LodestarGuide"
 	add_child(lodestar_guide)
+	# N.O.V.A. and Kaelen nudge the captain deeper, never saying why (step 11b).
+	undercurrent_nudge = load("res://scripts/story/UndercurrentNudge.gd").new()
+	undercurrent_nudge.name = "UndercurrentNudge"
+	add_child(undercurrent_nudge)
 	# The recurring cast in person: old grudges and old debts find the captain.
 	recurring_encounter_runner = RecurringEncounterRunnerType.new()
 	recurring_encounter_runner.name = "RecurringEncounterRunner"

@@ -94,7 +94,7 @@ static func record_visit(story_state: Dictionary, system_id: String, depth: int)
 		return {}
 	surveyed.append(system_id)
 	story_state[SURVEYED_KEY] = surveyed
-	return _add(story_state, {"kind": "system", "id": system_id, "value": survey_value(SYSTEM_SURVEY_PAY, depth)})
+	return _add(story_state, {"kind": "system", "id": system_id, "depth": depth, "value": survey_value(SYSTEM_SURVEY_PAY, depth)})
 
 
 static func record_anomaly(story_state: Dictionary, anomaly_id: String, depth: int) -> Dictionary:
@@ -103,7 +103,15 @@ static func record_anomaly(story_state: Dictionary, anomaly_id: String, depth: i
 	for e in story_state.get(SURVEY_KEY, []):
 		if str(e.get("id", "")) == anomaly_id:
 			return {}
-	return _add(story_state, {"kind": "anomaly", "id": anomaly_id, "value": survey_value(ANOMALY_SURVEY_PAY, maxi(depth, 0))})
+	return _add(story_state, {"kind": "anomaly", "id": anomaly_id, "depth": maxi(depth, 0), "value": survey_value(ANOMALY_SURVEY_PAY, maxi(depth, 0))})
+
+
+## How deep the deepest unsold entry is (-1 with none).
+static func deepest_unsold(story_state: Dictionary) -> int:
+	var deepest := -1
+	for e in story_state.get(SURVEY_KEY, []):
+		deepest = maxi(deepest, int(e.get("depth", 0)))
+	return deepest
 
 
 static func _add(story_state: Dictionary, entry: Dictionary) -> Dictionary:

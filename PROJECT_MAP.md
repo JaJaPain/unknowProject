@@ -2987,6 +2987,7 @@ Root: `spacegame`
     - 📄 [tts_hygiene_notes.md](file:///D:/CodingProjects/spacegame/docs/tts_hygiene_notes.md)
     - 📄 [turn_based_combat_design.md](file:///D:/CodingProjects/spacegame/docs/turn_based_combat_design.md)
     - 📄 [ui_presentation_notes.md](file:///D:/CodingProjects/spacegame/docs/ui_presentation_notes.md)
+    - 📄 [undercurrent_nudges_draft_2026_10_02.md](file:///D:/CodingProjects/spacegame/docs/undercurrent_nudges_draft_2026_10_02.md)
     - 📄 [upgrade_mechanics_design.md](file:///D:/CodingProjects/spacegame/docs/upgrade_mechanics_design.md)
     - 📄 [whileYouWasSleeping.md](file:///D:/CodingProjects/spacegame/docs/whileYouWasSleeping.md)
     - 📄 [world_lore.md](file:///D:/CodingProjects/spacegame/docs/world_lore.md)
@@ -4503,6 +4504,7 @@ Root: `spacegame`
       - `func _quest_giver_voice_ref(quest_data: Dictionary) -> String`
       - `func _choice_response_fallback_for_voice(voice_profile_id: StringName) -> String`
       - `func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void`
+      - `func _kaelen_pick_gate(revealable: Array) -> String`
       - `func _kaelen_gate_reveal(gate_id: String, cost: int) -> void`
       - `func _has_mission_conversation_bundle(quest_data: Dictionary) -> bool`
       - `func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool)`
@@ -5359,6 +5361,7 @@ Root: `spacegame`
         - `static func survey_value(base: int, depth: int) -> int`
         - `static func record_visit(story_state: Dictionary, system_id: String, depth: int) -> Dictionary`
         - `static func record_anomaly(story_state: Dictionary, anomaly_id: String, depth: int) -> Dictionary`
+        - `static func deepest_unsold(story_state: Dictionary) -> int`
         - `static func _add(story_state: Dictionary, entry: Dictionary) -> Dictionary`
         - `static func unsold(story_state: Dictionary) -> Dictionary`
         - `static func sell_all(story_state: Dictionary) -> int`
@@ -5810,6 +5813,7 @@ Root: `spacegame`
         - `func is_kaelen_gate_eligible() -> bool`
         - `func seed_kaelen_gate_rumor_if_ready() -> Dictionary`
         - `func get_kaelen_reveal_cost(gate_id: String) -> int`
+        - `func _kaelen_base_cost(gate_id: String) -> int`
         - `func get_gate_state(gate_id: String) -> String`
         - `func ensure_destinations_for_system(system_id: String) -> void`
         - `func _has_revealable_gates() -> bool`
@@ -7192,6 +7196,19 @@ Root: `spacegame`
           - `static func capture_deferred(campaign_path: String, tag: String) -> void`
           - `static func _capture_now(campaign_path: String, tag: String) -> void`
       - 📄 [StoryScreenshots.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/StoryScreenshots.gd.uid)
+      - 📄 [UndercurrentNudge.gd](file:///D:/CodingProjects/spacegame/scripts/story/UndercurrentNudge.gd)
+        - `static func fresh_state() -> Dictionary`
+        - `static func step(s: Dictionary, ctx: Dictionary, delta: float) -> Array`
+        - `static func _gap_ok(s: Dictionary) -> bool`
+        - `static func _say(s: Dictionary, who: String, pool: String) -> Dictionary`
+        - `static func next_line(s: Dictionary, pool: String) -> String`
+        - `static func pitch_tail(s: Dictionary, roll: float) -> String`
+        - `func current() -> Dictionary`
+        - `func _process(delta: float) -> void`
+        - `func _context() -> Dictionary`
+        - `func deliver(nudge: Dictionary) -> void`
+        - `static func kaelen_over_comms(line: String) -> void`
+        - `static func gate_is_outward(gate_id: String) -> bool`
       - 📂 **activities/**
         - 📄 [CrackMesher.gd](file:///D:/CodingProjects/spacegame/scripts/story/activities/CrackMesher.gd)
           - `static func build(cracks: Dictionary, seed_value: int) -> Dictionary`
@@ -10535,6 +10552,13 @@ Root: `spacegame`
       - 📄 [run_tts_priority_live.gd](file:///D:/CodingProjects/spacegame/tests/story/run_tts_priority_live.gd)
         - `func _initialize() -> void`
       - 📄 [run_tts_priority_live.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_tts_priority_live.gd.uid)
+      - 📄 [run_undercurrent_nudge_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_undercurrent_nudge_tests.gd)
+        - `func _ctx(system_id: String, depth: int, flying := true, docked := false, next_class := 3, upgrades := "[1]") -> Dictionary`
+        - `func _run(s: Dictionary, ctx: Dictionary, seconds: int) -> Array`
+        - `func _who(said: Array) -> Array`
+        - `func _pool_of(line: String) -> String`
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
       - 📄 [run_undercurrent_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_undercurrent_tests.gd)
         - `func _initialize() -> void`
         - `func _check(condition: bool, message: String) -> void`

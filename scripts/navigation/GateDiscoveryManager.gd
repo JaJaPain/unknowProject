@@ -137,6 +137,15 @@ func get_revealable_gates() -> Array[String]:
 
 
 func get_kaelen_reveal_cost(gate_id: String) -> int:
+	var base := _kaelen_base_cost(gate_id)
+	# Her leads point deeper (core loop step 11b): outward lanes cost less.
+	var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
+	if Nudge.gate_is_outward(gate_id):
+		return int(round(float(base) * Nudge.OUTWARD_DISCOUNT))
+	return base
+
+
+func _kaelen_base_cost(gate_id: String) -> int:
 	var store := _get_store()
 	if store == null:
 		return 75

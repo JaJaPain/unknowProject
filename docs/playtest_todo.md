@@ -590,3 +590,22 @@ campaign. Getting there takes a while; checks for when you do:
       pulsar, ion storms, a dying star...), N.O.V.A. says something about it
       a few seconds after arriving, once per kind. Esc > Wiki: a "Kinds of
       system" section with that entry.
+
+## Q. The undercurrent (added 2026-10-02, core loop step 11b)
+
+These are deliberately rare; you won't hear them all in one session.
+
+- [ ] **N.O.V.A. gets restless.** After visiting a deeper system, go back to
+      a shallower one and fly around there for 10+ minutes: she says
+      something like "We've been here a while. I don't like standing still."
+      Once per visit.
+- [ ] **Kaelen over comms.** Fit an upgrade, then undock: within a second or
+      two Kaelen comes over comms (filtered voice, Broker Kaelen line in the
+      feed), e.g. "Good. Now go." Not again for a while.
+- [ ] **Her pitches.** Ask Kaelen for work a few times: now and then (about
+      one in four, never twice running) her intro ends with a line about
+      better work further out.
+- [ ] **Outward routes are cheaper.** When she offers "Ask about new
+      routes", a gate leading deeper costs less than before (e.g. 53 SC
+      instead of 75), and after buying it she adds a line about it going
+      deeper.
