@@ -11693,8 +11693,59 @@ func _run_quest_reach_smoke_test() -> void:
 	if local_ids.has("generated") or abbrevs.has("GEN") or (local_ids.size() > 1 and abbrevs.size() < 2):
 		fail.call("The rep row doesn't show this system's own factions: %s %s" % [local_ids, abbrevs.keys()])
 		return
-	# 1. The board posts a pickup at one of this system's outposts.
+	# 0. Every job the board posts here leads somewhere real (finding 14b):
+	# accept each, check where its next step points exists, drop it.
 	var Builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var kinds := {}
+	for o in Builder.build_offers(int(CampaignClock.total_minutes)):
+		if not bool(o.get("enabled", true)) or not o.get("quest_data") is Dictionary:
+			continue
+		var qd: Dictionary = o["quest_data"]
+		var kind := str((qd.get("objective", {}) as Dictionary).get("type", ""))
+		if kind.is_empty():
+			continue
+		if QuestManager.is_quest_active():
+			QuestManager.abandon_quest()
+		GlobalState.clear_cargo()
+		if not QuestManager.accept_quest(qd.duplicate(true), {"text": "Accepted.", "consequence": {}}):
+			fail.call("Board job '%s' (%s) was rejected: %s" % [qd.get("title", "?"), kind, QuestManager.last_validation_error])
+			return
+		var aq: Dictionary = QuestManager.active_quest
+		var where: Node3D = null
+		match kind:
+			"PICKUP_SPECIAL":
+				where = ui._quest_tracker_route_target(aq)
+			"DELIVERY_COURIER", "PURCHASE_DELIVERY":
+				where = ui._quest_tracker_turn_in_target(aq)
+			_:
+				where = GlobalState.get_primary_station()
+		if where == null or not is_instance_valid(where):
+			fail.call("Board job '%s' (%s) leads nowhere in %s." % [qd.get("title", "?"), kind, GlobalState.current_system_id])
+			return
+		kinds[kind] = str(where.get("display_name"))
+		# A fight job needs its targets out there (the spawns come in a few frames).
+		if kind in ["RECOVER_COMBAT_DROP", "KILL_SHIPS"]:
+			var wanted := str(aq.get("target_faction", ""))
+			var found := 0
+			for i in 120:
+				await get_tree().process_frame
+				found = 0
+				for ship in get_tree().get_nodes_in_group("ship"):
+					if is_instance_valid(ship) and not bool(ship.get("destroyed")) 							and (str(ship.get("faction")) == wanted or bool(ship.get_meta("is_quest_target", false))):
+						found += 1
+				if found > 0:
+					break
+			if found == 0:
+				fail.call("Board job '%s' (%s) wants %s ships, and there are none in %s." % [qd.get("title", "?"), kind, wanted, GlobalState.current_system_id])
+				return
+			kinds[kind] = "%d %s ship(s)" % [found, wanted]
+		QuestManager.abandon_quest()
+		GlobalState.clear_cargo()
+	print("[QuestReachSmokeTest] board jobs lead somewhere: ", kinds)
+	if kinds.size() < 3:
+		fail.call("Too few kinds of board job to check: %s" % kinds)
+		return
+	# 1. The board posts a pickup at one of this system's outposts.
 	var offer := {}
 	for minute in [0, 45, 90, 135]:
 		for o in Builder.build_offers(int(CampaignClock.total_minutes) + minute):

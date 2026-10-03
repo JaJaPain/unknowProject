@@ -717,7 +717,7 @@ What changed:
   generated system, real board pickup, docks at the outpost, hunts in the
   lounge, picks up, checks the hand-in).
 - Station/Outpost label (problem 5): fixed with finding 13.
-- Not done yet: the wider every-quest-type reachability test (14b item 5).
+- 14b item 5 done: `--quest-reach-smoke-test` also takes every job the board posts in a generated system (pickup, courier, purchase delivery, ore/fuel delivery, recovery), accepts each, and checks its next step points at something real there (the outpost, the destination, the hand-in, or the target ships). Agent jobs, premise arcs and investigations aren't covered yet.
 - Lines for Abe's review (small batch) are in `PickupHunt.gd`.
 
 #### 9b. Built with defaults (Abe's three questions weren't answered before the playtest ended)
