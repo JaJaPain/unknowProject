@@ -4643,7 +4643,8 @@ func _dialogue_has_pickup_detail_mismatch(
 		obj.get("target_outpost_display", obj.get("target_outpost", ""))
 	).strip_edges()
 	var part_name := str(obj.get("part_name", "")).strip_edges()
-	if not target_npc.is_empty() and not _text_mentions_phrase(dialogue, target_npc):
+	# A lounge hunt never names who has it (Abe, 2026-10-03).
+	if not target_npc.is_empty() and not bool(obj.get("lounge_hunt", false)) and not _text_mentions_phrase(dialogue, target_npc):
 		print(
 			"[LLMInterface] ⚠ VALIDATE: Pickup dialogue does not mention target NPC '%s'. Rewriting." %
 			target_npc

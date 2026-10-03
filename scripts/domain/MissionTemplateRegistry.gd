@@ -158,22 +158,23 @@ static func _register_board_templates() -> void:
 		"tone_card": BOARD_TONE,
 		"write_fields": BOARD_WRITE_FIELDS,
 		"field_limits": BOARD_FIELD_LIMITS,
-		"required_placeholders": ["{ITEM_NAME}", "{TARGET_NPC}", "{PICKUP_LOCATION}"],
+		"required_placeholders": ["{ITEM_NAME}", "{PICKUP_LOCATION}"],
+		# A lounge hunt (Abe, 2026-10-03): never name who has it.
 		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
 		"custom_rules": [KAELEN_DISGUST_RULE],
 		"fallback_variants": [
 			{
 				"title": "Sealed Pickup: {ITEM_NAME}, No Sniffing",
 				"poster": "Outpost Maintenance Account",
-				"body": "Collect {ITEM_NAME} from {TARGET_NPC} at {PICKUP_LOCATION}. The package is sealed because trust is cheaper than insurance.",
-				"briefing": "Go to {PICKUP_LOCATION}, get {ITEM_NAME} from {TARGET_NPC}, and bring it back intact.",
+				"body": "Someone in the lounge at {PICKUP_LOCATION} has {ITEM_NAME}. Find out who. The package is sealed because trust is cheaper than insurance.",
+				"briefing": "Go to {PICKUP_LOCATION}, work out which lounge regular has {ITEM_NAME}, talk it out of them, and bring it back intact.",
 				"kaelen_turn_in": "There. {ITEM_NAME} is handed over and the public board money cleared. I did not broker this little errand, but apparently I now launder dignity and grime too.",
 			},
 			{
 				"title": "{ITEM_NAME} Pickup From {PICKUP_LOCATION}, Please Stop Asking Why",
 				"poster": "Concerned Owner, Burner Account",
-				"body": "{TARGET_NPC} has {ITEM_NAME} waiting at {PICKUP_LOCATION}. If it hums, pretend it always did that.",
-				"briefing": "Pick up {ITEM_NAME} from {TARGET_NPC} at {PICKUP_LOCATION}. Bring it to the listed destination.",
+				"body": "{ITEM_NAME} is waiting at {PICKUP_LOCATION}, with whichever regular is pretending it isn't. If it hums, pretend it always did that.",
+				"briefing": "Find who has {ITEM_NAME} in the lounge at {PICKUP_LOCATION}. Bring it to the listed destination.",
 				"kaelen_turn_in": "{ITEM_NAME} received. Credits routed. Next time you feel like slumming it on the public board, at least pick one with fewer stains.",
 			},
 		],

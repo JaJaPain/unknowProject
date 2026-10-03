@@ -660,3 +660,22 @@ through the marked gate and flies you in):
       (goal card says READY), the line is about docking to fit it instead.
 - [ ] **She leaves you alone when busy.** With a job active, or docked, she
       never says these.
+
+## T. Board pickups: the lounge hunt (added 2026-10-03, playtest finding 14)
+
+- [ ] **The job says where, not who.** Take a pickup from a station's public
+      board. The board text and the quest tracker name the outpost and say
+      someone in its lounge has it ("ask around"), never the person.
+- [ ] **Hand-in names the real station.** The tracker after pickup says
+      "Bring the ... to <this system's main station>", never Grease Monkeys
+      (outside the start system).
+- [ ] **No shortcut at the counter.** Dock at that outpost: a gold "Dock
+      Notice" says someone in this lounge has it; no Ask button in services.
+- [ ] **The hunt.** In the outpost lounge every contact has a pulsing "Ask
+      about it". The wrong people deflect, dryly; sooner or later one names
+      who has it. The holder denies it, then hedges, then hands it over on
+      the third ask. Buying the holder a drink counts as an ask.
+- [ ] **Talking plays along.** Chatting with the holder in the lounge: they
+      stay cagey about it; others may say who's acting cagey.
+- [ ] **Jenna's parts runs are unchanged:** the outpost contact is named and
+      hands it over directly (services button, or "Pick up" on their card).

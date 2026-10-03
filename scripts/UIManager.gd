@@ -5004,6 +5004,15 @@ func _render_dock_submenu() -> void:
 				docked_outpost_id_for_btn = GlobalState.resolve_outpost_id(current_station)
 			if docked_outpost_id_for_btn != "" and docked_outpost_id_for_btn == station_quest_svc.get("target_outpost", ""):
 				show_ask_btn = true
+				# A board pickup is a lounge hunt: no straight answer at the
+				# counter (Abe, 2026-10-03).
+				if bool(QuestManager.get_pickup_special_data().get("lounge_hunt", false)):
+					show_ask_btn = false
+					show_dock_message(
+						"Someone in this lounge has your %s. Nobody's going to just say so. Ask around." % str(QuestManager.get_pickup_special_data().get("part_name", "package")),
+						"Dock Notice",
+						Color(1.0, 0.82, 0.45)
+					)
 		ask_for_part_btn.visible = show_ask_btn
 		_set_npc_attention_button(
 			ask_for_part_btn,
@@ -5012,8 +5021,8 @@ func _render_dock_submenu() -> void:
 		)
 		
 		if show_ask_btn:
-			var part_name: String = str(QuestManager.active_quest.get("part_name", "the part"))
-			var npc_name: String = str(QuestManager.active_quest.get("target_npc", "the contact"))
+			var part_name: String = str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
+			var npc_name: String = str(QuestManager.get_pickup_special_data().get("target_npc", "the contact"))
 			ask_for_part_btn.disabled = false
 			if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
 				var rate: float = GlobalState.buyback_price_per_m3()
@@ -5912,6 +5921,29 @@ func _add_lounge_card_buttons(
 	]
 	if bool(card_data.get("rumor", false)):
 		action_defs.insert(2, ["Intel", "rumor"])
+	# The contact holding your pickup hands it over here too (playtest
+	# 2026-10-03 finding 14: everyone in the lounge talked about the part and
+	# nobody could give it).
+	# Board pickups are a hunt: everyone can be asked, and only one has it.
+	var part := str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
+	if lounge_hunt_active():
+		var ask_btn := Button.new()
+		ask_btn.text = "Ask about it"
+		ask_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ask_btn.add_theme_font_size_override("font_size", 8)
+		ask_btn.tooltip_text = "Ask %s about the %s." % [preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name), part]
+		ask_btn.pressed.connect(_on_lounge_hunt_ask.bind(npc_name))
+		actions.add_child(ask_btn)
+		_set_npc_attention_button(ask_btn, true, Color(1.0, 0.75, 0.2, 1.0))
+	elif lounge_handover_available(npc_name):
+		var pickup_btn := Button.new()
+		pickup_btn.text = "Pick up"
+		pickup_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pickup_btn.add_theme_font_size_override("font_size", 8)
+		pickup_btn.tooltip_text = "Ask %s for the %s." % [preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name), part]
+		pickup_btn.pressed.connect(_on_ask_for_part_pressed)
+		actions.add_child(pickup_btn)
+		_set_npc_attention_button(pickup_btn, true, Color(1.0, 0.75, 0.2, 1.0))
 	# L2: buy them a drink — warms the contact (persisted), once per dock.
 	var drink_btn := Button.new()
 	drink_btn.text = "Drink"
@@ -5929,6 +5961,66 @@ func _add_lounge_card_buttons(
 			_on_station_contact_action_pressed.bind(npc_name, str(action_def[1]))
 		)
 		actions.add_child(btn)
+
+
+## True when docked at the outpost where the active pickup waits, and it
+## isn't picked up yet (finding 14).
+func _docked_at_pickup_outpost() -> bool:
+	var pickup: Dictionary = QuestManager.get_pickup_special_data()
+	if pickup.is_empty() or bool(pickup.get("picked_up", false)):
+		return false
+	if current_station == null or not is_instance_valid(current_station):
+		return false
+	var docked_id: String = OUTPOST_NODE_TO_ID.get(current_station.name, "")
+	if docked_id.is_empty():
+		docked_id = GlobalState.resolve_outpost_id(current_station)
+	return not docked_id.is_empty() and docked_id == str(pickup.get("target_outpost", ""))
+
+
+## A non-hunt pickup (the mechanic's parts runs): the holder hands it over
+## from their lounge card too.
+func lounge_handover_available(npc_name: String) -> bool:
+	if bool(QuestManager.get_pickup_special_data().get("lounge_hunt", false)):
+		return false
+	return _docked_at_pickup_outpost() and str(QuestManager.get_pickup_special_data().get("target_npc", "")) == npc_name
+
+
+## A board pickup's lounge hunt is on here (Abe, 2026-10-03).
+func lounge_hunt_active() -> bool:
+	return bool(QuestManager.get_pickup_special_data().get("lounge_hunt", false)) and _docked_at_pickup_outpost()
+
+
+## Asking a lounge regular about the hunted item: a dry deflection, a pointer,
+## or (the holder, talked round) the hand-over.
+func _on_lounge_hunt_ask(npc_name: String) -> void:
+	if not lounge_hunt_active():
+		return
+	var q: Dictionary = QuestManager.get_pickup_special_data()
+	var Hunt := preload("res://scripts/domain/PickupHunt.gd")
+	var s: Dictionary = Hunt.state_for(StoryManager.story_state, _pickup_hunt_key(q))
+	var reply: Dictionary = Hunt.ask(s, npc_name, str(q.get("target_npc", "")), str(q.get("part_name", "package")), randf(), randi())
+	var npc_data := GlobalState.get_minor_npc_data(npc_name)
+	var color: Color = npc_data.get("flavor_color", Color.WHITE)
+	show_dock_message(str(reply["line"]), npc_name, color, GlobalState.get_minor_npc_portrait(npc_name))
+	GlobalState.emit_npc_flavor({
+		"npc_name": npc_name,
+		"line": str(reply["line"]),
+		"color": color,
+		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
+	})
+	if not bool(reply["handed_over"]):
+		return
+	# A hold full of ore: the existing trade offer clears it first; asking
+	# again after that hands it straight over.
+	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
+		_show_ore_trade_popup()
+		return
+	if QuestManager.mark_pickup_complete():
+		_render_dock_submenu()
+
+
+func _pickup_hunt_key(q: Dictionary) -> String:
+	return "%s|%s|%s" % [str(q.get("title", "")), str(q.get("target_outpost", "")), str(q.get("part_name", ""))]
 
 
 func _on_lounge_bartender_pressed() -> void:
@@ -6449,6 +6541,11 @@ func _on_buy_drink_pressed(
 	if faction_key in ["zenith", "aurelia", "vanguard"]:
 		GlobalState.adjust_reputation(faction_key, 0.5)
 	_record_lounge_drink_relationship_event(card_data, contact_key)
+	# A drink softens whoever's sitting on the hunted item (Abe, 2026-10-03).
+	if lounge_hunt_active():
+		preload("res://scripts/domain/PickupHunt.gd").drink(
+			preload("res://scripts/domain/PickupHunt.gd").state_for(StoryManager.story_state, _pickup_hunt_key(QuestManager.get_pickup_special_data())),
+			npc_name, str(QuestManager.get_pickup_special_data().get("target_npc", "")))
 	# Instant code-template confirmation — feedback speed beats LLM variety here.
 	var confirmations := [
 		"%s nods thanks and slides the glass closer. The room feels a degree warmer." % npc_name,
@@ -7150,6 +7247,26 @@ func _lounge_card_context(card_data: Dictionary) -> Dictionary:
 
 
 func _lounge_npc_state_context(card_data: Dictionary) -> String:
+	var hunt := _lounge_hunt_note(str(card_data.get("name", "")))
+	var memory := _lounge_npc_memory_context(card_data)
+	return (memory + " " + hunt).strip_edges()
+
+
+## What a lounge regular knows about the board pickup being hunted here, so
+## the chat plays along (Abe, 2026-10-03): the holder stalls, the others may
+## point. The hand-over itself happens with the Ask about it button.
+func _lounge_hunt_note(npc_name: String) -> String:
+	if npc_name.is_empty() or not lounge_hunt_active():
+		return ""
+	var q: Dictionary = QuestManager.get_pickup_special_data()
+	var part := str(q.get("part_name", "a package"))
+	var holder := str(q.get("target_npc", ""))
+	if npc_name == holder:
+		return "The speaker is quietly holding the %s the pilot came for. If it comes up, they deny it, then hedge; they never simply hand it over in conversation. Very dry humour." % part
+	return "The speaker doesn't have the %s the pilot is asking around about, but noticed %s acting cagey about something; they may say so if asked. Very dry humour." % [part, preload("res://scripts/domain/QuestNextStep.gd").person_name(holder)]
+
+
+func _lounge_npc_memory_context(card_data: Dictionary) -> String:
 	var npc_id := str(card_data.get("npc_id", "")).strip_edges()
 	if npc_id.is_empty():
 		npc_id = str(card_data.get("contact_key", "")).strip_edges()
@@ -10049,7 +10166,7 @@ func _on_test_deliver_pressed() -> void:
 		show_hud_warning("You haven't picked up the part yet. Dock at the assigned outpost and click 'Test: Pickup Part'.")
 		return
 	# Snapshot the part name for the success message before complete_quest clears cargo
-	var part_name: String = QuestManager.active_quest.get("part_name", "(unknown)")
+	var part_name: String = QuestManager.get_pickup_special_data().get("part_name", "(unknown)")
 	QuestManager.complete_quest()
 	show_hud_warning("Delivered '%s' to Grease Monkeys. +%d SC." % [part_name, TEST_PICKUP_REWARD])
 
@@ -10066,8 +10183,8 @@ func _on_deliver_part_pressed() -> void:
 		return
 	if not QuestManager.is_quest_active() or not QuestManager.is_quest_completed():
 		return
-	var part_name: String = QuestManager.active_quest.get("part_name", "(unknown)")
-	var reward: int = QuestManager.active_quest.get("reward_credits", 0)
+	var part_name: String = QuestManager.get_pickup_special_data().get("part_name", "(unknown)")
+	var reward: int = QuestManager.get_pickup_special_data().get("reward_credits", 0)
 	QuestManager.complete_quest()
 	
 	var salt: int = randi() % FALLBACK_MECHANIC_THANKS.size()
@@ -10140,14 +10257,14 @@ func _on_test_pickup_part_pressed() -> void:
 	if docked_outpost_id == "":
 		show_dock_message("Pickup can only happen at an outpost dock.", "", Color(1.0, 0.45, 0.45))
 		return
-	var quest_outpost_id: String = QuestManager.active_quest.get("target_outpost", "")
+	var quest_outpost_id: String = QuestManager.get_pickup_special_data().get("target_outpost", "")
 	if docked_outpost_id != quest_outpost_id:
 		show_dock_message(("Wrong outpost. The quest wants the part picked up at %s." % \
-			QuestManager.active_quest.get("target_outpost_display", quest_outpost_id)), "", Color(1.0, 0.45, 0.45))
+			QuestManager.get_pickup_special_data().get("target_outpost_display", quest_outpost_id)), "", Color(1.0, 0.45, 0.45))
 		return
 
-	var picked_part: String = QuestManager.active_quest.get("part_name", "the part")
-	var picked_npc: String = QuestManager.active_quest.get("target_npc", "the contact")
+	var picked_part: String = QuestManager.get_pickup_special_data().get("part_name", "the part")
+	var picked_npc: String = QuestManager.get_pickup_special_data().get("target_npc", "the contact")
 	var success: bool = QuestManager.mark_pickup_complete()
 	if success:
 		# Success: use the NPC's flavor color so the message feels
@@ -14629,6 +14746,9 @@ func _update_quest_tracker():
 func _completed_contract_tracker_text(q: Dictionary) -> String:
 	if str(q.get("objective_type", "")) in ["DELIVERY_COURIER", "PURCHASE_DELIVERY"]:
 		return "Cargo ready for delivery.\nDeliver to %s to settle the contract." % str(q.get("destination_display", "the designated destination"))
+	if str(q.get("objective_type", "")) == "PICKUP_SPECIAL":
+		# Names the station (playtest 2026-10-03 finding 14).
+		return "Cargo secured.\n" + str(preload("res://scripts/domain/QuestNextStep.gd").for_quest(q)["text"])
 	if bool(q.get("public_board", false)):
 		return "Board job satisfied.\nPayment pending — dock and settle with the local agent."
 	var objective_text := "Contract satisfied."
@@ -15672,11 +15792,11 @@ func _on_ask_for_part_pressed() -> void:
 			Color(1.0, 0.45, 0.45)
 		)
 		return
-	var quest_outpost_id: String = str(QuestManager.active_quest.get("target_outpost", ""))
+	var quest_outpost_id: String = str(QuestManager.get_pickup_special_data().get("target_outpost", ""))
 	if docked_outpost_id != quest_outpost_id:
 		show_dock_message(
 			"Wrong outpost. This pickup is waiting at %s." % str(
-				QuestManager.active_quest.get(
+				QuestManager.get_pickup_special_data().get(
 					"target_outpost_display",
 					quest_outpost_id
 				)
@@ -15696,8 +15816,8 @@ func _show_ore_trade_popup() -> void:
 	var ore_amount: int = int(GlobalState.cargo)
 	var rate: float = GlobalState.buyback_price_per_m3()
 	var payout: int = GlobalState.cargo_ore_value(rate)
-	var picked_part: String = str(QuestManager.active_quest.get("part_name", "the part"))
-	var picked_npc: String = str(QuestManager.active_quest.get("target_npc", "the contact"))
+	var picked_part: String = str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
+	var picked_npc: String = str(QuestManager.get_pickup_special_data().get("target_npc", "the contact"))
 	ore_trade_label.text = "Your hold's full of %d m³ of ore. %s will buy it at %s SC/m³ = %d SC to clear the bay for the part. Take the deal?" % [ore_amount, picked_npc, _format_rate(rate), payout]
 	if payout != int(round(GlobalState.cargo * rate)):
 		ore_trade_label.text = "Your hold's full of %d m³ of ore. %s will buy it at %s SC/m³, more for the rarer ore: %d SC to clear the bay for the part. Take the deal?" % [ore_amount, picked_npc, _format_rate(rate), payout]
@@ -15731,13 +15851,13 @@ func _on_ore_trade_decline_pressed() -> void:
 func _complete_pickup_with_handoff() -> void:
 	if not QuestManager.is_quest_active():
 		return
-	var picked_part: String = str(QuestManager.active_quest.get("part_name", "the part"))
-	var picked_npc: String = str(QuestManager.active_quest.get("target_npc", "the contact"))
+	var picked_part: String = str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
+	var picked_npc: String = str(QuestManager.get_pickup_special_data().get("target_npc", "the contact"))
 	
-	var line = QuestManager.active_quest.get("pickup_handoff_line", "")
-	var client_name: String = str(QuestManager.active_quest.get("agent_name", "Jenna Kross"))
+	var line = QuestManager.get_pickup_special_data().get("pickup_handoff_line", "")
+	var client_name: String = str(QuestManager.get_pickup_special_data().get("agent_name", "Jenna Kross"))
 	var destination_name: String = str(
-		QuestManager.active_quest.get(
+		QuestManager.get_pickup_special_data().get(
 			"destination",
 			_mechanic_destination_name()
 		)

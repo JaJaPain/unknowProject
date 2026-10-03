@@ -182,11 +182,13 @@ static func build_active_state(
 				)
 			)
 			state["target_npc"] = str(objective.get("target_npc", ""))
+			# Board pickups: find who has it in the lounge (Abe, 2026-10-03).
+			state["lounge_hunt"] = bool(objective.get("lounge_hunt", false))
 			state["part_name"] = str(
 				objective.get("part_name", "Unknown Part")
 			)
 			state["destination"] = str(
-				objective.get("destination", "Grease Monkeys")
+				objective.get("destination", "")
 			)
 			state["picked_up"] = false
 		"DELIVERY_COURIER":
@@ -496,6 +498,9 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 		"PICKUP_SPECIAL":
 			normalized["picked_up"] = bool(
 				normalized.get("picked_up", false)
+			)
+			normalized["lounge_hunt"] = bool(
+				normalized.get("lounge_hunt", false)
 			)
 		"DELIVERY_COURIER":
 			normalized["cargo_loaded"] = bool(

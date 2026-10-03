@@ -505,14 +505,16 @@ static func _build_fetch_pickup_offer(card: Dictionary, rng: RandomNumberGenerat
 	var title := "%s Needed" % item_name
 	var dialogue := "%s
 
-Word is %s at %s has one. Collect it and bring it back here." % [str(card.get("board_text", "")), holder, outpost_display]
+Word is someone in the lounge at %s has one. Work out who, talk it out of them, and bring it back here." % [str(card.get("board_text", "")), outpost_display]
 	var objective := {
 		"type": "PICKUP_SPECIAL",
 		"target_outpost": outpost_id,
 		"target_outpost_display": outpost_display,
 		"target_npc": holder,
+		"lounge_hunt": true,
 		"part_name": item_name,
-		"destination": "Grease Monkeys",
+		# The real hand-in: this system's main station (finding 14).
+		"destination": preload("res://scripts/domain/QuestNextStep.gd").hand_in_name(),
 		"reward_credits": base_reward,
 	}
 	var quest_data := _quest_data(title, "neutral", "Public Board", dialogue, objective, {})
@@ -522,13 +524,13 @@ Word is %s at %s has one. Collect it and bring it back here." % [str(card.get("b
 		title,
 		requester.substr(0, 1).to_upper() + requester.substr(1),
 		dialogue,
-		"Collect %s from %s at %s" % [item_name, holder, outpost_display],
+		"Find who has %s in the lounge at %s" % [item_name, outpost_display],
 		base_reward,
 		0,
 		1.0,
 		quest_data,
-		["{ITEM_NAME}", "{TARGET_NPC}", "{PICKUP_LOCATION}"],
-		{"{ITEM_NAME}": item_name, "{TARGET_NPC}": holder, "{PICKUP_LOCATION}": outpost_display}
+		["{ITEM_NAME}", "{PICKUP_LOCATION}"],
+		{"{ITEM_NAME}": item_name, "{PICKUP_LOCATION}": outpost_display}
 	)
 	offer["keep_authored_text"] = true
 	offer["fetch_variant"] = str(card.get("variant", ""))
@@ -617,12 +619,12 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 	var part_name := PART_NAMES[int(current_time_minutes / 15) % PART_NAMES.size()]
 	var base_reward := 130
 	var story_note := _story_board_context("pickup")
-	var dialogue := "Pick up %s from %s at %s. If anyone asks why it has a warranty sticker over a bite mark, you did not see that." % [
-		part_name,
-		npc_name,
+	# A lounge hunt (Abe, 2026-10-03): the job never says who has it.
+	var dialogue := "Someone in the lounge at %s is sitting on %s. Work out who and talk it out of them. If anyone asks why it has a warranty sticker over a bite mark, you did not see that." % [
 		outpost_display,
+		part_name,
 	]
-	var board_body := "Pickup job with a local contact and a suspicious return handoff."
+	var board_body := "Pickup job: find which lounge regular has it, then a suspicious return handoff."
 	if not story_note.is_empty():
 		dialogue += " Local note: %s" % story_note
 		board_body += " Local note: %s" % story_note
@@ -631,8 +633,10 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 		"target_outpost": outpost_id,
 		"target_outpost_display": outpost_display,
 		"target_npc": npc_name,
+		"lounge_hunt": true,
 		"part_name": part_name,
-		"destination": "Grease Monkeys",
+		# The real hand-in: this system's main station (finding 14).
+		"destination": preload("res://scripts/domain/QuestNextStep.gd").hand_in_name(),
 		"reward_credits": base_reward,
 	}
 	var quest_data := _quest_data(
@@ -650,19 +654,17 @@ static func _build_pickup_offer(current_time_minutes: int) -> Dictionary:
 		"[LOCAL] Sealed Part Pickup, No Smelling The Package",
 		"Outpost Maintenance Account",
 		board_body,
-		"Pick up %s from %s at %s" % [
+		"Find who has %s in the lounge at %s" % [
 			part_name,
-			npc_name,
 			outpost_display,
 		],
 		base_reward,
 		0,
 		1.0,
 		quest_data,
-		["{ITEM_NAME}", "{TARGET_NPC}", "{PICKUP_LOCATION}"],
+		["{ITEM_NAME}", "{PICKUP_LOCATION}"],
 		{
 			"{ITEM_NAME}": part_name,
-			"{TARGET_NPC}": npc_name,
 			"{PICKUP_LOCATION}": outpost_display,
 		}
 	)

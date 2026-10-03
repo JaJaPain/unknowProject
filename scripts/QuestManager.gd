@@ -482,13 +482,23 @@ func get_lane_data(lane_name: String) -> Dictionary:
 
 
 func get_pickup_special_data() -> Dictionary:
-	var station = get_lane_data("STATION")
-	if not station.is_empty() and station.get("objective_type", "") == "PICKUP_SPECIAL":
-		return station
-	var agent = get_lane_data("AGENT")
-	if not agent.is_empty() and agent.get("objective_type", "") == "PICKUP_SPECIAL":
-		return agent
-	return {}
+	var mission = _pickup_special_mission()
+	return mission.data if mission != null else {}
+
+
+## The active pickup job in any lane. Board pickups were missing here, so the
+## hand-over never appeared for a public board pickup (playtest 2026-10-03
+## finding 14).
+func _pickup_special_mission():
+	for lane in ["STATION", "AGENT", "BOARD"]:
+		var data := get_lane_data(lane)
+		if not data.is_empty() and data.get("objective_type", "") == "PICKUP_SPECIAL":
+			return _collection.get_by_lane({
+				"AGENT": MissionInstanceType.SourceLane.AGENT,
+				"BOARD": MissionInstanceType.SourceLane.BOARD,
+				"STATION": MissionInstanceType.SourceLane.STATION,
+			}[lane])
+	return null
 
 
 func get_completed_count() -> int:
@@ -1049,26 +1059,27 @@ func deliver_partial(amount: float) -> float:
 # hold via GlobalState.accept_special. Returns true on success, false if
 # the quest isn't a PICKUP_SPECIAL, isn't active, or is already picked up.
 func mark_pickup_complete() -> bool:
-	if not is_quest_active() or active_quest["objective_type"] != "PICKUP_SPECIAL":
+	# The pickup job in whichever lane it's in, focused or not (finding 14).
+	var mission = _pickup_special_mission()
+	if mission == null:
 		return false
-	if active_quest.get("picked_up", false):
+	var pickup: Dictionary = mission.data
+	if pickup.get("picked_up", false):
 		return false
-	var part_name: String = active_quest.get("part_name", "Unknown Part")
-	var target_npc: String = active_quest.get("target_npc", "an unknown contact")
-	var target_outpost: String = active_quest.get("target_outpost_display", active_quest.get("target_outpost", "an outpost"))
-	var destination: String = active_quest.get("destination", "Grease Monkeys")
+	var part_name: String = pickup.get("part_name", "Unknown Part")
+	var target_npc: String = pickup.get("target_npc", "an unknown contact")
+	var target_outpost: String = pickup.get("target_outpost_display", pickup.get("target_outpost", "an outpost"))
+	var destination: String = preload("res://scripts/domain/QuestNextStep.gd").destination_name(pickup)
 	var description: String = "Picked up from %s at %s. Deliver to %s at %s." % [
-		target_npc, target_outpost, active_quest["agent_name"], destination
+		target_npc, target_outpost, pickup.get("agent_name", "the agent"), destination
 	]
 	if not GlobalState.accept_special(part_name, description, target_outpost, destination):
 		print("[QuestManager] PICKUP_SPECIAL failed to pick up: cargo hold not empty")
 		return false
 		
-	active_quest["picked_up"] = true
+	pickup["picked_up"] = true
 	print("[QuestManager] PICKUP_SPECIAL picked up: '%s' from %s" % [part_name, target_npc])
-	var focused = _collection.get_focused()
-	if focused != null:
-		_mark_objective_ready_if_completed(focused)
+	_mark_objective_ready_if_completed(mission)
 	quest_progress_updated.emit()
 	return true
 

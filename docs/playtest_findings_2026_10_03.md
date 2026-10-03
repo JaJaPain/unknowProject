@@ -558,7 +558,7 @@ frame (`_update_overview_distances`, `"%dm"`, ~line 4064).
 - Test: target something, move, and check the label changes; it hides with
   the window.
 
-### 14. Can't find the "Unlabeled Heat Sink" (all three lounge NPCs talk about it, none offer it)
+### 14. **FIXED 2026-10-03** Can't find the "Unlabeled Heat Sink" (all three lounge NPCs talk about it, none offer it)
 
 **Abe:** he couldn't find the heat sink. All 3 lounge NPCs talk about it,
 so he thought it was a lounge thing, but none gave an option to get it.
@@ -681,3 +681,41 @@ the current system. Same risk in the other types:
    with the quest's title and the missing piece. This is what catches the
    next one of these before a playtest.
 6. Names (problem 4) and the Station/Outpost label (problem 5) as above.
+
+#### 14c. Fixed (2026-10-03)
+
+**Root cause found by the new smoke test:** `QuestManager.get_pickup_special_data()`
+only looked in the STATION and AGENT lanes; board jobs live in the BOARD
+lane. So for **every public board pickup** the hand-over button never
+appeared anywhere: the job could not be completed. (The outpost id matching
+was fine.)
+
+**Abe's design (during the fix):** board pickups should be a hunt: work out
+who in the lounge has it and coax it out of them, with very dry humour.
+
+What changed:
+- `get_pickup_special_data()` / `mark_pickup_complete()` find the pickup in
+  any lane, focused or not; the UI reads the pickup job, not whichever job
+  is focused.
+- Board pickups are lounge hunts (`lounge_hunt` flag, kept by
+  MissionAdapter): the board text, templates and tracker name the outpost,
+  never the holder (the dialogue validator no longer re-inserts the name).
+  At the outpost there's no counter shortcut, a dock notice instead. In its
+  lounge every contact has "Ask about it" (`scripts/domain/PickupHunt.gd`):
+  bystanders deflect or point (always by the third), the holder denies,
+  hedges, hands over on the third ask; a drink counts as an ask. The lounge
+  chat context tells the holder to stay cagey and the others who's acting
+  cagey.
+- Tracker next step (`scripts/domain/QuestNextStep.gd`): where (and, for
+  non-hunts, who, without the organisation prefix); after pickup, the real
+  hand-in station. Board pickups' destination is this system's main
+  station, not "Grease Monkeys"; station ids are never shown. Jenna's parts
+  runs keep their shop and direct hand-over (also a "Pick up" on the
+  holder's lounge card).
+- "Rook" removed from the last-name list (no more "Rook Rook").
+- Tests: `run_pickup_hunt_tests`; `--quest-reach-smoke-test` (real jump to a
+  generated system, real board pickup, docks at the outpost, hunts in the
+  lounge, picks up, checks the hand-in).
+- Not done yet (still on the list): the wider every-quest-type reachability
+  test (14b item 5), the Station/Outpost label (problem 5).
+- Lines for Abe's review (small batch) are in `PickupHunt.gd`.

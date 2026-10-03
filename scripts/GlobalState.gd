@@ -487,7 +487,7 @@ const GENERATED_CONTACT_LAST_NAMES: Array[String] = [
 	"Thane",
 	"Voss",
 	"Keir",
-	"Rook",
+	"Harrow",
 	"Calder",
 ]
 const GENERATED_CONTACT_PORTRAITS: Array[String] = [

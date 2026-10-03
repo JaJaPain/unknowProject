@@ -17,17 +17,9 @@ func handle_event(_data: Dictionary, _event: String, _event_data: Dictionary) ->
 	return {}
 
 
+## Where, who and how (playtest 2026-10-03 finding 14): QuestNextStep.
 func format_tracker_text(data: Dictionary) -> String:
-	if data.get("picked_up", false):
-		return "Deliver: %s to %s" % [
-			str(data.get("part_name", "item")),
-			str(data.get("destination", "station")),
-		]
-	return "Pickup: %s from %s @ %s" % [
-		str(data.get("part_name", "item")),
-		str(data.get("target_npc", "contact")),
-		str(data.get("target_outpost_display", data.get("target_outpost", "outpost"))),
-	]
+	return str(preload("res://scripts/domain/QuestNextStep.gd").for_quest(data)["text"])
 
 
 func on_complete(data: Dictionary) -> Dictionary:

@@ -351,6 +351,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_gas_giant_snapshot")
 	elif "--lodestar-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_lodestar_smoke_test")
+	elif "--quest-reach-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_quest_reach_smoke_test")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -11593,6 +11595,124 @@ func _run_lodestar_smoke_test() -> void:
 		return
 	print("[LodestarSmokeTest] next: ", now["id"], " season ", now["season"], " depth ", now["target_depth"])
 	print("[LodestarSmokeTest] PASS")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+## Playtest 2026-10-03 finding 14: a board pickup in a generated system has to
+## be doable end to end. Jumps to the first frontier system, takes the
+## board's pickup job, checks the tracker says where and who, docks at the
+## outpost, checks the hand-over is offered (in services and in its lounge),
+## takes it, and checks the hand-in points at a real station.
+##   -- --quest-reach-smoke-test --baseline-offline
+func _run_quest_reach_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	var fail := func(message: String) -> void:
+		push_error("[QuestReachSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	_initialize_campaign_registry()
+	StoryManager.clear_story_state()
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) or not _ensure_campaign_checkpoint_store(prepared["data"]):
+		fail.call("Could not create a campaign checkpoint store.")
+		return
+	_refresh_gate_states()
+	StoryManager.story_state["first_contract_handed_in"] = true
+	StoryManager.story_state["intro_agent_visited"] = true
+	StoryManager.story_state["intro_quest_delivered"] = true
+	GateDiscovery.mark_known("gate.start.to_test")
+	var gate := _find_gate(get_active_system_root(), "start_to_test")
+	_position_player_for_gate_test(gate)
+	if get_jump_block_reason(gate) != "" or not request_gate_jump(gate):
+		fail.call("Could not jump to the frontier system: %s" % get_jump_block_reason(gate))
+		return
+	await system_changed
+	for i in 60:
+		await get_tree().process_frame
+	CombatManager.set("state", 0)
+	var ui = GlobalState.get_ui_manager()
+	# 1. The board posts a pickup at one of this system's outposts.
+	var Builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var offer := {}
+	for minute in [0, 45, 90, 135]:
+		for o in Builder.build_offers(int(CampaignClock.total_minutes) + minute):
+			if str((o.get("quest_data", {}) as Dictionary).get("objective", {}).get("type", "")) == "PICKUP_SPECIAL":
+				offer = o
+				break
+		if not offer.is_empty():
+			break
+	if offer.is_empty():
+		fail.call("No pickup on the board in %s (outposts: %s)." % [GlobalState.current_system_id, str(GlobalState.get_current_pickup_outposts())])
+		return
+	var objective: Dictionary = offer["quest_data"]["objective"]
+	print("[QuestReachSmokeTest] pickup: %s from %s at %s, deliver to %s" % [objective["part_name"], objective["target_npc"], objective["target_outpost_display"], objective["destination"]])
+	if not QuestManager.accept_quest(offer["quest_data"], {"text": "Accepted.", "consequence": {}}):
+		fail.call("The pickup was rejected: %s" % QuestManager.last_validation_error)
+		return
+	var q: Dictionary = QuestManager.active_quest
+	# 2. The tracker says where and who, and routes to the outpost.
+	var outpost: Node3D = ui._quest_tracker_route_target(q)
+	if outpost == null or str(outpost.get("world_id")) != str(objective["target_outpost"]):
+		fail.call("The route button doesn't lead to the pickup outpost (%s)." % str(objective["target_outpost"]))
+		return
+	var step: Dictionary = load("res://scripts/domain/QuestNextStep.gd").for_quest(q)
+	print("[QuestReachSmokeTest] next step: ", step["text"])
+	var holder := str(objective["target_npc"])
+	var person := str(load("res://scripts/domain/QuestNextStep.gd").person_name(holder))
+	if not bool(q.get("lounge_hunt", false)):
+		fail.call("A board pickup should be a lounge hunt.")
+		return
+	if not str(step["text"]).contains(str(objective["target_outpost_display"])) or not str(step["text"]).contains("lounge") or str(step["text"]).contains(person):
+		fail.call("The next step should name the outpost and the lounge, not who: %s" % step["text"])
+		return
+	for field in ["dialogue", "objective_summary"]:
+		if str(q.get(field, "")).contains(person):
+			fail.call("The job's %s gives the holder away: %s" % [field, q.get(field)])
+			return
+	if str(q.get("destination", "")) == "Grease Monkeys" and str(GlobalState.current_system_id) != "start_system":
+		fail.call("The hand-in still names Grease Monkeys, in %s." % GlobalState.current_system_id)
+		return
+	# 3. Docked there: no straight answer at the counter; a hunt in the lounge.
+	player.global_position = outpost.global_position + Vector3(0, 0, 200)
+	player.set("is_docked", true)
+	ui.toggle_dock_menu(outpost, false)
+	for i in 10:
+		await get_tree().process_frame
+	if ui.ask_for_part_btn.visible:
+		fail.call("The services menu gives the hunted item away.")
+		return
+	if not ui.lounge_hunt_active():
+		fail.call("Docked at %s: no lounge hunt. station=%s world_id=%s resolved=%s pickup=%s registered=%s" % [objective["target_outpost_display"], ui.current_station.name if ui.current_station else "none", ui.current_station.get("world_id") if ui.current_station else "", GlobalState.resolve_outpost_id(ui.current_station), QuestManager.get_pickup_special_data(), GlobalState.generated_outpost_npcs.keys()])
+		return
+	var regulars: Array = GlobalState.get_minor_npcs_at_outpost(str(objective["target_outpost"]))
+	print("[QuestReachSmokeTest] lounge: ", regulars, " (holder ", holder, ")")
+	if not regulars.has(holder):
+		fail.call("The holder isn't one of this outpost's lounge contacts.")
+		return
+	for npc in regulars:
+		if npc != holder:
+			ui._on_lounge_hunt_ask(npc)
+			if bool(QuestManager.active_quest.get("picked_up", false)):
+				fail.call("A bystander handed it over.")
+				return
+	for n in 3:
+		ui._on_lounge_hunt_ask(holder)
+	# 4. Taken: the next step is the hand-in at a real station here.
+	for i in 5:
+		await get_tree().process_frame
+	q = QuestManager.active_quest
+	if not bool(q.get("picked_up", false)):
+		fail.call("Asking the holder three times didn't hand it over.")
+		return
+	var back: Node3D = ui._quest_tracker_route_target(q)
+	step = load("res://scripts/domain/QuestNextStep.gd").for_quest(q)
+	print("[QuestReachSmokeTest] after pickup: ", step["text"])
+	if back == null or not str(step["text"]).contains(str(back.get("display_name"))):
+		fail.call("After the pickup, the next step doesn't name the hand-in station: %s" % step["text"])
+		return
+	print("[QuestReachSmokeTest] PASS")
 	delete_savegame()
 	get_tree().quit(0)
 
