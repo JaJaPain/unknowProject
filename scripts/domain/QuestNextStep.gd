@@ -41,6 +41,20 @@ static func destination_name(q: Dictionary) -> String:
 	return where
 
 
+## The lounge hunt's suspect so far ("" before anyone's been caught out).
+static func hunt_suspect(q: Dictionary) -> String:
+	var tree := Engine.get_main_loop() as SceneTree
+	var story: Node = tree.root.get_node_or_null("StoryManager") if tree != null else null
+	if story == null:
+		return ""
+	var all = story.story_state.get(preload("res://scripts/domain/PickupHunt.gd").STATE_KEY)
+	if not all is Dictionary:
+		return ""
+	var key := "%s|%s|%s" % [str(q.get("title", "")), str(q.get("target_outpost", "")), str(q.get("part_name", ""))]
+	var s = (all as Dictionary).get(key)
+	return preload("res://scripts/domain/PickupHunt.gd").suspect(s, str(q.get("target_npc", ""))) if s is Dictionary else ""
+
+
 ## {text}: the next step for quest `q` (QuestManager.active_quest's shape).
 static func for_quest(q: Dictionary) -> Dictionary:
 	var kind := str(q.get("objective_type", ""))
@@ -53,7 +67,11 @@ static func for_quest(q: Dictionary) -> Dictionary:
 		var outpost := str(q.get("target_outpost_display", "the outpost"))
 		# Board pickups are a lounge hunt: who has it is for the player to find.
 		if bool(q.get("lounge_hunt", false)):
-			return {"text": "Dock at %s (outpost). Someone in its lounge has the %s: ask around, find who, and talk it out of them." % [outpost, part]}
+			# Once someone's named them (or they slipped), say who to lean on.
+			var suspect := hunt_suspect(q)
+			if not suspect.is_empty():
+				return {"text": "%s has the %s, at %s. Keep pushing them (a drink helps)." % [person_name(suspect), part, outpost]}
+			return {"text": "Dock at %s (outpost). Someone in its lounge has the %s and won't just hand it over: ask around, find who, and keep pushing them." % [outpost, part]}
 		var person := person_name(str(q.get("target_npc", "the contact")))
 		return {"text": "Dock at %s (outpost) and ask %s for the %s: in the dock menu, or by their card in the lounge." % [outpost, person, part]}
 	return {"text": ""}

@@ -26,7 +26,12 @@ func _initialize() -> void:
 	_check(str(Hunt.ask(s, "A", holder, "Sealed Actuator", 0.9, 0)["line"]).contains("Corin Marl"), "asked again once it's out, they repeat it")
 	# The holder: deny, hedge, give.
 	r = Hunt.ask(s, holder, holder, "Sealed Actuator", 0.0, 0)
-	_check(not bool(r["handed_over"]) and str(r["line"]) in [Hunt._fill(Hunt.HOLDER_DENY[0], "Sealed Actuator", "Corin Marl")], "first ask: denial")
+	_check(not bool(r["handed_over"]) and str(r["line"]).begins_with(Hunt._fill(Hunt.HOLDER_DENY[0], "Sealed Actuator", "Corin Marl")), "first ask: denial")
+	_check(str(r["line"]).ends_with(Hunt.HOLDER_TELL[0]), "...with a tell, so the player knows to push")
+	for line in Hunt.DEFLECT + Hunt.HINT:
+		_check(not str(line).contains("("), "bystanders never show a tell: %s" % line)
+	_check(Hunt.suspect(s, holder) == holder, "caught out: the tracker can name them")
+	_check(Hunt.suspect(Hunt.state_for({}, "fresh"), holder).is_empty(), "nobody suspected at the start")
 	r = Hunt.ask(s, holder, holder, "Sealed Actuator", 0.0, 0)
 	_check(not bool(r["handed_over"]) and str(r["line"]) == Hunt.HOLDER_HEDGE[0], "second: hedging")
 	_check(bool(Hunt.ask(s, holder, holder, "Sealed Actuator", 0.0, 0)["handed_over"]), "third: hands it over")
@@ -38,7 +43,7 @@ func _initialize() -> void:
 	_check(not bool(Hunt.ask(s2, "A", holder, "x", 0.9, 0)["handed_over"]), "a bystander's drink changes nothing")
 	_check(bool(Hunt.ask(s2, holder, holder, "x", 0.0, 0)["handed_over"]), "drinks soften the holder, but the last step is still an ask")
 	# Lines: filled, clean, dry.
-	for pool in [Hunt.DEFLECT, Hunt.HINT, Hunt.HOLDER_DENY, Hunt.HOLDER_HEDGE, Hunt.HOLDER_GIVE]:
+	for pool in [Hunt.DEFLECT, Hunt.HINT, Hunt.HOLDER_DENY, Hunt.HOLDER_TELL, Hunt.HOLDER_HEDGE, Hunt.HOLDER_GIVE]:
 		for line in pool:
 			var filled := Hunt._fill(str(line), "Sealed Actuator", "Corin Marl")
 			_check(not filled.contains("{") and ReservedTopics.is_clean(filled), "clean: %s" % filled)
@@ -46,7 +51,7 @@ func _initialize() -> void:
 	# The next step names the place, and for a hunt never the person.
 	var hunt := {"objective_type": "PICKUP_SPECIAL", "lounge_hunt": true, "part_name": "Sealed Actuator", "target_outpost_display": "QUARAIN BEACON", "target_npc": holder}
 	var text := str(Next.for_quest(hunt)["text"])
-	_check(text.contains("QUARAIN BEACON") and text.contains("lounge") and not text.contains("Corin"), "hunt: where, not who: %s" % text)
+	_check(text.contains("QUARAIN BEACON") and text.contains("lounge") and text.contains("keep pushing") and not text.contains("Corin"), "hunt: where, not who, and that it takes pushing: %s" % text)
 	var direct := hunt.duplicate()
 	direct["lounge_hunt"] = false
 	text = str(Next.for_quest(direct)["text"])

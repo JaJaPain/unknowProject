@@ -5048,7 +5048,7 @@ func _render_dock_submenu() -> void:
 				if bool(QuestManager.get_pickup_special_data().get("lounge_hunt", false)):
 					show_ask_btn = false
 					show_dock_message(
-						"Someone in this lounge has your %s. Nobody's going to just say so. Ask around." % str(QuestManager.get_pickup_special_data().get("part_name", "package")),
+						"Someone in this lounge has your %s, and they won't just hand it over. Ask around, watch for whoever's cagey, and keep pushing them. A drink helps." % str(QuestManager.get_pickup_special_data().get("part_name", "package")),
 						"Dock Notice",
 						Color(1.0, 0.82, 0.45)
 					)
@@ -6049,6 +6049,8 @@ func _on_lounge_hunt_ask(npc_name: String) -> void:
 		"color": color,
 		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),
 	})
+	# The tracker names the suspect once someone's been caught out.
+	_update_quest_tracker()
 	if not bool(reply["handed_over"]):
 		return
 	# A hold full of ore: the existing trade offer clears it first; asking

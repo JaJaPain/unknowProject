@@ -35,6 +35,14 @@ const HOLDER_DENY := [
 	"Never heard of it. Lovely word, though.",
 	"I'm just here for the ambience. Which is mostly coolant fumes.",
 ]
+## After the holder's denial: a tell, so the player knows to push (Abe,
+## 2026-10-03: the player has to understand they're squeezing it out of one
+## of them). Bystanders never show one.
+const HOLDER_TELL := [
+	"(Their hand drifts to the bag under the table.)",
+	"(They don't look at you. They look at their coat pocket.)",
+	"(The pause before that was slightly too long.)",
+]
 const HOLDER_HEDGE := [
 	"Say I had one. Hypothetically. It would be a very sealed, very unsniffed one.",
 	"You're persistent. That's either a virtue or a symptom.",
@@ -77,7 +85,16 @@ static func ask(s: Dictionary, npc: String, holder: String, part: String, roll: 
 		return {"line": _fill(HOLDER_GIVE[posmod(pick, HOLDER_GIVE.size())], part, holder_short), "handed_over": true}
 	if n == ASKS_TO_HAND_OVER - 1:
 		return {"line": _fill(HOLDER_HEDGE[posmod(pick, HOLDER_HEDGE.size())], part, holder_short), "handed_over": false}
-	return {"line": _fill(HOLDER_DENY[posmod(pick, HOLDER_DENY.size())], part, holder_short), "handed_over": false}
+	var deny := _fill(HOLDER_DENY[posmod(pick, HOLDER_DENY.size())], part, holder_short)
+	return {"line": "%s %s" % [deny, HOLDER_TELL[posmod(pick, HOLDER_TELL.size())]], "handed_over": false}
+
+
+## Who the player knows has it (named by a bystander, or caught in a tell),
+## for the tracker. "" while they don't.
+static func suspect(s: Dictionary, holder: String) -> String:
+	if bool(s.get("hinted", false)) or int((s.get("asks", {}) as Dictionary).get(holder, 0)) > 0:
+		return holder
+	return ""
 
 
 ## A drink for the holder softens them by one ask.

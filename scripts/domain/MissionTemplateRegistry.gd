@@ -161,7 +161,7 @@ static func _register_board_templates() -> void:
 		"required_placeholders": ["{ITEM_NAME}", "{PICKUP_LOCATION}"],
 		# A lounge hunt (Abe, 2026-10-03): never name who has it.
 		"forbidden_words": FORBIDDEN_MECHANIC_WORDS,
-		"custom_rules": [KAELEN_DISGUST_RULE],
+		"custom_rules": [KAELEN_DISGUST_RULE, "The body must make clear that someone in the outpost lounge has it, that the pilot has to find out who, and that they won't hand it over easily. Never name who has it."],
 		"fallback_variants": [
 			{
 				"title": "Sealed Pickup: {ITEM_NAME}, No Sniffing",

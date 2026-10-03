@@ -11823,7 +11823,14 @@ func _run_quest_reach_smoke_test() -> void:
 			if bool(QuestManager.active_quest.get("picked_up", false)):
 				fail.call("A bystander handed it over.")
 				return
-	for n in 3:
+	# Asked around: the tracker now says who to keep pushing.
+	ui._on_lounge_hunt_ask(holder)
+	var hunt_step := str(load("res://scripts/domain/QuestNextStep.gd").for_quest(QuestManager.get_pickup_special_data())["text"])
+	print("[QuestReachSmokeTest] tracker mid-hunt: ", hunt_step)
+	if not hunt_step.contains(person) or not hunt_step.contains("Keep pushing"):
+		fail.call("Mid-hunt, the tracker doesn't say who to push: %s" % hunt_step)
+		return
+	for n in 2:
 		ui._on_lounge_hunt_ask(holder)
 	# 4. Taken: the next step is the hand-in at a real station here.
 	for i in 5:
