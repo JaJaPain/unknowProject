@@ -88,7 +88,7 @@ reading the code (not confirmed yet).
 - Test: a unit test that calls `set_music_state` explore → tension → explore
   inside 2 s and checks a player is still playing at full volume afterwards.
 
-### 3. Tutorial: N.O.V.A. should say "back to the station" after the Reaver dies
+### 3. **FIXED 2026-10-03** Tutorial: N.O.V.A. should say "back to the station" after the Reaver dies
 
 **Abe:** after blowing up the Reaver in the tutorial, N.O.V.A. could point
 out that we should return to the station. A bit more hand-holding in case

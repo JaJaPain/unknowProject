@@ -689,3 +689,7 @@ through the marked gate and flies you in):
 - [ ] **Music never drops out.** Fly toward a Reaver (tension music), let it
       lose and regain you: the music changes smoothly and never stops. If it
       ever goes silent it comes back on its own within a few seconds.
+- [ ] **Tutorial: the way back.** New campaign, kill the starter Reaver:
+      a few seconds after her victory line N.O.V.A. says to head back and
+      points at Dock at Station. Stay out a minute: one reminder to dock and
+      Talk to Agent. Never again after that.

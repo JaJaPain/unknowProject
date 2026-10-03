@@ -10826,8 +10826,18 @@ func _run_first_session_smoke_test() -> void:
 	if most != 1:
 		_fail_first_session_smoke_test("The one-kill tutorial had %d Reavers at once, expected 1: %s" % [most, str(names)])
 		return
+	# The kill: N.O.V.A. says to head back (playtest 2026-10-03 finding 3).
+	QuestManager._on_player_ship_kill("reavers")
+	for i in 5:
+		await get_tree().process_frame
+	if not QuestManager.is_quest_completed() or not bool(StoryManager.story_state.get("tutorial_return_nudged", false)):
+		_fail_first_session_smoke_test("Killing the Reaver didn't queue N.O.V.A.'s 'head back to the station' line.")
+		return
+	if not ui._tutorial_return_still_due():
+		_fail_first_session_smoke_test("With the job done and the ship out, the return line should still be due.")
+		return
 
-	print("[FirstSessionSmokeTest] PASS: wiki, locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver.")
+	print("[FirstSessionSmokeTest] PASS: wiki, locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver, the way back.")
 	delete_savegame()
 	get_tree().quit()
 

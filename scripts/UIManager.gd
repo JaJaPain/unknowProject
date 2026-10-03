@@ -14289,6 +14289,38 @@ func _on_quest_objective_completed_details(quest_data: Dictionary) -> void:
 		quest_data.duplicate(true),
 		"objective_complete"
 	)
+	if _is_intro_starter_contract(quest_data):
+		_nudge_tutorial_return()
+
+
+## Tutorial hand-holding (Abe, playtest 2026-10-03 finding 3): once the
+## starter Reaver is down, N.O.V.A. says to head back, after her victory line;
+## a minute later, if we still haven't docked, one gentle reminder. Once each.
+const TUTORIAL_RETURN_LINE := "That's the job done, Captain. Let's head back to the station and get paid. The Dock at Station button on the tracker will take us in."
+const TUTORIAL_RETURN_REMINDER := "Kaelen's money is still sitting at the station, Captain. Dock and click Talk to Agent."
+const TUTORIAL_RETURN_DELAY_S := 6.0
+const TUTORIAL_REMINDER_DELAY_S := 60.0
+
+
+func _nudge_tutorial_return() -> void:
+	if not is_instance_valid(StoryManager) or bool(StoryManager.story_state.get("tutorial_return_nudged", false)):
+		return
+	StoryManager.story_state["tutorial_return_nudged"] = true
+	get_tree().create_timer(TUTORIAL_RETURN_DELAY_S).timeout.connect(func() -> void:
+		if _tutorial_return_still_due():
+			Nova.ask_captain(TUTORIAL_RETURN_LINE, "nav"))
+	get_tree().create_timer(TUTORIAL_RETURN_DELAY_S + TUTORIAL_REMINDER_DELAY_S).timeout.connect(func() -> void:
+		if _tutorial_return_still_due():
+			Nova.ask_captain(TUTORIAL_RETURN_REMINDER, "nav"))
+
+
+## Still flying with the starter contract done but not handed in.
+func _tutorial_return_still_due() -> bool:
+	var player = GlobalState.player
+	if not is_instance_valid(player) or bool(player.get("is_docked")) or bool(player.get("destroyed")):
+		return false
+	return QuestManager.is_quest_active() and QuestManager.is_quest_completed() \
+		and _is_intro_starter_contract(QuestManager.active_quest)
 
 
 func _request_kaelen_reaction_bundle_for_mission(
