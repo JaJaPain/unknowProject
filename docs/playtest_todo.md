@@ -609,3 +609,11 @@ These are deliberately rare; you won't hear them all in one session.
       routes", a gate leading deeper costs less than before (e.g. 53 SC
       instead of 75), and after buying it she adds a line about it going
       deeper.
+- [ ] **Kaelen's one job.** Once you're 3+ jumps out and she has a deeper
+      route for sale, Talk to Agent: she says she's only got the one job (a
+      sealed ledger from two Reaver raiders) and doesn't say what it's for.
+      Decline and come back: a different "still the ledger" intro and a
+      shorter briefing each time, never another job. Bring the ledger in:
+      her other work comes back, and when you next buy routes from her, the
+      gate that was missing is for sale at her usual price, with a line
+      hinting you had something to do with it opening (once).

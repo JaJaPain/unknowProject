@@ -13229,6 +13229,8 @@ func _refresh_agent_quest_board():
 	if _should_offer_starter_contract():
 		_show_kaelen_intro_quest_offer()
 		return
+	if _maybe_offer_kaelen_locked_gate_job():
+		return
 	agent_name_label.text = "BROKER KAELEN"
 	agent_subtitle_label.text = "Neutral Fixer & Profit Broker"
 	_update_agent_portrait("neutral", "", "neutral")
@@ -13474,7 +13476,8 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 	# about 1 in 4 offers, never two in a row, never the tutorial job).
 	var undercurrent = get_tree().current_scene.get("undercurrent_nudge") if get_tree().current_scene != null else null
 	if undercurrent != null and is_instance_valid(undercurrent) \
-			and bool(StoryManager.story_state.get("first_contract_handed_in", false)):
+			and bool(StoryManager.story_state.get("first_contract_handed_in", false)) \
+			and not bool(quest_data.get("kaelen_locked_gate", false)):
 		var tail: String = load("res://scripts/story/UndercurrentNudge.gd").pitch_tail(undercurrent.current(), randf())
 		if not tail.is_empty():
 			handoff_line = handoff_line.strip_edges() + " " + tail
@@ -13518,6 +13521,8 @@ func _on_quest_generated_received(quest_data: Dictionary, is_fallback: bool):
 		var revealable := GateDiscovery.get_revealable_gates()
 		if not revealable.is_empty():
 			var gate_id: String = _kaelen_pick_gate(revealable)
+			if gate_id.is_empty():
+				return
 			var cost: int = GateDiscovery.get_kaelen_reveal_cost(gate_id)
 			var intel_btn := Button.new()
 			intel_btn.text = "[ Ask about new routes — %d SC ]" % cost
@@ -13619,6 +13624,8 @@ func _add_kaelen_gate_intel_button() -> void:
 	if revealable.is_empty():
 		return
 	var gate_id: String = _kaelen_pick_gate(revealable)
+	if gate_id.is_empty():
+		return
 	var cost: int = GateDiscovery.get_kaelen_reveal_cost(gate_id)
 	var intel_btn := Button.new()
 	intel_btn.text = "[ Ask about new routes - %d SC ]" % cost
@@ -13684,13 +13691,39 @@ func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void:
 		StoryManager.mark_chapter_beat_state(beat_id, "offered", "Offer presented.")
 
 
-## Her leads point deeper (core loop step 11b): an outward gate first.
+## Her leads point deeper (core loop step 11b): an outward gate first. The
+## gate she can't buy open (step 11c) isn't for sale until her job is done.
+## "" when there's nothing to offer.
 func _kaelen_pick_gate(revealable: Array) -> String:
 	var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
-	for gate_id in revealable:
+	var Locked = load("res://scripts/story/KaelenLockedGate.gd")
+	var open: Array = revealable.filter(func(g): return not Locked.is_withheld(StoryManager.story_state, str(g)))
+	for gate_id in open:
 		if Nudge.gate_is_outward(str(gate_id)):
 			return str(gate_id)
-	return str(revealable[0])
+	return str(open[0]) if not open.is_empty() else ""
+
+
+## Step 11c: once per campaign, a few jumps out, Kaelen has one job and only
+## that job until it's done (she never says why). True if it's on screen.
+func _maybe_offer_kaelen_locked_gate_job() -> bool:
+	var Locked = load("res://scripts/story/KaelenLockedGate.gd")
+	var story_state: Dictionary = StoryManager.story_state
+	if Locked.stage(story_state).is_empty() and GateDiscovery:
+		var depth: int = load("res://scripts/domain/DepthScaling.gd").current_depth()
+		var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
+		for gate_id in GateDiscovery.get_revealable_gates():
+			if Nudge.gate_is_outward(str(gate_id)) and Locked.maybe_lock(story_state, str(gate_id), depth):
+				break
+	if not Locked.blocks_other_offers(story_state):
+		return false
+	var job: Dictionary = Locked.offer(story_state)
+	cached_quest_data = job
+	cached_quest_is_fallback = false
+	cached_unique_intro = str(job.get("handoff", ""))
+	_on_quest_generated_received(job, false)
+	cached_unique_intro = ""
+	return true
 
 
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
@@ -13703,7 +13736,11 @@ func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 			"\"I've got a contact who owes me — they mapped a route "
 			+ "nobody else has charted. It's yours now. Gate coordinates uploaded to your nav system.\""
 		)
-		if outward:
+		# The gate she couldn't buy open, now for sale: her half-hint (11c).
+		var hint: String = load("res://scripts/story/KaelenLockedGate.gd").on_gate_sold(StoryManager.story_state, gate_id, randi())
+		if not hint.is_empty():
+			agent_dialogue_label.text = hint
+		elif outward:
 			var undercurrent = get_tree().current_scene.get("undercurrent_nudge")
 			if undercurrent != null and is_instance_valid(undercurrent):
 				agent_dialogue_label.text += " " + Nudge.next_line(undercurrent.current(), "kaelen_outward_lead")

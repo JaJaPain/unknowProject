@@ -277,6 +277,9 @@ func _start_gameplay_runtime() -> void:
 	QuestManager.quest_declined_details.connect(_on_quiet_moment_quest_declined)
 	QuestManager.quest_expired_details.connect(_on_quest_expired_chronicle)
 	QuestManager.quest_completed_details.connect(_on_premise_quest_completed)
+	# Kaelen's one job (step 11c): handed in, the withheld gate goes on sale.
+	QuestManager.quest_completed_details.connect(func(quest_data: Dictionary) -> void:
+		load("res://scripts/story/KaelenLockedGate.gd").on_quest_completed(StoryManager.story_state, quest_data))
 	QuestManager.quest_abandoned_details.connect(_on_premise_quest_abandoned)
 	QuestManager.quest_expired_details.connect(_on_premise_quest_expired)
 	QuestManager.reveal_twist_triggered.connect(_on_reveal_twist_for_leverage)

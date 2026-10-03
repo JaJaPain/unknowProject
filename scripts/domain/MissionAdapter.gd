@@ -113,6 +113,8 @@ static func build_active_state(
 			quest_data.get("public_board_text_is_fallback", false)
 		),
 		"station_errand": bool(quest_data.get("station_errand", false)),
+		# Kaelen's one job (core loop step 11c): handing it in unlocks a gate.
+		"kaelen_locked_gate": bool(quest_data.get("kaelen_locked_gate", false)),
 		"is_intro_tutorial": bool(quest_data.get("is_intro_tutorial", false)),
 	}
 	# Keep the exact conversation and its provenance with the accepted mission.
@@ -472,6 +474,9 @@ static func normalize_legacy_state(source: Dictionary) -> Dictionary:
 	)
 	normalized["station_errand"] = bool(
 		normalized.get("station_errand", false)
+	)
+	normalized["kaelen_locked_gate"] = bool(
+		normalized.get("kaelen_locked_gate", false)
 	)
 	normalized = NarrativeMetadataType.apply_to_state(
 		normalized,

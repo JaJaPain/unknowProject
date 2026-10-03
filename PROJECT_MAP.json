@@ -10703,6 +10703,7 @@
             "func _choice_response_fallback_for_voice(voice_profile_id: StringName) -> String",
             "func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void",
             "func _kaelen_pick_gate(revealable: Array) -> String",
+            "func _maybe_offer_kaelen_locked_gate_job() -> bool",
             "func _kaelen_gate_reveal(gate_id: String, cost: int) -> void",
             "func _has_mission_conversation_bundle(quest_data: Dictionary) -> bool",
             "func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool)",
@@ -15104,6 +15105,22 @@
               "type": "file",
               "name": "KaelenInteractionPacketBuilder.gd.uid",
               "path": "scripts/story/KaelenInteractionPacketBuilder.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "KaelenLockedGate.gd",
+              "path": "scripts/story/KaelenLockedGate.gd",
+              "classes": [],
+              "functions": [
+                "static func state(story_state: Dictionary) -> Dictionary",
+                "static func stage(story_state: Dictionary) -> String",
+                "static func maybe_lock(story_state: Dictionary, gate_id: String, depth: int) -> bool",
+                "static func blocks_other_offers(story_state: Dictionary) -> bool",
+                "static func is_withheld(story_state: Dictionary, gate_id: String) -> bool",
+                "static func offer(story_state: Dictionary) -> Dictionary",
+                "static func on_quest_completed(story_state: Dictionary, quest_data: Dictionary) -> bool",
+                "static func on_gate_sold(story_state: Dictionary, gate_id: String, roll: int) -> String"
+              ]
             },
             {
               "type": "file",
@@ -21616,6 +21633,16 @@
               "type": "file",
               "name": "run_kaelen_interaction_bundle_tests.gd.uid",
               "path": "tests/story/run_kaelen_interaction_bundle_tests.gd.uid"
+            },
+            {
+              "type": "file",
+              "name": "run_kaelen_locked_gate_tests.gd",
+              "path": "tests/story/run_kaelen_locked_gate_tests.gd",
+              "classes": [],
+              "functions": [
+                "func _initialize() -> void",
+                "func _check(condition: bool, message: String) -> void"
+              ]
             },
             {
               "type": "file",

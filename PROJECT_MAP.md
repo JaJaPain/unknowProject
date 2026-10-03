@@ -4505,6 +4505,7 @@ Root: `spacegame`
       - `func _choice_response_fallback_for_voice(voice_profile_id: StringName) -> String`
       - `func _mark_story_agent_offer_presented(quest_data: Dictionary) -> void`
       - `func _kaelen_pick_gate(revealable: Array) -> String`
+      - `func _maybe_offer_kaelen_locked_gate_job() -> bool`
       - `func _kaelen_gate_reveal(gate_id: String, cost: int) -> void`
       - `func _has_mission_conversation_bundle(quest_data: Dictionary) -> bool`
       - `func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool)`
@@ -6653,6 +6654,15 @@ Root: `spacegame`
           - `static func _accepted_term_profile(mission_state: Dictionary) -> Dictionary`
           - `static func _turn_in_kind_for_tone(outcome_tone: String) -> String`
       - 📄 [KaelenInteractionPacketBuilder.gd.uid](file:///D:/CodingProjects/spacegame/scripts/story/KaelenInteractionPacketBuilder.gd.uid)
+      - 📄 [KaelenLockedGate.gd](file:///D:/CodingProjects/spacegame/scripts/story/KaelenLockedGate.gd)
+        - `static func state(story_state: Dictionary) -> Dictionary`
+        - `static func stage(story_state: Dictionary) -> String`
+        - `static func maybe_lock(story_state: Dictionary, gate_id: String, depth: int) -> bool`
+        - `static func blocks_other_offers(story_state: Dictionary) -> bool`
+        - `static func is_withheld(story_state: Dictionary, gate_id: String) -> bool`
+        - `static func offer(story_state: Dictionary) -> Dictionary`
+        - `static func on_quest_completed(story_state: Dictionary, quest_data: Dictionary) -> bool`
+        - `static func on_gate_sold(story_state: Dictionary, gate_id: String, roll: int) -> String`
       - 📄 [KnowledgeLedger.gd](file:///D:/CodingProjects/spacegame/scripts/story/KnowledgeLedger.gd)
         - 🏛️ **global class KnowledgeLedger**
           - `func _init(source_state: Dictionary = {}) -> void`
@@ -9831,6 +9841,9 @@ Root: `spacegame`
         - `func _assert_no_secret_tokens(source: String, label: String) -> void`
         - `func _expect(condition: bool, message: String) -> void`
       - 📄 [run_kaelen_interaction_bundle_tests.gd.uid](file:///D:/CodingProjects/spacegame/tests/story/run_kaelen_interaction_bundle_tests.gd.uid)
+      - 📄 [run_kaelen_locked_gate_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_kaelen_locked_gate_tests.gd)
+        - `func _initialize() -> void`
+        - `func _check(condition: bool, message: String) -> void`
       - 📄 [run_keystone_tests.gd](file:///D:/CodingProjects/spacegame/tests/story/run_keystone_tests.gd)
         - `func _initialize() -> void`
         - `func _path(gs: Node, sys: String) -> String`
