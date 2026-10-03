@@ -14,39 +14,71 @@ var _failures: Array[String] = []
 
 func _initialize() -> void:
 	var holder := "Pilgrim Fleet Corin Marl"
+	var part := "Sealed Actuator"
+	var P: Dictionary = Hunt.pools()
+	var filled_pool := func(name: String) -> Array:
+		return (P[name] as Array).map(func(l): return Hunt._fill(str(l), part, "Corin Marl"))
 	var story := {}
+	var decks: Dictionary = Hunt.decks_for(story)
 	var s: Dictionary = Hunt.state_for(story, "job1")
 	_check(Hunt.state_for(story, "job1") == s, "one state per job")
 	# Bystanders: deflect or point; never hand it over; the third always points.
-	var r: Dictionary = Hunt.ask(s, "A", holder, "Sealed Actuator", 0.9, 0)
-	_check(not bool(r["handed_over"]) and not str(r["line"]).contains("Corin"), "a bystander can just deflect")
-	r = Hunt.ask(s, "B", holder, "Sealed Actuator", 0.9, 1)
-	r = Hunt.ask(s, "C", holder, "Sealed Actuator", 0.9, 2)
-	_check(str(r["line"]).contains("Corin Marl") and not bool(r["handed_over"]), "by the third bystander, someone points at the holder (by name, without the org)")
-	_check(str(Hunt.ask(s, "A", holder, "Sealed Actuator", 0.9, 0)["line"]).contains("Corin Marl"), "asked again once it's out, they repeat it")
-	# The holder: deny, hedge, give.
-	r = Hunt.ask(s, holder, holder, "Sealed Actuator", 0.0, 0)
-	_check(not bool(r["handed_over"]) and str(r["line"]).begins_with(Hunt._fill(Hunt.HOLDER_DENY[0], "Sealed Actuator", "Corin Marl")), "first ask: denial")
-	_check(str(r["line"]).ends_with(Hunt.HOLDER_TELL[0]), "...with a tell, so the player knows to push")
-	for line in Hunt.DEFLECT + Hunt.HINT:
-		_check(not str(line).contains("("), "bystanders never show a tell: %s" % line)
+	var r: Dictionary = Hunt.ask(s, "A", holder, part, 0.9, decks)
+	_check(not bool(r["handed_over"]) and str(r["line"]) in filled_pool.call("deflect"), "a bystander can just deflect")
+	r = Hunt.ask(s, "B", holder, part, 0.9, decks)
+	r = Hunt.ask(s, "C", holder, part, 0.9, decks)
+	_check(str(r["line"]).contains("Corin Marl") and not str(r["line"]).contains("Pilgrim") and not bool(r["handed_over"]), "by the third bystander, someone points at the holder (by name, without the org)")
+	_check(str(Hunt.ask(s, "A", holder, part, 0.9, decks)["line"]).contains("Corin Marl"), "asked again once it's out, they repeat it")
+	# The holder: deny with a tell, hedge, give.
+	r = Hunt.ask(s, holder, holder, part, 0.0, decks)
+	var line := str(r["line"])
+	var denied := (filled_pool.call("deny") as Array).any(func(d): return line.begins_with(str(d)))
+	var told := (P["tell"] as Array).any(func(x): return line.ends_with(str(x)))
+	_check(not bool(r["handed_over"]) and denied and told, "first ask: a denial with a tell, so the player knows to push: %s" % line)
 	_check(Hunt.suspect(s, holder) == holder, "caught out: the tracker can name them")
 	_check(Hunt.suspect(Hunt.state_for({}, "fresh"), holder).is_empty(), "nobody suspected at the start")
-	r = Hunt.ask(s, holder, holder, "Sealed Actuator", 0.0, 0)
-	_check(not bool(r["handed_over"]) and str(r["line"]) == Hunt.HOLDER_HEDGE[0], "second: hedging")
-	_check(bool(Hunt.ask(s, holder, holder, "Sealed Actuator", 0.0, 0)["handed_over"]), "third: hands it over")
+	r = Hunt.ask(s, holder, holder, part, 0.0, decks)
+	_check(not bool(r["handed_over"]) and str(r["line"]) in filled_pool.call("hedge"), "second: hedging")
+	r = Hunt.ask(s, holder, holder, part, 0.0, decks)
+	_check(bool(r["handed_over"]) and str(r["line"]) in filled_pool.call("give"), "third: hands it over")
 	# A drink counts as an ask.
 	var s2: Dictionary = Hunt.state_for(story, "job2")
 	Hunt.drink(s2, "A", holder)
 	Hunt.drink(s2, holder, holder)
 	Hunt.drink(s2, holder, holder)
-	_check(not bool(Hunt.ask(s2, "A", holder, "x", 0.9, 0)["handed_over"]), "a bystander's drink changes nothing")
-	_check(bool(Hunt.ask(s2, holder, holder, "x", 0.0, 0)["handed_over"]), "drinks soften the holder, but the last step is still an ask")
-	# Lines: filled, clean, dry.
-	for pool in [Hunt.DEFLECT, Hunt.HINT, Hunt.HOLDER_DENY, Hunt.HOLDER_TELL, Hunt.HOLDER_HEDGE, Hunt.HOLDER_GIVE]:
-		for line in pool:
-			var filled := Hunt._fill(str(line), "Sealed Actuator", "Corin Marl")
+	_check(not bool(Hunt.ask(s2, "A", holder, "x", 0.9, decks)["handed_over"]), "a bystander's drink changes nothing")
+	_check(bool(Hunt.ask(s2, holder, holder, "x", 0.0, decks)["handed_over"]), "drinks soften the holder, but the last step is still an ask")
+
+	# A large pool (Abe), dealt from shuffled decks: random, no repeats until
+	# every line has had its turn, and a fresh shuffle after.
+	for name in Hunt.POOL_NAMES:
+		_check((P[name] as Array).size() >= 25, "%s: a large pool (%d)" % [name, (P[name] as Array).size()])
+		var fresh := {}
+		var seen := {}
+		for k in (P[name] as Array).size():
+			seen[Hunt.draw(fresh, name)] = true
+		_check(seen.size() == (P[name] as Array).size(), "%s: every line before any repeats" % name)
+		_check(not Hunt.draw(fresh, name).is_empty(), "%s: then a new shuffle" % name)
+	var orders := {}
+	for k in 6:
+		var d := {}
+		orders[str([Hunt.draw(d, "deflect"), Hunt.draw(d, "deflect"), Hunt.draw(d, "deflect")])] = true
+	_check(orders.size() > 1, "the order is random, not fixed")
+	# Lines: filled, clean, grammatical, tells only from the holder.
+	for name in Hunt.POOL_NAMES:
+		for l in P[name]:
+			var raw := str(l)
+			var filled := Hunt._fill(raw, part, "Corin Marl")
 			_check(not filled.contains("{") and ReservedTopics.is_clean(filled), "clean: %s" % filled)
+			_check(not raw.contains(" a {part}") and not raw.begins_with("A {part}"), "no 'a {part}' (items can start with a vowel): %s" % raw)
+			if name == "tell":
+				_check(raw.begins_with("(") and raw.ends_with(")"), "a tell is a bracketed stage direction: %s" % raw)
+			else:
+				_check(not raw.contains("("), "only tells use brackets: %s" % raw)
+			if name == "hint":
+				_check(raw.contains("{holder}"), "a pointer names who: %s" % raw)
+			elif name in ["deflect", "deny", "hedge"]:
+				_check(not raw.contains("{holder}"), "%s never names the holder: %s" % [name, raw])
 
 	# The next step names the place, and for a hunt never the person.
 	var hunt := {"objective_type": "PICKUP_SPECIAL", "lounge_hunt": true, "part_name": "Sealed Actuator", "target_outpost_display": "QUARAIN BEACON", "target_npc": holder}

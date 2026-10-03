@@ -6039,7 +6039,7 @@ func _on_lounge_hunt_ask(npc_name: String) -> void:
 	var q: Dictionary = QuestManager.get_pickup_special_data()
 	var Hunt := preload("res://scripts/domain/PickupHunt.gd")
 	var s: Dictionary = Hunt.state_for(StoryManager.story_state, _pickup_hunt_key(q))
-	var reply: Dictionary = Hunt.ask(s, npc_name, str(q.get("target_npc", "")), str(q.get("part_name", "package")), randf(), randi())
+	var reply: Dictionary = Hunt.ask(s, npc_name, str(q.get("target_npc", "")), str(q.get("part_name", "package")), randf(), Hunt.decks_for(StoryManager.story_state))
 	var npc_data := GlobalState.get_minor_npc_data(npc_name)
 	var color: Color = npc_data.get("flavor_color", Color.WHITE)
 	show_dock_message(str(reply["line"]), npc_name, color, GlobalState.get_minor_npc_portrait(npc_name))

@@ -6,52 +6,49 @@ extends RefCounted
 ##
 ## - Ask someone who doesn't have it: a deflection; sometimes they point at
 ##   who does.
-## - Ask the one who has it: they deny it, then hedge, then hand it over on
-##   the third ask. A drink bought for them counts as an ask.
+## - Ask the one who has it: they deny it (with a tell), then hedge, then hand
+##   it over on the third ask. A drink bought for them counts as an ask.
 ##
-## Pure: the state is a dictionary kept in StoryManager.story_state
-## (STATE_KEY -> {mission key: {asks: {npc: n}, hinted: bool}}).
+## Lines: a large authored pool in data/content/pickup_hunt_lines.json (Abe:
+## big and hand-written beats small or model-written). Each pool is a shuffled
+## deck: every ask draws a random line, and none repeats until the whole pool
+## has been used (decks are kept in story_state, so across hunts too).
+##
+## Pure: the state is dictionaries kept in StoryManager.story_state
+## (STATE_KEY -> {mission key: {asks: {npc: n}, hinted: bool}}; DECKS_KEY ->
+## {pool: [line indices left]}).
 
 const STATE_KEY := "pickup_hunt"
+const DECKS_KEY := "pickup_hunt_decks"
+const LINES_PATH := "res://data/content/pickup_hunt_lines.json"
 ## Asks it takes to talk the holder round (a drink counts as one).
 const ASKS_TO_HAND_OVER := 3
 ## How often a bystander points at the holder (always by the third bystander
 ## asked, so the hunt never stalls).
 const HINT_CHANCE := 0.5
+const POOL_NAMES := ["deflect", "hint", "deny", "tell", "hedge", "give"]
 
-const DEFLECT := [
-	"I own a mug and a grudge. Neither is a {part}.",
-	"If I had one, I'd be using it. Look at me. I'm overheating emotionally.",
-	"No. But thank you for assuming I'm the sort of person who would.",
-	"I've been asked that twice today. You're the second most hopeful.",
-]
-const HINT := [
-	"Try {holder}. They've been guarding that bag like it pays rent.",
-	"{holder} came in with something warm under their coat. I didn't ask. You should.",
-	"Not me. {holder}, probably. They've been suspiciously calm.",
-]
-const HOLDER_DENY := [
-	"A {part}? What would I want with a... no. No idea what you mean.",
-	"Never heard of it. Lovely word, though.",
-	"I'm just here for the ambience. Which is mostly coolant fumes.",
-]
-## After the holder's denial: a tell, so the player knows to push (Abe,
-## 2026-10-03: the player has to understand they're squeezing it out of one
-## of them). Bystanders never show one.
-const HOLDER_TELL := [
-	"(Their hand drifts to the bag under the table.)",
-	"(They don't look at you. They look at their coat pocket.)",
-	"(The pause before that was slightly too long.)",
-]
-const HOLDER_HEDGE := [
-	"Say I had one. Hypothetically. It would be a very sealed, very unsniffed one.",
-	"You're persistent. That's either a virtue or a symptom.",
-]
-const HOLDER_GIVE := [
-	"Fine. Take it. It hums when it's lonely. That's normal. Probably.",
-	"It's yours. Don't open it, don't sniff it, don't name it. I did all three.",
-	"Here. Tell whoever posted that job they owe me a drink. You can be the drink.",
-]
+## Used only if the data file can't be read.
+const FALLBACK := {
+	"deflect": ["I own a mug and a grudge. Neither is your {part}."],
+	"hint": ["Try {holder}. They've been guarding that bag like it pays rent."],
+	"deny": ["Never heard of it. Lovely word, though."],
+	"tell": ["(Their hand drifts to the bag under the table.)"],
+	"hedge": ["You're persistent. That's either a virtue or a symptom."],
+	"give": ["Fine. Take it. It hums when it's lonely. That's normal. Probably."],
+}
+
+static var _pools: Dictionary = {}
+
+
+## Every pool, from the data file (fallback lines if it can't be read).
+static func pools() -> Dictionary:
+	if _pools.is_empty():
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(LINES_PATH))
+		for name in POOL_NAMES:
+			var lines = parsed.get(name) if parsed is Dictionary else null
+			_pools[name] = lines if lines is Array and not (lines as Array).is_empty() else FALLBACK[name]
+	return _pools
 
 
 ## The hunt's state for one job (created on first use).
@@ -65,9 +62,33 @@ static func state_for(story_state: Dictionary, mission_key: String) -> Dictionar
 	return all[mission_key]
 
 
-## Ask `npc` about the item. `roll` 0..1 for the bystander hint, `pick` any int
-## for line choice. Returns {line, handed_over}.
-static func ask(s: Dictionary, npc: String, holder: String, part: String, roll: float, pick: int) -> Dictionary:
+## The shuffled decks, kept in story_state.
+static func decks_for(story_state: Dictionary) -> Dictionary:
+	var decks = story_state.get(DECKS_KEY)
+	if not decks is Dictionary:
+		decks = {}
+		story_state[DECKS_KEY] = decks
+	return decks
+
+
+## A random line from `pool`: dealt from a shuffled deck, reshuffled when it
+## runs out, so nothing repeats until every line has had its turn.
+static func draw(decks: Dictionary, pool: String) -> String:
+	var lines: Array = pools()[pool]
+	var deck: Array = decks.get(pool, [])
+	# A deck from an older, shorter pool is dealt out fresh.
+	deck = deck.filter(func(i): return int(i) < lines.size())
+	if deck.is_empty():
+		deck = range(lines.size())
+		deck.shuffle()
+	var index := int(deck.pop_back())
+	decks[pool] = deck
+	return str(lines[index])
+
+
+## Ask `npc` about the item. `roll` 0..1 for the bystander hint; lines come
+## from `decks`. Returns {line, handed_over}.
+static func ask(s: Dictionary, npc: String, holder: String, part: String, roll: float, decks: Dictionary) -> Dictionary:
 	var asks: Dictionary = s["asks"]
 	var n := int(asks.get(npc, 0)) + 1
 	asks[npc] = n
@@ -79,14 +100,14 @@ static func ask(s: Dictionary, npc: String, holder: String, part: String, roll: 
 			give_hint = true  # asked again: they repeat where to look
 		if give_hint:
 			s["hinted"] = true
-			return {"line": _fill(HINT[posmod(pick, HINT.size())], part, holder_short), "handed_over": false}
-		return {"line": _fill(DEFLECT[posmod(pick, DEFLECT.size())], part, holder_short), "handed_over": false}
+			return {"line": _fill(draw(decks, "hint"), part, holder_short), "handed_over": false}
+		return {"line": _fill(draw(decks, "deflect"), part, holder_short), "handed_over": false}
 	if n >= ASKS_TO_HAND_OVER:
-		return {"line": _fill(HOLDER_GIVE[posmod(pick, HOLDER_GIVE.size())], part, holder_short), "handed_over": true}
+		return {"line": _fill(draw(decks, "give"), part, holder_short), "handed_over": true}
 	if n == ASKS_TO_HAND_OVER - 1:
-		return {"line": _fill(HOLDER_HEDGE[posmod(pick, HOLDER_HEDGE.size())], part, holder_short), "handed_over": false}
-	var deny := _fill(HOLDER_DENY[posmod(pick, HOLDER_DENY.size())], part, holder_short)
-	return {"line": "%s %s" % [deny, HOLDER_TELL[posmod(pick, HOLDER_TELL.size())]], "handed_over": false}
+		return {"line": _fill(draw(decks, "hedge"), part, holder_short), "handed_over": false}
+	var deny := _fill(draw(decks, "deny"), part, holder_short)
+	return {"line": "%s %s" % [deny, draw(decks, "tell")], "handed_over": false}
 
 
 ## Who the player knows has it (named by a bystander, or caught in a tell),
