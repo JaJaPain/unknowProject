@@ -348,6 +348,82 @@ func _process(delta: float) -> void:
 	if GlobalState != null and not GlobalState.paused:
 		_update_tension(delta)
 	_music_watchdog(delta)
+	_update_engine(delta)
+
+
+# --- The engine in normal flight (playtest 2026-10-03 finding 6) -------------
+# A seamless loop (tools/generate_engine_loop.py) under flight: a quiet hum at
+# a standstill, fuller and a little higher with speed, a swell on boost.
+# Smoothed so it never jumps; silent when docked, dead, in the jump tunnel or
+# a cutscene.
+const ENGINE_LOOP_PATH := "res://sound/ShipSounds/engine_loop.wav"
+const ENGINE_IDLE_DB := -26.0
+const ENGINE_FULL_DB := -11.0
+const ENGINE_BOOST_DB := 4.0
+const ENGINE_SILENT_DB := -60.0
+const ENGINE_PITCH_IDLE := 0.85
+const ENGINE_PITCH_FULL := 1.12
+const ENGINE_PITCH_BOOST := 0.1
+## How fast the level and pitch follow (per second).
+const ENGINE_FOLLOW := 3.0
+var engine_player: AudioStreamPlayer
+var _engine_db := ENGINE_SILENT_DB
+var _engine_pitch := ENGINE_PITCH_IDLE
+
+
+func _ensure_engine_player() -> bool:
+	if engine_player != null:
+		return true
+	if not ResourceLoader.exists(ENGINE_LOOP_PATH):
+		return false
+	var stream = load(ENGINE_LOOP_PATH)
+	if stream is AudioStreamWAV:
+		stream = (stream as AudioStreamWAV).duplicate()
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		stream.loop_begin = 0
+		stream.loop_end = int(stream.get_length() * stream.mix_rate)
+	engine_player = AudioStreamPlayer.new()
+	engine_player.name = "EngineLoop"
+	engine_player.bus = "SFX"
+	engine_player.stream = stream
+	engine_player.volume_db = ENGINE_SILENT_DB
+	add_child(engine_player)
+	if not stream is AudioStreamWAV:
+		engine_player.finished.connect(engine_player.play)
+	return true
+
+
+## Where the engine should sit now: [volume dB, pitch].
+func engine_target() -> Array:
+	var player = GlobalState.player if GlobalState != null else null
+	if player == null or not is_instance_valid(player) or bool(player.get("is_docked")) or bool(player.get("destroyed")) \
+			or GlobalState.paused or bool(GlobalState.get("intro_cinematic_active")) or (jump_player != null and jump_player.playing):
+		return [ENGINE_SILENT_DB, ENGINE_PITCH_IDLE]
+	var full := maxf(1.0, float(player.get("max_speed")) * float(GlobalState.get("engine_speed_mult") if GlobalState.get("engine_speed_mult") != null else 1.0))
+	var ratio := clampf(float(player.get("current_speed")) / full, 0.0, 1.0)
+	var db := lerpf(ENGINE_IDLE_DB, ENGINE_FULL_DB, sqrt(ratio))
+	var pitch := lerpf(ENGINE_PITCH_IDLE, ENGINE_PITCH_FULL, ratio)
+	if float(player.get("boost_timer")) > 0.0:
+		db += ENGINE_BOOST_DB
+		pitch += ENGINE_PITCH_BOOST
+	return [db, pitch]
+
+
+func _update_engine(delta: float) -> void:
+	if not _ensure_engine_player():
+		return
+	var target := engine_target()
+	# A long frame (a load, a hitch) mustn't turn the glide into a jump.
+	var k := 1.0 - exp(-ENGINE_FOLLOW * minf(delta, 0.05))
+	_engine_db = lerpf(_engine_db, float(target[0]), k)
+	_engine_pitch = lerpf(_engine_pitch, float(target[1]), k)
+	engine_player.volume_db = _engine_db
+	engine_player.pitch_scale = maxf(0.1, _engine_pitch)
+	var audible := _engine_db > ENGINE_SILENT_DB + 2.0
+	if audible and not engine_player.playing:
+		engine_player.play()
+	elif not audible and engine_player.playing:
+		engine_player.stop()
 
 
 var _silent_s := 0.0

@@ -215,7 +215,7 @@ with the tractor beam as well.
   arrival): check a beam exists during the pull, the ship reaches the berth,
   then is freed; and an outpost arrival.
 
-### 6. No engine sound in normal flight (only on boost)
+### 6. **FIXED 2026-10-03** No engine sound in normal flight (only on boost)
 
 **Abe:** if we have an engine noise for regular flight, he can't hear it;
 he does hear something during boost.

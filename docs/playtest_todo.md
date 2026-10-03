@@ -703,3 +703,8 @@ through the marked gate and flies you in):
       metres out, pulled to the docking spot, held, then slides in. A
       departing one starts on the beam and is pushed clear before flying
       off. Outposts get some of this traffic too.
+- [ ] **Engine sound.** Undock and fly: a low engine hum, quiet at a
+      standstill, fuller and slightly higher as you speed up, swelling on
+      boost; it fades out when you dock and in the jump tunnel. It's a
+      generated placeholder (`tools/generate_engine_loop.py`): too loud,
+      too quiet, wrong character? Say so.
