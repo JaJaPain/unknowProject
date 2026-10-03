@@ -10828,6 +10828,23 @@ func _run_first_session_smoke_test() -> void:
 	if most != 1:
 		_fail_first_session_smoke_test("The one-kill tutorial had %d Reavers at once, expected 1: %s" % [most, str(names)])
 		return
+	# New wiki entries: a pulsing HUD button until read (finding 7).
+	var WikiT = load("res://scripts/ui/Wiki.gd")
+	StoryManager.story_state[WikiT.UNREAD_KEY] = []
+	await get_tree().create_timer(1.2).timeout
+	if ui.wiki_hud_btn.visible:
+		_fail_first_session_smoke_test("The wiki button shows with nothing unread.")
+		return
+	WikiT.unlock("lodestar")
+	await get_tree().create_timer(1.2).timeout
+	if not ui.wiki_hud_btn.visible or not ui._npc_attention_buttons.has(ui.wiki_hud_btn):
+		_fail_first_session_smoke_test("A new wiki entry didn't bring up the pulsing wiki button.")
+		return
+	WikiT.mark_read("lodestar")
+	await get_tree().create_timer(1.2).timeout
+	if ui.wiki_hud_btn.visible:
+		_fail_first_session_smoke_test("Reading the entry didn't clear the wiki button.")
+		return
 	# The kill: N.O.V.A. says to head back (playtest 2026-10-03 finding 3).
 	QuestManager._on_player_ship_kill("reavers")
 	for i in 5:

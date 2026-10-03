@@ -245,7 +245,7 @@ evasive burns only.) Ship sounds on disk: ShipAlignSound, jet_spool_up
 - Engine tier could later shift its character (Mk II+ slightly deeper);
   not for this pass.
 
-### 7. The wiki button should flash when there are new entries
+### 7. **FIXED 2026-10-03** The wiki button should flash when there are new entries
 
 **Abe:** the wiki button should flash when new items are in it.
 

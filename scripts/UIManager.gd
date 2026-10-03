@@ -1208,6 +1208,16 @@ func _create_overview():
 		gap.custom_minimum_size = Vector2(0, 4)
 		hud_vbox.add_child(gap)
 		hud_vbox.add_child(command_row)
+		# New wiki entries get a pulsing button of their own, only while
+		# something is unread (Abe, playtest 2026-10-03 finding 7).
+		wiki_hud_btn = Button.new()
+		wiki_hud_btn.custom_minimum_size = Vector2(0, 26)
+		wiki_hud_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		HudStyle.style_button(wiki_hud_btn, 12)
+		wiki_hud_btn.tooltip_text = "New entries in the wiki (also Esc > Wiki)"
+		wiki_hud_btn.visible = false
+		wiki_hud_btn.pressed.connect(open_wiki)
+		hud_vbox.add_child(wiki_hud_btn)
 	else:
 		add_child(command_row)
 
@@ -2755,6 +2765,8 @@ func _make_pause_card(title_text: String) -> PanelContainer:
 ## data/content/wiki_entries.json). The button shows how many entries are new.
 const WikiType := preload("res://scripts/ui/Wiki.gd")
 var pause_wiki_button: Button = null
+var wiki_hud_btn: Button = null
+var _wiki_unread_seen := -1
 var _wiki_screen: Node = null
 
 
@@ -2779,10 +2791,16 @@ func open_wiki() -> void:
 
 
 func refresh_wiki_button() -> void:
+	var unread := WikiType.unread_count()
+	# Both wiki buttons pulse gold while anything is unread (finding 7).
+	if wiki_hud_btn != null and is_instance_valid(wiki_hud_btn):
+		wiki_hud_btn.visible = unread > 0
+		wiki_hud_btn.text = "WIKI  ·  %d NEW" % unread
+		_set_npc_attention_button(wiki_hud_btn, unread > 0, Color(1.0, 0.82, 0.45, 1.0))
 	if pause_wiki_button == null or not is_instance_valid(pause_wiki_button):
 		return
-	var unread := WikiType.unread_count()
 	pause_wiki_button.text = "WIKI  (%d new)" % unread if unread > 0 else "WIKI"
+	_set_npc_attention_button(pause_wiki_button, unread > 0, Color(1.0, 0.82, 0.45, 1.0))
 
 
 func _add_pause_action(
@@ -8435,6 +8453,11 @@ func _poll_loose_end_rewards(delta: float) -> void:
 	if _loose_ends_poll < 1.0:
 		return
 	_loose_ends_poll = 0.0
+	# Wiki entries unlock from anywhere; the buttons catch up once a second.
+	var unread := WikiType.unread_count()
+	if unread != _wiki_unread_seen:
+		_wiki_unread_seen = unread
+		refresh_wiki_button()
 	var root := get_tree().current_scene
 	if root == null or not root.has_method("premise_main_story_threads"):
 		return

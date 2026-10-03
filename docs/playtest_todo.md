@@ -708,3 +708,7 @@ through the marked gate and flies you in):
       boost; it fades out when you dock and in the jump tunnel. It's a
       generated placeholder (`tools/generate_engine_loop.py`): too loud,
       too quiet, wrong character? Say so.
+- [ ] **Wiki: new entries flash.** When a new wiki entry unlocks, a gold
+      "WIKI · N NEW" button appears under Inventory / Star Map and pulses;
+      clicking it opens the wiki. Esc > WIKI pulses too. Reading the new
+      entries makes both go quiet.
