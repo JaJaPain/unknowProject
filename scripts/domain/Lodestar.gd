@@ -92,3 +92,141 @@ static func last_bearing_text(s: Dictionary) -> String:
 	if found.is_empty() or card.is_empty():
 		return ""
 	return str(card["bearings"][int(found[-1])]["text"])
+
+
+# --- Seasons, the pin and the arrival (core loop step 12, plan 4.5) ----------
+#
+# More state keys: "season" (1 for the first Lodestar), "start_depth" and
+# "target_depth" (seasons 2+), "pinned_system" / "pinned_gate" (set when the
+# last bearing marks it), "past" ([{id, season, system}], one per Lodestar
+# reached; the next card is drawn from the rest of the deck).
+
+## Credits the place gives, per season.
+const REWARD_PER_SEASON := 2000
+## Each later Lodestar is at least this many systems deeper than the last.
+const SEASON_DEPTH_STEP := 7
+## ...and at least this far past where the Captain stands when it's drawn.
+const MIN_DEPTH_AHEAD := 6
+
+
+static func season(s: Dictionary) -> int:
+	return maxi(1, int(s.get("season", 1)))
+
+
+## The depth this season's Lodestar lies at (or beyond).
+static func target_depth(s: Dictionary) -> int:
+	return int(s.get("target_depth", TARGET_DEPTH + SEASON_DEPTH_STEP * (season(s) - 1)))
+
+
+## The gate class past which it lies, for the map ("Class VI gates").
+static func target_class(s: Dictionary) -> int:
+	return preload("res://scripts/domain/GateClass.gd").class_for_depth(target_depth(s))
+
+
+## Can bearing `index` be found at this depth? The first season keeps step
+## 10's rule (bearing N in a Class N+2 system); later seasons spread the five
+## bearings evenly between where the season began and the Lodestar.
+static func bearing_ready(s: Dictionary, index: int, depth: int) -> bool:
+	if season(s) <= 1:
+		var GateClassType := preload("res://scripts/domain/GateClass.gd")
+		return GateClassType.class_for_depth(depth) >= bearing_class(index)
+	return depth >= bearing_depth(s, index)
+
+
+## Seasons 2+: the depth bearing `index` waits for.
+static func bearing_depth(s: Dictionary, index: int) -> int:
+	var start := int(s.get("start_depth", 0))
+	var span := maxi(BEARINGS, target_depth(s) - 1 - start)
+	return start + int(round(float(index + 1) * span / BEARINGS))
+
+
+## Which way the wedge points. The first season keeps step 9's angle; each
+## later one points somewhere new.
+static func season_wedge_angle(campaign_seed: int, s: Dictionary) -> float:
+	if season(s) <= 1:
+		return wedge_angle(campaign_seed)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("lodestar_angle:%d:%d" % [campaign_seed, season(s)])
+	return deg_to_rad(rng.randf_range(-60.0, 240.0))
+
+
+static func is_pinned(s: Dictionary) -> bool:
+	return not str(s.get("pinned_system", "")).is_empty()
+
+
+## The last bearing marks the system: choose one of the gates out of here.
+## `gates`: [{gate_id, dest, dest_depth, visited, withheld}]. Deeper beats
+## shallower, unvisited beats visited, a gate Kaelen is holding back is never
+## chosen (its sale is her story). {} when none fits.
+static func pick_pin(gates: Array, here_depth: int) -> Dictionary:
+	var best := {}
+	var best_score := -1
+	for g in gates:
+		if bool(g.get("withheld", false)) or str(g.get("dest", "")).is_empty():
+			continue
+		if int(g.get("dest_depth", -1)) <= here_depth:
+			continue
+		var score := 2 if not bool(g.get("visited", false)) else 1
+		if score > best_score:
+			best = g
+			best_score = score
+	return best
+
+
+static func pin(s: Dictionary, system_id: String, gate_id: String) -> void:
+	s["pinned_system"] = system_id
+	s["pinned_gate"] = gate_id
+
+
+## The scene the place plays when the Captain reaches it (authored per card).
+static func arrival_scene(s: Dictionary) -> Dictionary:
+	var scene = card_of(s).get("arrival_scene", {})
+	return scene if scene is Dictionary else {}
+
+
+static func reward_credits(s: Dictionary) -> int:
+	return REWARD_PER_SEASON * season(s)
+
+
+## Reached: the season closes and a new Lodestar is drawn further out, from
+## the cards not yet reached this campaign (the deck starts over once every
+## card has been). Returns the new state; it starts unheard-of.
+static func next_season(story_state: Dictionary, campaign_seed: int, here_depth: int) -> Dictionary:
+	var old: Dictionary = story_state.get(STATE_KEY, {})
+	var past: Array = (old.get("past", []) as Array).duplicate()
+	past.append({"id": str(old.get("id", "")), "season": season(old), "system": str(old.get("pinned_system", ""))})
+	var used := {}
+	for p in past:
+		used[str(p["id"])] = true
+	var pool: Array = []
+	for card in deck():
+		if not used.has(str(card["id"])):
+			pool.append(card)
+	if pool.is_empty():
+		for card in deck():
+			if str(card["id"]) != str(old.get("id", "")):
+				pool.append(card)
+	var new_season := season(old) + 1
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("lodestar:%d:%d" % [campaign_seed, new_season])
+	var card: Dictionary = pool[rng.randi() % pool.size()] if not pool.is_empty() else {}
+	var target := maxi(TARGET_DEPTH + SEASON_DEPTH_STEP * (new_season - 1), here_depth + MIN_DEPTH_AHEAD)
+	var fresh := {
+		"id": str(card.get("id", "")), "known": false, "bearings": [], "season": new_season,
+		"start_depth": here_depth, "target_depth": target, "past": past,
+	}
+	story_state[STATE_KEY] = fresh
+	return fresh
+
+
+## The gate class where bearing `index` turns up, for the log.
+static func bearing_class_for(s: Dictionary, index: int) -> int:
+	if season(s) <= 1:
+		return bearing_class(index)
+	return preload("res://scripts/domain/GateClass.gd").class_for_depth(bearing_depth(s, index))
+
+
+## The Lodestars reached so far this campaign, oldest first: [{id, season, system}].
+static func past(s: Dictionary) -> Array:
+	var p = s.get("past", [])
+	return p if p is Array else []

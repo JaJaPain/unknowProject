@@ -14,7 +14,19 @@
 				{"text": "The beacon's own course corrections point back at itself: follow them in reverse and they converge.", "nova": "It's telling every ship where to go, and where it is, in the same breath. Clever."},
 				{"text": "The corrections converge on one system past the edge of the charts. The Lighthouse is there.", "nova": "That's it. That's where it's been shouting from all this time."}
 			],
-			"arrival": "The clan's elder trades the old network map for news of the gates the Captain has crossed. The map shows the next horizon."
+			"arrival": "The clan's elder trades the old network map for news of the gates the Captain has crossed. The map shows the next horizon.",
+			"arrival_scene": {
+				"landmark": "beacon",
+				"speaker": "THE LIGHTHOUSE",
+				"approach": "There it is. A beacon tower, still lit. Take us in close, Captain.",
+				"lines": [
+					"Unregistered ship, you're the first to follow our corrections all the way in for a long time. Welcome to the Lighthouse.",
+					"My family has kept this light burning for six generations. We trade in news. Tell us which gates you've crossed, and we'll tell you where they go.",
+					"That's a fair trade. Here's a copy of our old network map. Most of it is roads nobody drives any more. Not all of it."
+				],
+				"nova": "An old map that still works, from people who kept a light on for strangers. I think I like it out here.",
+				"farewell": "Before you go: there's something on the far edge of our map we never dared to chase. Maybe you will."
+			}
 		},
 		{
 			"id": "silent_fleet",
@@ -29,7 +41,19 @@
 				{"text": "Someone out there buys medicine and seed stock through brokers, always paying in very old coin.", "nova": "They're alive. And careful. And running low on things you can't grow."},
 				{"text": "The brokers' deliveries all go to one quiet system past the edge of the charts. The fleet is there.", "nova": "Found them. Let's be gentle about it. They went to a lot of trouble not to be found."}
 			],
-			"arrival": "The fleet's settlement, wary but polite. They ask the Captain to keep their secret, and offer something rare in return."
+			"arrival": "The fleet's settlement, wary but polite. They ask the Captain to keep their secret, and offer something rare in return.",
+			"arrival_scene": {
+				"landmark": "fleet",
+				"speaker": "THE SILENT FLEET",
+				"approach": "Ships. Dozens of them, all dark, all parked in neat rows. Slowly, Captain.",
+				"lines": [
+					"Hold your position, stranger. You followed the brokers' trail. Not many people bother.",
+					"Our grandparents switched off their transponders to get away from a war. We'd like to stay switched off.",
+					"Keep this place off your charts and we'll call it even. Take this for the trouble: seed stock and ship parts, the old good kind."
+				],
+				"nova": "Forty ships of families, and they're fine. They're actually fine. I'm keeping their secret, Captain. You should too.",
+				"farewell": "One more thing. Our scouts heard something further out. We didn't go and look. You look like the type who would."
+			}
 		},
 		{
 			"id": "humming_gate",
@@ -44,7 +68,19 @@
 				{"text": "Two factions are quietly buying gate parts in bulk, both shipping them the same way.", "nova": "Nobody buys that many gate parts unless they're planning to fix a lot of gates. Or own the one that can."},
 				{"text": "The hum is loudest at one system past the edge of the charts. The Humming Gate is there.", "nova": "That's the one. Listen to it. It sounds healthy. I didn't know they could."}
 			],
-			"arrival": "The ring itself, perfect and quiet, with two factions' ships already circling. Who gets it is the next season's question."
+			"arrival": "The ring itself, perfect and quiet, with two factions' ships already circling. Who gets it is the next season's question.",
+			"arrival_scene": {
+				"landmark": "ring",
+				"speaker": "THE HUMMING GATE",
+				"approach": "Listen to that. It's humming in tune. Every other ring I've ever heard sounds like a sick engine.",
+				"lines": [
+					"This is a survey picket. You're in a restricted system. Then again, so are we, and we didn't ask either.",
+					"That ring hasn't missed a beat since before anyone kept records. Every gate tech alive would give a hand to study it.",
+					"Two factions are already circling. You got here first, so you get the readings. Use them before somebody decides they own the sky."
+				],
+				"nova": "A perfect ring. I'm recording the hum, Captain. If the other gates ever need tuning, I know what they should sound like.",
+				"farewell": "The readings point somewhere. The ring was tuned by something further out, and it's still out there."
+			}
 		},
 		{
 			"id": "cartographer",
@@ -59,7 +95,19 @@
 				{"text": "The scratched-out name survives in an old fuel log: the surveyor refuelled there twice.", "nova": "Twice. So it's real, and you can get back from it."},
 				{"text": "The fuel log's coordinates match one system past the edge of the charts. The circled system is there.", "nova": "There it is. Let's go and see what was worth erasing."}
 			],
-			"arrival": "The erased system: a consortium's secret mine, and the surveyor's route beyond it. The Captain decides who learns it exists."
+			"arrival": "The erased system: a consortium's secret mine, and the surveyor's route beyond it. The Captain decides who learns it exists.",
+			"arrival_scene": {
+				"landmark": "survey",
+				"speaker": "THE CIRCLED SYSTEM",
+				"approach": "The surveyor's station. Still standing, mostly. Let's see what they found.",
+				"lines": [
+					"Automated survey log, recovered. Last entry: the belts here are richer than anything on the registry. And there's a route beyond them.",
+					"Second entry, different hand: consortium claim. System removed from the public registry. Mining under seal.",
+					"Third entry, the surveyor again: if you're reading this, the chart got out. Good. Finish the route for me."
+				],
+				"nova": "They erased a whole system to keep it for themselves. And one stubborn surveyor said no. I wish we'd met them.",
+				"farewell": "The surveyor's last route runs on, past the edge of this chart. They never got to the end of it."
+			}
 		},
 		{
 			"id": "garden",
@@ -74,7 +122,19 @@
 				{"text": "Mining consortiums have been asking about the hauler family. Not kindly.", "nova": "And now the miners have noticed. Of course they have."},
 				{"text": "The hauler family's routes all end at one system past the edge of the charts. The Garden is there.", "nova": "Found it. Let's get there before the people with drills do."}
 			],
-			"arrival": "The Garden: a green world and its quiet keepers, and the mining fleet two jumps behind. What the Captain does next shapes the season."
+			"arrival": "The Garden: a green world and its quiet keepers, and the mining fleet two jumps behind. What the Captain does next shapes the season.",
+			"arrival_scene": {
+				"landmark": "garden",
+				"speaker": "THE GARDEN",
+				"approach": "Captain. It's green. An actual green world, out here. I didn't believe the haulers.",
+				"lines": [
+					"You found us. Please don't land, the ground is fragile. We can talk from orbit.",
+					"Our founders were botanists. A quirk of this world's orbit keeps it warm, and we've kept it off every map so it stays that way.",
+					"There's a mining fleet two jumps behind you, asking about the ice haulers' routes. Take these seeds. If anyone asks, you found nothing."
+				],
+				"nova": "A garden, Captain. A whole living world. Let's not be the reason someone puts a drill in it.",
+				"farewell": "The keepers say the haulers' oldest routes go further still. Not everything out there is dead."
+			}
 		},
 		{
 			"id": "quiet_war",
@@ -89,7 +149,19 @@
 				{"text": "The salvage gets newer, and better, the deeper it was found. The wrecks were guarding something.", "nova": "The closer to the middle, the better the ships. They put their best around whatever it was."},
 				{"text": "The wreck fields thicken around one system past the edge of the charts. The battlefield is there.", "nova": "That's the battlefield. Fly carefully. Some of those wrecks may still have opinions."}
 			],
-			"arrival": "The silent battlefield and what it guarded. Both factions' salvagers arrive within days, and they remember everything."
+			"arrival": "The silent battlefield and what it guarded. Both factions' salvagers arrive within days, and they remember everything.",
+			"arrival_scene": {
+				"landmark": "wrecks",
+				"speaker": "THE QUIET WAR",
+				"approach": "Wrecks. Hundreds of them, still in formation. Nobody ever cleaned this up.",
+				"lines": [
+					"Automated defence picket. Combat is over. Combat has been over for a very long time. Please state your faction.",
+					"Neither side? Acknowledged. The cache was never claimed. Both sides agreed to forget it existed.",
+					"Releasing salvage rights to the first neutral vessel. Message ends. Picket shutting down. Thank you for coming."
+				],
+				"nova": "A whole war that both sides decided to forget, and a machine that waited all this time to hand over the keys. That's the saddest thing I've ever seen.",
+				"farewell": "The picket's last log points further out. Something there was worth starting a war over, too."
+			}
 		}
 	]
 }

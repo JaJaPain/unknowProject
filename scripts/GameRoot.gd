@@ -348,6 +348,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_route_smoke_test")
 	elif "--gas-giant-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_gas_giant_snapshot")
+	elif "--lodestar-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_lodestar_smoke_test")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -11496,6 +11498,131 @@ func _fail_jump_smoke_test(message: String) -> void:
 	push_error("[JumpSmokeTest] FAIL: " + message)
 	delete_savegame()
 	get_tree().quit(1)
+
+
+## Core loop step 12: a save with every bearing found. The last bearing marks
+## a gate out of here, the ship jumps through it, the place is on the
+## overview, flying in plays its scene and the season rolls over.
+##   -- --lodestar-smoke-test --baseline-offline [--lodestar-snapshot]
+## With --lodestar-snapshot (windowed), it also saves a picture of the place.
+func _run_lodestar_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	var fail := func(message: String) -> void:
+		push_error("[LodestarSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	_initialize_campaign_registry()
+	StoryManager.clear_story_state()
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) or not _ensure_campaign_checkpoint_store(prepared["data"]):
+		fail.call("Could not create a campaign checkpoint store.")
+		return
+	_refresh_gate_states()
+	var Lodestar = load("res://scripts/domain/Lodestar.gd")
+	StoryManager.story_state["first_contract_handed_in"] = true
+	StoryManager.story_state[Lodestar.STATE_KEY] = {"id": "lighthouse", "known": true, "bearings": [0, 1, 2, 3, 4]}
+	# 1. The last bearing marks a gate out of here.
+	if not lodestar_guide.try_pin():
+		fail.call("Nothing was pinned with every bearing found.")
+		return
+	var s: Dictionary = lodestar_guide.current()
+	var gate_id := str(s["pinned_gate"])
+	print("[LodestarSmokeTest] pinned ", s["pinned_system"], " via ", gate_id, " (", GateDiscovery.get_gate_state(gate_id), ")")
+	if GateDiscovery.get_gate_state(gate_id) != "known":
+		fail.call("The marked gate isn't on the charts.")
+		return
+	# 2. Through it.
+	var gate: Node3D = null
+	for g in get_tree().get_nodes_in_group("jumpgate"):
+		if str(g.call("get_world_id")) == gate_id or str(g.get("gate_id")) == gate_id:
+			gate = g
+	if gate == null:
+		gate = _find_gate(get_active_system_root(), "start_to_test")
+	_refresh_gate_states()
+	_position_player_for_gate_test(gate)
+	if get_jump_block_reason(gate) != "" or not request_gate_jump(gate):
+		fail.call("Could not jump through the marked gate: %s" % get_jump_block_reason(gate))
+		return
+	await system_changed
+	for i in 30:
+		await get_tree().process_frame
+	if str(system_registry.resolve_system_id(GlobalState.current_system_id)) != str(s["pinned_system"]):
+		fail.call("Jumped to %s, not the marked %s." % [GlobalState.current_system_id, s["pinned_system"]])
+		return
+	# 3. The place is there (the guide polls once a second).
+	CombatManager.set("state", 0)
+	var place: Node3D = null
+	for i in 180:
+		await get_tree().process_frame
+		var found := get_tree().get_nodes_in_group("lodestar")
+		if not found.is_empty():
+			place = found[0]
+			break
+	if place == null:
+		fail.call("The Lodestar didn't appear in its system.")
+		return
+	if not GlobalState.active_system_entities.has(place):
+		fail.call("The Lodestar isn't on the overview.")
+		return
+	print("[LodestarSmokeTest] the place: ", place.get("display_name"), " (", place.get("kind"), ") at ", place.global_position)
+	if "--lodestar-snapshot" in OS.get_cmdline_user_args():
+		await _lodestar_snapshot(place)
+	# 4. Fly in: the scene, the reward, the next season.
+	var credits_before := int(GlobalState.player_credits)
+	player.global_position = place.global_position + Vector3(0, 0, 700)
+	player.velocity = Vector3.ZERO
+	for i in 180:
+		await get_tree().process_frame
+		if Lodestar.season(lodestar_guide.current()) == 2:
+			break
+	var now: Dictionary = lodestar_guide.current()
+	if Lodestar.season(now) != 2 or str(now["id"]) == "lighthouse":
+		fail.call("Reaching it didn't roll the season: %s" % str(now))
+		return
+	if int(GlobalState.player_credits) - credits_before != Lodestar.REWARD_PER_SEASON:
+		fail.call("The place paid %d." % (int(GlobalState.player_credits) - credits_before))
+		return
+	if _get_branch_map_for_smoke()._lodestar_title_at(str(system_registry.resolve_system_id(GlobalState.current_system_id))) != "The Lighthouse":
+		fail.call("The star map doesn't ring the reached place.")
+		return
+	print("[LodestarSmokeTest] next: ", now["id"], " season ", now["season"], " depth ", now["target_depth"])
+	print("[LodestarSmokeTest] PASS")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+## The place, from a camera off to one side (windowed).
+func _lodestar_snapshot(place: Node3D) -> void:
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var cam := Camera3D.new()
+	cam.far = 20000.0
+	get_active_system_root().add_child(cam)
+	var kinds := ["beacon", "fleet", "ring", "survey", "garden", "wrecks"]
+	for kind in kinds:
+		var mark = load("res://scripts/story/LodestarLandmark.gd").new()
+		mark.kind = kind
+		get_active_system_root().add_child(mark)
+		mark.global_position = place.global_position + Vector3(0, 3000, 0)
+		place.visible = false
+		cam.global_position = mark.global_position + Vector3(700, 260, 1000)
+		cam.look_at(mark.global_position)
+		cam.make_current()
+		for i in 20:
+			await get_tree().process_frame
+		var path := ProjectSettings.globalize_path("res://.tmp_godot_user/lodestar_%s.png" % kind)
+		await _hud_snapshot_save(path)
+		print("[LodestarSmokeTest] snapshot ", path)
+		mark.queue_free()
+	place.visible = true
+	cam.queue_free()
+	if ui != null:
+		ui.visible = true
 
 func _run_save_smoke_assertions() -> bool:
 	var safe_source := campaign_checkpoint_store.runtime_state_from_active()

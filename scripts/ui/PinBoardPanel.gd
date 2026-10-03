@@ -123,7 +123,10 @@ func _render_lodestar() -> void:
 	_title.text = "LODESTAR LOG"
 	var found := int(_lodestar.get("found", 0))
 	var total := int(_lodestar.get("total", 5))
-	if found >= total:
+	var marked := str(_lodestar.get("marked", ""))
+	if found >= total and not marked.is_empty():
+		_header.text = "%s. Every bearing found. It's in %s: fly there and find it (gold ring on the star map)." % [str(_lodestar.get("title", "")), marked]
+	elif found >= total:
 		_header.text = "%s. Every bearing found: it's marked on the star map." % str(_lodestar.get("title", ""))
 	else:
 		_header.text = "%s. Bearings %d of %d. The next can turn up past the Class %s gates: any receiver, drone dive, anomaly, investigation or lead of Kaelen's there." % [
@@ -132,6 +135,9 @@ func _render_lodestar() -> void:
 	var bearings: Array = _lodestar.get("bearings", [])
 	for i in bearings.size():
 		_rows.add_child(_log_row("Bearing %d" % (i + 1), str(bearings[i])))
+	# Lodestars already reached this campaign (core loop step 12).
+	for r in _lodestar.get("reached", []):
+		_rows.add_child(_log_row("Reached, season %d" % int(r.get("season", 1)), str(r.get("title", ""))))
 
 
 func _log_row(heading: String, text: String) -> Control:

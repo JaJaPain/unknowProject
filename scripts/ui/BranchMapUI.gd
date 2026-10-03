@@ -461,6 +461,19 @@ func _draw() -> void:
 			draw_arc(pos, NODE_RADIUS + 10, 0, TAU, 32, Color(0.85, 0.5, 1.0, 0.85), 2.5)
 			draw_arc(pos, NODE_RADIUS + 14, 0, TAU, 32, Color(0.85, 0.5, 1.0, 0.35), 1.5)
 
+		# The Lodestar's system once marked, and every one already reached
+		# (core loop step 12): a gold ring and its name.
+		var lodestar_title := _lodestar_title_at(sys_id)
+		if not lodestar_title.is_empty():
+			var gold := Color(1.0, 0.82, 0.45)
+			var pulse := 0.75 + 0.25 * sin(Time.get_ticks_msec() / 600.0)
+			draw_arc(pos, NODE_RADIUS + 8, 0, TAU, 32, Color(gold, 0.9 * pulse), 3.0)
+			draw_arc(pos, NODE_RADIUS + 14, 0, TAU, 32, Color(gold, 0.35 * pulse), 1.5)
+			var font := get_theme_default_font()
+			var label := lodestar_title.to_upper()
+			var label_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+			draw_string(font, pos + Vector2(-label_size.x / 2.0, -NODE_RADIUS - 20), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, gold)
+
 		if planned_route.size() >= 2:
 			var is_dest: bool = sys_id == planned_route[-1]
 			var on_route: bool = sys_id in planned_route and not is_current
@@ -606,7 +619,8 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 		var s := _lodestar_state()
 		var card: Dictionary = LodestarScript.card_of(s)
 		var found := LodestarScript.bearings_found(s)
-		var text := "[color=#ffd273]%s[/color]\n%s\nSomewhere past the edge of the charts (Class VI gates)." % [str(card["title"]), str(card["first_hint"])]
+		var GateClassType = load("res://scripts/domain/GateClass.gd")
+		var text := "[color=#ffd273]%s[/color]\n%s\nSomewhere past the edge of the charts (Class %s gates)." % [str(card["title"]), str(card["first_hint"]), GateClassType.class_name_of(LodestarScript.target_class(s))]
 		text += "\nBearings: %d of %d" % [found, LodestarScript.BEARINGS]
 		var last := LodestarScript.last_bearing_text(s)
 		if not last.is_empty():
@@ -622,6 +636,17 @@ func _update_hover_tooltip(hover_pos: Vector2) -> void:
 
 
 # --- The Lodestar wedge (core loop step 9) -------------------------------------
+
+## The Lodestar marked or reached at this system, or "" (core loop step 12).
+func _lodestar_title_at(sys_id: String) -> String:
+	var s: Dictionary = LodestarScript.state(StoryManager.story_state, int(GlobalState.campaign_seed))
+	if str(s.get("pinned_system", "")) == sys_id and bool(s.get("known", false)):
+		return str(LodestarScript.card_of(s).get("title", ""))
+	for p in LodestarScript.past(s):
+		if str(p.get("system", "")) == sys_id:
+			return str(LodestarScript.by_id(str(p.get("id", ""))).get("title", ""))
+	return ""
+
 
 ## The campaign's Lodestar state, or {} while the captain hasn't heard of it.
 func _lodestar_state() -> Dictionary:
@@ -662,7 +687,7 @@ func _lodestar_hit(p: Vector2) -> bool:
 	if q.length() < LODESTAR_INNER_FRAC or q.length() > 1.0:
 		return false
 	var half := deg_to_rad(maxf(LodestarScript.wedge_degrees(LodestarScript.bearings_found(s)), 10.0)) / 2.0
-	return absf(wrapf(q.angle() - LodestarScript.wedge_angle(int(GlobalState.campaign_seed)), -PI, PI)) <= half
+	return absf(wrapf(q.angle() - LodestarScript.season_wedge_angle(int(GlobalState.campaign_seed), s), -PI, PI)) <= half
 
 
 ## A faint gold wedge at the edge of the map: roughly which way. Each bearing
@@ -672,7 +697,10 @@ func _draw_lodestar() -> void:
 	if s.is_empty():
 		return
 	var band := _lodestar_band()
-	var angle := LodestarScript.wedge_angle(int(GlobalState.campaign_seed))
+	# Marked and on the map (core loop step 12): the ring on its system says it.
+	if system_nodes.has(str(s.get("pinned_system", ""))):
+		return
+	var angle := LodestarScript.season_wedge_angle(int(GlobalState.campaign_seed), s)
 	var width := deg_to_rad(LodestarScript.wedge_degrees(LodestarScript.bearings_found(s)))
 	var gold := Color(1.0, 0.82, 0.45)
 	var pulse := 0.75 + 0.25 * sin(Time.get_ticks_msec() / 600.0)

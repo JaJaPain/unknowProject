@@ -3861,6 +3861,8 @@ func update_overview_list(entities: Array):
 					type_str = faction_upper + " Combat Vessel"
 			elif entity.is_in_group("wreckage"):
 				type_str = "Wreckage"
+			elif entity.is_in_group("lodestar"):
+				type_str = "Lodestar"
 			elif entity.is_in_group("anomaly"):
 				# Resolved anomalies earn their real name in the overview too, so a
 				# place the player has already been reads as known rather than
@@ -3896,6 +3898,8 @@ func update_overview_list(entities: Array):
 				row_color = Color(1.0, 0.27, 0.22)   # Mission hunt target red
 			elif type_str == "Anomaly":
 				row_color = Color(1.0, 0.78, 0.1)     # Amber — unknown contact
+			elif type_str == "Lodestar":
+				row_color = Color(1.0, 0.82, 0.45)    # The Lodestar's gold
 			else:
 				row_color = Color(1.0, 1.0, 1.0)      # Default white for ships, wreckage etc.
 			if row_color != Color(1.0, 1.0, 1.0):
@@ -8499,9 +8503,18 @@ func lodestar_log() -> Dictionary:
 	for index in s.get("bearings", []):
 		texts.append(str(card["bearings"][int(index)]["text"]))
 	var found: int = Lodestar.bearings_found(s)
+	# Where it's marked, and the ones already reached (core loop step 12).
+	var marked := ""
+	var registry = get_tree().current_scene.get("system_registry") if get_tree().current_scene != null else null
+	if Lodestar.is_pinned(s):
+		var def = registry.get_system(str(s["pinned_system"])) if registry != null else null
+		marked = str(def.display_name) if def != null else "on the star map"
+	var reached: Array = []
+	for p in Lodestar.past(s):
+		reached.append({"title": str(Lodestar.by_id(str(p.get("id", ""))).get("title", "")), "season": int(p.get("season", 1))})
 	return {"title": str(card["title"]), "first_hint": str(card["first_hint"]), "bearings": texts,
-		"found": found, "total": Lodestar.BEARINGS,
-		"next_class": load("res://scripts/domain/GateClass.gd").class_name_of(Lodestar.bearing_class(found))}
+		"found": found, "total": Lodestar.BEARINGS, "marked": marked, "reached": reached,
+		"next_class": load("res://scripts/domain/GateClass.gd").class_name_of(Lodestar.bearing_class_for(s, mini(found, Lodestar.BEARINGS - 1)))}
 
 
 ## Shows one premise-arc decision (a finding to report, or a story choice)

@@ -617,3 +617,35 @@ These are deliberately rare; you won't hear them all in one session.
       her other work comes back, and when you next buy routes from her, the
       gate that was missing is for sale at her usual price, with a line
       hinting you had something to do with it opening (once).
+
+## R. Reaching the Lodestar (added 2026-10-02, core loop step 12)
+
+Reaching it in normal play takes a long campaign. To see it now, run the
+smoke test windowed (it sets up a save with every bearing found, jumps you
+through the marked gate and flies you in):
+`Godot_v4.6.3-stable_win64_console.exe --path . -- --lodestar-smoke-test --lodestar-snapshot --baseline-offline`
+(pictures of all six places land in .tmp_godot_user/lodestar_*.png).
+
+- [ ] **The last bearing marks it.** When the fifth bearing turns up, the
+      feed says "<Lodestar> is marked on the star map: <system>, through a
+      gate out of this system". That gate is now on your charts (free).
+      Star map: the wedge is gone and that system has a pulsing gold ring
+      with the Lodestar's name above it.
+- [ ] **Loose ends board > Lodestar log** says which system it's in.
+- [ ] **Arriving.** Jump into that system: N.O.V.A. says a line about seeing
+      it (e.g. "There it is. A beacon tower, still lit."), and the overview
+      lists it in gold as **Lodestar**. It never drops off the overview.
+- [ ] **Flying in.** Fly toward it: within about 900 m a gold
+      "<NAME> · REACHED" banner (+2000 SC, Season 1 complete), then the
+      place speaks in the feed, a line every few seconds, then N.O.V.A.
+      reacts, then a last line pointing further out.
+- [ ] **Does it look like a place?** Each Lodestar has its own landmark
+      (beacon tower, parked fleet, perfect ring, survey station, green
+      world, wreck field). Simple shapes for now: say which ones need an
+      art pass first.
+- [ ] **The next season.** About a minute later, N.O.V.A. starts a new
+      rumour ("Here we go again, Captain." + the next Lodestar's first
+      hint) and a new gold wedge appears on the star map, pointing
+      somewhere else, further out (Class VIII-ish gates).
+- [ ] **It stays.** Fly back to the reached system later: the landmark is
+      still there (no scene this time) and its gold ring stays on the map.

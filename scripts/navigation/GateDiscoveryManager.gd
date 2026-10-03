@@ -338,6 +338,22 @@ func _find_active_gate(
 	return null
 
 
+## Put a gate on the charts for free (the Lodestar's last bearing marks its
+## gate, core loop step 12). True if it changed.
+func mark_known(gate_id: String) -> bool:
+	var store := _get_store()
+	if store == null:
+		return false
+	var current_state := store.get_gate_state(gate_id)
+	if current_state == "known":
+		return false
+	_ensure_destination_generated(gate_id)
+	if not store.set_gate_knowledge(gate_id, "known"):
+		return false
+	gate_state_changed.emit(gate_id, current_state, "known")
+	return true
+
+
 func _get_store() -> CampaignCheckpointStore:
 	var game_root := _get_game_root()
 	if game_root and game_root.has_method("get_checkpoint_store"):

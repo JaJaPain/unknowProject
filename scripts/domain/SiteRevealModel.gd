@@ -22,7 +22,7 @@ const SIZE_SMALL := "small"   ## Ships, wrecks, containers.
 const SIZE_TINY := "tiny"     ## Gates the player has not found yet.
 
 ## Groups whose objects are landmarks.
-const LARGE_GROUPS := ["station", "celestial"]
+const LARGE_GROUPS := ["station", "celestial", "lodestar"]
 
 ## A gate the player KNOWS is a landmark: it is how they leave, and a route that
 ## vanishes because you drifted away from it is a navigation failure, not an
