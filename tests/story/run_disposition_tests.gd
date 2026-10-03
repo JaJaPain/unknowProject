@@ -30,6 +30,11 @@ func _initialize() -> void:
 	_check(gs.faction_disposition("zenith") == "hostile", "a major that hates you: hostile")
 	gs.reputations = saved_reps
 
+	# Registry ids to runtime keys (finding 11: every generated faction became "generated").
+	_check(gs.faction_runtime_key("faction.zenith") == "zenith", "faction.zenith -> zenith")
+	_check(gs.faction_runtime_key("faction.generated.89d3b557db62.f2") == "gen_89d3b557db62_f2", "a generated id -> its gen_ key")
+	_check(gs.faction_runtime_key("gen_89d3b557db62_f2") == "gen_89d3b557db62_f2", "a gen_ key stays")
+
 	# Ships: roles and provocation.
 	var scene := load(NPC_SCENE) as PackedScene
 	var hauler: Node3D = _ship(scene, "gen_pilgrim_fleet_01", "Logistics")

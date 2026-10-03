@@ -11910,7 +11910,7 @@ func _get_current_system_faction_ids() -> Array[String]:
 	for sys_def in registry.get_all_systems():
 		if sys_def.legacy_id == sys_id or str(sys_def.id) == sys_id:
 			for fid in sys_def.faction_ids:
-				result.append(str(fid).get_slice(".", 1))
+				result.append(GlobalState.faction_runtime_key(str(fid)))
 			break
 	return result
 

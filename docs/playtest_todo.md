@@ -724,3 +724,7 @@ through the marked gate and flies you in):
 - [ ] **T works near peaceful ships.** With only territorial/peaceful
       ships around, the receiver works. Near a hostile it says which ship
       and how far ("Hostile close (Reaver Raider, 820 m)").
+- [ ] **Rep row in frontier systems.** Jump out of the start system: the
+      REP row shows each local faction's own short name (e.g. "REN 0 | ANK 0
+      | ESH 0"), not "GEN 0" three times; hover for the full name. The star
+      map detail panel lists their names.

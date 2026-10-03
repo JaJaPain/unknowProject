@@ -31,7 +31,8 @@ const TERRITORIAL_STRIKE := 120.0
 const TERRITORIAL_PATIENCE_S := 10.0
 const TERRITORIAL_LEASH := 400.0
 const PLAIN_LEASH := 150.0
-var _perimeter_since_msec := -1
+var _perimeter_since_msec := 0
+var _in_perimeter := false
 var _perimeter_hailed := false
 var taunted_player: bool = false
 var ceasefire: bool = false
@@ -1195,10 +1196,11 @@ func _record_persistent_state() -> void:
 ## to engage.
 func _territorial_engage(dist_to_player: float, notice_mult: float) -> bool:
 	if dist_to_player > TERRITORIAL_WARN * notice_mult:
-		_perimeter_since_msec = -1
+		_in_perimeter = false
 		return false
 	var now := Time.get_ticks_msec()
-	if _perimeter_since_msec < 0:
+	if not _in_perimeter:
+		_in_perimeter = true
 		_perimeter_since_msec = now
 	if not _perimeter_hailed:
 		_perimeter_hailed = true

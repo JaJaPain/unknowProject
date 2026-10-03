@@ -11674,6 +11674,16 @@ func _run_quest_reach_smoke_test() -> void:
 		await get_tree().process_frame
 	CombatManager.set("state", 0)
 	var ui = GlobalState.get_ui_manager()
+	# Finding 11: the HUD's rep row names this system's own factions.
+	var local_ids: Array = ui._get_current_system_faction_ids()
+	ui._update_hud_reputations()
+	var abbrevs := {}
+	for id in local_ids:
+		abbrevs[str(GlobalState.faction_info(str(id)).get("abbrev", ""))] = true
+	print("[QuestReachSmokeTest] local factions: ", local_ids, " ", abbrevs.keys())
+	if local_ids.has("generated") or abbrevs.has("GEN") or (local_ids.size() > 1 and abbrevs.size() < 2):
+		fail.call("The rep row doesn't show this system's own factions: %s %s" % [local_ids, abbrevs.keys()])
+		return
 	# 1. The board posts a pickup at one of this system's outposts.
 	var Builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
 	var offer := {}

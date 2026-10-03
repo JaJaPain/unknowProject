@@ -308,6 +308,18 @@ const TERRITORIAL_REP := -10.0
 const CIVILIAN_ROLES := ["Logistics", "MiningHauler"]
 
 
+## The key a faction goes by at runtime (ships, reputations, faction_info)
+## from a registry id: "faction.zenith" -> "zenith",
+## "faction.generated.89d3b557db62.f2" -> "gen_89d3b557db62_f2". Shortening
+## with get_slice(".", 1) turned every generated faction into "generated"
+## ("GEN 0" three times on the HUD: playtest 2026-10-03 finding 11).
+static func faction_runtime_key(faction_id: String) -> String:
+	var clean := faction_id.strip_edges()
+	if clean.begins_with("faction.generated."):
+		return "gen_" + clean.trim_prefix("faction.generated.").replace(".", "_")
+	return clean.trim_prefix("faction.")
+
+
 static func _faction_key(faction_name: String) -> String:
 	return faction_name.trim_prefix("faction.")
 

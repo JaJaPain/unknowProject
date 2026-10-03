@@ -229,7 +229,7 @@ func _rebuild_map() -> void:
 		var faction_names: Array[String] = []
 		var faction_ids: Array[String] = []
 		for fid in sys_def.faction_ids:
-			var raw: String = str(fid).get_slice(".", 1)
+			var raw: String = GlobalState.faction_runtime_key(str(fid))
 			faction_ids.append(raw)
 			# The player-facing name (generated factions read "Generated" before).
 			faction_names.append(GlobalState.faction_display_name(str(fid)))
@@ -826,7 +826,7 @@ func _show_system_detail(sys_id: String, data: Dictionary, pos: Vector2) -> void
 			if not sys_def.faction_ids.is_empty():
 				var factions: Array[String] = []
 				for fid in sys_def.faction_ids:
-					factions.append(str(fid).get_slice(".", 1).capitalize())
+					factions.append(GlobalState.faction_display_name(GlobalState.faction_runtime_key(str(fid))))
 				text += "\nFactions: %s" % ", ".join(factions)
 	_detail_label.text = text
 	_detail_panel.position = pos + Vector2(15, -10)

@@ -450,7 +450,7 @@ Also today, hostile minors only notice the player within **130 m**
   attacks inside 250 m; the receiver isn't blocked by a territorial ship at
   450 m but is by a Reaver at 800 m; the overview colours.
 
-### 11. HUD rep row in the 2nd system shows "GEN 0 | GEN 0 | GEN 0"
+### 11. **FIXED 2026-10-03** HUD rep row in the 2nd system shows "GEN 0 | GEN 0 | GEN 0"
 
 **Abe (screenshot):** in the second system the REP row reads GEN 0 three
 times. A real rep, or an error?
