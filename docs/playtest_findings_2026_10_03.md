@@ -487,7 +487,7 @@ Same slice in two more places:
   abbreviations with their real reputations; star map detail panel shows
   their names.
 
-### 12. Goal card: tooltips on each row saying how to get it
+### 12. **FIXED 2026-10-03** Goal card: tooltips on each row saying how to get it
 
 **Abe:** add tooltips for goals telling how to get that material or what to
 do.
@@ -750,3 +750,11 @@ What changed:
   makes it fight back.
 - Tests: `run_disposition_tests`; combat, station-combat, mining-risk,
   evasion, autopilot, core, mission, first-session, jump smoke all pass.
+
+#### 12b. Built (2026-10-03)
+Every goal card row has a hover tooltip (`UpgradeGoal.row_tooltip`): credits
+(jobs, Kaelen, ore, survey data), ore (mine, then Bank for upgrades; banked
+vs hold), each material (what it is, what it's for, red rock + G + drone, a
+clean run brings two, drones at station stores), power (MW short, upgrade
+the Powerplant first), "Done." when met. Not done: showing a red rock's
+material before diving (my suggestion, needs Abe's yes).

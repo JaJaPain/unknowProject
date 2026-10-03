@@ -11389,6 +11389,15 @@ func _run_goal_smoke_test() -> void:
 	if Goal.is_ready(GlobalState, goal):
 		fail.call("The goal is ready with nothing in the bank.")
 		return
+	# Finding 12: each row says how to get it.
+	for row in Goal.rows(GlobalState, goal):
+		var tip := str(Goal.row_tooltip(row))
+		if tip.length() < 40 or tip == "Done.":
+			fail.call("Row %s has no how-to tooltip: %s" % [row["id"], tip])
+			return
+		if str(row["id"]) == "rad_quartz" and (not tip.contains("Rad-quartz") or not tip.contains("press G")):
+			fail.call("The rad-quartz tooltip doesn't say what it is and how to get it: %s" % tip)
+			return
 	# 2. Everything in hand: ready.
 	var data: Dictionary = Goal.tier_data(GlobalState, goal)
 	GlobalState.player_credits = int(data["cost_cr"])

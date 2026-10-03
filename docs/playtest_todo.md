@@ -728,3 +728,6 @@ through the marked gate and flies you in):
       REP row shows each local faction's own short name (e.g. "REN 0 | ANK 0
       | ESH 0"), not "GEN 0" three times; hover for the full name. The star
       map detail panel lists their names.
+- [ ] **Goal card tooltips.** Hover each row on the goal card (Credits,
+      Ore, a material, Power when short): it says how to get it and how far
+      along you are; a finished row says "Done."

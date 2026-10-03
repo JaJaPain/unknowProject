@@ -186,6 +186,11 @@ func refresh() -> void:
 		amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		HudStyle.style_label(amount, 12, HudStyle.GOOD if done else HudStyle.TEXT)
 		line.add_child(amount)
+		# Hover a row for how to get it (finding 12).
+		line.tooltip_text = Goal.row_tooltip(row)
+		line.mouse_filter = Control.MOUSE_FILTER_STOP
+		for part in line.get_children():
+			(part as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_rows_box.add_child(line)
 		if not done and first_short.is_empty():
 			first_short = str(row["hint"])

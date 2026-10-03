@@ -119,6 +119,35 @@ static func rows(gs, goal: Dictionary) -> Array:
 	return out
 
 
+## What each material is and where it comes from, for its row's tooltip.
+const MATERIAL_HOW := {
+	"thermal_lattice": "Thermal lattice: a heat-tolerant tech-grade weave, for weapons, engines and power.",
+	"rad_quartz": "Rad-quartz: a radiation-hardened crystal, for shields, sensors and mining gear.",
+	"cryo_ferrite": "Cryo ferrite: a cold-stable iron, for cargo and storage.",
+	"resonant_crystal": "Resonant crystal: the rare top-tier material. It sometimes turns up from a clean drone run with the ore nearly whole.",
+}
+const DRONE_HOW := "Red rocks (tech-grade seams) each hold one of the three tech materials. Target a red rock, fly close, press G and fly the survey drone to a seam. A clean run brings home two. Survey drones are sold at station stores."
+
+
+## The hover text for a goal card row: what it is, how to get it, and how
+## far along you are (Abe, playtest 2026-10-03 finding 12).
+static func row_tooltip(row: Dictionary) -> String:
+	var id := str(row.get("id", ""))
+	var have := int(row.get("have", 0))
+	var need := int(row.get("need", 0))
+	if id != "power" and have >= need:
+		return "Done."
+	match id:
+		"credits":
+			return "Credits: %d of %d.\nTake a job from a station board or from Kaelen, sell ore, or sell survey data from new systems." % [have, need]
+		"ore":
+			return "Ore: %d of %d banked.\nMine any rock (target it, fly close, Mine), then dock and press Bank for upgrades. Banked ore is kept for upgrades; ore in your hold can still be sold." % [have, need]
+		"power":
+			return "Fitting this draws %d MW more than your powerplant gives.\nUpgrade the Powerplant first (you can set it as your goal on the upgrade screen)." % need
+	var what := str(MATERIAL_HOW.get(id, "%s: a tech-grade material." % material_label(id)))
+	return "%s\n%d of %d.\n%s" % [what, have, need, DRONE_HOW]
+
+
 static func material_label(item: String) -> String:
 	return preload("res://scripts/story/activities/DroneMazeActivity.gd").material_name(item)
 
