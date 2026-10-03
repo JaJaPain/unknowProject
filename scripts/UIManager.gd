@@ -40,6 +40,8 @@ var cargo_bar: ProgressBar
 
 var target_panel: PanelContainer
 var target_label: Label
+var target_distance_label: Label
+var _target_last_distance := -1.0
 var target_icon: TextureRect
 var target_action_box: HBoxContainer
 var target_boost_btn: Button
@@ -1113,6 +1115,13 @@ func _create_target_panel():
 	target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	target_label.text = "No Target Selected"
 	target_info_box.add_child(target_label)
+
+	# How far it is, updated every frame (Abe, playtest 2026-10-03 finding 13).
+	target_distance_label = Label.new()
+	target_distance_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	HudStyle.style_label(target_distance_label, 12, HudStyle.DIM)
+	target_distance_label.visible = false
+	vbox.add_child(target_distance_label)
 
 	# The target's condition: hull (and shields, where the target has them).
 	target_bars = VBoxContainer.new()
@@ -4083,7 +4092,7 @@ func _update_overview_distances(delta: float = 999.0):
 					btn.visible = revealed
 				var dist_lbl = btn.get_meta("dist_label_ref")
 				if is_instance_valid(dist_lbl):
-					dist_lbl.text = "  " + str(int(dist)) + "m"
+					dist_lbl.text = "  " + format_distance(dist)
 				
 				# Update label color if attacking player
 				var name_lbl = btn.get_meta("name_label_ref")
@@ -4215,7 +4224,8 @@ func _on_target_changed(new_target: Node3D):
 			type_str = "Asteroid"
 			icon_index = 1
 		elif new_target.is_in_group("station"):
-			type_str = "Station"
+			# Same word as the overview (playtest 2026-10-03 finding 14).
+			type_str = "Outpost" if str(new_target.get("station_type")) == "outpost" else "Station"
 			icon_index = 2
 		elif new_target.is_in_group("jumpgate"):
 			var gate_state: String = new_target.get("knowledge_state") if new_target.get("knowledge_state") else "known"
@@ -10968,8 +10978,42 @@ func _apply_attack_reach(btn: Button, target: Node) -> void:
 	btn.tooltip_text = "" if reachable else "Too far to engage — close to %dm." % int(ATTACK_REACH_ENTER_M)
 
 
+## "1,014 m" under 10 km, then "12.4 km" (the target window and the overview).
+static func format_distance(metres: float) -> String:
+	if metres >= 10000.0:
+		return "%.1f km" % (metres / 1000.0)
+	var whole := int(round(metres))
+	var text := str(whole)
+	if whole >= 1000:
+		text = "%d,%03d" % [whole / 1000, whole % 1000]
+	return text + " m"
+
+
+## The target window's distance line, with a hint which way it's going.
+func _update_target_distance() -> void:
+	if target_distance_label == null:
+		return
+	var target = GlobalState.active_target
+	var player = GlobalState.player
+	if target == null or not is_instance_valid(target) or not target is Node3D or player == null or not is_instance_valid(player):
+		target_distance_label.visible = false
+		_target_last_distance = -1.0
+		return
+	var dist := (player as Node3D).global_position.distance_to((target as Node3D).global_position)
+	var arrow := ""
+	if _target_last_distance >= 0.0:
+		if dist < _target_last_distance - 0.05:
+			arrow = "  ▼"
+		elif dist > _target_last_distance + 0.05:
+			arrow = "  ▲"
+	_target_last_distance = dist
+	target_distance_label.text = format_distance(dist) + arrow
+	target_distance_label.visible = true
+
+
 func _update_target_command_feedback() -> void:
 	_update_boost_button()
+	_update_target_distance()
 	if target_approach_btn == null or target_orbit_btn == null or target_action_btn == null:
 		return
 	var active_mode := ""

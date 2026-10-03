@@ -535,7 +535,7 @@ do.
 - Test: rows have tooltips; each material has its own text; power row text
   names the MW.
 
-### 13. The target window should show the distance to the target
+### 13. **FIXED 2026-10-03** The target window should show the distance to the target
 
 **Abe (screenshot):** the target window ("CALARI BEACON [Station]" with
 Boost / Fly to / Orbit / Dock at Station) should show the distance.
@@ -716,8 +716,8 @@ What changed:
 - Tests: `run_pickup_hunt_tests`; `--quest-reach-smoke-test` (real jump to a
   generated system, real board pickup, docks at the outpost, hunts in the
   lounge, picks up, checks the hand-in).
-- Not done yet (still on the list): the wider every-quest-type reachability
-  test (14b item 5), the Station/Outpost label (problem 5).
+- Station/Outpost label (problem 5): fixed with finding 13.
+- Not done yet: the wider every-quest-type reachability test (14b item 5).
 - Lines for Abe's review (small batch) are in `PickupHunt.gd`.
 
 #### 9b. Built with defaults (Abe's three questions weren't answered before the playtest ended)

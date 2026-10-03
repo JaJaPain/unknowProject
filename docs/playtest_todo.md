@@ -731,3 +731,7 @@ through the marked gate and flies you in):
 - [ ] **Goal card tooltips.** Hover each row on the goal card (Credits,
       Ore, a material, Power when short): it says how to get it and how far
       along you are; a finished row says "Done."
+- [ ] **Target distance.** Target anything: under its name the target
+      window shows the distance ("1,244 m", "12.4 km" far off) with ▼ when
+      closing and ▲ when opening; it matches the overview. Outposts say
+      [Outpost], not [Station].

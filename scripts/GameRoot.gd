@@ -11734,6 +11734,21 @@ func _run_quest_reach_smoke_test() -> void:
 	if str(q.get("destination", "")) == "Grease Monkeys" and str(GlobalState.current_system_id) != "start_system":
 		fail.call("The hand-in still names Grease Monkeys, in %s." % GlobalState.current_system_id)
 		return
+	# Findings 13 and 14: targeting the outpost shows its distance and calls it an outpost.
+	GlobalState.active_target = outpost
+	for i in 5:
+		await get_tree().process_frame
+	var dist_text := str(ui.target_distance_label.text)
+	print("[QuestReachSmokeTest] target: ", ui.target_label.text, " / ", dist_text)
+	if not ui.target_distance_label.visible or not (dist_text.contains(" m") or dist_text.contains(" km")):
+		fail.call("The target window shows no distance: '%s'" % dist_text)
+		return
+	if not str(ui.target_label.text).contains("[Outpost]"):
+		fail.call("The target window doesn't call the outpost an outpost: %s" % ui.target_label.text)
+		return
+	if ui.format_distance(1014.0) != "1,014 m" or ui.format_distance(12400.0) != "12.4 km" or ui.format_distance(85.4) != "85 m":
+		fail.call("Distance format: %s / %s / %s" % [ui.format_distance(1014.0), ui.format_distance(12400.0), ui.format_distance(85.4)])
+		return
 	# 3. Docked there: no straight answer at the counter; a hunt in the lounge.
 	player.global_position = outpost.global_position + Vector3(0, 0, 200)
 	player.set("is_docked", true)
