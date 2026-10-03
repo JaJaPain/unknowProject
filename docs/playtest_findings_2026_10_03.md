@@ -169,7 +169,7 @@ so they feel more 3D.
   usually looks good on rock; if some craters invert, the fix is a
   hand-tuned height (or the image tool) for that texture only.
 
-### 5. NPC ships docking at stations and outposts: bring them in on a tractor beam too
+### 5. **FIXED 2026-10-03** NPC ships docking at stations and outposts: bring them in on a tractor beam too
 
 **Abe:** other ships docking at stations and outposts should be brought in
 with the tractor beam as well.

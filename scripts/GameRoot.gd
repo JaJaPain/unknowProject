@@ -10844,8 +10844,10 @@ func _run_first_session_smoke_test() -> void:
 	get_tree().quit()
 
 
-## Station traffic end to end: one freighter in from the gate to the berth,
-## one out from the berth to the gate (fast, so the test is short).
+## Station traffic end to end (playtest 2026-10-03 finding 5): a freighter
+## in from the gate is taken on the station's tractor beam, one goes to an
+## outpost the same way, and one is pushed out on the beam and leaves through
+## the gate (fast, so the test is short).
 ## -- --traffic-smoke-test --baseline-offline
 func _run_traffic_smoke_test() -> void:
 	await get_tree().process_frame
@@ -10853,29 +10855,39 @@ func _run_traffic_smoke_test() -> void:
 	for i in 30:
 		await get_tree().process_frame
 	traffic_director.forced_speed = 160.0
-	traffic_director.forced_arriving = 1
-	traffic_director.spawn_now()
-	traffic_director.forced_arriving = 0
-	traffic_director.spawn_now()
-	for second in 90:
+	var spawn := func(arriving: int, outpost: int) -> void:
+		traffic_director.forced_arriving = arriving
+		traffic_director.forced_outpost = outpost
+		traffic_director.spawn_now()
+	spawn.call(1, 0)
+	spawn.call(1, 1)
+	spawn.call(0, 0)
+	var most_beams := 0
+	for second in 120:
 		await get_tree().create_timer(1.0).timeout
+		var beams := 0
+		for node in get_tree().current_scene.get_children():
+			if node is DockingTractorBeam:
+				beams += 1
+		most_beams = maxi(most_beams, beams)
 		# A freighter blocked by a planet is retired; send another of that kind.
-		if second % 15 == 14:
-			if traffic_director.docked_count == 0:
-				traffic_director.forced_arriving = 1
-				traffic_director.spawn_now()
+		if second % 20 == 19:
+			if traffic_director.docked_count - traffic_director.outpost_docked_count == 0:
+				spawn.call(1, 0)
+			if traffic_director.outpost_docked_count == 0:
+				spawn.call(1, 1)
 			if traffic_director.left_count == 0:
-				traffic_director.forced_arriving = 0
-				traffic_director.spawn_now()
-		if traffic_director.docked_count >= 1 and traffic_director.left_count >= 1:
-			print("[TrafficSmokeTest] PASS: a freighter docked at the berth and another left through the gate.")
+				spawn.call(0, 0)
+		if traffic_director.docked_count - traffic_director.outpost_docked_count >= 1 and traffic_director.outpost_docked_count >= 1 \
+				and traffic_director.left_count >= 1 and most_beams >= 1:
+			print("[TrafficSmokeTest] PASS: freighters docked on the beam at the station and an outpost, and another was pushed out and left through the gate (beams seen: %d)." % most_beams)
 			delete_savegame()
 			get_tree().quit()
 			return
 	for entry in traffic_director.get("_ships"):
 		if is_instance_valid(entry["ship"]):
 			print("[TrafficSmokeTest] %s kind=%s dist=%.0f speed=%.1f pos=%s" % [entry["ship"].name, entry["kind"], entry["ship"].global_position.distance_to(entry["dest"]), entry["ship"].velocity.length(), str(entry["ship"].global_position)])
-	push_error("[TrafficSmokeTest] FAIL: docked=%d left=%d after 90 s." % [traffic_director.docked_count, traffic_director.left_count])
+	push_error("[TrafficSmokeTest] FAIL: docked=%d (outposts %d) left=%d tractored=%d beams=%d after 120 s." % [traffic_director.docked_count, traffic_director.outpost_docked_count, traffic_director.left_count, traffic_director.tractored_count, most_beams])
 	delete_savegame()
 	get_tree().quit(1)
 

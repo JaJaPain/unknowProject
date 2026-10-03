@@ -698,3 +698,8 @@ through the marked gate and flies you in):
       maps). Rocky planets show crater rims. Too strong or too soft? Say
       which (asteroids 0.7, planets 0.6; `tools/make_normal_maps.py`).
       Before/after: `--normal-map-snapshot` (windowed).
+- [ ] **Freighters dock on the beam.** Hang around a main station: an
+      inbound freighter is caught by the cyan tractor beam a few hundred
+      metres out, pulled to the docking spot, held, then slides in. A
+      departing one starts on the beam and is pushed clear before flying
+      off. Outposts get some of this traffic too.
