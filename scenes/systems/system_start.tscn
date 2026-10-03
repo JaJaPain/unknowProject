@@ -1,8 +1,9 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/MainScene.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/planet_gas.png" id="2_gas_tex"]
 [ext_resource type="Texture2D" path="res://assets/planet_rocky.png" id="3_rocky_tex"]
+[ext_resource type="Texture2D" path="res://assets/planet_rocky_normal.png" id="3_rocky_normal"]
 [ext_resource type="PackedScene" path="res://scenes/station.tscn" id="4_station"]
 [ext_resource type="PackedScene" path="res://scenes/jump_gate.tscn" id="5_gate"]
 
@@ -43,6 +44,9 @@ rings = 32
 albedo_texture = ExtResource("3_rocky_tex")
 roughness = 0.9
 metallic = 0.2
+normal_enabled = true
+normal_scale = 0.6
+normal_texture = ExtResource("3_rocky_normal")
 
 [sub_resource type="SphereMesh" id="SphereMesh_rocky"]
 material = SubResource("StandardMaterial3D_rocky")

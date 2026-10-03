@@ -353,6 +353,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_lodestar_smoke_test")
 	elif "--quest-reach-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_quest_reach_smoke_test")
+	elif "--normal-map-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_normal_map_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -11724,6 +11726,60 @@ func _run_quest_reach_smoke_test() -> void:
 		return
 	print("[QuestReachSmokeTest] PASS")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## Playtest 2026-10-03 finding 4: a rocky planet and an asteroid, side-lit,
+## with their normal maps off and on (windowed). Pictures in .tmp_godot_user/.
+##   -- --normal-map-snapshot --baseline-offline
+func _run_normal_map_snapshot() -> void:
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var sun := get_tree().root.find_children("*", "DirectionalLight3D", true, false)
+	var light_dir := (sun[0] as DirectionalLight3D).global_transform.basis.z.normalized() if not sun.is_empty() else Vector3.RIGHT
+	var cam := Camera3D.new()
+	cam.far = 30000.0
+	get_active_system_root().add_child(cam)
+	var shots: Array = []
+	for node in get_tree().get_nodes_in_group("celestial"):
+		var kind := str((node as Node).get_meta("planet_kind", ""))
+		if kind == "rocky" or (kind.is_empty() and str(node.name).to_lower().contains("rock")):
+			shots.append(["planet", node, 2.6])
+			break
+	var rocks := get_tree().get_nodes_in_group("asteroid")
+	if not rocks.is_empty():
+		shots.append(["asteroid", rocks[0], 4.0])
+	for shot in shots:
+		var target: Node3D = shot[1]
+		var mesh := target.find_children("*", "MeshInstance3D", true, false)
+		if mesh.is_empty():
+			continue
+		var radius: float = (mesh[0] as MeshInstance3D).get_aabb().size.length() * 0.5 * target.global_transform.basis.get_scale().x
+		# Side-lit: look at it from 90 degrees off the light.
+		var side := light_dir.cross(Vector3.UP).normalized()
+		cam.global_position = target.global_position + (side * 0.8 + light_dir * 0.6).normalized() * radius * float(shot[2])
+		cam.look_at(target.global_position)
+		cam.make_current()
+		var mats: Array = []
+		for m in mesh:
+			var mi := m as MeshInstance3D
+			var mat = mi.get_surface_override_material(0) if mi.get_surface_override_material(0) != null else (mi.mesh.surface_get_material(0) if mi.mesh != null else null)
+			if mat is StandardMaterial3D:
+				mats.append(mat)
+		for state in ["off", "on"]:
+			for mat in mats:
+				(mat as StandardMaterial3D).normal_enabled = state == "on" and (mat as StandardMaterial3D).normal_texture != null
+			for i in 15:
+				await get_tree().process_frame
+			await _hud_snapshot_save(ProjectSettings.globalize_path("res://.tmp_godot_user/normals_%s_%s.png" % [shot[0], state]))
+	print("[NormalMapSnapshot] done: ", shots.map(func(s): return s[0]))
 	get_tree().quit(0)
 
 

@@ -118,7 +118,7 @@ the flashing "return to station" isn't enough.
 - Test: complete the starter contract in the first-session smoke test and
   check the line is queued; not queued for ordinary contracts.
 
-### 4. Normal maps for the planet and asteroid textures (look more 3D)
+### 4. **FIXED 2026-10-03** Normal maps for the planet and asteroid textures (look more 3D)
 
 **Abe:** look into creating normal maps for our planet and asteroid textures
 so they feel more 3D.

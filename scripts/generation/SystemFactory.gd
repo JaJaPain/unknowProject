@@ -9,6 +9,9 @@ var _asteroid_scene: PackedScene
 var _gate_scene: PackedScene
 var _rocky_texture: Texture2D
 var _gas_texture: Texture2D
+var _rocky_normal: Texture2D
+## Planets are seen from far off: gentler than the rocks.
+const PLANET_NORMAL_SCALE := 0.6
 
 
 func _load_resources() -> void:
@@ -16,6 +19,9 @@ func _load_resources() -> void:
 	_asteroid_scene = load("res://scenes/asteroid.tscn") as PackedScene
 	_gate_scene = load("res://scenes/jump_gate.tscn") as PackedScene
 	_rocky_texture = load("res://assets/planet_rocky.png") as Texture2D
+	# Baked from the texture by tools/make_normal_maps.py (playtest 2026-10-03
+	# finding 4): rocky planets read as relief, not a printed ball.
+	_rocky_normal = load("res://assets/planet_rocky_normal.png") as Texture2D
 	_gas_texture = load("res://assets/planet_gas.png") as Texture2D
 
 const STATION_MODELS := [
@@ -198,6 +204,10 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	material.albedo_color = tint
 	material.roughness = 0.88
 	material.metallic = 0.08
+	if not is_gas and _rocky_normal != null:
+		material.normal_enabled = true
+		material.normal_texture = _rocky_normal
+		material.normal_scale = PLANET_NORMAL_SCALE
 
 	var mesh := SphereMesh.new()
 	mesh.radius = radius

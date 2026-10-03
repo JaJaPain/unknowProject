@@ -693,3 +693,8 @@ through the marked gate and flies you in):
       a few seconds after her victory line N.O.V.A. says to head back and
       points at Dock at Station. Stay out a minute: one reminder to dock and
       Talk to Agent. Never again after that.
+- [ ] **Rocks and rocky planets look 3D.** Fly up to an asteroid with the
+      sun to one side: pits and ridges catch the light and shadow (normal
+      maps). Rocky planets show crater rims. Too strong or too soft? Say
+      which (asteroids 0.7, planets 0.6; `tools/make_normal_maps.py`).
+      Before/after: `--normal-map-snapshot` (windowed).

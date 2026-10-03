@@ -61,6 +61,7 @@ static func _ensure_loaded() -> void:
 		if mat_key not in mat_cache:
 			var mat := StandardMaterial3D.new()
 			mat.albedo_texture = atlas_texture
+			_add_normal(mat, ATLAS_PATH)
 			mat.roughness = 0.95
 			mat.metallic = 0.1
 			mat.uv1_scale = Vector3(CELL_SIZE, CELL_SIZE, 1.0)
@@ -128,12 +129,28 @@ static func ore_material_for_index(idx: int, ore_type: String) -> Material:
 	if tex != null:
 		mat = StandardMaterial3D.new()
 		mat.albedo_texture = tex
+		_add_normal(mat, path)
 		mat.roughness = 0.9
 		mat.metallic = 0.15
 		mat.uv1_scale = Vector3(CELL_SIZE, CELL_SIZE, 1.0)
 		mat.uv1_offset = Vector3(float(cell.x) * CELL_SIZE, float(cell.y) * CELL_SIZE, 0.0)
 	_ore_materials[key] = mat
 	return mat
+
+
+## The rock's normal map, baked from its atlas by tools/make_normal_maps.py
+## (<atlas>_normal.png, same cell layout, so the albedo's uv1 offset lines it
+## up). Playtest 2026-10-03 finding 4: rocks read flat without it.
+const NORMAL_SCALE := 0.7
+
+
+static func _add_normal(mat: StandardMaterial3D, atlas_path: String) -> void:
+	var normal_path := atlas_path.get_basename() + "_normal.png"
+	if not ResourceLoader.exists(normal_path):
+		return
+	mat.normal_enabled = true
+	mat.normal_texture = load(normal_path) as Texture2D
+	mat.normal_scale = NORMAL_SCALE
 
 
 static func fragment_scene_path_for_index(idx: int) -> String:
