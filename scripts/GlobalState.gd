@@ -283,6 +283,83 @@ static func is_minor_faction(faction_name: String) -> bool:
 	var definition := GameContentRegistry.shared().faction(faction_name)
 	return definition != null and definition.classification == "minor"
 
+# --- Hostile, territorial, peaceful (Abe, playtest 2026-10-03 finding 10b) ---
+# Hostile: always aggressive towards you once they see you. Territorial: only
+# if you get too close (a warning hail first). Peaceful: never starts it.
+# Safeguards (the receiver block, N.O.V.A.'s threat warnings) count hostile
+# ships, never territorial ones keeping to themselves.
+const DISPOSITION_HOSTILE := "hostile"
+const DISPOSITION_TERRITORIAL := "territorial"
+const DISPOSITION_PEACEFUL := "peaceful"
+## The authored minor factions, by how they act (factions.json descriptors:
+## Raiders, Outlaws, Marauders attack; Nomads and Mercenaries guard their own).
+const AUTHORED_DISPOSITION := {
+	"reavers": DISPOSITION_HOSTILE,
+	"obsidian": DISPOSITION_HOSTILE,
+	"wraiths": DISPOSITION_HOSTILE,
+	"dustborn": DISPOSITION_TERRITORIAL,
+	"ironclad": DISPOSITION_TERRITORIAL,
+}
+## Reputation at or below this makes anyone hostile; below the territorial
+## line a major faction's warships turn territorial.
+const HOSTILE_REP := -50.0
+const TERRITORIAL_REP := -10.0
+## Roles that never start a fight unless they're pirates.
+const CIVILIAN_ROLES := ["Logistics", "MiningHauler"]
+
+
+static func _faction_key(faction_name: String) -> String:
+	return faction_name.trim_prefix("faction.")
+
+
+## A faction's stance toward the player, from what it is and its standing.
+func faction_disposition(faction_name: String) -> String:
+	var key := _faction_key(faction_name)
+	if key.is_empty() or key == "player":
+		return DISPOSITION_PEACEFUL
+	if AUTHORED_DISPOSITION.has(key):
+		var authored := str(AUTHORED_DISPOSITION[key])
+		if authored == DISPOSITION_TERRITORIAL and float(reputations.get(key, 0.0)) <= HOSTILE_REP:
+			return DISPOSITION_HOSTILE
+		return authored
+	var rep := float(reputations.get(faction_name, reputations.get(key, 0.0)))
+	if is_minor_faction(faction_name):
+		# Generated frontier factions guard their own (salvage compacts, claims
+		# offices, pilgrim fleets...); push one far enough and it hunts you.
+		var record := _generated_faction_record(faction_name)
+		var own := str(record.get("disposition", DISPOSITION_TERRITORIAL))
+		return DISPOSITION_HOSTILE if rep <= HOSTILE_REP else own
+	if rep <= HOSTILE_REP:
+		return DISPOSITION_HOSTILE
+	if rep < TERRITORIAL_REP:
+		return DISPOSITION_TERRITORIAL
+	return DISPOSITION_PEACEFUL
+
+
+## A pirate faction: hostile by nature, not by standing (no reputation to
+## lose with them).
+func is_pirate_faction(faction_name: String) -> bool:
+	return str(AUTHORED_DISPOSITION.get(_faction_key(faction_name), "")) == DISPOSITION_HOSTILE
+
+
+## One ship's stance toward the player right now.
+func ship_disposition(ship: Node) -> String:
+	if ship == null or not is_instance_valid(ship):
+		return DISPOSITION_PEACEFUL
+	if bool(ship.get_meta("civilian_traffic", false)) or bool(ship.get_meta("npc_attack_protected", false)):
+		return DISPOSITION_PEACEFUL
+	# Sent after the player, or shot at by them: hostile.
+	if bool(ship.get_meta("is_quest_target", false)) or bool(ship.get_meta("hunts_player", false)) \
+			or bool(ship.get_meta("is_code_enforcement", false)) or bool(ship.get("is_reinforcement")) \
+			or str(ship.get("last_attacker_faction")) == "player":
+		return DISPOSITION_HOSTILE
+	var faction := str(ship.get("faction")) if ship.get("faction") != null else ""
+	var stance := faction_disposition(faction)
+	if str(ship.get("ship_role")) in CIVILIAN_ROLES and not is_pirate_faction(faction):
+		return DISPOSITION_PEACEFUL
+	return stance
+
+
 static func minor_faction_data(faction_name: String) -> Dictionary:
 	if faction_name.begins_with("gen_") or faction_name.begins_with("faction.generated."):
 		var generated := _generated_faction_record(faction_name)

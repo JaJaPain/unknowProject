@@ -20,6 +20,19 @@ var target: Node3D = null
 var fire_cooldown: float = 0.0
 var destroyed: bool = false
 var last_attacker_faction: String = ""
+# Hostile and territorial (Abe, playtest 2026-10-03 finding 10b): how far a
+# hostile ship notices the player and how far it chases; a territorial one
+# hails at its perimeter, strikes when crowded (or after a while inside it)
+# and lets go further out.
+const HOSTILE_NOTICE := 400.0
+const HOSTILE_LEASH := 800.0
+const TERRITORIAL_WARN := 250.0
+const TERRITORIAL_STRIKE := 120.0
+const TERRITORIAL_PATIENCE_S := 10.0
+const TERRITORIAL_LEASH := 400.0
+const PLAIN_LEASH := 150.0
+var _perimeter_since_msec := -1
+var _perimeter_hailed := false
 var taunted_player: bool = false
 var ceasefire: bool = false
 var _combat_intent_id: String = ""   # queue id while waiting to engage
@@ -600,7 +613,12 @@ func _physics_process(delta: float):
 			target = null
 		else:
 			var dist = global_position.distance_to(target.global_position)
-			if dist > 150.0:
+			var leash := PLAIN_LEASH
+			if target == GlobalState.player:
+				match GlobalState.ship_disposition(self):
+					GlobalState.DISPOSITION_HOSTILE: leash = HOSTILE_LEASH
+					GlobalState.DISPOSITION_TERRITORIAL: leash = TERRITORIAL_LEASH
+			if dist > leash:
 				target = null
 
 	if bool(get_meta("intro_tutorial_target", false)):
@@ -631,7 +649,7 @@ func _physics_process(delta: float):
 				target = p
 				
 		var is_combat_role: bool = ship_role in ["Gunner", "Interceptor"] \
-			or GlobalState.is_minor_faction(faction) \
+			or GlobalState.is_pirate_faction(faction) \
 			or is_reinforcement \
 			or is_code_enforcement \
 			or bool(get_meta("is_quest_target", false))
@@ -646,27 +664,25 @@ func _physics_process(delta: float):
 					and not GlobalState.is_intro_tutorial_player_protection_active() \
 					and not _should_redirect_from_player_engagement() \
 					and Time.get_ticks_msec() >= _combat_queue_redirect_until_msec:
-				var is_player_enemy = false
-				
-				# Minor factions are always hostile to the player
-				if GlobalState.is_minor_faction(faction):
-					is_player_enemy = true
-				elif GlobalState.reputations.has(faction) and GlobalState.reputations[faction] < -10.0:
-					is_player_enemy = true
-				
-				# Station safe zone: major factions stand down near station if rep isn't terrible
-				if is_player_enemy and not GlobalState.is_minor_faction(faction):
-					if GlobalState.is_in_safe_zone(global_position):
-						if GlobalState.reputations.get(faction, -100.0) > GlobalState.SAFE_ZONE_REP_THRESHOLD:
-							is_player_enemy = false  # Stand down near station
-				
-				if is_player_enemy:
-					var dist_to_player = global_position.distance_to(p.global_position)
-					# System environment (a nebula) shortens how far they notice the player.
-					if dist_to_player < min_dist * float(GlobalState.environment_value("player_detection_mult", 1.0)):
-						min_dist = dist_to_player
-						best_target = p
-						
+				var stance: String = GlobalState.ship_disposition(self)
+				# Station safe zone: a major faction's ships stand down near a
+				# station unless the player's standing is terrible.
+				if stance != GlobalState.DISPOSITION_PEACEFUL and not GlobalState.is_minor_faction(faction) \
+						and GlobalState.is_in_safe_zone(global_position) \
+						and GlobalState.reputations.get(faction, -100.0) > GlobalState.SAFE_ZONE_REP_THRESHOLD:
+					stance = GlobalState.DISPOSITION_PEACEFUL
+				var dist_to_player = global_position.distance_to(p.global_position)
+				# System environment (a nebula) shortens how far they notice the player.
+				var notice_mult := float(GlobalState.environment_value("player_detection_mult", 1.0))
+				var engage := false
+				if stance == GlobalState.DISPOSITION_HOSTILE:
+					engage = dist_to_player < HOSTILE_NOTICE * notice_mult
+				elif stance == GlobalState.DISPOSITION_TERRITORIAL:
+					engage = _territorial_engage(dist_to_player, notice_mult)
+				if engage:
+					min_dist = dist_to_player
+					best_target = p
+
 			# 2. Check other active system entities (NPC ships)
 			for entity in GlobalState.active_system_entities:
 				if entity and is_instance_valid(entity) and entity != self and not entity.get("destroyed"):
@@ -902,7 +918,9 @@ func take_damage(amount: float, attacker_faction: String = ""):
 		"attacker_faction": attacker_faction,
 	})
 	health -= amount
-	if attacker_faction == "player" and not GlobalState.is_minor_faction(faction) \
+	# Shooting anyone but pirates costs standing with them, and makes them
+	# defend themselves (territorial ships included: finding 10b).
+	if attacker_faction == "player" and not GlobalState.is_pirate_faction(faction) \
 			and not is_code_enforcement:
 		GlobalState.adjust_reputation(faction, -2.0) # Aggro drop rep on hit
 		last_attacker_faction = "player"
@@ -1172,11 +1190,30 @@ func _record_persistent_state() -> void:
 	if game_root and game_root.has_method("record_persistent_entity_state"):
 		game_root.record_persistent_entity_state(self)
 
+## Territorial: inside the perimeter they hail once; they strike when the
+## player comes close, or stays inside the perimeter too long. Returns true
+## to engage.
+func _territorial_engage(dist_to_player: float, notice_mult: float) -> bool:
+	if dist_to_player > TERRITORIAL_WARN * notice_mult:
+		_perimeter_since_msec = -1
+		return false
+	var now := Time.get_ticks_msec()
+	if _perimeter_since_msec < 0:
+		_perimeter_since_msec = now
+	if not _perimeter_hailed:
+		_perimeter_hailed = true
+		GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(),
+			"You're inside our perimeter. Back off.", Color(1.0, 0.75, 0.3))
+	return dist_to_player < TERRITORIAL_STRIKE * notice_mult \
+		or now - _perimeter_since_msec >= int(TERRITORIAL_PATIENCE_S * 1000.0)
+
+
 func _apply_reputation_changes():
-	# Minor factions don't affect reputation when killed
-	if GlobalState.is_minor_faction(faction):
+	# Pirates don't affect reputation when killed; everyone else remembers
+	# (a generated faction pushed far enough turns hostile: finding 10b).
+	if GlobalState.is_pirate_faction(faction):
 		return
-	
+
 	# Decrease reputation with the killed faction
 	GlobalState.adjust_reputation(faction, -20.0)
 	

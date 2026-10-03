@@ -270,6 +270,13 @@
 			"body": "Fights are turn based. Each turn you get [b]action points (AP)[/b] and plan your moves on the combat wheel, then both sides act.\n\n[b]Fire[/b]  Shoot your guns. Shields absorb hits until they break, then the hull takes it.\n[b]Drones[/b]  Launch a drone that attacks on its own.\n[b]Shield Reroute[/b]  Divert power to shields: the next hit is softened.\n[b]Boost[/b] and [b]Micro-Warp[/b]  Your ways to avoid getting hit (see Evasion).\n[b]Repair Kit[/b]  Patch some hull mid-fight, if you carry one.\n[b]Flee[/b]  Try to break off and escape.\n\nHover a wedge on the wheel to see what it does. You can open this guide in a fight with COMBAT HELP in the pause menu."
 		},
 		{
+			"id": "hostile_territorial",
+			"category": "Combat",
+			"title": "Hostile and territorial",
+			"unlocked": true,
+			"body": "Not every armed ship wants a fight.\n\n[b]Hostile[/b] ships (red on the overview) attack as soon as they spot you: pirates like the Reavers, Obsidian and Wraiths, and anyone whose standing with you has hit rock bottom.\n[b]Territorial[/b] ships (amber) guard their own: frontier crews, nomads, mercenaries, and the big factions' warships when you're out of favour. Get close and they warn you off; come closer, or hang around inside their perimeter, and they open fire. Keep your distance and they leave you alone.\n\nHaulers and station traffic never start anything. Shoot first at anyone but pirates and they'll remember it."
+		},
+		{
 			"id": "evasion",
 			"category": "Combat",
 			"title": "Evasion",

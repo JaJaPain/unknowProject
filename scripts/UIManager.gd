@@ -3918,6 +3918,10 @@ func update_overview_list(entities: Array):
 				row_color = Color(1.0, 0.78, 0.1)     # Amber — unknown contact
 			elif type_str == "Lodestar":
 				row_color = Color(1.0, 0.82, 0.45)    # The Lodestar's gold
+			elif entity.is_in_group("ship") and GlobalState.ship_disposition(entity) == GlobalState.DISPOSITION_HOSTILE:
+				row_color = Color(1.0, 0.45, 0.4)     # Hostile: attacks on sight (finding 10b)
+			elif entity.is_in_group("ship") and GlobalState.ship_disposition(entity) == GlobalState.DISPOSITION_TERRITORIAL:
+				row_color = Color(1.0, 0.72, 0.3)     # Territorial: keep your distance
 			else:
 				row_color = Color(1.0, 1.0, 1.0)      # Default white for ships, wreckage etc.
 			if row_color != Color(1.0, 1.0, 1.0):
@@ -5178,11 +5182,13 @@ func _ship_standing(ship: Node) -> String:
 	var faction := str(ship.get("faction")) if ship.get("faction") != null else ""
 	if faction.is_empty():
 		return "Ship"
-	if GlobalState.is_minor_faction(faction):
-		return "Hostile"
+	# Hostile attacks on sight; territorial only if you crowd it (finding 10b).
+	match GlobalState.ship_disposition(ship):
+		GlobalState.DISPOSITION_HOSTILE:
+			return "Hostile"
+		GlobalState.DISPOSITION_TERRITORIAL:
+			return "Territorial"
 	var rep := float(GlobalState.reputations.get(faction, 0.0))
-	if rep < -10.0:
-		return "Hostile"
 	if rep > 20.0:
 		return "Friendly"
 	return "Neutral"

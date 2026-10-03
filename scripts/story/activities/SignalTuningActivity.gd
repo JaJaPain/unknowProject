@@ -152,8 +152,9 @@ func listen_block_reason() -> String:
 	var combat := get_node_or_null("/root/CombatManager")
 	if combat != null and int(combat.get("state")) != 0:
 		return "RECEIVER   ·   Not in the middle of a fight."
-	if _threat_nearby():
-		return "RECEIVER   ·   Hostiles close. Can't hold a weak signal with them around."
+	var threat := threat_label()
+	if not threat.is_empty():
+		return "RECEIVER   ·   Hostile close (%s). Can't hold a weak signal with them around." % threat
 	if _near_station():
 		return "RECEIVER   ·   Too much station noise. Move further out."
 	return ""
@@ -311,35 +312,38 @@ func _can_listen() -> bool:
 ## shows red (a contract's target close by, anything locked onto us), plus
 ## pirates close by. Uses the overview's own rules, so "red on the overview" and
 ## "no receiver" always agree.
-const HOSTILE_QUIET_RANGE := 3000.0
+## A hostile ship this close keeps the receiver quiet (was 3000 for any
+## "minor" ship, which blocked it near peaceful salvagers: finding 10).
+const HOSTILE_QUIET_RANGE := 1500.0
 
 
 func _threat_nearby() -> bool:
+	return not threat_label().is_empty()
+
+
+## The ship that keeps the receiver quiet, as "Reaver Raider, 820 m", or "".
+## Only a hostile ship close enough to matter, or one actually locked on to
+## us (a territorial one keeping to itself never counts: Abe, playtest
+## 2026-10-03 finding 10b).
+func threat_label() -> String:
 	var gs := get_node_or_null("/root/GlobalState")
 	var player = gs.player if gs != null else null
 	if not is_instance_valid(player):
-		return false
-	var ui = gs.get_ui_manager() if gs.has_method("get_ui_manager") else null
+		return ""
+	var best := ""
+	var best_dist := INF
 	for ship in get_tree().get_nodes_in_group("ship"):
 		if ship == player or not is_instance_valid(ship) or bool(ship.get("destroyed")):
 			continue
-		var near := (ship as Node3D).global_position.distance_to((player as Node3D).global_position) < HOSTILE_QUIET_RANGE
-		# A contract target counts when it's close, like any hostile: one on the
-		# far side of the system blocked the receiver for the whole contract
-		# (playtest 2026-10-02).
-		if near and ui != null and ui.has_method("_is_overview_mission_target") and ui._is_overview_mission_target(ship):
-			return true
-		if ship.get("target") == player:
-			return true
-		# Pirates close by attack on sight. A patrol whose faction merely dislikes
-		# us does not: a new campaign starts at -20 with two factions, so every
-		# peaceful patrol near the start blocked the receiver (playtest
-		# 2026-10-02), though the overview showed nothing red.
-		var faction := str(ship.get("faction")) if ship.get("faction") != null else ""
-		if near and gs.has_method("is_minor_faction") and not faction.is_empty() and gs.is_minor_faction(faction):
-			return true
-	return false
-
+		var dist := (ship as Node3D).global_position.distance_to((player as Node3D).global_position)
+		if dist >= HOSTILE_QUIET_RANGE or dist >= best_dist:
+			continue
+		var hostile: bool = gs.has_method("ship_disposition") and str(gs.ship_disposition(ship)) == "hostile"
+		if hostile or ship.get("target") == player:
+			best_dist = dist
+			var shown = ship.get("display_name")
+			best = "%s, %d m" % [str(shown) if shown != null and not str(shown).is_empty() else str(ship.name), int(dist)]
+	return best
 
 func _try_offer() -> void:
 	if director == null or not is_instance_valid(director) or not world_provider.is_valid():

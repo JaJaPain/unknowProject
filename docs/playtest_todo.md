@@ -716,3 +716,11 @@ through the marked gate and flies you in):
       one jump out it says "burn x1.1", then x1.5, x2.0, x2.8 further out
       (hover for the explanation). The star map tooltip shows "Fuel burn" for
       other systems. Does it bite enough? (Base rate unchanged; cap x6.)
+- [ ] **Hostile and territorial.** In a frontier system: salvage/pilgrim
+      gunships show amber on the overview; fly within ~250 m and they hail
+      "You're inside our perimeter. Back off."; stay or get within ~120 m
+      and they attack; keep away and they don't. Their haulers never attack.
+      Reavers (red) come for you from ~400 m. Is 400 m too far / too close?
+- [ ] **T works near peaceful ships.** With only territorial/peaceful
+      ships around, the receiver works. Near a hostile it says which ship
+      and how far ("Hostile close (Reaver Raider, 820 m)").

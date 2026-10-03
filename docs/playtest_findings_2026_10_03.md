@@ -336,7 +336,7 @@ x2.8.
 - Re-run the economy sim (`--economy-sim`, step 7) after, since fuel runs
   are part of rung times.
 
-### 10. Receiver (T) blocked: "Hostiles close" with nothing hostile around
+### 10. **FIXED 2026-10-03** Receiver (T) blocked: "Hostiles close" with nothing hostile around
 
 **Abe (screenshot):** in Calari (a generated frontier system), no ship was
 close or targeting him, yet T said "Hostiles close. Can't hold a weak signal
@@ -381,7 +381,7 @@ hostile. Is that intended? (Ask Abe.)
   (not blocked), a Reaver at 800 m (blocked), a far-off targeting ship
   (not blocked).
 
-#### 10b. Abe's design: two aggression settings, Hostile and Territorial
+#### 10b. **FIXED 2026-10-03** Abe's design: two aggression settings, Hostile and Territorial
 
 **Abe:** we should have 2 different settings. **Hostile** = always
 aggressive towards you if they see you. **Territorial** = only aggressive if
@@ -729,3 +729,24 @@ What changed:
 - Boost unaffected (cruising only, as Abe said).
 - Shown next to the HUD fuel ("burn x1.5", with a tooltip), on the star map
   tooltip ("Fuel burn: x1.5") and in the wiki's Fuel entry.
+
+#### 10c. As built (2026-10-03)
+- `GlobalState.faction_disposition()` / `ship_disposition()` / `is_pirate_faction()`:
+  pirates (Reavers, Obsidian, Wraiths) hostile in any role; Dustborn,
+  Ironclad and generated factions territorial (their Logistics and
+  MiningHauler ships peaceful); majors peaceful, territorial below -10,
+  hostile at -50 (generated too); station traffic peaceful; anyone the
+  player shot first, quest targets and hunters hostile.
+- Ranges scaled to this game's (combat starts at 80 m; the old notice range
+  was 130 m): hostile notices at **400 m** and chases to 800 m; territorial
+  hails at **250 m** ("You're inside our perimeter. Back off."), strikes
+  inside 120 m or after 10 s inside 250 m, lets go past 400 m.
+- Receiver: blocked only by a hostile ship within 1500 m or a ship locked on
+  within 1500 m; the message names it and its distance.
+- Overview: hostile ships red, territorial amber; the target tag says
+  Hostile / Territorial / Friendly / Neutral. Wiki: "Hostile and
+  territorial" (Combat).
+- Shooting a non-pirate costs standing (generated factions included now) and
+  makes it fight back.
+- Tests: `run_disposition_tests`; combat, station-combat, mining-risk,
+  evasion, autopilot, core, mission, first-session, jump smoke all pass.
