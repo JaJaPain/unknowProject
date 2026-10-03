@@ -260,7 +260,7 @@
 			"category": "Story",
 			"title": "N.O.V.A.",
 			"unlocked": true,
-			"body": "Your ship's AI. She flies with you, warns you about threats, comments on what happens, and helps with anything technical.\n\nWhen she talks, her portrait appears over the comms panel. Everything she and everyone else says is also written in the comms feed."
+			"body": "[b]N.O.V.A.[/b]: Neural Operational Virtual Assistant. Your ship's AI. She flies with you, warns you about threats, comments on what happens, and helps with anything technical.\n\nWhen she talks, her portrait appears over the comms panel. Everything she and everyone else says is also written in the comms feed."
 		},
 		{
 			"id": "combat_basics",

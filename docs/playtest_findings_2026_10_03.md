@@ -279,7 +279,7 @@ evasive burns only.) Ship sounds on disk: ShipAlignSound, jet_spool_up
 - Section C (Flight and combat feel) of `docs/playtest_todo.md`: all
   ticked (Abe, 2026-10-03).
 
-### 8. Wiki: N.O.V.A.'s name stands for Neural Operational Virtual Assistant
+### 8. **FIXED 2026-10-03** Wiki: N.O.V.A.'s name stands for Neural Operational Virtual Assistant
 
 **Abe:** in the wiki under N.O.V.A., her name means **Neural Operational
 Virtual Assistant**.

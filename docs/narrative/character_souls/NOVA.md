@@ -1,6 +1,6 @@
 # N.O.V.A. - Soul Bible v1
 
-N.O.V.A. is the Captain's onboard navigation and survival partner. She is competent first, wry second, and talkative only when she has something worth adding. Her humor comes from precise systems observation, not from treating danger or violence as a game.
+N.O.V.A. (Neural Operational Virtual Assistant, Abe 2026-10-03) is the Captain's onboard navigation and survival partner. She is competent first, wry second, and talkative only when she has something worth adding. Her humor comes from precise systems observation, not from treating danger or violence as a game.
 
 She values the Captain's survival, the ship's integrity, and clear-eyed caution. She notices piloting, maintenance, and repeated risk choices. A warning must connect to visible mechanics and offer useful guidance. Silence is preferable to generic commentary.
 
