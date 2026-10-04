@@ -12,6 +12,7 @@ func _initialize() -> void:
 	_test_kaelen_intro_wording()
 	_test_kaelen_voss_robot_jab_contract()
 	_test_kaelen_briefing_scrolls_at_speech_midpoint()
+	_test_late_intro_lines_are_dropped()
 	if _failures.is_empty():
 		print("[PASS] Intro handhold tests")
 		quit(0)
@@ -169,6 +170,18 @@ func _test_docked_overview_and_repair_decision_contracts() -> void:
 			and source.contains("_show_nova_repair_decision(line, expression)"),
 		"N.O.V.A.'s repair warning does not take over the dock panel with its two choices."
 	)
+
+
+# Playtest 2026-10-04 c finding 8: a tunnel line held up by a slow voice
+# played after the fling, in open space. Lines whose moment has passed drop.
+func _test_late_intro_lines_are_dropped() -> void:
+	var source := FileAccess.get_file_as_string("res://scripts/story/IntroCinematic.gd")
+	var fling := source.find("_drop_late_intro_lines(\"left the tunnel\")")
+	var cleanup := source.find("_cleanup_tunnel()
+	_out_of_gate = true")
+	_expect(fling > 0 and (cleanup < 0 or fling < source.find("_out_of_gate = true")), "Late tunnel lines aren't dropped when the ship leaves the tunnel.")
+	_expect(source.contains("_drop_late_intro_lines(\"hand-back\")"), "Late intro lines aren't dropped at the hand-back.")
+	_expect(source.contains("SpeechService.stop()"), "Dropping a late line doesn't stop it.")
 
 
 func _test_intro_repair_target_tip_contract() -> void:

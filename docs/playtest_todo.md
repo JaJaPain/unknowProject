@@ -793,3 +793,24 @@ through the marked gate and flies you in):
       model... (0:xx)", then "Writing your campaign's story... (0:xx)". Usually
       done in about a minute. If it ever says "The story model got stuck.
       Restarting it...", it should carry on by itself.
+
+## X. Playtest 2026-10-04 c fixes (added 2026-10-04)
+
+- [ ] **Intro: no controls till the look-around hint.** Right-drag, clicks,
+      Q/W/E, I, M do nothing during the opening; they work once "Hold RIGHT
+      MOUSE and drag to look around" shows. Space still skips.
+- [ ] **Intro drones** start orbiting as soon as you're thrown out of the gate.
+- [ ] **No late tunnel lines:** N.O.V.A.'s tunnel lines never play after
+      you're out in open space, even on a slow machine.
+- [ ] **Undock (station and both outposts):** Dock Control speaks as the
+      beam carries you out; HUD orders (Approach, Orbit...) are refused with
+      "Dock Control has the ship..."; control returns past the safety zone
+      with "Clear of the safety zone. Controls are yours."; N.O.V.A.'s first
+      undock tip comes after that.
+- [ ] **Beam sound:** docking, undocking and nearby traffic beams hum like
+      the mining tractor.
+- [ ] **Kaelen in a new system** has work (or says why not), and her waiting
+      line is in her own voice.
+- [ ] **Lounge hunt:** cards show the person's name and two buttons that
+      stay on the card; "Ask about it" shows the reply in the message box
+      with Press them / Ask someone else; pressing the holder hands it over.

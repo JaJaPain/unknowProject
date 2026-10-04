@@ -265,7 +265,7 @@ that change the plan itself.
   consecutive frames-in-a-second windows, and at most one obstruction
   notice per trip.
 
-### 8. Lag: N.O.V.A. said a tunnel line after we were out of the tunnel
+### 8. Lag: N.O.V.A. said a tunnel line after we were out of the tunnel — FIXED
 
 **Abe:** with lag, N.O.V.A. used her "stuck in the tunnel" line when we were
 already outside it.
@@ -433,3 +433,10 @@ together. It needs a cleaner way of doing it.
   inside, draws a ring where it crosses the ship's level, and flashes each
   rock as the front reaches it. Checked from inside with the gameplay
   camera. Wiki updated.
+- **8:** when the ship is flung out of the gate, any tunnel line still
+  waiting on its voice (or still sounding) is dropped (`SpeechService.stop()`);
+  the same at the hand-back, so no intro line ever plays late. Logged as
+  `intro_cinematic/late_line_dropped`. Not done: the playback wait still
+  watches TTS's global flags rather than her specific clip (the drop covers
+  the symptom).
+- **Still open: 7** (autopilot 180s, needs a route-tour repro first).

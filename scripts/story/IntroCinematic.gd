@@ -595,6 +595,8 @@ func _finish() -> void:
 	if _ship_light != null and is_instance_valid(_ship_light):
 		_ship_light.light_energy = _ship_light_energy
 	_stop_intro_audio()
+	# Nothing from the cinematic plays after control is handed back.
+	_drop_late_intro_lines("hand-back")
 	if is_instance_valid(AudioManager):
 		AudioManager.stop_broken_gate_ambience()
 		# Skip/watchdog paths have no return-drop one-shot to wait for.
@@ -626,6 +628,17 @@ func _finish() -> void:
 		)
 	else:
 		queue_free()
+
+
+## Drop any intro line that's still waiting for its voice or still sounding
+## once its moment has passed (finding 8). The cinematic waits for each line,
+## but a slow voice can outlast that wait, and the line then played late.
+func _drop_late_intro_lines(moment: String) -> void:
+	if not is_instance_valid(SpeechService) or not SpeechService.is_busy():
+		return
+	print("[IntroCinematic] Dropping a late N.O.V.A. line (%s)." % moment)
+	GenerationDiagnostics.record_event("intro_cinematic", "late_line_dropped", "intro_cinematic", {"moment": moment})
+	SpeechService.stop()
 
 
 func _play_nova_handoff_line() -> void:
@@ -707,6 +720,10 @@ func _run() -> void:
 	await _beat(FLING_FLASH)
 	if _finished:
 		return
+	# A tunnel line still waiting on a slow voice must never play out here in
+	# open space (Abe, playtest 2026-10-04 c finding 8): out of the tunnel,
+	# anything N.O.V.A. hasn't finished saying in it is dropped.
+	_drop_late_intro_lines("left the tunnel")
 	_cleanup_tunnel()
 	_out_of_gate = true
 	# Thrown out of the gate tumbling: whole turns on every axis, easing out as
