@@ -2340,7 +2340,7 @@ func _pick_mission_shipping_lane_route(system_root: Node3D) -> Array[Vector3]:
 		return []
 	var stations: Array[Node3D] = []
 	for node in _mission_route_nodes_in_group(system_root, "station"):
-		if node is Node3D and is_instance_valid(node):
+		if is_instance_valid(node) and node is Node3D:
 			stations.append(node)
 	if stations.size() < 2:
 		return []

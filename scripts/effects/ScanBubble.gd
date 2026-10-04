@@ -73,7 +73,7 @@ static func spawn(parent: Node, at: Vector3, radius: float, rocks: Array = []) -
 	bubble.scale = Vector3.ONE * 2.0
 	bubble._build_ring()
 	for rock in rocks:
-		if rock is Node3D and is_instance_valid(rock):
+		if is_instance_valid(rock) and rock is Node3D:
 			bubble._rocks.append({"node": rock, "dist": (rock as Node3D).global_position.distance_to(at)})
 	bubble._rocks.sort_custom(func(a, b) -> bool: return float(a["dist"]) < float(b["dist"]))
 	var tween: Tween = bubble.create_tween()

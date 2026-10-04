@@ -814,3 +814,8 @@ through the marked gate and flies you in):
 - [ ] **Lounge hunt:** cards show the person's name and two buttons that
       stay on the card; "Ask about it" shows the reply in the message box
       with Press them / Ask someone else; pressing the holder hands it over.
+- [ ] **Tutorial station on top.** New campaign: Greywake sits at the top
+      of the overview (not red) while the tutorial points at it; the arrow
+      finds it without scrolling.
+- [ ] **No crash docking** when a job falls back to the built-in one (the
+      2026-10-04 crash: a destroyed ship still in the system list).

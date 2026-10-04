@@ -29,7 +29,7 @@ func clear() -> void:
 	for effect in _effects:
 		for key in effect.keys():
 			var node: Variant = effect[key]
-			if node is Node and is_instance_valid(node):
+			if is_instance_valid(node) and node is Node:
 				node.queue_free()
 	_effects.clear()
 	_anchors.clear()

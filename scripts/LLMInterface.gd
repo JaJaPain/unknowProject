@@ -5304,7 +5304,7 @@ func _trigger_fallback():
 func _factions_in_current_system() -> Array:
 	var found := []
 	for entity in GlobalState.active_system_entities:
-		if entity is Node and is_instance_valid(entity):
+		if is_instance_valid(entity) and entity is Node:
 			var faction = entity.get("faction")
 			if faction != null and not str(faction).is_empty() and not str(faction) in found:
 				found.append(str(faction))

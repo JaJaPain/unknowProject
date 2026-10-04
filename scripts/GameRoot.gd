@@ -6636,7 +6636,7 @@ func _restore_safe_location(safe_location: Dictionary) -> void:
 
 func _find_world_entity(entity_id: String) -> Node3D:
 	for entity in GlobalState.active_system_entities:
-		if entity is Node3D and is_instance_valid(entity) \
+		if is_instance_valid(entity) and entity is Node3D \
 				and entity.has_method("get_world_id") \
 				and str(entity.call("get_world_id")) == entity_id:
 			return entity
@@ -9113,7 +9113,7 @@ func _run_autopilot_smoke_test() -> void:
 		# more, so this counted zero engagements forever. Read the blocker the
 		# live navigator actually reports instead.
 		var blocking_node = simulated.get("obstacle", null)
-		var current_avoidance_id: int = blocking_node.get_instance_id() 			if blocking_node is Node3D and is_instance_valid(blocking_node) else 0
+		var current_avoidance_id: int = blocking_node.get_instance_id() 			if is_instance_valid(blocking_node) and blocking_node is Node3D else 0
 		if current_avoidance_id == rocky_id \
 				and previous_avoidance_id != rocky_id:
 			rocky_engagements += 1

@@ -4140,10 +4140,15 @@ func _update_overview_distances(delta: float = 999.0):
 				if is_instance_valid(name_lbl):
 					var targeting_player: bool = entity.is_in_group("ship") \
 						and entity.get("target") == GlobalState.player
-					var pinned: bool = targeting_player or bool(btn.get_meta("is_mission_target", false)) \
+					# The tutorial's station sits at the top like a ship targeting
+					# you, so the arrow never points below the fold (Abe,
+					# 2026-10-04: it only worked once he scrolled down to it).
+					var tutorial_station: bool = _intro_handhold_active() and entity == _intro_primary_station()
+					var flagged: bool = targeting_player or bool(btn.get_meta("is_mission_target", false)) \
 						or GlobalState.active_target == entity
-					btn.set_meta("pinned", pinned)
-					if pinned:
+					btn.set_meta("pinned", flagged or tutorial_station)
+					# Red only for threats and targets; the tutorial station is just on top.
+					if flagged:
 						name_lbl.add_theme_color_override("font_color", HudStyle.DANGER)
 					else:
 						name_lbl.remove_theme_color_override("font_color")
@@ -11537,6 +11542,11 @@ func _update_intro_handhold() -> void:
 			next_button = target_action_btn
 		elif not (dock_panel and dock_panel.visible):
 			next_button = _find_intro_station_overview_button()
+			# Its row is pinned to the top; keep the list scrolled up to it.
+			var list_scroll := overview_list.get_parent() as ScrollContainer if overview_list else null
+			if next_button != null and list_scroll != null and list_scroll.scroll_vertical != 0:
+				_sort_overview_list()
+				list_scroll.scroll_vertical = 0
 		if next_button and is_instance_valid(next_button) and next_button.is_visible_in_tree():
 			arrow_visible = true
 	if _intro_handhold_target_button != next_button:
