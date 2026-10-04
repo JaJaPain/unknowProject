@@ -135,14 +135,16 @@ const DOCK_CLEARANCE_LINES: Array[String] = [
 ]
 ## Dock Control as the beam carries the ship out (Abe, playtest 2026-10-04
 ## c finding 3): the same station voice as the docking clearance, saying the
-## ship is theirs until it's past the safety zone. Provisional, for Abe's review.
+## ship is theirs until it's past the safety zone. No call sign on the way out
+## (Abe, 2026-10-04: "cool during the docking in, redundant on the undock").
+## Approved by Abe.
 const DOCK_DEPARTURE_LINES: Array[String] = [
-	"{call}, hold steady. We'll walk you out on the beam; controls come back once you're past our safety zone.",
-	"Dock Control to {call}: releasing clamps. Hands off until you clear the safety zone.",
-	"{call}, you're on the outbound beam. Stay put; the ship is yours again at the edge of our zone.",
-	"Clamps released, {call}. We'll carry you out. Don't fight the pull, it never ends well.",
-	"{call}, departure logged. Hold position while the tractor clears you from the station.",
-	"Dock Control to {call}: outbound lane is clear. Controls return past the safety zone.",
+	"Dock Control here. Hold steady; we'll walk you out on the beam. Controls come back once you're past our safety zone.",
+	"Dock Control here. Releasing clamps. Hands off until you clear the safety zone.",
+	"Dock Control here. You're on the outbound beam. Stay put; the ship is yours again at the edge of our zone.",
+	"Dock Control here. Clamps released; we'll carry you out. Don't fight the pull, it never ends well.",
+	"Dock Control here. Departure logged. Hold position while the tractor clears you from the station.",
+	"Dock Control here. Outbound lane is clear. Controls return past the safety zone.",
 ]
 const DOCK_RELEASE_TEXT := "Clear of the safety zone. Controls are yours."
 var docking_procedure_panel: PanelContainer
@@ -4508,7 +4510,7 @@ func _dock_call_sign() -> String:
 
 
 func _play_dock_departure(station: Node3D) -> void:
-	var line := DOCK_DEPARTURE_LINES[randi() % DOCK_DEPARTURE_LINES.size()].replace("{call}", _dock_call_sign())
+	var line := DOCK_DEPARTURE_LINES[randi() % DOCK_DEPARTURE_LINES.size()]
 	SpeechService.play(line, _dock_clearance_voice_for_station(station))
 	GlobalState.emit_chatter("Dock Control", line, Color(0.25, 0.82, 1.0))
 
@@ -13678,8 +13680,8 @@ func _show_kaelen_intro_quest_offer() -> void:
 
 ## Kaelen while a job is still being found: her own voice, first person
 ## (playtest 2026-10-04 c finding 9: "Kaelen is lining up work in the
-## background" was developer text, about herself). Provisional, for Abe's
-## review. The board fills itself in when the job lands.
+## background" was developer text, about herself). Approved by Abe.
+## The board fills itself in when the job lands.
 const KAELEN_WAITING_LINES: Array[String] = [
 	"Give me a minute, Shiny. I'm still shaking the trees.",
 	"Nothing on the board yet. Somebody owes me a call; stand there and look employable.",
