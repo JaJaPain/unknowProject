@@ -52,3 +52,54 @@ Each file ends in a long, very quiet reverb tail plus true silence: 0.5 to
   audible end, never longer.
 - Test: the music test checks that the bed starts rising within 0.3 s of
   each stinger's audible end.
+
+### 2. New game stuck at 35% ("Writing campaign story") for ~10 minutes
+
+**Abe:** it feels like way too much time at 35%; is something hanging new
+game generation?
+
+**What 35% is:** the loader waits for the campaign bible, written by the
+large story model (qwen3:8b on Ollama), before it lets the game start
+(`UIManager._check_both_services_ready` → `_wait_for_campaign_story_before_gameplay`).
+Its request timeout is **600 s** (`LocalModelGateway.REQUEST_TIMEOUTS["campaign_bible"]`).
+
+**This session (game started 15:34:40), from the game log, Ollama's
+server.log, `ollama ps` and netstat:**
+- At startup the game said "Ollama not responding — attempting to start it
+  automatically" and launched a second Ollama. The real one (running since
+  9/15) answered, so the second exited. The previous session had just quit
+  at 15:33:49 with five generations in flight (Ollama aborted them).
+- The game evicted both models (`vram_cleared_for_generation`), then sent the
+  bible request (`request_started`). Godot has held that connection open
+  ever since.
+- **Ollama never started on it:** no qwen3:8b load in server.log, and
+  `ollama ps` shows only qwen3:4b (its runner dates from 15:19, an earlier
+  session). From 15:36:27 to 15:44+ Ollama got nothing but health polls.
+- Meanwhile the small-model warm-up ran (in the previous session it was
+  correctly *deferred* during the bible). It timed out after 90 s, then a
+  4b probe passed at 15:36. So the warm-up and the bible raced for the GPU,
+  and the 8b request has sat queued or stalled inside Ollama.
+- Result: the loading screen says "Writing campaign story" for the full
+  10-minute timeout, with no sign of progress or trouble.
+
+**Likely cause:** the "Ollama not responding → launch it" startup path skips
+the rule that defers the small-model warm-up while the bible is generating.
+The eviction, then the warm-up reloading the 4b, then the 8b request left
+Ollama's scheduler stuck (seen before: 2026-09-30 server.log "client
+connection closed before llama-server finished loading"). The previous
+session quitting mid-generation two minutes earlier probably caused the
+"not responding" at startup.
+
+**Proposed fix (after the playtest):**
+- Never warm the small model while the bible is pending, on every startup
+  path (including after launching or recovering Ollama).
+- A watchdog instead of a blind 10-minute wait: poll `/api/ps`. If the large
+  model hasn't started loading within ~45 s, or hasn't finished within ~3
+  min, cancel and retry the bible once. If that also stalls, start the
+  campaign on the procedural bible that's already built
+  (`procedural_bootstrap`) and upgrade the story in the background when the
+  model is back.
+- The loading screen shows real progress: "Loading the story model...",
+  "Writing... (1:20)", and after a stall "The story model isn't answering;
+  starting with a simpler story."
+- Check the outcome in this session's log after 15:45 (timeout).
