@@ -8665,7 +8665,7 @@ func scan_composition() -> Dictionary:
 	_ore_scan_ready_msec = now + int(OreScanType.COOLDOWN_S * 1000.0)
 	var player := GlobalState.player as Node3D
 	var result: Dictionary = OreScanType.scan(player.global_position, get_tree().get_nodes_in_group("asteroid"))
-	_spawn_scan_pulse(player.global_position)
+	_spawn_scan_pulse(player.global_position, float(result.get("radius", OreScanType.RANGE)), result.get("touched", []))
 	GlobalState.emit_chatter("SCAN", OreScanType.summary(result), Color(0.55, 0.85, 1.0))
 	# Names in the overview and the target window change now, not next rebuild.
 	refresh_overview()
@@ -8716,11 +8716,11 @@ func _set_scan_countdown_text(message: String) -> void:
 
 ## A clear bubble out of the ship to the edge of what the scan covers, and a
 ## sonar ping (Abe, 2026-10-04).
-func _spawn_scan_pulse(at: Vector3) -> void:
+func _spawn_scan_pulse(at: Vector3, radius: float, rocks: Array) -> void:
 	var root := get_tree().current_scene if get_tree() else null
 	if root == null:
 		return
-	load("res://scripts/effects/ScanBubble.gd").spawn(root, at, OreScanType.RANGE)
+	load("res://scripts/effects/ScanBubble.gd").spawn(root, at, radius, rocks)
 	# The submarine ping (Abe): tools/make_sonar_ping.py.
 	var ping := load(SCAN_PING_PATH) as AudioStream
 	if ping != null:

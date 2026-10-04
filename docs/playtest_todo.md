@@ -740,7 +740,9 @@ through the marked gate and flies you in):
 
 - [ ] **Scan Composition.** In a belt, press **C** (or the target window's
       "Scan Composition (C)" on a rock): a sonar ping sounds and a clear
-      bubble grows out of the ship to the edge of the scanned area, holds,
+      bubble grows steadily out of the ship (grid on its shell, a ring at
+      ship level) just past the ten nearest rocks, each rock flashing as the
+      wave reaches it; it holds,
       then fades to nothing;
       the feed says "Scan: N rocks · 2 water ice, ...", and the overview now
       names those rocks ("Water ice asteroid"); unscanned rocks just say

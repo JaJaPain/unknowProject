@@ -140,7 +140,7 @@ ship until it's outside the safe zone.
   on the beam's line and ends outside the sphere; after the release, orders
   work.
 
-### 5. Scan bubble: looks full-size at once, and its edge can't be seen
+### 5. Scan bubble: looks full-size at once, and its edge can't be seen — FIXED
 
 **Abe:** the scan bubble needs to grow more slowly; it looks full size
 instantly. The sound is good. It might be too big: he can't see its edge.
@@ -425,3 +425,10 @@ together. It needs a cleaner way of doing it.
   (`_update_drones`) until control is handed back.
 - Also: `run_intro_handhold_tests` had a stale source check since 31a4107;
   updated to the current rule (tip on first undock, repaired or not).
+- **5:** Abe's answer on size: "the 10 or so asteroids near the ship, not
+  half the belt". The scan now reads the nearest 10 ordinary rocks (within
+  320 m at most), and the bubble grows just past the farthest of them. It
+  grows steadily (1.5-3.5 s by size), carries a faint grid visible from
+  inside, draws a ring where it crosses the ship's level, and flashes each
+  rock as the front reaches it. Checked from inside with the gameplay
+  camera. Wiki updated.
