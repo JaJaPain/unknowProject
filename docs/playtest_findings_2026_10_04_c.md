@@ -61,3 +61,43 @@ health colours (already set by `_apply_consequences`) and that nothing in
 `_update_drones` needs movement state. Optional: a beat of N.O.V.A.'s
 "drones back online" if Abe wants it called out (ask; no new line without
 approval).
+
+### 3. Undocking: Dock Control should speak ("hold steady...")
+
+**Abe:** when undocking, the NPC who docked you should say something like
+"Hold steady, ship's control will be returned to you once outside of our
+safety zone."
+
+**Code:**
+- Docking already has this voice. `_play_dock_clearance` (`UIManager.gd:~4486`)
+  picks one of 20 `DOCK_CLEARANCE_LINES` ("{call}, you are cleared for
+  docking. Hold steady..."). It speaks it through `SpeechService` in the
+  station's own voice (`_dock_clearance_voice_for_station`: stable per
+  station, the same voice every time) and posts it to the feed as
+  "Dock Control".
+- Undocking says nothing. `_push_out_of_berth` (`UIManager.gd:~10661`) runs the
+  beam push out past the approach sphere and hands control back silently.
+- Timing to watch: on the first undock with the starter contract,
+  N.O.V.A.'s target tip (`_maybe_play_intro_repair_target_tip`) also plays
+  right after undock. The two must not talk over each other: Dock Control
+  first (the push takes ~4-10 s), N.O.V.A. after control is back.
+
+**Proposed fix:**
+- `DOCK_DEPARTURE_LINES`: an authored pool like the docking one, ~20 lines
+  with {call}, matter-of-fact and a few dry, all saying the same thing:
+  hold steady, the beam takes you out, control comes back past the safety
+  zone. Spoken in the same station voice when the push starts, posted as
+  "Dock Control". In player text the sphere is the station's "safety zone"
+  (Abe's word).
+- Optional short second line when the beam lets go ("{call}, you're clear.
+  Controls are yours."), so the hand-back is heard as well as felt. Ask Abe.
+- Lines for Abe's review in short batches (first 6 below, provisional):
+  1. "{call}, hold steady. We'll walk you out on the beam; controls come back once you're past our safety zone."
+  2. "Dock Control to {call}: releasing clamps. Hands off until you clear the safety zone."
+  3. "{call}, you're on the outbound beam. Stay put; the ship is yours again at the edge of our zone."
+  4. "Clamps released, {call}. We'll carry you out. Don't fight the pull, it never ends well."
+  5. "{call}, departure logged. Hold position while the tractor clears you from the station."
+  6. "Dock Control to {call}: outbound lane is clear. Controls return past the safety zone."
+- Test: the dock smoke hears one departure line per undock, in the
+  station's voice, before control returns. The intro tip waits until
+  after it.
