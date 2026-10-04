@@ -33,6 +33,17 @@ const LANE_CLEARANCE := 150.0
 const AUTOPILOT_STATION_MARGIN := 55.0
 ## How far out from its pier a berthed ship sits.
 const BERTH_STANDOFF := 25.0
+# --- Outposts (Abe, 2026-10-04): ChatGPT's Kestrel Depot and Crown Haven, built
+# the same way (Dock_* markers, a turning Radar_Rotor) at outpost size. Their
+# berths face along the marker's +X, which isn't always away from the centre
+# (Crown Haven's pads face up), so the lane runs along the marker. Their meshes
+# are joined by material, so a box per mesh would fill the open docking bays:
+# they collide as the real mesh. Numbers from ChatGPT's harbor test.
+const OUTPOST_BERTH_STANDOFF := 16.0
+const OUTPOST_LANE_CLEARANCE := 60.0
+## Outpost light drones, as a share of the main-station size.
+const OUTPOST_LIGHT_SCALE := 0.15
+var _outpost_berths := false
 var _hull_radius := 0.0
 var _hull_boxes: Array[AABB] = []
 
@@ -163,7 +174,10 @@ func _setup_berths(model_root: Node3D) -> void:
 	berths.sort_custom(func(a: Node3D, b: Node3D) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)
 	# The top tier: a clear approach on every model (the harbor test's choice).
 	player_berth = berths[berths.size() - 2] if berths.size() >= 2 else berths[0]
+	_outpost_berths = station_type == "outpost"
 	rotor = model_root.find_child("Habitat_Rotor", true, false) as Node3D
+	if rotor == null:
+		rotor = model_root.find_child("Radar_Rotor", true, false) as Node3D
 	for animation in model_root.find_children("*", "AnimationPlayer", true, false):
 		(animation as AnimationPlayer).stop()
 	# These models are built at their real size: the station node isn't scaled.
@@ -179,12 +193,16 @@ func _setup_berths(model_root: Node3D) -> void:
 		if box.size.length() < 1.0:
 			continue
 		_hull_boxes.append(box)
-		var shape := BoxShape3D.new()
-		shape.size = box.size
 		var holder := CollisionShape3D.new()
 		holder.name = "HullBox_%s" % mesh.name
-		holder.shape = shape
-		holder.position = box.get_center()
+		if _outpost_berths and mesh.mesh != null:
+			holder.shape = mesh.mesh.create_trimesh_shape()
+			holder.transform = _relative_transform_to(mesh, self)
+		else:
+			var shape := BoxShape3D.new()
+			shape.size = box.size
+			holder.shape = shape
+			holder.position = box.get_center()
 		add_child(holder)
 		for i in 8:
 			_hull_radius = maxf(_hull_radius, box.get_endpoint(i).length())
@@ -192,7 +210,13 @@ func _setup_berths(model_root: Node3D) -> void:
 
 ## Where a ship sits in the player's berth, and how it faces.
 func berth_position() -> Vector3:
-	return player_berth.global_position + player_berth.global_basis.x.normalized() * BERTH_STANDOFF
+	var standoff := OUTPOST_BERTH_STANDOFF if _outpost_berths else BERTH_STANDOFF
+	return player_berth.global_position + player_berth.global_basis.x.normalized() * standoff
+
+
+## Outposts are lit at this share of a main station's light size.
+func light_scale() -> float:
+	return OUTPOST_LIGHT_SCALE if _outpost_berths else 1.0
 
 
 func berth_basis() -> Basis:
@@ -203,7 +227,7 @@ func berth_basis() -> Basis:
 
 ## The approach sphere's radius (around the station's centre).
 func approach_sphere_radius() -> float:
-	return _hull_radius + LANE_CLEARANCE
+	return _hull_radius + (OUTPOST_LANE_CLEARANCE if _outpost_berths else LANE_CLEARANCE)
 
 
 ## How big the autopilot should treat this station: the sphere, less its own
@@ -216,6 +240,14 @@ func autopilot_radius() -> float:
 ## straight out from the berth. The autopilot flies here; the beam does the
 ## rest along the line to the berth.
 func lane_entry_position() -> Vector3:
+	if _outpost_berths:
+		# Where the berth's outward line (marker +X) meets the sphere.
+		var from := berth_position() - global_position
+		var dir := player_berth.global_basis.x.normalized()
+		var along := from.dot(dir)
+		var r := approach_sphere_radius()
+		var t := -along + sqrt(maxf(0.0, along * along + r * r - from.length_squared()))
+		return global_position + from + dir * t
 	var out := player_berth.global_position - global_position
 	if out.length_squared() < 1.0:
 		out = global_basis.x

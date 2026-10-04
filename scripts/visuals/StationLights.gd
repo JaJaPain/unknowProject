@@ -97,24 +97,31 @@ const MAIN_LANE_BEACONS := 4
 
 
 func _build_main_station(box: AABB, station: Node3D) -> void:
+	# Outposts (same kind of model, a tenth the size) get the same set, smaller.
+	var s: float = float(station.call("light_scale")) if station.has_method("light_scale") else 1.0
+	var dot := MAIN_DOT * s
 	var c := box.get_center()
 	var e := box.size * 0.5
 	var rim := maxf(e.x, e.z) * 0.92
 	for i in MAIN_RIM_MARKERS:
 		var a := TAU * float(i) / float(MAIN_RIM_MARKERS)
 		var at := c + Vector3(cos(a) * rim, 0.0, sin(a) * rim)
-		_beacon(at, RED if at.x < c.x else GREEN, MAIN_DOT, "marker")
-	_beacon(c + Vector3(0, e.y + 40.0, 0), WHITE, MAIN_DOT * 1.4, "strobe")
-	_beacon(c + Vector3(0, -e.y - 40.0, 0), WHITE, MAIN_DOT * 1.4, "strobe")
-	# The docking lane, in the station's own space.
+		_beacon(at, RED if at.x < c.x else GREEN, dot, "marker")
+	_beacon(c + Vector3(0, e.y + 40.0 * s, 0), WHITE, dot * 1.4, "strobe")
+	_beacon(c + Vector3(0, -e.y - 40.0 * s, 0), WHITE, dot * 1.4, "strobe")
+	# The docking lane, in the station's own space. The beacons stand beside
+	# it, never in it (an outpost lane can run straight up).
 	var berth := station.to_local(station.call("berth_position"))
 	var entry := station.to_local(station.call("lane_entry_position"))
+	var lane := (entry - berth).normalized()
+	var beside := Vector3.UP if absf(lane.dot(Vector3.UP)) < 0.7 else lane.cross(Vector3.FORWARD).normalized()
+	var offset := beside * (30.0 if s >= 1.0 else 18.0)
 	for i in MAIN_LANE_BEACONS:
 		var t := (float(i) + 0.5) / float(MAIN_LANE_BEACONS)
-		_beacon(berth.lerp(entry, t) + Vector3.UP * 30.0, AMBER, MAIN_DOT * 0.8, "berth")
+		_beacon(berth.lerp(entry, t) + offset, AMBER, dot * 0.8, "berth")
 	_berth_light = OmniLight3D.new()
 	_berth_light.light_color = AMBER
-	_berth_light.omni_range = 150.0
+	_berth_light.omni_range = 150.0 * maxf(s, 0.3)
 	_berth_light.light_energy = 1.0
 	_berth_light.position = berth
 	add_child(_berth_light)

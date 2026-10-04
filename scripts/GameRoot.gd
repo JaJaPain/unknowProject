@@ -1140,6 +1140,13 @@ func _init_generated_system_configs() -> void:
 			seed_val,
 			frontier_factions
 		)
+		# Rebuilt without a saved config: skins still avoid the system its
+		# return gate leads back to.
+		var previous := ""
+		if not sys_def.gates.is_empty():
+			previous = str(sys_def.gates[0].destination_system_id)
+		load("res://scripts/domain/StationSkins.gd").assign(
+			config, load("res://scripts/domain/StationSkins.gd").of_system(system_registry, previous))
 		system_registry.set_generated_config(sys_id, config)
 		system_registry.set_generated_config(config.legacy_id, config)
 

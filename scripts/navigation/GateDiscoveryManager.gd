@@ -247,6 +247,10 @@ func _ensure_destination_generated(gate_id: String) -> void:
 		frontier_factions
 	)
 
+	# Never the skins of the system it's reached from (Abe, 2026-10-04).
+	load("res://scripts/domain/StationSkins.gd").assign(
+		config, load("res://scripts/domain/StationSkins.gd").of_system(registry, str(gate_def.system_id)))
+
 	var return_gate_id := str(gate_def.destination_gate_id)
 	var return_gate_legacy := return_gate_id.replace(".", "_")
 	var source_sys_id := str(gate_def.system_id)

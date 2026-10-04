@@ -24,23 +24,11 @@ func _load_resources() -> void:
 	_rocky_normal = load("res://assets/planet_rocky_normal.png") as Texture2D
 	_gas_texture = load("res://assets/planet_gas.png") as Texture2D
 
-const STATION_MODELS := [
-	"res://assets/space_station1.glb",
-	"res://assets/space_station2.glb",
-]
-const STATION_SCALES := [2.0, 20.0]
-## Main stations are the kilometre-scale models with berths (Abe, 2026-10-04:
-## mains only, never outposts), each system its own look.
-const MAIN_STATION_MODELS := [
-	"res://assets/stations/cinder_anchorage.glb",
-	"res://assets/stations/cinder_foundry_union.glb",
-	"res://assets/stations/cinder_polar_research.glb",
-	"res://assets/stations/cinder_red_corsair.glb",
-	"res://assets/stations/meridian_exchange.glb",
-	"res://assets/stations/meridian_blackwake_syndicate.glb",
-	"res://assets/stations/meridian_helios_embassy.glb",
-	"res://assets/stations/meridian_verdant_exchange.glb",
-]
+## Which model and finish each station wears: StationSkins (main stations
+## are the kilometre-scale models, outposts Kestrel Depot and Crown Haven;
+## never a skin the system before used). The system's choice is saved in its
+## config (station_skins); one is picked here if it has none.
+const StationSkinsType := preload("res://scripts/domain/StationSkins.gd")
 ## Room a main station needs: its approach sphere (about 1.3 km) and space
 ## around it.
 const MAIN_STATION_CLEARANCE := 2600.0
@@ -318,7 +306,9 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 			return {}
 		position = found
 
-	var model_idx := rng.randi() % STATION_MODELS.size()
+	if config.station_skins.size() < maxi(config.station_count, index + 1):
+		config.station_skins = StationSkinsType.pick(config.seed_value, maxi(config.station_count, index + 1) - 1, [])
+	var skin: String = config.station_skins[index]
 
 	var station := _station_scene.instantiate() as Node3D
 	station.name = "Station_%d" % index
@@ -331,18 +321,12 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 	station.set("world_id", world_id)
 	station.set("display_name", display_name)
 	station.set("station_type", station_type)
-	station.set("model_path", STATION_MODELS[model_idx])
-	# Two models, many stations: each one gets its own size, heading and a
-	# slight tilt so no two read as the same place.
-	station.set("model_instance_scale", STATION_SCALES[model_idx] * rng.randf_range(0.8, 1.25))
+	# Every station model has berths and is built at its real size: scale 1,
+	# level, turned its own way.
+	station.set("model_path", skin)
+	station.set("model_instance_scale", 1.0)
 	station.position = position
-	station.rotation = Vector3(rng.randf_range(-0.12, 0.12), rng.randf_range(0.0, TAU), rng.randf_range(-0.12, 0.12))
-	if index == 0:
-		# A main station: one of the big berthed models, at its real size,
-		# level (its docking lanes are horizontal) and turned its own way.
-		station.set("model_path", MAIN_STATION_MODELS[rng.randi() % MAIN_STATION_MODELS.size()])
-		station.set("model_instance_scale", 1.0)
-		station.rotation = Vector3(0.0, rng.randf_range(0.0, TAU), 0.0)
+	station.rotation = Vector3(0.0, rng.randf_range(0.0, TAU), 0.0)
 
 	_placed_positions.append(position)
 	_placed_radii.append(MAIN_STATION_CLEARANCE if index == 0 else MIN_STATION_CLEARANCE)

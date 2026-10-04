@@ -764,3 +764,16 @@ through the marked gate and flies you in):
       routes" gets "I don't feel good about selling you this route, Shiny...",
       no credits are taken, the HUD says what the gate needs, and after the
       upgrade she sells it.
+
+## W. New outposts (added 2026-10-04)
+
+- [ ] **Iron Reach and Kova are the new outposts.** Iron Reach is Kestrel
+      Depot (grey/teal), Kova is Crown Haven (pearl/cobalt); the radar on top
+      turns, the rest stays still. Small light drones, amber beacons beside
+      the lane.
+- [ ] **Dock at both.** Kestrel's lane comes in from the side; Crown Haven's
+      pads face up, so the beam pulls you straight down onto the pad. The
+      ship never clips the structure; undocking lifts you clear first.
+- [ ] **New look every jump.** Jump to a new system: its main station and
+      outposts wear different models/finishes from the system you left.
+      Jump back: the same ones as before (they're saved with the system).

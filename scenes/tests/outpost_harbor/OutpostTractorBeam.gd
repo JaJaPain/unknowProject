@@ -1,4 +1,3 @@
-class_name DockingTractorBeam
 extends MeshInstance3D
 
 ## Lightweight visual tether for the automated docking procedure. It follows
@@ -54,8 +53,6 @@ func _update_beam() -> void:
 	var beam_length := station_origin.distance_to(end_point)
 	visible = true
 	global_position = station_origin.lerp(end_point, 0.5)
-	# A straight-up beam (Crown Haven's pads) needs another up, or looking_at
-	# fails on the colinear vectors (ChatGPT's harbor test).
 	var up := Vector3.FORWARD if absf(direction.dot(Vector3.UP)) > 0.99 else Vector3.UP
 	global_basis = Basis.looking_at(direction, up) \
 		* Basis(Vector3.RIGHT, PI * 0.5)

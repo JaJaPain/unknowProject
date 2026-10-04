@@ -38,6 +38,9 @@ var nebula_colors: Array[Color] = []
 var nebula_brightness: float = 0.5
 var nebula_layer_count: int = 3
 var story_pack: Dictionary = {}
+## Station model paths, main first then outposts (StationSkins). Chosen when
+## the system is generated so it never repeats the previous system's skins.
+var station_skins: Array[String] = []
 
 
 static func from_seed(
@@ -205,6 +208,7 @@ func to_dict() -> Dictionary:
 		"nebula_brightness": nebula_brightness,
 		"nebula_layer_count": nebula_layer_count,
 		"story_pack": story_pack.duplicate(true),
+		"station_skins": station_skins.duplicate(),
 	}
 
 
@@ -266,6 +270,9 @@ static func from_dict(data: Dictionary) -> SystemConfig:
 	)
 	if data.get("story_pack", {}) is Dictionary:
 		config.story_pack = (data.get("story_pack", {}) as Dictionary).duplicate(true)
+	if data.get("station_skins", []) is Array:
+		for skin in data.get("station_skins", []):
+			config.station_skins.append(str(skin))
 	return config
 
 
