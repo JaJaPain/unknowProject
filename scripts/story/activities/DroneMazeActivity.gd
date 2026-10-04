@@ -218,6 +218,9 @@ func eligible_target() -> Node3D:
 	var combat := get_node_or_null("/root/CombatManager")
 	if combat != null and int(combat.get("state")) != 0:
 		return null
+	# Not mid-jump (playtest 2026-10-03 b finding 1).
+	if preload("res://scripts/story/activities/SignalTuningActivity.gd")._jumping():
+		return null
 	if kind_of(target).is_empty() or _worked.has(_id_for(target)):
 		return null
 	if (player as Node3D).global_position.distance_to((target as Node3D).global_position) > LAUNCH_RANGE:

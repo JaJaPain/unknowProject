@@ -77,6 +77,13 @@ func _initialize() -> void:
 	_check(item.get("kind", "") == "thread", "the director offers the thread here")
 	activity.offer(item)
 	_check(activity.has_offer(), "offered")
+	# Abe, 2026-10-04: an offer made just before a fight was announced in it.
+	# Not calm yet: she holds the line (and the T prompt) until it is.
+	_check(activity._announce_pending, "not calm: the announcement waits")
+	activity._calm_s = ActivityType.ANNOUNCE_CALM_S
+	activity._announce()
+	_check(not activity._announce_pending, "calm again: she announces it")
+	_check(FileAccess.get_file_as_string("res://scripts/story/activities/SignalTuningActivity.gd").contains("_calm_s >= OFFER_CALM_S"), "offers wait for calm")
 	activity._on_finished("failed", 0.0)
 	_check(director.main_story_threads().is_empty(), "a failed attempt hears nothing")
 	activity.offer(item)

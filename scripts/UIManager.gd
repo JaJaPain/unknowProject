@@ -4493,15 +4493,19 @@ func _run_docking_procedure(serial: int, station: Node3D, ship: Node3D) -> void:
 	var berth := station.call("get_docking_position", ship.global_position) as Vector3 \
 		if station.has_method("get_docking_position") else station.global_position
 	var berthed: bool = station.has_method("is_berthed") and bool(station.call("is_berthed"))
+	var pull_seconds := DOCK_TRACTOR_PULL_SECONDS
 	if berthed:
-		# Pulled from the lane entry into the berth itself, turning to face it.
+		# Pulled from the lane entry into the berth itself, turning to face it,
+		# at a pace you can watch: the lane is most of a kilometre (Abe,
+		# 2026-10-04: the beam should visibly take hold and draw the ship in).
 		berth = station.call("berth_position")
+		pull_seconds = maxf(DOCK_TRACTOR_PULL_SECONDS, ship.global_position.distance_to(berth) / BIG_STATION_BEAM_SPEED)
 	var pull := create_tween().set_ignore_time_scale(true)
-	pull.tween_property(ship, "global_position", berth, DOCK_TRACTOR_PULL_SECONDS) \
+	pull.tween_property(ship, "global_position", berth, pull_seconds) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	if berthed:
-		pull.parallel().tween_property(ship, "quaternion", (station.call("berth_basis") as Basis).get_rotation_quaternion(), DOCK_TRACTOR_PULL_SECONDS)
-	pull.parallel().tween_property(_docking_procedure_progress, "value", 40.0, DOCK_TRACTOR_PULL_SECONDS)
+		pull.parallel().tween_property(ship, "quaternion", (station.call("berth_basis") as Basis).get_rotation_quaternion(), pull_seconds)
+	pull.parallel().tween_property(_docking_procedure_progress, "value", 40.0, pull_seconds)
 	await pull.finished
 	if serial != _docking_procedure_serial or not is_instance_valid(station):
 		return
@@ -4537,11 +4541,13 @@ func _ensure_docking_procedure_panel() -> void:
 	if docking_procedure_panel != null:
 		return
 	docking_procedure_panel = PanelContainer.new()
-	docking_procedure_panel.set_anchors_preset(Control.PRESET_CENTER)
+	# Low on the screen, so the beam taking hold and the pull stay in view
+	# (Abe, 2026-10-04).
+	docking_procedure_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	docking_procedure_panel.offset_left = -230
 	docking_procedure_panel.offset_right = 230
-	docking_procedure_panel.offset_top = -92
-	docking_procedure_panel.offset_bottom = 92
+	docking_procedure_panel.offset_top = -330
+	docking_procedure_panel.offset_bottom = -146
 	docking_procedure_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.025, 0.08, 0.11, 0.94)
@@ -10517,7 +10523,7 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	
 	# Give player a slight push away from station
 	if GlobalState.player:
-		var undocking_from = current_station
+		var undocking_from = station_before_undock
 		if undocking_from != null and is_instance_valid(undocking_from) and undocking_from.has_method("is_berthed") and bool(undocking_from.call("is_berthed")):
 			# A berthed main station pushes the ship back out along the lane
 			# on its beam, facing out, then lets go (Abe, 2026-10-04).
@@ -10532,22 +10538,29 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	_maybe_play_intro_repair_target_tip()
 
 
-## Undocking from a big station: the berth's beam carries the ship out to the
-## lane entry, nose out; flight is the player's again when it lets go.
+## Undocking from a big station: the berth's beam carries the ship out past
+## the approach sphere, nose out; only then is flight the player's again (Abe,
+## 2026-10-04). Same unhurried pace as the pull in.
 const UNDOCK_PUSH_SECONDS := 2.5
+## How fast a big station's beam moves a ship along its lane.
+const BIG_STATION_BEAM_SPEED := 70.0
+## How far past the sphere the push leaves the ship.
+const UNDOCK_CLEAR_OF_SPHERE := 250.0
 
 
 func _push_out_of_berth(station: Node3D, ship: Node3D) -> void:
-	var out: Vector3 = station.call("lane_entry_position")
+	var entry: Vector3 = station.call("lane_entry_position")
+	var out := entry + (entry - station.global_position).normalized() * UNDOCK_CLEAR_OF_SPHERE
 	var away := out - station.global_position
 	away.y = 0.0
 	ship.global_basis = Basis.looking_at(away.normalized(), Vector3.UP)
+	var push_seconds := maxf(UNDOCK_PUSH_SECONDS, ship.global_position.distance_to(out) / BIG_STATION_BEAM_SPEED)
 	var beam := DockingTractorBeamType.new()
 	get_tree().current_scene.add_child(beam)
 	beam.call("configure", station.call("beam_origin"), ship)
 	ship.set("is_docked", true)
 	var push := create_tween().set_ignore_time_scale(true)
-	push.tween_property(ship, "global_position", out, UNDOCK_PUSH_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	push.tween_property(ship, "global_position", out, push_seconds).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	push.tween_callback(func() -> void:
 		if is_instance_valid(beam):
 			beam.queue_free()

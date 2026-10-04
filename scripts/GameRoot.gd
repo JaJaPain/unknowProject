@@ -16,6 +16,8 @@ const STARTING_STATION_APPROACH_SECONDS := 8.0
 # Keep this aligned with PlayerShip.DOCK_TRACTOR_CAPTURE_RANGE. A fresh
 # campaign should require a real approach before the tractor can take over.
 const STARTING_STATION_TRACTOR_BUFFER := 72.0
+## A fresh campaign starts this far beyond a big station's approach sphere.
+const STARTING_BIG_STATION_DISTANCE := 6000.0
 const SAVE_VERSION := SaveMigrator.CURRENT_VERSION
 const SAVE_PATH := "user://savegame.json"
 const GATE_TRAVEL_MINUTES := 45
@@ -424,6 +426,10 @@ func _position_fresh_campaign_ship_for_station_approach() -> void:
 		approach_direction = (docking_position - station.global_position).normalized()
 	var approach_distance := maxf(0.0, float(player.get("max_speed"))) \
 		* STARTING_STATION_APPROACH_SECONDS
+	# Far enough out to take in the size of a big station on the way in
+	# (Abe, 2026-10-04: "it only takes a few seconds to get to the station").
+	if station.has_method("is_berthed") and bool(station.call("is_berthed")):
+		approach_distance = STARTING_BIG_STATION_DISTANCE
 	player.global_position = docking_position + approach_direction * (
 		approach_distance + STARTING_STATION_TRACTOR_BUFFER
 	)
@@ -8306,8 +8312,9 @@ func _run_dock_smoke_test() -> void:
 		# so wait for the completed station UI instead of treating the first
 		# docked frame as the end of the procedure.
 		# Tractor, clamps and pressure (about 10 s), then the welcome screen
-		# waits up to 12 s for N.O.V.A.'s line before fading: allow 30 s.
-		for frame in range(1800):
+		# waits up to 12 s for N.O.V.A.'s line before fading: allow 30 s; a big station's
+		# lane pull is up to ~15 s more: allow 60 s.
+		for frame in range(3600):
 			if ui and ui.dock_panel.visible:
 				break
 			await get_tree().physics_frame
@@ -8396,6 +8403,17 @@ func _run_dock_smoke_test() -> void:
 		if ui.has_method("undock_player"):
 			ui.undock_player()
 		await get_tree().process_frame
+		# A big station's beam pushes the ship out past its approach sphere
+		# before flight is handed back (Abe, 2026-10-04): wait for it, then
+		# check it ended up outside.
+		var big := station.has_method("is_berthed") and bool(station.call("is_berthed"))
+		for frame in range(2400 if big else 0):
+			if not player.is_docked:
+				break
+			await get_tree().physics_frame
+		if big and player.global_position.distance_to(station.global_position) <= float(station.call("approach_sphere_radius")):
+			_fail_dock_smoke_test("Undocking from '%s' left the ship inside the approach sphere." % station.name)
+			return
 		if player.is_docked \
 				or player.nav_mode != "MANUAL" \
 				or ui.dock_panel.visible:
@@ -11897,6 +11915,20 @@ func _run_station_snapshot() -> void:
 			await get_tree().process_frame
 		await _hud_snapshot_save(ProjectSettings.globalize_path("res://.tmp_godot_user/%s.png" % shot[0]))
 	print("[StationSnapshot] sphere %.0f, berths %d" % [float(station.call("approach_sphere_radius")), (station.get("berths") as Array).size()])
+	# The dock itself, as the player sees it: the beam takes the ship at the
+	# sphere and draws it in (Abe, 2026-10-04).
+	cam.queue_free()
+	if ui != null:
+		ui.visible = true
+	player.global_position = entry + out * 40.0
+	player.look_at(station.global_position, Vector3.UP)
+	player.sync_camera_to_ship()
+	player.get_viewport().get_camera_3d()
+	GlobalState.active_target = station
+	station.call("begin_dock_tractor", player)
+	for at in [1.5, 6.0, 11.0]:
+		await get_tree().create_timer(at - (0.0 if at == 1.5 else (4.5 if at == 6.0 else 5.0))).timeout
+		await _hud_snapshot_save(ProjectSettings.globalize_path("res://.tmp_godot_user/station_dock_%02d.png" % int(at)))
 	get_tree().quit(0)
 
 

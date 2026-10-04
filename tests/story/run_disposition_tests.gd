@@ -72,7 +72,7 @@ func _initialize() -> void:
 	_check(receiver.threat_label().is_empty(), "a territorial gunship at 450 m keeping to itself: the receiver works")
 	reaver.global_position = Vector3(800, 0, 0)
 	var label: String = receiver.threat_label()
-	_check(label.contains("800 m"), "a Reaver at 800 m blocks it, by name and distance: %s" % label)
+	_check(label.contains(load("res://scripts/domain/WorldScale.gd").label(800.0)), "a Reaver at 800 (world) blocks it, by name and distance in the player's metres: %s" % label)
 	reaver.global_position = Vector3(2000, 0, 0)
 	_check(receiver.threat_label().is_empty(), "a Reaver far off doesn't")
 	gunner.set("target", player)

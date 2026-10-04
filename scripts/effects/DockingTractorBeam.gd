@@ -9,6 +9,7 @@ var _station: Node3D
 var _ship: Node3D
 var _cylinder: CylinderMesh
 const SHIP_SURFACE_CLEARANCE := 5.0
+const BEAM_WIDTH_PER_LENGTH := 0.004
 
 
 func configure(station: Node3D, ship: Node3D) -> void:
@@ -59,3 +60,7 @@ func _update_beam() -> void:
 	# scaled for their models, and inherited node scale made the old beam run far
 	# beyond the ship.
 	_cylinder.height = beam_length
+	# A long beam (a big station's lane) is thicker, or it vanishes at range.
+	var radius := maxf(0.42, beam_length * BEAM_WIDTH_PER_LENGTH)
+	_cylinder.top_radius = radius
+	_cylinder.bottom_radius = radius

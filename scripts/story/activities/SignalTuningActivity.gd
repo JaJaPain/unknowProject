@@ -64,6 +64,13 @@ var _flight_s := 0.0
 var _offer_at := 0.0
 var _decided := false
 var _offered: Dictionary = {}
+## Calm (nothing hostile, no fight, no jump) for this long before an offer,
+## and her announcement waits for calm too: one was made a moment before a
+## Reaver locked on and she announced it mid-fight (Abe, 2026-10-04).
+const OFFER_CALM_S := 8.0
+const ANNOUNCE_CALM_S := 2.0
+var _calm_s := 0.0
+var _announce_pending := false
 var _panel: Node = null
 ## On-screen prompt while an offer is open: the only other hint was one comms
 ## line that scrolled away, so players never knew the receiver existed.
@@ -97,6 +104,9 @@ func _process(delta: float) -> void:
 		_offer_at = FIRST_OFFER_AFTER_S if not _taught() else randf_range(OFFER_AFTER_MIN_S, OFFER_AFTER_MAX_S)
 		_decided = false
 		_offered = {}
+	_calm_s = (_calm_s + delta) if _can_listen() else 0.0
+	if _announce_pending and _calm_s >= ANNOUNCE_CALM_S:
+		_announce()
 	_update_prompt(delta)
 	_update_status(delta)
 	if _panel != null:
@@ -108,7 +118,7 @@ func _process(delta: float) -> void:
 	_flight_s += delta
 	# Never offered beside a station: its traffic and dock chatter drown out
 	# anything faint (Abe, 2026-09-30). The clock waits until we're clear.
-	if not _decided and _flight_s >= _offer_at and not _near_station():
+	if not _decided and _flight_s >= _offer_at and _calm_s >= OFFER_CALM_S and not _near_station():
 		_decided = true
 		_try_offer()
 
@@ -124,7 +134,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Returns what happened: "tuning", "blocked", "scanning", or "" when the ship
 ## isn't flying (docked, loading, cinematic) and T means nothing.
 func press_tune() -> String:
-	if _panel != null or not _flying():
+	if _panel != null or not _flying() or _jumping():
 		return ""
 	var reason := listen_block_reason()
 	if not reason.is_empty():
@@ -304,7 +314,20 @@ func _can_listen() -> bool:
 	var combat := get_node_or_null("/root/CombatManager")
 	if combat != null and int(combat.get("state")) != 0:
 		return false
+	# Not mid-jump: the tunnel isn't somewhere to tune a receiver (playtest
+	# 2026-10-03 b finding 1).
+	if _jumping():
+		return false
 	return not _threat_nearby()
+
+
+## A gate jump is under way (GameRoot's transition).
+static func _jumping() -> bool:
+	var loop := Engine.get_main_loop()
+	var scene = (loop as SceneTree).current_scene if loop is SceneTree else null
+	if scene == null:
+		return false
+	return bool(scene.get("transition_in_progress")) or bool(scene.get("jump_request_pending"))
 
 
 ## No receiver work while a fight is coming (Abe, 2026-10-01: "if a ship is in
@@ -359,11 +382,21 @@ func _try_offer() -> void:
 	offer(item)
 
 
-## Make `item` available to tune into, and have her mention it.
+## Make `item` available to tune into; she mentions it once it's calm.
 func offer(item: Dictionary) -> void:
 	_offered = item
 	if not _offered.has("difficulty"):
 		_offered["difficulty"] = pick_difficulty()
+	_announce_pending = true
+	if _calm_s >= ANNOUNCE_CALM_S or not is_inside_tree():
+		_announce()
+
+
+## Her line, the system line and the wiki entry for the open offer.
+func _announce() -> void:
+	_announce_pending = false
+	if _offered.is_empty():
+		return
 	var story := get_node_or_null("/root/StoryManager")
 	var taught := story != null and bool(story.story_state.get(TAUGHT_FLAG, false))
 	var pool: Array = OFFER_LINES[str(_offered["difficulty"])]
@@ -402,7 +435,7 @@ func _current_depth() -> int:
 ## "[T] TUNE RECEIVER" at the bottom of the screen, gently pulsing, for as long
 ## as the offer is open and the player is free to take it.
 func _update_prompt(delta: float) -> void:
-	var show := not _offered.is_empty() and _panel == null and _can_listen() and not _near_station()
+	var show := not _offered.is_empty() and not _announce_pending and _panel == null and _can_listen() and not _near_station()
 	if show and _prompt == null:
 		_build_prompt()
 	if _prompt == null:
