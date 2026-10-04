@@ -183,7 +183,10 @@ static func fallback_chapter_packet(
 	return {
 		"packet_id": "chapter_packet.%d.fallback" % chapter_number,
 		"chapter": chapter_number,
-		"premise": "Local pressure is rising while the larger story plan recovers.",
+		# Everything with words in it here can reach the player (titles, pitches,
+		# Loose ends): in-world only, never how the game works (playtest
+		# 2026-10-04 finding 4: "while the authored chapter packet's unavailable").
+		"premise": "Supply runs out here have been slipping, and the station is feeling it.",
 		"opposing_force": _default_opposing_force_dossier(),
 		"attachment_beats": [],
 		"threads": [
@@ -191,15 +194,15 @@ static func fallback_chapter_packet(
 				"thread_id": "thread.%s" % suffix,
 				"public_ref": "thread:%s" % suffix,
 				"privacy": "public",
-				"summary": "A local pressure thread keeps missions grounded until the chapter plan refreshes.",
+				"summary": "Ordinary work has been piling up at the station while traffic stays thin.",
 			},
 		],
 		"facts": [
 			{
 				"fact_id": "fact.%s_visible_pressure" % suffix,
 				"privacy": "public",
-				"public_text": "Local contacts are reacting to unstable conditions.",
-				"answer_anchor": "The trouble is local, visible, and safe to ask about.",
+				"public_text": "Fewer ships are calling here, and the station's errands are stacking up.",
+				"answer_anchor": "Traffic is thin and nobody wants the small runs; that's all it is.",
 			},
 		],
 		"beats": [
@@ -209,10 +212,10 @@ static func fallback_chapter_packet(
 				"cause_id": "cause.%s_model_recovery" % suffix,
 				"supported_objective_types": [objective_type],
 				"eligible_entity_ids": [entity_id],
-				"stake": "Contacts need a grounded job while the authored chapter packet is unavailable.",
+				"stake": _fallback_stake(chapter_number),
 				"disclosure_fact_ids": ["fact.%s_visible_pressure" % suffix],
 				"completion_fact_ids": ["fact.%s_visible_pressure" % suffix],
-				"decline_consequence": "The local pressure remains unresolved and another contact may ask for help.",
+				"decline_consequence": "The errand waits on the board for someone else.",
 			},
 		],
 		"next_packet_trigger": {
@@ -222,6 +225,20 @@ static func fallback_chapter_packet(
 		"source": "procedural_fallback",
 		"fallback_reason": reason,
 	}
+
+
+## The fallback's stake, one of a few in-world reasons (it opens the pitch:
+## "<stake>. The job is ...").
+const FALLBACK_STAKES := [
+	"Traffic's been thin and the small runs keep piling up",
+	"Half the regular haulers skipped this stop last week",
+	"The station's running short on the everyday things nobody notices until they're gone",
+	"A couple of crews quit on short notice and their work still needs doing",
+]
+
+
+static func _fallback_stake(chapter: int) -> String:
+	return str(FALLBACK_STAKES[posmod(chapter - 1, FALLBACK_STAKES.size())])
 
 
 static func _first_available_objective(

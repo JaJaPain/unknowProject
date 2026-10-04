@@ -78,7 +78,7 @@ require N missions) has the same bug.
 - Test: a fresh campaign with a non-empty global history: no route offer
   until 3 contracts in this campaign.
 
-### 4. The first agent job was the fallback job again (+ two new details)
+### 4. The first agent job was the fallback job again (+ two new details) — FIXED
 
 **Abe (screenshot):** "Vaeshtalil Pilgrim Fleet Juno Calder", system faction
 contact: "Hey, Vaes? Got a job for you—Courier: Fact Fallback Chapter 1
@@ -146,7 +146,7 @@ seconds turns back around and starts flying to the location again.
   station's sphere; check the heading never flips more than ~90 degrees and
   the ship arrives.
 
-### 6. New button (Abe's design): "Scan Composition" for rocks in mining range
+### 6. New button (Abe's design): "Scan Composition" for rocks in mining range — DONE as a range scan (see 8)
 
 **Abe:** a new button for mining that only shows up when in mining range,
 labelled **Scan Composition**; it tells you what resources are in the rock.
@@ -196,7 +196,7 @@ or mostly silicate (silicate is the bulk of every mix).
 the ores in the hold ("Silicate 21 · Ferrite 4"), so you don't have to open
 the inventory to see them. Ask Abe if he wants it.
 
-### 8. Fuel Blocks board job: no way to find the ice (playtest ended here)
+### 8. Fuel Blocks board job: no way to find the ice (playtest ended here) — FIXED (Scan Composition, C)
 
 **Abe:** he took a board job for Fuel Blocks; without a way to find the ice
 rocks "it might take years". That is why he asked for a scan (finding 6).
@@ -224,3 +224,17 @@ in the system; it only warns when there is none at all
 - N.O.V.A.'s Fuel Blocks hint and the job text point at the scan.
 
 **Playtest ended by Abe at this point. Agent quest still bugged (finding 4).**
+
+## Fix log
+
+- **6 + 8 (96b1120):** Scan Composition: C or the target window's button;
+  320 m pulse, overview names scanned rocks ("Water ice asteroid"), red rocks
+  unread, mining a rock reads it; Fuel Blocks job points at the scan.
+- **4:** the fallback chapter packet speaks in-world (rotating stakes like
+  "Traffic's been thin and the small runs keep piling up"); job items come
+  from an authored pool, never from fact ids; a dev-word guard
+  (`StoryAgentOfferBuilder.looks_like_dev_text`) blanks any stake or
+  complication that talks about the game's insides; the pitch writer gets
+  the contact's own name ("Juno Calder", not "Vaeshtalil Pilgrim Fleet Juno
+  Calder") and addresses the player as "you" or "Captain"; contact name
+  pools grew from 12 x 12 to 32 x 32 so the same person turns up less.

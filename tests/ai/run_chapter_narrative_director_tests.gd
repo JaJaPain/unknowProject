@@ -277,6 +277,23 @@ func _test_fallback_packet_is_valid_and_grounded() -> void:
 			and int(parsed.get("chapter", 0)) == 1,
 		"Fallback chapter packet was not valid, grounded, and clearly labeled."
 	)
+	# Playtest 2026-10-04 finding 4: its words reach the player (job pitch,
+	# Loose ends), so none of them may talk about how the game works.
+	var offers := preload("res://scripts/story/StoryAgentOfferBuilder.gd")
+	var spoken: Array[String] = [str(packet.get("premise", ""))]
+	for thread in packet.get("threads", []):
+		spoken.append(str(thread.get("summary", "")))
+	for fact in packet.get("facts", []):
+		spoken.append(str(fact.get("public_text", "")))
+		spoken.append(str(fact.get("answer_anchor", "")))
+	for beat in packet.get("beats", []):
+		spoken.append(str(beat.get("stake", "")))
+		spoken.append(str(beat.get("decline_consequence", "")))
+	for line in spoken:
+		_expect(not line.is_empty() and not offers.looks_like_dev_text(line), "Fallback text speaks like a developer: %s" % line)
+	_expect(offers.looks_like_dev_text("Contacts need a grounded job while the authored chapter packet is unavailable."), "The dev-word guard missed the old stake.")
+	var item: String = offers._story_item_name({"beat_id": "beat.fallback_chapter_1_stabilize_route", "completion_fact_ids": ["fact.fallback_chapter_1_visible_pressure"]}, "courier")
+	_expect(not offers.looks_like_dev_text(item) and not item.begins_with("Fact"), "A job item was named from a fact id: %s" % item)
 
 
 func _has_error_code(validation: ValidationResult, code: String) -> bool:

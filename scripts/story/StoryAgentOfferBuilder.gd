@@ -84,7 +84,7 @@ static func build_offer(
 		"story_thread_id": str(candidate.get("thread_id", "")),
 		"story_beat_id": str(candidate.get("beat_id", "")),
 		"cause_id": str(candidate.get("cause_id", "")),
-		"stake": str(candidate.get("stake", "")),
+		"stake": _player_stake(candidate),
 		"story_hook_ref": str(candidate.get("thread_id", "")),
 	}
 	var timing := _timing_from_budget(budget)
@@ -321,7 +321,7 @@ static func _delivery_courier_objective(candidate: Dictionary) -> Dictionary:
 	var destination := _destination_outpost(candidate)
 	if destination.is_empty():
 		return {}
-	var item_name := _story_item_name(candidate, "Sealed Courier Package")
+	var item_name := _story_item_name(candidate, "courier")
 	return {
 		"type": "DELIVERY_COURIER",
 		"item_name": item_name,
@@ -364,7 +364,7 @@ static func _recover_combat_drop_objective(
 		"target_faction": _target_faction(candidate),
 		"count_required": count,
 		"drop_chance": 0.33,
-		"item_name": _story_item_name(candidate, "data pack"),
+		"item_name": _story_item_name(candidate, "data"),
 		"turn_in_location": _main_station_display(),
 		"reward_credits": int(round(520.0 * float(budget.get("reward_multiplier", 1.0)))),
 	}
@@ -429,7 +429,7 @@ static func _pickup_special_objective(candidate: Dictionary) -> Dictionary:
 		"target_outpost": target_outpost,
 		"target_outpost_display": target_display,
 		"target_npc": str(candidate.get("target_npc", "Local Quartermaster")),
-		"part_name": _story_item_name(candidate, "sealed component"),
+		"part_name": _story_item_name(candidate, "component"),
 		"destination": _main_station_display(),
 		"reward_credits": 260,
 	}
@@ -483,7 +483,7 @@ static func _accept_choice() -> Dictionary:
 
 
 static func _title_for_candidate(candidate: Dictionary, objective: Dictionary) -> String:
-	var stake := str(candidate.get("stake", "")).strip_edges()
+	var stake := _player_stake(candidate)
 	match str(objective.get("type", "")):
 		"DELIVERY_COURIER":
 			return "Courier: %s" % str(objective.get("item_name", "Sealed Package"))
@@ -507,8 +507,10 @@ static func _dialogue_for_candidate(
 	objective: Dictionary,
 	budget: Dictionary
 ) -> String:
-	var stake := str(candidate.get("stake", "")).strip_edges()
+	var stake := _player_stake(candidate)
 	var complication := str(candidate.get("complication", "")).strip_edges()
+	if looks_like_dev_text(complication):
+		complication = ""
 	var objective_summary := _objective_summary(objective)
 	var band := str(budget.get("difficulty_band", "routine"))
 	var text := "%s. The job is %s." % [
@@ -520,6 +522,12 @@ static func _dialogue_for_candidate(
 	if band != "routine":
 		text += " Treat it as %s work." % band.replace("_", " ")
 	return text
+
+
+## The candidate's stake as the player may read it ("" when it's dev text).
+static func _player_stake(candidate: Dictionary) -> String:
+	var stake := str(candidate.get("stake", "")).strip_edges()
+	return "" if looks_like_dev_text(stake) else stake
 
 
 static func _objective_summary(objective: Dictionary) -> String:
@@ -597,14 +605,40 @@ static func _target_faction_display(faction: String) -> String:
 	return faction.capitalize()
 
 
-static func _story_item_name(candidate: Dictionary, fallback: String) -> String:
-	var fact_ids: Array = candidate.get("completion_fact_ids", []) \
-		if candidate.get("completion_fact_ids", []) is Array else []
-	if not fact_ids.is_empty():
-		var label := str(fact_ids[0]).get_file().replace("_", " ").replace(".", " ")
-		if not label.strip_edges().is_empty():
-			return label.strip_edges().capitalize()
-	return fallback
+## What the job moves, by kind. Never built from ids: a fact id once became
+## "Courier: Fact Fallback Chapter 1 Visible Pressure" (playtest 2026-10-04).
+const STORY_ITEMS := {
+	"courier": ["Sealed Courier Package", "Crate of Medical Gel", "Sealed Survey Logs",
+		"Replacement Valve Set", "Pressure Seal Kit", "Coolant Cartridges",
+		"Navigation Chart Cores", "Sealed Mail Bundle", "Water Reclaimer Filters",
+		"Spare Hab Lighting"],
+	"data": ["Data Pack", "Flight Recorder", "Encrypted Log Core", "Cargo Manifest Drive"],
+	"component": ["Sealed Component", "Gyro Assembly", "Relay Coil", "Heat Sink",
+		"Pump Impeller", "Sensor Lens"],
+}
+
+
+static func _story_item_name(candidate: Dictionary, kind: String) -> String:
+	var authored := str(candidate.get("item_name", "")).strip_edges()
+	if not authored.is_empty() and not looks_like_dev_text(authored):
+		return authored
+	var pool: Array = STORY_ITEMS.get(kind, STORY_ITEMS["courier"])
+	var key := str(candidate.get("beat_id", candidate.get("thread_id", "")))
+	return str(pool[posmod(key.hash(), pool.size())])
+
+
+## Words that only make sense to a developer. Any job text that has one is
+## replaced before the player sees it (playtest 2026-10-04 finding 4).
+const DEV_WORDS := ["fallback", "packet", "chapter plan", "authored", "fact.", "fact_",
+	"thread.", "beat.", "cause.", "procedural", "placeholder", "unavailable"]
+
+
+static func looks_like_dev_text(text: String) -> bool:
+	var lower := text.to_lower()
+	for word in DEV_WORDS:
+		if lower.contains(word):
+			return true
+	return false
 
 
 static func _main_station_id() -> String:

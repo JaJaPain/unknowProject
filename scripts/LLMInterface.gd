@@ -1,5 +1,6 @@
 extends Node
 
+const QuestNextStepType := preload("res://scripts/domain/QuestNextStep.gd")
 const LocalModelGatewayType := preload("res://scripts/ai/LocalModelGateway.gd")
 const NarrativeDirectorType := preload("res://scripts/ai/NarrativeDirector.gd")
 const CampaignDirectionContractType := preload("res://scripts/story/CampaignDirectionContract.gd")
@@ -2973,13 +2974,16 @@ func request_quest_generation(
 		var role_label: String = (
 			agent_role if not agent_role.is_empty() else "station contact"
 		)
+		# The contact's own name only: given "<Faction> <First> <Last>" the
+		# writer took a piece of the faction for a name ("Hey, Vaes?",
+		# playtest 2026-10-04 finding 4).
 		agent_persona = "You are %s, a %s for %s. " % [
-			agent_name,
+			QuestNextStepType.person_name(agent_name),
 			role_label,
 			faction_label,
 		] + \
 			"You are stationed in the current system and offer practical local contracts. " + \
-			"You speak directly to the pilot and use dry PG-13 frontier humor when it fits. Never call the pilot by name or nickname -- use 'you' or 'pilot'. " + \
+			"You speak directly to the pilot and use dry PG-13 frontier humor when it fits. Never call the pilot by name or nickname -- use 'you' or 'Captain'. Never use a faction's name, or part of one, as a form of address. " + \
 			"Do not impersonate Broker Kaelen. Do not claim to be from Zenith, Aurelia, or Vanguard unless that is your faction."
 
 	if not agent_profile.is_empty():
