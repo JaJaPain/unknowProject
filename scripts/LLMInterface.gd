@@ -49,13 +49,12 @@ var _ollama_ready:        bool = false
 var _ollama_poll_count:   int  = 0
 var _ollama_start_pid:    int  = -1   # PID of the process we launched, if any
 var _models_warm_started: bool = false  # guard so reconnect doesn't re-warm
-# Opt-in only — session-level, defaults off. When true, force_restart_ollama()
-# is allowed to kill a pre-existing (not game-launched) ollama.exe by name via
-# taskkill, not just relaunch a missing one. Toggle lives in DevPanel Story
-# Debug tab. Killing an external process the game didn't start is a much more
-# invasive action than the normal watchdog's "launch if missing" behavior, so
-# it stays behind explicit player consent per session.
-var ollama_auto_restart_allowed: bool = false
+# When true, force_restart_ollama() may kill a running ollama.exe (and its
+# llama-server runners) by name, not just one the game launched. On by
+# default (Abe, 2026-10-04: Ollama is there only for this game, so the game
+# owns it and may restart it whenever it needs to). The DevPanel Story Debug
+# toggle can still turn it off.
+var ollama_auto_restart_allowed: bool = true
 var _ollama_recovery_in_progress: bool = false
 var _ollama_heartbeat_in_flight: bool = false
 var _ollama_heartbeat_timer: Timer = null
@@ -767,9 +766,48 @@ func force_restart_ollama() -> void:
 			"Enable the DevPanel toggle to allow this, or restart Ollama manually."
 		)
 		return
-	print("[LLMInterface] Force restart: taskkill on ollama.exe (player-allowed).")
-	OS.execute("taskkill", ["/IM", "ollama.exe", "/F"], [], false)
+	print("[LLMInterface] Force restart: taskkill on ollama.exe and its runners.")
+	_kill_ollama_processes()
 	_ollama_launch()
+
+
+func _kill_ollama_processes() -> void:
+	if OS.get_name() == "Windows":
+		OS.execute("taskkill", ["/IM", "ollama.exe", "/F"], [], false)
+		OS.execute("taskkill", ["/IM", "llama-server.exe", "/F"], [], false)
+	else:
+		OS.execute("pkill", ["-f", "ollama"], [], false)
+
+
+## Restart Ollama outright (the game owns it), wait until it answers, then call
+## `on_up(true)`, or `on_up(false)` if it hasn't come back in ~60 s. Used when
+## a request is stuck inside Ollama (playtest 2026-10-04 b finding 2).
+func restart_ollama_then(on_up: Callable) -> void:
+	GenerationDiagnostics.record_event("ollama_watchdog", "restart_for_stall", "llm_interface", {})
+	print("[LLMInterface] Restarting Ollama to clear a stuck request.")
+	if campaign_bible_priority_active:
+		campaign_bible_stage = "restarting"
+		campaign_bible_stage_since_msec = Time.get_ticks_msec()
+	small_model_verified = false
+	_models_warm_started = false
+	if _ollama_start_pid > 0:
+		OS.kill(_ollama_start_pid)
+		_ollama_start_pid = -1
+	_kill_ollama_processes()
+	await get_tree().create_timer(1.5, true, false, true).timeout
+	_ollama_launch()
+	for i in 30:
+		await get_tree().create_timer(2.0, true, false, true).timeout
+		var up := [false, false]
+		_ollama_ping(func(ok: bool) -> void:
+			up[0] = ok
+			up[1] = true)
+		while not up[1]:
+			await get_tree().process_frame
+		if up[0]:
+			on_up.call(true)
+			return
+	on_up.call(false)
 
 
 ## Called once Ollama is confirmed up. Checks that required models are present,
@@ -1058,7 +1096,9 @@ func _verify_small_model_ready(model_name: String, attempt: int) -> void:
 	var h := HTTPRequest.new()
 	add_child(h)
 	h.timeout = 30.0
+	_small_model_http.append(h)
 	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, body: PackedByteArray) -> void:
+		_small_model_http.erase(h)
 		h.queue_free()
 		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
 		var ok := result == HTTPRequest.RESULT_SUCCESS and code == 200
@@ -1163,7 +1203,10 @@ func _warm_single_model(model_name: String, label: String, on_done: Callable) ->
 	var h := HTTPRequest.new()
 	add_child(h)
 	h.timeout = 90.0
+	if label == "small":
+		_small_model_http.append(h)
 	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, _body: PackedByteArray) -> void:
+		_small_model_http.erase(h)
 		h.queue_free()
 		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
 		if result == HTTPRequest.RESULT_SUCCESS and code == 200:
@@ -1408,6 +1451,7 @@ func _start_campaign_bible_attempt(
 	motif_history: Dictionary = {}
 ) -> void:
 	set_campaign_bible_priority_active(true)
+	_cancel_small_model_warmup()
 	var capability := "campaign_bible"
 	var model_name := model_for_capability(capability)
 	if OLLAMA_URL.is_empty() or model_name.strip_edges().is_empty():
@@ -1443,6 +1487,11 @@ func _start_campaign_bible_attempt(
 			"seed": randi(),
 		}
 	)
+	var small_model := active_model_name if active_model_name != "" else LocalModelGatewayType.DEFAULT_SMALL_MODEL
+	# A stalled load is retried once, then reported as a timeout (the loading
+	# screen asks again shortly). Playtest 2026-10-04 b finding 2.
+	var stall := {"retries": 0}
+	var fire_holder := {}
 	# The actual large-model request, deferred until VRAM is cleared below.
 	var fire_bible_request := func() -> void:
 		GenerationDiagnostics.record_event(
@@ -1481,6 +1530,26 @@ func _start_campaign_bible_attempt(
 			HTTPClient.METHOD_POST,
 			JSON.stringify(payload)
 		)
+		if err == OK:
+			_watch_campaign_bible_load(temp_http, model_name, func() -> void:
+				if int(stall["retries"]) < CAMPAIGN_BIBLE_STALL_RETRIES:
+					stall["retries"] = int(stall["retries"]) + 1
+					# Something is stuck inside Ollama: restart it (Abe: the game
+					# owns it), then ask again on a clean server.
+					if ollama_auto_restart_allowed:
+						restart_ollama_then(func(up: bool) -> void:
+							if up:
+								(fire_holder["fire"] as Callable).call()
+							else:
+								set_campaign_bible_priority_active(false)
+								campaign_bible_stage = ""
+								callback.call({"ok": false, "reason": "campaign_bible_timeout", "model": model_name, "stalled": true}))
+					else:
+						_evict_models_then([small_model, model_name], fire_holder["fire"])
+					return
+				set_campaign_bible_priority_active(false)
+				campaign_bible_stage = ""
+				callback.call({"ok": false, "reason": "campaign_bible_timeout", "model": model_name, "stalled": true}))
 		if err != OK:
 			temp_http.queue_free()
 			set_campaign_bible_priority_active(false)
@@ -1497,11 +1566,11 @@ func _start_campaign_bible_attempt(
 				"error": err,
 			})
 
+	fire_holder["fire"] = fire_bible_request
 	# Wipe VRAM first (both models), then reload the big model fresh. On a 16GB
 	# card a resident small model starves the 8B story model into a CPU spill and
 	# a timeout (stuck-at-35%). model_name is the large model; active_model_name
 	# the small one — evict both, the request reloads the large cleanly.
-	var small_model := active_model_name if active_model_name != "" else LocalModelGatewayType.DEFAULT_SMALL_MODEL
 	GenerationDiagnostics.record_event(
 		"campaign_bible",
 		"vram_cleared_for_generation",
@@ -1509,6 +1578,88 @@ func _start_campaign_bible_attempt(
 		{"evicted": [small_model, model_name]}
 	)
 	_evict_models_then([small_model, model_name], fire_bible_request)
+
+
+## The small model's warm-up and readiness probe in flight (HTTPRequests).
+var _small_model_http: Array = []
+## What the campaign bible is doing, for the loading screen: "" (nothing),
+## "loading_model" (the story model is coming into memory) or "writing".
+var campaign_bible_stage := ""
+var campaign_bible_stage_since_msec := 0
+## The story model must be in memory this soon after the request, or the
+## request is treated as stalled (2026-10-04: it sat 10 minutes, never loading).
+var campaign_bible_load_stall_s := 90.0  # a var for tests
+const CAMPAIGN_BIBLE_STALL_RETRIES := 1
+const OLLAMA_PS_URL := "http://127.0.0.1:11434/api/ps"
+
+
+## Cancel the small model's warm-up and readiness probe. Evicting a model
+## while its own load is in flight left Ollama's scheduler stuck and the
+## story model never loaded (playtest 2026-10-04 b finding 2). The small
+## model is warmed again after the story gate (warm_small_model_after_story_gate).
+func _cancel_small_model_warmup() -> void:
+	if _small_model_http.is_empty():
+		return
+	for h in _small_model_http:
+		if h != null and is_instance_valid(h):
+			(h as HTTPRequest).cancel_request()
+			(h as HTTPRequest).queue_free()
+	_small_model_http.clear()
+	_models_warm_started = false
+	GenerationDiagnostics.record_event("model_warmup", "cancelled_for_campaign_bible", "LLMInterface", {"model": active_model_name})
+
+
+## Every few seconds while the bible request is open: is the story model in
+## memory yet (Ollama /api/ps)? Not within campaign_bible_load_stall_s: cancel
+## the request and call `on_stall`.
+func _watch_campaign_bible_load(http: HTTPRequest, model_name: String, on_stall: Callable) -> void:
+	campaign_bible_stage = "loading_model"
+	campaign_bible_stage_since_msec = Time.get_ticks_msec()
+	var started := Time.get_ticks_msec()
+	while true:
+		await get_tree().create_timer(3.0, true, false, true).timeout
+		if http == null or not is_instance_valid(http) or http.is_queued_for_deletion():
+			return  # answered (or failed) on its own
+		if campaign_bible_stage == "writing":
+			continue
+		var loaded: bool = await _ollama_model_loaded(model_name)
+		if not is_instance_valid(http) or http.is_queued_for_deletion():
+			return
+		var waited := float(Time.get_ticks_msec() - started) / 1000.0
+		if loaded:
+			campaign_bible_stage = "writing"
+			campaign_bible_stage_since_msec = Time.get_ticks_msec()
+			GenerationDiagnostics.record_event("campaign_bible", "model_loaded", "llm_interface", {"model": model_name, "elapsed_seconds": waited})
+		elif waited >= campaign_bible_load_stall_s:
+			push_warning("[LLMInterface] Story model '%s' didn't load in %.0fs; cancelling the campaign bible request." % [model_name, waited])
+			GenerationDiagnostics.record_event("campaign_bible", "load_stalled", "llm_interface", {"model": model_name, "elapsed_seconds": waited})
+			http.cancel_request()
+			http.queue_free()
+			campaign_bible_stage = "loading_model"
+			campaign_bible_stage_since_msec = Time.get_ticks_msec()
+			on_stall.call()
+			return
+
+
+## Whether Ollama has `model_name` in memory now.
+func _ollama_model_loaded(model_name: String) -> bool:
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 4.0
+	if h.request(OLLAMA_PS_URL, [], HTTPClient.METHOD_GET) != OK:
+		h.queue_free()
+		return false
+	var response: Array = await h.request_completed
+	h.queue_free()
+	if int(response[0]) != HTTPRequest.RESULT_SUCCESS or int(response[1]) != 200:
+		return false
+	var parsed: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
+	if not (parsed is Dictionary):
+		return false
+	for m in (parsed as Dictionary).get("models", []):
+		if m is Dictionary and (str(m.get("name", "")) == model_name or str(m.get("model", "")) == model_name):
+			return true
+	return false
 
 
 func _on_campaign_bible_generation_completed(
@@ -1527,6 +1678,7 @@ func _on_campaign_bible_generation_completed(
 	if temp_http != null and is_instance_valid(temp_http):
 		temp_http.queue_free()
 	set_campaign_bible_priority_active(false)
+	campaign_bible_stage = ""
 	if result != HTTPRequest.RESULT_SUCCESS or response_code != 200:
 		var reason := "http_failed_result_%d_code_%d" % [result, response_code]
 		if result == HTTPRequest.RESULT_TIMEOUT:

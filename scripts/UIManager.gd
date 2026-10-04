@@ -16780,6 +16780,7 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 				loading_status_label.text = "Writing your campaign's story. This takes a minute or two on the first launch."
 				_creep_loading_bar(92.0, 120.0)
 				_play_nova_latency_filler("llm_generation", 1.0, 0)
+				_tick_story_status()
 			elif request_status == "waiting_for_llm_connection":
 				loading_status_label.text = (
 					"Campaign story required. Waiting for local LLM connection..."
@@ -16796,6 +16797,37 @@ func _wait_for_campaign_story_before_gameplay() -> void:
 				get_tree().create_timer(1.0, true, false, true).timeout.connect(
 					func(): _wait_for_campaign_story_before_gameplay()
 				)
+
+
+## The loading screen says what the story model is really doing, with a
+## clock (playtest 2026-10-04 b finding 2: "Writing your campaign's story"
+## sat for ten minutes while nothing was being written).
+var _story_status_ticking := false
+const STORY_STATUS_TEXT := {
+	"loading_model": "Loading the story model... (%s)",
+	"writing": "Writing your campaign's story... (%s)",
+	"restarting": "The story model got stuck. Restarting it... (%s)",
+}
+
+
+func _tick_story_status() -> void:
+	if _story_status_ticking:
+		return
+	_story_status_ticking = true
+	# The request goes out after the GPU is cleared; give it a moment.
+	var idle := 0
+	while loading_status_label != null and is_instance_valid(loading_status_label) and idle < 10:
+		await get_tree().create_timer(1.0, true, false, true).timeout
+		if loading_status_label == null or not is_instance_valid(loading_status_label):
+			break
+		var stage := str(LLMInterface.get("campaign_bible_stage"))
+		if not STORY_STATUS_TEXT.has(stage):
+			idle += 1
+			continue
+		idle = 0
+		var secs := int((Time.get_ticks_msec() - int(LLMInterface.get("campaign_bible_stage_since_msec"))) / 1000)
+		loading_status_label.text = STORY_STATUS_TEXT[stage] % ("%d:%02d" % [secs / 60, secs % 60])
+	_story_status_ticking = false
 
 
 ## Chapter-plan request statuses that mean the plan is already in place.

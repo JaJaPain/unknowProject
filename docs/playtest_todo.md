@@ -784,3 +784,10 @@ through the marked gate and flies you in):
       handing in Kaelen's first contract, N.O.V.A. never offers a signal and T
       does nothing. After the hand-in, her first receiver offer comes early
       as before.
+- [ ] **Music after stingers.** Win a fight or get paid: the music starts
+      coming back as the stinger's last note fades, with no silent gap. A
+      kill that completes a contract (two stingers) doesn't keep it down long.
+- [ ] **New game loading at 35%.** The status shows "Loading the story
+      model... (0:xx)", then "Writing your campaign's story... (0:xx)". Usually
+      done in about a minute. If it ever says "The story model got stuck.
+      Restarting it...", it should carry on by itself.

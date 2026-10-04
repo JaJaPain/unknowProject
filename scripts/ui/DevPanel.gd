@@ -332,6 +332,7 @@ func _build_story_debug_tab() -> void:
 	tab.add_child(auto_restart_hint)
 	var auto_restart_check := CheckBox.new()
 	auto_restart_check.text = "Allow Ollama Auto-Restart (kill + relaunch)"
+	auto_restart_check.button_pressed = true  # the game owns Ollama (Abe, 2026-10-04)
 	auto_restart_check.toggled.connect(func(enabled: bool): ollama_auto_restart_toggled.emit(enabled))
 	tab.add_child(auto_restart_check)
 	var force_restart_btn := Button.new()

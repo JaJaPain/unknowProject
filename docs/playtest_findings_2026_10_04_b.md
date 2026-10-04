@@ -7,7 +7,7 @@ changes until Abe says the playtest has finished.**
 
 ## Findings
 
-### 1. Music waits far too long to come back after a stinger
+### 1. Music waits far too long to come back after a stinger — FIXED
 
 **Abe:** after a stinger the music waits an ungodly long time before it ramps
 back up. It's not the fade, which he can hear; the fade starts really, really
@@ -53,7 +53,7 @@ Each file ends in a long, very quiet reverb tail plus true silence: 0.5 to
 - Test: the music test checks that the bed starts rising within 0.3 s of
   each stinger's audible end.
 
-### 2. New game stuck at 35% ("Writing campaign story") for ~10 minutes
+### 2. New game stuck at 35% ("Writing campaign story") for ~10 minutes — FIXED
 
 **Abe:** it feels like way too much time at 35%; is something hanging new
 game generation?
@@ -103,3 +103,18 @@ session quitting mid-generation two minutes earlier probably caused the
   "Writing... (1:20)", and after a stall "The story model isn't answering;
   starting with a simpler story."
 - Check the outcome in this session's log after 15:45 (timeout).
+
+## Fix log (Abe ended the playtest to patch 1 and 2)
+
+- **1:** each stinger holds the music only while it's heard (measured
+  audible lengths); the fade starts 0.5 s before its end and eases out;
+  back-to-back stingers extend the hold only to the later end.
+- **2:** the game owns Ollama (Abe): restarts are allowed by default. The
+  bible cancels the small model's warm-up and probe before clearing the
+  GPU. A watchdog polls /api/ps: if the story model isn't in memory within
+  90 s, the request is cancelled, Ollama is restarted (taskkill ollama.exe and
+  llama-server.exe, relaunch, wait until it answers) and the bible is asked
+  again; a second stall reports a timeout and the loading screen retries.
+  The loading screen shows the real stage with a clock: "Loading the story
+  model... (0:12)", "Writing your campaign's story... (1:05)", "The story
+  model got stuck. Restarting it...". Not yet tested against a live stall.
