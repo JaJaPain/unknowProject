@@ -204,3 +204,63 @@ asteroid.
   quieter (-10 dB) with a short max distance.
 - Test: the dock smoke checks that a beam's audio player is playing during
   the pull and push, and stops after.
+
+### 7. Autopilot still does 180-degree turns ("Obstruction cleared. Resuming direct course")
+
+**Abe:** still a lot of 180-degree turns, with "navigation obstruction
+cleared, returning to...". It gets the job done, but the 180 looks bad. Can
+we stop it?
+
+**What the message means:** `_emit_navigation_obstruction` ("Direct route
+obstructed by X. Plotting a safe orbital bypass.") fires when a replan finds
+something in the straight line. `_emit_navigation_route_clear` ("Obstruction
+cleared. Resuming direct course.") fires when a later replan finds the
+straight line clear again (`PlayerShip.gd:~2087-2118`). So each 180 is a
+detour that a later replan drops: turn away, then turn back. The fix from
+playtest 2026-10-04 finding 5 (full-length routes, speed-scaled lookahead, no
+aiming behind) handled the "route ran out" case. These come from replans
+that change the plan itself.
+
+**Likely causes (from the code; needs a repro to rank them):**
+1. **Inside a keep-out sphere, the exit is radial.** When the ship is
+   already inside an obstacle's keep-out (body + margin), TangentNavigator
+   steers to an exit waypoint pointing mostly *away from the obstacle's
+   centre* (`exit_waypoint`, `EXIT_OUTWARD_BIAS 1.0` vs `EXIT_AROUND_BIAS
+   0.55`). With the obstacle ahead, that's a turn of up to 180. Once out,
+   the next replan finds a bypass or a clear line and turns back.
+2. **Planets' keep-outs are now kilometres wide.** A planet's navigation
+   radius includes its ring and belt (`navigation_clearance_radius = ring +
+   width/2 + 90`). The rings were stretched ×5 with the world (start gas
+   giant ~4.4 km), so routes to anything near a planet (belts, outposts,
+   orbital stations, the gate) start or end inside or near these spheres,
+   which feeds cause 1. The corridor exception only covers stations and
+   rocks orbiting that same planet (`_get_navigation_clearance_for_destination`).
+3. **Moving ships count as route obstacles** (`"ship"` is in
+   `_TANGENT_OBSTACLE_GROUPS`). Traffic now cruises at up to ×5. A freighter
+   crossing the line gets a bypass; it moves on; "cleared"; turn back. The
+   nose whisker (55 u) also forces replans near traffic and belt rocks.
+4. **No hysteresis:** every replan picks a side or a straight line afresh, so
+   alternating plans aren't damped.
+
+**Proposed fix (after the playtest):**
+- **Repro first:** a "route tour" smoke in the start system and a generated
+  one. Undock at each station, fly to every other station, outpost, gate,
+  belt and a few rocks, at cruise. Record the largest heading reversal and
+  every obstruction/cleared pair. Rank the causes from that.
+- **Never turn more than ~100 degrees from the goal to get around
+  something:** inside a keep-out, exit along the tangent on the goal's side
+  (slide round), not straight out. If the goal is really behind, make a
+  wide banked turn, never a pivot.
+- **Hysteresis:** keep the chosen bypass side until clearly past the
+  obstacle. Don't drop a detour for "direct" until the direct line has been
+  clear for ~2 s and the turn back is under ~45 degrees. The notices follow
+  the same rule.
+- **Moving ships aren't route obstacles;** they're handled locally (a small
+  sidestep from the whisker), never by a full replan.
+- **Re-check celestial keep-outs** after the stretch: bound the
+  ring-inclusive radius for routing past a planet (the belt is a field on
+  an arc now, not a full ring) and widen the corridor exception to
+  anything near the planet.
+- Test: the route tour asserts no heading change over ~100 degrees between
+  consecutive frames-in-a-second windows, and at most one obstruction
+  notice per trip.
