@@ -8466,6 +8466,21 @@ func _run_dock_smoke_test() -> void:
 		# before flight is handed back (Abe, 2026-10-04): wait for it, then
 		# check it ended up outside.
 		var big := station.has_method("is_berthed") and bool(station.call("is_berthed"))
+		# Playtest 2026-10-04 c finding 4: mid-push, a HUD order is refused
+		# and the ship stays on the beam.
+		if big and player.is_docked:
+			GlobalState.active_target = station
+			if bool(ui.call("_command_selected_target", "ORBIT")) or player.nav_mode != "MANUAL":
+				_fail_dock_smoke_test("A HUD order was taken mid-push at '%s' (nav %s)." % [station.name, player.nav_mode])
+				return
+			# Finding 6: the beam hums like the mining tractor.
+			var humming := false
+			for node in get_tree().current_scene.get_children():
+				if node is DockingTractorBeam and node.hum != null and node.hum.playing:
+					humming = true
+			if not humming:
+				_fail_dock_smoke_test("The undock beam at '%s' is silent." % station.name)
+				return
 		for frame in range(2400 if big else 0):
 			if not player.is_docked:
 				break

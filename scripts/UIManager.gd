@@ -133,6 +133,18 @@ const DOCK_CLEARANCE_LINES: Array[String] = [
 	"Dock control confirms {call}. Aligning ship, then we will cycle the locks.",
 	"{call}, docking clearance is yours. Please remain a cooperative piece of spaceflight.",
 ]
+## Dock Control as the beam carries the ship out (Abe, playtest 2026-10-04
+## c finding 3): the same station voice as the docking clearance, saying the
+## ship is theirs until it's past the safety zone. Provisional, for Abe's review.
+const DOCK_DEPARTURE_LINES: Array[String] = [
+	"{call}, hold steady. We'll walk you out on the beam; controls come back once you're past our safety zone.",
+	"Dock Control to {call}: releasing clamps. Hands off until you clear the safety zone.",
+	"{call}, you're on the outbound beam. Stay put; the ship is yours again at the edge of our zone.",
+	"Clamps released, {call}. We'll carry you out. Don't fight the pull, it never ends well.",
+	"{call}, departure logged. Hold position while the tractor clears you from the station.",
+	"Dock Control to {call}: outbound lane is clear. Controls return past the safety zone.",
+]
+const DOCK_RELEASE_TEXT := "Clear of the safety zone. Controls are yours."
 var docking_procedure_panel: PanelContainer
 var _docking_procedure_title: Label
 var _docking_procedure_status: Label
@@ -4484,11 +4496,21 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	_run_docking_procedure(serial, station, ship)
 
 
-func _play_dock_clearance(station: Node3D) -> void:
+func _dock_call_sign() -> String:
 	var code := GlobalState.ship_transponder_code
 	if code.length() != 6:
 		code = "000000"
-	var call_sign := "INDY SHIP OSCAR-%s-BRAVO" % code
+	return "INDY SHIP OSCAR-%s-BRAVO" % code
+
+
+func _play_dock_departure(station: Node3D) -> void:
+	var line := DOCK_DEPARTURE_LINES[randi() % DOCK_DEPARTURE_LINES.size()].replace("{call}", _dock_call_sign())
+	SpeechService.play(line, _dock_clearance_voice_for_station(station))
+	GlobalState.emit_chatter("Dock Control", line, Color(0.25, 0.82, 1.0))
+
+
+func _play_dock_clearance(station: Node3D) -> void:
+	var call_sign := _dock_call_sign()
 	var line := DOCK_CLEARANCE_LINES[randi() % DOCK_CLEARANCE_LINES.size()].replace(
 		"{call}", call_sign
 	)
@@ -10673,9 +10695,11 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	if GlobalState.player:
 		var undocking_from = station_before_undock
 		if undocking_from != null and is_instance_valid(undocking_from) and undocking_from.has_method("is_berthed") and bool(undocking_from.call("is_berthed")):
-			# A berthed main station pushes the ship back out along the lane
-			# on its beam, facing out, then lets go (Abe, 2026-10-04).
-			_push_out_of_berth(undocking_from, GlobalState.player)
+			# A berthed station (main or outpost) pushes the ship back out
+			# along the lane on its beam, facing out, then lets go (Abe,
+			# 2026-10-04). Dock Control talks you out; N.O.V.A. waits.
+			_play_dock_departure(undocking_from)
+			_push_out_of_berth(undocking_from, GlobalState.player, _maybe_play_intro_repair_target_tip)
 		else:
 			GlobalState.player.global_position += Vector3(0, 0, -15.0)
 			GlobalState.player.is_docked = false
@@ -10683,7 +10707,10 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 		# A mission's targets may have spawned while the player was docked. Rebuild
 		# now so their red hunt rows and N.O.V.A.'s prepared reaction arrive together.
 		refresh_overview()
-	_maybe_play_intro_repair_target_tip()
+		if not bool(GlobalState.player.is_docked):
+			_maybe_play_intro_repair_target_tip()
+	else:
+		_maybe_play_intro_repair_target_tip()
 
 
 ## Undocking from a big station: the berth's beam carries the ship out past
@@ -10696,7 +10723,7 @@ const BIG_STATION_BEAM_SPEED := 70.0
 const UNDOCK_CLEAR_OF_SPHERE := 250.0
 
 
-func _push_out_of_berth(station: Node3D, ship: Node3D) -> void:
+func _push_out_of_berth(station: Node3D, ship: Node3D, on_clear: Callable = Callable()) -> void:
 	var entry: Vector3 = station.call("lane_entry_position")
 	var out := entry + (entry - station.global_position).normalized() * UNDOCK_CLEAR_OF_SPHERE
 	var away := out - station.global_position
@@ -10713,7 +10740,10 @@ func _push_out_of_berth(station: Node3D, ship: Node3D) -> void:
 		if is_instance_valid(beam):
 			beam.queue_free()
 		if is_instance_valid(ship):
-			ship.set("is_docked", false))
+			ship.set("is_docked", false)
+			show_hud_info(DOCK_RELEASE_TEXT, Color(0.25, 0.82, 1.0))
+		if on_clear.is_valid():
+			on_clear.call())
 
 
 # The starter contract becomes active while the player is still in the station.
@@ -11040,6 +11070,9 @@ func _close_context_menu() -> void:
 		selection_marker.queue_redraw()
 
 
+const DOCK_CONTROL_HOLDS_SHIP := "Dock Control has the ship until you're clear of the safety zone."
+
+
 func _command_selected_target(mode: String) -> bool:
 	var target := GlobalState.active_target
 	if target == null or not is_instance_valid(target) \
@@ -11048,6 +11081,9 @@ func _command_selected_target(mode: String) -> bool:
 		return false
 	if mode == "ATTACK":
 		GlobalState.clear_intro_tutorial_player_protection()
+	if bool(GlobalState.player.get("is_docked")):
+		show_hud_warning(DOCK_CONTROL_HOLDS_SHIP)
+		return false
 	if not GlobalState.player.has_method("begin_target_navigation") \
 			or not bool(
 				GlobalState.player.call("begin_target_navigation", mode)

@@ -10,6 +10,13 @@ var _ship: Node3D
 var _cylinder: CylinderMesh
 const SHIP_SURFACE_CLEARANCE := 5.0
 const BEAM_WIDTH_PER_LENGTH := 0.004
+## The same hum as the mining tractor (Abe, playtest 2026-10-04 c finding 6),
+## looping at the ship's end for as long as the beam holds it. The player's
+## own beam at the mining tractor's level; traffic quieter and only up close.
+const HUM_STREAM := preload("res://sound/Mining/TractorBeam.mp3")
+const HUM_PLAYER_DB := -4.0
+const HUM_TRAFFIC_DB := -12.0
+var hum: AudioStreamPlayer3D
 
 
 func configure(station: Node3D, ship: Node3D) -> void:
@@ -30,7 +37,26 @@ func configure(station: Node3D, ship: Node3D) -> void:
 	_cylinder.material = material
 	mesh = _cylinder
 	cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_start_hum()
 	_update_beam()
+
+
+func _start_hum() -> void:
+	hum = AudioStreamPlayer3D.new()
+	hum.name = "TractorHum"
+	hum.stream = HUM_STREAM
+	hum.bus = "SFX"
+	hum.unit_size = 15.0
+	hum.max_db = 2.0
+	var gs := get_node_or_null("/root/GlobalState")
+	var is_player: bool = _ship != null and gs != null and _ship == gs.get("player")
+	hum.volume_db = HUM_PLAYER_DB if is_player else HUM_TRAFFIC_DB
+	hum.max_distance = 350.0 if is_player else 250.0
+	add_child(hum)
+	hum.finished.connect(func() -> void:
+		if is_inside_tree():
+			hum.play())
+	hum.play()
 
 
 func _process(_delta: float) -> void:
@@ -51,6 +77,8 @@ func _update_beam() -> void:
 	# player camera. This makes the tether visibly terminate at its target.
 	var direction := offset / length
 	var end_point := _ship.global_position - direction * SHIP_SURFACE_CLEARANCE
+	if hum != null:
+		hum.global_position = _ship.global_position
 	var beam_length := station_origin.distance_to(end_point)
 	visible = true
 	global_position = station_origin.lerp(end_point, 0.5)

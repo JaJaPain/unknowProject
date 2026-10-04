@@ -808,6 +808,11 @@ func _on_target_changed(new_target: Node3D):
 
 
 func begin_target_navigation(mode: String) -> bool:
+	# While docked (and while a station's beam pulls the ship in or pushes it
+	# out past the safety zone) the station has the ship: no orders, from the
+	# HUD either (playtest 2026-10-04 c finding 4).
+	if is_docked:
+		return false
 	var selected := GlobalState.active_target
 	if selected == null or not is_instance_valid(selected):
 		return false
@@ -1374,6 +1379,13 @@ func _physics_process(delta: float):
 		_hide_mining_beams()
 		if nav_mode in ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "ORBIT", "MINE", "ATTACK", "DOCK"]:
 			cancel_autopilot()
+
+	# The beam has the ship (docking pull, undock push): nothing else steers
+	# or moves it until it lets go outside the safety zone (finding 4).
+	if is_docked:
+		target_position = null
+		current_speed = 0.0
+		velocity = Vector3.ZERO
 
 	# Move and steer
 	if target_position != null:
@@ -2559,6 +2571,8 @@ func launch_combat_drone(target_node: Node3D) -> void:
 	)
 
 func double_click_move(click_pos: Vector3):
+	if is_docked:
+		return
 	cancel_autopilot()
 	route_notice_sent = false
 	route_notice_override = ""

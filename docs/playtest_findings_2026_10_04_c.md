@@ -62,7 +62,7 @@ health colours (already set by `_apply_consequences`) and that nothing in
 "drones back online" if Abe wants it called out (ask; no new line without
 approval).
 
-### 3. Undocking: Dock Control should speak ("hold steady...")
+### 3. Undocking: Dock Control should speak ("hold steady...") — FIXED
 
 **Abe:** when undocking, the NPC who docked you should say something like
 "Hold steady, ship's control will be returned to you once outside of our
@@ -102,7 +102,7 @@ safety zone."
   station's voice, before control returns. The intro tip waits until
   after it.
 
-### 4. Undock: controls come back before the ship is outside the safety zone
+### 4. Undock: controls come back before the ship is outside the safety zone — FIXED
 
 **Abe:** on the same undock change, control should not be returned to the
 ship until it's outside the safe zone.
@@ -174,7 +174,7 @@ instantly. The sound is good. It might be too big: he can't see its edge.
   ring, or a smaller scan (e.g. 200 m)?
 - Check from the gameplay camera (inside), not an outside snapshot.
 
-### 6. The docking tractor beam should sound like the asteroid tractor
+### 6. The docking tractor beam should sound like the asteroid tractor — FIXED
 
 **Abe:** the tractor beam should use the same sound as when we tractor an
 asteroid.
@@ -403,3 +403,17 @@ together. It needs a cleaner way of doing it.
   (clipped to zero height); it now wraps to its real height. The
   quest-reach smoke checks every card button stays inside its card and the
   reply choices; `--lounge-shot` saves screenshots (reviewed).
+- **3:** Dock Control speaks as the beam carries you out, in the station's
+  docking voice (6 provisional `DOCK_DEPARTURE_LINES`). On release the HUD
+  says "Clear of the safety zone. Controls are yours." N.O.V.A.'s
+  first-undock tip waits for the release.
+- **4:** while docked (pull, berth, push) the ship takes no orders, from the
+  HUD either: `begin_target_navigation` / `double_click_move` refuse,
+  physics doesn't steer or move, and HUD orders get "Dock Control has the
+  ship until you're clear of the safety zone." The dock smoke issues an
+  order mid-push at every station and outpost.
+- **6:** every station beam (dock, undock, traffic) loops the mining
+  tractor's hum at the ship's end; traffic quieter and only up close. The
+  dock smoke checks the hum mid-push.
+- Same at main stations and the new outposts: one code path, checked at
+  Greywake, Iron Reach and Kova.
