@@ -758,3 +758,9 @@ through the marked gate and flies you in):
 - [ ] **First agent job reads in-world.** No "fallback", "chapter" or
       "packet" in the job title or pitch; the contact never calls you by a
       bit of a faction name.
+- [ ] **Kaelen won't sell a route you can't fly.** Her first route (Class I)
+      sells as before. Later, while the ship can't use the gate she's
+      offering (e.g. Class II without Shields Mk II): pressing "Ask about new
+      routes" gets "I don't feel good about selling you this route, Shiny...",
+      no credits are taken, the HUD says what the gate needs, and after the
+      upgrade she sells it.

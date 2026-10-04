@@ -14079,9 +14079,46 @@ func _maybe_offer_kaelen_locked_gate_job() -> bool:
 	return true
 
 
+## Abe, 2026-10-04: she offers a route the ship can't fly yet, then won't take
+## the money for it. Class I gates have no prerequisite; from Class II on the
+## ship has to meet the gate first. Nothing is spent and she can be asked again.
+const KAELEN_ROUTE_NOT_YET_LINE := "I don't feel good about selling you this route, Shiny. You can't even use it yet. Upgrade that ship of yours and ask me about it again later."
+
+
+## What the gate wants from this ship (GateRatingGuide.access_to), or {} when
+## that can't be worked out (then she sells as before).
+func _kaelen_route_access(gate_id: String) -> Dictionary:
+	var root := get_tree().current_scene
+	var guide = root.get("gate_rating_guide") if root != null else null
+	var registry = root.get("system_registry") if root != null else null
+	if guide == null or not is_instance_valid(guide) or registry == null or not registry.has_method("get_gate"):
+		return {}
+	var gate_def = registry.get_gate(gate_id)
+	if gate_def == null:
+		return {}
+	return guide.access_to(str(gate_def.destination_system_id))
+
+
 func _kaelen_gate_reveal(gate_id: String, cost: int) -> void:
 	var Nudge = load("res://scripts/story/UndercurrentNudge.gd")
 	var outward: bool = Nudge.gate_is_outward(gate_id)
+	var access := _kaelen_route_access(gate_id)
+	if not access.is_empty() and not bool(access.get("ok", true)):
+		_update_agent_portrait("neutral", "", "serious")
+		agent_dialogue_label.text = "\"%s\"" % KAELEN_ROUTE_NOT_YET_LINE
+		SpeechService.play(KAELEN_ROUTE_NOT_YET_LINE, "voice.kaelen.v1")
+		show_hud_info(str(access.get("label", "Upgrade the ship first.")), Color(1.0, 0.75, 0.35))
+		for child in agent_choices_container.get_children():
+			child.queue_free()
+		var later_btn := Button.new()
+		later_btn.text = "[ Fair enough ]"
+		later_btn.pressed.connect(func():
+			agent_panel.visible = false
+			dock_panel.visible = true
+			_render_dock_submenu()
+		)
+		agent_choices_container.add_child(later_btn)
+		return
 	var result := GateDiscovery.kaelen_reveal(gate_id, cost)
 	if result.get("ok", false):
 		_update_agent_portrait("neutral", "", "intrigued")
