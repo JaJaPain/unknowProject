@@ -1652,8 +1652,11 @@ func _create_dock_menu():
 	dock_message_line.add_theme_font_size_override("font_size", 14)
 	dock_message_line.add_theme_color_override("font_shadow_color", Color.BLACK)
 	dock_message_line.add_theme_constant_override("shadow_outline_size", 2)
-	dock_message_line.clip_text = true
-	dock_message_line.custom_minimum_size.y = 0
+	# Wraps to its real height (up to 4 lines). Clipped with no minimum height
+	# it was squeezed to nothing in the lounge, so hunt replies were invisible
+	# (playtest 2026-10-04 c finding 10).
+	dock_message_line.clip_text = false
+	dock_message_line.custom_minimum_size.y = 20
 	dock_message_line.max_lines_visible = 4
 	msg_text_vbox.add_child(dock_message_line)
 
@@ -5764,6 +5767,7 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 		return
 	var rect: Rect2 = slot_rects[slot_index]
 	var card := Control.new()
+	card.set_meta("lounge_card", true)  # for the lounge layout check (quest-reach smoke)
 	card.anchor_left = rect.position.x
 	card.anchor_top = rect.position.y
 	card.anchor_right = rect.position.x + rect.size.x
@@ -5817,7 +5821,11 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 	name.anchor_top = 0.555 + name_offset.y
 	name.anchor_right = 0.89 + name_offset.x
 	name.anchor_bottom = 0.615 + name_offset.y
-	name.text = str(card_data.get("name", "Unknown")).to_upper()
+	# The person, not "<Faction> <Person>" (playtest 2026-10-04 c finding 10:
+	# the long name ran off both edges). The faction is on the line below.
+	var full_name := str(card_data.get("name", "Unknown"))
+	var person := preload("res://scripts/domain/QuestNextStep.gd").person_name(full_name)
+	name.text = person.to_upper()
 	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	name.clip_text = true
@@ -5835,7 +5843,8 @@ func _add_lounge_contact_card(slot_index: int, card_data: Dictionary) -> void:
 	meta.anchor_bottom = 0.695 + meta_offset.y
 	var role := str(card_data.get("role", "Contact"))
 	var mood := str(card_data.get("mood", "Neutral"))
-	meta.text = "%s  /  %s" % [role, mood]
+	var org := full_name.trim_suffix(person).strip_edges()
+	meta.text = "%s  /  %s" % [org if not org.is_empty() else role, mood]
 	meta.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	meta.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	meta.clip_text = true
@@ -5987,60 +5996,76 @@ func _add_lounge_card_buttons(
 	var contact_key := _lounge_contact_key(card_data)
 	primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 
+	# Playtest 2026-10-04 c finding 10: six buttons in a row ran off the card
+	# and over the neighbours (stealing their clicks). Now at most two, which
+	# never grow past the card: the one thing to do here (during a pickup hunt,
+	# "Ask about it"), and a "More" menu with the rest.
 	var actions := HBoxContainer.new()
 	actions.anchor_left = 0.11
 	actions.anchor_top = 0.72
 	actions.anchor_right = 0.89
 	actions.anchor_bottom = 0.79
-	actions.add_theme_constant_override("separation", 3)
+	actions.clip_contents = true
+	actions.add_theme_constant_override("separation", 4)
 	card.add_child(actions)
-	var action_defs: Array = [
-		["Faction", "faction"],
-		["Trouble", "trouble"],
-		["Work", "work"],
-	]
-	if bool(card_data.get("rumor", false)):
-		action_defs.insert(2, ["Intel", "rumor"])
-	# The contact holding your pickup hands it over here too (playtest
-	# 2026-10-03 finding 14: everyone in the lounge talked about the part and
-	# nobody could give it).
-	# Board pickups are a hunt: everyone can be asked, and only one has it.
+	var person_name := preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name)
 	var part := str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
 	if lounge_hunt_active():
-		var ask_btn := Button.new()
-		ask_btn.text = "Ask about it"
-		ask_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		ask_btn.add_theme_font_size_override("font_size", 8)
-		ask_btn.tooltip_text = "Ask %s about the %s." % [preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name), part]
+		# Board pickups are a hunt: everyone can be asked, and only one has it.
+		var ask_btn := _lounge_card_action_button("Ask about it", "Ask %s about the %s." % [person_name, part])
 		ask_btn.pressed.connect(_on_lounge_hunt_ask.bind(npc_name))
 		actions.add_child(ask_btn)
 		_set_npc_attention_button(ask_btn, true, Color(1.0, 0.75, 0.2, 1.0))
 	elif lounge_handover_available(npc_name):
-		var pickup_btn := Button.new()
-		pickup_btn.text = "Pick up"
-		pickup_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		pickup_btn.add_theme_font_size_override("font_size", 8)
-		pickup_btn.tooltip_text = "Ask %s for the %s." % [preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name), part]
+		# The contact holding your pickup hands it over here (playtest
+		# 2026-10-03 finding 14).
+		var pickup_btn := _lounge_card_action_button("Pick up", "Ask %s for the %s." % [person_name, part])
 		pickup_btn.pressed.connect(_on_ask_for_part_pressed)
 		actions.add_child(pickup_btn)
 		_set_npc_attention_button(pickup_btn, true, Color(1.0, 0.75, 0.2, 1.0))
-	# L2: buy them a drink — warms the contact (persisted), once per dock.
-	var drink_btn := Button.new()
-	drink_btn.text = "Drink"
-	drink_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	drink_btn.add_theme_font_size_override("font_size", 8)
-	drink_btn.tooltip_text = "Buy them a drink (%d cr)" % LOUNGE_DRINK_COST
-	drink_btn.pressed.connect(_on_buy_drink_pressed.bind(npc_name, contact_key, card_data))
-	actions.add_child(drink_btn)
+	else:
+		# L2: buy them a drink: warms the contact (persisted), once per dock.
+		var drink_btn := _lounge_card_action_button("Drink", "Buy %s a drink (%d cr)." % [person_name, LOUNGE_DRINK_COST])
+		drink_btn.pressed.connect(_on_buy_drink_pressed.bind(npc_name, contact_key, card_data))
+		actions.add_child(drink_btn)
+	var more := MenuButton.new()
+	more.text = "More"
+	more.clip_text = true
+	more.flat = false
+	more.custom_minimum_size = Vector2.ZERO
+	more.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	more.add_theme_font_size_override("font_size", 10)
+	more.tooltip_text = "Other things to talk to %s about." % person_name
+	var menu := more.get_popup()
+	menu.add_theme_font_size_override("font_size", 13)
+	var menu_actions: Array[Callable] = []
+	if lounge_hunt_active() or lounge_handover_available(npc_name):
+		menu.add_item("Buy them a drink (%d cr)" % LOUNGE_DRINK_COST)
+		menu_actions.append(_on_buy_drink_pressed.bind(npc_name, contact_key, card_data))
+	var action_defs: Array = [["Their faction", "faction"], ["Any trouble?", "trouble"]]
+	if bool(card_data.get("rumor", false)):
+		action_defs.append(["Heard anything?", "rumor"])
+	action_defs.append(["Got work?", "work"])
 	for action_def in action_defs:
-		var btn := Button.new()
-		btn.text = str(action_def[0])
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		btn.add_theme_font_size_override("font_size", 8)
-		btn.pressed.connect(
-			_on_station_contact_action_pressed.bind(npc_name, str(action_def[1]))
-		)
-		actions.add_child(btn)
+		menu.add_item(str(action_def[0]))
+		menu_actions.append(_on_station_contact_action_pressed.bind(npc_name, str(action_def[1])))
+	menu.id_pressed.connect(func(id: int) -> void:
+		var index := menu.get_item_index(id)
+		if index >= 0 and index < menu_actions.size():
+			menu_actions[index].call())
+	actions.add_child(more)
+
+
+## A lounge card button that never grows past its share of the card.
+func _lounge_card_action_button(label: String, tooltip: String) -> Button:
+	var btn := Button.new()
+	btn.text = label
+	btn.clip_text = true
+	btn.custom_minimum_size = Vector2.ZERO
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.add_theme_font_size_override("font_size", 10)
+	btn.tooltip_text = tooltip
+	return btn
 
 
 ## True when docked at the outpost where the active pickup waits, and it
@@ -6081,9 +6106,17 @@ func _on_lounge_hunt_ask(npc_name: String) -> void:
 	var reply: Dictionary = Hunt.ask(s, npc_name, str(q.get("target_npc", "")), str(q.get("part_name", "package")), randf(), Hunt.decks_for(StoryManager.story_state))
 	var npc_data := GlobalState.get_minor_npc_data(npc_name)
 	var color: Color = npc_data.get("flavor_color", Color.WHITE)
-	show_dock_message(str(reply["line"]), npc_name, color, GlobalState.get_minor_npc_portrait(npc_name))
+	# Turn by turn with one person (finding 10): press them again, or move
+	# on. The holder gives in after a few asks; a drink helps.
+	var choices: Array = []
+	if not bool(reply["handed_over"]):
+		choices = [
+			{"text": "Press them", "callback": _on_lounge_hunt_ask.bind(npc_name)},
+			{"text": "Ask someone else", "callback": clear_dock_message},
+		]
+	show_dock_message(str(reply["line"]), preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name), color, GlobalState.get_minor_npc_portrait(npc_name), choices)
 	GlobalState.emit_npc_flavor({
-		"npc_name": npc_name,
+		"npc_name": preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name),
 		"line": str(reply["line"]),
 		"color": color,
 		"voice_profile_id": str(npc_data.get("voice_profile_id", "voice.neutral.v1")),

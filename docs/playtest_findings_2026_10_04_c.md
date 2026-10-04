@@ -305,7 +305,7 @@ NOVA_LINE_1 ("Hold on, Captain!..."), 1A ("I almost got it.") and 1B
 - Same rule for arrival lines 2-4 relative to the hand-back: none of them
   may play after `_finish()`.
 
-### 9. First dock in the new system: "No vetted contract is ready yet", and it never would be (SERIOUS)
+### 9. First dock in the new system: "No vetted contract is ready yet", and it never would be (SERIOUS) — FIXED
 
 **Abe (screenshot):** first dock in the new system, Kaelen's panel says "No
 vetted contract is ready yet. Kaelen is lining up work in the background;
@@ -350,7 +350,7 @@ check back in a moment." No missions.
 - Test: a smoke that advances the chapter, jumps, docks and opens Kaelen
   gets a contract (or a real "no work" reason), never a permanent defer.
 
-### 10. Lounge hunt ("talk them out of the item"): janky, broken, buttons run together
+### 10. Lounge hunt ("talk them out of the item"): janky, broken, buttons run together — FIXED
 
 **Abe (screenshot):** the new mini-game to talk the item out of someone is
 very janky and broken. He couldn't get it to work, and the buttons all run
@@ -388,3 +388,18 @@ together. It needs a cleaner way of doing it.
 - Test: a UI test that every card's controls stay inside the card's rect,
   and a hunt smoke: Talk → Ask about it → the pool lines progress and the
   holder gives the item.
+
+## Fix log (Abe ended the playtest)
+
+- **9:** `StoryManager.chapter_advanced` → GameRoot commits the new
+  chapter's plan at once; `_request_background_agent_quest` makes a missing
+  plan on the spot. Kaelen's waiting line is now her own (provisional pool
+  of 6). First-session smoke checks a chapter advance.
+- **10:** cards show the person's name, with the faction on the small line.
+  At most two buttons, which never grow past the card: "Ask about it"
+  (during a hunt) or "Drink", plus a "More" menu (drink, their faction, any
+  trouble, heard anything, got work). Hunt replies offer "Press them" and
+  "Ask someone else". **The reply line was invisible in the lounge**
+  (clipped to zero height); it now wraps to its real height. The
+  quest-reach smoke checks every card button stays inside its card and the
+  reply choices; `--lounge-shot` saves screenshots (reviewed).

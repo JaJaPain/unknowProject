@@ -8175,7 +8175,8 @@ func _run_core_smoke_test() -> void:
 			_fail_core_smoke_test("Pressing scan twice in the cooldown didn't keep to one countdown line.")
 			return
 		var first_text := str(countdown.text)
-		await get_tree().create_timer(1.3).timeout
+		# It rounds up ("10 s" for the first second): wait past two ticks.
+		await get_tree().create_timer(2.2).timeout
 		if str(countdown.text) == first_text:
 			_fail_core_smoke_test("The scan countdown line didn't count down: %s" % first_text)
 			return
@@ -11921,11 +11922,53 @@ func _run_quest_reach_smoke_test() -> void:
 	if not regulars.has(holder):
 		fail.call("The holder isn't one of this outpost's lounge contacts.")
 		return
+	# Playtest 2026-10-04 c finding 10: in the lounge, every card's buttons
+	# stay inside its own card (they ran over the neighbours), the hunt card
+	# leads with "Ask about it", and a reply lets you press the same person.
+	ui.current_submenu = ui.DockSubmenu.LOUNGE
+	ui._render_dock_submenu()
+	for i in 10:
+		await get_tree().process_frame
+	var cards: Array = ui.station_contacts_panel.find_children("*", "Control", true, false).filter(func(c): return c.has_meta("lounge_card"))
+	var asked_cards := 0
+	for card in cards:
+		var card_rect: Rect2 = (card as Control).get_global_rect().grow(1.0)
+		for b in (card as Control).find_children("*", "BaseButton", true, false):
+			var r: Rect2 = (b as Control).get_global_rect()
+			if (b as Control).is_visible_in_tree() and r.size.x > 0.0 and not card_rect.encloses(r):
+				fail.call("A lounge button runs outside its card: '%s' %s vs card %s" % [str(b.get("text")), str(r), str(card_rect)])
+				return
+			if str(b.get("text")) == "Ask about it":
+				asked_cards += 1
+	print("[QuestReachSmokeTest] lounge cards: %d, asking buttons: %d" % [cards.size(), asked_cards])
+	if "--lounge-shot" in OS.get_cmdline_user_args():
+		var landing_layer := get_node_or_null("LandingLayer")
+		if landing_layer != null:
+			landing_layer.queue_free()
+		if ui.loading_panel != null and is_instance_valid(ui.loading_panel):
+			ui.loading_panel.queue_free()
+		for i in 10:
+			await get_tree().process_frame
+		await _hud_snapshot_save("user://lounge_hunt_cards.png")
+		ui._on_lounge_hunt_ask(regulars[0] if regulars[0] != holder else regulars[1])
+		for i in 10:
+			await get_tree().process_frame
+		await _hud_snapshot_save("user://lounge_hunt_reply.png")
+	if cards.is_empty() or asked_cards == 0:
+		fail.call("The lounge shows no 'Ask about it' during the hunt (cards %d)." % cards.size())
+		return
 	for npc in regulars:
 		if npc != holder:
 			ui._on_lounge_hunt_ask(npc)
 			if bool(QuestManager.active_quest.get("picked_up", false)):
 				fail.call("A bystander handed it over.")
+				return
+			var press_found := false
+			for c in ui.dock_message_choices.get_children():
+				if str(c.get("text")) == "Press them" and not c.is_queued_for_deletion():
+					press_found = true
+			if not press_found:
+				fail.call("A hunt reply offers no 'Press them'.")
 				return
 	# Asked around: the tracker now says who to keep pushing.
 	ui._on_lounge_hunt_ask(holder)
