@@ -264,3 +264,43 @@ that change the plan itself.
 - Test: the route tour asserts no heading change over ~100 degrees between
   consecutive frames-in-a-second windows, and at most one obstruction
   notice per trip.
+
+### 8. Lag: N.O.V.A. said a tunnel line after we were out of the tunnel
+
+**Abe:** with lag, N.O.V.A. used her "stuck in the tunnel" line when we were
+already outside it.
+
+**Code (`scripts/story/IntroCinematic.gd`):** the tunnel lines are
+NOVA_LINE_1 ("Hold on, Captain!..."), 1A ("I almost got it.") and 1B
+("ALMOST!"). Each goes through `_nova_line_after_voice_ready`:
+- It waits up to 45 s for TTS to be free (`_speech_ready_for_intro`), then
+  calls `SpeechService.play(text)` and waits for playback with
+  `_wait_for_nova_playback`.
+- That wait isn't tied to *her* clip. It watches TTSInterface's global
+  `is_requesting` / `audio_player.playing`, so any other request (a
+  background cache job) counts as "her voice" and ends the wait when it
+  finishes. If nothing is seen at all, it gives up after 18-36 s.
+- Then the timeline moves on to the fling out of the gate. Her clip is still
+  queued in SpeechService and plays whenever synthesis catches up: outside
+  the tunnel.
+- Nothing cancels a pending tunnel line at the fling, and `_finish()` doesn't
+  either.
+- Today's run had extra load: the Ollama restart and new-game generation
+  compete with Kokoro TTS. The intro lines are meant to be pre-cached
+  (`cache_nova_voice_lines`), but if the cache wasn't done, each line is
+  synthesized live.
+
+**Proposed fix:**
+- **A line belongs to its moment:** when the intro moves past a beat (the
+  fling ends the tunnel), any of that beat's lines not yet *started* are
+  dropped (`SpeechService` cancel/stop for those texts). A late tunnel line
+  never plays in open space.
+- **Wait for her clip, not any audio:** track the specific request
+  (SpeechService play id or a finished signal for that text) instead of
+  TTSInterface's global flags.
+- **Pre-cache gate:** the loading screen already waits on TTS. Make sure the
+  intro's own lines are cached before the cinematic starts (they're few and
+  fixed). If not, start the intro and let lines that can't be ready in time
+  drop, rather than shift.
+- Same rule for arrival lines 2-4 relative to the hand-back: none of them
+  may play after `_finish()`.
