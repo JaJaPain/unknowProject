@@ -173,3 +173,34 @@ instantly. The sound is good. It might be too big: he can't see its edge.
   shrinks the scan. **Ask Abe:** keep 320 m with the visible front and
   ring, or a smaller scan (e.g. 200 m)?
 - Check from the gameplay camera (inside), not an outside snapshot.
+
+### 6. The docking tractor beam should sound like the asteroid tractor
+
+**Abe:** the tractor beam should use the same sound as when we tractor an
+asteroid.
+
+**Code:**
+- The asteroid tractor plays `res://sound/Mining/TractorBeam.mp3` (4.8 s) as
+  a positioned loop: `AudioManager.start_tractor_loop(pos)` and
+  `stop_tractor_loop()`, -4 dB, on the shared 3D `tractor_player`
+  (`PlayerShip.gd:~2343`, when the mining tractor engages). It loops by
+  restarting from `_on_mining_loop_finished`.
+- **Every station beam is silent:** `DockingTractorBeam`
+  (`scripts/effects/DockingTractorBeam.gd`) has no audio. It's used for the
+  player's dock pull (`UIManager.gd:~4470`), the undock push (`~10668`) and
+  NPC traffic docking (`TrafficDirector`). The docking procedure plays no
+  sound either.
+
+**Proposed fix:**
+- `DockingTractorBeam` owns its own `AudioStreamPlayer3D` with the same
+  TractorBeam stream, looping while the beam exists. It sits at the ship end
+  and stops (short fade) when the beam is freed. Every station beam then
+  sounds the same as the mining one: the player's dock and undock and NPC
+  traffic (heard from nearby only, by 3D distance falloff). It needs its
+  own player, not the shared mining `tractor_player`, so traffic beams and
+  mining never cut each other off.
+- Set the stream to loop (or restart on `finished` like the mining loop).
+- Player's own dock and undock beam at -4 dB like mining; traffic beams
+  quieter (-10 dB) with a short max distance.
+- Test: the dock smoke checks that a beam's audio player is playing during
+  the pull and push, and stops after.
