@@ -333,7 +333,7 @@ func investigation_panel_view(mission_id: String) -> Dictionary:
 				if not cap._role_scanned(state, role): reason = "Scan the %s site first" % role
 			var item: String = cap.BRANCH_CONSUMABLE.get(branch, "")
 			if not item.is_empty() and not GlobalState.inventory.has_item(item): reason = "Requires one %s" % item.replace("_", " ")
-			if reason.is_empty() and str(result["resolve_site_id"]).is_empty(): reason = "Return within 300 m of a scanned site, below 10 m/s and out of combat"
+			if reason.is_empty() and str(result["resolve_site_id"]).is_empty(): reason = "Return within %s of a scanned site, below %s and out of combat" % [preload("res://scripts/domain/WorldScale.gd").label(300.0), preload("res://scripts/domain/WorldScale.gd").speed_label(10.0)]
 			result["branches"].append({"id": branch, "label": labels.get(branch, branch), "reason": reason})
 	# What the scans observed, for N.O.V.A.'s question: whether the second site
 	# is in, and whether the two observed codes agree.

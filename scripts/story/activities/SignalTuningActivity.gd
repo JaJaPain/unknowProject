@@ -270,7 +270,7 @@ func _build_status() -> void:
 
 
 ## No receiver work within this range of any station.
-const STATION_QUIET_RANGE := 1000.0
+const STATION_QUIET_RANGE := 1000.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL  # between places: stretches
 
 
 func _near_station() -> bool:
@@ -342,7 +342,7 @@ func threat_label() -> String:
 		if hostile or ship.get("target") == player:
 			best_dist = dist
 			var shown = ship.get("display_name")
-			best = "%s, %d m" % [str(shown) if shown != null and not str(shown).is_empty() else str(ship.name), int(dist)]
+			best = "%s, %s" % [str(shown) if shown != null and not str(shown).is_empty() else str(ship.name), preload("res://scripts/domain/WorldScale.gd").label(dist)]
 	return best
 
 func _try_offer() -> void:

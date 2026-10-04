@@ -196,7 +196,7 @@ func _anomaly_id(system_id: String, index: int) -> String:
 
 func _random_position(rng: RandomNumberGenerator) -> Vector3:
 	var angle: float = rng.randf() * TAU
-	var dist: float = rng.randf_range(500.0, 1200.0)
+	var dist: float = rng.randf_range(500.0, 1200.0) * preload("res://scripts/domain/WorldScale.gd").TRAVEL  # stretched with the world
 	return Vector3(cos(angle) * dist, rng.randf_range(-20.0, 20.0), sin(angle) * dist)
 
 

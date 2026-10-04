@@ -30,10 +30,14 @@ const STATION_MODELS := [
 ]
 const STATION_SCALES := [2.0, 20.0]
 
-const MIN_PLANET_SPACING := 800.0
-const MIN_STATION_CLEARANCE := 200.0
-const MIN_GATE_CLEARANCE := 350.0
-const SYSTEM_RADIUS := 2500.0
+# Between-places distances, written at the old scale and stretched by the
+# world's one factor (WorldScale.TRAVEL; Abe, 2026-10-04: bigger systems for
+# the kilometre-scale main stations, close-range things unchanged).
+const WorldScale := preload("res://scripts/domain/WorldScale.gd")
+const MIN_PLANET_SPACING := 800.0 * WorldScale.TRAVEL
+const MIN_STATION_CLEARANCE := 200.0 * WorldScale.TRAVEL
+const MIN_GATE_CLEARANCE := 350.0 * WorldScale.TRAVEL
+const SYSTEM_RADIUS := 2500.0 * WorldScale.TRAVEL
 
 const PLANET_TINTS := [
 	Color(0.92, 0.58, 0.38),
@@ -169,7 +173,8 @@ func _build(config: SystemConfig) -> Dictionary:
 
 func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool = false) -> Dictionary:
 	var is_gas := rng.randf() < 0.35
-	var radius := rng.randf_range(200.0, 550.0) if is_gas else rng.randf_range(150.0, 350.0)
+	# Planets grow with the world (Abe): they still dwarf the main stations.
+	var radius := WorldScale.travel(rng.randf_range(200.0, 550.0) if is_gas else rng.randf_range(150.0, 350.0))
 	var pos := _find_placement(radius + MIN_PLANET_SPACING, 30)
 	if pos == Vector3.INF:
 		return {}
@@ -190,10 +195,10 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	var ring_radius := 0.0
 	var ring_width := 0.0
 	if force_resource_belt or (not is_gas and rng.randf() < 0.45):
-		ring_radius = radius + rng.randf_range(120.0, 250.0)
+		ring_radius = radius + WorldScale.travel(rng.randf_range(120.0, 250.0))
 		ring_width = rng.randf_range(60.0, 140.0)
 
-	var physical_clearance := radius + maxf(100.0, radius * 0.25)
+	var physical_clearance := radius + maxf(WorldScale.travel(100.0), radius * 0.25)
 	var ring_clearance := (ring_radius + ring_width * 0.5 + 90.0) if ring_radius > 0.0 else 0.0
 	planet.set_meta("navigation_clearance_radius", maxf(physical_clearance, ring_clearance))
 	if ring_radius > 0.0:
@@ -212,8 +217,9 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	var mesh := SphereMesh.new()
 	mesh.radius = radius
 	mesh.height = radius * 2.0
-	mesh.radial_segments = 48
-	mesh.rings = 24
+	# Planets are kilometres across now: a smoother silhouette.
+	mesh.radial_segments = 96
+	mesh.rings = 48
 	mesh.material = material
 
 	var mesh_instance := MeshInstance3D.new()
@@ -255,7 +261,7 @@ func _build_ring_spec(
 ) -> Dictionary:
 	var radius := float(planet.get_meta("physical_radius", 250.0))
 	if ring_radius <= 0.0:
-		ring_radius = radius + rng.randf_range(140.0, 260.0)
+		ring_radius = radius + WorldScale.travel(rng.randf_range(140.0, 260.0))
 	if ring_width <= 0.0:
 		ring_width = rng.randf_range(70.0, 150.0)
 	var ring_clearance := ring_radius + ring_width * 0.5 + 90.0
@@ -286,7 +292,7 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 	if is_orbital:
 		var planet: Node3D = planets[rng.randi() % planets.size()]
 		var clearance := float(planet.get_meta("navigation_clearance_radius", 500.0))
-		var orbit_radius := clearance + rng.randf_range(150.0, 350.0)
+		var orbit_radius := clearance + WorldScale.travel(rng.randf_range(150.0, 350.0))
 		var angle := rng.randf_range(0.0, TAU)
 		position = planet.position + Vector3(cos(angle) * orbit_radius, 0.0, sin(angle) * orbit_radius)
 	else:
@@ -324,7 +330,7 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 func _find_placement(clearance: float, max_attempts: int) -> Vector3:
 	for _attempt in range(max_attempts):
 		var angle := rng.randf_range(0.0, TAU)
-		var dist := rng.randf_range(600.0, SYSTEM_RADIUS)
+		var dist := rng.randf_range(WorldScale.travel(600.0), SYSTEM_RADIUS)
 		var pos := Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
 		if _is_clear(pos, clearance):
 			_placed_positions.append(pos)
@@ -355,8 +361,12 @@ func _spawn_asteroid_ring(
 		ids.append("entity.gen.asteroid.%s.%03d" % [ring_key, index])
 	# Every field has at least one red rock (tech-grade seams).
 	var red_id: String = (load("res://scripts/Asteroid.gd") as GDScript).guaranteed_tech_seam_id(ids)
+	# The ring is bigger but rocks aren't: a mining field on an arc of it,
+	# packed as tightly as the whole ring used to be.
+	var field_start := rng.randf_range(0.0, TAU)
+	var field_arc := TAU / WorldScale.TRAVEL
 	for index in range(count):
-		var angle := TAU * (float(index) / float(count)) + rng.randf_range(-0.035, 0.035)
+		var angle := field_start + field_arc * (float(index) / float(count)) + rng.randf_range(-0.035, 0.035) / WorldScale.TRAVEL
 		var radius := ring_radius + rng.randf_range(-ring_width * 0.5, ring_width * 0.5)
 		var asteroid := _asteroid_scene.instantiate()
 		asteroid.name = "%s_Ring_%02d" % [ring_key.capitalize(), index]
@@ -365,7 +375,8 @@ func _spawn_asteroid_ring(
 		asteroid.force_tech_seam = asteroid.persistent_id == red_id
 		asteroid.orbit_center = planet.position
 		asteroid.orbit_radius = radius
-		asteroid.orbit_speed = rng.randf_range(0.003, 0.009)
+		# The same drift speed on the bigger ring.
+		asteroid.orbit_speed = rng.randf_range(0.003, 0.009) / WorldScale.TRAVEL
 		asteroid.current_angle = angle
 		asteroid.orbit_y = planet.position.y + rng.randf_range(-8.0, 8.0)
 		asteroid.is_orbiting = true

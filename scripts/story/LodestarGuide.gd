@@ -192,7 +192,7 @@ const NEXT_SEASON_OPENER := "Here we go again, Captain."
 ## The scene plays when the ship is this close to the place.
 const ARRIVAL_RANGE := 900.0
 ## Where the place sits, from the system's centre.
-const LANDMARK_DISTANCE := 2200.0
+const LANDMARK_DISTANCE := 2200.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
 ## Seconds between the place's lines.
 const LINE_GAP_S := 6.0
 ## The next Lodestar's rumour waits this long after the scene.

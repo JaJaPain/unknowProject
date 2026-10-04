@@ -8770,12 +8770,12 @@ func _run_autopilot_smoke_test() -> void:
 	obstacle.add_child(collision)
 	get_active_system_root().add_child(obstacle)
 
-	player.global_position = Vector3(10000.0, 0.0, 10000.0)
-	obstacle.global_position = Vector3(10200.0, 0.0, 10000.0)
+	player.global_position = Vector3(-30000.0, 0.0, -30000.0)
+	obstacle.global_position = Vector3(-29800.0, 0.0, -30000.0)
 	obstacle.add_to_group("asteroid")
 	var asteroid_result: Dictionary = player.call(
 		"autopilot_probe",
-		Vector3(10400.0, 0.0, 10000.0),
+		Vector3(-29600.0, 0.0, -30000.0),
 		null
 	)
 	if not bool(asteroid_result.get("is_avoiding", false)) \
@@ -8789,7 +8789,7 @@ func _run_autopilot_smoke_test() -> void:
 	obstacle.add_to_group("celestial")
 	sphere.radius = 300.0
 	obstacle.set_meta("navigation_clearance_radius", 430.0)
-	obstacle.global_position = Vector3(10250.0, 0.0, 10000.0)
+	obstacle.global_position = Vector3(-29750.0, 0.0, -30000.0)
 	var visibility_target := StaticBody3D.new()
 	visibility_target.name = "AutopilotVisibilityTarget"
 	var target_collision := CollisionShape3D.new()
@@ -8798,9 +8798,9 @@ func _run_autopilot_smoke_test() -> void:
 	target_collision.shape = target_sphere
 	visibility_target.add_child(target_collision)
 	get_active_system_root().add_child(visibility_target)
-	visibility_target.global_position = Vector3(10800.0, 0.0, 10000.0)
+	visibility_target.global_position = Vector3(-29200.0, 0.0, -30000.0)
 	await get_tree().physics_frame
-	player.global_position = Vector3(9700.0, 0.0, 10000.0)
+	player.global_position = Vector3(-30300.0, 0.0, -30000.0)
 	if bool(player.call("_has_clear_navigation_line", visibility_target)):
 		visibility_target.queue_free()
 		obstacle.queue_free()
@@ -8809,8 +8809,8 @@ func _run_autopilot_smoke_test() -> void:
 			"Planet-blocked target was incorrectly reported as visible."
 		)
 		return
-	player.global_position = Vector3(9700.0, 0.0, 10400.0)
-	visibility_target.global_position = Vector3(10800.0, 0.0, 10400.0)
+	player.global_position = Vector3(-30300.0, 0.0, -29600.0)
+	visibility_target.global_position = Vector3(-29200.0, 0.0, -29600.0)
 	if not bool(player.call("is_target_physically_visible", visibility_target)) \
 			or bool(player.call("is_navigation_target_visible", visibility_target)):
 		visibility_target.queue_free()
@@ -8820,8 +8820,8 @@ func _run_autopilot_smoke_test() -> void:
 			"Physical visibility and navigation clearance were not separated."
 		)
 		return
-	visibility_target.global_position = Vector3(10800.0, 0.0, 10000.0)
-	player.global_position = Vector3(10000.0, 0.0, 10350.0)
+	visibility_target.global_position = Vector3(-29200.0, 0.0, -30000.0)
+	player.global_position = Vector3(-30000.0, 0.0, -29650.0)
 	player.call("_clear_avoidance_state")
 	var obstruction_notices_before: int = player.get(
 		"navigation_obstruction_notice_count"
@@ -8831,7 +8831,7 @@ func _run_autopilot_smoke_test() -> void:
 	)
 	var planet_result: Dictionary = player.call(
 		"autopilot_probe",
-		Vector3(10500.0, 0.0, 10350.0),
+		Vector3(-29500.0, 0.0, -29650.0),
 		null
 	)
 	if not bool(planet_result.get("is_avoiding", false)) \
@@ -8853,7 +8853,7 @@ func _run_autopilot_smoke_test() -> void:
 	# cannot emit the notice. Drive a real replan -- that is the path that both
 	# routes the ship and tells the player why it is turning.
 	player.call("_clear_autopilot_path")
-	player.call("_plan_autopilot_path", Vector3(10500.0, 0.0, 10350.0), null)
+	player.call("_plan_autopilot_path", Vector3(-29500.0, 0.0, -29650.0), null)
 	if (
 		int(player.get("navigation_obstruction_notice_count"))
 			!= obstruction_notices_before + 1
@@ -8869,8 +8869,8 @@ func _run_autopilot_smoke_test() -> void:
 		)
 		return
 
-	var destination := Vector3(10800.0, 0.0, 10000.0)
-	player.global_position = Vector3(9700.0, 0.0, 10000.0)
+	var destination := Vector3(-29200.0, 0.0, -30000.0)
+	player.global_position = Vector3(-30300.0, 0.0, -30000.0)
 	player.call("_clear_avoidance_state")
 	var required_clearance: float = player.call("_get_obstacle_radius", obstacle) \
 		+ player.call("_get_obstacle_safety_margin", obstacle)
@@ -8974,7 +8974,7 @@ func _run_autopilot_smoke_test() -> void:
 		kova_station.global_position - rocky_planet.global_position
 	).normalized()
 	player.global_position = rocky_planet.global_position \
-		- planet_to_station * 900.0
+		- planet_to_station * 900.0 * load("res://scripts/domain/WorldScale.gd").TRAVEL
 	player.call("_clear_avoidance_state")
 	if bool(player.call("is_navigation_target_visible", kova_station)):
 		player.global_transform = original_transform
@@ -9002,7 +9002,8 @@ func _run_autopilot_smoke_test() -> void:
 	# Kept so a failure can tell "flew into the envelope" from "started inside
 	# it" -- different bugs, and one of them is not a bug.
 	var real_start_distance := real_minimum_distance
-	for step in range(1200):
+	# The route is as long as the world is stretched (WorldScale).
+	for step in range(int(1200 * load("res://scripts/domain/WorldScale.gd").TRAVEL)):
 		var simulated: Dictionary = player.call(
 			"autopilot_probe",
 			kova_station.global_position,
@@ -9074,6 +9075,11 @@ func _run_autopilot_smoke_test() -> void:
 		var real_remaining := real_final_position.distance_to(
 			kova_station.global_position
 		)
+		var blockers := []
+		for body in get_tree().get_nodes_in_group("celestial"):
+			if body is Node3D and body != kova_station and not player.call("_is_route_clear_of_obstacle", kova_station.global_position, body, float(player.call("_get_obstacle_radius", body)) + 5.0):
+				blockers.append("%s@%s r=%.0f" % [body.name, str((body as Node3D).global_position), float(player.call("_get_obstacle_radius", body))])
+		push_error("[AutopilotSmokeTest] view blocked by: %s" % str(blockers))
 		player.global_transform = original_transform
 		player.call("_clear_avoidance_state")
 		_fail_autopilot_smoke_test(
@@ -9106,7 +9112,7 @@ func _run_autopilot_smoke_test() -> void:
 	var kova_route_minimum_positions := {}
 	var kova_route_minimum_states := {}
 	var station_arrival_distance := 100.0
-	for step in range(2400):
+	for step in range(int(2400 * load("res://scripts/domain/WorldScale.gd").TRAVEL)):  # longer routes in the stretched world
 		var simulated: Dictionary = player.call(
 			"autopilot_probe",
 			iron_reach.global_position,
@@ -9694,8 +9700,8 @@ func _run_combat_smoke_test() -> void:
 		_fail_combat_smoke_test("A major-faction ship attacked inside the safe zone.")
 		return
 
-	player.global_position = Vector3(1000.0, 0.0, 1000.0)
-	test_npc.global_position = Vector3(1040.0, 0.0, 1000.0)
+	player.global_position = Vector3(1000.0, 0.0, 1000.0) * load("res://scripts/domain/WorldScale.gd").TRAVEL
+	test_npc.global_position = Vector3(1000.0, 0.0, 1000.0) * load("res://scripts/domain/WorldScale.gd").TRAVEL + Vector3(40.0, 0.0, 0.0)
 	test_npc.target = null
 	test_npc.call("_physics_process", 0.016)
 	if test_npc.target != player:
@@ -11797,8 +11803,9 @@ func _run_quest_reach_smoke_test() -> void:
 	if not str(ui.target_label.text).contains("[Outpost]"):
 		fail.call("The target window doesn't call the outpost an outpost: %s" % ui.target_label.text)
 		return
-	if ui.format_distance(1014.0) != "1,014 m" or ui.format_distance(12400.0) != "12.4 km" or ui.format_distance(85.4) != "85 m":
-		fail.call("Distance format: %s / %s / %s" % [ui.format_distance(1014.0), ui.format_distance(12400.0), ui.format_distance(85.4)])
+	var k: float = load("res://scripts/domain/WorldScale.gd").TRAVEL
+	if ui.format_distance(1014.0 * k) != "1,014 m" or ui.format_distance(12400.0 * k) != "12.4 km" or ui.format_distance(85.4 * k) != "85 m":
+		fail.call("Distance format (relabelled metres): %s / %s / %s" % [ui.format_distance(1014.0 * k), ui.format_distance(12400.0 * k), ui.format_distance(85.4 * k)])
 		return
 	# 3. Docked there: no straight answer at the counter; a hunt in the lounge.
 	player.global_position = outpost.global_position + Vector3(0, 0, 200)

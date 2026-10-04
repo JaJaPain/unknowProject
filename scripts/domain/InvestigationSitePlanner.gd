@@ -18,21 +18,21 @@ extends RefCounted
 ## hazard is worse than a contract that was never offered.
 
 ## Distance band for the primary site from its anchor station.
-const PRIMARY_MIN := 2000.0
-const PRIMARY_MAX := 4000.0
+const PRIMARY_MIN := 2000.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
+const PRIMARY_MAX := 4000.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
 ## Distance band for the verification site from the primary.
-const VERIFICATION_MIN := 1000.0
-const VERIFICATION_MAX := 2000.0
+const VERIFICATION_MIN := 1000.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
+const VERIFICATION_MAX := 2000.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
 ## Clearance beyond a keep-out sphere before a site is considered safe.
 const HAZARD_MARGIN := 300.0
 ## Sites must not crowd anything the player already navigates to.
-const STRUCTURE_CLEARANCE := 800.0
+const STRUCTURE_CLEARANCE := 800.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
 ## Candidate attempts per anchor station before moving to the next one.
 const MAX_ATTEMPTS := 32
 ## The search circle the player is given, and how far its centre may be offset
 ## from the primary so the site is not simply at the middle of the marker.
-const SEARCH_RADIUS := 1500.0
-const SEARCH_CENTER_OFFSET_MAX := 900.0
+const SEARCH_RADIUS := 1500.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
+const SEARCH_CENTER_OFFSET_MAX := 900.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
 ## Sites sit roughly in the system plane, with mild vertical spread.
 const VERTICAL_SPREAD := 0.18
 

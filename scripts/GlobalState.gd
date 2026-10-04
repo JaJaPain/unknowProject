@@ -274,7 +274,7 @@ const MINOR_NPCS = {
 # Minor factions ignore safe zones — they're outlaws.
 const SAFE_ZONES = [
 	{ "position": Vector3(0, 0, 180), "radius": 250.0 },  # Main Station
-]
+]  # written at the old scale; stretched with the world when checked
 const SAFE_ZONE_REP_THRESHOLD = -40.0
 
 static func is_minor_faction(faction_name: String) -> bool:
@@ -395,8 +395,9 @@ static func minor_faction_data(faction_name: String) -> Dictionary:
 	}
 
 static func is_in_safe_zone(world_pos: Vector3) -> bool:
+	var k: float = preload("res://scripts/domain/WorldScale.gd").TRAVEL
 	for zone in SAFE_ZONES:
-		if world_pos.distance_to(zone["position"]) <= zone["radius"]:
+		if world_pos.distance_to(zone["position"] * k) <= float(zone["radius"]) * k:
 			return true
 	return false
 
@@ -2336,7 +2337,7 @@ func _mission_route_position(node: Node3D) -> Vector3:
 ## sent. Hails are per claim (system + belt) and last a few minutes.
 const CLAIM_GRACE_MS := 20000
 const CLAIM_HAIL_MEMORY_MS := 300000
-const FUEL_ICE_FREE_RADIUS := 3000.0
+const FUEL_ICE_FREE_RADIUS := 3000.0 * preload("res://scripts/domain/WorldScale.gd").TRAVEL
 var _claim_hails: Dictionary = {}
 
 

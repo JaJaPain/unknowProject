@@ -1,5 +1,8 @@
 extends PanelContainer
 
+## Distances and speeds as the player reads them (WorldScale).
+const _WS := preload("res://scripts/domain/WorldScale.gd")
+
 var manager: Node
 var ui: Control
 var mission_id := ""
@@ -54,7 +57,7 @@ func open_mission(id: String) -> void:
 		_nova_question = ""
 	mission_id = id
 	_signature = ""
-	status.text = "Hold within 300 m, below 10 m/s, for three seconds. Combat interrupts scanning."
+	status.text = "Hold within %s, below %s, for three seconds. Combat interrupts scanning." % [_WS.label(300.0), _WS.speed_label(10.0)]
 	show()
 	_refresh()
 
@@ -86,7 +89,7 @@ func _refresh() -> void:
 	if view["phase"] in ["ready", "closed"]:
 		_label("Finding filed. Dock at the assigned station to collect payment.")
 	elif not str(view.get("extract_site_id", "")).is_empty():
-		_label("Committed. Fly to the cache and hold within 300 m, below 10 m/s, to extract it.")
+		_label("Committed. Fly to the cache and hold within %s, below %s, to extract it." % [_WS.label(300.0), _WS.speed_label(10.0)])
 		var cache_id := str(view["extract_site_id"])
 		_button("Extract the cache", "", func():
 			var report: Dictionary = manager.begin_investigation_scan(mission_id, cache_id)
@@ -179,4 +182,4 @@ func _label(text: String) -> void:
 	rows.add_child(label)
 
 static func _reason(reason: String) -> String:
-	return str({"out_of_range": "Approach within 300 m", "too_fast": "Slow below 10 m/s", "in_combat": "Scanning is unavailable during combat", "ship_unavailable": "Undock before scanning", "stale_revision": "The investigation changed; review the updated evidence"}.get(reason, reason))
+	return str({"out_of_range": "Approach within %s" % _WS.label(300.0), "too_fast": "Slow below %s" % _WS.speed_label(10.0), "in_combat": "Scanning is unavailable during combat", "ship_unavailable": "Undock before scanning", "stale_revision": "The investigation changed; review the updated evidence"}.get(reason, reason))

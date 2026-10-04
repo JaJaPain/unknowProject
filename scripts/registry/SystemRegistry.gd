@@ -260,7 +260,8 @@ func _build_generated_root(definition: SystemDefinition) -> Node3D:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = config.seed_value + gate.id.hash()
 		var angle := rng.randf_range(0.0, TAU)
-		var dist := rng.randf_range(500.0, 1200.0)
+		# Stretched with the world (WorldScale).
+		var dist := preload("res://scripts/domain/WorldScale.gd").travel(rng.randf_range(500.0, 1200.0))
 		var gate_pos := Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
 		var dest_sys := get_system(gate.destination_system_id)
 		SystemFactory.add_gate_to_system(

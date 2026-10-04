@@ -4,6 +4,7 @@ const SystemAmbience := preload("res://scripts/visuals/SystemAmbience.gd")
 const PlanetRotation := preload("res://scripts/visuals/PlanetRotation.gd")
 const AnomalyRegistryScript = preload("res://scripts/AnomalyRegistry.gd")
 const GasGiantLookType := preload("res://scripts/generation/GasGiantLook.gd")
+const WorldScale := preload("res://scripts/domain/WorldScale.gd")
 
 
 ## The start system's gas giant look for this campaign.
@@ -29,6 +30,7 @@ func _ready():
 		SystemAmbience.apply_nebula_sky(world_env.environment, "start_system", "yellow")
 	# Seed random number generator
 	randomize()
+	_stretch_authored_layout()
 	
 	var rotation_rng := RandomNumberGenerator.new()
 	rotation_rng.seed = 4172026
@@ -38,28 +40,28 @@ func _ready():
 	GasGiantLookType.apply(gas_giant, start_gas_giant_seed())
 
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
-	_spawn_asteroid_ring(gas_giant, 850.0, 150.0, 75, "GasGiantBelt")
+	_spawn_asteroid_ring(gas_giant, WorldScale.travel(850.0), 150.0, 75, "GasGiantBelt")
 	
 	# Spawn Asteroid rings around Rocky Planet (radius 250, ring at 370, width 80)
-	_spawn_asteroid_ring(rocky_planet, 370.0, 80.0, 45, "RockyBelt")
+	_spawn_asteroid_ring(rocky_planet, WorldScale.travel(370.0), 80.0, 45, "RockyBelt")
 	
 	# Spawn NPC Ships
-	_spawn_npc("zenith", Vector3(120, 0, 180), 12.0, "Logistics", "entity.start.patrol.zenith.logistics")
-	_spawn_npc("zenith", Vector3(-120, 0, 190), 12.0, "MiningHauler", "entity.start.patrol.zenith.mining_hauler")
+	_spawn_npc("zenith", _s(Vector3(120, 0, 180)), 12.0, "Logistics", "entity.start.patrol.zenith.logistics")
+	_spawn_npc("zenith", _s(Vector3(-120, 0, 190)), 12.0, "MiningHauler", "entity.start.patrol.zenith.mining_hauler")
 	
 	# Close hostiles for easy testing near start area
-	_spawn_npc("aurelia", Vector3(90, 0, 80), 14.0, "Interceptor", "entity.start.patrol.aurelia.inner")
-	_spawn_npc("vanguard", Vector3(-90, 0, 80), 15.0, "Gunner", "entity.start.patrol.vanguard.inner")
+	_spawn_npc("aurelia", _s(Vector3(90, 0, 80)), 14.0, "Interceptor", "entity.start.patrol.aurelia.inner")
+	_spawn_npc("vanguard", _s(Vector3(-90, 0, 80)), 15.0, "Gunner", "entity.start.patrol.vanguard.inner")
 	
 	# Hostiles around Rocky Planet
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(40, 0, 40), 14.0, "Gunner", "entity.start.patrol.aurelia.rocky_01")
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(-50, 0, -40), 14.0, "Interceptor", "entity.start.patrol.aurelia.rocky_02")
-	_spawn_npc("aurelia", rocky_planet.global_position + Vector3(0, 0, -80), 14.0, "MiningHauler", "entity.start.patrol.aurelia.rocky_03")
+	_spawn_npc("aurelia", rocky_planet.global_position + _s(Vector3(40, 0, 40)), 14.0, "Gunner", "entity.start.patrol.aurelia.rocky_01")
+	_spawn_npc("aurelia", rocky_planet.global_position + _s(Vector3(-50, 0, -40)), 14.0, "Interceptor", "entity.start.patrol.aurelia.rocky_02")
+	_spawn_npc("aurelia", rocky_planet.global_position + _s(Vector3(0, 0, -80)), 14.0, "MiningHauler", "entity.start.patrol.aurelia.rocky_03")
 	
 	# Hostiles around Gas Giant
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(50, 0, 50), 15.0, "Gunner", "entity.start.patrol.vanguard.gas_01")
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(-60, 0, -60), 15.0, "Interceptor", "entity.start.patrol.vanguard.gas_02")
-	_spawn_npc("vanguard", gas_giant.global_position + Vector3(80, 0, 0), 15.0, "MiningHauler", "entity.start.patrol.vanguard.gas_03")
+	_spawn_npc("vanguard", gas_giant.global_position + _s(Vector3(50, 0, 50)), 15.0, "Gunner", "entity.start.patrol.vanguard.gas_01")
+	_spawn_npc("vanguard", gas_giant.global_position + _s(Vector3(-60, 0, -60)), 15.0, "Interceptor", "entity.start.patrol.vanguard.gas_02")
+	_spawn_npc("vanguard", gas_giant.global_position + _s(Vector3(80, 0, 0)), 15.0, "MiningHauler", "entity.start.patrol.vanguard.gas_03")
 
 	
 	SystemAmbience.add_sun(self, {
@@ -109,8 +111,11 @@ func _spawn_asteroid_ring(
 		ids.append(prefix + "_Asteroid_" + str(i))
 	# Every field has at least one red rock (tech-grade seams).
 	var red_id: String = (load("res://scripts/Asteroid.gd") as GDScript).guaranteed_tech_seam_id(ids)
+	# The world is bigger but rocks aren't: the belt is a field on an arc of
+	# the ring, packed as tightly as the whole ring used to be.
+	var field_start := randf() * TAU
 	for i in range(count):
-		var angle = randf() * TAU
+		var angle = field_start + randf() * TAU / WorldScale.TRAVEL
 		var offset_r = randf_range(-width / 2.0, width / 2.0)
 		var r = radius + offset_r
 		
@@ -128,7 +133,8 @@ func _spawn_asteroid_ring(
 		# Setup orbiting variables on the asteroid
 		ast.orbit_center = center
 		ast.orbit_radius = r
-		ast.orbit_speed = randf_range(0.005, 0.015) # Slow, majestic orbital speed
+		# Slow, majestic orbit; the same drift speed on the bigger ring.
+		ast.orbit_speed = randf_range(0.005, 0.015) / WorldScale.TRAVEL
 		ast.current_angle = angle
 		ast.orbit_y = y
 		ast.is_orbiting = true
@@ -136,6 +142,37 @@ func _spawn_asteroid_ring(
 		
 		add_child(ast)
 		ast.global_position = Vector3(x, y, z)
+
+## A position written at the old (cramped) scale, in today's world.
+func _s(v: Vector3) -> Vector3:
+	return v * WorldScale.TRAVEL
+
+
+## The start system is laid out by hand at the old scale: stretch the
+## spacing and the planets with the rest of the world (WorldScale). Stations
+## and gates keep their size; only where they sit changes.
+func _stretch_authored_layout() -> void:
+	var k := WorldScale.TRAVEL
+	for node_name in ["GasGiant", "RockyPlanet", "Station", "IronReachOutpost", "KovaStation", "TestSystemGate"]:
+		var node := get_node_or_null(node_name) as Node3D
+		if node != null:
+			node.position *= k
+	for planet in [gas_giant, rocky_planet]:
+		var mesh_instance := planet.get_node_or_null("MeshInstance3D") as MeshInstance3D
+		if mesh_instance != null and mesh_instance.mesh is SphereMesh:
+			var sphere := (mesh_instance.mesh as SphereMesh).duplicate() as SphereMesh
+			sphere.radius *= k
+			sphere.height *= k
+			mesh_instance.mesh = sphere
+		var shape_node := planet.get_node_or_null("CollisionShape3D") as CollisionShape3D
+		if shape_node != null and shape_node.shape is SphereShape3D:
+			var shape := (shape_node.shape as SphereShape3D).duplicate() as SphereShape3D
+			shape.radius *= k
+			shape_node.shape = shape
+		for key in ["navigation_clearance_radius", "physical_radius"]:
+			if planet.has_meta(key):
+				planet.set_meta(key, float(planet.get_meta(key)) * k)
+
 
 const _ROLE_PROFILE_KEY := {
 	"Gunner":      "gunner",

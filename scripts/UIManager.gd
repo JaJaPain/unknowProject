@@ -10967,7 +10967,7 @@ func _apply_mine_reach(btn: Button, target: Node) -> void:
 		return
 	var reachable := _refresh_mine_reach(target)
 	btn.disabled = not reachable
-	btn.tooltip_text = "" if reachable else "Too far to mine — close to %dm." % int(MINE_REACH_ENTER_M)
+	btn.tooltip_text = "" if reachable else "Too far to mine — close to %s." % format_distance(MINE_REACH_ENTER_M)
 
 
 ## Applies the reach latch to an "Attack Hostile" button. Both the target window
@@ -10977,18 +10977,13 @@ func _apply_attack_reach(btn: Button, target: Node) -> void:
 		return
 	var reachable := _refresh_attack_reach(target)
 	btn.disabled = not reachable
-	btn.tooltip_text = "" if reachable else "Too far to engage — close to %dm." % int(ATTACK_REACH_ENTER_M)
+	btn.tooltip_text = "" if reachable else "Too far to engage — close to %s." % format_distance(ATTACK_REACH_ENTER_M)
 
 
-## "1,014 m" under 10 km, then "12.4 km" (the target window and the overview).
-static func format_distance(metres: float) -> String:
-	if metres >= 10000.0:
-		return "%.1f km" % (metres / 1000.0)
-	var whole := int(round(metres))
-	var text := str(whole)
-	if whole >= 1000:
-		text = "%d,%03d" % [whole / 1000, whole % 1000]
-	return text + " m"
+## A world distance as the player reads it ("1,014 m", "12.4 km"), in the
+## relabelled metres of WorldScale (Abe, 2026-10-04).
+static func format_distance(world_distance: float) -> String:
+	return preload("res://scripts/domain/WorldScale.gd").label(world_distance)
 
 
 ## The target window's distance line, with a hint which way it's going.

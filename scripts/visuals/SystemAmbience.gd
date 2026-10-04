@@ -4,12 +4,17 @@ const STARFIELD_SHADER := preload("res://shaders/starfield.gdshader")
 const NEBULA_SHADER := preload("res://shaders/nebula.gdshader")
 const SkyFollowerScript := preload("res://scripts/visuals/SkyFollower.gd")
 
-const SUN_DISTANCE := 6000.0
-const SUN_RADIUS := 90.0
-const STARFIELD_RADIUS := 18000.0
-const NEBULA_DISTANCE := 17000.0
-const NEBULA_QUAD_WIDTH := 22000.0
-const NEBULA_QUAD_HEIGHT := 11000.0
+# The sky sits beyond the whole (bigger) system, inside the camera's 50 km
+# far plane, and follows the player, so no planet ever ends up behind the
+# starfield (Abe, 2026-10-04: systems stretched by WorldScale). Sizes grow
+# with distance so it all looks the same as before.
+const SKY_SCALE := 44000.0 / 17000.0
+const SUN_DISTANCE := 40000.0
+const SUN_RADIUS := 90.0 * SUN_DISTANCE / 6000.0
+const STARFIELD_RADIUS := 46000.0
+const NEBULA_DISTANCE := 44000.0
+const NEBULA_QUAD_WIDTH := 22000.0 * SKY_SCALE
+const NEBULA_QUAD_HEIGHT := 11000.0 * SKY_SCALE
 
 const NEBULA_TEXTURES := [
 	preload("res://assets/nebula_cloud_1.png"),
@@ -49,7 +54,14 @@ static func add_sun(system_root: Node3D, config: Dictionary = {}) -> MeshInstanc
 	sun.mesh = mesh
 	sun.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	sun.position = sun_pos
-	system_root.add_child(sun)
+	# Part of the sky: it follows the player like the stars and nebula.
+	var anchor := Node3D.new()
+	anchor.name = "SunAnchor"
+	system_root.add_child(anchor)
+	var follower := Node.new()
+	follower.set_script(SkyFollowerScript)
+	anchor.add_child(follower)
+	anchor.add_child(sun)
 
 	var light := system_root.get_node_or_null("DirectionalLight3D") as DirectionalLight3D
 	if light == null:

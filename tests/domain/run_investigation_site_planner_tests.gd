@@ -1,5 +1,8 @@
 extends SceneTree
 
+## Hazards and spacing at the stretched world scale (WorldScale).
+const _K := preload("res://scripts/domain/WorldScale.gd").TRAVEL
+
 # Placement must never wedge a mission site somewhere the autopilot refuses to
 # fly. It shares TangentNavigator's keep-out records rather than re-deriving
 # radii, and reports failure instead of shrinking its own margins.
@@ -99,7 +102,7 @@ func _test_same_seed_reproduces_placement() -> void:
 func _test_reports_failure_rather_than_shrinking_margins() -> void:
 	var stations := [_station("station.a", Vector3.ZERO)]
 	# A hazard so large it swallows the entire placement annulus.
-	var smothered := [_hazard(Vector3.ZERO, 6000.0)]
+	var smothered := [_hazard(Vector3.ZERO, 6000.0 * _K)]
 	var plan: Dictionary = PlannerType.plan_sites(4242, stations, smothered)
 	_expect(
 		not bool(plan.get("ok", true)),
@@ -119,8 +122,8 @@ func _test_reports_failure_rather_than_shrinking_margins() -> void:
 		"An empty station list should say so rather than report no_safe_sites."
 	)
 	# A second station is tried when the first is unusable.
-	var two := [_station("station.a", Vector3.ZERO), _station("station.b", Vector3(40000, 0, 0))]
-	var blocked_first := [_hazard(Vector3.ZERO, 6000.0)]
+	var two := [_station("station.a", Vector3.ZERO), _station("station.b", Vector3(40000.0 * _K, 0, 0))]
+	var blocked_first := [_hazard(Vector3.ZERO, 6000.0 * _K)]
 	var fallback: Dictionary = PlannerType.plan_sites(99, two, blocked_first)
 	_expect(
 		bool(fallback.get("ok", false)) \

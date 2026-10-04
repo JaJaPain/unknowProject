@@ -1,5 +1,8 @@
 extends SceneTree
 
+## Hazards and spacing at the stretched world scale (WorldScale).
+const _K := preload("res://scripts/domain/WorldScale.gd").TRAVEL
+
 # Mission TRUTH is generated in code from the seed. If it could drift -- between
 # runs, or under a generated label -- the evidence a player gathers would stop
 # agreeing with the answer they are graded against.
@@ -194,7 +197,7 @@ func _test_budget_is_mirrored_not_invented() -> void:
 func _test_failed_placement_produces_no_offer() -> void:
 	var smothered = PlannerType.plan_sites(
 		1, [{"id": "station.a", "position": Vector3.ZERO}],
-		[{"center": Vector3.ZERO, "radius": 9000.0, "physical": 4000.0}]
+		[{"center": Vector3.ZERO, "radius": 9000.0 * _K, "physical": 4000.0 * _K}]
 	)
 	var built = BuilderType.build_objective(
 		"m1", _shape("survey_discrepancy"), 1, smothered, 400, "station.a", []
