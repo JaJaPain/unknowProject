@@ -101,3 +101,41 @@ safety zone."
 - Test: the dock smoke hears one departure line per undock, in the
   station's voice, before control returns. The intro tip waits until
   after it.
+
+### 4. Undock: controls come back before the ship is outside the safety zone
+
+**Abe:** on the same undock change, control should not be returned to the
+ship until it's outside the safe zone.
+
+**Code:**
+- The undock push is meant to hold control: `_push_out_of_berth`
+  (`UIManager.gd:~10661`) keeps `is_docked = true` while the beam carries
+  the ship to 250 past the approach sphere (the "safety zone"), and only
+  then clears it.
+- But `is_docked` only blocks the ship's **own** input
+  (`PlayerShip._unhandled_input` returns early: mouse fly-to, RMB, Q/W/E,
+  Space).
+- **HUD orders aren't blocked.** The target window's Approach / Orbit /
+  Mine / Attack / Dock buttons and the overview call
+  `_command_selected_target` → `PlayerShip.begin_target_navigation()`. That
+  accepts orders while docked, and `_physics_process` steers and
+  `move_and_slide()`s whenever `nav_mode != "MANUAL"`, with no docked
+  check. So any HUD order during the push flies the ship at once, fighting
+  the beam's tween: control is effectively back inside the zone.
+- `undock_player` also sets `nav_mode = "MANUAL"` right after starting the
+  push, which is fine. The same hole exists during the docking pull-in.
+- The HUD (target window, overview) is fully live during the push.
+
+**Proposed fix:**
+- One "beam has the ship" rule. While `is_docked` (and during the
+  push and pull), `begin_target_navigation`, fly-to and every nav entry
+  refuse, with one HUD line: "Dock Control has the ship until you're clear
+  of the safety zone." `_physics_process` skips steering and
+  `move_and_slide` while docked, so only the beam moves the ship.
+- Any order given just before the push is cleared (MANUAL) when the beam
+  lets go.
+- The hand-back is clear: the beam lets go outside the zone, with Dock
+  Control's release line (finding 3) and the HUD hint "Controls returned".
+- Test: in the dock smoke, issue an Approach order mid-push. The ship stays
+  on the beam's line and ends outside the sphere; after the release, orders
+  work.
