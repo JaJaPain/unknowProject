@@ -259,10 +259,16 @@ func _build_generated_root(definition: SystemDefinition) -> Node3D:
 	for gate in definition.gates:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = config.seed_value + gate.id.hash()
-		var angle := rng.randf_range(0.0, TAU)
-		# Stretched with the world (WorldScale).
-		var dist := preload("res://scripts/domain/WorldScale.gd").travel(rng.randf_range(500.0, 1200.0))
-		var gate_pos := Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+		var angle := 0.0
+		var gate_pos := Vector3.ZERO
+		# Stretched with the world (WorldScale), and never on top of a
+		# station: the main ones are kilometres across now.
+		for attempt in 16:
+			angle = rng.randf_range(0.0, TAU)
+			var dist := preload("res://scripts/domain/WorldScale.gd").travel(rng.randf_range(500.0, 1200.0))
+			gate_pos = Vector3(cos(angle) * dist, 0.0, sin(angle) * dist)
+			if _clear_of_stations(root, gate_pos):
+				break
 		var dest_sys := get_system(gate.destination_system_id)
 		SystemFactory.add_gate_to_system(
 			root,
@@ -276,6 +282,17 @@ func _build_generated_root(definition: SystemDefinition) -> Node3D:
 			angle + PI
 		)
 	return root
+
+
+## A gate spot clear of every station's room (main stations: their approach
+## sphere plus a margin).
+func _clear_of_stations(root: Node3D, at: Vector3) -> bool:
+	for child in root.get_children():
+		if child is Node3D and (child as Node).is_in_group("station"):
+			var room := 3000.0 if str(child.get("model_path")).begins_with("res://assets/stations/") else 800.0
+			if (child as Node3D).position.distance_to(at) < room:
+				return false
+	return true
 
 
 func _load_from_dict(data: Dictionary) -> void:

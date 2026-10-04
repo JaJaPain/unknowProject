@@ -1417,6 +1417,9 @@ func _physics_process(delta: float):
 						+ _get_obstacle_safety_margin(active_target)
 				elif active_target.is_in_group("station"):
 					target_stop_dist = 110.0
+					# A big main station: stop at its approach sphere.
+					if active_target.has_method("is_berthed") and bool(active_target.call("is_berthed")):
+						target_stop_dist = float(active_target.call("approach_sphere_radius"))
 				elif active_target.is_in_group("asteroid") or active_target.is_in_group("ship"):
 					target_stop_dist = 60.0
 				target_speed = clamp((dist - target_stop_dist) * 4.0, -speed_limit, speed_limit)
@@ -2189,6 +2192,10 @@ func _get_obstacle_radius(obstacle: Node3D) -> float:
 	# models dwarf their collision boxes, and a route sized from the box flew
 	# through the outposts (playtest 2026-10-02). Planets keep their spheres,
 	# which match the body exactly (a sphere's bounding box overstates it).
+	# A big main station: its approach sphere (Abe, 2026-10-04), not the
+	# model's bounding box.
+	if obstacle.has_method("autopilot_radius") and obstacle.has_method("is_berthed") and bool(obstacle.call("is_berthed")):
+		return float(obstacle.call("autopilot_radius"))
 	if not obstacle.is_in_group("celestial"):
 		var Bounds := preload("res://scripts/navigation/ObstacleBounds.gd")
 		var measured := maxf(Bounds.collision_radius(obstacle), Bounds.visual_radius(obstacle))

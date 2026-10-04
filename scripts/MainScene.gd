@@ -157,6 +157,11 @@ func _stretch_authored_layout() -> void:
 		var node := get_node_or_null(node_name) as Node3D
 		if node != null:
 			node.position *= k
+	# The gate was far too close to the station (Abe, 2026-10-04): it sits out
+	# on the far side from the planets now, a real departure from home.
+	var start_gate := get_node_or_null("TestSystemGate") as Node3D
+	if start_gate != null:
+		start_gate.position = Vector3(-900.0, 0.0, -2000.0) * k
 	for planet in [gas_giant, rocky_planet]:
 		var mesh_instance := planet.get_node_or_null("MeshInstance3D") as MeshInstance3D
 		if mesh_instance != null and mesh_instance.mesh is SphereMesh:
@@ -188,6 +193,13 @@ func _spawn_npc(
 	role: String = "",
 	world_id: String = ""
 ):
+	# Greywake is a kilometre-scale station now: nothing spawns inside its
+	# approach sphere (Abe, 2026-10-04); push the spot out past it.
+	if station != null and station.has_method("is_berthed") and bool(station.call("is_berthed")):
+		var away: Vector3 = pos - station.global_position
+		var clear_radius: float = float(station.call("approach_sphere_radius")) + 150.0
+		if away.length() < clear_radius:
+			pos = station.global_position + (away.normalized() if away.length() > 1.0 else Vector3.RIGHT) * clear_radius
 	var npc = npc_ship_scene.instantiate()
 	npc.faction = faction_name
 	npc.speed = npc_speed
@@ -218,7 +230,7 @@ func _spawn_salvager():
 		add_child(salvager)
 		# Spawn near space station
 		if station:
-			salvager.global_position = station.global_position + Vector3(0, 0, 50.0)
+			salvager.global_position = station.global_position + Vector3(0, 0, (float(station.call("approach_sphere_radius")) + 150.0) if station.has_method("is_berthed") and bool(station.call("is_berthed")) else 50.0)
 			
 		# Generate unique scrapper pilot name and backstory
 		_generate_salvager_identity(salvager)

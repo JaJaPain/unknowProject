@@ -59,6 +59,9 @@ static func _bounds(station: Node3D) -> AABB:
 
 
 func _build(box: AABB, station: Node3D) -> void:
+	if station.has_method("is_berthed") and bool(station.call("is_berthed")):
+		_build_main_station(box, station)
+		return
 	var c := box.get_center()
 	var e := box.size * 0.5
 	var dot := maxf(1.5, box.size.length() * 0.012)
@@ -81,6 +84,40 @@ func _build(box: AABB, station: Node3D) -> void:
 	_berth_light.position = berth
 	add_child(_berth_light)
 	_beacon(berth, AMBER, dot, "berth")
+
+
+## The kilometre-scale main stations (Abe, 2026-10-04: the drone lights from
+## the old station, around the new ones too). Drones stay ship-sized; there
+## are more of them: navigation markers round the rim (red to port, green to
+## starboard), strobes top and bottom, and a line of amber beacons down the
+## docking lane from the approach sphere to the berth, with the berth lit.
+const MAIN_DOT := 10.0
+const MAIN_RIM_MARKERS := 8
+const MAIN_LANE_BEACONS := 4
+
+
+func _build_main_station(box: AABB, station: Node3D) -> void:
+	var c := box.get_center()
+	var e := box.size * 0.5
+	var rim := maxf(e.x, e.z) * 0.92
+	for i in MAIN_RIM_MARKERS:
+		var a := TAU * float(i) / float(MAIN_RIM_MARKERS)
+		var at := c + Vector3(cos(a) * rim, 0.0, sin(a) * rim)
+		_beacon(at, RED if at.x < c.x else GREEN, MAIN_DOT, "marker")
+	_beacon(c + Vector3(0, e.y + 40.0, 0), WHITE, MAIN_DOT * 1.4, "strobe")
+	_beacon(c + Vector3(0, -e.y - 40.0, 0), WHITE, MAIN_DOT * 1.4, "strobe")
+	# The docking lane, in the station's own space.
+	var berth := station.to_local(station.call("berth_position"))
+	var entry := station.to_local(station.call("lane_entry_position"))
+	for i in MAIN_LANE_BEACONS:
+		var t := (float(i) + 0.5) / float(MAIN_LANE_BEACONS)
+		_beacon(berth.lerp(entry, t) + Vector3.UP * 30.0, AMBER, MAIN_DOT * 0.8, "berth")
+	_berth_light = OmniLight3D.new()
+	_berth_light.light_color = AMBER
+	_berth_light.omni_range = 150.0
+	_berth_light.light_energy = 1.0
+	_berth_light.position = berth
+	add_child(_berth_light)
 
 
 ## A beacon drone at `pos` carrying a light of radius `size`.

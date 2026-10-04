@@ -357,6 +357,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_normal_map_snapshot")
 	elif "--cruise-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_cruise_smoke_test")
+	elif "--station-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_station_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -416,6 +418,10 @@ func _position_fresh_campaign_ship_for_station_approach() -> void:
 			"get_docking_position",
 			station.global_position + approach_direction
 		) as Vector3
+	# A big main station: start straight out along its docking lane (the
+	# docking point is on its approach sphere, in line with the berth).
+	if station.has_method("is_berthed") and bool(station.call("is_berthed")):
+		approach_direction = (docking_position - station.global_position).normalized()
 	var approach_distance := maxf(0.0, float(player.get("max_speed"))) \
 		* STARTING_STATION_APPROACH_SECONDS
 	player.global_position = docking_position + approach_direction * (
@@ -11856,6 +11862,41 @@ func _run_quest_reach_smoke_test() -> void:
 		return
 	print("[QuestReachSmokeTest] PASS")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## Greywake as a kilometre-scale station (windowed): from outside, and down its
+## docking lane. Pictures in .tmp_godot_user/.
+##   -- --station-snapshot --baseline-offline --no-save-load
+func _run_station_snapshot() -> void:
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 90:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var station := GlobalState.get_primary_station() as Node3D
+	var cam := Camera3D.new()
+	cam.far = 50000.0
+	get_active_system_root().add_child(cam)
+	var entry: Vector3 = station.call("lane_entry_position")
+	var out := (entry - station.global_position).normalized()
+	var side := out.cross(Vector3.UP).normalized()
+	var shots := [
+		["station_wide", station.global_position + out * 3400.0 + side * 1800.0 + Vector3.UP * 900.0, station.global_position],
+		["station_lane", entry + out * 500.0 + side * 120.0 + Vector3.UP * 60.0, station.call("berth_position")],
+	]
+	for shot in shots:
+		cam.global_position = shot[1]
+		cam.look_at(shot[2], Vector3.UP)
+		cam.make_current()
+		for i in 30:
+			await get_tree().process_frame
+		await _hud_snapshot_save(ProjectSettings.globalize_path("res://.tmp_godot_user/%s.png" % shot[0]))
+	print("[StationSnapshot] sphere %.0f, berths %d" % [float(station.call("approach_sphere_radius")), (station.get("berths") as Array).size()])
 	get_tree().quit(0)
 
 

@@ -98,9 +98,10 @@ mesh = SubResource("SphereMesh_rocky")
 shape = SubResource("SphereShape3D_rocky")
 
 [node name="Station" parent="." groups=["primary_station"] instance=ExtResource("4_station")]
-transform = Transform3D(5, 0, 0, 0, 5, 0, 0, 0, 5, 0, 0, 180)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 180)
 display_name = "GREYWAKE STATION"
 world_id = "station.start.main"
+model_path = "res://assets/stations/cinder_anchorage.glb"
 
 [node name="IronReachOutpost" parent="." instance=ExtResource("4_station")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2750, 0, 900)

@@ -4082,7 +4082,7 @@ func _update_overview_distances(delta: float = 999.0):
 		if btn is Button:
 			var entity = btn.get_meta("entity_ref")
 			if entity and is_instance_valid(entity):
-				var dist = p_pos.distance_to(entity.global_position)
+				var dist = distance_to_entity(p_pos, entity)
 				btn.set_meta("distance_val", dist)
 				# Sensor reveal is applied HERE, per frame, because this is the only
 				# place that sees the current distance. Hiding the row rather than
@@ -4449,7 +4449,8 @@ func begin_docking_procedure(station: Node3D, ship: Node3D) -> void:
 	# Keep the beam outside the station hierarchy. The primary station is scaled
 	# 5x, which previously magnified the tether after its length was applied.
 	get_tree().current_scene.add_child(_docking_tractor_beam)
-	_docking_tractor_beam.call("configure", station, ship)
+	# A berthed main station's beam comes from the berth itself.
+	_docking_tractor_beam.call("configure", station.call("beam_origin") if station.has_method("beam_origin") else station, ship)
 	if ship.has_method("begin_docking_camera"):
 		ship.begin_docking_camera(station)
 	_ensure_docking_procedure_panel()
@@ -4491,9 +4492,15 @@ func _run_docking_procedure(serial: int, station: Node3D, ship: Node3D) -> void:
 	_set_docking_procedure_stage("TRACTOR LOCK ACQUIRED", "Drawing ship into the berth.", 0.0)
 	var berth := station.call("get_docking_position", ship.global_position) as Vector3 \
 		if station.has_method("get_docking_position") else station.global_position
+	var berthed: bool = station.has_method("is_berthed") and bool(station.call("is_berthed"))
+	if berthed:
+		# Pulled from the lane entry into the berth itself, turning to face it.
+		berth = station.call("berth_position")
 	var pull := create_tween().set_ignore_time_scale(true)
 	pull.tween_property(ship, "global_position", berth, DOCK_TRACTOR_PULL_SECONDS) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	if berthed:
+		pull.parallel().tween_property(ship, "quaternion", (station.call("berth_basis") as Basis).get_rotation_quaternion(), DOCK_TRACTOR_PULL_SECONDS)
 	pull.parallel().tween_property(_docking_procedure_progress, "value", 40.0, DOCK_TRACTOR_PULL_SECONDS)
 	await pull.finished
 	if serial != _docking_procedure_serial or not is_instance_valid(station):
@@ -10510,13 +10517,42 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	
 	# Give player a slight push away from station
 	if GlobalState.player:
-		GlobalState.player.global_position += Vector3(0, 0, -15.0)
-		GlobalState.player.is_docked = false
+		var undocking_from = current_station
+		if undocking_from != null and is_instance_valid(undocking_from) and undocking_from.has_method("is_berthed") and bool(undocking_from.call("is_berthed")):
+			# A berthed main station pushes the ship back out along the lane
+			# on its beam, facing out, then lets go (Abe, 2026-10-04).
+			_push_out_of_berth(undocking_from, GlobalState.player)
+		else:
+			GlobalState.player.global_position += Vector3(0, 0, -15.0)
+			GlobalState.player.is_docked = false
 		GlobalState.player.nav_mode = "MANUAL"
 		# A mission's targets may have spawned while the player was docked. Rebuild
 		# now so their red hunt rows and N.O.V.A.'s prepared reaction arrive together.
 		refresh_overview()
 	_maybe_play_intro_repair_target_tip()
+
+
+## Undocking from a big station: the berth's beam carries the ship out to the
+## lane entry, nose out; flight is the player's again when it lets go.
+const UNDOCK_PUSH_SECONDS := 2.5
+
+
+func _push_out_of_berth(station: Node3D, ship: Node3D) -> void:
+	var out: Vector3 = station.call("lane_entry_position")
+	var away := out - station.global_position
+	away.y = 0.0
+	ship.global_basis = Basis.looking_at(away.normalized(), Vector3.UP)
+	var beam := DockingTractorBeamType.new()
+	get_tree().current_scene.add_child(beam)
+	beam.call("configure", station.call("beam_origin"), ship)
+	ship.set("is_docked", true)
+	var push := create_tween().set_ignore_time_scale(true)
+	push.tween_property(ship, "global_position", out, UNDOCK_PUSH_SECONDS).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	push.tween_callback(func() -> void:
+		if is_instance_valid(beam):
+			beam.queue_free()
+		if is_instance_valid(ship):
+			ship.set("is_docked", false))
 
 
 # The starter contract becomes active while the player is still in the station.
@@ -10986,6 +11022,15 @@ static func format_distance(world_distance: float) -> String:
 	return preload("res://scripts/domain/WorldScale.gd").label(world_distance)
 
 
+## How far `from` is from `entity` for the player's readouts: to the hull of
+## a kilometre-scale main station (its centre is half a kilometre inside it),
+## to the centre for everything else.
+static func distance_to_entity(from: Vector3, entity: Node) -> float:
+	if entity.has_method("surface_distance"):
+		return float(entity.call("surface_distance", from))
+	return from.distance_to((entity as Node3D).global_position)
+
+
 ## The target window's distance line, with a hint which way it's going.
 func _update_target_distance() -> void:
 	if target_distance_label == null:
@@ -10996,7 +11041,7 @@ func _update_target_distance() -> void:
 		target_distance_label.visible = false
 		_target_last_distance = -1.0
 		return
-	var dist := (player as Node3D).global_position.distance_to((target as Node3D).global_position)
+	var dist := distance_to_entity((player as Node3D).global_position, target)
 	var arrow := ""
 	if _target_last_distance >= 0.0:
 		if dist < _target_last_distance - 0.05:

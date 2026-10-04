@@ -9,6 +9,33 @@ extends StaticBody3D
 
 @onready var ring: MeshInstance3D = $Ring
 
+# --- Kilometre-scale main stations (Abe, 2026-10-04) ---------------------------
+# Models with authored berths (`Dock_*` nodes; assets/stations/, ChatGPT's
+# Cinder Anchorage and Meridian Exchange and their liveries). The habitat
+# rotor turns; the piers stay still. Collision is a box per section, not the
+# full mesh.
+#
+# Abe's approach sphere: an invisible sphere around the station. Docking: the
+# autopilot flies to the point on the sphere in line with the player's berth,
+# the berth's tractor beam takes the ship there and pulls it in. Undocking:
+# the beam pushes it back out to the sphere. The autopilot avoids the sphere,
+# not the hull (autopilot_radius()).
+var berths: Array[Node3D] = []
+var player_berth: Node3D = null
+var rotor: Node3D = null
+## Habitat rotor turns per minute.
+@export var rotor_rpm := 1.0
+## The approach sphere's gap beyond the hull's farthest point.
+const LANE_CLEARANCE := 150.0
+## The autopilot's own margin for stations (PlayerShip): its avoidance
+## envelope ends just inside the sphere, so a docking point on the sphere is
+## outside it and the route still goes around the station.
+const AUTOPILOT_STATION_MARGIN := 55.0
+## How far out from its pier a berthed ship sits.
+const BERTH_STANDOFF := 25.0
+var _hull_radius := 0.0
+var _hull_boxes: Array[AABB] = []
+
 func _ready():
 	add_to_group("station")
 	add_to_group(WorldIdentity.IDENTITY_GROUP)
@@ -31,6 +58,7 @@ func _ready():
 			# it so the visual center sits at the node origin (otherwise
 			# the targeting reticle ends up at the model's feet/bottom).
 			_center_model(model_instance)
+			_setup_berths(model_instance)
 			
 			# Hide the default procedural Core + Ring meshes
 			var core_node = get_node_or_null("Core")
@@ -104,15 +132,113 @@ func _physics_process(delta: float):
 	if ring:
 		ring.rotate_y(0.12 * delta)
 	
-	# Gentle slow rotation for outposts (GLB models)
-	if model_path != "":
+	# Berthed main stations: only the habitat rotor turns (ships sit on the
+	# piers). Everything else with a GLB model turns gently as before.
+	if is_berthed():
+		if is_instance_valid(rotor):
+			rotor.rotate_y(TAU * rotor_rpm / 60.0 * delta)
+	elif model_path != "":
 		rotate_y(0.025 * delta)
 
 func get_docking_position(approach_position: Vector3) -> Vector3:
+	if is_berthed():
+		return lane_entry_position()
 	var away_from_station := approach_position - global_position
 	if away_from_station.length_squared() < 0.001:
 		away_from_station = global_transform.basis.z
 	return global_position + away_from_station.normalized() * get_docking_distance()
+
+func is_berthed() -> bool:
+	return player_berth != null and is_instance_valid(player_berth)
+
+
+## Find the berths, stop the model's own animation (the rotor turns in
+## _physics_process instead), build the simplified collision. Only for models
+## with authored berths.
+func _setup_berths(model_root: Node3D) -> void:
+	for node in model_root.find_children("Dock_*", "Node3D", true, false):
+		berths.append(node as Node3D)
+	if berths.is_empty():
+		return
+	berths.sort_custom(func(a: Node3D, b: Node3D) -> bool: return a.name.naturalnocasecmp_to(b.name) < 0)
+	# The top tier: a clear approach on every model (the harbor test's choice).
+	player_berth = berths[berths.size() - 2] if berths.size() >= 2 else berths[0]
+	rotor = model_root.find_child("Habitat_Rotor", true, false) as Node3D
+	for animation in model_root.find_children("*", "AnimationPlayer", true, false):
+		(animation as AnimationPlayer).stop()
+	# These models are built at their real size: the station node isn't scaled.
+	scale = Vector3.ONE
+	# The small default collision box doesn't fit; one box per section does.
+	for child in get_children():
+		if child is CollisionShape3D:
+			(child as CollisionShape3D).disabled = true
+	var meshes: Array[MeshInstance3D] = []
+	_find_meshes(model_root, meshes)
+	for mesh in meshes:
+		var box := _relative_transform_to(mesh, self) * mesh.get_aabb()
+		if box.size.length() < 1.0:
+			continue
+		_hull_boxes.append(box)
+		var shape := BoxShape3D.new()
+		shape.size = box.size
+		var holder := CollisionShape3D.new()
+		holder.name = "HullBox_%s" % mesh.name
+		holder.shape = shape
+		holder.position = box.get_center()
+		add_child(holder)
+		for i in 8:
+			_hull_radius = maxf(_hull_radius, box.get_endpoint(i).length())
+
+
+## Where a ship sits in the player's berth, and how it faces.
+func berth_position() -> Vector3:
+	return player_berth.global_position + player_berth.global_basis.x.normalized() * BERTH_STANDOFF
+
+
+func berth_basis() -> Basis:
+	var radial := player_berth.global_position - global_position
+	radial.y = 0.0
+	return Basis.looking_at(radial.normalized(), Vector3.UP)
+
+
+## The approach sphere's radius (around the station's centre).
+func approach_sphere_radius() -> float:
+	return _hull_radius + LANE_CLEARANCE
+
+
+## How big the autopilot should treat this station: the sphere, less its own
+## station margin and a little, so its envelope stays inside the sphere.
+func autopilot_radius() -> float:
+	return approach_sphere_radius() - AUTOPILOT_STATION_MARGIN - 20.0
+
+
+## Where docking starts and undocking ends: the point on the approach sphere
+## straight out from the berth. The autopilot flies here; the beam does the
+## rest along the line to the berth.
+func lane_entry_position() -> Vector3:
+	var out := player_berth.global_position - global_position
+	if out.length_squared() < 1.0:
+		out = global_basis.x
+	return global_position + out.normalized() * approach_sphere_radius()
+
+
+## The node the tractor beam comes from: the berth on a berthed station.
+func beam_origin() -> Node3D:
+	return player_berth if is_berthed() else self
+
+
+## How far `from` is from the hull (the section boxes), not the centre. For
+## other stations: the centre distance, as before.
+func surface_distance(from: Vector3) -> float:
+	if _hull_boxes.is_empty():
+		return from.distance_to(global_position)
+	var local := to_local(from)
+	var best := INF
+	for box in _hull_boxes:
+		var nearest := Vector3(clampf(local.x, box.position.x, box.end.x), clampf(local.y, box.position.y, box.end.y), clampf(local.z, box.position.z, box.end.z))
+		best = minf(best, local.distance_to(nearest))
+	return best
+
 
 func get_world_id() -> String:
 	return world_id

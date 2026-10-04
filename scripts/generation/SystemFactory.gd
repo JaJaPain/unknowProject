@@ -29,6 +29,21 @@ const STATION_MODELS := [
 	"res://assets/space_station2.glb",
 ]
 const STATION_SCALES := [2.0, 20.0]
+## Main stations are the kilometre-scale models with berths (Abe, 2026-10-04:
+## mains only, never outposts), each system its own look.
+const MAIN_STATION_MODELS := [
+	"res://assets/stations/cinder_anchorage.glb",
+	"res://assets/stations/cinder_foundry_union.glb",
+	"res://assets/stations/cinder_polar_research.glb",
+	"res://assets/stations/cinder_red_corsair.glb",
+	"res://assets/stations/meridian_exchange.glb",
+	"res://assets/stations/meridian_blackwake_syndicate.glb",
+	"res://assets/stations/meridian_helios_embassy.glb",
+	"res://assets/stations/meridian_verdant_exchange.glb",
+]
+## Room a main station needs: its approach sphere (about 1.3 km) and space
+## around it.
+const MAIN_STATION_CLEARANCE := 2600.0
 
 # Between-places distances, written at the old scale and stretched by the
 # world's one factor (WorldScale.TRAVEL; Abe, 2026-10-04: bigger systems for
@@ -293,10 +308,12 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 		var planet: Node3D = planets[rng.randi() % planets.size()]
 		var clearance := float(planet.get_meta("navigation_clearance_radius", 500.0))
 		var orbit_radius := clearance + WorldScale.travel(rng.randf_range(150.0, 350.0))
+		if index == 0:
+			orbit_radius += MAIN_STATION_CLEARANCE  # its own size, clear of the belt
 		var angle := rng.randf_range(0.0, TAU)
 		position = planet.position + Vector3(cos(angle) * orbit_radius, 0.0, sin(angle) * orbit_radius)
 	else:
-		var found := _find_placement(MIN_STATION_CLEARANCE, 20)
+		var found := _find_placement(MAIN_STATION_CLEARANCE if index == 0 else MIN_STATION_CLEARANCE, 20)
 		if found == Vector3.INF:
 			return {}
 		position = found
@@ -320,9 +337,15 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 	station.set("model_instance_scale", STATION_SCALES[model_idx] * rng.randf_range(0.8, 1.25))
 	station.position = position
 	station.rotation = Vector3(rng.randf_range(-0.12, 0.12), rng.randf_range(0.0, TAU), rng.randf_range(-0.12, 0.12))
+	if index == 0:
+		# A main station: one of the big berthed models, at its real size,
+		# level (its docking lanes are horizontal) and turned its own way.
+		station.set("model_path", MAIN_STATION_MODELS[rng.randi() % MAIN_STATION_MODELS.size()])
+		station.set("model_instance_scale", 1.0)
+		station.rotation = Vector3(0.0, rng.randf_range(0.0, TAU), 0.0)
 
 	_placed_positions.append(position)
-	_placed_radii.append(MIN_STATION_CLEARANCE)
+	_placed_radii.append(MAIN_STATION_CLEARANCE if index == 0 else MIN_STATION_CLEARANCE)
 
 	return {"node": station, "world_id": world_id, "display_name": display_name}
 
