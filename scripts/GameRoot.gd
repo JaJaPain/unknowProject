@@ -8140,6 +8140,29 @@ func _run_core_smoke_test() -> void:
 		_fail_core_smoke_test("Orbit override did not replace approach mode.")
 		return
 
+	# Scan Composition's cooldown counts down on one line (Abe, 2026-10-04).
+	var scan_ui := GlobalState.get_ui_manager()
+	if scan_ui != null and scan_ui.has_method("scan_composition"):
+		scan_ui.call("scan_composition")
+		var lines_before: int = scan_ui.chat_vbox.get_child_count()
+		scan_ui.call("scan_composition")
+		scan_ui.call("scan_composition")
+		var countdown = scan_ui.get("_scan_countdown_label")
+		if scan_ui.chat_vbox.get_child_count() != lines_before + 1 or countdown == null \
+				or not str(countdown.text).contains("Scanner recharging"):
+			_fail_core_smoke_test("Pressing scan twice in the cooldown didn't keep to one countdown line.")
+			return
+		var first_text := str(countdown.text)
+		await get_tree().create_timer(1.3).timeout
+		if str(countdown.text) == first_text:
+			_fail_core_smoke_test("The scan countdown line didn't count down: %s" % first_text)
+			return
+		scan_ui.set("_ore_scan_ready_msec", Time.get_ticks_msec())
+		await get_tree().create_timer(0.4).timeout
+		if not str(countdown.text).contains("Scanner ready."):
+			_fail_core_smoke_test("The scan countdown didn't end on 'Scanner ready.': %s" % str(countdown.text))
+			return
+
 	print("[CoreSmokeTest] PASS: startup, campaign UI, save notifications, pause, movement, camera, targeting, and navigation overrides verified.")
 	delete_savegame()
 	get_tree().quit(0)

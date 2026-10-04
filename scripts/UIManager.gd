@@ -8596,7 +8596,7 @@ func scan_composition() -> Dictionary:
 		return {}
 	var now := Time.get_ticks_msec()
 	if now < _ore_scan_ready_msec:
-		GlobalState.emit_chatter("SCAN", "Scanner recharging: %.0f s." % ceilf(float(_ore_scan_ready_msec - now) / 1000.0), Color(0.6, 0.75, 0.85))
+		_show_scan_countdown()
 		return {}
 	_ore_scan_ready_msec = now + int(OreScanType.COOLDOWN_S * 1000.0)
 	var player := GlobalState.player as Node3D
@@ -8609,6 +8609,45 @@ func scan_composition() -> Dictionary:
 	if t != null and is_instance_valid(t) and t.is_in_group("asteroid"):
 		_on_target_changed(t)
 	return result
+
+
+## One line in the system messages that counts down in place ("Scanner
+## recharging: 7 s", then "Scanner ready.") instead of a new line per press
+## (Abe, 2026-10-04).
+var _scan_countdown_label: RichTextLabel = null
+var _scan_countdown_running := false
+const SCAN_COUNTDOWN_COLOUR := Color(0.6, 0.75, 0.85)
+
+
+func _show_scan_countdown() -> void:
+	_set_scan_countdown_text(_scan_countdown_text())
+	if _scan_countdown_running:
+		return
+	_scan_countdown_running = true
+	while is_inside_tree() and Time.get_ticks_msec() < _ore_scan_ready_msec:
+		await get_tree().create_timer(0.25, true, false, true).timeout
+		if _scan_countdown_label == null or not is_instance_valid(_scan_countdown_label):
+			break  # scrolled out of the feed
+		_set_scan_countdown_text(_scan_countdown_text())
+	_scan_countdown_running = false
+	if _scan_countdown_label != null and is_instance_valid(_scan_countdown_label):
+		_set_scan_countdown_text("Scanner ready.")
+	_scan_countdown_label = null
+
+
+func _scan_countdown_text() -> String:
+	var left := ceilf(float(_ore_scan_ready_msec - Time.get_ticks_msec()) / 1000.0)
+	return "Scanner recharging: %d s" % maxi(int(left), 1)
+
+
+func _set_scan_countdown_text(message: String) -> void:
+	if _scan_countdown_label == null or not is_instance_valid(_scan_countdown_label):
+		if chat_vbox == null:
+			return
+		add_chat_message("SCAN", message, SCAN_COUNTDOWN_COLOUR)
+		_scan_countdown_label = chat_vbox.get_child(chat_vbox.get_child_count() - 1) as RichTextLabel
+		return
+	_scan_countdown_label.text = "[color=#%s][b]SCAN:[/b][/color] %s" % [SCAN_COUNTDOWN_COLOUR.to_html(false), message]
 
 
 ## A clear bubble out of the ship to the edge of what the scan covers, and a

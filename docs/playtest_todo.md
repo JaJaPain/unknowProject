@@ -745,7 +745,8 @@ through the marked gate and flies you in):
       the feed says "Scan: N rocks · 2 water ice, ...", and the overview now
       names those rocks ("Water ice asteroid"); unscanned rocks just say
       "Asteroid". Scanned rocks stay on the overview a bit further out than
-      before. Pressing C again within 10 seconds says the scanner is recharging. A red
+      before. Pressing C again within 10 seconds shows ONE line, "Scanner
+      recharging: N s", that counts down in place and ends "Scanner ready." A red
       rock in range is counted as unreadable. A rock you mine names itself.
 - [ ] **Fuel Blocks job.** The board's Fuel Blocks job says ice is scarce and
       to scan (C); scanning a belt finds the water ice.
