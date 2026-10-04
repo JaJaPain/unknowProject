@@ -110,7 +110,7 @@ func _spawn() -> void:
 	ship.set("patrol_center", to)
 	var route: Array[Vector3] = [to]
 	ship.set("patrol_route", route)
-	var entry := {"ship": ship, "dest": to, "kind": "dock" if arriving else "leave", "station": station}
+	var entry := {"ship": ship, "dest": to, "kind": "dock" if arriving else "leave", "station": station, "base_speed": float(ship.get("speed"))}
 	_ships.append(entry)
 	if not arriving:
 		_push_out(entry, station, from + toward * PUSH_OUT_DIST + side * 20.0)
@@ -125,6 +125,10 @@ func _tick_ship(entry: Dictionary) -> void:
 	if bool(entry.get("on_beam", false)):
 		return  # the beam's tweens own it now
 	var d := (ship as Node3D).global_position.distance_to(entry["dest"])
+	# Freighters cruise the long legs too (WorldScale; same as the player's
+	# autopilot), back to normal speed for the last stretch.
+	var k: float = preload("res://scripts/domain/WorldScale.gd").TRAVEL
+	ship.set("speed", float(entry.get("base_speed", 16.0)) * lerpf(1.0, k, clampf((d - 1500.0) / 2500.0, 0.0, 1.0)))
 	# NPC steering doesn't route around planets: a freighter that stops
 	# closing on its destination for 12 s is quietly retired (fades out).
 	var now := Time.get_ticks_msec()

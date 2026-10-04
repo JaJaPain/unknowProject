@@ -355,6 +355,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_quest_reach_smoke_test")
 	elif "--normal-map-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_normal_map_snapshot")
+	elif "--cruise-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_cruise_smoke_test")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_perf_probe")
 	elif "--hud-snapshot" in OS.get_cmdline_user_args():
@@ -11853,6 +11855,62 @@ func _run_quest_reach_smoke_test() -> void:
 		fail.call("After the pickup, the next step doesn't name the hand-in station: %s" % step["text"])
 		return
 	print("[QuestReachSmokeTest] PASS")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+## World scale (Abe, 2026-10-04): a long autopilot hop in the bigger world takes
+## about as long as the same displayed distance did before, and arrival is at
+## normal speed. Flies 2,000 (displayed) metres in open space at a fast clock.
+##   -- --cruise-smoke-test --baseline-offline
+func _run_cruise_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	for i in 30:
+		await get_tree().process_frame
+	var WS = load("res://scripts/domain/WorldScale.gd")
+	var shown := 2000.0
+	var start := Vector3(-60000.0, 0.0, -60000.0)
+	var dest := start + Vector3(WS.travel(shown), 0.0, 0.0)
+	player.global_position = start
+	player.look_at(dest, Vector3.UP)
+	player.velocity = Vector3.ZERO
+	player.current_speed = 0.0
+	GlobalState.active_target = null
+	player.nav_mode = "MOVE_TO_POINT"
+	player.target_position = dest
+	var top := float(player.max_speed) * float(GlobalState.engine_speed_mult)
+	# The old world: the same displayed distance at normal top speed.
+	var old_seconds := shown / top
+	Engine.time_scale = 8.0
+	var t0 := Time.get_ticks_msec()
+	var peak := 0.0
+	while player.global_position.distance_to(dest) > 25.0 and (Time.get_ticks_msec() - t0) / 1000.0 * Engine.time_scale < old_seconds * 4.0:
+		await get_tree().physics_frame
+		peak = maxf(peak, float(player.current_speed))
+	var seconds := (Time.get_ticks_msec() - t0) / 1000.0 * Engine.time_scale
+	var arrive_speed := float(player.current_speed)
+	Engine.time_scale = 1.0
+	player.nav_mode = "MANUAL"
+	player.target_position = null
+	print("[CruiseSmokeTest] %.0f world units: %.1f s (old world %.1f s), peak %.0f (top %.0f), arrived at %.1f" % [WS.travel(shown), seconds, old_seconds, peak, top, arrive_speed])
+	var fail := func(message: String) -> void:
+		push_error("[CruiseSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	if player.global_position.distance_to(dest) > 25.0:
+		fail.call("Never arrived (%.0f left)." % player.global_position.distance_to(dest))
+		return
+	if seconds > old_seconds * 1.3:
+		fail.call("The hop took %.1f s; the old world took %.1f s." % [seconds, old_seconds])
+		return
+	if peak < top * WS.TRAVEL * 0.8:
+		fail.call("Never cruised (peak %.0f, top %.0f)." % [peak, top])
+		return
+	if arrive_speed > top * 1.1:
+		fail.call("Arrived too fast (%.1f)." % arrive_speed)
+		return
+	print("[CruiseSmokeTest] PASS")
 	delete_savegame()
 	get_tree().quit(0)
 

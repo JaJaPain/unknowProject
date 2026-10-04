@@ -34,6 +34,14 @@ var current_shield: float = 0.0
 var shield_regen_timer: float = 0.0
 var current_speed: float = 0.0
 const BOOST_SPEED_MULTIPLIER := 1.25
+## Cruise (Abe, 2026-10-04): the world is WorldScale.TRAVEL times bigger, so
+## the autopilot flies long hops that much faster and trips take the time they
+## always did. Full cruise far from where it's going; back to normal speed over
+## the last stretch, so arrivals, combat, mining and docking feel unchanged.
+## Manual flight and orbiting never cruise.
+const CRUISE_NEAR := 150.0
+const CRUISE_RAMP := 700.0
+const CRUISE_MODES := ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "DOCK", "MOVE_TO_POINT", "MINE", "ATTACK"]
 const BOOST_DURATION_SECONDS := 5.0
 const BOOST_COOLDOWN_SECONDS := 60.0
 const BOOST_HEAT_DAMAGE := 2.0
@@ -873,6 +881,15 @@ func _cruise_fuel_mult() -> float:
 	return _cruise_mult
 
 
+## How much faster than normal the autopilot flies `remaining` world units
+## from its destination: 1 up close, WorldScale.TRAVEL far out.
+func cruise_multiplier(remaining: float) -> float:
+	if not nav_mode in CRUISE_MODES or engine_stall_timer > 0.0:
+		return 1.0
+	var k: float = preload("res://scripts/domain/WorldScale.gd").TRAVEL
+	return lerpf(1.0, k, clampf((remaining - CRUISE_NEAR) / CRUISE_RAMP, 0.0, 1.0))
+
+
 func activate_boost() -> bool:
 	var no_fuel := GlobalState.is_fuel_empty() or GlobalState.fuel + 0.0001 < GlobalState.FuelScript.BOOST_COST
 	if destroyed or is_docked or boost_timer > 0.0 or boost_cooldown_timer > 0.0 or no_fuel:
@@ -1385,6 +1402,8 @@ func _physics_process(delta: float):
 			speed_limit *= GlobalState.FuelScript.EMPTY_SPEED_MULT
 		if boost_timer > 0.0:
 			speed_limit *= BOOST_SPEED_MULTIPLIER
+		var cruise := cruise_multiplier(global_position.distance_to(dest))
+		speed_limit *= cruise
 		var target_speed: float = speed_limit
 		
 		# Proportional speed controller to maintain safe distance from targets
@@ -1439,8 +1458,9 @@ func _physics_process(delta: float):
 					speed_limit
 				)
 			
-		# Calculate acceleration taking cargo mass into account
-		var accel = 15.0 * GlobalState.acceleration_mult
+		# Calculate acceleration taking cargo mass into account (cruise spools
+		# up and down as fast as it climbs, so a long hop isn't all ramp).
+		var accel = 15.0 * GlobalState.acceleration_mult * cruise
 		if not GlobalState.ignore_cargo_mass and GlobalState.cargo_max > 0:
 			var cargo_ratio = GlobalState.cargo / GlobalState.cargo_max
 			# Full cargo reduces acceleration by up to 60%
