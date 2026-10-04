@@ -48,6 +48,9 @@ var target_boost_btn: Button
 var target_approach_btn: Button
 var target_orbit_btn: Button
 var target_action_btn: Button
+var target_scan_btn: Button
+const OreScanType := preload("res://scripts/domain/OreScan.gd")
+var _ore_scan_ready_msec := 0
 # Tracks the currently-selected target so we can announce when it's destroyed or
 # salvaged and clear the target window (see _check_active_target_alive).
 var _tracked_target_id: int = 0
@@ -1182,6 +1185,13 @@ func _create_target_panel():
 				_command_selected_target("ATTACK")
 	)
 	target_action_box.add_child(target_action_btn)
+
+	target_scan_btn = Button.new()
+	target_scan_btn.name = "TargetScanButton"
+	target_scan_btn.text = "Scan Composition (C)"
+	target_scan_btn.visible = false
+	target_scan_btn.pressed.connect(func(): scan_composition())
+	target_action_box.add_child(target_scan_btn)
 	
 	target_panel.visible = false
 
@@ -3750,6 +3760,10 @@ func _unhandled_input(event: InputEvent):
 			_on_inventory_pressed()
 			get_viewport().set_input_as_handled()
 			return
+		if event.physical_keycode == OreScanType.KEY and _can_scan_composition():
+			scan_composition()
+			get_viewport().set_input_as_handled()
+			return
 	if event.is_action_pressed("pause_game"):
 		if loading_panel and is_instance_valid(loading_panel):
 			return
@@ -4028,6 +4042,11 @@ func _passes_sensor_reveal(entity: Node, distance: float) -> bool:
 		return true
 	if not (entity is Node3D):
 		return true
+	# A rock the scanner read stays listed out past the usual rock range, so
+	# what the scan found can be picked from the overview.
+	if entity.is_in_group("asteroid") and OreScanType.is_scanned(entity) and distance <= OreScanType.LIST_RANGE:
+		entity.set_meta("overview_seen", true)
+		return true
 	var groups := entity.get_groups()
 	var size_class: String = RevealModel.size_class_for_groups(
 		groups, _gate_knowledge_state(entity)
@@ -4221,7 +4240,7 @@ func _on_target_changed(new_target: Node3D):
 		var icon_index = 0 # Default to ship icon
 		
 		if new_target.is_in_group("asteroid"):
-			type_str = "Asteroid"
+			type_str = _asteroid_type_label(new_target)
 			icon_index = 1
 		elif new_target.is_in_group("station"):
 			# Same word as the overview (playtest 2026-10-03 finding 14).
@@ -4274,6 +4293,8 @@ func _on_target_changed(new_target: Node3D):
 			target_icon.texture = atlas
 			target_icon.visible = true
 			
+		if target_scan_btn:
+			target_scan_btn.visible = new_target.is_in_group("asteroid")
 		if target_action_btn:
 			if new_target.is_in_group("asteroid"):
 				target_action_btn.text = "Mine Asteroid"
@@ -8551,15 +8572,78 @@ func _place_upgrade_goal_card() -> void:
 	upgrade_goal_card.position = Vector2(right - upgrade_goal_card.size.x, top)
 
 
-## "Asteroid · Thorium · Zenith claim": the ore (rare ore draws a fight) and
-## the claim when its crews are working it (core loop step 6b).
+## Scan Composition is for flying: not docked, paused, dead, or in a cutscene.
+func _can_scan_composition() -> bool:
+	var player = GlobalState.player
+	if player == null or not is_instance_valid(player):
+		return false
+	if GlobalState.paused or bool(GlobalState.get("intro_cinematic_active")):
+		return false
+	return not bool(player.get("is_docked")) and not bool(player.get("destroyed"))
+
+
+## Scan Composition (C, or the target window's button): a pulse from the ship
+## reads the ore of every ordinary rock within OreScan.RANGE; the overview
+## names them and the feed sums them up (Abe, playtest 2026-10-04).
+## Returns the scan result ({} while the scanner recharges).
+func scan_composition() -> Dictionary:
+	if not _can_scan_composition():
+		return {}
+	var now := Time.get_ticks_msec()
+	if now < _ore_scan_ready_msec:
+		GlobalState.emit_chatter("SCAN", "Scanner recharging: %.0f s." % ceilf(float(_ore_scan_ready_msec - now) / 1000.0), Color(0.6, 0.75, 0.85))
+		return {}
+	_ore_scan_ready_msec = now + int(OreScanType.COOLDOWN_S * 1000.0)
+	var player := GlobalState.player as Node3D
+	var result: Dictionary = OreScanType.scan(player.global_position, get_tree().get_nodes_in_group("asteroid"))
+	_spawn_scan_pulse(player.global_position)
+	GlobalState.emit_chatter("SCAN", OreScanType.summary(result), Color(0.55, 0.85, 1.0))
+	# Names in the overview and the target window change now, not next rebuild.
+	refresh_overview()
+	var t = GlobalState.active_target
+	if t != null and is_instance_valid(t) and t.is_in_group("asteroid"):
+		_on_target_changed(t)
+	return result
+
+
+## A thin blue shell racing out to the scan's range, so the player sees what
+## it covered.
+func _spawn_scan_pulse(at: Vector3) -> void:
+	var root := get_tree().current_scene if get_tree() else null
+	if root == null:
+		return
+	var mesh := SphereMesh.new()
+	mesh.radius = 1.0
+	mesh.height = 2.0
+	mesh.radial_segments = 48
+	mesh.rings = 24
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_color = Color(0.35, 0.75, 1.0, 0.22)
+	var pulse := MeshInstance3D.new()
+	pulse.name = "OreScanPulse"
+	pulse.mesh = mesh
+	pulse.material_override = mat
+	pulse.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(pulse)
+	pulse.global_position = at
+	pulse.scale = Vector3.ONE * 20.0
+	var tween := pulse.create_tween()
+	tween.tween_property(pulse, "scale", Vector3.ONE * OreScanType.RANGE, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(mat, "albedo_color:a", 0.0, 1.2).set_ease(Tween.EASE_IN)
+	tween.tween_callback(pulse.queue_free)
+
+
+## "Thorium asteroid · Zenith claim": the ore once a scan (C) or the laser
+## has read it (Abe, playtest 2026-10-04), and the claim when its crews are
+## working it (core loop step 6b). Unscanned rocks read "Asteroid".
 func _asteroid_type_label(rock: Node) -> String:
-	var text := "Asteroid"
 	if rock.is_in_group("tech_seam_asteroid"):
 		return "Asteroid · tech-grade seams"
-	var ore := str(rock.get("ore_type"))
-	if not ore.is_empty() and ore != "silicate" and ore != "<null>":
-		text += " · " + load("res://scripts/economy/OreTypes.gd").display(ore)
+	var text: String = OreScanType.name_for(rock)
 	var claim := str(GlobalState.worked_claim_owner(rock as Node3D))
 	if not claim.is_empty():
 		text += " · %s claim" % GlobalState.faction_display_name(claim)

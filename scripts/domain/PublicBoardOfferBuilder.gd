@@ -289,6 +289,8 @@ static func _build_fuel_block_offer(current_time_minutes: int) -> Dictionary:
 	var gs = Engine.get_main_loop().root.get_node_or_null("GlobalState")
 	if gs != null and float((gs.get("system_ore_mix") as Dictionary).get("water_ice", 0.0)) <= 0.0:
 		dialogue += " There's no ice in this system's belts; it'll have to be hauled in."
+	else:
+		dialogue += " Ice is scarce in the belts: fly out to one and scan (C) to find it."
 	var objective := {
 		"type": "PURCHASE_DELIVERY",
 		"item_id": "fuel_booster",

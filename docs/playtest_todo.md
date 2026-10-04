@@ -735,3 +735,15 @@ through the marked gate and flies you in):
       window shows the distance ("1,244 m", "12.4 km" far off) with ▼ when
       closing and ▲ when opening; it matches the overview. Outposts say
       [Outpost], not [Station].
+
+## V. Playtest 2026-10-04 fixes (added 2026-10-04)
+
+- [ ] **Scan Composition.** In a belt, press **C** (or the target window's
+      "Scan Composition (C)" on a rock): a blue shell races out from the ship,
+      the feed says "Scan: N rocks · 2 water ice, ...", and the overview now
+      names those rocks ("Water ice asteroid"); unscanned rocks just say
+      "Asteroid". Scanned rocks stay on the overview a bit further out than
+      before. Pressing C again at once says the scanner is recharging. A red
+      rock in range is counted as unreadable. A rock you mine names itself.
+- [ ] **Fuel Blocks job.** The board's Fuel Blocks job says ice is scarce and
+      to scan (C); scanning a belt finds the water ice.

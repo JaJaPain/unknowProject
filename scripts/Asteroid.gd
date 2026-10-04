@@ -512,6 +512,8 @@ func mine():
 	if amount_to_mine > 0.0:
 		var added = GlobalState.add_ore(amount_to_mine, ore_type)
 		resources -= added
+		if added > 0.0:
+			set_meta("ore_scanned", true)  # you know what you're cutting (OreScan)
 		if added > 0.0 and GlobalState.has_method("report_player_mined_asteroid"):
 			GlobalState.report_player_mined_asteroid(self)
 		
