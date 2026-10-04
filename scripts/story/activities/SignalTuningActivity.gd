@@ -104,6 +104,12 @@ func _process(delta: float) -> void:
 		_offer_at = FIRST_OFFER_AFTER_S if not _taught() else randf_range(OFFER_AFTER_MIN_S, OFFER_AFTER_MAX_S)
 		_decided = false
 		_offered = {}
+	# Nothing at all until the tutorial is done (Abe, 2026-10-04: it kept
+	# cutting into the tutorial). The offer clock starts after it.
+	if not tutorial_done():
+		_flight_s = 0.0
+		_calm_s = 0.0
+		return
 	_calm_s = (_calm_s + delta) if _can_listen() else 0.0
 	if _announce_pending and _calm_s >= ANNOUNCE_CALM_S:
 		_announce()
@@ -123,6 +129,18 @@ func _process(delta: float) -> void:
 		_try_offer()
 
 
+## The tutorial is done once the first contract is handed in. Overridable
+## for tests.
+var tutorial_override: Callable = Callable()
+
+
+func tutorial_done() -> bool:
+	if tutorial_override.is_valid():
+		return bool(tutorial_override.call())
+	var story := get_node_or_null("/root/StoryManager")
+	return story != null and bool((story.get("story_state") as Dictionary).get("first_contract_handed_in", false))
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).physical_keycode == TUNE_KEY:
 		if press_tune():
@@ -134,7 +152,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Returns what happened: "tuning", "blocked", "scanning", or "" when the ship
 ## isn't flying (docked, loading, cinematic) and T means nothing.
 func press_tune() -> String:
-	if _panel != null or not _flying() or _jumping():
+	if _panel != null or not _flying() or _jumping() or not tutorial_done():
 		return ""
 	var reason := listen_block_reason()
 	if not reason.is_empty():

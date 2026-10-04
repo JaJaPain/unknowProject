@@ -111,6 +111,16 @@ func _initialize() -> void:
 	activity.flying_override = func() -> bool: return flying[0]
 	_check(activity.press_tune() == "", "docked or loading: T means nothing")
 	flying[0] = true
+	# Abe, 2026-10-04: nothing at all until the tutorial is handed in.
+	var tutorial := [false]
+	activity.tutorial_override = func() -> bool: return tutorial[0]
+	_check(activity.press_tune() == "", "during the tutorial T means nothing")
+	activity._flight_s = 999.0
+	activity.set_process(true)
+	activity._process(0.5)
+	activity.set_process(false)
+	_check(activity._flight_s == 0.0 and not activity._decided, "and no signal is offered during the tutorial")
+	tutorial[0] = true
 	_check(activity.press_tune() == "scanning" and activity._status.visible and activity._status_label.text == ActivityType.SCANNING_TEXT, "no signal: it scans")
 	activity._update_status(ActivityType.SCAN_SECONDS + 0.1)
 	_check(activity._status_label.text == ActivityType.NOTHING_TEXT, "then reports nothing on the band")

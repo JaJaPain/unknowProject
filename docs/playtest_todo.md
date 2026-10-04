@@ -777,3 +777,7 @@ through the marked gate and flies you in):
 - [ ] **New look every jump.** Jump to a new system: its main station and
       outposts wear different models/finishes from the system you left.
       Jump back: the same ones as before (they're saved with the system).
+- [ ] **No receiver during the tutorial.** New campaign: from launch to
+      handing in Kaelen's first contract, N.O.V.A. never offers a signal and T
+      does nothing. After the hand-in, her first receiver offer comes early
+      as before.
