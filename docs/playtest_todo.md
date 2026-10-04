@@ -747,3 +747,14 @@ through the marked gate and flies you in):
       rock in range is counted as unreadable. A rock you mine names itself.
 - [ ] **Fuel Blocks job.** The board's Fuel Blocks job says ice is scarce and
       to scan (C); scanning a belt finds the water ice.
+- [ ] **Fly-to never U-turns.** Fly to something on the far side of a
+      planet or a big station (long trip, cruising): the ship bends round
+      smoothly and never swings 180 degrees and back.
+- [ ] **Mouse after docking.** Hold right mouse (camera drag) while the
+      tractor beam takes you in: the mouse works in the dock menu.
+- [ ] **Loading tips** change about every 14 seconds.
+- [ ] **No early route offer.** New campaign: Kaelen's new-route offer
+      waits until 3 contracts are done in this campaign.
+- [ ] **First agent job reads in-world.** No "fallback", "chapter" or
+      "packet" in the job title or pitch; the contact never calls you by a
+      bit of a faction name.

@@ -397,6 +397,22 @@ static func heading_agreement(
 
 const MARCH_STEP := 50.0
 const MARCH_MAX_STEPS := 60
+## The autopilot's routes in the stretched world (playtest 2026-10-04 finding
+## 5): 60 steps of 50 traced only 3,000 units of a 10,000-30,000 trip, and the
+## untraced rest went straight through planets; pushing that straight line out
+## of the body put route points behind the ship and it U-turned. The step grows
+## with the trip (tangent steps clear the sphere they round, so a longer step
+## is still safe) and the whole trip is traced.
+const MARCH_STEP_MAX := 250.0
+const MARCH_ROUTE_MAX_STEPS := 400
+
+
+## The live autopilot's route: march_waypoints sized to the trip.
+static func march_route(start: Vector3, destination: Vector3, obstacles: Array) -> PackedVector3Array:
+	var distance := start.distance_to(destination)
+	var step := clampf(distance / float(MARCH_MAX_STEPS), MARCH_STEP, MARCH_STEP_MAX)
+	var steps := mini(MARCH_ROUTE_MAX_STEPS, int(ceil(distance / step)) + MARCH_MAX_STEPS)
+	return march_waypoints(start, destination, obstacles, step, steps)
 
 
 ## Traces the steer rule forward from `start`, recording the corner points, to

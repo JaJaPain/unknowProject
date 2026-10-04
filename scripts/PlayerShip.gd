@@ -1792,7 +1792,7 @@ func autopilot_probe(destination: Vector3, navigation_target: Node3D) -> Diction
 	var steer: Vector3 = TangentNavigatorType.steer_from(
 		global_position, destination, obstacles
 	)
-	var path: PackedVector3Array = TangentNavigatorType.march_waypoints(
+	var path: PackedVector3Array = TangentNavigatorType.march_route(
 		global_position, destination, obstacles
 	)
 	return {
@@ -1828,7 +1828,17 @@ func _autopilot_steer_target(destination: Vector3, navigation_target: Node3D) ->
 
 func _needs_path_replan(destination: Vector3) -> bool:
 	return _auto_path_dest.distance_to(destination) > _PATH_REPLAN_DEST_MOVE \
-		or _path_offcourse_distance() > _PATH_OFFCOURSE
+		or _path_offcourse_distance() > _path_offcourse_limit()
+
+
+## At cruise a ship carries wide on a bend; that isn't straying. Tolerance and
+## lookahead grow with speed (playtest 2026-10-04 finding 5).
+func _path_offcourse_limit() -> float:
+	return maxf(_PATH_OFFCOURSE, absf(current_speed) * 3.0)
+
+
+func _path_lookahead_distance() -> float:
+	return maxf(_PATH_LOOKAHEAD, absf(current_speed) * 1.5)
 
 
 ## Distance from the ship to the nearest point of the remaining path (INF if none).
@@ -1849,7 +1859,7 @@ func _plan_autopilot_path(destination: Vector3, navigation_target: Node3D) -> vo
 	# both need it, and it walks the scene tree.
 	var obstacles := _navigator_obstacles(navigation_target)
 	_announce_route_obstruction(destination, obstacles)
-	var raw: PackedVector3Array = TangentNavigatorType.march_waypoints(
+	var raw: PackedVector3Array = TangentNavigatorType.march_route(
 		global_position, destination, obstacles
 	)
 	_auto_path = _push_path_clear(_catmull_rom_smooth(raw), destination)
@@ -1909,7 +1919,7 @@ func _push_path_clear(path: PackedVector3Array, destination: Vector3) -> PackedV
 ## around. The obstacle field is snapshotted ONCE and reused for every step --
 ## rebuilding it per step walked the whole scene sixty times per replan.
 func _march_tangent_waypoints(destination: Vector3, navigation_target: Node3D) -> PackedVector3Array:
-	return TangentNavigatorType.march_waypoints(
+	return TangentNavigatorType.march_route(
 		global_position, destination, _navigator_obstacles(navigation_target)
 	)
 
@@ -1957,18 +1967,32 @@ func _path_lookahead_target(destination: Vector3) -> Vector3:
 			best_d = d
 			best_i = i
 	_auto_path_index = best_i
-	# Walk forward from the closest point by the lookahead distance.
+	# Walk forward from the closest point by the lookahead distance, never
+	# aiming at a point the ship has already passed (a point behind the ship is
+	# a U-turn; playtest 2026-10-04 finding 5).
+	var lookahead := _path_lookahead_distance()
 	var accum := 0.0
 	var idx := best_i
 	var prev := _auto_path[best_i]
 	while idx < _auto_path.size():
 		var pt := _auto_path[idx]
 		accum += prev.distance_to(pt)
-		if accum >= _PATH_LOOKAHEAD:
+		if accum >= lookahead and not _path_point_passed(idx):
 			return pt
 		prev = pt
 		idx += 1
 	return destination
+
+
+## True when the ship is already beyond route point `idx` along the route's
+## direction there.
+func _path_point_passed(idx: int) -> bool:
+	if idx + 1 >= _auto_path.size():
+		return false
+	var along := _auto_path[idx + 1] - _auto_path[idx]
+	if along.length_squared() < 0.0001:
+		return false
+	return (global_position - _auto_path[idx]).dot(along) > 0.0
 
 
 func _clear_autopilot_path() -> void:

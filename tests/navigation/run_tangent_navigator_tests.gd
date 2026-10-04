@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_long_range_and_crowded_fields()
 	_test_moving_target_is_caught()
 	_test_game_scale_gas_giant()
+	_test_stretched_world_route()
 	if _failures.is_empty():
 		print("[PASS] Tangent navigator tests")
 		quit(0)
@@ -315,6 +316,28 @@ func _test_game_scale_gas_giant() -> void:
 		_expect(path[path.size() - 1].distance_to(dest) < 1.0, "game-scale route ends at the destination")
 		var clearance: float = Nav.route_min_clearance(path, center)
 		_expect(clearance >= 600.0 + Nav.INSIDE_BODY_CLEARANCE, "game-scale route to %s stays out of the planet (closest %.0f, body 600)" % [dest, clearance])
+
+
+# Playtest 2026-10-04 finding 5: in the stretched world (x5) the same giant is
+# 3,000 across with a 5,600 keep-out, and trips are tens of kilometres; the
+# live route (march_route) must trace all of it, round the body, and never
+# double back.
+func _test_stretched_world_route() -> void:
+	var center := Vector3(0, 0, -10000)
+	var giant := {"center": center, "radius": 5625.0, "physical": 3000.0}
+	for dest in [Vector3(0, 0, -20000), Vector3(2000, 0, -21000), Vector3(-7500, 0, -18000)]:
+		var path: PackedVector3Array = Nav.march_route(Vector3.ZERO, dest, [giant])
+		_expect(path[path.size() - 1].distance_to(dest) < 1.0, "stretched route ends at the destination")
+		var clearance: float = Nav.route_min_clearance(path, center)
+		_expect(clearance >= 3000.0 + Nav.INSIDE_BODY_CLEARANCE, "stretched route to %s stays out of the planet (closest %.0f)" % [dest, clearance])
+		_expect(Nav.segment_clears_sphere(path[path.size() - 2], dest, center, 3000.0), "the last straight leg clears the planet")
+		var reversals := 0
+		for i in range(1, path.size() - 1):
+			var a: Vector3 = path[i] - path[i - 1]
+			var b: Vector3 = path[i + 1] - path[i]
+			if a.length() > 0.01 and b.length() > 0.01 and a.normalized().dot(b.normalized()) < -0.2:
+				reversals += 1
+		_expect(reversals == 0, "the route never doubles back (%d reversals to %s)" % [reversals, dest])
 
 
 func _expect(condition: bool, message: String) -> void:

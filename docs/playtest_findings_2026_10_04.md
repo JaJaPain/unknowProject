@@ -110,7 +110,7 @@ fallback in-world, never title from an id, a banned-words guard).
    if so, the uniqueness check misses contacts created for systems not yet
    loaded. Larger name lists would also help.
 
-### 5. On Fly-to, the ship U-turns, then a few seconds later turns back and carries on
+### 5. On Fly-to, the ship U-turns, then a few seconds later turns back and carries on — FIXED
 
 **Abe:** the ship keeps turning around 180 degrees, then after a few
 seconds turns back around and starts flying to the location again.
@@ -241,3 +241,4 @@ in the system; it only warns when there is none at all
 - **1:** loading tips every 14 s (`LOADING_TIP_SECONDS`).
 - **2:** docking frees a held camera drag (docking camera start, dock menu, and a right-button release while docked); the dock smoke holds a drag into every dock.
 - **3:** completed contracts are counted per campaign (story_state `contracts_completed`); Kaelen's route offer and gate actions that need N missions use it. Open question for Abe: should her offer also wait for Class II access?
+- **5:** autopilot routes trace the whole trip (march step grows with the trip, 50-250, up to 400 steps; it used to stop at 3,000 and cut straight through planets, and pushing that line out of the body put route points behind the ship); lookahead (x1.5 s of speed) and off-course tolerance (x3 s) grow with speed; the nose never aims at a route point already passed. Navigator test: stretched-world giant, no reversals.
