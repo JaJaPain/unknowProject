@@ -17,7 +17,7 @@ const LIST_RANGE := RANGE * 1.25
 ## The key (C for Composition).
 const KEY := KEY_C
 ## Seconds before the scanner can pulse again.
-const COOLDOWN_S := 6.0
+const COOLDOWN_S := 10.0  # Abe, 2026-10-04
 const META := "ore_scanned"
 
 

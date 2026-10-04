@@ -50,6 +50,7 @@ var target_orbit_btn: Button
 var target_action_btn: Button
 var target_scan_btn: Button
 const OreScanType := preload("res://scripts/domain/OreScan.gd")
+const SCAN_PING_PATH := "res://sound/ShipSounds/sonar_ping.wav"
 var _ore_scan_ready_msec := 0
 # Tracks the currently-selected target so we can announce when it's destroyed or
 # salvaged and clear the target window (see _check_active_target_alive).
@@ -8610,35 +8611,17 @@ func scan_composition() -> Dictionary:
 	return result
 
 
-## A thin blue shell racing out to the scan's range, so the player sees what
-## it covered.
+## A clear bubble out of the ship to the edge of what the scan covers, and a
+## sonar ping (Abe, 2026-10-04).
 func _spawn_scan_pulse(at: Vector3) -> void:
 	var root := get_tree().current_scene if get_tree() else null
 	if root == null:
 		return
-	var mesh := SphereMesh.new()
-	mesh.radius = 1.0
-	mesh.height = 2.0
-	mesh.radial_segments = 48
-	mesh.rings = 24
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.albedo_color = Color(0.35, 0.75, 1.0, 0.22)
-	var pulse := MeshInstance3D.new()
-	pulse.name = "OreScanPulse"
-	pulse.mesh = mesh
-	pulse.material_override = mat
-	pulse.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	root.add_child(pulse)
-	pulse.global_position = at
-	pulse.scale = Vector3.ONE * 20.0
-	var tween := pulse.create_tween()
-	tween.tween_property(pulse, "scale", Vector3.ONE * OreScanType.RANGE, 1.2).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(mat, "albedo_color:a", 0.0, 1.2).set_ease(Tween.EASE_IN)
-	tween.tween_callback(pulse.queue_free)
+	load("res://scripts/effects/ScanBubble.gd").spawn(root, at, OreScanType.RANGE)
+	# The submarine ping (Abe): tools/make_sonar_ping.py.
+	var ping := load(SCAN_PING_PATH) as AudioStream
+	if ping != null:
+		AudioManager.play_sfx(ping, -4.0)
 
 
 ## "Thorium asteroid · Zenith claim": the ore once a scan (C) or the laser
