@@ -28,16 +28,26 @@ func _initialize() -> void:
 
 	# Finding 1: a stinger ducks the bed, holds, then fades back in slowly.
 	am.play_stinger("victory")
+	var hold: float = am.stinger_hold_s("victory")
 	var length: float = am._stinger_player.stream.get_length()
+	# Playtest 2026-10-04 b: hold only while it's heard, not through the tail.
+	_check(hold <= float(am.STINGER_AUDIBLE_S["victory"]) and hold < length - 0.5, "the hold ends before the silent tail (%.1f of %.1f s)" % [hold, length])
+	for id in am.STINGERS:
+		_check(am.STINGER_AUDIBLE_S.has(id), "every stinger has a measured audible length: %s" % id)
 	await create_timer(0.4).timeout
 	_check(am.music_bed_db() <= am.STINGER_DUCK_DB + 0.5, "ducked under the stinger (%.1f dB)" % am.music_bed_db())
-	await create_timer(maxf(0.1, length - 0.6)).timeout
-	_check(am.music_bed_db() <= am.STINGER_DUCK_DB + 1.0, "still ducked until the stinger ends (%.1f dB)" % am.music_bed_db())
+	# A second stinger mid-hold that ends sooner doesn't stretch the hold.
+	am.play_stinger("mission")
+	_check(absf(float(am._bed_release_msec - Time.get_ticks_msec()) / 1000.0 - (hold - 0.4)) < 0.3, "back-to-back: the hold runs to the later end, not restarted")
+	await create_timer(maxf(0.1, hold - 0.4 - 0.3)).timeout
+	_check(am.music_bed_db() <= am.STINGER_DUCK_DB + 1.0, "still ducked until the stinger's end (%.1f dB)" % am.music_bed_db())
+	await create_timer(0.3 + 0.5).timeout
+	_check(am.music_bed_db() > am.STINGER_DUCK_DB + 3.0, "the rise is heard within half a second of the release (%.1f dB)" % am.music_bed_db())
 	var last: float = am.music_bed_db()
 	var biggest_step := 0.0
 	var samples := 0
 	var start := Time.get_ticks_msec()
-	while Time.get_ticks_msec() - start < int((am.STINGER_RESTORE_S + 1.0) * 1000.0):
+	while Time.get_ticks_msec() - start < int((am.STINGER_RESTORE_S + 0.5) * 1000.0):
 		await process_frame
 		var now: float = am.music_bed_db()
 		_check(now >= last - 0.01, "the fade never dips back down")

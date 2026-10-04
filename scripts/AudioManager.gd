@@ -25,6 +25,13 @@ const MUSIC_BED_BUS := "MusicBed"
 const STINGER_DUCK_DB := -12.0
 const STINGER_DUCK_IN_S := 0.2
 const STINGER_RESTORE_S := 2.5
+## Where each stinger stops being heard (about -35 dB), measured with ffmpeg
+## (playtest 2026-10-04 b finding 1). The files run on in a near-silent
+## reverb tail (0.7-2.5 s) that used to hold the music down.
+const STINGER_AUDIBLE_S := {"danger": 7.0, "jump": 9.0, "mission": 6.0, "victory": 8.0}
+## The music starts back this long before the stinger's last note fades,
+## so it swells under it instead of after a gap.
+const STINGER_FADE_LEAD_S := 0.5
 ## Tension music needs the threat to hold, and to be gone a while, so a
 ## flickering lock doesn't flip the music (finding 2).
 const TENSION_ENTER_S := 2.0
@@ -500,20 +507,36 @@ func play_stinger(stinger_id: String) -> void:
 		return
 	_stinger_player.stream = load(path)
 	_stinger_player.play()
-	_duck_bed_for(_stinger_player.stream.get_length() if _stinger_player.stream != null else 2.0)
+	_duck_bed_for(stinger_hold_s(stinger_id))
+
+
+## How long the music stays ducked for a stinger: until just before it stops
+## being heard.
+func stinger_hold_s(stinger_id: String) -> float:
+	var audible := float(STINGER_AUDIBLE_S.get(stinger_id, 0.0))
+	if audible <= 0.0:
+		audible = _stinger_player.stream.get_length() if _stinger_player.stream != null else 2.0
+	return maxf(0.3, audible - STINGER_FADE_LEAD_S)
 
 
 var _bed_tween: Tween
 var _bed_serial := 0
+## When the current hold ends (msec); a later stinger can push it out to its
+## own end but never restarts it from scratch.
+var _bed_release_msec := 0
 
 
-## Duck the music bed now, hold it for `seconds`, then fade it back in
-## slowly (eased, so the start of the swell is gentle). A new stinger while
-## ducked restarts the hold.
+## Duck the music bed now, hold it `seconds`, then fade it back in. The fade
+## eases OUT: the rise is heard at once and settles gently (an ease-in sat
+## near -12 dB for its first second, which sounded like more waiting).
+## Back-to-back stingers: the hold runs to whichever ends later.
 func _duck_bed_for(seconds: float) -> void:
 	var idx := AudioServer.get_bus_index(MUSIC_BED_BUS)
 	if idx == -1:
 		return
+	var now := Time.get_ticks_msec()
+	_bed_release_msec = maxi(_bed_release_msec, now + int(seconds * 1000.0))
+	var hold := float(_bed_release_msec - now) / 1000.0
 	_bed_serial += 1
 	var serial := _bed_serial
 	if _bed_tween != null and _bed_tween.is_valid():
@@ -521,11 +544,11 @@ func _duck_bed_for(seconds: float) -> void:
 	var set_db := func(db: float) -> void: AudioServer.set_bus_volume_db(idx, db)
 	_bed_tween = create_tween()
 	_bed_tween.tween_method(set_db, AudioServer.get_bus_volume_db(idx), STINGER_DUCK_DB, STINGER_DUCK_IN_S)
-	_bed_tween.tween_interval(maxf(0.1, seconds - STINGER_DUCK_IN_S))
+	_bed_tween.tween_interval(maxf(0.05, hold - STINGER_DUCK_IN_S))
 	_bed_tween.tween_callback(func() -> void:
 		if serial == _bed_serial:
 			GlobalState.trace("[TRACE] [Music] stinger done, music fading back in"))
-	_bed_tween.tween_method(set_db, STINGER_DUCK_DB, 0.0, STINGER_RESTORE_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_bed_tween.tween_method(set_db, STINGER_DUCK_DB, 0.0, STINGER_RESTORE_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 ## The music bed's volume now, dB (for tests).
