@@ -1,5 +1,10 @@
 extends Node
 
+## A new chapter has begun (advance_chapter). GameRoot gives it its chapter
+## plan at once: without one, every agent contract waited forever (playtest
+## 2026-10-04 c finding 9).
+signal chapter_advanced(chapter: int)
+
 # StoryManager — narrative director stub.
 # Beat evaluation, arc generation, and nudge logic are implemented in Phase 1–4
 # per story_manager_impl.md. This file owns the deferred beat scheduler (Tool 10)
@@ -1133,6 +1138,7 @@ func advance_chapter(
 	_update_kaelen_mood()
 	# Story context changed — replace all known agent pools so tone stays current.
 	_replace_all_handoff_pools()
+	chapter_advanced.emit(int(story_state.get("chapter", 1)))
 
 # Hands N.O.V.A. her campaign-specific quirk and gate-glitch lines. The quirk
 # and the glitch lines are player-safe; the raw memory flicker is director-only

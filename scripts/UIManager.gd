@@ -8030,6 +8030,11 @@ func _request_station_contact_work(
 
 
 func _request_background_agent_quest() -> bool:
+	# Mid-campaign, a missing chapter plan is made on the spot, never waited
+	# on (finding 9).
+	var story_root := get_tree().current_scene
+	if story_root != null and story_root.has_method("ensure_current_chapter_plan"):
+		story_root.call("ensure_current_chapter_plan")
 	if not _campaign_story_ready_for_gameplay():
 		print("[UIManager] Deferring background contract generation until campaign story is ready.")
 		return true
@@ -13598,6 +13603,20 @@ func _show_kaelen_intro_quest_offer() -> void:
 	agent_choices_container.add_child(pass_btn)
 
 
+## Kaelen while a job is still being found: her own voice, first person
+## (playtest 2026-10-04 c finding 9: "Kaelen is lining up work in the
+## background" was developer text, about herself). Provisional, for Abe's
+## review. The board fills itself in when the job lands.
+const KAELEN_WAITING_LINES: Array[String] = [
+	"Give me a minute, Shiny. I'm still shaking the trees.",
+	"Nothing on the board yet. Somebody owes me a call; stand there and look employable.",
+	"Hold that thought. I've got a line out and I'd like it to bite before you wander off.",
+	"I'm working on it. Good work takes a minute. Bad work takes two, and pays worse.",
+	"Patience, Shiny. The people with money are always the last to pick up.",
+	"Something's coming together. Don't touch anything.",
+]
+
+
 func _refresh_agent_quest_board():
 	# This also repairs saves from the old return-briefing bypass: even if its
 	# accepted flag is already true, ordinary cached work cannot skip the tutor.
@@ -13641,10 +13660,7 @@ func _refresh_agent_quest_board():
 	else:
 		# Still loading or not started yet
 		GlobalState.trace("[TRACE] [UIManager] No pre-cached quest ready. Waiting for background generator...")
-		var waiting_line := (
-			"No vetted contract is ready yet. Kaelen is lining up work in the "
-			+ "background; check back in a moment."
-		)
+		var waiting_line: String = KAELEN_WAITING_LINES[randi() % KAELEN_WAITING_LINES.size()]
 		agent_dialogue_label.text = waiting_line
 		if not _agent_more_work_check_playing:
 			SpeechService.play(waiting_line, "voice.kaelen.v1")

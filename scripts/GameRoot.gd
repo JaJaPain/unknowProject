@@ -235,6 +235,8 @@ func _start_gameplay_runtime() -> void:
 	if gameplay_runtime_started:
 		return
 	gameplay_runtime_started = true
+	if not StoryManager.chapter_advanced.is_connected(_on_chapter_advanced):
+		StoryManager.chapter_advanced.connect(_on_chapter_advanced)
 	_init_dev_panel()
 	_init_event_scheduler()
 	_init_ship_behavior_observer()
@@ -4044,6 +4046,26 @@ func _seed_npc_stakes_from_chapter_packet(packet: Dictionary) -> void:
 				"[GameRoot] Chapter packet NPC stake was not recorded for %s: %s" %
 				[str(npc_id), str(result.get("error", "unknown error"))]
 			)
+
+
+## Every chapter needs its plan the moment it starts (playtest 2026-10-04 c
+## finding 9: chapter 2 had none, so Kaelen's contracts waited forever).
+## With the legacy planner off this commits the authored packet instantly.
+func _on_chapter_advanced(chapter: int) -> void:
+	var result := request_chapter_plan_generation(chapter)
+	if not bool(result.get("ok", false)):
+		push_warning("[GameRoot] Chapter %d plan could not be prepared: %s" % [chapter, str(result.get("error", "unknown error"))])
+
+
+## The current chapter has a plan, making one now if it hasn't (instant with
+## the legacy planner off). True when it's ready afterwards.
+func ensure_current_chapter_plan() -> bool:
+	if is_chapter_plan_ready():
+		return true
+	if not is_campaign_story_ready():
+		return false
+	request_chapter_plan_generation()
+	return is_chapter_plan_ready()
 
 
 func maybe_queue_next_chapter_plan_generation() -> Dictionary:
@@ -10922,6 +10944,19 @@ func _run_first_session_smoke_test() -> void:
 		return
 	if not ui._tutorial_return_still_due():
 		_fail_first_session_smoke_test("With the job done and the ship out, the return line should still be due.")
+		return
+
+	# Playtest 2026-10-04 c finding 9: a new chapter gets its plan at once, so
+	# Kaelen's contracts are never blocked behind a missing one.
+	if is_campaign_story_ready():
+		StoryManager.advance_chapter()
+		if not is_chapter_plan_ready():
+			_fail_first_session_smoke_test("Chapter %d started without a chapter plan; agent contracts would wait forever." % int(StoryManager.story_state.get("chapter", 1)))
+			return
+	else:
+		print("[FirstSessionSmokeTest] (chapter advance check skipped: offline campaign story)")
+	if not StoryManager.chapter_advanced.is_connected(_on_chapter_advanced):
+		_fail_first_session_smoke_test("GameRoot isn't listening for new chapters.")
 		return
 
 	print("[FirstSessionSmokeTest] PASS: wiki, locked star map, clean docking, Kaelen's two replies, tutorial accepted, one Reaver, the way back.")
