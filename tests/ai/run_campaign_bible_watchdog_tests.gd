@@ -46,6 +46,19 @@ func _initialize() -> void:
 	await create_timer(6.0).timeout
 	_check(not fired[0], "an answered request isn't treated as a stall")
 
+	# The story model is loaded on the title screen (Abe, 2026-10-04); while it
+	# holds the GPU the small model waits, and passing the story gate releases it.
+	llm._models_warm_started = false
+	llm._story_preload_state = "ready"
+	llm.set_campaign_bible_priority_active(false)
+	llm._ollama_warm_models()
+	_check(not bool(llm._models_warm_started), "the small model waits while the story model is loaded")
+	llm.warm_small_model_after_story_gate()
+	_check(str(llm._story_preload_state) == "released", "past the story gate the story model makes way")
+	var src := FileAccess.get_file_as_string("res://scripts/LLMInterface.gd")
+	_check(src.contains("[small_model] if _story_preload_holds_gpu() else [small_model, model_name]"), "a preloaded story model isn't cleared before the story request")
+	_check(src.contains("_preload_story_model()\n\t\t_discover_ollama_model()") or src.contains("_preload_story_model()\r\n\t\t_discover_ollama_model()"), "the preload starts before the small model warms")
+
 	var ui_text := FileAccess.get_file_as_string("res://scripts/UIManager.gd")
 	_check(ui_text.contains("Loading the story model") and ui_text.contains("_tick_story_status()"), "the loading screen shows the real stage and a clock")
 	if _failures.is_empty():

@@ -615,7 +615,19 @@ func _ready():
 			_ollama_after_up()
 		else:
 			push_warning("[LLMInterface] Ollama not responding — attempting to start it automatically.")
-			_ollama_launch()
+			# Usually it IS running, stuck from the last session quitting
+			# mid-generation; a second copy can't take the port and the stuck
+			# one then stalls the campaign story at 35% (twice on 2026-10-04).
+			# The game owns Ollama: restart it outright.
+			if ollama_auto_restart_allowed:
+				# The relaunch's own readiness poll runs _ollama_after_up().
+				restart_ollama_then(func(up: bool) -> void:
+					if up:
+						print("[LLMInterface] Ollama restarted and answering.")
+					else:
+						push_warning("[LLMInterface] CRITICAL: Ollama did not come back after a restart."))
+			else:
+				_ollama_launch()
 	)
 
 # ── Ollama watchdog helpers ───────────────────────────────────────────────────
@@ -790,6 +802,8 @@ func restart_ollama_then(on_up: Callable) -> void:
 		campaign_bible_stage_since_msec = Time.get_ticks_msec()
 	small_model_verified = false
 	_models_warm_started = false
+	if _story_preload_state != "":
+		_story_preload_state = "released"
 	if _ollama_start_pid > 0:
 		OS.kill(_ollama_start_pid)
 		_ollama_start_pid = -1
@@ -817,8 +831,54 @@ func _ollama_after_up() -> void:
 	_start_ollama_heartbeat()
 	_ollama_ensure_models([LocalModelGatewayType.DEFAULT_SMALL_MODEL,
 		LocalModelGatewayType.DEFAULT_LARGE_MODEL], func():
+		# Before discovery (which warms the small model): the story model gets
+		# the GPU first (Abe, 2026-10-04).
+		_preload_story_model()
 		_discover_ollama_model()
 	)
+
+
+## The story model, loaded while the player is still on the title screen
+## (Abe, 2026-10-04: "on game start, start ollama and load the model right
+## then"). A new campaign's story then starts writing at once instead of
+## first loading ~5 GB from disk (32 s on Abe's machine). It holds the GPU
+## until the story is written, or until a continued campaign passes the
+## story gate, then makes way for the small dialogue model as before.
+## "" (not tried), "loading", "ready", "failed", "released".
+var _story_preload_state := ""
+const STORY_PRELOAD_KEEP_ALIVE := "15m"
+
+
+func _story_preload_holds_gpu() -> bool:
+	return _story_preload_state in ["loading", "ready"]
+
+
+func _preload_story_model() -> void:
+	if _story_preload_state != "" or "--baseline-offline" in OS.get_cmdline_user_args():
+		return
+	_story_preload_state = "loading"
+	# Exactly the story request's model and context size, or Ollama would
+	# reload it when the real request comes.
+	var body: Dictionary = build_generation_body("campaign_bible", "", "", {})
+	body["keep_alive"] = STORY_PRELOAD_KEEP_ALIVE
+	var started := Time.get_ticks_msec()
+	var h := HTTPRequest.new()
+	add_child(h)
+	h.timeout = 180.0
+	h.request_completed.connect(func(result: int, code: int, _hdrs: PackedStringArray, _body: PackedByteArray) -> void:
+		h.queue_free()
+		var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+		var ok := result == HTTPRequest.RESULT_SUCCESS and code == 200
+		if _story_preload_state == "loading":
+			_story_preload_state = "ready" if ok else "failed"
+		print("[LLMInterface] Story model preload %s in %.1fs." % ["done" if ok else "failed", elapsed])
+		GenerationDiagnostics.record_event("model_warmup", "story_preload_" + ("ready" if ok else "failed"), "LLMInterface", {"model": str(body.get("model", "")), "elapsed_seconds": elapsed})
+		if not ok:
+			call_deferred("_ollama_warm_models"))
+	LocalModelGatewayType.note_request("model_warmup")
+	if h.request(OLLAMA_URL, ["Content-Type: application/json"], HTTPClient.METHOD_POST, JSON.stringify(body)) != OK:
+		h.queue_free()
+		_story_preload_state = "failed"
 
 ## Checks /api/tags; for any model in `required` not already present, pulls it.
 ## Fires `on_done` once all models are confirmed available (or pull succeeded).
@@ -1051,6 +1111,9 @@ func _discover_ollama_model():
 func _ollama_warm_models() -> void:
 	if _models_warm_started:
 		return
+	if _story_preload_holds_gpu() and not campaign_bible_priority_active:
+		GenerationDiagnostics.record_event("model_warmup", "small_warm_deferred_for_story_preload", "LLMInterface", {"model": active_model_name})
+		return
 	if campaign_bible_priority_active:
 		GenerationDiagnostics.record_event(
 			"model_warmup",
@@ -1076,6 +1139,11 @@ func _ollama_warm_models() -> void:
 
 func warm_small_model_after_story_gate() -> void:
 	if small_model_verified or _models_warm_started:
+		return
+	if _story_preload_holds_gpu() and not campaign_bible_priority_active:
+		_story_preload_state = "released"
+		_evict_models_then([model_for_capability("campaign_bible")], func() -> void:
+			_ollama_warm_models())
 		return
 	call_deferred("_ollama_warm_models")
 
@@ -1577,7 +1645,9 @@ func _start_campaign_bible_attempt(
 		"llm_interface",
 		{"evicted": [small_model, model_name]}
 	)
-	_evict_models_then([small_model, model_name], fire_bible_request)
+	var to_clear: Array = [small_model] if _story_preload_holds_gpu() else [small_model, model_name]
+	_story_preload_state = "released" if _story_preload_state != "" else ""
+	_evict_models_then(to_clear, fire_bible_request)
 
 
 ## The small model's warm-up and readiness probe in flight (HTTPRequests).
