@@ -6,7 +6,7 @@ Abe saw, what the code says (cause, with file:line), and a proposed fix.
 
 ## Findings
 
-### 1. The T receiver mini-game triggers inside the gate jump
+### 1. **FIXED 2026-10-04** The T receiver mini-game triggers inside the gate jump
 
 **Abe:** the T mini game is triggering inside the gate jump (the jump tunnel).
 
