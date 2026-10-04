@@ -52,7 +52,7 @@ hit Escape to open a different menu and come back for it to return.
 - Test: in the dock smoke, set the mouse captured and `rmb_dragging` before
   capture; after docking the mouse mode is visible.
 
-### 3. "New route available" on the first dock of the next system, after only the tutorial
+### 3. "New route available" on the first dock of the next system, after only the tutorial — FIXED
 
 **Abe:** Kaelen's new-route offer showed up on his first dock in the new
 system, with only the tutorial job done in the last system.
@@ -240,3 +240,4 @@ in the system; it only warns when there is none at all
   pools grew from 12 x 12 to 32 x 32 so the same person turns up less.
 - **1:** loading tips every 14 s (`LOADING_TIP_SECONDS`).
 - **2:** docking frees a held camera drag (docking camera start, dock menu, and a right-button release while docked); the dock smoke holds a drag into every dock.
+- **3:** completed contracts are counted per campaign (story_state `contracts_completed`); Kaelen's route offer and gate actions that need N missions use it. Open question for Abe: should her offer also wait for Class II access?

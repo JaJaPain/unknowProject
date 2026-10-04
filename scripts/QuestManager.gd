@@ -501,15 +501,14 @@ func _pickup_special_mission():
 	return null
 
 
+## Contracts completed in THIS campaign. Not the quest history file: that is
+## one log for every campaign ever played, so on a played machine it was
+## always past every threshold (playtest 2026-10-04 finding 3: Kaelen offered
+## a route after only the tutorial).
 func get_completed_count() -> int:
-	var history := _load_quest_history()
-	if history.strip_edges().is_empty():
+	if not is_instance_valid(StoryManager):
 		return 0
-	var count := 0
-	for line in history.split("\n"):
-		if line.strip_edges().begins_with("- **"):
-			count += 1
-	return count
+	return int(StoryManager.story_state.get("contracts_completed", 0))
 
 
 func is_quest_completed() -> bool:
@@ -1004,6 +1003,9 @@ func _increment_mission_history_revision(
 	event_type: String,
 	mission_data: Dictionary
 ) -> void:
+	if event_type == "completed" and is_instance_valid(StoryManager):
+		StoryManager.story_state["contracts_completed"] = \
+			int(StoryManager.story_state.get("contracts_completed", 0)) + 1
 	if is_instance_valid(StoryManager) \
 			and StoryManager.has_method("increment_mission_history_revision"):
 		StoryManager.increment_mission_history_revision(event_type, mission_data)
