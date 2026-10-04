@@ -4614,6 +4614,10 @@ func toggle_dock_menu(
 	create_checkpoint: bool = true
 ):
 	current_station = station
+	# The dock menu needs the pointer, whatever the camera was doing.
+	if GlobalState.player != null and is_instance_valid(GlobalState.player) \
+			and GlobalState.player.has_method("_release_mouse_capture"):
+		GlobalState.player.call("_release_mouse_capture")
 	var dock_ui_open := dock_panel.visible or agent_panel.visible \
 			or (public_board_panel and public_board_panel.visible) \
 			or (pin_board_panel and pin_board_panel.visible) \
@@ -16755,8 +16759,10 @@ func _creep_loading_bar(cap: float, seconds: float) -> void:
 
 
 ## A rotating tip under the loading status: the first line of each preloaded
-## wiki entry, controls filled in, a new one every 7 seconds.
+## wiki entry, controls filled in, a new one every LOADING_TIP_SECONDS.
 var _loading_tip_label: Label = null
+## Long enough to read a tip twice (Abe, playtest 2026-10-04: half the old pace).
+const LOADING_TIP_SECONDS := 14.0
 
 
 func _build_loading_tips(parent: Control) -> void:
@@ -16783,7 +16789,7 @@ func _rotate_loading_tip(tips: Array[String], index: int) -> void:
 	if tips.is_empty() or _loading_tip_label == null or not is_instance_valid(_loading_tip_label):
 		return
 	_loading_tip_label.text = tips[index % tips.size()]
-	get_tree().create_timer(7.0, true, false, true).timeout.connect(
+	get_tree().create_timer(LOADING_TIP_SECONDS, true, false, true).timeout.connect(
 		func(): _rotate_loading_tip(tips, index + 1)
 	)
 

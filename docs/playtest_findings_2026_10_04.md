@@ -7,7 +7,7 @@ saw, what the code says (cause, with file:line), and a proposed fix.
 
 ## Findings
 
-### 1. Loading-screen tips change too fast (half the speed)
+### 1. Loading-screen tips change too fast (half the speed) — FIXED
 
 **Abe:** the tips during the loading screen should cycle at about half the
 speed they do now.
@@ -20,7 +20,7 @@ the comment above `_build_loading_tips` also says 7).
 (`LOADING_TIP_SECONDS := 14.0`), comment updated. Optionally a short fade
 between tips (0.4 s) so the change reads calmly. Nothing else depends on it.
 
-### 2. Docking at a new station loses the mouse (Esc needed to get it back)
+### 2. Docking at a new station loses the mouse (Esc needed to get it back) — FIXED
 
 **Abe:** when docking at the new stations he loses mouse control; he has to
 hit Escape to open a different menu and come back for it to return.
@@ -238,3 +238,5 @@ in the system; it only warns when there is none at all
   the contact's own name ("Juno Calder", not "Vaeshtalil Pilgrim Fleet Juno
   Calder") and addresses the player as "you" or "Captain"; contact name
   pools grew from 12 x 12 to 32 x 32 so the same person turns up less.
+- **1:** loading tips every 14 s (`LOADING_TIP_SECONDS`).
+- **2:** docking frees a held camera drag (docking camera start, dock menu, and a right-button release while docked); the dock smoke holds a drag into every dock.

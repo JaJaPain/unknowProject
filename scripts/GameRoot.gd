@@ -8287,6 +8287,9 @@ func _run_dock_smoke_test() -> void:
 		player.current_speed = 0.0
 		GlobalState.active_target = station
 		player.nav_mode = "DOCK"
+		# Playtest 2026-10-04 finding 2: a camera drag held into the dock must
+		# not leave the mouse captured.
+		player.rmb_dragging = true
 
 		for frame in range(240):
 			await get_tree().physics_frame
@@ -8320,6 +8323,9 @@ func _run_dock_smoke_test() -> void:
 			await get_tree().physics_frame
 		if not ui or not ui.dock_panel.visible:
 			_fail_dock_smoke_test("Dock UI did not open for '%s'." % station.name)
+			return
+		if player.rmb_dragging:
+			_fail_dock_smoke_test("A camera drag held into the dock at '%s' kept the mouse captured." % station.name)
 			return
 		await get_tree().process_frame
 		if not FileAccess.file_exists(SAVE_PATH):

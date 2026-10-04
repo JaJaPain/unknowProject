@@ -482,6 +482,10 @@ func _enter_orbit(enemy: Node) -> void:
 	_cam_lerp_speed = _ORBIT_LERP
 
 func begin_docking_camera(station: Node3D) -> void:
+	# A right-drag held as the tractor takes the ship would leave the mouse
+	# captured: once docked, the button's release is never seen (Abe,
+	# playtest 2026-10-04: "I lose mouse control, Esc brings it back").
+	_release_mouse_capture()
 	if station == null or not is_instance_valid(station) or _cam_mode != 0:
 		return
 	_dock_cam_station = station
@@ -964,6 +968,11 @@ func _unhandled_input(event: InputEvent):
 	# Control children of the dock menu still get their own _gui_input
 	# before this runs, so dock buttons keep working.
 	if is_docked:
+		# ...except letting go of a camera drag, so the mouse is never stuck.
+		if rmb_dragging and event is InputEventMouseButton \
+				and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_RIGHT \
+				and not event.pressed:
+			_release_mouse_capture()
 		return
 	# CombatPanel owns input during turn-based planning and execution.
 	if CombatManager.state != CombatManager.State.IDLE:
