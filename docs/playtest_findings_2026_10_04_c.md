@@ -139,3 +139,37 @@ ship until it's outside the safe zone.
 - Test: in the dock smoke, issue an Approach order mid-push. The ship stays
   on the beam's line and ends outside the sphere; after the release, orders
   work.
+
+### 5. Scan bubble: looks full-size at once, and its edge can't be seen
+
+**Abe:** the scan bubble needs to grow more slowly; it looks full size
+instantly. The sound is good. It might be too big: he can't see its edge.
+
+**Cause (`scripts/effects/ScanBubble.gd`):**
+- **Too fast where it matters:** it grows over 1.6 s with a *cubic ease-out*
+  to 1,600 units (`OreScan.RANGE`, 320 m displayed). Ease-out does most of
+  its growth at the start: by 0.3 s it's ~750 units across. The camera sits
+  6-50 units from the ship (`PlayerShip` zoom), so in well under half a
+  second the shell is far past the camera and reads as "instantly full".
+- **The edge is invisible from inside:** the shader is a soap-bubble rim
+  (alpha from `1 - |N·V|`). The rim shows only where you look along the
+  surface, which is from outside. From inside, near its centre (always, for
+  a 1,600 sphere and a 50 m camera), every part of the shell faces you
+  head-on, so the rim is ~0 and only the 1.2% tint remains. The snapshot I
+  checked was taken from outside, which is why it looked right.
+
+**Proposed fix:**
+- **Slower, steady growth:** ~3.5 s, linear or gentle ease-in-out, so the
+  front visibly travels outward past the camera and across the belt.
+- **A front you can see from inside:** a bright band at the expanding edge,
+  visible from any angle (in the shader: brightness from where the
+  fragment sits on the sphere, not from the view angle). Plus a faint ring
+  where the shell cuts the ship's plane, so you watch it sweep across the
+  rocks to the scan's edge. Then it holds a moment at full size and fades.
+- **Rocks ping as the front reaches them:** each scanned rock flashes
+  briefly when the wave passes it, and its overview name changes then, not
+  all at once. That shows the scan's reach without seeing the whole sphere.
+- **Size:** the bubble shows exactly what's scanned, so making it smaller
+  shrinks the scan. **Ask Abe:** keep 320 m with the visible front and
+  ring, or a smaller scan (e.g. 200 m)?
+- Check from the gameplay camera (inside), not an outside snapshot.
