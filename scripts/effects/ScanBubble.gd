@@ -16,7 +16,7 @@ extends MeshInstance3D
 ## Growth time for the largest bubble (OreScan.RANGE); smaller ones are
 ## quicker, never under GROW_MIN_S, so the front is always seen to travel.
 const GROW_S := 3.5
-const GROW_MIN_S := 1.5
+const GROW_MIN_S := 2.0
 const HOLD_S := 0.6
 const FADE_S := 1.2
 const RIM_COLOUR := Color(0.62, 0.86, 1.0)

@@ -426,9 +426,10 @@ together. It needs a cleaner way of doing it.
 - Also: `run_intro_handhold_tests` had a stale source check since 31a4107;
   updated to the current rule (tip on first undock, repaired or not).
 - **5:** Abe's answer on size: "the 10 or so asteroids near the ship, not
-  half the belt". The scan now reads the nearest 10 ordinary rocks (within
-  320 m at most), and the bubble grows just past the farthest of them. It
-  grows steadily (1.5-3.5 s by size), carries a faint grid visible from
+  half the belt", then "a rule of thumb, not exact: a reasonable bubble so
+  the player has to scan and move". The scan is a fixed 400-unit bubble
+  (80 m displayed): about ten rocks of a start belt (one every ~70 units). It
+  grows steadily (2 s), carries a faint grid visible from
   inside, draws a ring where it crosses the ship's level, and flashes each
   rock as the front reaches it. Checked from inside with the gameplay
   camera. Wiki updated.
