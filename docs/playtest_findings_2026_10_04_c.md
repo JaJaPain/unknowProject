@@ -304,3 +304,48 @@ NOVA_LINE_1 ("Hold on, Captain!..."), 1A ("I almost got it.") and 1B
   drop, rather than shift.
 - Same rule for arrival lines 2-4 relative to the hand-back: none of them
   may play after `_finish()`.
+
+### 9. First dock in the new system: "No vetted contract is ready yet", and it never would be (SERIOUS)
+
+**Abe (screenshot):** first dock in the new system, Kaelen's panel says "No
+vetted contract is ready yet. Kaelen is lining up work in the background;
+check back in a moment." No missions.
+
+**Cause (confirmed from this session's log):**
+- When you open Kaelen, `_refresh_agent_quest_board` → `_request_background_agent_quest()`
+  (`UIManager.gd:~8032`). It refuses unless `_campaign_story_ready_for_gameplay()`,
+  which needs the campaign bible **and a chapter plan for the current
+  chapter** (`GameRoot.is_chapter_plan_ready`: a packet for
+  `story_state.chapter`).
+- This campaign moved to **chapter 2** before the jump (log: the
+  `chapter_2` story screenshot, line ~708). `StoryManager.advance_chapter`
+  bumps the number, but nothing commits a chapter-2 packet. With the
+  legacy planner off, packets are only committed when someone asks:
+  the loading screen at startup (chapter 1), or
+  `maybe_queue_next_chapter_plan_generation` once 60% of the current packet
+  is used up. The chapter advanced without that happening.
+- From then on every contract request logs "Deferring background contract
+  generation until campaign story is ready." (three times in the log). So
+  **Kaelen's agent work is blocked for the rest of the campaign, in every
+  system.** "Check back in a moment" is never true.
+- The waiting line itself is developer text: Kaelen speaks about herself in
+  the third person ("Kaelen is lining up work"), and says "vetted contract".
+
+**Proposed fix (priority):**
+- `advance_chapter` (or GameRoot listening to it) makes sure the new
+  chapter has a packet at once. With the legacy planner off that's
+  `_commit_fallback_chapter_plan(new_chapter, ...)`, which is instant.
+  Also, on load and on arrival in a system, any missing current-chapter
+  packet is committed.
+- `_request_background_agent_quest` never dead-ends on a missing chapter
+  plan mid-session: if the bible is ready and only the plan is missing, ask
+  for it (instant) and carry on.
+- Prefetch on arrival: start the agent contract when you arrive in a system
+  (or set course for the main station), not on dock, so it's usually ready
+  when you open her panel.
+- Replace the waiting line with Kaelen's own voice, a small authored pool,
+  first person and in character ("Give me a minute, Shiny, I'm still
+  shaking the trees here."). The board fills itself in when the job lands
+  (the `is_waiting_for_agent_board` path already exists).
+- Test: a smoke that advances the chapter, jumps, docks and opens Kaelen
+  gets a contract (or a real "no work" reason), never a permanent defer.
