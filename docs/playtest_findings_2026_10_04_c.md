@@ -349,3 +349,42 @@ check back in a moment." No missions.
   (the `is_waiting_for_agent_board` path already exists).
 - Test: a smoke that advances the chapter, jumps, docks and opens Kaelen
   gets a contract (or a real "no work" reason), never a permanent defer.
+
+### 10. Lounge hunt ("talk them out of the item"): janky, broken, buttons run together
+
+**Abe (screenshot):** the new mini-game to talk the item out of someone is
+very janky and broken. He couldn't get it to work, and the buttons all run
+together. It needs a cleaner way of doing it.
+
+**What the screenshot shows / code (`UIManager._add_lounge_card_buttons`,
+`~5960`):**
+- Each contact card gets a row of **up to six** buttons squeezed into one
+  `HBoxContainer` at 78% of the card's width, font size 8: "Ask about it",
+  Drink, Faction, Trouble, (Intel), Work. Each button's minimum width is its
+  text, so the row is wider than the card and **spills over the neighbouring
+  cards**: rows overlap and interleave (the red outline in the screenshot).
+  The row also sits over the Talk button.
+- **Overlapping rows steal clicks:** where one card's row lies on top of the
+  next card's, a click meant for "Ask about it" can land on the neighbour's
+  Work or Drink. That would explain "couldn't get it to work" (to confirm:
+  the hunt's own logic, `_on_lounge_hunt_ask`, passes its tests).
+- **Names overflow too:** the card title is the full "<Faction> <Person>"
+  ("ORORRENVA PILGRIM FLEET KESH ORRIN"), cut off at both ends. The person
+  alone ("KESH ORRIN") with the faction on the small second line would fit.
+
+**Proposed redesign (cleaner):**
+- **Cards stay simple:** portrait, the person's name, faction and mood on
+  the small line, and **one** button: Talk. No action row on the card.
+  During a hunt, the card holding nothing gets no marker. The whole lounge
+  gets one header line: "Someone here has the Heat Sink. Ask around."
+- **Talk opens the conversation panel with a clean, vertical action
+  list,** full-size buttons, one per row: **Ask about the Heat Sink**
+  (highlighted during a hunt), Buy a drink (cost), Faction, Trouble, Intel
+  (when they have it), Work, Leave. Their reply shows above the list, so
+  you can work on one person turn by turn (deflect → hint → give), which is
+  the whole point of the dry-humour hunt.
+- The hand-over (they give it) happens in that panel with a clear "They
+  hand you the Heat Sink" and the job's next step.
+- Test: a UI test that every card's controls stay inside the card's rect,
+  and a hunt smoke: Talk → Ask about it → the pool lines progress and the
+  holder gives the item.
