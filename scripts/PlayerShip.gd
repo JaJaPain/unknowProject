@@ -968,6 +968,11 @@ func engage_evasive_maneuver(attacker: Node3D) -> bool:
 	return boost_fired
 
 func _unhandled_input(event: InputEvent):
+	# The opening cinematic owns the ship until it hands control back with
+	# "Hold RIGHT MOUSE and drag to look around" (Abe, playtest 2026-10-04 c
+	# finding 1). Space (skip) is the cinematic's own.
+	if GlobalState.intro_cinematic_active:
+		return
 	# While docked the dock UI owns the screen — block any world-bound
 	# input (LMB fly-to, RMB targeting, camera orbit, autopilot keys).
 	# Control children of the dock menu still get their own _gui_input

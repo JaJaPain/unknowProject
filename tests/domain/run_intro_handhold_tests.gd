@@ -184,7 +184,7 @@ func _test_intro_repair_target_tip_contract() -> void:
 	var story_source := story_file.get_as_text()
 	_expect(
 		ui_source.contains("func _maybe_play_intro_repair_target_tip()")
-			and ui_source.contains("if not _repaired_this_dock or not _should_flash_undock()")
+			and ui_source.contains("if not _should_flash_undock():")
 			and ui_source.contains("intro_repair_target_tip_delivered")
 			and ui_source.contains("highlighted that ship in red on our overview")
 			and ui_source.contains("Nova.Severity.THREAT"),

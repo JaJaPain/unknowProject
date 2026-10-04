@@ -3764,6 +3764,10 @@ func _restart_game():
 	get_tree().reload_current_scene()
 
 func _unhandled_input(event: InputEvent):
+	# No HUD keys (inventory, star map, replies, scan) during the opening
+	# cinematic (finding 1). Esc still reaches the systems menu below.
+	if GlobalState.intro_cinematic_active and not event.is_action_pressed("pause_game"):
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode >= KEY_1 and event.keycode <= KEY_4 and _press_agent_reply(event.keycode - KEY_1 + 1):
 			get_viewport().set_input_as_handled()

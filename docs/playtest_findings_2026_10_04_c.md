@@ -6,7 +6,7 @@ playtest has finished.**
 
 ## Findings
 
-### 1. Mouse and controls work during the intro; they should be off until the "look around" hint
+### 1. Mouse and controls work during the intro; they should be off until the "look around" hint — FIXED
 
 **Abe:** the mouse and all controls should be disabled until they're handed
 back, at the point where the tutorial suggests using the right mouse button
@@ -41,7 +41,7 @@ Nothing gates input:
 - Test: during the intro, simulated RMB drag, click, Q, I, M and G do
   nothing; after `_finish()` they work.
 
-### 2. Get the ship's drones moving as soon as we're out of the gate
+### 2. Get the ship's drones moving as soon as we're out of the gate — FIXED
 
 **Abe:** get our drones moving as soon as possible once we're outside the
 gate.
@@ -417,3 +417,11 @@ together. It needs a cleaner way of doing it.
   dock smoke checks the hum mid-push.
 - Same at main stations and the new outposts: one code path, checked at
   Greywake, Iron Reach and Kova.
+- **1:** while the opening cinematic runs, PlayerShip ignores all input
+  and the HUD ignores its keys. Control comes back with "Hold RIGHT MOUSE and
+  drag to look around". Space still skips; Esc still opens the systems menu
+  (ask Abe whether to lock that too).
+- **2:** from the fling out of the gate, the cinematic drives the drones
+  (`_update_drones`) until control is handed back.
+- Also: `run_intro_handhold_tests` had a stale source check since 31a4107;
+  updated to the current rule (tip on first undock, repaired or not).

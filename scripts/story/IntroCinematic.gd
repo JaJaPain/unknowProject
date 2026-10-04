@@ -496,6 +496,9 @@ func _stop_intro_audio() -> void:
 	_gate_pan_2 = null
 
 
+var _out_of_gate := false
+
+
 func _process(delta: float) -> void:
 	if _finished:
 		return
@@ -525,6 +528,13 @@ func _process(delta: float) -> void:
 		_player_camera.h_offset = _camera_base_h_offset + randf_range(-strength, strength)
 		_player_camera.v_offset = _camera_base_v_offset + randf_range(-strength, strength)
 		_player_camera.fov = _camera_base_fov + sin(_elapsed * 2.6) * 2.0 * decay + 5.0 * decay
+	# Out of the gate, the drones come back to life at once (Abe, playtest
+	# 2026-10-04 c finding 2); the ship's own physics, which normally runs
+	# them, stays off until control is handed back.
+	if _out_of_gate:
+		var p = GlobalState.player
+		if p != null and is_instance_valid(p) and p.has_method("_update_drones"):
+			p.call("_update_drones", real_delta)
 	if _ship_light != null and is_instance_valid(_ship_light):
 		var pulse := 0.35 + randf() * 1.4 + maxf(0.0, sin(_elapsed * 18.0)) * 1.8
 		_ship_light.light_energy = _ship_light_energy * pulse
@@ -698,6 +708,7 @@ func _run() -> void:
 	if _finished:
 		return
 	_cleanup_tunnel()
+	_out_of_gate = true
 	# Thrown out of the gate tumbling: whole turns on every axis, easing out as
 	# the new system comes into view (Abe liked the old tumble's ending). Only
 	# now, with the tunnel gone, can the chase camera swing freely.
