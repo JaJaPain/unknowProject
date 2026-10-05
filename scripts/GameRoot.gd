@@ -371,6 +371,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_berth_probe")
 	elif "--traffic-berth-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_berth_snapshot")
+	elif "--comet-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_comet_snapshot")
 	elif "--station-tour-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_tour_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
@@ -1446,6 +1448,11 @@ func _init_undercurrent_director() -> void:
 	mining_risk = load("res://scripts/world/MiningRisk.gd").new()
 	mining_risk.name = "MiningRisk"
 	add_child(mining_risk)
+	# A distant comet now and then (Abe, 2026-10-05): one for the session.
+	if get_node_or_null("CometDirector") == null:
+		var comet := load("res://scripts/visuals/CometDirector.gd").new() as Node
+		comet.name = "CometDirector"
+		add_child(comet)
 
 
 ## The rare death moment, if this death earned one (consumed once).
@@ -12176,6 +12183,65 @@ func _run_cruise_smoke_test() -> void:
 		return
 	print("[CruiseSmokeTest] PASS")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## The distant comet (2026-10-05), windowed: a pass at 4x speed from the
+## player's normal view, pictures at about 20/45/70% of the way; the systems
+## menu freezes it; one director only. Pictures in --out. Exits 1 on a failure.
+##   -- --comet-snapshot --baseline-offline --out=<dir>
+func _run_comet_snapshot() -> void:
+	var out := "user://comet_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var fail := func(message: String) -> void:
+		push_error("[CometSnapshot] FAIL: " + message)
+		Engine.time_scale = 1.0
+		get_tree().quit(1)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var directors := get_children().filter(func(c): return str(c.name).begins_with("CometDirector"))
+	if directors.size() != 1:
+		fail.call("Expected one comet director, found %d." % directors.size())
+		return
+	var director = directors[0]
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	director.set("_until_next", 0.5)
+	for i in 120:
+		await get_tree().process_frame
+		if bool(director.call("is_crossing")):
+			break
+	if not bool(director.call("is_crossing")):
+		fail.call("No pass began.")
+		return
+	var sky = director.get("sky")
+	# Frame the shots on the comet's path (the pass is centred where the camera
+	# looked when it began): face the middle of the arc.
+	var cam := get_viewport().get_camera_3d()
+	Engine.time_scale = 4.0
+	for pct in [20, 45, 70]:
+		while float(sky.get("age")) < 90.0 * pct / 100.0:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("comet_%02d.png" % pct))
+		if pct == 45:
+			# The systems menu freezes the pass.
+			GlobalState.paused = true
+			var held := float(sky.get("age"))
+			await get_tree().create_timer(1.0, true, false, true).timeout
+			if absf(float(sky.get("age")) - held) > 0.001:
+				fail.call("The comet kept moving while paused.")
+				return
+			GlobalState.paused = false
+	Engine.time_scale = 1.0
+	print("[CometSnapshot] PASS (camera %s)" % str(cam.name if cam != null else "none"))
 	get_tree().quit(0)
 
 

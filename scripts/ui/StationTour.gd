@@ -16,6 +16,8 @@ const EASE := 0.6
 const MUSIC_DIP_DB := -5.0
 ## Watch a freighter for this long after its beam lets go.
 const WATCH_AFTER_S := 4.0
+## How far the view leans from the station toward a crossing comet (0-1).
+const COMET_LEAN := 0.45
 
 var _ui: Control = null
 var _idle := 0.0
@@ -119,6 +121,10 @@ func start() -> void:
 		_cam.global_transform = _prev_cam.global_transform
 	_look = _station.global_position
 	print("[StationTour] start at %s (orbit %.0f)" % [str(_station.get("display_name")), _radius])
+	# A comet across the sky, for a bit more ooh la la (Abe, 2026-10-05).
+	var comet := _comet()
+	if comet != null:
+		comet.call("trigger_soon")
 	var tw := create_tween().set_ignore_time_scale(true)
 	tw.tween_property(_fade, "color:a", 1.0, FADE_S)
 	tw.tween_callback(func() -> void:
@@ -185,6 +191,13 @@ func _place(t: float) -> void:
 		var bob := sin(_clock * TAU / 47.0) * 0.18 + 0.22
 		want_pos = centre + Vector3(cos(_angle), bob, sin(_angle)) * _radius
 		want_look = centre
+		# While the comet crosses, the camera leans toward it, keeping the
+		# station in the picture: the lap would otherwise turn its back on it.
+		var comet := _comet()
+		var head: Vector3 = comet.call("head_direction") if comet != null else Vector3.ZERO
+		if head != Vector3.ZERO:
+			var dist := want_pos.distance_to(centre)
+			want_look = centre.lerp(want_pos + head * dist, COMET_LEAN)
 	_cam.global_position = _cam.global_position.lerp(want_pos, t)
 	_look = _look.lerp(want_look, t)
 	if _cam.global_position.distance_to(_look) > 1.0:
@@ -213,6 +226,11 @@ func _pick_freighter() -> void:
 				_watch = ship
 				print("[StationTour] watching %s" % ship.name)
 				return
+
+
+func _comet() -> Node:
+	var scene := get_tree().current_scene
+	return scene.get_node_or_null("CometDirector") if scene != null else null
 
 
 func _traffic_entries() -> Array:

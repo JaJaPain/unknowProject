@@ -868,3 +868,8 @@ through the marked gate and flies you in):
 - [ ] **N.O.V.A. gets bored mining:** mine steadily for a couple of minutes:
       she makes a dry remark about the rocks. Not more than once every ~7
       minutes, and a different one each time.
+- [ ] **The comet:** about 5 minutes into a session a faint comet crosses
+      high in the sky in front of you, over about a minute and a half, behind
+      every planet and station and never close. Then roughly 10 minutes after
+      each one ends. The idle station tour calls one in and leans the view
+      toward it. The systems menu freezes it; a jump ends it.
