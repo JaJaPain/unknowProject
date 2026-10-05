@@ -4447,15 +4447,9 @@ func _on_cargo_changed(new_cargo: float):
 	if cargo_label and cargo_bar:
 		cargo_label.text = "CARGO   " + GlobalState.cargo_display_text().replace("ORE: ", "")
 		cargo_bar.max_value = GlobalState.cargo_max
-		# Bar visual: ore fill when carrying ore, "full" when carrying a
-		# special item (so the player sees something is loaded), 0 when empty.
-		match GlobalState.cargo_type:
-			GlobalState.CargoType.ORE:
-				cargo_bar.value = new_cargo
-			GlobalState.CargoType.SPECIAL:
-				cargo_bar.value = GlobalState.cargo_max
-			_:
-				cargo_bar.value = 0.0
+		# The bar is the ore; a mission item rides beside it and shows in the
+		# text ("+ Audit-Proof Relay").
+		cargo_bar.value = new_cargo if GlobalState.cargo_type == GlobalState.CargoType.ORE else 0.0
 
 		# Play audio warning when ore cargo reaches max capacity
 		if GlobalState.cargo_type == GlobalState.CargoType.ORE and new_cargo >= GlobalState.cargo_max:
@@ -6175,11 +6169,7 @@ func _on_lounge_hunt_ask(npc_name: String) -> void:
 	_update_quest_tracker()
 	if not bool(reply["handed_over"]):
 		return
-	# A hold full of ore: the existing trade offer clears it first; asking
-	# again after that hands it straight over.
-	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
-		_show_ore_trade_popup()
-		return
+	# Ore and the item ride together now: no clearing the bay first.
 	if QuestManager.mark_pickup_complete():
 		# Re-rendering the submenu clears the dock message, which wiped the
 		# holder's "here it is" the moment they said it. Put it back, with what
@@ -10499,7 +10489,7 @@ func _on_deliver_part_pressed() -> void:
 
 
 func _has_anomaly_data_core_cargo() -> bool:
-	return GlobalState.cargo_type == GlobalState.CargoType.SPECIAL \
+	return GlobalState.has_special_cargo() \
 		and str(GlobalState.cargo_special.get("cargo_kind", "")) == "anomaly_data_core"
 
 
@@ -10507,7 +10497,7 @@ func _turn_in_anomaly_data_core() -> void:
 	var core_name: String = str(GlobalState.cargo_special.get("name", "the data core"))
 	var payout: int = clampi(int(GlobalState.cargo_special.get("payout_credits", 120)), 0, 500)
 	GlobalState.add_credits(payout)
-	GlobalState.clear_cargo()
+	GlobalState.clear_special()
 	AudioManager.play_sell_ore()
 	var line_options := [
 		"That's not standard salvage. Which is why I'm buying it. %d SC, and I'm pretending I never saw the checksum.",
@@ -11050,7 +11040,7 @@ func _sell_ore():
 		var earnings := GlobalState.cargo_ore_value()
 		var imported: Array[String] = GlobalState.imported_ores_in_hold()
 		GlobalState.add_credits(earnings)
-		GlobalState.clear_cargo()
+		GlobalState.clear_ore()
 		_update_sell_button()
 		_update_repair_button()
 		AudioManager.play_sell_ore()
@@ -16352,10 +16342,9 @@ func _on_ask_for_part_pressed() -> void:
 			Color(1.0, 0.45, 0.45)
 		)
 		return
-	if GlobalState.cargo_type == GlobalState.CargoType.ORE and GlobalState.cargo > 0.0:
-		_show_ore_trade_popup()
-	else:
-		_complete_pickup_with_handoff()
+	# Ore and the item ride together now (Abe, 2026-10-05): no selling the
+	# ore to clear the bay first.
+	_complete_pickup_with_handoff()
 
 func _show_ore_trade_popup() -> void:
 	if not ore_trade_popup or not is_instance_valid(ore_trade_popup):

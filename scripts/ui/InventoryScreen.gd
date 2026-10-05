@@ -257,7 +257,7 @@ func _fill_grid(gs: Node) -> void:
 			continue
 		ids.append(str(id))
 	ids.sort_custom(func(a, b): return _sort_key(reg.get_item(a), a) < _sort_key(reg.get_item(b), b))
-	var mission_cargo: bool = _tab == "all" and gs.cargo_type == gs.CargoType.SPECIAL
+	var mission_cargo: bool = _tab == "all" and gs.has_special_cargo()
 	if mission_cargo:
 		ids.push_front(MISSION_CARGO_ID)
 	if not ids.has(_selected):
@@ -465,7 +465,7 @@ func _empty_socket(locked: bool) -> Control:
 func _fill_detail(gs: Node) -> void:
 	for c in _detail.get_children():
 		c.queue_free()
-	if _selected == MISSION_CARGO_ID and gs.cargo_type == gs.CargoType.SPECIAL:
+	if _selected == MISSION_CARGO_ID and gs.has_special_cargo():
 		_fill_mission_detail(gs)
 		return
 	if _selected.is_empty() or _selected == MISSION_CARGO_ID:
@@ -546,15 +546,15 @@ func _fill_hold(gs: Node) -> void:
 		row.add_child(fuel_icon)
 	var fuel_text := _label("FUEL  %d / %d" % [int(gs.fuel), int(FuelScript.TANK_MAX)], 13, ACCENT if not gs.is_fuel_empty() else WARN)
 	row.add_child(fuel_text)
-	if gs.cargo_type == gs.CargoType.SPECIAL:
-		summary.text = "%s  (%s → %s)" % [str(gs.cargo_special.get("name", "Special cargo")), str(gs.cargo_special.get("source", "?")), str(gs.cargo_special.get("destination", "?"))]
-		return
 	var mix: Dictionary = gs.cargo_ore_mix()
 	if mix.is_empty():
 		summary.text = "Empty, %d m³ free" % int(gs.cargo_max)
 		summary.add_theme_color_override("font_color", DIM)
 	else:
 		summary.text = "%d / %d m³ of ore" % [int(gs.cargo), int(gs.cargo_max)]
+	# A mission item rides beside the ore (its card is in the grid).
+	if gs.has_special_cargo():
+		summary.text += "   + %s" % str(gs.cargo_special.get("name", "mission cargo"))
 	# The hold as a bar, each ore in its own colour.
 	var bar := HBoxContainer.new()
 	bar.custom_minimum_size = Vector2(0, 12)

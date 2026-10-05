@@ -1258,10 +1258,6 @@ func _physics_process(delta: float):
 		if nav_mode == "MINE":
 			nav_mode = "MANUAL"
 			target_position = null
-	# When a special item is loaded, hide the mining laser entirely —
-	# the player can't mine until they deliver or jettison the special.
-	elif GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
-		_hide_mining_beams()
 			
 	if fire_cooldown > 0.0:
 		fire_cooldown -= delta

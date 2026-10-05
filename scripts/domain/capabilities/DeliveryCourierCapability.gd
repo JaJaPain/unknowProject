@@ -15,7 +15,7 @@ func is_completed(data: Dictionary) -> bool:
 		return false
 	var expected_item := str(data.get("item_name", ""))
 	return bool(data.get("cargo_loaded", false)) \
-		and int(gs.cargo_type) == int(gs.CargoType.SPECIAL) \
+		and bool(gs.has_special_cargo()) \
 		and str(gs.cargo_special.get("name", "")) == expected_item
 
 
@@ -41,7 +41,7 @@ func on_cleanup(data: Dictionary) -> Dictionary:
 	if gs == null:
 		return {}
 	var expected_item := str(data.get("item_name", ""))
-	if int(gs.cargo_type) == int(gs.CargoType.SPECIAL) \
+	if bool(gs.has_special_cargo()) \
 			and str(gs.cargo_special.get("name", "")) == expected_item:
 		return {"clear_cargo": true}
 	return {}

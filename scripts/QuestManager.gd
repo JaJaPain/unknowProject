@@ -1577,13 +1577,14 @@ func _apply_completion_hints(hints: Dictionary) -> void:
 	var item_quantity := int(hints.get("remove_inventory_quantity", 0))
 	if not item_id.is_empty() and item_quantity > 0:
 		GlobalState.inventory.remove(item_id, item_quantity)
+	# "clear_cargo" from a job means its item: the ore beside it stays.
 	if hints.get("clear_cargo", false):
-		GlobalState.clear_cargo()
+		GlobalState.clear_special()
 
 
 func _apply_cleanup_hints(hints: Dictionary) -> void:
 	if hints.get("clear_cargo", false):
-		GlobalState.clear_cargo()
+		GlobalState.clear_special()
 	var cf_faction: String = str(hints.get("clear_ceasefire_faction", ""))
 	if cf_faction != "":
 		_set_ceasefire_for_faction(cf_faction, false)

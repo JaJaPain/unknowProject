@@ -1681,30 +1681,32 @@ func imported_ores_in_hold() -> Array[String]:
 #                     then true (and the part is loaded into cargo_special)
 var test_quest: Dictionary = {}
 
+## The hold carries ore AND one mission item side by side (Abe, 2026-10-05:
+## a pickup made him sell his ore first). `cargo_type` is the ore side only
+## (EMPTY or ORE); the item is `cargo_special`, on its own. SPECIAL is never
+## set any more; an old save's SPECIAL reads as ore or empty.
 func normalize_cargo_state() -> void:
 	_cargo_normalizing = true
+	if cargo_type == CargoType.SPECIAL:
+		cargo_type = CargoType.ORE if cargo > 0.0 else CargoType.EMPTY
 	if cargo_type == CargoType.ORE and cargo <= 0.0:
 		cargo = 0.0
 		cargo_type = CargoType.EMPTY
-		cargo_special = {}
-	elif cargo_type == CargoType.SPECIAL and cargo_special.is_empty():
-		cargo = 0.0
-		cargo_type = CargoType.EMPTY
-	elif cargo_type != CargoType.SPECIAL and not cargo_special.is_empty():
-		cargo_special = {}
 	_cargo_normalizing = false
 
-# Returns true if the hold can accept more ore (empty, or already ore with
-# room left). Returns false if a special item is loaded.
+# True: ore always fits beside a mission item (room is checked separately).
 func can_accept_ore() -> bool:
 	normalize_cargo_state()
-	return cargo_type == CargoType.EMPTY or cargo_type == CargoType.ORE
+	return true
 
-# Returns true if the hold can accept a special cargo item. Only valid
-# when the hold is empty — can't swap out ore for a part.
+# A mission item fits when there isn't one aboard already (ore doesn't matter).
 func can_accept_special() -> bool:
-	normalize_cargo_state()
-	return cargo_type == CargoType.EMPTY
+	return cargo_special.is_empty()
+
+
+## A mission item is aboard.
+func has_special_cargo() -> bool:
+	return not cargo_special.is_empty()
 
 # Add ore to the hold. Returns the amount actually added (capped at
 # cargo_max). Returns 0 if the hold can't accept ore (i.e. a special
@@ -1725,8 +1727,7 @@ func add_ore(amount: float, ore_type: String = "silicate") -> float:
 	cargo_changed.emit(cargo)
 	return added
 
-# Accept a special cargo item. Only valid when the hold is empty.
-# Returns true if accepted, false if the hold wasn't empty.
+# Take a mission item aboard, beside any ore. False if one's aboard already.
 func accept_special(
 	item_name: String,
 	description: String,
@@ -1744,7 +1745,6 @@ func accept_special(
 	}
 	for key in metadata.keys():
 		cargo_special[key] = metadata[key]
-	cargo_type = CargoType.SPECIAL
 	cargo_changed.emit(cargo)
 	return true
 
@@ -1761,18 +1761,31 @@ func remove_ore(amount: float, ore_type: String = "") -> float:
 	cargo_ore_types = taken[0]
 	cargo -= removed
 	if cargo <= 0.0:
-		clear_cargo()
+		clear_ore()
 	else:
 		cargo_changed.emit(cargo)
 	return removed
 
-# Reset the hold to EMPTY. Used after quest delivery, sell-ore, and when
-# the player jettisons or delivers a special item.
+# Empty the whole hold, ore and item (a reset).
 func clear_cargo() -> void:
 	cargo = 0.0
 	cargo_ore_types = {}
 	cargo_special = {}
 	cargo_type = CargoType.EMPTY
+	cargo_changed.emit(cargo)
+
+
+# The ore is gone (sold, stored, handed over); a mission item stays.
+func clear_ore() -> void:
+	cargo = 0.0
+	cargo_ore_types = {}
+	cargo_type = CargoType.EMPTY
+	cargo_changed.emit(cargo)
+
+
+# The mission item is gone (handed in); the ore stays.
+func clear_special() -> void:
+	cargo_special = {}
 	cargo_changed.emit(cargo)
 
 
@@ -1909,24 +1922,26 @@ func buyback_ore_at_outpost() -> int:
 	var rate: float = buyback_price_per_m3()
 	var paid: int = cargo_ore_value(rate)
 	player_credits += paid
-	clear_cargo()
+	clear_ore()
 	return paid
 
 # Returns a short display string for the HUD: "EMPTY", "ORE: 15 / 30 m³",
 # or "SPECIAL: Replacement Plasma Coupler".
 func cargo_display_text() -> String:
 	normalize_cargo_state()
-	match cargo_type:
-		CargoType.EMPTY:
-			return "EMPTY"
-		CargoType.ORE:
-			var kind: String = OreTypesScript.summary(cargo_ore_mix())
-			if kind.is_empty() or kind == OreTypesScript.display(OreTypesScript.DEFAULT):
-				return "ORE: %d / %d m³" % [int(cargo), int(cargo_max)]
-			return "ORE: %d / %d m³ (%s)" % [int(cargo), int(cargo_max), kind]
-		CargoType.SPECIAL:
-			return "SPECIAL: " + cargo_special.get("name", "(unnamed)")
-	return ""
+	var ore := ""
+	if cargo_type == CargoType.ORE:
+		var kind: String = OreTypesScript.summary(cargo_ore_mix())
+		if kind.is_empty() or kind == OreTypesScript.display(OreTypesScript.DEFAULT):
+			ore = "ORE: %d / %d m³" % [int(cargo), int(cargo_max)]
+		else:
+			ore = "ORE: %d / %d m³ (%s)" % [int(cargo), int(cargo_max), kind]
+	var item := ""
+	if has_special_cargo():
+		item = "+ " + str(cargo_special.get("name", "(unnamed)"))
+	if ore.is_empty():
+		return "EMPTY" if item.is_empty() else item.substr(2)
+	return ore if item.is_empty() else "%s  %s" % [ore, item]
 
 var player_storage_ore: float = 0.0
 var player_storage_max: float = 1000.0
@@ -3096,7 +3111,7 @@ func deposit_ore(amount: float) -> bool:
 	player_storage_ore += amount
 	storage_ore_types = stored
 	if cargo <= 0.0:
-		clear_cargo()
+		clear_ore()
 	return true
 
 

@@ -9576,12 +9576,19 @@ func _run_economy_smoke_test() -> void:
 		"Test Outpost",
 		"Main Station"
 	):
-		_fail_economy_smoke_test("Could not load special cargo for exclusivity test.")
+		_fail_economy_smoke_test("Could not load special cargo beside ore.")
 		return
+	# Ore and a mission item ride together (Abe, 2026-10-05): mining with the
+	# item aboard adds ore and keeps the item; selling the ore keeps it too.
 	asteroid.call("mine")
-	if GlobalState.cargo_type != GlobalState.CargoType.SPECIAL \
-			or not is_equal_approx(float(asteroid.get("resources")), 16.0):
-		_fail_economy_smoke_test("Mining replaced special cargo or consumed asteroid resources.")
+	if not GlobalState.has_special_cargo() \
+			or GlobalState.cargo <= 0.0 \
+			or float(asteroid.get("resources")) >= 16.0:
+		_fail_economy_smoke_test("Mining with a mission item aboard didn't add ore beside it.")
+		return
+	GlobalState.clear_ore()
+	if not GlobalState.has_special_cargo() or GlobalState.cargo > 0.0:
+		_fail_economy_smoke_test("Clearing the ore took the mission item with it.")
 		return
 
 	GlobalState.clear_cargo()
@@ -10734,7 +10741,7 @@ func _run_services_smoke_test() -> void:
 		return
 	ui.call("_on_ask_for_part_pressed")
 	if bool(QuestManager.active_quest["picked_up"]) \
-			or GlobalState.cargo_type == GlobalState.CargoType.SPECIAL:
+			or GlobalState.has_special_cargo():
 		_fail_services_smoke_test("Pickup succeeded at the wrong outpost.")
 		return
 	ui.current_station = kova
@@ -10745,7 +10752,7 @@ func _run_services_smoke_test() -> void:
 		return
 	ui.call("_on_ask_for_part_pressed")
 	if not bool(QuestManager.active_quest["picked_up"]) \
-			or GlobalState.cargo_type != GlobalState.CargoType.SPECIAL \
+			or not GlobalState.has_special_cargo() \
 			or GlobalState.cargo_special.get("name", "") != "Sensor Calibration Kit":
 		_fail_services_smoke_test("Assigned outpost did not load the pickup cargo.")
 		return

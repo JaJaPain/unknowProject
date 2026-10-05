@@ -877,3 +877,7 @@ through the marked gate and flies you in):
       pickup jobs get jumped on the way back: partway home N.O.V.A. warns of a
       tail, ~25 s later a Reaver Hijacker comes at you with a hail. Dock first
       and it loses you. Shoot it down and she has a word about it.
+- [ ] **Ore and a pickup together:** with ore in the hold, take a pickup: the
+      holder hands it over without asking you to sell your ore. Keep mining
+      with the item aboard; the HUD says "... m³ + <item>". Selling ore keeps
+      the item; handing in the item keeps the ore.

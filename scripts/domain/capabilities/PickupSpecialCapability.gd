@@ -24,7 +24,7 @@ func format_tracker_text(data: Dictionary) -> String:
 
 func on_complete(data: Dictionary) -> Dictionary:
 	var expected_part := str(data.get("part_name", ""))
-	if GlobalState.cargo_type != GlobalState.CargoType.SPECIAL:
+	if not GlobalState.has_special_cargo():
 		return {"block": "hold is empty"}
 	if GlobalState.cargo_special.get("name", "") != expected_part:
 		return {"block": "hold has wrong item"}
@@ -33,7 +33,7 @@ func on_complete(data: Dictionary) -> Dictionary:
 
 func on_cleanup(data: Dictionary) -> Dictionary:
 	var expected_part := str(data.get("part_name", ""))
-	if GlobalState.cargo_type == GlobalState.CargoType.SPECIAL \
+	if GlobalState.has_special_cargo() \
 			and str(GlobalState.cargo_special.get("name", "")) == expected_part:
 		return {"clear_cargo": true}
 	return {}
