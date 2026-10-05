@@ -41,3 +41,56 @@ whole, clean and quietly powerful.
 - **No:** writing, symbols, faction marks, other ships.
 - **Export:** batched as above; the inner ring as its own mesh (the game may
   rotate it slowly).
+
+**#1 status (2026-10-05):** delivered and approved. `assets/landmarks/humming_gate.glb`:
+13 meshes, 6 materials, inner halo on its own pivot; 34-66 draw calls in game.
+
+## Brief #2: The Lighthouse
+
+A navigation beacon station older than the current gate charts. For
+generations a salvage clan has kept it alive, trading its memory of forgotten
+routes for supplies. It still broadcasts course corrections for gates that
+aren't on any chart.
+
+- **Size:** about 900 m tall overall; a destination, readable from far away.
+- **Shape:** one tall, slender, elegant original tower (the old beacon),
+  clearly older and finer-made than anything else in the game, with a large
+  lamp/emitter housing at the top. Wrapped around its lower two-thirds: the
+  clan's additions, built over generations from salvage: mismatched habitat
+  modules, cargo containers welded into rooms, catwalks, patched solar wings,
+  a few docked small craft hulls turned into homes. Old elegance below,
+  generations of patchwork wrapped around it.
+- **Surface:** the original tower in weathered pale stone-like alloy; the
+  clan's parts in mixed, faded colours, rust, patch plates, mismatched panels.
+- **Light:** the beacon at the top as a separate emissive material (the game
+  makes it pulse); warm window lights scattered through the clan's modules
+  (separate emissive material); a few small blinking navigation lights.
+- **Optional:** a slowly rotating emitter ring at the top (own pivot).
+- **No:** writing, symbols, faction marks, ships flying.
+- **Export:** batched (tower, clan additions, lights as few meshes per
+  material); the emitter ring on its own pivot.
+
+## Brief #3: The Silent Fleet's settlement
+
+A colony convoy that jumped beyond the charts long ago to escape a war, and
+switched off every transponder so nobody could follow. Their descendants live
+here still, in the ships that brought them, and want to stay hidden.
+
+- **Size:** about 2 km across.
+- **Shape:** six to ten old convoy ships of different sizes and designs
+  (colony transports, freighters, a tanker), parked together and **lashed
+  into one settlement**: connecting tubes and bridges between hulls, cables,
+  shared radiator fields, a central hub built later where they meet. Engines
+  cold and long unused; it should read as *a town made of ships that will
+  never fly again*.
+- **Surface:** old, cared-for hulls, repaired rather than rusting; faded
+  original paint; patches where hull plates were taken to build the hub. Dark
+  and low-key overall: they're hiding.
+- **Light:** dim, warm window lights (separate emissive material), much less
+  than a normal station; a few small greenhouse modules with soft green light
+  (separate emissive material). No beacons, no navigation lights: they don't
+  want to be seen.
+- **Optional:** a couple of tiny shuttles docked (separate meshes).
+- **No:** writing, symbols, faction marks, weapons, damage from battle.
+- **Export:** batched (each ship hull, the connectors, the hub, lights as few
+  meshes per material).
