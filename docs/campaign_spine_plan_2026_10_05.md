@@ -128,3 +128,49 @@ added or wrong. The fixed-cast secret never appears (existing leak test).
 7. **More Lodestar cards** and bridges (writing, in short review batches).
 
 Lines and bridges are authored and go to Abe in short batches.
+
+## 7. Season sim results (2026-10-05)
+
+`tools/story_sim/run_season_sim.gd`: 6 campaigns in a row (one shared card
+history, like one player), up to 30 real hours each, story jobs ~45% of what
+the player does, a new system every 30-60 minutes.
+
+| | Result |
+|---|---|
+| First loose thread seen | ~0.2 h, every campaign |
+| Real traces seen by 10 h | 8-24 |
+| Main story locked | **2 of 6** campaigns (at 10.0 h and 25.4 h) |
+| Confrontation reached / season closed | **0 of 6**, even at 30 h |
+| Live stories at 10 h | 25-30 started, only 6-15 resolved |
+| Stories two campaigns share at 10 h | 17% average, 35% worst pair (good) |
+
+**Why it doesn't lock:** the prime suspect is always "busy". The draft guess
+keeps casting them into new stories (they'd appeared in 3-5), and the lock
+waits until they're in none; the candidate list also skips busy people, so it
+drops below the 3 it needs. A deadlock that gets worse the better the
+recurring-suspect idea works.
+
+**Why nothing closes:**
+- **Too many live stories.** About two start per system. Ignored stories
+  settle after 3/6/12 in-game DAYS, but the clock moves only on events (about
+  5 in-game hours per real hour), so in real play they almost never settle.
+  The board fills up and the main story drowns in it.
+- **The confrontation is just another posting** among ~30, with nothing
+  pointing the player at it.
+
+**Fixes (mechanical, proposed):**
+1. **Lock without waiting:** lock when the evidence is there; stop casting the
+   suspect into NEW stories once the story is ready; the reveal plays when
+   their current story ends (or straight away if none).
+2. **Stories settle in play time, not calendar days:** a personal story fades
+   after you've been through ~2 more systems, a local one when you've left its
+   system and moved on, a regional one after ~6 systems.
+3. **A cap on live stories:** this system's own plus one regional; stories
+   from systems far behind you wind down.
+4. **The main story leads:** its postings come first on the board, and N.O.V.A.
+   or Kaelen point at it once it's revealed (and, per section 3, it ends at the
+   Lodestar).
+
+**For Abe:** target hours. Suggested: reveal around hours 8-12, climax with
+the Lodestar around hours 15-25 (the economy sim puts Class VI, needed for a
+depth-13 Lodestar, at ~17 h for an efficient automated captain).
