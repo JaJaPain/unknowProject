@@ -23,7 +23,7 @@ const WARNING_S := 25.0
 const SPAWN_DISTANCE := 1500.0
 const CHECK_S := 0.5
 
-## Draft lines for Abe's review (2026-10-05). {item}: the pickup.
+## Lines approved by Abe 2026-10-05. {item}: the pickup.
 const WARN_LINES := [
 	"Captain, a ship just lit its engines behind us and turned our way. I think someone wants the {item} more than we do.",
 	"We've picked up a tail. One ship, closing. Whoever sold us the {item} sold the news as well.",
