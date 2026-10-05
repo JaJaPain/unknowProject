@@ -78,6 +78,16 @@ func _test_rejects_known_defects() -> void:
 		{"speaker": "nova", "word_cap": 45}, "word_echo", "intra_line_repeat")
 	_expect_flag(
 		"That was a FUBAR run.", {"speaker": "kaelen"}, "tts_all_caps", "all_caps")
+	# Abe, 2026-10-04: a garbled jealousy line reached the player.
+	var garbled := "She was just my main shaft. She didn't have any tools. She had her hands. I nearly vented."
+	var jealous := {"speaker": "nova", "word_cap": 45, "third_parties": ["Mrs. Kross", "the Dalley girl"]}
+	_expect_flag(garbled, jealous, "person_is_part", "garbled_person_is_part")
+	# His corrected version, and ordinary work ON a part, stay clean.
+	_expect_clean("Have I told you that mechanic was working on my intake shaft? She didn't use any tools, just her hands. I nearly vented.", jealous, "abe_corrected_jealousy")
+	# Approved lines with four short sentences stay clean (a sentence-count
+	# rule was tried and dropped).
+	_expect_clean("She's gone. You talk faster around her. Not that I'm timing it. I'm timing it.", {"speaker": "nova", "word_cap": 45}, "approved_four_sentences")
+	_expect_clean("He was on my injector rail all afternoon with a lubricant gun. I could not hold pressure the whole way through.", jealous, "work_on_a_part")
 	# from a live Godot run: both are character violations her bible forbids
 	_expect_flag("This trade paid well. You got hurt. I wanted that.",
 		{"speaker": "kaelen"}, "cruel_to_captain", "wished_harm")

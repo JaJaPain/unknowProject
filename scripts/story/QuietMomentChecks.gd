@@ -241,6 +241,15 @@ static func screen(line: String, context: Dictionary = {}) -> Array[String]:
 	if clean.contains("...") or clean.contains("…"):
 		errors.append("tts_ellipsis")
 
+	# --- coherence (Abe, 2026-10-04: "She was just my main shaft. She didn't
+	# have any tools. She had her hands. I nearly vented."): a person equated
+	# with a ship part is the jealousy beat's raw material scrambled into
+	# nonsense. (A sentence-count rule was tried and dropped: approved lines
+	# use four short sentences on purpose, "She's gone. You talk faster around
+	# her. Not that I'm timing it. I'm timing it.")
+	if _person_is_part(clean):
+		errors.append("person_is_part")
+
 	# --- intra-line repetition ("My hips are full. My knees are full...")
 	var counts := {}
 	for w in words_of(clean):
@@ -252,6 +261,44 @@ static func screen(line: String, context: Dictionary = {}) -> Array[String]:
 			break
 
 	return errors
+
+
+## Sentences in a line (ends of . ! ?, ignoring a trailing one).
+static func _sentence_count(text: String) -> int:
+	var count := 0
+	var t := normalize(text).strip_edges()
+	for i in t.length():
+		if t[i] in [".", "!", "?"] and (i + 1 >= t.length() or t[i + 1] == " "):
+			count += 1
+	if count == 0 and not t.is_empty():
+		count = 1
+	return count
+
+
+## Ship parts the jealousy beat draws on, by their head noun.
+const PART_NOUNS := [
+	"shaft", "manifold", "intake", "intakes", "coupling", "housing", "housings",
+	"port", "ports", "rail", "line", "lines", "seat", "seats", "inlet", "valve",
+	"injector", "socket", "plating", "fitting",
+]
+
+
+## "she was just my main shaft": a person (she/he/they/a name) set equal to
+## a ship part. Working ON a part ("she was on my shaft for an hour") is fine.
+static func _person_is_part(text: String) -> bool:
+	var w := words_of(text)
+	for i in range(w.size() - 2):
+		if not (w[i] in ["she", "he", "they"]) or not (w[i + 1] in ["was", "is", "were"]):
+			continue
+		var j := i + 2
+		while j < w.size() and w[j] in ["just", "only", "really", "basically"]:
+			j += 1
+		if j < w.size() and w[j] in ["my", "her", "his", "their"]:
+			# the noun within the next three words
+			for k in range(j + 1, mini(j + 4, w.size())):
+				if PART_NOUNS.has(w[k]):
+					return true
+	return false
 
 
 # The deficiency word has to be describing HIM, not the task. "You'll want to

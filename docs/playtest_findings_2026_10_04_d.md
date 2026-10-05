@@ -145,3 +145,16 @@ for gates beyond Class I.
   Still unexplained, so an always-on `[BackwardsWatch]` log now names any
   NPC whose real movement runs against its nose for over a second (faction,
   role, behaviour, speed). Check the game log after the next sighting.
+- **3, follow-up (Abe, 2026-10-05: garbled lines "have been bothering me"):**
+  - `QuietMomentChecks` now rejects a person equated with a ship part
+    (`person_is_part`, e.g. "she was just my main shaft"); the line is then
+    regenerated. A sentence-count rule was tried and dropped: approved lines
+    use four short sentences on purpose.
+  - Swept against every approved line in the voice bank and beat data: no
+    false positives.
+  - A model-based sense check (the 4b model judging each line) was tried live
+    and failed both ways: strict, it rejected 6 of 7 good lines; relaxed, it
+    passed everything, including the garbled examples. Not kept.
+- Abe's note from the 2026-10-04 evening run: Ollama hung at 15% this time,
+  recovered by itself and finished loading (the startup restart). The bar
+  now creeps up smoothly instead of jumping. Both fine.
