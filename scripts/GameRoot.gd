@@ -12202,6 +12202,11 @@ func _run_route_tour_smoke_test() -> void:
 		if not belts.has(prefix) and system_root.is_ancestor_of(rock):
 			belts[prefix] = rock
 	destinations.append_array(belts.values())
+	# --tour-pairs=A>B,C>D runs only those trips.
+	var only_pairs: Array = []
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--tour-pairs="):
+			only_pairs = Array(arg.substr(13).split(","))
 	var worst_all := 0.0
 	var uturn_trips := 0
 	var trips := 0
@@ -12211,6 +12216,8 @@ func _run_route_tour_smoke_test() -> void:
 		var out: Vector3 = (entry - origin.global_position).normalized()
 		for dest in destinations:
 			if dest == origin or not is_instance_valid(dest):
+				continue
+			if not only_pairs.is_empty() and not only_pairs.has("%s>%s" % [origin.name, dest.name]):
 				continue
 			player.global_position = entry + out * 300.0
 			player.look_at(player.global_position + out, Vector3.UP)
@@ -12248,7 +12255,8 @@ func _run_route_tour_smoke_test() -> void:
 						worst = swing
 					if swing > 120.0:
 						uturns += 1
-						messages.append("%.0fs U-TURN %.0f deg, %.0f u to go, speed %.0f, nav %s" % [sim, swing, now_dist, float(player.current_speed), str(player.nav_mode)])
+						var rd: Dictionary = player.replan_debug
+						messages.append("%.0fs U-TURN %.0f deg, %.0f u to go, speed %.0f, nav %s, last replan %.1fs ago (%s, refused %s), path pts %d idx %d" % [sim, swing, now_dist, float(player.current_speed), str(player.nav_mode), (Time.get_ticks_msec() - int(rd.get("ms", 0))) / 1000.0 * Engine.time_scale, str(rd.get("why", "")), str(rd.get("refused", false)), player._auto_path.size(), player._auto_path_index])
 						headings.clear()
 				var msg := str(player.last_navigation_status_message)
 				if msg != last_msg and not msg.is_empty():

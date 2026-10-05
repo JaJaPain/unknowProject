@@ -205,7 +205,7 @@ asteroid.
 - Test: the dock smoke checks that a beam's audio player is playing during
   the pull and push, and stops after.
 
-### 7. Autopilot still does 180-degree turns ("Obstruction cleared. Resuming direct course")
+### 7. Autopilot still does 180-degree turns ("Obstruction cleared. Resuming direct course") — FIXED
 
 **Abe:** still a lot of 180-degree turns, with "navigation obstruction
 cleared, returning to...". It gets the job done, but the 180 looks bad. Can
@@ -439,4 +439,16 @@ together. It needs a cleaner way of doing it.
   `intro_cinematic/late_line_dropped`. Not done: the playback wait still
   watches TTS's global flags rather than her specific clip (the drop covers
   the symptom).
-- **Still open: 7** (autopilot 180s, needs a route-tour repro first).
+- **7:** reproduced with `--route-tour-smoke-test` (flies every station,
+  outpost, gate and belt pairing; `--tour-pairs=A>B` for chosen trips):
+  6 of 15 trips U-turned (worst 158 degrees), always while rounding a planet
+  or station. Instrumenting showed no replan at all: the ship was following
+  its original route, and the route itself had a hairpin. A traced route is
+  short steps round the obstacle then one long leg to the target, and a
+  uniform Catmull-Rom spline through points that unevenly spaced loops back
+  where they meet. Fix: split long legs to the march step before smoothing
+  (`PlayerShip._even_spacing`). Also kept: a fresh plan that would demand a
+  U-turn while cruising on a plan that still leads ahead is refused (up to
+  4 times), and the nose whisker no longer throws the current plan away.
+  Result: 0 of 15 trips U-turn, worst swing 97 degrees (the turn to leave
+  a station facing away from the target).

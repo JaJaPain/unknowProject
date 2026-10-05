@@ -1412,7 +1412,7 @@ func _physics_process(delta: float):
 					var now_ms := Time.get_ticks_msec()
 					if now_ms - _last_whisker_replan_ms > 1500:
 						_last_whisker_replan_ms = now_ms
-						_clear_autopilot_path()  # one fresh plan around the surprise
+						_whisker_replan = true  # one fresh plan around the surprise (still no U-turns)
 
 			# Planned + spline-smoothed path: trace the route once with the tangent
 			# logic, fit a Catmull-Rom curve, and follow it with a lookahead so the
@@ -1836,7 +1836,10 @@ func _tangent_steer_target(destination: Vector3, navigation_target: Node3D) -> V
 ## Main autopilot entry: follow a planned, spline-smoothed path to the destination,
 ## replanning as needed. Returns the point the nose should aim at this frame.
 func _autopilot_steer_target(destination: Vector3, navigation_target: Node3D) -> Vector3:
-	if _auto_path.is_empty() or _needs_path_replan(destination):
+	if _auto_path.is_empty() or _whisker_replan or _needs_path_replan(destination):
+		# For the route tour's diagnosis: why and when the last replan came.
+		replan_debug = {"ms": Time.get_ticks_msec(), "why": "empty" if _auto_path.is_empty() else ("whisker" if _whisker_replan else ("dest" if _auto_path_dest.distance_to(destination) > _PATH_REPLAN_DEST_MOVE else "offcourse %.0f/%.0f" % [_path_offcourse_distance(), _path_offcourse_limit()])), "refused": false}
+		_whisker_replan = false
 		_plan_autopilot_path(destination, navigation_target)
 	if _auto_path.is_empty():
 		return destination
@@ -1844,6 +1847,8 @@ func _autopilot_steer_target(destination: Vector3, navigation_target: Node3D) ->
 
 
 func _needs_path_replan(destination: Vector3) -> bool:
+	if Time.get_ticks_msec() < _replan_hold_until_ms:
+		return false
 	return _auto_path_dest.distance_to(destination) > _PATH_REPLAN_DEST_MOVE \
 		or _path_offcourse_distance() > _path_offcourse_limit()
 
@@ -1875,13 +1880,67 @@ func _plan_autopilot_path(destination: Vector3, navigation_target: Node3D) -> vo
 	# One obstacle snapshot for the whole replan: the blocker check and the march
 	# both need it, and it walks the scene tree.
 	var obstacles := _navigator_obstacles(navigation_target)
-	_announce_route_obstruction(destination, obstacles)
 	var raw: PackedVector3Array = TangentNavigatorType.march_route(
 		global_position, destination, obstacles
 	)
-	_auto_path = _push_path_clear(_catmull_rom_smooth(raw), destination)
+	var fresh := _push_path_clear(_catmull_rom_smooth(_even_spacing(raw)), destination)
+	# Playtest 2026-10-04 c finding 7 (route tour): rounding a planet at
+	# cruise, the ship drifts off its line, replans from where it is, and the
+	# fresh plan points back the way it came: a 120-158 degree swing and back
+	# within two seconds. While cruising on a plan that still leads ahead,
+	# don't take one that demands a U-turn; try again shortly. A few refusals
+	# in a row and the fresh plan wins (a real dead end).
+	if _fresh_plan_reverses(fresh) and _current_plan_leads_ahead(destination) \
+			and _reversal_refusals < REVERSAL_REFUSALS_MAX:
+		_reversal_refusals += 1
+		replan_debug["refused"] = true
+		_replan_hold_until_ms = Time.get_ticks_msec() + REVERSAL_HOLD_MS
+		_auto_path_dest = destination
+		return
+	_reversal_refusals = 0
+	_announce_route_obstruction(destination, obstacles)
+	_auto_path = fresh
 	_auto_path_dest = destination
 	_auto_path_index = 0
+
+
+const REVERSAL_TURN_DEG := 100.0
+const REVERSAL_REFUSALS_MAX := 4
+const REVERSAL_HOLD_MS := 1200
+var _reversal_refusals := 0
+## The nose whisker asks for a fresh plan; the old one is kept until then, so a
+## fresh plan demanding a U-turn can still be refused (route tour, 2026-10-04).
+var _whisker_replan := false
+var replan_debug: Dictionary = {}
+var _replan_hold_until_ms := 0
+
+
+## True when following `path` would start with a turn of more than
+## REVERSAL_TURN_DEG while the ship is moving at a fair clip.
+func _fresh_plan_reverses(path: PackedVector3Array) -> bool:
+	if path.size() < 2 or absf(current_speed) < 30.0:
+		return false
+	var lookahead := _path_lookahead_distance()
+	var accum := 0.0
+	var aim := path[path.size() - 1]
+	for i in range(1, path.size()):
+		accum += path[i - 1].distance_to(path[i])
+		if accum >= lookahead:
+			aim = path[i]
+			break
+	var to_aim := aim - global_position
+	if to_aim.length() < 1.0:
+		return false
+	return rad_to_deg((-global_transform.basis.z).angle_to(to_aim)) > REVERSAL_TURN_DEG
+
+
+## True when the plan being flown still points roughly the way the ship is
+## going (its next aim point within 60 degrees of the nose).
+func _current_plan_leads_ahead(destination: Vector3) -> bool:
+	if _auto_path.is_empty():
+		return false
+	var to_aim := _path_lookahead_target(destination) - global_position
+	return to_aim.length() > 1.0 and rad_to_deg((-global_transform.basis.z).angle_to(to_aim)) < 60.0
 
 
 ## Tell the player why the ship is about to turn.
@@ -1939,6 +1998,27 @@ func _march_tangent_waypoints(destination: Vector3, navigation_target: Node3D) -
 	return TangentNavigatorType.march_route(
 		global_position, destination, _navigator_obstacles(navigation_target)
 	)
+
+
+## The route tour's finding (playtest 2026-10-04 c finding 7): a traced
+## route is short steps round an obstacle (up to 250) and then one long leg
+## straight to the target (10,000+). A uniform Catmull-Rom spline through
+## points spaced that unevenly overshoots and loops back where they meet:
+## that hairpin is the 180-degree turn. Splitting long legs into pieces no
+## longer than the march step keeps the spacing even, and the curve smooth.
+func _even_spacing(raw: PackedVector3Array) -> PackedVector3Array:
+	if raw.size() < 3:
+		return raw
+	var out := PackedVector3Array()
+	out.append(raw[0])
+	for i in range(1, raw.size()):
+		var a := raw[i - 1]
+		var b := raw[i]
+		var pieces := int(ceil(a.distance_to(b) / TangentNavigatorType.MARCH_STEP_MAX))
+		for k in range(1, pieces):
+			out.append(a.lerp(b, float(k) / float(pieces)))
+		out.append(b)
+	return out
 
 
 ## Catmull-Rom spline through the raw points -> dense smooth point list.
@@ -2013,6 +2093,8 @@ func _path_point_passed(idx: int) -> bool:
 
 
 func _clear_autopilot_path() -> void:
+	_reversal_refusals = 0
+	_replan_hold_until_ms = 0
 	_auto_path = PackedVector3Array()
 	_auto_path_dest = Vector3.ZERO
 	_auto_path_index = 0

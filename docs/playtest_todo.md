@@ -819,3 +819,9 @@ through the marked gate and flies you in):
       finds it without scrolling.
 - [ ] **No crash docking** when a job falls back to the built-in one (the
       2026-10-04 crash: a destroyed ship still in the system list).
+- [ ] **No autopilot 180s.** Fly-to and Approach across the system, past
+      the gas giant, the rocky planet and Greywake: the ship curves round
+      and never swings back and forth. Fewer "Obstruction cleared" notices.
+- [ ] **New planets.** Gas giants have moving clouds and storms; rocky
+      planets are cratered rock or ocean worlds with changing clouds; all lit
+      from the sun with a night side; nothing moves while paused.
