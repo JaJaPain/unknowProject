@@ -361,6 +361,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_normal_map_snapshot")
 	elif "--cruise-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_cruise_smoke_test")
+	elif "--route-tour-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_route_tour_smoke_test")
 	elif "--station-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
@@ -11149,26 +11151,35 @@ func _run_gas_giant_snapshot() -> void:
 		get_tree().quit(1)
 		return
 	var Look := preload("res://scripts/generation/GasGiantLook.gd")
-	# A camera of its own, framing the whole planet with the sun to one side.
+	# A camera of its own, framing the whole planet (sized from its real radius:
+	# the world is stretched) with the sun to one side.
+	var body: MeshInstance3D = Look.body_of(giant)
+	var radius: float = (body.get_aabb().size.x * 0.5 * body.global_basis.get_scale().x) if body != null else 3000.0
 	var shot := Camera3D.new()
-	shot.far = 20000.0
+	shot.far = radius * 20.0
 	get_active_system_root().add_child(shot)
-	shot.global_position = giant.global_position + Vector3(-800, 300, -950)
+	# From the side of the sun (about 75 degrees round), so the lit face, the
+	# terminator and the night side all show.
+	var to_sun := Vector3(-0.62, 0.24, -0.74)
+	for light in get_active_system_root().find_children("*", "DirectionalLight3D", true, false):
+		to_sun = (light as DirectionalLight3D).global_basis.z
+		break
+	shot.global_position = giant.global_position + to_sun.rotated(Vector3.UP, deg_to_rad(75.0)).normalized() * radius * 3.2
 	shot.look_at(giant.global_position, Vector3.UP)
 	shot.current = true
 	var ui = GlobalState.get_ui_manager()
 	if ui != null:
 		ui.visible = false
-	# For the pictures, the biggest storm faces the camera (in the planet's own
-	# frame, which turns).
-	var facing := func() -> Vector3:
-		return (giant.global_transform.basis.inverse() * (shot.global_position - giant.global_position)).normalized() \
-			+ Vector3(0.25, 0.1, 0.0)
 	for seed_value in [1, 2, 3, 4, 5, 6]:
 		Look.apply(giant, seed_value)
-		var mesh := giant.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
-		(mesh.material_override as ShaderMaterial).set_shader_parameter("storm_dir_1", facing.call())
-		print("GIANTSHOT seed %d: %s" % [seed_value, Look.look_for(seed_value)["palette"]])
+		var surface := Look.body_of(giant).material_override as ShaderMaterial
+		print("GIANTSHOT seed %d: %s / %s" % [seed_value, str(surface.get_meta("archetype", "")), str(surface.get_meta("palette", ""))])
+		await get_tree().process_frame
+		var gv = giant.get_node_or_null("GasGiantVisual")
+		print("GIANTSHOT   light %s, to sun %s, sun colour %s, camera dir %s" % [
+			str(gv.get("_light").name) if gv != null and gv.get("_light") != null else "none",
+			str(surface.get_shader_parameter("sun_direction")), str(surface.get_shader_parameter("sun_color")),
+			str((shot.global_position - giant.global_position).normalized())])
 		for i in 20:
 			await get_tree().process_frame
 		await _hud_snapshot_save(out.path_join("gas_giant_%d.png" % seed_value))
@@ -12113,6 +12124,106 @@ func _run_cruise_smoke_test() -> void:
 		fail.call("Arrived too fast (%.1f)." % arrive_speed)
 		return
 	print("[CruiseSmokeTest] PASS")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+## Playtest 2026-10-04 c finding 7: the autopilot's 180s. Starts outside each
+## station and outpost and flies (APPROACH, at cruise) to every other station,
+## the gate and a rock in each belt, recording the biggest heading swing in
+## any 2 s of flight, U-turns (over 120 degrees), and each "obstructed" /
+## "cleared" notice. Report-only unless --strict.
+##   -- --route-tour-smoke-test --baseline-offline [--strict]
+func _run_route_tour_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	for i in 30:
+		await get_tree().process_frame
+	var system_root := get_active_system_root()
+	var stations: Array = get_tree().get_nodes_in_group("station").filter(func(s): return system_root.is_ancestor_of(s))
+	var destinations: Array = stations.duplicate()
+	for gate in get_tree().get_nodes_in_group("jumpgate"):
+		if system_root.is_ancestor_of(gate):
+			destinations.append(gate)
+	# One rock from each belt (by name prefix).
+	var belts := {}
+	for rock in get_tree().get_nodes_in_group("asteroid"):
+		var prefix := str(rock.name).get_slice("_Asteroid", 0)
+		if not belts.has(prefix) and system_root.is_ancestor_of(rock):
+			belts[prefix] = rock
+	destinations.append_array(belts.values())
+	var worst_all := 0.0
+	var uturn_trips := 0
+	var trips := 0
+	Engine.time_scale = 8.0
+	for origin in stations:
+		var entry: Vector3 = origin.call("lane_entry_position") if origin.has_method("lane_entry_position") else origin.global_position + Vector3(0, 0, 300)
+		var out: Vector3 = (entry - origin.global_position).normalized()
+		for dest in destinations:
+			if dest == origin or not is_instance_valid(dest):
+				continue
+			player.global_position = entry + out * 300.0
+			player.look_at(player.global_position + out, Vector3.UP)
+			player.velocity = Vector3.ZERO
+			player.current_speed = 0.0
+			player.set("is_docked", false)
+			GlobalState.active_target = dest
+			player.begin_target_navigation("APPROACH")
+			var notices_before: int = int(player.navigation_obstruction_notice_count)
+			var clears_before: int = int(player.navigation_route_clear_notice_count)
+			var messages: Array = []
+			var last_msg := ""
+			var headings: Array = []  # [sim_time, flat forward]
+			var sim := 0.0
+			var worst := 0.0
+			var uturns := 0
+			var start_dist: float = player.global_position.distance_to(dest.global_position)
+			var min_dist := start_dist
+			var backtrack := 0.0
+			while sim < 300.0:
+				await get_tree().physics_frame
+				sim += get_physics_process_delta_time()  # already the scaled step
+				var now_dist: float = player.global_position.distance_to(dest.global_position)
+				min_dist = minf(min_dist, now_dist)
+				backtrack = maxf(backtrack, now_dist - min_dist)
+				var fwd: Vector3 = -player.global_basis.z
+				fwd.y = 0.0
+				if fwd.length() > 0.01:
+					headings.append([sim, fwd.normalized()])
+				while headings.size() > 2 and float(headings[0][0]) < sim - 2.0:
+					headings.pop_front()
+				if headings.size() > 1:
+					var swing := rad_to_deg((headings[0][1] as Vector3).angle_to(headings[-1][1] as Vector3))
+					if swing > worst:
+						worst = swing
+					if swing > 120.0:
+						uturns += 1
+						headings.clear()
+				var msg := str(player.last_navigation_status_message)
+				if msg != last_msg and not msg.is_empty():
+					messages.append("%.0fs %s" % [sim, msg.trim_prefix("NAVIGATION: ")])
+					last_msg = msg
+				# Arrived (it parks at the stop distance) or gave up.
+				if player.nav_mode == "MANUAL" or (sim > 15.0 and absf(float(player.current_speed)) < 1.0):
+					break
+			trips += 1
+			if uturns > 0:
+				uturn_trips += 1
+			worst_all = maxf(worst_all, worst)
+			print("[RouteTour] %s -> %s: %.0f u, %.0f s, end %.0f u (closest %.0f, backtrack %.0f), speed %.1f, nav %s, worst swing %.0f deg, U-turns %d, obstructed %d / cleared %d%s" % [
+				origin.name, dest.name, start_dist, sim, player.global_position.distance_to(dest.global_position), min_dist, backtrack, float(player.current_speed), str(player.nav_mode), worst, uturns,
+				int(player.navigation_obstruction_notice_count) - notices_before,
+				int(player.navigation_route_clear_notice_count) - clears_before,
+				("  | " + " ; ".join(messages)) if uturns > 0 else ""])
+			player.cancel_autopilot()
+	Engine.time_scale = 1.0
+	print("[RouteTour] %d trips, %d with U-turns, worst swing %.0f deg" % [trips, uturn_trips, worst_all])
+	if "--strict" in OS.get_cmdline_user_args() and uturn_trips > 0:
+		push_error("[RouteTour] FAIL: %d trips had U-turns." % uturn_trips)
+		delete_savegame()
+		get_tree().quit(1)
+		return
+	print("[RouteTour] DONE")
 	delete_savegame()
 	get_tree().quit(0)
 

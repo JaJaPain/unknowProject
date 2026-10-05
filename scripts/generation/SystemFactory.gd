@@ -228,10 +228,11 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.name = "MeshInstance3D"
 	mesh_instance.mesh = mesh
-	if is_gas:
-		# Its own bands, colours and storms, not the one Jupiter texture.
-		mesh_instance.material_override = preload("res://scripts/generation/GasGiantLook.gd").material_for(config.seed_value * 31 + index)
 	planet.add_child(mesh_instance)
+	if is_gas:
+		# Its own clouds, storms and atmosphere (gas giant V2), from the same
+		# per-planet seed as before. Uses its own RNG, not this factory's.
+		preload("res://scripts/generation/GasGiantLook.gd").apply(planet, config.seed_value * 31 + index)
 
 	var shape := SphereShape3D.new()
 	shape.radius = radius

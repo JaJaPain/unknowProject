@@ -74,10 +74,55 @@ static func material_for(seed_value: int) -> ShaderMaterial:
 	return material
 
 
-## Dresses an existing gas giant (its MeshInstance3D child) with this look.
+## Dresses an existing gas giant with the V2 look (ChatGPT's procedural
+## clouds, storms and atmosphere; docs/prototypes/gas_giant_v2_claude_handoff.md):
+## a surface material on the body, an atmosphere shell child, and a
+## GasGiantVisual controller for its clock and sunlight. Applying again
+## (a campaign reseed) reuses the shell and controller. The V1 look_for /
+## material_for above stay for the old snapshot and tests.
+const ProfilesType := preload("res://scripts/generation/GasGiantProfiles.gd")
+const ATMOSPHERE_SHELL := "GasGiantAtmosphere"
+const ATMOSPHERE_SCALE := 1.012
+
+
 static func apply(planet: Node3D, seed_value: int) -> void:
 	if planet == null:
 		return
-	for child in planet.find_children("*", "MeshInstance3D", true, false):
-		(child as MeshInstance3D).material_override = material_for(seed_value)
+	var body := body_of(planet)
+	if body == null:
 		return
+	var profile: Dictionary = ProfilesType.profile_for_seed(hash("gas_giant_v2:%d" % seed_value))
+	# Game distances: the middle quality tier (4 octaves).
+	profile["quality_level"] = 1
+	var pair: Dictionary = ProfilesType.material_pair_for(profile)
+	var surface: ShaderMaterial = pair["surface"]
+	var atmosphere: ShaderMaterial = pair["atmosphere"]
+	surface.set_meta("palette", str(profile.get("palette", "")))
+	surface.set_meta("archetype", str(profile.get("archetype", "")))
+	body.material_override = surface
+	var shell := body.get_node_or_null(ATMOSPHERE_SHELL) as MeshInstance3D
+	if shell == null:
+		shell = MeshInstance3D.new()
+		shell.name = ATMOSPHERE_SHELL
+		shell.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		body.add_child(shell)
+	shell.mesh = body.mesh
+	shell.transform = Transform3D.IDENTITY.scaled(Vector3.ONE * ATMOSPHERE_SCALE)
+	shell.material_override = atmosphere
+	var visual := planet.get_node_or_null("GasGiantVisual")
+	if visual == null:
+		visual = load("res://scripts/visuals/GasGiantVisual.gd").new()
+		visual.name = "GasGiantVisual"
+		planet.add_child(visual)
+	visual.call("bind", surface, atmosphere)
+
+
+## The planet's body mesh: its "MeshInstance3D" child, never the atmosphere.
+static func body_of(planet: Node3D) -> MeshInstance3D:
+	var body := planet.get_node_or_null("MeshInstance3D") as MeshInstance3D
+	if body != null:
+		return body
+	for child in planet.find_children("*", "MeshInstance3D", true, false):
+		if str(child.name) != ATMOSPHERE_SHELL:
+			return child as MeshInstance3D
+	return null
