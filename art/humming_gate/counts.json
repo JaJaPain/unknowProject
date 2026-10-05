@@ -1,0 +1,11 @@
+{
+  "meshes": 13,
+  "materials": 6,
+  "vertices": 59800,
+  "triangles": 115780,
+  "main_ring_diameter_m": 1202,
+  "crown_tip_diameter_m": 1546,
+  "clear_aperture_m": 919,
+  "depth_m": 80,
+  "inner_ring_offset_m": 30
+}

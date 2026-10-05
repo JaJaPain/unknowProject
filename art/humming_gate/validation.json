@@ -1,0 +1,13 @@
+{
+  "glb_bytes": 5488808,
+  "meshes": 13,
+  "materials": 6,
+  "surfaces": 15,
+  "triangles": 115780,
+  "cameras": 0,
+  "lights": 0,
+  "godot_4_6_3_import": "passed; 13 meshes, 15 surfaces, halo pivot present",
+  "extensions": [
+    "KHR_materials_emissive_strength"
+  ]
+}
