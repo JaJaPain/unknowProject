@@ -252,3 +252,11 @@ approach could get work lights or a beacon.
 - **Risk (optional):** scavengers already working it, or arriving.
 - **Fits section 3:** the Silent Fleet Lodestar and the "bury an old crime"
   bridge are natural homes for it.
+- **Radiation keeps you out (Abe, 2026-10-05):** a radiation zone around the
+  hulls (~1 km) is why you can't fly in close, and why nobody has picked it
+  clean. You scan from the edge; drones go inside (the drone dive). N.O.V.A.
+  warns at the line, the HUD shows the zone, crossing it ticks damage,
+  autopilot routes stay outside. Fits the "radiation belt" keystone: a
+  shielded ship can later reach inner scan points and better salvage, a
+  reason to come back. Also the performance fix: no close-up view to render,
+  so small debris can be hidden at range (most of the ~700 draw calls).
