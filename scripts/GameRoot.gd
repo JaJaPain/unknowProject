@@ -371,6 +371,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_berth_probe")
 	elif "--traffic-berth-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_berth_snapshot")
+	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_mission_remark_smoke_test")
 	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_normal_snapshot")
 	elif "--station-snapshot" in OS.get_cmdline_user_args():
@@ -12166,6 +12168,116 @@ func _run_cruise_smoke_test() -> void:
 		fail.call("Arrived too fast (%.1f)." % arrive_speed)
 		return
 	print("[CruiseSmokeTest] PASS")
+	delete_savegame()
+	get_tree().quit(0)
+
+
+## N.O.V.A.'s mission remark (playtest 2026-10-05 finding 7): board cards
+## carry one about half the time, it rides into the accepted mission, and she
+## says it halfway to the mission's place: not at the start, yes at the middle.
+##   -- --mission-remark-smoke-test --baseline-offline
+func _run_mission_remark_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	# N.O.V.A. holds every line while the title screen is up.
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	var fail := func(message: String) -> void:
+		push_error("[MissionRemarkSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	_initialize_campaign_registry()
+	StoryManager.clear_story_state()
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) or not _ensure_campaign_checkpoint_store(prepared["data"]):
+		fail.call("Could not create a campaign checkpoint store.")
+		return
+	_refresh_gate_states()
+	StoryManager.story_state["first_contract_handed_in"] = true
+	StoryManager.story_state["intro_agent_visited"] = true
+	StoryManager.story_state["intro_quest_delivered"] = true
+	GateDiscovery.mark_known("gate.start.to_test")
+	var gate := _find_gate(get_active_system_root(), "start_to_test")
+	_position_player_for_gate_test(gate)
+	if get_jump_block_reason(gate) != "" or not request_gate_jump(gate):
+		fail.call("Could not jump to the frontier system.")
+		return
+	await system_changed
+	for i in 60:
+		await get_tree().process_frame
+	CombatManager.set("state", 0)
+	var ui = GlobalState.get_ui_manager()
+	var Builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var cards := 0
+	var with := 0
+	var offer := {}
+	for minute in range(0, 1440, 45):
+		for o in Builder.build_offers(int(CampaignClock.total_minutes) + minute):
+			var qd = o.get("quest_data", {})
+			if not qd is Dictionary or (qd as Dictionary).is_empty():
+				continue
+			var kind := str((qd.get("objective", {}) as Dictionary).get("type", ""))
+			if kind in ["KILL_SHIPS", "RECOVER_COMBAT_DROP", "TARGET_WITH_COMMS_REVERSAL"]:
+				continue
+			cards += 1
+			if not str(qd.get("nova_remark", "")).is_empty():
+				with += 1
+				print("[MissionRemarkSmokeTest] card '%s': %s" % [qd.get("title", "?"), qd["nova_remark"]])
+				if offer.is_empty() and kind == "PICKUP_SPECIAL":
+					offer = o
+	print("[MissionRemarkSmokeTest] %d of %d cards carry a remark" % [with, cards])
+	if cards < 6 or with == 0 or with == cards:
+		fail.call("Cards should carry a remark about half the time (%d of %d)." % [with, cards])
+		return
+	if offer.is_empty():
+		fail.call("No pickup card with a remark to fly.")
+		return
+	var remark := str(offer["quest_data"]["nova_remark"])
+	# Undocked, a trip away from the pickup outpost, before taking the job.
+	var outpost: Node3D = null
+	for s in get_tree().get_nodes_in_group("station"):
+		if s is Node3D and str(GlobalState.resolve_outpost_id(s)) == str(offer["quest_data"]["objective"].get("target_outpost", "")):
+			outpost = s
+	var out := Vector3(1, 0, 0.3).normalized()
+	SpeechService.stop()
+	player.is_docked = false
+	if outpost != null:
+		player.global_position = outpost.global_position + out * 6000.0
+	if not QuestManager.accept_quest(offer["quest_data"], {"text": "Accepted.", "consequence": {}}):
+		fail.call("The pickup was rejected: %s" % QuestManager.last_validation_error)
+		return
+	await get_tree().process_frame
+	var aq: Dictionary = QuestManager.active_quest
+	if str(aq.get("nova_remark", "")) != remark:
+		fail.call("The remark didn't ride into the accepted mission.")
+		return
+	var where: Node3D = ui._quest_tracker_route_target(aq)
+	if where == null:
+		fail.call("The pickup leads nowhere.")
+		return
+	player.global_position = where.global_position + out * 6000.0
+	await get_tree().create_timer(2.0).timeout
+	if bool(aq.get("nova_remark_played", false)):
+		fail.call("She said it at the start of the trip.")
+		return
+	player.global_position = where.global_position + out * 3000.0
+	# Offline, a voice request never finishes and speech reads as busy for
+	# good; in play it clears in seconds.
+	SpeechService.stop()
+	# Up to 25 s: her speech budget keeps a gap after her last casual line.
+	for i in 50:
+		if bool(aq.get("nova_remark_played", false)):
+			break
+		await get_tree().create_timer(0.5).timeout
+	if not bool(aq.get("nova_remark_said", false)):
+		var runner = ui.get("_mission_remark_runner")
+		fail.call("She didn't say it halfway (runner %s, docked %s, active %s, target %s, dist %.0f, quest remark '%s')." % [
+			runner != null and is_instance_valid(runner), player.is_docked, QuestManager.is_quest_active(),
+			str(ui._quest_tracker_route_target(QuestManager.active_quest)), player.global_position.distance_to(where.global_position),
+			str(QuestManager.active_quest.get("nova_remark", ""))])
+		return
+	print("[MissionRemarkSmokeTest] PASS: %d of %d cards carry a remark; said halfway: %s" % [with, cards, remark])
 	delete_savegame()
 	get_tree().quit(0)
 

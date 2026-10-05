@@ -841,3 +841,22 @@ through the marked gate and flies you in):
 - [ ] **Station hulls up close:** docking at a big station or outpost, the
       hull panels show their seams and the metal catches the sun with a little
       worn texture, with no sparkle or crawling as you move.
+
+## Z. Playtest 2026-10-05 fixes (added 2026-10-05)
+
+- [ ] **Intro:** a soft dark vignette at the screen edges; no mouse cursor at
+      all until "Hold RIGHT MOUSE..." (Esc's systems menu still shows one).
+- [ ] **N.O.V.A. on the chat:** while she talks during docking/undocking, her
+      portrait stays on the chat box as it moves, never over empty space or the
+      overview.
+- [ ] **Tractor hum** a little louder.
+- [ ] **No overview on the beam:** it disappears when the beam takes you in,
+      stays gone while docked, and fades back in with "Controls are yours."
+- [ ] **Undock once:** opening the inventory while being pushed out doesn't
+      bring the dock screen back; no "Checkpoint could not be saved".
+- [ ] **Pickup item:** after the hand-over, the holder's line stays up with
+      "X is in your hold. Deliver it to..."; the inventory shows the item as a
+      MISSION card; turning in says "X handed over to ...".
+- [ ] **N.O.V.A. on your jobs:** about half the board jobs you take, she says
+      something about it (the pay, the item, where it's going) partway there,
+      never at the station. Lines vary.

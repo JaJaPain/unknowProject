@@ -598,6 +598,23 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 	return true
 
 
+## A remark about the job you're on (MissionRemarks, playtest 2026-10-05
+## finding 7): Abe wants more of her noticing what you're doing, so it isn't
+## held to the "three casual lines in two minutes" cap, only to the gap after
+## her last line, so she never talks over herself. It still counts toward the
+## cap, so other idle chatter backs off after it.
+func speak_mission_remark(text: String, expression: String = "smile") -> bool:
+	var now := Time.get_ticks_msec()
+	if not _recent_speech_ms.is_empty() and now - int(_recent_speech_ms.back()) < SPEECH_BUDGET_MIN_GAP_MS:
+		return false
+	return speak(text, Severity.COMBAT, expression) and _count_idle_line(now)
+
+
+func _count_idle_line(now_ms: int) -> bool:
+	_recent_speech_ms.append(now_ms)
+	return true
+
+
 # True if a line at `severity` may be delivered at `now_ms` under the global
 # speech budget. Prunes the window as a side effect. Time is a parameter so
 # tests can drive it deterministically.

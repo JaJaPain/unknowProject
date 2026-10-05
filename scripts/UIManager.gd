@@ -338,6 +338,9 @@ var store_btn: Button
 var _store_current_id: String = ""
 var inventory_panel: Panel
 const InventoryScreenScript := preload("res://scripts/ui/InventoryScreen.gd")
+const MissionRemarksScript := preload("res://scripts/story/MissionRemarks.gd")
+const MissionRemarkRunnerScript := preload("res://scripts/story/MissionRemarkRunner.gd")
+var _mission_remark_runner: Node = null
 var inventory_return_to_dock: bool = false
 
 var quest_tracker_panel: PanelContainer
@@ -13929,6 +13932,7 @@ func _on_background_quest_generated(quest_data: Dictionary, is_fallback: bool):
 		return
 	if is_instance_valid(Nova):
 		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
+	MissionRemarksScript.attach(quest_data)
 	cached_quest_data = quest_data
 	cached_quest_is_fallback = is_fallback
 	cached_quest_context = request_context
@@ -14688,6 +14692,7 @@ func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	SpeechService.start_interaction("Select Choice: " + choice.get("text", ""))
 	if is_instance_valid(Nova):
 		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
+	MissionRemarksScript.attach(quest_data)
 	
 	cached_quest_data = {}
 	cached_quest_is_fallback = false
@@ -15132,6 +15137,19 @@ func _on_partial_delivery_pressed(deliverable: float):
 func _on_quest_accepted():
 	_update_quest_tracker()
 	_refresh_visible_npc_attention_buttons()
+	# N.O.V.A.'s remark on this job (finding 7): its voice now, said halfway.
+	if QuestManager.is_quest_active() and not _is_intro_starter_contract(QuestManager.active_quest):
+		var accepted: Dictionary = QuestManager.active_quest
+		MissionRemarksScript.attach(accepted)
+		MissionRemarksScript.note_accepted(accepted)
+		var remark := str(accepted.get("nova_remark", "")).strip_edges()
+		if not remark.is_empty() and is_instance_valid(Nova):
+			SpeechService.cache(remark, Nova.NOVA_VOICE_PROFILE_ID, -1.0, true)
+		if _mission_remark_runner == null or not is_instance_valid(_mission_remark_runner):
+			_mission_remark_runner = MissionRemarkRunnerScript.new()
+			_mission_remark_runner.name = "MissionRemarkRunner"
+			add_child(_mission_remark_runner)
+		_mission_remark_runner.call("arm", self)
 	# Her "highlighted that ship in red" line plays the moment the clamps
 	# release after the starter job; generate it now, at the front of the voice
 	# queue, so it isn't still synthesizing then (Abe, 2026-09-30).

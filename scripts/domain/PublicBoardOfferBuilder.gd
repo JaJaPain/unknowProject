@@ -67,6 +67,10 @@ static func build_offers(current_time_minutes: int) -> Array[Dictionary]:
 		offers.append(purchase_offer)
 	offers.append(_build_recovery_preview())
 	_scale_pay_by_depth(offers)
+	# Each card carries N.O.V.A.'s remark from the start (finding 7).
+	for offer in offers:
+		if offer.get("quest_data", {}) is Dictionary and not (offer["quest_data"] as Dictionary).is_empty():
+			preload("res://scripts/story/MissionRemarks.gd").attach(offer["quest_data"])
 	_withhold_invalid_offers(offers)
 	_apply_story_intent_priority(offers)
 	_apply_cooldowns(offers)
