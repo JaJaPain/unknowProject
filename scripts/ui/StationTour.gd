@@ -18,8 +18,8 @@ const MUSIC_DIP_DB := -5.0
 const WATCH_AFTER_S := 4.0
 ## Kaelen, voice only, while you're away (Abe, 2026-10-05): five minutes
 ## into the tour, then about every five minutes, over comms (no portrait, no
-## text). Every line is heard before any repeats. Lines: Abe's two, drafts
-## for the rest.
+## text). Every line is heard before any repeats. Lines approved by Abe
+## 2026-10-05 except the last (she thinks board work is beneath you).
 const KAELEN_FIRST_S := 300.0
 const KAELEN_EVERY_S := 300.0
 const KAELEN_JITTER_S := 60.0
@@ -30,7 +30,7 @@ const KAELEN_LINES := [
 	"I've had cargo pods with more ambition than you this afternoon, Shiny.",
 	"Take your time, Shiny. It's not as if there's a whole galaxy out there with my money in it.",
 	"If you're napping, I'm billing it as a consultation.",
-	"Shiny, the board's full of jobs and not one of them does itself. Believe me, I've asked.",
+	"I've got clients waiting, Shiny. Real ones. Not the riffraff off the public board.",
 ]
 var _kaelen_next := -1.0
 var _kaelen_bag: Array = []
