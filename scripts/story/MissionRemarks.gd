@@ -19,8 +19,7 @@ const PAY_HISTORY := 6
 const PAY_MIN_SAMPLES := 3
 const HUNT_TYPES := ["KILL_SHIPS", "RECOVER_COMBAT_DROP", "TARGET_WITH_COMMS_REVERSAL"]
 
-## Lines: all approved by Abe 2026-10-05, except the ore lines from "Another
-## rock" on (drafts). The ore pool doubles as her boredom on long mining
+## Lines: all approved by Abe 2026-10-05. The ore pool doubles as her boredom on long mining
 ## stretches (Nova.on_player_mined); lines with a {detail} only fit jobs. {pay} {item} {amount} {dest}
 ## {client}: a line is only used when the card has every detail it names.
 const LINES := {
@@ -55,13 +54,11 @@ const LINES := {
 	"ore": [
 		"{amount} cubic metres of ore. You do know I can see you smiling at the rocks?",
 		"Ore run. Keep the drill steady and I'll keep the complaints to myself. Most of them.",
-		"Another rock. Riveting. Not literally. The drill does that.",
 		"I've started naming the asteroids. That one's Gary. Gary's having a hard day.",
 		"This belt has been here four billion years. It's not in a hurry. Neither, apparently, are we.",
 		"I worked out how many of these it takes to pay for the upgrade. You don't want the number. I didn't want the number.",
 		"Drill's running warm. So's my patience. Only one of those is a problem.",
 		"If you hum while you mine, I can't stop you. I can, however, record it.",
-		"Ore in, credits later. The glamorous side of space travel they put on the posters.",
 		"Rock. Rock. Slightly shinier rock. I'll let you know if anything changes.",
 	],
 	"investigate": [
