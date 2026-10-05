@@ -516,6 +516,8 @@ func mine():
 			set_meta("ore_scanned", true)  # you know what you're cutting (OreScan)
 		if added > 0.0 and GlobalState.has_method("report_player_mined_asteroid"):
 			GlobalState.report_player_mined_asteroid(self)
+		if added > 0.0 and is_instance_valid(Nova):
+			Nova.on_player_mined()
 		
 		# Visual/text popups could be spawned here
 		

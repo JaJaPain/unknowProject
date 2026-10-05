@@ -598,6 +598,31 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 	return true
 
 
+## Bored on a long mining stretch (Abe, 2026-10-05): after a couple of minutes
+## of steady mining she says one of the ore lines (MissionRemarks' ore pool,
+## the ones that need no job detail), at most once every few minutes. A pause
+## longer than MINING_GAP_S ends the stretch.
+const MINING_BORED_AFTER_S := 120.0
+const MINING_BORED_COOLDOWN_S := 420.0
+const MINING_GAP_S := 20.0
+var _mining_since := -1.0
+var _mining_last := -1.0
+var _mining_bored_at := -1000000.0
+
+
+func on_player_mined() -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if _mining_last < 0.0 or now - _mining_last > MINING_GAP_S:
+		_mining_since = now
+	_mining_last = now
+	if _in_combat or now - _mining_since < MINING_BORED_AFTER_S 			or now - _mining_bored_at < MINING_BORED_COOLDOWN_S:
+		return
+	var line: String = preload("res://scripts/story/MissionRemarks.gd")._draw("ore", {})
+	if not line.is_empty() and speak(line, Severity.IDLE, "thoughtful"):
+		_mining_bored_at = now
+		_mining_since = now
+
+
 ## A remark about the job you're on (MissionRemarks, playtest 2026-10-05
 ## finding 7): Abe wants more of her noticing what you're doing, so it isn't
 ## held to the "three casual lines in two minutes" cap, only to the gap after

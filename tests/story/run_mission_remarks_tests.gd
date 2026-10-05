@@ -17,6 +17,7 @@ func _initialize() -> void:
 	_test_pay_lines()
 	_test_flat_and_nested()
 	_test_no_repeats()
+	_test_mining_boredom_pool()
 	if _failures.is_empty():
 		print("[PASS] MissionRemarks (all cases)")
 		quit(0)
@@ -122,3 +123,23 @@ func _test_no_repeats() -> void:
 	var d := Remarks._details({"objective": {"type": "PURCHASE_DELIVERY", "item_name": "Coolant Cell", "reward_credits": 90}})
 	if str(d.get("item", "")) != "Coolant Cell":
 		_failures.append("Purchase item not read (part_name missing came through as text?): %s" % str(d))
+
+
+func _test_mining_boredom_pool() -> void:
+	# Bored while mining: no job, no details. Only lines that need none, and
+	# all of those come round before a repeat.
+	Remarks._bags.clear()
+	var free_lines := 0
+	for template in Remarks.LINES["ore"]:
+		if not str(template).contains("{"):
+			free_lines += 1
+	var seen := {}
+	for i in free_lines:
+		var line := Remarks._draw("ore", {})
+		if line.is_empty() or line.contains("{"):
+			_failures.append("Mining boredom drew an unusable line: '%s'" % line)
+			return
+		if seen.has(line):
+			_failures.append("Mining boredom repeated a line early: %s" % line)
+			return
+		seen[line] = true

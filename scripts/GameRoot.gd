@@ -11474,8 +11474,13 @@ func _run_mining_risk_smoke_test() -> void:
 	if not mining_risk._guard_told.has(str(red.get("persistent_id"))):
 		fail.call("N.O.V.A. didn't call out the guarded rock.")
 		return
-	# 4. The overview names the ore.
+	# 4. The overview names the ore, once the rock's been read (since the
+	# Scan Composition change, 2026-10-04, an unread rock is just "Asteroid").
 	var ui = GlobalState.get_ui_manager()
+	if str(ui._asteroid_type_label(rock)) != "Asteroid":
+		fail.call("An unscanned rock gives its ore away: '%s'" % ui._asteroid_type_label(rock))
+		return
+	rock.set_meta(load("res://scripts/domain/OreScan.gd").META, true)
 	if not str(ui._asteroid_type_label(rock)).contains("Thorium"):
 		fail.call("The overview doesn't name the rock's ore: '%s'" % ui._asteroid_type_label(rock))
 		return
