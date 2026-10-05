@@ -29,6 +29,18 @@ func _initialize() -> void:
 	_check(families.size() == 6, "all six families turn up (%d)" % families.size())
 	_check(palettes.size() == 8, "all eight palettes turn up (%d)" % palettes.size())
 
+	# Abe, 2026-10-04: ice giants are rare, and only further out.
+	var ice_near := 0
+	var ice_far := 0
+	for s in 1000:
+		if Look.ICE_FAMILIES.has(Look.family_for(s, 0)) or Look.ICE_FAMILIES.has(Look.family_for(s, 1)):
+			ice_near += 1
+		if Look.ICE_FAMILIES.has(Look.family_for(s, 3)):
+			ice_far += 1
+	_check(ice_near == 0, "no ice giants in the start system or the first ring (%d)" % ice_near)
+	_check(ice_far > 50 and ice_far < 200, "about one in eight further out (%d/1000)" % ice_far)
+	_check(Look.family_for(77, 3) == Look.family_for(77, 3), "a planet's family is steady")
+
 	# Applying: one body, one shell, one controller, unique materials.
 	var a := _planet(3000.0)
 	var b := _planet(3000.0)

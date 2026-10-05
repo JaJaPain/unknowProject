@@ -232,7 +232,7 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	if is_gas:
 		# Its own clouds, storms and atmosphere (gas giant V2), from the same
 		# per-planet seed as before. Uses its own RNG, not this factory's.
-		preload("res://scripts/generation/GasGiantLook.gd").apply(planet, config.seed_value * 31 + index)
+		preload("res://scripts/generation/GasGiantLook.gd").apply(planet, config.seed_value * 31 + index, preload("res://scripts/domain/DepthScaling.gd").depth_of(config.system_id))
 
 	var shape := SphereShape3D.new()
 	shape.radius = radius

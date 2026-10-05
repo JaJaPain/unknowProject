@@ -85,13 +85,31 @@ const ATMOSPHERE_SHELL := "GasGiantAtmosphere"
 const ATMOSPHERE_SCALE := 1.012
 
 
-static func apply(planet: Node3D, seed_value: int) -> void:
+## Ice giants are rare, and only further out (Abe, 2026-10-04): none in the
+## start system or the first ring of systems, then about one gas giant in
+## eight. Their pale cyan read green under a warm star.
+const ICE_FAMILIES := ["quiet_ice", "active_ice"]
+const ICE_MIN_DEPTH := 2
+const ICE_CHANCE := 0.12
+
+
+## Which family a gas giant `depth` systems out belongs to (steady per seed).
+static func family_for(seed_value: int, depth: int) -> String:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("gas_giant_v2_family:%d" % seed_value)
+	if depth >= ICE_MIN_DEPTH and rng.randf() < ICE_CHANCE:
+		return str(ICE_FAMILIES[rng.randi() % ICE_FAMILIES.size()])
+	var others: Array = ProfilesType.ARCHETYPES.filter(func(a): return not ICE_FAMILIES.has(a))
+	return str(others[rng.randi() % others.size()])
+
+
+static func apply(planet: Node3D, seed_value: int, depth: int = 0) -> void:
 	if planet == null:
 		return
 	var body := body_of(planet)
 	if body == null:
 		return
-	var profile: Dictionary = ProfilesType.profile_for_seed(hash("gas_giant_v2:%d" % seed_value))
+	var profile: Dictionary = ProfilesType.profile_for_seed(hash("gas_giant_v2:%d" % seed_value), family_for(seed_value, depth))
 	# Game distances: the middle quality tier (4 octaves).
 	profile["quality_level"] = 1
 	var pair: Dictionary = ProfilesType.material_pair_for(profile)
