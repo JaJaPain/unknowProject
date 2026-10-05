@@ -1,5 +1,5 @@
 {
-  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. Review (Abe): lighthouse and silent_fleet approved 2026-10-05; the rest DRAFT. Every Hidden Hand goal is hosted somewhere and none by more than 3 Lodestars.",
+  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. Review (Abe): lighthouse, silent_fleet, humming_gate and cartographer approved 2026-10-05; garden and quiet_war DRAFT. Every Hidden Hand goal is hosted somewhere and none by more than 3 Lodestars.",
   "bridges": {
     "lighthouse": {
       "own_the_lanes": "The Lighthouse remembers routes nobody else charts. Whoever owns its map owns lanes no tariff office knows exist.",
@@ -15,7 +15,7 @@
     },
     "humming_gate": {
       "own_the_lanes": "A working gate is a lane nobody else can use. Whoever holds the ring holds the region's trade.",
-      "take_the_chair": "Whoever can repair the network gets to run it. The ring is the chair.",
+      "take_the_chair": "The council seat goes to whoever brings the ring under their flag. It was promised to someone else. It won't be theirs for long.",
       "start_a_war": "Two factions already circle the ring. One push and they fight over it, and whoever pushed sells to both.",
       "keep_the_lights_on": "Their colony's gate is failing. The ring is the only thing left that can fix it."
     },
