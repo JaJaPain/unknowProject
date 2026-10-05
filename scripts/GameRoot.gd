@@ -8480,6 +8480,16 @@ func _run_dock_smoke_test() -> void:
 			if bool(ui.call("_command_selected_target", "ORBIT")) or player.nav_mode != "MANUAL":
 				_fail_dock_smoke_test("A HUD order was taken mid-push at '%s' (nav %s)." % [station.name, player.nav_mode])
 				return
+			# Playtest d finding 1: overview rows take no clicks mid-push.
+			ui.refresh_overview()
+			await get_tree().process_frame
+			var rows: Array = ui.overview_list.get_children().filter(func(c): return c is Button and c.get_meta("entity_ref", null) != station)
+			if not rows.is_empty():
+				var other = rows[0].get_meta("entity_ref", null)
+				(rows[0] as Button).pressed.emit()
+				if GlobalState.active_target == other:
+					_fail_dock_smoke_test("An overview row was clickable mid-push at '%s'." % station.name)
+					return
 			# Finding 6: the beam hums like the mining tractor.
 			var humming := false
 			for node in get_tree().current_scene.get_children():

@@ -3841,6 +3841,8 @@ func update_overview_list(entities: Array):
 			btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 			HudStyle.style_row(btn)
 			btn.pressed.connect(func():
+				if _beam_has_ship():
+					return
 				GlobalState.active_target = entity
 				_queue_station_target_prefetch(entity, "selected")
 				_update_intro_handhold()
@@ -3848,7 +3850,8 @@ func update_overview_list(entities: Array):
 			btn.gui_input.connect(func(event: InputEvent):
 				if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 					btn.accept_event()
-					show_context_menu(entity)
+					if not _beam_has_ship():
+						show_context_menu(entity)
 			)
 			overview_list.add_child(btn)
 			
@@ -13367,6 +13370,14 @@ func set_overview_collapsed(collapsed: bool):
 		overview_panel.size.y = _overview_expanded_h if _overview_expanded_h > 100.0 else get_viewport_rect().size.y * 0.60
 		
 	refresh_overview()
+
+
+## While a station's beam has the ship (docked, or being carried in or out
+## past the safety zone), the overview shows but takes no clicks (playtest
+## 2026-10-04 d finding 1); control, and clicks, come back together.
+func _beam_has_ship() -> bool:
+	return GlobalState.player != null and is_instance_valid(GlobalState.player) \
+		and bool(GlobalState.player.get("is_docked"))
 
 
 func _set_overview_dock_locked(locked: bool) -> void:

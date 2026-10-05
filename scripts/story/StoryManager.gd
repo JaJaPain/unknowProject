@@ -110,6 +110,7 @@ var story_state: Dictionary = {
 	"agent_contracts_since_cooldown": 0,
 	# Per campaign (QuestManager.get_completed_count).
 	"contracts_completed": 0,
+	"contracts_since_route": 0,
 	"faction_pressure": {},
 	"player_choices": [],
 	"kaelen_hidden_hints": [],
@@ -336,6 +337,7 @@ func clear_story_state() -> void:
 		"agent_cooldown_message_index": 0,
 		"agent_contracts_since_cooldown": 0,
 		"contracts_completed": 0,
+		"contracts_since_route": 0,
 		"faction_pressure": {},
 		"player_choices": [],
 		"kaelen_hidden_hints": [],

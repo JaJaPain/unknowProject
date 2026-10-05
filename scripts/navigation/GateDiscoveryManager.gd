@@ -13,6 +13,7 @@ const GeneratedGateBuilderType := preload(
 
 var _last_kaelen_offer_time: int = -1
 const KAELEN_COOLDOWN_MINUTES := 60
+const KAELEN_CONTRACTS_PER_ROUTE := 3
 const KAELEN_FIRST_OFFER_DELAY_MINUTES := 15
 
 
@@ -96,6 +97,7 @@ func kaelen_reveal(gate_id: String, cost: int) -> Dictionary:
 		return {"ok": false, "error": "Failed to update gate knowledge."}
 
 	_last_kaelen_offer_time = CampaignClock.total_minutes
+	StoryManager.story_state["contracts_since_route"] = 0
 	gate_state_changed.emit(gate_id, current_state, "known")
 	# Her leads can carry a Lodestar bearing too (core loop step 10).
 	load("res://scripts/story/LodestarGuide.gd").offer_from("kaelen")
@@ -186,7 +188,10 @@ func _is_kaelen_offer_ready() -> bool:
 	var start_minutes := CampaignClock.START_HOUR * CampaignClock.MINUTES_PER_HOUR
 	if CampaignClock.total_minutes < start_minutes + KAELEN_FIRST_OFFER_DELAY_MINUTES:
 		return false
-	if QuestManager.get_completed_count() < 3:
+	# Three contracts since her last route sale, not in the whole campaign
+	# (playtest 2026-10-04 d finding 4: after the first route the campaign
+	# count never held her back, so she offered the next route on arrival).
+	if int(StoryManager.story_state.get("contracts_since_route", QuestManager.get_completed_count())) < KAELEN_CONTRACTS_PER_ROUTE:
 		return false
 	if _last_kaelen_offer_time >= 0 \
 			and (CampaignClock.total_minutes - _last_kaelen_offer_time) < KAELEN_COOLDOWN_MINUTES:

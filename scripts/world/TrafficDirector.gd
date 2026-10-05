@@ -173,13 +173,17 @@ func _tractor_in(entry: Dictionary, station: Node3D) -> void:
 	_hold_engines(ship)
 	var beam := _beam(station, ship)
 	var berth: Vector3 = entry["dest"]
-	ship.look_at(station.global_position, Vector3.UP)
+	# Nose along the way it's being moved, never at the station's centre while
+	# being dragged somewhere else: that read as flying backwards (playtest
+	# 2026-10-04 d finding 2; the new outposts' berths sit above or beside).
+	_face(ship, berth)
 	var tween := ship.create_tween()
 	tween.tween_property(ship, "global_position", berth, TRACTOR_PULL_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_interval(CLAMP_HOLD_S)
 	tween.tween_callback(func() -> void:
 		if is_instance_valid(beam):
-			beam.queue_free())
+			beam.queue_free()
+		_face(ship, station.global_position))
 	tween.tween_property(ship, "global_position", berth.lerp(station.global_position, 0.4), SLIDE_IN_S).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(ship, "scale", Vector3.ONE * 0.05, SLIDE_IN_S).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
@@ -207,6 +211,17 @@ func _push_out(entry: Dictionary, station: Node3D, clear_point: Vector3) -> void
 		entry["on_beam"] = false
 		entry.erase("best_dist")
 		ship.set_physics_process(true))
+
+
+## Turn `ship` to face `point` (another up when the line is vertical).
+static func _face(ship: Node3D, point: Vector3) -> void:
+	if not is_instance_valid(ship):
+		return
+	var dir := point - ship.global_position
+	if dir.length() < 1.0:
+		return
+	var up := Vector3.FORWARD if absf(dir.normalized().dot(Vector3.UP)) > 0.99 else Vector3.UP
+	ship.look_at(point, up)
 
 
 ## Engines off while the beam has it (its steering would fight the tween).

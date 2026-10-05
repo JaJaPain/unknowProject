@@ -6,7 +6,7 @@ no code changes until Abe says the playtest has finished.**
 
 ## Findings
 
-### 1. Undocking: the overview can be clicked while the beam still has the ship
+### 1. Undocking: the overview can be clicked while the beam still has the ship — FIXED
 
 **Abe:** when undocking, the player should not be able to click on the
 overview.
@@ -42,7 +42,7 @@ overview.
   after release (target set).
 - **Ask Abe:** hidden during the push, or visible but not clickable?
 
-### 2. A ship seen flying backwards
+### 2. A ship seen flying backwards — FIXED
 
 **Abe:** saw another ship flying backwards; needs checking again.
 
@@ -101,7 +101,7 @@ subject is the mechanic and whose object is a part, or under two clauses).
 Abe's corrected line could be an approved example for this beat, or a fixed
 fallback when the model's line fails the check.
 
-### 4. First dock in the new system: Kaelen already offers the next route
+### 4. First dock in the new system: Kaelen already offers the next route — FIXED
 
 **Abe (screenshot):** in the new system Kaelen's panel already shows "[ Ask
 about new routes — 53 SC ]" on the first dock: a new gate is ready to open
@@ -120,3 +120,21 @@ resets the count, and she offers the next route after 3 more contracts.
 That makes every system ask for work before the next way out. Keep the
 first route's rule (3 contracts, no ship requirement) and the ship check
 for gates beyond Class I.
+
+## Fix log (Abe ended the playtest for the night)
+
+- **1:** while the beam has the ship (`is_docked`: berth, pull in, push out),
+  overview rows take no left or right clicks (`UIManager._beam_has_ship`). The
+  overview stays *visible* during the push so it can be read; clicks come back
+  with control past the safety zone. (Claude's call while Abe was away; to
+  hide it instead, keep `_set_overview_dock_locked(true)` until the push's
+  release.) The dock smoke clicks a row mid-push at every station and outpost.
+- **2:** arriving traffic on a station beam now faces where it's being moved
+  (its berth), then turns to the station for the slide in; it was facing the
+  station's centre while being dragged elsewhere. Not checked: a reversed
+  ship model (only matters if Abe saw it out in open space).
+- **4:** Kaelen sells the next route after 3 contracts *since her last route
+  sale* (`story_state.contracts_since_route`, reset on each sale), not 3 in
+  the whole campaign. Every system now needs work before its next way out.
+- **3** (garbled jealousy line) was corrected in the data mid-playtest; the
+  line quality check is still to do.

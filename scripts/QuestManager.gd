@@ -1006,6 +1006,9 @@ func _increment_mission_history_revision(
 	if event_type == "completed" and is_instance_valid(StoryManager):
 		StoryManager.story_state["contracts_completed"] = \
 			int(StoryManager.story_state.get("contracts_completed", 0)) + 1
+		# Kaelen sells the next route after this many more (playtest d-4).
+		StoryManager.story_state["contracts_since_route"] = \
+			int(StoryManager.story_state.get("contracts_since_route", 0)) + 1
 	if is_instance_valid(StoryManager) \
 			and StoryManager.has_method("increment_mission_history_revision"):
 		StoryManager.increment_mission_history_revision(event_type, mission_data)

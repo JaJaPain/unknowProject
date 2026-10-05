@@ -825,3 +825,8 @@ through the marked gate and flies you in):
 - [ ] **New planets.** Gas giants have moving clouds and storms; rocky
       planets are cratered rock or ocean worlds with changing clouds; all lit
       from the sun with a night side; nothing moves while paused.
+- [ ] **Overview during undock:** visible but not clickable while the beam
+      carries you out; clickable again with "Controls are yours."
+- [ ] **Traffic on the beam** faces where it's going, never slides backwards.
+- [ ] **Kaelen's routes:** after buying a route, she won't offer the next
+      one until you've done 3 more contracts.
