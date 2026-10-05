@@ -365,6 +365,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_route_tour_smoke_test")
 	elif "--planet-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_planet_snapshot")
+	elif "--ship-facing-probe" in OS.get_cmdline_user_args():
+		call_deferred("_run_ship_facing_probe")
 	elif "--station-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
@@ -12141,6 +12143,55 @@ func _run_cruise_smoke_test() -> void:
 	print("[CruiseSmokeTest] PASS")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+## Playtest 2026-10-04 d finding 2: a ship came through a gate and flew
+## "backwards" away from it. NPCs always move along their nose (-Z), so a
+## ship whose engines sit at the front has its model reversed. Spawns every
+## faction (majors, minors, this system's generated looks) in every role and
+## reports where the engines are.
+##   -- --ship-facing-probe --baseline-offline
+func _run_ship_facing_probe() -> void:
+	for i in 30:
+		await get_tree().process_frame
+	var factions: Array = ["zenith", "aurelia", "vanguard"]
+	for key in GlobalState.local_faction_looks.keys():
+		if not factions.has(key):
+			factions.append(key)
+	for f in GlobalState.get_current_system_minor_factions():
+		if not factions.has(f):
+			factions.append(f)
+	var scene: PackedScene = load("res://scenes/npc_ship.tscn")
+	var reversed := 0
+	var checked := 0
+	for faction in factions:
+		for role in ["Gunner", "Interceptor", "Logistics", "MiningHauler"]:
+			var ship = scene.instantiate()
+			ship.faction = faction
+			ship.ship_role = role
+			ship.persistent_id = "probe.%s.%s" % [faction, role]
+			ship.set_physics_process(false)
+			get_active_system_root().add_child(ship)
+			ship.global_position = Vector3(90000, 0, 90000)
+			for i in 3:
+				await get_tree().process_frame
+			var points: Array = ship.get("engine_points") if ship.get("engine_points") != null else []
+			var z_sum := 0.0
+			var n := 0
+			for p in points:
+				if p is Node3D and is_instance_valid(p):
+					z_sum += ship.to_local((p as Node3D).global_position).z
+					n += 1
+			checked += 1
+			var verdict := "?"
+			if n > 0:
+				verdict = "ok" if z_sum / n > 0.0 else "REVERSED"
+				if verdict == "REVERSED":
+					reversed += 1
+			print("[ShipFacing] %s %s: %d engines, mean z %.2f -> %s" % [faction, role, n, (z_sum / n) if n > 0 else 0.0, verdict])
+			ship.queue_free()
+	print("[ShipFacing] %d ships checked, %d reversed" % [checked, reversed])
+	get_tree().quit()
 
 
 ## The start system's rocky planet as each terrestrial family (ChatGPT's

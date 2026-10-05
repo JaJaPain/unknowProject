@@ -588,7 +588,33 @@ func _setup_amarr_hardpoints(node: Node):
 	for child in node.get_children():
 		_setup_amarr_hardpoints(child)
 
+## Playtest 2026-10-04 d finding 2: a ship came through a gate and flew
+## "backwards". Its own engines can't do that, so log any ship whose real
+## movement runs against its nose for over a second (once per ship).
+var _backwards_s := 0.0
+var _backwards_logged := false
+var _watch_last_pos := Vector3.INF
+
+
+func _watch_backwards(delta: float) -> void:
+	if _backwards_logged:
+		return
+	if _watch_last_pos != Vector3.INF and delta > 0.0:
+		var moved := global_position - _watch_last_pos
+		var speed_now := moved.length() / delta
+		if speed_now > 5.0 and moved.normalized().dot(-global_transform.basis.z) < -0.5:
+			_backwards_s += delta
+			if _backwards_s > 1.0:
+				_backwards_logged = true
+				print("[BackwardsWatch] %s (%s %s) moving backwards at %.0f u/s, behavior '%s', physics %s, docked-on-beam %s" % [
+					name, faction, ship_role, speed_now, behavior, is_physics_processing(), str(get_meta("on_beam", false))])
+		else:
+			_backwards_s = 0.0
+	_watch_last_pos = global_position
+
+
 func _physics_process(delta: float):
+	_watch_backwards(delta)
 	if GlobalState.paused or GlobalState.intro_cinematic_active or destroyed:
 		return
 	_update_engine_glow()

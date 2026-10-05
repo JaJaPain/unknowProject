@@ -138,3 +138,10 @@ for gates beyond Class I.
   the whole campaign. Every system now needs work before its next way out.
 - **3** (garbled jealousy line) was corrected in the data mid-playtest; the
   line quality check is still to do.
+- **2, follow-up (Abe: it came in through a gate, then flew backwards away
+  from it):** not the beam case. Ruled out with `--ship-facing-probe`: all 32
+  faction/role ships have their engines at the rear, so no model is
+  reversed. NPC engines only push along the nose and nothing else moves them.
+  Still unexplained, so an always-on `[BackwardsWatch]` log now names any
+  NPC whose real movement runs against its nose for over a second (faction,
+  role, behaviour, speed). Check the game log after the next sighting.
