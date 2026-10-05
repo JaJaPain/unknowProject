@@ -37,6 +37,9 @@ SEAM_LO = 0.15
 SEAM_HI = 0.40
 SEAM_DEPTH = 0.12
 WEAR = 0.25
+# The Cinder skins (stations and the Kestrel outposts that wear them) have the
+# clearest panel work; Abe asked for them a little stronger (2026-10-05).
+CINDER_BOOST = 1.6
 # Detail wider than this (pixels) is shading, not shape.
 HIGHPASS = 10.0
 BLUR = 1.4
@@ -114,7 +117,10 @@ def _micro(path: Path, size, strength: float) -> np.ndarray:
 
 def bake(colour: Path, micro: Path, micro_strength: float) -> Path:
     img = Image.open(colour).convert("RGB")
-    n = _normals(_height(img))
+    h = _height(img)
+    if "cinder" in colour.name:
+        h *= CINDER_BOOST
+    n = _normals(h)
     if micro is not None:
         m = _micro(micro, img.size, micro_strength)
         # Whiteout blend: add the slopes, multiply the up components.
