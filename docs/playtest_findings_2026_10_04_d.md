@@ -100,3 +100,23 @@ shaft"; tool "nothing but his hands" → "no tools at all, just bare hands"
 subject is the mechanic and whose object is a part, or under two clauses).
 Abe's corrected line could be an approved example for this beat, or a fixed
 fallback when the model's line fails the check.
+
+### 4. First dock in the new system: Kaelen already offers the next route
+
+**Abe (screenshot):** in the new system Kaelen's panel already shows "[ Ask
+about new routes — 53 SC ]" on the first dock: a new gate is ready to open
+straight away. He ended the playtest for the night here.
+
+**Cause:** `GateDiscoveryManager._is_kaelen_offer_ready` needs 3 completed
+contracts *in the campaign* (`QuestManager.get_completed_count()`, per
+campaign since c-fix 3), 15 minutes of campaign time, and 60 minutes since
+her last sale (`KAELEN_COOLDOWN_MINUTES`). After the first route the
+campaign count is already 3 or more, so it never holds her back again: once
+an hour has passed she offers the next route on arrival, with no work done
+here.
+
+**Proposed fix:** count contracts since her last route sale. Each sale
+resets the count, and she offers the next route after 3 more contracts.
+That makes every system ask for work before the next way out. Keep the
+first route's rule (3 contracts, no ship requirement) and the ship check
+for gates beyond Class I.
