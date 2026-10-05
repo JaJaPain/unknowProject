@@ -267,3 +267,8 @@ approach could get work lights or a beacon.
   in the game. The lower-poly-only version changed nothing (614 pieces), as
   expected: the cost was the piece count, not the triangles. The other two
   stay in `art_inbox/twin_wreck_field/`.
+- **Animation (2026-10-05):** v3's loop plays (checked: `--wreck-snapshot
+  --anim-capture`), but six merged groups bob 0.1-2.7 m over minutes, so it
+  reads as still. Abe: good enough for a short set piece. Optional polish
+  later: a shader that tumbles every debris piece around its own centre
+  (centres computed at load or baked by ChatGPT), still 6 draw calls.

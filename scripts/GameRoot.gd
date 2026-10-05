@@ -12608,6 +12608,10 @@ func _run_wreck_snapshot() -> void:
 		var b: AABB = mi.global_transform * mi.get_aabb()
 		box = b if first else box.merge(b)
 		first = false
+	# `--anim-capture`: show the drift, sped up, from close in (frames for a GIF).
+	if "--anim-capture" in OS.get_cmdline_user_args():
+		await _wreck_anim_capture(wreck, anims, spot, cam, out, tag)
+		return
 	print("[WreckSnapshot] %s imported: %d meshes, %d animation players, size %s m" % [tag, meshes, anims.size(), str(box.size.snapped(Vector3.ONE * 10))])
 	for v in views:
 		cam.global_position = spot + (v[1] as Vector3)
@@ -12618,6 +12622,36 @@ func _run_wreck_snapshot() -> void:
 		print("[WreckSnapshot] %s view: %.0f fps (without: %.0f), %d draw calls (without: %d)" % [v[0], fps, baseline[v[0]][0], calls, baseline[v[0]][1]])
 		await _hud_snapshot_save(out.path_join("%s_%s.png" % [tag, v[0]]))
 	print("[WreckSnapshot] DONE")
+	get_tree().quit(0)
+
+
+func _wreck_anim_capture(wreck: Node3D, anims: Array, spot: Vector3, cam: Camera3D, out: String, tag: String) -> void:
+	var ap: AnimationPlayer = anims[0] if not anims.is_empty() else null
+	if ap == null:
+		push_error("[WreckSnapshot] FAIL: no AnimationPlayer")
+		get_tree().quit(1)
+		return
+	ap.speed_scale = 16.0
+	print("[WreckSnapshot] %s: playing %s, animation '%s' (%.0f s), tracks %d" % [tag, ap.is_playing(), ap.current_animation,
+		ap.current_animation_length, ap.get_animation(ap.current_animation).get_track_count() if ap.current_animation != "" else 0])
+	# The moving groups: nodes the tracks point at.
+	var movers: Array = []
+	var anim := ap.get_animation(ap.current_animation)
+	var root := ap.get_node(ap.root_node)
+	for i in anim.get_track_count():
+		var n := root.get_node_or_null(NodePath(str(anim.track_get_path(i)).get_slice(":", 0)))
+		if n is Node3D and not movers.has(n):
+			movers.append(n)
+	var start: Array = movers.map(func(n): return [(n as Node3D).position, (n as Node3D).rotation_degrees])
+	cam.global_position = spot + Vector3(320, 120, 260)
+	cam.look_at(spot + Vector3(0, -40, 0), Vector3.UP)
+	for f in 40:
+		await get_tree().create_timer(0.25).timeout
+		await _hud_snapshot_save(out.path_join("%s_anim_%02d.png" % [tag, f]))
+	for i in movers.size():
+		var n := movers[i] as Node3D
+		print("[WreckSnapshot]   %s moved %.1f m, turned %.1f deg" % [n.name, n.position.distance_to(start[i][0]), (n.rotation_degrees - start[i][1]).length()])
+	print("[WreckSnapshot] anim capture DONE")
 	get_tree().quit(0)
 
 
