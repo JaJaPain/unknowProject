@@ -1,5 +1,5 @@
 {
-  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. Status: DRAFT, in review with Abe in short batches.",
+  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. Review (Abe): lighthouse and silent_fleet approved 2026-10-05; the rest DRAFT. Every Hidden Hand goal is hosted somewhere and none by more than 3 Lodestars.",
   "bridges": {
     "lighthouse": {
       "own_the_lanes": "The Lighthouse remembers routes nobody else charts. Whoever owns its map owns lanes no tariff office knows exist.",
@@ -21,9 +21,9 @@
     },
     "cartographer": {
       "rewrite_a_verdict": "The surveyor's chart proves where someone really was. The verdict that ruined their family stands on a lie the chart can undo.",
-      "bury_old_crime": "The erased system is the crime. Anyone who finds it finds out who erased it.",
       "break_a_rival": "The consortium mining in secret is their rival. Expose the mine and the rival is finished.",
-      "prove_them_wrong": "The registry swore that system never existed. The chart proves the whole institution lied."
+      "prove_them_wrong": "The registry swore that system never existed. The chart proves the whole institution lied.",
+      "buy_a_station": "The secret mine is worth a fortune while nobody knows it's there. Expose it, let the price crash, and buy it for nothing."
     },
     "garden": {
       "protect_a_secret_child": "Someone they love lives among the Garden's keepers, hidden from everyone who'd use them.",
