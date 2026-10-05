@@ -873,3 +873,7 @@ through the marked gate and flies you in):
       every planet and station and never close. Then roughly 10 minutes after
       each one ends. The idle station tour calls one in and leans the view
       toward it. The systems menu freezes it; a jump ends it.
+- [ ] **Pickups get intercepted:** after your first upgrade, about half the
+      pickup jobs get jumped on the way back: partway home N.O.V.A. warns of a
+      tail, ~25 s later a Reaver Hijacker comes at you with a hail. Dock first
+      and it loses you. Shoot it down and she has a word about it.

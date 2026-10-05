@@ -375,6 +375,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_comet_snapshot")
 	elif "--station-tour-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_tour_snapshot")
+	elif "--pickup-intercept-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_pickup_intercept_smoke_test")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_remark_smoke_test")
 	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
@@ -1448,6 +1450,11 @@ func _init_undercurrent_director() -> void:
 	mining_risk = load("res://scripts/world/MiningRisk.gd").new()
 	mining_risk.name = "MiningRisk"
 	add_child(mining_risk)
+	# Pickups get intercepted on the way back half the time (Abe, 2026-10-05).
+	if get_node_or_null("PickupIntercept") == null:
+		var intercept := load("res://scripts/world/PickupIntercept.gd").new() as Node
+		intercept.name = "PickupIntercept"
+		add_child(intercept)
 	# A distant comet now and then (Abe, 2026-10-05): one for the session.
 	if get_node_or_null("CometDirector") == null:
 		var comet := load("res://scripts/visuals/CometDirector.gd").new() as Node
@@ -12326,6 +12333,104 @@ func _run_station_tour_snapshot() -> void:
 		return
 	await _hud_snapshot_save(out.path_join("tour_back.png"))
 	print("[StationTourSnapshot] PASS")
+	get_tree().quit(0)
+
+
+## Pickup intercepts (Abe, 2026-10-05): with the roll forced to "yes", a
+## picked-up job's way back gets N.O.V.A.'s warning partway home (not at the
+## start), then a hijacker hunting the player; shooting it down gets her
+## after-line.
+##   -- --pickup-intercept-smoke-test --baseline-offline
+func _run_pickup_intercept_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	var fail := func(message: String) -> void:
+		push_error("[PickupInterceptSmokeTest] FAIL: " + message)
+		delete_savegame()
+		get_tree().quit(1)
+	_initialize_campaign_registry()
+	StoryManager.clear_story_state()
+	var prepared := _capture_prepared_runtime_state()
+	if not bool(prepared.get("ok", false)) or not _ensure_campaign_checkpoint_store(prepared["data"]):
+		fail.call("Could not create a campaign checkpoint store.")
+		return
+	_refresh_gate_states()
+	StoryManager.story_state["first_contract_handed_in"] = true
+	StoryManager.story_state["intro_agent_visited"] = true
+	StoryManager.story_state["intro_quest_delivered"] = true
+	GateDiscovery.mark_known("gate.start.to_test")
+	var gate := _find_gate(get_active_system_root(), "start_to_test")
+	_position_player_for_gate_test(gate)
+	if get_jump_block_reason(gate) != "" or not request_gate_jump(gate):
+		fail.call("Could not jump to the frontier system.")
+		return
+	await system_changed
+	for i in 60:
+		await get_tree().process_frame
+	CombatManager.set("state", 0)
+	var intercept = get_node_or_null("PickupIntercept")
+	if intercept == null:
+		fail.call("No PickupIntercept installed.")
+		return
+	var Builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var offer := {}
+	for minute in [0, 45, 90, 135, 180, 225]:
+		for o in Builder.build_offers(int(CampaignClock.total_minutes) + minute):
+			if str((o.get("quest_data", {}) as Dictionary).get("objective", {}).get("type", "")) == "PICKUP_SPECIAL":
+				offer = o
+				break
+		if not offer.is_empty():
+			break
+	if offer.is_empty():
+		fail.call("No pickup on the board.")
+		return
+	GlobalState.clear_cargo()
+	if not QuestManager.accept_quest(offer["quest_data"], {"text": "Accepted.", "consequence": {}}):
+		fail.call("The pickup was rejected: %s" % QuestManager.last_validation_error)
+		return
+	intercept.set("force_next", true)
+	intercept.set("ignore_first_upgrade_rule", true)
+	intercept.set("warning_s", 1.0)
+	if not QuestManager.mark_pickup_complete():
+		fail.call("The pickup couldn't be picked up.")
+		return
+	var ui = GlobalState.get_ui_manager()
+	var job: Dictionary = QuestManager.get_pickup_special_data()
+	var home = ui._quest_tracker_route_target(job)
+	if not home is Node3D:
+		fail.call("The way back leads nowhere.")
+		return
+	SpeechService.stop()
+	player.is_docked = false
+	var out := Vector3(1, 0, 0.3).normalized()
+	player.global_position = (home as Node3D).global_position + out * 6000.0
+	await get_tree().create_timer(2.0).timeout
+	if not bool(job.get("intercept_planned", false)):
+		fail.call("The forced roll didn't plan an intercept.")
+		return
+	if bool(job.get("intercept_done", false)):
+		fail.call("It was announced at the start of the way back.")
+		return
+	player.global_position = (home as Node3D).global_position + out * 3600.0
+	for i in 20:
+		await get_tree().create_timer(0.5).timeout
+		if intercept.get("last_hijacker") != null:
+			break
+	var ship = intercept.get("last_hijacker")
+	if ship == null or not is_instance_valid(ship) or not bool(ship.get_meta("hunts_player", false)):
+		fail.call("No hijacker came after the warning.")
+		return
+	print("[PickupInterceptSmokeTest] hijacker %s at %.0f m" % [ship.display_name, (ship as Node3D).global_position.distance_to(player.global_position)])
+	ship.call("die")
+	await get_tree().create_timer(0.5).timeout
+	if int(intercept.get("hijackers_downed")) != 1:
+		fail.call("Shooting the hijacker down wasn't noticed.")
+		return
+	print("[PickupInterceptSmokeTest] PASS: warned partway home, a hijacker came, went down and N.O.V.A. noticed")
+	delete_savegame()
 	get_tree().quit(0)
 
 
