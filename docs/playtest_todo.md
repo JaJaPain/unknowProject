@@ -838,3 +838,6 @@ through the marked gate and flies you in):
 - [ ] **Freighters sit at the pier** a few seconds after docking, nose out,
       then are gone; leaving ones lift off their pier straight up first.
 - [ ] **Outposts too:** freighters use the outpost's other berths, not yours.
+- [ ] **Station hulls up close:** docking at a big station or outpost, the
+      hull panels show their seams and the metal catches the sun with a little
+      worn texture, with no sparkle or crawling as you move.

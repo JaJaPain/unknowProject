@@ -371,6 +371,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_berth_probe")
 	elif "--traffic-berth-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_berth_snapshot")
+	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_station_normal_snapshot")
 	elif "--station-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
@@ -12146,6 +12148,100 @@ func _run_cruise_smoke_test() -> void:
 		return
 	print("[CruiseSmokeTest] PASS")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## Every station and outpost skin, side-lit by the sun, close enough to see
+## the hull panels: as exported (<skin>_off.png), then with the baked normal
+## maps (<skin>_on.png). Windowed. Pictures in --out. Run it with
+## --no-station-normals so the system's own stations leave the skins as exported.
+##   -- --station-normal-snapshot --no-station-normals --baseline-offline --out=<dir> [--skin=<name>]
+func _run_station_normal_snapshot() -> void:
+	var out := "user://station_normal_snapshots"
+	var only := ""
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+		elif arg.begins_with("--skin="):
+			only = arg.substr(7)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var sun := get_tree().root.find_children("*", "DirectionalLight3D", true, false)
+	var to_sun := (sun[0] as DirectionalLight3D).global_transform.basis.z.normalized() if not sun.is_empty() else Vector3.RIGHT
+	var Normals = load("res://scripts/visuals/StationNormals.gd")
+	var Skins = load("res://scripts/domain/StationSkins.gd")
+	var paths: Array = Skins.MAIN + Skins.OUTPOST
+	var cam := Camera3D.new()
+	cam.far = 50000.0
+	get_active_system_root().add_child(cam)
+	var spot := player.global_position + Vector3(0.0, 20000.0, 0.0)
+	for p in paths:
+		var skin := str(p).get_file().get_basename()
+		if not only.is_empty() and skin != only:
+			continue
+		var model: Node3D = (load(p) as PackedScene).instantiate()
+		get_active_system_root().add_child(model)
+		model.global_position = spot
+		var box := AABB()
+		var first := true
+		for m in model.find_children("*", "MeshInstance3D", true, false):
+			var mi := m as MeshInstance3D
+			var b: AABB = mi.global_transform * mi.get_aabb()
+			box = b if first else box.merge(b)
+			first = false
+		var centre := box.get_center()
+		var size := box.size.length()
+		# Side-lit: the camera looks across the sunlight, a little above.
+		var across := to_sun.cross(Vector3.UP).normalized()
+		var wide := [centre + (across * 0.8 + to_sun * 0.35 + Vector3.UP * 0.25).normalized() * size * 0.42, centre]
+		# Close: the biggest hull face the sun grazes, from a few panels away.
+		var close := wide
+		var best := 0.0
+		for m in model.find_children("*", "MeshInstance3D", true, false):
+			var mi := m as MeshInstance3D
+			if mi.mesh == null:
+				continue
+			var faces := mi.mesh.get_faces()
+			for f in range(0, faces.size(), 3):
+				var a: Vector3 = mi.global_transform * faces[f]
+				var b: Vector3 = mi.global_transform * faces[f + 1]
+				var c: Vector3 = mi.global_transform * faces[f + 2]
+				var cr := (b - a).cross(c - a)
+				var area := cr.length() * 0.5
+				if area <= best:
+					continue
+				var n := cr.normalized()
+				var lit := n.dot(to_sun)
+				if lit < 0.15 or lit > 0.55:
+					continue
+				best = area
+				var mid := (a + b + c) / 3.0
+				var side := n.cross(to_sun).normalized()
+				close = [mid + (n * 0.8 + side * 0.6).normalized() * clampf(sqrt(area) * 1.2, size * 0.01, size * 0.06), mid]
+		for shot in [["", wide], ["_close", close]]:
+			cam.global_position = shot[1][0]
+			cam.look_at(shot[1][1], Vector3.UP)
+			cam.make_current()
+			for i in 20:
+				await get_tree().process_frame
+			await _hud_snapshot_save(out.path_join("%s%s_off.png" % [skin, shot[0]]))
+		var changed: int = Normals.apply(model, true)
+		for shot in [["", wide], ["_close", close]]:
+			cam.global_position = shot[1][0]
+			cam.look_at(shot[1][1], Vector3.UP)
+			for i in 20:
+				await get_tree().process_frame
+			await _hud_snapshot_save(out.path_join("%s%s_on.png" % [skin, shot[0]]))
+		print("[StationNormalShot] %s: %d materials with baked normals" % [skin, changed])
+		model.queue_free()
 	get_tree().quit(0)
 
 

@@ -63,6 +63,7 @@ func _ready():
 		if model_scene:
 			var model_instance = model_scene.instantiate()
 			model_instance.scale = Vector3.ONE * model_instance_scale
+			load("res://scripts/visuals/StationNormals.gd").apply(model_instance)
 			add_child(model_instance)
 			
 			# Auto-center: compute the AABB of the loaded model and shift
