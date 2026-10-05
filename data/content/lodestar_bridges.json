@@ -1,5 +1,5 @@
 {
-  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. Review (Abe): lighthouse, silent_fleet, humming_gate and cartographer approved 2026-10-05; garden and quiet_war DRAFT. Every Hidden Hand goal is hosted somewhere and none by more than 3 Lodestars.",
+  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. All bridges approved by Abe 2026-10-05. Every Hidden Hand goal is hosted somewhere and none by more than 3 Lodestars.",
   "bridges": {
     "lighthouse": {
       "own_the_lanes": "The Lighthouse remembers routes nobody else charts. Whoever owns its map owns lanes no tariff office knows exist.",
@@ -29,7 +29,7 @@
       "protect_a_secret_child": "Someone they love lives among the Garden's keepers, hidden from everyone who'd use them.",
       "keep_the_lights_on": "A world where food grows by itself. A starving colony would trade anything for it, and take it if trading fails.",
       "break_a_rival": "The mining fleet two jumps behind belongs to their rival. Get there first and the rival's claim dies.",
-      "prove_them_wrong": "Everyone said nothing could grow out there. The Garden proves them wrong, and ruins the people who said it."
+      "prove_them_wrong": "The survey office declared everything out here barren, so their people were sent to a contested world instead, and the war over it cost them everything. The Garden proves it never had to happen."
     },
     "quiet_war": {
       "bury_old_crime": "The war was erased from history. What happened on that battlefield is the crime they're burying.",
