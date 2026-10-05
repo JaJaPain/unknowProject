@@ -14,8 +14,9 @@ const BEAM_WIDTH_PER_LENGTH := 0.004
 ## looping at the ship's end for as long as the beam holds it. The player's
 ## own beam at the mining tractor's level; traffic quieter and only up close.
 const HUM_STREAM := preload("res://sound/Mining/TractorBeam.mp3")
-const HUM_PLAYER_DB := -4.0
-const HUM_TRAFFIC_DB := -12.0
+## 10% louder (Abe, playtest 2026-10-05 finding 4): linear_to_db(1.1) = +0.83.
+const HUM_PLAYER_DB := -3.2
+const HUM_TRAFFIC_DB := -11.2
 var hum: AudioStreamPlayer3D
 
 

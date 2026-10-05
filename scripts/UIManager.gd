@@ -4550,6 +4550,10 @@ func _dock_clearance_voice_for_station(station: Node3D) -> String:
 
 
 func _run_docking_procedure(serial: int, station: Node3D, ship: Node3D) -> void:
+	# Whenever the beam has the ship there's no overview at all: there and
+	# unclickable looked broken (Abe, playtest 2026-10-05 finding 6).
+	_set_overview_dock_locked(true)
+	_undock_in_progress = false
 	_set_docking_procedure_stage("TRACTOR LOCK ACQUIRED", "Drawing ship into the berth.", 0.0)
 	var berth := station.call("get_docking_position", ship.global_position) as Vector3 \
 		if station.has_method("get_docking_position") else station.global_position
@@ -6167,7 +6171,37 @@ func _on_lounge_hunt_ask(npc_name: String) -> void:
 		_show_ore_trade_popup()
 		return
 	if QuestManager.mark_pickup_complete():
+		# Re-rendering the submenu clears the dock message, which wiped the
+		# holder's "here it is" the moment they said it. Put it back, with what
+		# just happened under it (Abe, playtest 2026-10-05 finding 8).
 		_render_dock_submenu()
+		var person := preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name)
+		show_dock_message("%s
+
+%s" % [str(reply["line"]), _pickup_loaded_text()], person, color, GlobalState.get_minor_npc_portrait(npc_name))
+		_announce_pickup_loaded()
+
+
+## "Audit-Proof Relay is in your hold. Deliver to Kaelen at Greywake."
+func _pickup_loaded_text() -> String:
+	var special: Dictionary = GlobalState.cargo_special
+	var item := str(special.get("name", "The item"))
+	var q: Dictionary = QuestManager.get_pickup_special_data()
+	var agent := preload("res://scripts/domain/QuestNextStep.gd").person_name(str(q.get("agent_name", "")))
+	var where := str(special.get("destination", "")).strip_edges()
+	if agent.is_empty() and where.is_empty():
+		return "%s is in your hold." % item
+	if agent.is_empty():
+		return "%s is in your hold. Deliver it to %s." % [item, where]
+	if where.is_empty():
+		return "%s is in your hold. Deliver it to %s." % [item, agent]
+	return "%s is in your hold. Deliver it to %s at %s." % [item, agent, where]
+
+
+## The pickup in system chat too, so it's on record after the dock message
+## fades.
+func _announce_pickup_loaded() -> void:
+	GlobalState.emit_chatter("SYSTEM", _pickup_loaded_text(), Color(1.0, 0.82, 0.35))
 
 
 func _pickup_hunt_key(q: Dictionary) -> String:
@@ -8956,8 +8990,7 @@ func _on_inventory_pressed() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	if inventory_panel and inventory_panel.visible:
 		inventory_panel.visible = false
-		var player_is_docked := GlobalState.player != null and bool(GlobalState.player.get("is_docked"))
-		if inventory_return_to_dock or player_is_docked:
+		if _dock_visit_open():
 			dock_panel.visible = true
 			_render_dock_submenu()
 		inventory_return_to_dock = false
@@ -8980,8 +9013,7 @@ func _on_inventory_back_pressed() -> void:
 
 func _close_inventory_panel() -> void:
 	inventory_panel.visible = false
-	var player_is_docked := GlobalState.player != null and bool(GlobalState.player.get("is_docked"))
-	if inventory_return_to_dock or player_is_docked:
+	if _dock_visit_open():
 		dock_panel.visible = true
 		_render_dock_submenu()
 	inventory_return_to_dock = false
@@ -10621,18 +10653,28 @@ func _get_contact_mood(npc_name: String) -> String:
 
 
 func undock_player(skip_repair_warning: bool = false) -> void:
+	# One undock at a time: a second press while the beam is already carrying
+	# the ship out ran it again with no station, and the checkpoint failed
+	# (Abe, playtest 2026-10-05 finding 9).
+	if _undock_in_progress:
+		return
+	# N.O.V.A.'s repair prompt can stop the undock, so the music and the camera
+	# only change once it goes ahead: before, the first press looked like
+	# leaving while the ship was still docked.
+	if not skip_repair_warning and _show_nova_repair_undock_prompt():
+		return
+	_undock_in_progress = true
 	AudioManager.set_music_state("explore")
 	if GlobalState.player and is_instance_valid(GlobalState.player) and GlobalState.player.has_method("end_docking_camera"):
 		GlobalState.player.end_docking_camera()
-	if not skip_repair_warning and _show_nova_repair_undock_prompt():
-		return
 	_dismiss_station_welcome()
 	_hide_nova_repair_decision()
 	AudioManager.exit_lounge_music()
 	_contacts_with_rumor.clear()
 	if is_instance_valid(Nova):
 		Nova.on_undock()  # may welcome the captain back if they were parked a while
-	var station_before_undock := current_station
+	var station_before_undock: Node3D = _station_player_is_at()
+	inventory_return_to_dock = false
 	var game_root := get_tree().current_scene
 	if game_root and game_root.has_method("request_safe_checkpoint"):
 		if not game_root.request_safe_checkpoint(
@@ -10660,9 +10702,7 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 	_lounge_prefetch_station_id = ""
 	# Reset submenu so the next dock opens on services, not maintenance
 	current_submenu = DockSubmenu.SERVICES
-	# Restore full overview when heading back into space
-	_set_overview_dock_locked(false)
-	set_overview_collapsed(false)
+	# The overview comes back when the beam lets go, not here (finding 6).
 	# NOTE: refreshing the quest tracker HERE does not work, and an earlier fix
 	# that did so was a no-op. `is_docked` is cleared by GameRoot, not by this
 	# function, so at this point the player still counts as docked and
@@ -10717,6 +10757,7 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 		else:
 			GlobalState.player.global_position += Vector3(0, 0, -15.0)
 			GlobalState.player.is_docked = false
+			_on_undock_released()
 		GlobalState.player.nav_mode = "MANUAL"
 		# A mission's targets may have spawned while the player was docked. Rebuild
 		# now so their red hunt rows and N.O.V.A.'s prepared reaction arrive together.
@@ -10756,6 +10797,7 @@ func _push_out_of_berth(station: Node3D, ship: Node3D, on_clear: Callable = Call
 		if is_instance_valid(ship):
 			ship.set("is_docked", false)
 			show_hud_info(DOCK_RELEASE_TEXT, Color(0.25, 0.82, 1.0))
+		_on_undock_released()
 		if on_clear.is_valid():
 			on_clear.call())
 
@@ -12699,9 +12741,8 @@ func _nova_alert_portrait() -> Texture2D:
 	return _nova_portrait_texture(Nova.expression_for_event("ambush"))
 
 
-# Shows N.O.V.A.'s portrait above the chat window while she talks. Sized to the
-# chat width (scales when the player resizes chat) and placed once — it lives
-# above the chat, it does not follow it. Click-through.
+# Shows N.O.V.A.'s portrait over the chat window while she talks, following
+# it (see _place_nova_talk_portrait). Click-through.
 func _show_nova_talk_portrait(expression: String) -> void:
 	if not chat_window_panel or not is_instance_valid(chat_window_panel):
 		return
@@ -12715,12 +12756,10 @@ func _show_nova_talk_portrait(expression: String) -> void:
 		_nova_talk_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		add_child(_nova_talk_portrait)
 	_nova_talk_portrait.texture = tex
-	var side: float = clampf(chat_window_panel.size.x * 0.5, 90.0, 360.0)
-	_nova_talk_portrait.size = Vector2(side, side)
-	# Sit OVER the chat window (top-aligned to it), not above it — so she stays
-	# on-screen no matter where the player parks the chat (e.g. at the top edge).
-	_nova_talk_portrait.global_position = chat_window_panel.global_position
+	if not chat_window_panel.item_rect_changed.is_connected(_place_nova_talk_portrait):
+		chat_window_panel.item_rect_changed.connect(_place_nova_talk_portrait)
 	_nova_talk_portrait.visible = true
+	_place_nova_talk_portrait()
 	_kill_talk_portrait_fade()
 	_nova_talk_portrait.modulate.a = 0.0
 	var tw := _nova_talk_portrait.create_tween()
@@ -12728,6 +12767,19 @@ func _show_nova_talk_portrait(expression: String) -> void:
 	_nova_talk_portrait.set_meta("fade_tween", tw)
 	_talk_portrait_serial += 1
 	_watch_talk_portrait(_talk_portrait_serial, Time.get_ticks_msec())
+
+
+## She sits OVER the chat window (top-aligned to it), so she stays on-screen
+## wherever the chat is, and she follows it: the left column moves the chat
+## when the overview hides or comes back (docking, undocking), which left her
+## over empty space or the overview (Abe, playtest 2026-10-05 finding 3).
+## Sized to the chat as drawn (the column scales panels to fit).
+func _place_nova_talk_portrait() -> void:
+	if _nova_talk_portrait == null or not is_instance_valid(_nova_talk_portrait) 			or not _nova_talk_portrait.visible or not is_instance_valid(chat_window_panel):
+		return
+	var side: float = clampf(chat_window_panel.size.x * chat_window_panel.scale.x * 0.5, 90.0, 360.0)
+	_nova_talk_portrait.size = Vector2(side, side)
+	_nova_talk_portrait.global_position = chat_window_panel.global_position
 
 
 ## Fading only on playback_finished left her portrait up, silent, whenever a
@@ -13378,6 +13430,50 @@ func set_overview_collapsed(collapsed: bool):
 func _beam_has_ship() -> bool:
 	return GlobalState.player != null and is_instance_valid(GlobalState.player) \
 		and bool(GlobalState.player.get("is_docked"))
+
+
+## Undocking from press to release (the beam push); a second press does nothing.
+var _undock_in_progress := false
+
+
+## The dock menu's visit is open (from the dock menu opening until undock).
+## Not `is_docked`: that stays true while the beam pushes the ship out, and a
+## panel closing then brought the whole dock screen back mid-flight (finding 9).
+func _dock_visit_open() -> bool:
+	return current_station != null and is_instance_valid(current_station)
+
+
+## The station the player is docked at: the dock visit's, or, if that's been
+## lost, the nearest station whose approach sphere holds the ship, so the
+## undock checkpoint still has somewhere to save.
+func _station_player_is_at() -> Node3D:
+	if _dock_visit_open():
+		return current_station
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p):
+		return null
+	var best: Node3D = null
+	var best_d := INF
+	for s in get_tree().get_nodes_in_group("station"):
+		if not s is Node3D or not is_instance_valid(s):
+			continue
+		var d: float = (s as Node3D).global_position.distance_to(p.global_position)
+		var reach: float = float(s.call("approach_sphere_radius")) * 1.5 if s.has_method("approach_sphere_radius") else 3000.0
+		if d <= reach and d < best_d:
+			best = s
+			best_d = d
+	return best
+
+
+## The beam has let go: control, the overview and its clicks come back
+## together, the overview fading in with "Controls are yours." (finding 6).
+func _on_undock_released() -> void:
+	_undock_in_progress = false
+	_set_overview_dock_locked(false)
+	set_overview_collapsed(false)
+	if overview_panel and is_instance_valid(overview_panel):
+		overview_panel.modulate.a = 0.0
+		overview_panel.create_tween().set_ignore_time_scale(true).tween_property(overview_panel, "modulate:a", 1.0, 0.4)
 
 
 func _set_overview_dock_locked(locked: bool) -> void:

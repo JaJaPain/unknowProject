@@ -26,6 +26,29 @@ const LABELLED_SHEETS := ["novelty", "tactical", "cargo"]
 ## Sheets whose cells carry their own frame (trimmed off).
 const FRAMED_SHEETS := ["props_supplies", "props_story"]
 const GRID_COLUMNS := 7
+## A pickup mission's item rides in the cargo hold (GlobalState.cargo_special),
+## not the item inventory, so it never showed in the grid and looked missing
+## (Abe, playtest 2026-10-05 finding 8). It gets a card of its own, first on
+## the All tab, with an icon from the story-props sheet matched on its name.
+const MISSION_CARGO_ID := "__mission_cargo__"
+const MISSION_COLOR := Color(1.0, 0.82, 0.35)
+const STORY_PROPS_SHEET := "res://assets/PropIconsStory.png"
+## Name word -> story-props cell [column, row]; first match wins.
+const MISSION_ICONS := [
+	["crate", Vector2i(4, 1)], ["weapon", Vector2i(4, 1)],
+	["wine", Vector2i(1, 2)], ["manifest", Vector2i(1, 0)],
+	["pouch", Vector2i(4, 2)], ["package", Vector2i(4, 2)], ["parcel", Vector2i(4, 2)],
+	["sample", Vector2i(2, 4)], ["quarantine", Vector2i(2, 4)], ["flask", Vector2i(0, 4)],
+	["core", Vector2i(2, 1)], ["ai ", Vector2i(2, 1)],
+	["relay", Vector2i(2, 0)], ["chip", Vector2i(2, 0)], ["transponder", Vector2i(2, 0)], ["drive", Vector2i(2, 0)],
+	["log", Vector2i(1, 1)], ["slate", Vector2i(4, 4)], ["data", Vector2i(4, 4)], ["chart", Vector2i(2, 3)],
+	["tube", Vector2i(0, 0)], ["evidence", Vector2i(0, 0)], ["art", Vector2i(2, 2)],
+	["seal", Vector2i(4, 0)], ["ballot", Vector2i(3, 0)], ["idol", Vector2i(0, 1)],
+	["reactor", Vector2i(3, 1)], ["seed", Vector2i(1, 4)], ["bell", Vector2i(3, 3)],
+	["music", Vector2i(3, 2)], ["warrant", Vector2i(0, 3)], ["collar", Vector2i(1, 3)],
+]
+## No word matched: a sealed cargo crate (Abe).
+const MISSION_ICON_DEFAULT := Vector2i(4, 1)
 
 const BG := Color(0.035, 0.045, 0.06, 0.97)
 const PANEL_BG := Color(0.06, 0.075, 0.1, 0.95)
@@ -234,10 +257,18 @@ func _fill_grid(gs: Node) -> void:
 			continue
 		ids.append(str(id))
 	ids.sort_custom(func(a, b): return _sort_key(reg.get_item(a), a) < _sort_key(reg.get_item(b), b))
+	var mission_cargo: bool = _tab == "all" and gs.cargo_type == gs.CargoType.SPECIAL
+	if mission_cargo:
+		ids.push_front(MISSION_CARGO_ID)
 	if not ids.has(_selected):
 		_selected = str(ids[0]) if not ids.is_empty() else ""
 	for id in ids:
-		_grid.add_child(_slot(id, int(items[id]), reg.get_item(id)))
+		if id == MISSION_CARGO_ID:
+			_grid.add_child(_mission_slot(gs))
+		else:
+			_grid.add_child(_slot(id, int(items[id]), reg.get_item(id)))
+	if mission_cargo:
+		ids.erase(MISSION_CARGO_ID)  # not an inventory slot: the hold carries it
 	# The All tab shows every slot: empty ones up to the limit, then locked
 	# ones (more slots come with ship upgrades). Other tabs pad out the row.
 	if _tab == "all":
@@ -321,6 +352,90 @@ func _slot(item_id: String, quantity: int, def) -> Control:
 	return slot
 
 
+func _mission_slot(gs: Node) -> Control:
+	var selected := _selected == MISSION_CARGO_ID
+	var slot := Button.new()
+	slot.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
+	slot.focus_mode = Control.FOCUS_NONE
+	slot.tooltip_text = "%s (mission cargo)" % str(gs.cargo_special.get("name", "Mission cargo"))
+	var base := Color(0.1, 0.085, 0.05)
+	slot.add_theme_stylebox_override("normal", _box(base, MISSION_COLOR.darkened(0.25) if not selected else MISSION_COLOR, 2 if not selected else 3, 8))
+	slot.add_theme_stylebox_override("hover", _box(base.lightened(0.06), MISSION_COLOR, 2, 8))
+	slot.add_theme_stylebox_override("pressed", _box(base.lightened(0.06), MISSION_COLOR, 3, 8))
+	slot.pressed.connect(func() -> void:
+		_selected = MISSION_CARGO_ID
+		refresh())
+	var icon := TextureRect.new()
+	icon.texture = _mission_icon(str(gs.cargo_special.get("name", "")))
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	icon.offset_left = 8
+	icon.offset_top = 8
+	icon.offset_right = -8
+	icon.offset_bottom = -8
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(icon)
+	var tag := _label("MISSION", 10, MISSION_COLOR)
+	tag.position = Vector2(8, 4)
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(tag)
+	return slot
+
+
+func _mission_icon(item_name: String) -> Texture2D:
+	var lower := item_name.to_lower() + " "
+	var cell := MISSION_ICON_DEFAULT
+	for pair in MISSION_ICONS:
+		if lower.contains(str(pair[0])):
+			cell = pair[1]
+			break
+	var key := "mission|%d|%d" % [cell.x, cell.y]
+	if _icon_cache.has(key):
+		return _icon_cache[key]
+	var sheet := load(STORY_PROPS_SHEET) as Texture2D
+	var tex: Texture2D = null
+	if sheet != null:
+		var w := sheet.get_width() / 5.0
+		var h := sheet.get_height() / 5.0
+		var atlas := AtlasTexture.new()
+		atlas.atlas = sheet
+		atlas.region = Rect2(cell.x * w, cell.y * h, w, h).grow(-w * 0.07)
+		tex = atlas
+	_icon_cache[key] = tex
+	return tex
+
+
+func _fill_mission_detail(gs: Node) -> void:
+	var special: Dictionary = gs.cargo_special
+	var art := PanelContainer.new()
+	art.custom_minimum_size = Vector2(0, 230)
+	art.add_theme_stylebox_override("panel", _box(Color(0.06, 0.05, 0.03), MISSION_COLOR.darkened(0.3), 1, 10, 10))
+	var big := TextureRect.new()
+	big.texture = _mission_icon(str(special.get("name", "")))
+	big.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	big.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	big.custom_minimum_size = Vector2(0, 206)
+	art.add_child(big)
+	_detail.add_child(art)
+	var name_label := _label(str(special.get("name", "Mission cargo")), 20, TEXT)
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail.add_child(name_label)
+	var chips := HBoxContainer.new()
+	chips.add_theme_constant_override("separation", 6)
+	chips.add_child(_chip("Mission cargo", MISSION_COLOR))
+	chips.add_child(_chip("In the hold", DIM))
+	_detail.add_child(chips)
+	var desc_text := str(special.get("description", "")).strip_edges()
+	if not desc_text.is_empty():
+		var desc := _label(desc_text, 13, Color(0.74, 0.8, 0.87))
+		desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_detail.add_child(desc)
+	var note := _label("Can't be sold or dropped. Hand it over to finish the job.", 12, DIM)
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_detail.add_child(note)
+
+
 func _empty_socket(locked: bool) -> Control:
 	var socket := Panel.new()
 	socket.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
@@ -350,7 +465,10 @@ func _empty_socket(locked: bool) -> Control:
 func _fill_detail(gs: Node) -> void:
 	for c in _detail.get_children():
 		c.queue_free()
-	if _selected.is_empty():
+	if _selected == MISSION_CARGO_ID and gs.cargo_type == gs.CargoType.SPECIAL:
+		_fill_mission_detail(gs)
+		return
+	if _selected.is_empty() or _selected == MISSION_CARGO_ID:
 		var none := _label("No items here yet.\nBuy them at a station store, or find them in wrecks.", 14, DIM)
 		none.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_detail.add_child(none)

@@ -1072,7 +1072,9 @@ func mark_pickup_complete() -> bool:
 	if pickup.get("picked_up", false):
 		return false
 	var part_name: String = pickup.get("part_name", "Unknown Part")
-	var target_npc: String = pickup.get("target_npc", "an unknown contact")
+	# The stored name carries the holder's faction in front ("Dratordraru
+	# Salvage Compact Vale Venn"); the hold shows the person (finding 8).
+	var target_npc: String = preload("res://scripts/domain/QuestNextStep.gd").person_name(str(pickup.get("target_npc", "an unknown contact")))
 	var target_outpost: String = pickup.get("target_outpost_display", pickup.get("target_outpost", "an outpost"))
 	var destination: String = preload("res://scripts/domain/QuestNextStep.gd").destination_name(pickup)
 	var description: String = "Picked up from %s at %s. Deliver to %s at %s." % [
@@ -1252,6 +1254,10 @@ func complete_quest():
 		if hints.has("block"):
 			print("[QuestManager] %s: cannot complete, %s" % [
 				active_quest["objective_type"], hints["block"]])
+			# Say so, instead of the hand-in silently doing nothing (playtest
+			# 2026-10-05 finding 10): a pickup job pays only with its item aboard.
+			if str(active_quest["objective_type"]) == "PICKUP_SPECIAL":
+				GlobalState.emit_chatter("SYSTEM", "Can't hand it in: the %s isn't in your hold." % str(active_quest.get("part_name", "item")), Color(1.0, 0.55, 0.25))
 			return
 		completion_hints = hints
 
@@ -1298,6 +1304,10 @@ func complete_quest():
 	var detail = "Completed. Payout: " + str(final_payout) + " SC. Choice selected: '" + str(completed_quest.get("choice_text_selected", "")) + "'."
 	_log_quest_to_file(str(completed_quest["title"]), str(completed_quest["objective_type"]), detail)
 	print("[QuestManager] Quest completed successfully: ", completed_quest["title"])
+	# The item visibly leaves the hold (finding 8): it came in with a line.
+	if str(completed_quest.get("objective_type", "")) == "PICKUP_SPECIAL":
+		var handed_to := preload("res://scripts/domain/QuestNextStep.gd").person_name(str(completed_quest.get("agent_name", "")))
+		GlobalState.emit_chatter("SYSTEM", "%s handed over%s." % [str(completed_quest.get("part_name", "The item")), "" if handed_to.is_empty() else " to " + handed_to], Color(1.0, 0.82, 0.35))
 	if not bool(settled.get("durable", true)):
 		push_warning("[QuestManager] Completion consequences are live but their save is pending a safe checkpoint.")
 	_increment_mission_history_revision("completed", completed_quest)

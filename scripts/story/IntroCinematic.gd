@@ -28,6 +28,10 @@ const SPIN_TURNS := 9.0          # full-axis tumble rotations (scaled to TUMBLE_
 const WATCHDOG_S := 60.0  # fallback only; must exceed full runtime (~40s)
 
 const GLITCH_SHADER := preload("res://shaders/intro_glitch.gdshader")
+## A slight dark vignette over the whole opening (Abe, playtest 2026-10-05
+## finding 1). The damage vignette's soft screen edge, tinted black.
+const VIGNETTE_SHADER := preload("res://shaders/damage_vignette.gdshader")
+const VIGNETTE_INTENSITY := 0.75
 const JUMP_TUNNEL_SCENE := preload("res://scenes/jump_tunnel.tscn")
 const NOVA_PORTRAIT_TEXTURE := preload("res://assets/Portraits/ShipAI.png")
 const SFX_GATE_1 := "res://sound/Opening/GateSound1.wav"
@@ -163,6 +167,16 @@ func _build_visuals() -> void:
 	_glitch_mat.set_shader_parameter("white_out", 0.0)
 	_glitch_rect.material = _glitch_mat
 	_layer.add_child(_glitch_rect)
+
+	var vignette := ColorRect.new()
+	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var vignette_mat := ShaderMaterial.new()
+	vignette_mat.shader = VIGNETTE_SHADER
+	vignette_mat.set_shader_parameter("tint", Color(0, 0, 0, 1))
+	vignette_mat.set_shader_parameter("intensity", VIGNETTE_INTENSITY)
+	vignette.material = vignette_mat
+	_layer.add_child(vignette)
 
 	_nova_panel = PanelContainer.new()
 	_nova_panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -502,6 +516,7 @@ var _out_of_gate := false
 func _process(delta: float) -> void:
 	if _finished:
 		return
+	_keep_cursor_hidden()
 	var real_delta := delta / maxf(Engine.time_scale, 0.01)
 	_elapsed += real_delta
 	if _gate != null and is_instance_valid(_gate):
@@ -543,6 +558,15 @@ func _process(delta: float) -> void:
 		_tunnel_mat.set_shader_parameter("ring_speed", 10.0 + randf() * 14.0)
 
 
+## No mouse cursor until control comes back (Abe, playtest 2026-10-05 finding
+## 2), except over the systems menu, which Esc still opens mid-intro. Checked
+## every frame, so however the menu opens or closes, the cursor follows.
+func _keep_cursor_hidden() -> void:
+	var wanted := Input.MOUSE_MODE_VISIBLE if GlobalState.paused else Input.MOUSE_MODE_HIDDEN
+	if Input.mouse_mode != wanted:
+		Input.mouse_mode = wanted
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _finished:
 		return
@@ -581,6 +605,8 @@ func _finish() -> void:
 		return
 	_finished = true
 	_apply_consequences()
+	# The cursor comes back with control.
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	var p = GlobalState.player
 	if p != null and is_instance_valid(p):
 		p.set_physics_process(true)

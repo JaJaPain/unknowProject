@@ -1059,7 +1059,10 @@ func _request_safe_checkpoint_impl(
 	_sync_checkpoint_chronicle_context()
 	var safe_location := _safe_location_for(source_reason, safe_entity)
 	if safe_location.is_empty():
-		push_warning("[GameRoot] Safe checkpoint location is unavailable.")
+		var why := "no entity"
+		if safe_entity != null:
+			why = "freed entity" if not is_instance_valid(safe_entity) else "%s has no world id" % safe_entity.name
+		push_warning("[GameRoot] Safe checkpoint location is unavailable (%s: %s)." % [source_reason, why])
 		_notify_checkpoint_failure()
 		return false
 	var prior_campaign_time := CampaignClock.capture_state()
@@ -8498,6 +8501,19 @@ func _run_dock_smoke_test() -> void:
 				if GlobalState.active_target == other:
 					_fail_dock_smoke_test("An overview row was clickable mid-push at '%s'." % station.name)
 					return
+			# Playtest 2026-10-05 finding 6: no overview at all while the beam
+			# has the ship.
+			if ui.overview_panel.visible:
+				_fail_dock_smoke_test("The overview showed mid-push at '%s'." % station.name)
+				return
+			# Finding 9: opening and closing the inventory mid-push doesn't bring
+			# the dock screen back, and a second undock press does nothing.
+			ui.call("_on_inventory_pressed")
+			ui.call("_on_inventory_pressed")
+			if ui.dock_panel.visible:
+				_fail_dock_smoke_test("Closing the inventory mid-push brought the dock screen back at '%s'." % station.name)
+				return
+			ui.undock_player()
 			# Finding 6: the beam hums like the mining tractor.
 			var humming := false
 			for node in get_tree().current_scene.get_children():
@@ -8517,6 +8533,9 @@ func _run_dock_smoke_test() -> void:
 				or player.nav_mode != "MANUAL" \
 				or ui.dock_panel.visible:
 			_fail_dock_smoke_test("Undocking did not restore flight state for '%s'." % station.name)
+			return
+		if not ui.overview_panel.visible:
+			_fail_dock_smoke_test("The overview didn't come back at the release from '%s'." % station.name)
 			return
 		var undock_checkpoint := (
 			campaign_checkpoint_store.runtime_state_from_active()

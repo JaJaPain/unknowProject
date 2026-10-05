@@ -75,33 +75,33 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## D. Jumping and other systems
 
-- [ ] **Arrival card.** Jump through a gate: "ARRIVING", the system name
+- [x] **Arrival card.** Jump through a gate: "ARRIVING", the system name
       large, "Controlled by …", fading out after a few seconds.
-- [ ] **Star map unlocked.** After the first jump the STAR MAP button is
+- [x] **Star map unlocked.** After the first jump the STAR MAP button is
       lit and M opens it.
-- [ ] **Real names.** In the new system, ships in the overview and the
+- [x] **Real names.** In the new system, ships in the overview and the
       target panel have faction names (e.g. "Solilvekan Interceptor 824"),
       never "GEN_…". Wrecks too. N.O.V.A. and combat chatter use the names.
-- [ ] **REP row.** The REP row in the top-left panel lists the local
+- [x] **REP row.** The REP row in the top-left panel lists the local
       faction(s) in that system.
-- [ ] **System names.** No "Uncharted System 28"-style names; new systems
+- [x] **System names.** No "Uncharted System 28"-style names; new systems
       get real-sounding names.
-- [ ] **Turn-ins.** Finish an ore delivery (or any job) in the new system:
+- [x] **Turn-ins.** Finish an ore delivery (or any job) in the new system:
       the card says "Dock at …", never "Destination Not In System".
-- [ ] **No absent targets.** Kill contracts only name factions that fly
+- [x] **No absent targets.** Kill contracts only name factions that fly
       in that system.
 
 ## E. The world around you
 
-- [ ] **Station traffic.** Park near the main station for up to 2
+- [x] **Station traffic.** Park near the main station for up to 2
       minutes: a freighter flies in from the gate and fades out at the
       station, or one leaves the station and vanishes at the gate with a
       flash.
-- [ ] **Station lights.** Look at a station: red and green lights on the
+- [x] **Station lights.** Look at a station: red and green lights on the
       sides, white strobes flashing twice, an amber glow at the berth.
       Note: the start station's lights never showed clearly in Claude's
       screenshots; say if you can't see them.
-- [ ] **Radio voices.** The system radio / local channel in two different
+- [x] **Radio voices.** The system radio / local channel in two different
       systems uses two different voices, and none sounds like N.O.V.A.,
       Kaelen or Jenna.
 
