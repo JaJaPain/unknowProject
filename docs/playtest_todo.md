@@ -865,3 +865,6 @@ through the marked gate and flies you in):
       camera drifts slowly round the station, swinging over to watch a
       freighter come down onto its pier. Touch anything: the dock screen and
       your view come straight back (that touch doesn't press a button).
+- [ ] **N.O.V.A. gets bored mining:** mine steadily for a couple of minutes:
+      she makes a dry remark about the rocks. Not more than once every ~7
+      minutes, and a different one each time.
