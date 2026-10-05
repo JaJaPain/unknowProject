@@ -860,3 +860,8 @@ through the marked gate and flies you in):
 - [ ] **N.O.V.A. on your jobs:** about half the board jobs you take, she says
       something about it (the pay, the item, where it's going) partway there,
       never at the station. Lines vary.
+- [ ] **Idle station tour:** docked on the station menu, leave the mouse and
+      keyboard alone for 1m30s: the screen fades, the HUD is gone, and the
+      camera drifts slowly round the station, swinging over to watch a
+      freighter come down onto its pier. Touch anything: the dock screen and
+      your view come straight back (that touch doesn't press a button).

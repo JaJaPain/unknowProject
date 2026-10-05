@@ -341,6 +341,8 @@ const InventoryScreenScript := preload("res://scripts/ui/InventoryScreen.gd")
 const MissionRemarksScript := preload("res://scripts/story/MissionRemarks.gd")
 const MissionRemarkRunnerScript := preload("res://scripts/story/MissionRemarkRunner.gd")
 var _mission_remark_runner: Node = null
+## The idle station tour while docked (finding 5).
+var station_tour: Node = null
 var inventory_return_to_dock: bool = false
 
 var quest_tracker_panel: PanelContainer
@@ -557,6 +559,11 @@ func _ready():
 	# Configure layout
 	anchors_preset = Control.PRESET_FULL_RECT
 	
+	station_tour = preload("res://scripts/ui/StationTour.gd").new()
+	station_tour.name = "StationTour"
+	add_child(station_tour)
+	station_tour.call("setup", self)
+
 	# Connect GlobalState signals
 	GlobalState.credits_changed.connect(_on_credits_changed)
 	GlobalState.cargo_changed.connect(_on_cargo_changed)

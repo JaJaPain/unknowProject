@@ -371,6 +371,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_berth_probe")
 	elif "--traffic-berth-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_traffic_berth_snapshot")
+	elif "--station-tour-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_station_tour_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_remark_smoke_test")
 	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
@@ -12169,6 +12171,90 @@ func _run_cruise_smoke_test() -> void:
 		return
 	print("[CruiseSmokeTest] PASS")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## The idle station tour (playtest 2026-10-05 finding 5), windowed: docked at
+## the main station, the tour starts after the (shortened) idle wait, flies its
+## lap and watches a freighter come in on its beam; a key press brings the
+## dock screen and the camera back. Pictures in --out. Exits 1 on a failure.
+##   -- --station-tour-snapshot --baseline-offline --out=<dir>
+func _run_station_tour_snapshot() -> void:
+	var out := "user://station_tour_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var fail := func(message: String) -> void:
+		push_error("[StationTourSnapshot] FAIL: " + message)
+		get_tree().quit(1)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	var station := GlobalState.get_primary_station() as Node3D
+	player.global_position = station.call("berth_position")
+	player.velocity = Vector3.ZERO
+	player.is_docked = true
+	ui.call("toggle_dock_menu", station)
+	for i in 1500:
+		if ui.dock_panel.visible:
+			break
+		await get_tree().process_frame
+	if not ui.dock_panel.visible:
+		fail.call("The dock menu didn't open.")
+		return
+	SpeechService.stop()
+	ui.clear_dock_message()
+	var tour = ui.station_tour
+	tour.set("idle_s", 2.0)
+	var cam_before: Camera3D = get_viewport().get_camera_3d()
+	for i in 60:
+		await get_tree().create_timer(0.25).timeout
+		SpeechService.stop()
+		if bool(tour.call("is_touring")):
+			break
+	if not bool(tour.call("is_touring")):
+		fail.call("The tour didn't start after the idle wait.")
+		return
+	await get_tree().create_timer(3.0).timeout
+	if ui.visible:
+		fail.call("The HUD/dock screen is still up during the tour.")
+		return
+	await _hud_snapshot_save(out.path_join("tour_lap_1.png"))
+	await get_tree().create_timer(8.0).timeout
+	await _hud_snapshot_save(out.path_join("tour_lap_2.png"))
+	# A freighter comes in: the tour goes to watch it.
+	var traffic = find_child("TrafficDirector", true, false)
+	if traffic != null:
+		traffic.call("clear")
+		traffic.set("forced_arriving", 1)
+		traffic.set("forced_outpost", 0)
+		traffic.call("spawn_now")
+		var entry: Dictionary = (traffic.get("_ships") as Array)[-1]
+		entry["ship"].global_position = entry["dest"] + (entry["dest"] - station.global_position).normalized() * 150.0
+		for i in 80:
+			await get_tree().create_timer(0.25).timeout
+			if tour.get("_watch") != null:
+				break
+		await get_tree().create_timer(4.0).timeout
+		await _hud_snapshot_save(out.path_join("tour_freighter.png"))
+		if tour.get("_watch") == null:
+			push_warning("[StationTourSnapshot] the tour never went to watch the freighter")
+	# Any key: everything back as it was.
+	var key := InputEventKey.new()
+	key.keycode = KEY_SHIFT
+	key.pressed = true
+	Input.parse_input_event(key)
+	await get_tree().create_timer(1.5).timeout
+	if bool(tour.call("is_touring")) or not ui.visible or not ui.dock_panel.visible or get_viewport().get_camera_3d() != cam_before:
+		fail.call("A key didn't bring the dock screen and camera back (touring %s, ui %s, dock %s)." % [tour.call("is_touring"), ui.visible, ui.dock_panel.visible])
+		return
+	await _hud_snapshot_save(out.path_join("tour_back.png"))
+	print("[StationTourSnapshot] PASS")
 	get_tree().quit(0)
 
 
