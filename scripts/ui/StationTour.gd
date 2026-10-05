@@ -18,8 +18,8 @@ const MUSIC_DIP_DB := -5.0
 const WATCH_AFTER_S := 4.0
 ## Kaelen, voice only, while you're away (Abe, 2026-10-05): five minutes
 ## into the tour, then about every five minutes, over comms (no portrait, no
-## text). Every line is heard before any repeats. Lines approved by Abe
-## 2026-10-05 except the last (she thinks board work is beneath you).
+## text). Every line is heard before any repeats. All lines approved by Abe
+## 2026-10-05 (she thinks board work is beneath you).
 const KAELEN_FIRST_S := 300.0
 const KAELEN_EVERY_S := 300.0
 const KAELEN_JITTER_S := 60.0
