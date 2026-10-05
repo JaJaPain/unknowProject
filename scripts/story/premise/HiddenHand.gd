@@ -12,6 +12,7 @@ extends RefCounted
 ## the arcs. Pure static functions; every one returns a new state.
 
 const CastRulesType := preload("res://scripts/story/premise/RecurringCast.gd")
+const BridgesType := preload("res://scripts/story/premise/LodestarBridges.gd")
 const STAGES := ["hidden", "locked", "revealed", "closed"]
 const MOTIVES: Array[String] = ["revenge", "fear", "faith", "control", "greed", "protecting_someone", "ideology", "survival", "legacy", "guilt"]
 const METHODS: Array[String] = ["debt_leverage", "sabotage", "forged_records", "cornering_a_market", "blackmail", "impersonation",
@@ -47,18 +48,24 @@ static func is_active(state: Dictionary) -> bool:
 ## and again after a main story closes). `method_coverage` (method -> number of
 ## deck threads that can carry it; see method_coverage()) keeps the draw away
 ## from methods the deck can barely leave evidence for.
-static func begin_season(state: Dictionary, seed_value: int, now_minute: int, method_coverage: Dictionary = {}) -> Dictionary:
+## `lodestar_id`: this season's Lodestar. The goal is drawn from the ones it
+## hosts (LodestarBridges), so the mystery and the destination are one story
+## (campaign spine plan, section 3); "" or an unknown Lodestar: any goal.
+static func begin_season(state: Dictionary, seed_value: int, now_minute: int, method_coverage: Dictionary = {}, lodestar_id: String = "") -> Dictionary:
 	var next := state.duplicate(true)
 	var previous: Dictionary = next.get("main_story", {})
 	var season := int(previous.get("season", 0)) + 1
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|hidden_hand|%d" % [seed_value, season])
 	var goals: Array = GOALS.duplicate()
+	var hosted: Array = BridgesType.goals_for(lodestar_id)
+	if not hosted.is_empty():
+		goals = goals.filter(func(g): return hosted.has(str(g["id"])))
 	if not method_coverage.is_empty():
 		# Only goals with at least one well-evidenced method.
 		goals = goals.filter(func(g): return not _usable_methods(g["methods"], method_coverage).is_empty())
 		if goals.is_empty():
-			goals = GOALS.duplicate()
+			goals = GOALS.duplicate().filter(func(g): return hosted.is_empty() or hosted.has(str(g["id"])))
 	var goal: Dictionary = goals[rng.randi_range(0, goals.size() - 1)]
 	var methods: Array = goal["methods"]
 	if not method_coverage.is_empty() and not _usable_methods(methods, method_coverage).is_empty():
@@ -68,6 +75,7 @@ static func begin_season(state: Dictionary, seed_value: int, now_minute: int, me
 		"motive": MOTIVES[rng.randi_range(0, MOTIVES.size() - 1)],
 		"method": str(methods[rng.randi_range(0, methods.size() - 1)]),
 		"goal_id": str(goal["id"]), "goal_text": str(goal["text"]),
+		"lodestar_id": lodestar_id, "bridge": BridgesType.bridge(lodestar_id, str(goal["id"])),
 		"threads": [], "next_thread": 1, "lock": {}, "started_minute": now_minute,
 	}
 	return next

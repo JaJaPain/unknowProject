@@ -65,6 +65,9 @@ var enabled := true
 var library = null
 var history_path := HistoryType.DEFAULT_PATH
 var campaign_seed := 0
+## This season's Lodestar id ("" if none yet). GameRoot sets it from Lodestar.state
+## so the Hidden Hand's goal is one the Lodestar hosts (campaign spine plan, 3).
+var lodestar_id := ""
 var state: Dictionary = ArcsType.empty_state()
 var _history: Dictionary = HistoryType.empty_history()
 var _history_loaded := false
@@ -142,7 +145,7 @@ func ensure_arcs(world: Dictionary, now_minute: int) -> Array[String]:
 	if not HandType.is_active(state):
 		if _method_coverage.is_empty():
 			_method_coverage = HandType.method_coverage(library)
-		state = HandType.begin_season(state, campaign_seed, now_minute, _method_coverage)
+		state = HandType.begin_season(state, campaign_seed, now_minute, _method_coverage, lodestar_id)
 	var system_id := str(world.get("system_id", ""))
 	_count_visit(system_id, now_minute)
 	var profile := profile_for(world)

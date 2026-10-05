@@ -13,6 +13,7 @@ func _initialize() -> void:
 	_test_seen_and_pinned()
 	_test_whole_deck_traces()
 	_test_candidates_draft_and_lock()
+	_test_lodestar_hosts_the_goal()
 	if _failures.is_empty():
 		print("[PASS] Hidden hand tests")
 		quit(0)
@@ -140,3 +141,24 @@ func _test_candidates_draft_and_lock() -> void:
 	_check(story["stage"] == "locked" and story["lock"]["entity_id"] == "npc.culprit", "the lock should name the culprit")
 	_check(str(story["lock"]["truth"]).contains("Oren Vask"), "the truth should name them")
 	_check(not Hand.ready_to_lock(locked["state"]), "a locked story can't lock again")
+
+
+## The Hidden Hand wants what's at the Lodestar: its goal is one the Lodestar
+## hosts, and the season carries the bridge line (campaign spine plan, 3).
+func _test_lodestar_hosts_the_goal() -> void:
+	var Bridges = load("res://scripts/story/premise/LodestarBridges.gd")
+	for lodestar in ["lighthouse", "silent_fleet", "humming_gate", "cartographer", "garden", "quiet_war"]:
+		var hosted: Array = Bridges.goals_for(lodestar)
+		_check(hosted.size() >= 3, "%s should host several goals" % lodestar)
+		for seed_value in 25:
+			var s := Hand.begin_season(Arcs.empty_state(), seed_value, 0, {}, lodestar)
+			var story := Hand.main_story(s)
+			if not hosted.has(str(story["goal_id"])):
+				_failures.append("%s drew a goal it doesn't host: %s" % [lodestar, story["goal_id"]])
+				return
+			if str(story.get("bridge", "")).is_empty():
+				_failures.append("%s + %s has no bridge line" % [lodestar, story["goal_id"]])
+				return
+	var free := Hand.begin_season(Arcs.empty_state(), 3, 0, {}, "")
+	_check(not str(Hand.main_story(free)["goal_id"]).is_empty(), "no Lodestar still draws a goal")
+

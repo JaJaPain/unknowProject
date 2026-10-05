@@ -1593,6 +1593,11 @@ func _on_premise_season_closed(_season: int, _resolution_id: String) -> void:
 func _premise_sync_seed() -> void:
 	if is_instance_valid(premise_director) and int(premise_director.campaign_seed) == 0:
 		premise_director.campaign_seed = int(GlobalState.campaign_seed)
+	# The season's Lodestar, so the Hidden Hand wants what's there (bridges).
+	if is_instance_valid(premise_director) and int(GlobalState.campaign_seed) != 0:
+		var Lodestar = load("res://scripts/domain/Lodestar.gd")
+		var card: Dictionary = Lodestar.card_of(Lodestar.state(StoryManager.story_state, int(GlobalState.campaign_seed)))
+		premise_director.lodestar_id = str(card.get("id", ""))
 
 
 ## Ships flown under a generated faction here wear its look (Faction DNA):

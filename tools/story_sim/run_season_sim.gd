@@ -69,6 +69,7 @@ func _campaign(index: int) -> Dictionary:
 	d.history_path = HISTORY_PATH
 	d.use_showrunner = false
 	d.reset_for_new_campaign(seed_value)
+	d.lodestar_id = str(LodestarType.draw(seed_value).get("id", ""))
 	var out := {"index": index, "seed": seed_value, "lodestar": str(LodestarType.draw(seed_value).get("id", "?")),
 		"first_thread_h": -1.0, "lock_h": -1.0, "close_h": -1.0, "systems": 0, "story_jobs": 0, "other": 0,
 		"cards_10h": [], "at_10h": {}, "locked_systems": -1}
