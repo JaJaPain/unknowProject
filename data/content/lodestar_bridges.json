@@ -1,0 +1,41 @@
+{
+  "_comment": "Campaign spine plan section 3 (Abe, 2026-10-05): the Hidden Hand wants what's at the Lodestar. Each Lodestar hosts the Hidden Hand goals listed here, with an authored bridge: why that person needs that place. At season start the goal is drawn from the Lodestar's hosted goals. Bridges are director text that may be shown at the reveal and the climax; they never name the culprit (the code adds that) and stay clear of the fixed-cast canon. Status: DRAFT, in review with Abe in short batches.",
+  "bridges": {
+    "lighthouse": {
+      "own_the_lanes": "The Lighthouse remembers routes nobody else charts. Whoever owns its map owns lanes no tariff office knows exist.",
+      "escape_a_debt": "A route off every chart is a way out from under every creditor. The Lighthouse's map is the door.",
+      "silence_a_witness": "The witness took the old routes to disappear, and only the Lighthouse knows where they lead.",
+      "bury_old_crime": "The beacon logs every ship that ever asked it for a course. One of those logs puts them where they swore they never were."
+    },
+    "silent_fleet": {
+      "protect_a_secret_child": "Someone they love went dark with the fleet. Keeping the fleet hidden is keeping them safe.",
+      "bury_old_crime": "The fleet ran from a war, and from the crime that started it. If the fleet is found, so is what they saw.",
+      "start_a_war": "The fleet's settlement is the one place both sides would kill to claim. Point them at it and the war starts itself.",
+      "silence_a_witness": "Somewhere in that fleet is the last witness. Reach the fleet first, and the testimony never comes."
+    },
+    "humming_gate": {
+      "own_the_lanes": "A working gate is a lane nobody else can use. Whoever holds the ring holds the region's trade.",
+      "take_the_chair": "Whoever can repair the network gets to run it. The ring is the chair.",
+      "start_a_war": "Two factions already circle the ring. One push and they fight over it, and whoever pushed sells to both.",
+      "keep_the_lights_on": "Their colony's gate is failing. The ring is the only thing left that can fix it."
+    },
+    "cartographer": {
+      "rewrite_a_verdict": "The surveyor's chart proves where someone really was. The verdict that ruined their family stands on a lie the chart can undo.",
+      "bury_old_crime": "The erased system is the crime. Anyone who finds it finds out who erased it.",
+      "break_a_rival": "The consortium mining in secret is their rival. Expose the mine and the rival is finished.",
+      "prove_them_wrong": "The registry swore that system never existed. The chart proves the whole institution lied."
+    },
+    "garden": {
+      "protect_a_secret_child": "Someone they love lives among the Garden's keepers, hidden from everyone who'd use them.",
+      "keep_the_lights_on": "A world where food grows by itself. A starving colony would trade anything for it, and take it if trading fails.",
+      "break_a_rival": "The mining fleet two jumps behind belongs to their rival. Get there first and the rival's claim dies.",
+      "prove_them_wrong": "Everyone said nothing could grow out there. The Garden proves them wrong, and ruins the people who said it."
+    },
+    "quiet_war": {
+      "bury_old_crime": "The war was erased from history. What happened on that battlefield is the crime they're burying.",
+      "start_a_war": "The cache of old technology is reason enough for a new war. Let both sides learn where it is.",
+      "silence_a_witness": "The last survivor of that battle knows who fired first.",
+      "rewrite_a_verdict": "The battlefield shows who really started it. The verdict blamed the wrong side, and their family paid for it."
+    }
+  }
+}
