@@ -68,8 +68,13 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 			var faction_key := str(target.get("faction_key", target.get("spawn_key", "")))
 			if faction_key.is_empty():
 				faction_key = _first_hostile(world)
+			var count := int(SCALE_KILLS.get(scale, 3))
+			# The main story's showdown: the longer the chase, the more they've
+			# hired (campaign spine plan: the race; capped).
+			if bool(mission.get("scales_with_lead", false)):
+				count = mini(6, count + int(world.get("hand_lead", 0)) / 2)
 			objective = {"type": LibraryType.VERB_TO_OBJECTIVE[verb], "target_faction": faction_key,
-				"count_required": int(SCALE_KILLS.get(scale, 3)), "reward_credits": reward}
+				"count_required": count, "reward_credits": reward}
 			if verb == "recover_combat_drop":
 				objective["drop_chance"] = 0.4
 				objective["item_name"] = item

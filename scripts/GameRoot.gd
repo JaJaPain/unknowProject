@@ -1484,6 +1484,7 @@ func _init_premise_director() -> void:
 	premise_director.decision_ready.connect(_on_premise_decision_ready)
 	premise_director.main_story_locked.connect(_on_premise_main_story_locked)
 	premise_director.season_closed.connect(_on_premise_season_closed)
+	premise_director.race_step.connect(_on_premise_race_step)
 	# Breathe in, breathe out: model work happens while docked or jumping.
 	generation_window = GenerationWindowType.new()
 	generation_window.name = "GenerationWindow"
@@ -1583,6 +1584,38 @@ func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> voi
 	# The pattern has a name. Voiced presentation comes with the voice pipeline;
 	# for now the comms feed carries it.
 	GlobalState.emit_chatter("CONTRACTS", "Everything keeps pointing back to %s. Someone on the board wants to talk about it." % display_name, Color(1.0, 0.8, 0.45))
+	# The race begins (campaign spine plan): N.O.V.A. says where they're going.
+	var lodestar := str(premise_director.lodestar_title()) if is_instance_valid(premise_director) else ""
+	if not lodestar.is_empty() and is_instance_valid(Nova):
+		var line := str(RACE_START_LINES.pick_random()).replace("{name}", display_name).replace("{lodestar}", lodestar)
+		get_tree().create_timer(8.0).timeout.connect(func() -> void: Nova.speak(line, Nova.Severity.NAV, "serious"))
+
+
+## The race (Abe, 2026-10-05): N.O.V.A. on the culprit heading for the
+## Lodestar. Draft lines for Abe's review. {name}: the culprit; {lodestar}: the
+## Lodestar's title.
+const RACE_START_LINES := [
+	"Captain, it's {name}. And whatever they're after, it's at {lodestar}. They've got a head start.",
+	"{name}. Of course it is. They're heading for {lodestar}, and they're not waiting for us.",
+]
+const RACE_STEP_LINES := [
+	"Traffic logs here show {name} came through ahead of us. Still ahead. Still heading for {lodestar}.",
+	"Every system we spend, {name} spends getting closer to {lodestar}. Just saying.",
+	"Someone here sold {name} fuel and asked no questions. We're on the right trail.",
+	"If {name} reaches {lodestar} with time to dig in, this gets harder.",
+]
+var _race_line_bag: Array = []
+
+
+## Every second system after the reveal, a reminder they're still ahead.
+func _on_premise_race_step(steps: int, culprit: String, lodestar: String) -> void:
+	if steps % 2 != 0 or culprit.is_empty() or lodestar.is_empty() or not is_instance_valid(Nova):
+		return
+	if _race_line_bag.is_empty():
+		_race_line_bag = RACE_STEP_LINES.duplicate()
+		_race_line_bag.shuffle()
+	var line := str(_race_line_bag.pop_back()).replace("{name}", culprit).replace("{lodestar}", lodestar)
+	get_tree().create_timer(10.0).timeout.connect(func() -> void: Nova.speak(line, Nova.Severity.NAV, "serious"))
 
 
 func _on_premise_season_closed(_season: int, _resolution_id: String) -> void:

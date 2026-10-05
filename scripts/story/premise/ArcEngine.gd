@@ -152,7 +152,10 @@ static func apply_mission_result(state: Dictionary, library, arc_id: String, bea
 		return state
 	var tag := outcome_tag_for(missions[mission_index], terminal_state, branch_id)
 	if tag.is_empty():
-		return resolve(state, library, arc_id, str(card.get("default_resolution", "")), now_minute)
+		# No outcome fits (e.g. a fight walked away from): the world settles it.
+		var settled := state.duplicate(true)
+		_ledger(settled, "%s | b%d m%d %s/%s: no outcome, default" % [arc_id, beat_n, mission_index, terminal_state, branch_id])
+		return resolve(settled, library, arc_id, str(card.get("default_resolution", "")), now_minute)
 	var next := state.duplicate(true)
 	if tag == "?finding":
 		next["arcs"][arc_id]["stage"] = "finding"

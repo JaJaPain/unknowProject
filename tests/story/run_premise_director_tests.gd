@@ -166,6 +166,11 @@ func _test_main_story_season() -> void:
 	# 8-12, campaign spine plan); allow 25.
 	for system_n in range(1, 26):
 		var w := _world(system_n)
+		# The showdown happens at the Lodestar (the race): arrive there two
+		# systems after the reveal.
+		var ms: Dictionary = d.state.get("main_story", {})
+		if ms.has("_locked_at_system") and system_n >= int(ms["_locked_at_system"]) + 2:
+			w["at_lodestar"] = true
 		d.ensure_arcs(w, now)
 		for _round in 40:
 			now += 60

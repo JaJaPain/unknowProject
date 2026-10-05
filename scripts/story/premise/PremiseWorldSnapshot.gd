@@ -37,6 +37,14 @@ static func capture(now_minute: int) -> Dictionary:
 	}
 	if gs == null:
 		return world
+	# In this season's Lodestar system (its last bearing pinned it here): the
+	# main story's showdown happens here (campaign spine plan: the race).
+	var tree := Engine.get_main_loop() as SceneTree
+	var sm := tree.root.get_node_or_null("/root/StoryManager") if tree != null else null
+	if sm != null and int(gs.get("campaign_seed")) != 0:
+		var Lodestar = load("res://scripts/domain/Lodestar.gd")
+		var ls: Dictionary = Lodestar.state(sm.story_state, int(gs.get("campaign_seed")))
+		world["at_lodestar"] = not str(ls.get("pinned_system", "")).is_empty() and str(ls.get("pinned_system", "")) == system_id
 	# Stations, gates and hazards for placing investigation scan sites.
 	world["investigation_world"] = InvestigationPlacementType.capture(gs)
 

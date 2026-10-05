@@ -322,7 +322,10 @@ static func lock(state: Dictionary, choice: Dictionary, now_minute: int) -> Dict
 	for tid in (choice.get("links", {}) as Dictionary).keys():
 		if str(tid) in seen_ids:
 			links[str(tid)] = str(choice["links"][tid])
-	if links.size() < LOCK_MIN_TRACES:
+	# Forced at the Lodestar (the Captain got there before the evidence did):
+	# the climax can't be skipped, so whatever was seen has to do.
+	var min_links := 1 if bool(story.get("force_lock", false)) else LOCK_MIN_TRACES
+	if links.size() < min_links:
 		return {"ok": false, "reason": "explains_too_little", "state": state}
 	var next := state.duplicate(true)
 	next["main_story"]["stage"] = "locked"

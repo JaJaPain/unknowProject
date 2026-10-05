@@ -48,6 +48,11 @@ static func forge(state: Dictionary, world: Dictionary) -> Dictionary:
 	var outposts: Array = world.get("outposts", [])
 	var dock: Dictionary = outposts[0] if not outposts.is_empty() else main
 	var hostile: Array = world.get("hostile_factions", [])
+	# The race (Abe, 2026-10-05): they're heading for the Lodestar, for the
+	# reason the season's bridge gives; the showdown happens there.
+	var lodestar_title := str(world.get("lodestar_title", "")).strip_edges()
+	var bridge := str(story.get("bridge", "")).strip_edges()
+	var heading := ("{role:culprit} is heading for %s. %s" % [lodestar_title, bridge]).strip_edges() if not lodestar_title.is_empty() else ""
 
 	var card := {
 		"id": card_id_for(season), "schema_version": 1, "title": "The Hidden Hand (season %d)" % season,
@@ -63,21 +68,29 @@ static func forge(state: Dictionary, world: Dictionary) -> Dictionary:
 		],
 		"requirements": {"min_factions": 0},
 		"accepts_seeds": [],
-		"public_situation": "Whispers keep connecting %s to everything that has gone wrong lately." % name,
+		"public_situation": ("Whispers keep connecting %s to everything that has gone wrong lately." % name) + ((" " + heading) if not heading.is_empty() else ""),
 		"private_truth": truth,
 		"beats": [
 			{"n": 1, "function": "reversal",
 			 "public_change": str(beats_text[0]) if beats_text.size() > 0 else "A last piece of proof turns up.",
 			 "missions": [{"verb": "pickup_special", "requester": "witness", "target": "evidence_dock",
-				"reason": "%s has pieced together part of what {role:culprit} has been doing and needs the last proof collected before it disappears." % witness_name,
+				"reason": ("%s has pieced together part of what {role:culprit} has been doing and needs the last proof collected before it disappears." % witness_name) + ((" " + heading) if not heading.is_empty() else ""),
 				"private_fact": "The witness is afraid of being the next thing {role:culprit} buries.",
 				"outcome_tags": ["proof_collected", "abandoned"],
 				"routes": {"proof_collected": "next", "abandoned": "resolution:hand_slips_away"}}],
 			 "player_choice": null},
-			{"n": 2, "function": "climax",
+			{"n": 2, "function": "chase",
+			 "public_change": "{role:culprit} has hired guns to cover the trail.",
+			 "missions": [{"verb": "kill_ships", "requester": "witness", "target": "culprit_ship",
+				"reason": "{role:culprit} left hired guns behind to slow anyone following. Clear them and the trail stays warm.",
+				"private_fact": "The hired guns were paid in advance, and not by much.",
+				"outcome_tags": ["trail_kept", "abandoned"],
+				"routes": {"trail_kept": "next", "abandoned": "next"}}],
+			 "player_choice": null},
+			{"n": 3, "function": "climax", "at_lodestar": true,
 			 "public_change": str(beats_text[1]) if beats_text.size() > 1 else "{role:culprit} tries to leave the system.",
-			 "missions": [{"verb": "comms_reversal", "requester": "witness", "target": "culprit_ship",
-				"reason": "{role:culprit} is running. %s pays for someone to stop the ship before the proof means nothing." % witness_name,
+			 "missions": [{"verb": "comms_reversal", "requester": "witness", "target": "culprit_ship", "scales_with_lead": true,
+				"reason": ("{role:culprit} made it to %s. %s pays for someone to stop them before the proof means nothing." % [lodestar_title, witness_name]) if not lodestar_title.is_empty() else ("{role:culprit} is running. %s pays for someone to stop the ship before the proof means nothing." % witness_name),
 				"private_fact": "Mid-fight, {role:culprit} hails the pilot from their own ship and offers a great deal of money to let them go.",
 				"outcome_tags": ["culprit_stopped", "took_the_offer"],
 				"routes": {"culprit_stopped": "next", "took_the_offer": "resolution:bought_off"}}],

@@ -79,14 +79,23 @@ func _campaign(index: int) -> Dictionary:
 	var closed := []
 	d.season_closed.connect(func(season, res): closed.append(res))
 	var limit := hours * 60.0
+	# Reaching the Lodestar: the economy sim puts Class VI at ~17 h for an
+	# efficient captain; a player, somewhere in 17-22 h.
+	var lodestar_at := rng.randf_range(17.0, 22.0) * 60.0
+	var at_lodestar_since := -1.0
 	while real_min < limit and closed.is_empty():
 		system_n += 1
 		out["systems"] = system_n
 		var w := _world(seed_value, system_n, rng)
+		if real_min >= lodestar_at:
+			w["at_lodestar"] = true
+			if at_lodestar_since < 0.0:
+				at_lodestar_since = real_min
+				out["lodestar_h"] = real_min / 60.0
 		real_min += 3.0
 		game_min += 45
 		d.ensure_arcs(w, game_min)
-		var stay := rng.randf_range(30.0, 60.0)
+		var stay := rng.randf_range(30.0, 60.0) if not bool(w.get("at_lodestar", false)) else 600.0
 		var left := stay
 		while left > 0.0 and real_min < limit and closed.is_empty():
 			for decision in d.pending_decisions():
@@ -103,7 +112,10 @@ func _campaign(index: int) -> Dictionary:
 				if not main_arc.is_empty() and str(postings[0].get("arc_id", "")) == main_arc and rng.randf() < 0.7:
 					pick = postings[0]
 				var quest: Dictionary = pick["quest_data"].duplicate(true)
-				quest["objective"]["branch_id"] = ["finish_kill", "accept_bribe"][rng.randi() % 2]
+				# A bribe only exists on combat jobs (a twisted kill job's
+				# counter-offer); elsewhere it read as abandoning the job.
+				var combat := str(quest["objective"].get("type", "")) in ["KILL_SHIPS", "TARGET_WITH_COMMS_REVERSAL", "RECOVER_COMBAT_DROP"]
+				quest["objective"]["branch_id"] = "accept_bribe" if combat and rng.randf() < 0.25 else "finish_kill"
 				var terminal := "completed" if rng.randf() < 0.9 else "abandoned"
 				spent = rng.randf_range(8.0, 12.0)
 				game_min += 15
@@ -125,6 +137,9 @@ func _campaign(index: int) -> Dictionary:
 		out["cards_10h"] = _cards(d)
 	if out["lock_h"] >= 0.0:
 		out["locked_systems"] = int(out.get("_lock_sys", -1))
+	out["closed_by"] = str(closed[0]) if not closed.is_empty() else ""
+	var conf := str(HandType.main_story(d.state).get("confrontation_arc_id", ""))
+	out["conf_ledger"] = (d.state.get("ledger", []) as Array).filter(func(l): return not conf.is_empty() and str(l).begins_with(conf)).slice(-8)
 	out["final"] = _snapshot(d)
 	out["blocked"] = _lock_blockers(d)
 	d.free()
@@ -196,11 +211,15 @@ func _report(results: Array) -> void:
 	for r in results:
 		var f: Dictionary = r["final"]
 		var t: Dictionary = r["at_10h"]
-		print("  #%d lodestar=%s | first thread %s | lock %s | close %s | systems %d | story jobs %d, other %d" % [
-			r["index"], r["lodestar"], _h(r["first_thread_h"]), _h(r["lock_h"]), _h(r["close_h"]), r["systems"], r["story_jobs"], r["other"]])
+		print("  #%d lodestar=%s | first thread %s | lock %s | reached Lodestar %s | close %s | systems %d | story jobs %d, other %d" % [
+			r["index"], r["lodestar"], _h(r["first_thread_h"]), _h(r["lock_h"]), _h(r.get("lodestar_h", -1.0)), _h(r["close_h"]), r["systems"], r["story_jobs"], r["other"]])
 		print("      hand: %s / %s / %s -> %s (stage %s) | at 10 h: %d arcs (%d resolved), %d threads seen (%d real traces), %d cards" % [
 			f["motive"], f["method"], f["goal"], f["hand"] if not str(f["hand"]).is_empty() else "(not locked)", f["stage"],
 			t["arcs"], t["resolved"], t["threads_seen"], t["traces_seen"], (r["cards_10h"] as Array).size()])
+		if not str(r.get("closed_by", "")).is_empty():
+			print("      season closed by: %s" % r["closed_by"])
+			for l in r.get("conf_ledger", []):
+				print("        %s" % str(l).left(150))
 		if not str(r.get("blocked", "")).is_empty():
 			print("      not locked because: %s" % r["blocked"])
 	# Uniqueness at 10 hours: how much two campaigns' stories overlap.

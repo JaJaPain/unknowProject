@@ -55,11 +55,17 @@ func _test_forged_card_is_valid_and_playable() -> void:
 			var built := Adapter.build_active_state(offer, offer["choices"][0], "mission.runtime.forge_test", "system.v", 0)
 			_check(built["validation"].is_valid(), "forged beat %d offer invalid: %s" % [beat["n"], built["validation"].summary()])
 			_check(not str(offer["dialogue"]).contains("{role:"), "forged dialogue has unfilled placeholders")
-	# Every route resolves: expose, quiet deal, bought off, slips away.
+	var showdown: Dictionary = (card["beats"] as Array).filter(func(b): return str(b.get("function", "")) == "climax")[0]
+	_check(bool(showdown.get("at_lodestar", false)), "the showdown waits for the Lodestar")
+	_check(bool((showdown["missions"] as Array)[0].get("scales_with_lead", false)), "the showdown's fight grows with the culprit's lead")
+	_check((card["beats"] as Array).size() == 3, "proof, chase, showdown")
+	# Every route resolves: expose, quiet deal, bought off, slips away. The
+	# race: proof, then the chase (lost or not, the trail goes on), then the
+	# showdown at the Lodestar.
 	var outcomes := {
-		"exposed": [["completed", ""], ["completed", "finish_kill"], ["choice", "expose"]],
-		"quiet_deal": [["completed", ""], ["completed", "finish_kill"], ["choice", "quiet_deal"]],
-		"bought_off": [["completed", ""], ["completed", "accept_bribe"]],
+		"exposed": [["completed", ""], ["completed", "finish_kill"], ["completed", "finish_kill"], ["choice", "expose"]],
+		"quiet_deal": [["completed", ""], ["abandoned", ""], ["completed", "finish_kill"], ["choice", "quiet_deal"]],
+		"bought_off": [["completed", ""], ["completed", "finish_kill"], ["completed", "accept_bribe"]],
 		"hand_slips_away": [["abandoned", ""]],
 	}
 	for expected in outcomes.keys():

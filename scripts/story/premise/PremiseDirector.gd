@@ -18,6 +18,9 @@ signal arc_resolved(arc_id: String, resolution_id: String)
 signal main_story_locked(display_name: String, arc_id: String)
 ## A main story (season) has ended; a new one begins with the next arcs.
 signal season_closed(season: int, resolution_id: String)
+## The race (campaign spine plan): after the reveal, each system the Captain
+## visits puts the culprit a step further ahead. (steps, culprit, Lodestar)
+signal race_step(steps: int, culprit: String, lodestar_title: String)
 
 const LibraryType := preload("res://scripts/story/premise/PremiseCardLibrary.gd")
 const HistoryType := preload("res://scripts/story/premise/PremiseCardHistoryStore.gd")
@@ -163,6 +166,11 @@ func ensure_arcs(world: Dictionary, now_minute: int) -> Array[String]:
 			wanted.append(scale)
 	if regional < TARGET_REGIONAL:
 		wanted.append("regional")
+	# At the Lodestar before the reveal: it happens now, on whatever was seen,
+	# so the season's climax is never skipped (the race).
+	if bool(world.get("at_lodestar", false)) and str(HandType.main_story(state).get("stage", "")) == "hidden" 			and not HandType.proposal(state).is_empty():
+		state["main_story"]["force_lock"] = true
+		_apply_lock(HandType.lock_by_code(state, now_minute), world, now_minute)
 	var live := ArcsType.active_arc_ids(state).size()
 	for scale in wanted:
 		if live >= MAX_LIVE_ARCS:
@@ -183,6 +191,9 @@ func _count_visit(system_id: String, now_minute: int) -> void:
 	state["visits"] = int(state.get("visits", 0)) + 1
 	_fade_by_play(now_minute)
 	var story := HandType.main_story(state)
+	if str(story.get("stage", "")) == "revealed":
+		state["main_story"]["race_steps"] = int(story.get("race_steps", 0)) + 1
+		race_step.emit(int(state["main_story"]["race_steps"]), str((story.get("lock", {}) as Dictionary).get("display_name", "")), lodestar_title())
 	if HandType.evidence_ready(state):
 		if not story.has("evidence_ready_visit"):
 			state["main_story"]["evidence_ready_visit"] = int(state["visits"])
@@ -257,11 +268,16 @@ func _live_offers(world: Dictionary) -> Array[Dictionary]:
 		world_with_quirks["quirks"] = profile_for(world).get("quirks", [])
 	# Rivals for the rival twist: the recurring cast (alive, free, not busy).
 	world_with_quirks["rival_candidates"] = CastType.candidates(state)
+	world_with_quirks["hand_lead"] = int(HandType.main_story(state).get("race_steps", 0))
 	for arc_id in ArcsType.active_arc_ids(state):
 		var a := ArcsType.arc(state, arc_id)
 		if str(a["system_id"]) != system_id and str(a["scale"]) != "regional":
 			continue
 		var card: Dictionary = library.get_card(str(a["card_id"]))
+		# The showdown happens at the Lodestar (the race): its chapter waits
+		# until the Captain is there.
+		if bool(LibraryType.beat(card, int(a.get("beat", 1))).get("at_lodestar", false)) and not bool(world.get("at_lodestar", false)):
+			continue
 		for ref in ArcsType.current_offers(state, library, arc_id):
 			var offer: Dictionary = ComposerType.compose(ref, card, a["cast"], world_with_quirks, campaign_seed)
 			if offer.is_empty() or bool(offer.get("premise_needs_completion", false)):
@@ -695,10 +711,19 @@ static func LocalModelGatewayURL() -> String:
 	return preload("res://scripts/ai/LocalModelGateway.gd").OLLAMA_GENERATE_URL
 
 
+## The season's Lodestar, as the player knows it ("" before it's drawn).
+func lodestar_title() -> String:
+	if lodestar_id.is_empty():
+		return ""
+	return str(load("res://scripts/domain/Lodestar.gd").by_id(lodestar_id).get("title", ""))
+
+
 func _apply_lock(locked: Dictionary, world: Dictionary, now_minute: int) -> void:
 	if not bool(locked.get("ok", false)):
 		return
 	state = locked["state"]
+	world = world.duplicate()
+	world["lodestar_title"] = lodestar_title()
 	# The culprit's untouched side stories end quietly: they don't star in one
 	# story while being confronted in another.
 	var culprit := str(state["main_story"]["lock"].get("entity_id", ""))

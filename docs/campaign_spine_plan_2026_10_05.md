@@ -272,3 +272,24 @@ approach could get work lights or a beacon.
   reads as still. Abe: good enough for a short set piece. Optional polish
   later: a shader that tumbles every debris piece around its own centre
   (centres computed at load or baked by ChatGPT), still 6 draw calls.
+
+
+## 11. Convergence built (2026-10-05): bridges + the race
+
+- **Bridges** (all approved by Abe): `data/content/lodestar_bridges.json`,
+  `LodestarBridges.gd`. The Hidden Hand's goal is drawn from the goals the
+  season's Lodestar hosts; the season carries the bridge line.
+- **The race** (Abe's choice over a later reveal): the confrontation is now
+  proof -> chase -> **showdown at the Lodestar** (the showdown chapter only
+  appears in the Lodestar system). Each system after the reveal puts the
+  culprit a step ahead (`race_steps`); the showdown fight grows with it
+  (+1 ship per 2 steps, max 6). Reaching the Lodestar before the reveal forces
+  it there, so the climax is never skipped. N.O.V.A. names where they're
+  going at the reveal and reminds every second system (draft lines in
+  GameRoot.RACE_START_LINES / RACE_STEP_LINES, for Abe).
+- **Sim (8 campaigns, 30 h):** every season closes at the Lodestar, at
+  18.5-23.5 h, after arriving. Endings varied: exposed, quiet deal, bought
+  off, and "slips away" when the showdown fight is walked away from. Reveal
+  spread 9.7-22.7 h (median 14.6) in that run: campaigns with few story jobs
+  only got it forced at the Lodestar. Worth watching in play; the
+  evidence bar may want a time floor rather than more evidence.
