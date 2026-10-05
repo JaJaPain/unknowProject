@@ -49,6 +49,17 @@ const TARGET_REGIONAL := 1
 ## If the player never engages, the world settles an arc after this long
 ## (campaign minutes) with its default resolution.
 const IGNORE_BUDGET_MINUTES := {"personal": 3 * 1440, "local": 6 * 1440, "regional": 12 * 1440}
+## Stories nobody touched also fade by PLAY: after this many more systems
+## visited (personal/local only once you've left their system). The campaign
+## clock moves on events only (about 5 in-game hours per real hour), so the
+## day budgets above almost never ran out in a session and the board filled
+## up (campaign spine plan, section 7).
+const IGNORE_BUDGET_VISITS := {"personal": 2, "local": 2, "regional": 6}
+## No more than this many live stories at once.
+const MAX_LIVE_ARCS := 6
+## Once the evidence is ready, the lock waits at most this many systems for
+## the prime suspect's other stories to end.
+const LOCK_WAIT_VISITS := 2
 
 var enabled := true
 var library = null
@@ -133,6 +144,7 @@ func ensure_arcs(world: Dictionary, now_minute: int) -> Array[String]:
 			_method_coverage = HandType.method_coverage(library)
 		state = HandType.begin_season(state, campaign_seed, now_minute, _method_coverage)
 	var system_id := str(world.get("system_id", ""))
+	_count_visit(system_id, now_minute)
 	var profile := profile_for(world)
 	var live_here := {"personal": 0, "local": 0}
 	var regional := 0
@@ -148,11 +160,51 @@ func ensure_arcs(world: Dictionary, now_minute: int) -> Array[String]:
 			wanted.append(scale)
 	if regional < TARGET_REGIONAL:
 		wanted.append("regional")
+	var live := ArcsType.active_arc_ids(state).size()
 	for scale in wanted:
+		if live >= MAX_LIVE_ARCS:
+			break
 		var arc_id := _start_one(world, profile, scale, now_minute)
 		if not arc_id.is_empty():
 			started.append(arc_id)
+			live += 1
 	return started
+
+
+## A new system: count it, let untouched stories from systems behind fade, and
+## time the lock's wait on a busy suspect.
+func _count_visit(system_id: String, now_minute: int) -> void:
+	if str(state.get("visit_system", "")) == system_id:
+		return
+	state["visit_system"] = system_id
+	state["visits"] = int(state.get("visits", 0)) + 1
+	_fade_by_play(now_minute)
+	var story := HandType.main_story(state)
+	if HandType.evidence_ready(state):
+		if not story.has("evidence_ready_visit"):
+			state["main_story"]["evidence_ready_visit"] = int(state["visits"])
+		elif int(state["visits"]) - int(story["evidence_ready_visit"]) >= LOCK_WAIT_VISITS:
+			state["main_story"]["lock_wait_over"] = true
+
+
+func _engaged(a: Dictionary) -> bool:
+	return not (a.get("done", {}) as Dictionary).is_empty() or int(a.get("beat", 1)) > 1
+
+
+func _fade_by_play(now_minute: int) -> void:
+	var here := str(state.get("visit_system", ""))
+	var visits := int(state.get("visits", 0))
+	for arc_id in ArcsType.active_arc_ids(state):
+		var a := ArcsType.arc(state, arc_id)
+		if _engaged(a) or arc_id == str(HandType.main_story(state).get("confrontation_arc_id", "")):
+			continue
+		var scale := str(a["scale"])
+		if scale != "regional" and str(a["system_id"]) == here:
+			continue
+		if visits - int(a.get("started_visit", visits)) >= int(IGNORE_BUDGET_VISITS.get(scale, 2)):
+			var card: Dictionary = library.get_card(str(a["card_id"]))
+			state = ArcsType.resolve(state, library, arc_id, str(card.get("default_resolution", "")), now_minute)
+			_after_change(arc_id)
 
 
 ## Board postings for the arcs in this system. Records card history the first
@@ -177,7 +229,11 @@ func board_postings(world: Dictionary, now_minute: int) -> Array[Dictionary]:
 		var odd := _odd_details(arc_id, ArcsType.arc(state, arc_id), world)
 		if not odd.is_empty():
 			posting["body"] = str(posting["body"]) + "\n\n" + odd
-		postings.append(posting)
+		# The main story leads the board (campaign spine plan, fix 4).
+		if arc_id == str(HandType.main_story(state).get("confrontation_arc_id", "")):
+			postings.push_front(posting)
+		else:
+			postings.append(posting)
 		if not bool(ArcsType.arc(state, arc_id).get("shown", false)):
 			_record_shown(arc_id, str(item["card"]["id"]))
 			state = HandType.mark_arc_threads_seen(state, arc_id, now_minute, 1)
@@ -596,6 +652,19 @@ func _apply_lock(locked: Dictionary, world: Dictionary, now_minute: int) -> void
 	if not bool(locked.get("ok", false)):
 		return
 	state = locked["state"]
+	# The culprit's untouched side stories end quietly: they don't star in one
+	# story while being confronted in another.
+	var culprit := str(state["main_story"]["lock"].get("entity_id", ""))
+	for arc_id in ArcsType.active_arc_ids(state):
+		var a := ArcsType.arc(state, arc_id)
+		if _engaged(a):
+			continue
+		for entry in (a.get("cast", {}) as Dictionary).values():
+			if str(entry.get("entity_id", "")) == culprit:
+				var card: Dictionary = library.get_card(str(a["card_id"]))
+				state = ArcsType.resolve(state, library, arc_id, str(card.get("default_resolution", "")), now_minute)
+				_after_change(arc_id)
+				break
 	var forged := ForgeType.forge(state, world)
 	if forged.is_empty():
 		return
@@ -706,7 +775,7 @@ func apply_decision(arc_id: String, option_id: String, now_minute: int) -> void:
 func tick(now_minute: int) -> void:
 	for arc_id in ArcsType.active_arc_ids(state):
 		var a := ArcsType.arc(state, arc_id)
-		var engaged := not (a.get("done", {}) as Dictionary).is_empty() or int(a.get("beat", 1)) > 1
+		var engaged := _engaged(a)
 		if engaged:
 			continue
 		var budget := int(IGNORE_BUDGET_MINUTES.get(str(a["scale"]), 4320))
@@ -739,6 +808,7 @@ func _start_one(world: Dictionary, profile: Dictionary, scale: String, now_minut
 	var cast := CastingType.cast_card(card, _with_known_people(world), seed_value, arc_id_preview)
 	var started := ArcsType.start_arc(state, card, str(world.get("system_id", "")), cast, now_minute)
 	state = started["state"]
+	state["arcs"][str(started["arc_id"])]["started_visit"] = int(state.get("visits", 0))
 	state = HandType.seed_threads(state, card, str(started["arc_id"]), seed_value)
 	return str(started["arc_id"])
 
@@ -759,6 +829,12 @@ func _with_known_people(world: Dictionary) -> Dictionary:
 			seen_ids[str(person["id"])] = true
 	out["known_npcs"] = known
 	var draft := str(HandType.main_story(state).get("draft_entity_id", ""))
+	if HandType.evidence_ready(state) and not draft.is_empty():
+		# The case is made: the suspect isn't cast into anything new, so their
+		# stories can end and the reveal can come.
+		out["known_npcs"] = (out["known_npcs"] as Array).filter(func(k): return str(k.get("id", "")) != draft)
+		out["priority_npc_ids"] = []
+		return out
 	out["priority_npc_ids"] = [draft] if not draft.is_empty() else []
 	return out
 

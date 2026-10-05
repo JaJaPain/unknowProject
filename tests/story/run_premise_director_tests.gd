@@ -162,7 +162,9 @@ func _test_main_story_season() -> void:
 	d.main_story_locked.connect(func(name, arc_id): locked_name.append(name))
 	d.season_closed.connect(func(season, res): closed.append(res))
 	var now := 0
-	for system_n in range(1, 16):
+	# The reveal needs evidence from 9 systems (tuned to reveal around hours
+	# 8-12, campaign spine plan); allow 25.
+	for system_n in range(1, 26):
 		var w := _world(system_n)
 		d.ensure_arcs(w, now)
 		for _round in 40:
@@ -173,7 +175,11 @@ func _test_main_story_season() -> void:
 			var postings: Array = d.board_postings(w, now)
 			if postings.is_empty():
 				break
-			var quest: Dictionary = postings[rng.randi_range(0, postings.size() - 1)]["quest_data"].duplicate(true)
+			# Once revealed, the main story leads the board and a player follows it.
+			var pick: Dictionary = postings[rng.randi_range(0, postings.size() - 1)]
+			if not locked_name.is_empty():
+				pick = postings[0]
+			var quest: Dictionary = pick["quest_data"].duplicate(true)
 			quest["objective"]["branch_id"] = "finish_kill"
 			d.on_mission_terminal(quest, "completed", now)
 		if not locked_name.is_empty() and not d.state["main_story"].has("_locked_at_system"):
@@ -181,7 +187,7 @@ func _test_main_story_season() -> void:
 		if not closed.is_empty():
 			print("  main story: locked at system %s, closed at system %d (%s)" % [d.state["main_story"].get("_locked_at_system", "?"), system_n, closed[0]])
 			break
-	_check(not locked_name.is_empty(), "the main story should lock within fifteen systems")
+	_check(not locked_name.is_empty(), "the main story should lock within twenty-five systems")
 	_check(not closed.is_empty(), "the confrontation should resolve and close the season")
 	if not locked_name.is_empty():
 		var lock: Dictionary = d.state["main_story"]["lock"]

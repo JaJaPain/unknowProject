@@ -52,7 +52,9 @@ static func forge(state: Dictionary, world: Dictionary) -> Dictionary:
 	var card := {
 		"id": card_id_for(season), "schema_version": 1, "title": "The Hidden Hand (season %d)" % season,
 		"logline": "The pattern behind this season's trouble finally has a name: %s." % name,
-		"scale": "local", "tone": ["tense", "noir"], "themes": ["truth_vs_comfort"],
+		# Regional: the main story follows you. As "local" it stayed in the
+		# system where the reveal happened, and moving on lost it (season sim).
+		"scale": "regional", "tone": ["tense", "noir"], "themes": ["truth_vs_comfort"],
 		"roles": [
 			{"id": "culprit", "kind": "person", "archetype": "con_artist", "description": "The person behind it all.", "reuse": "prefer_existing"},
 			{"id": "witness", "kind": "person", "archetype": "negotiator", "description": "Someone who pieced part of it together.", "reuse": "prefer_existing"},

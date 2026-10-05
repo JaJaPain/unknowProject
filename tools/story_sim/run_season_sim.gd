@@ -95,7 +95,13 @@ func _campaign(index: int) -> Dictionary:
 			var postings: Array = d.board_postings(w, game_min)
 			var spent := 0.0
 			if not postings.is_empty() and rng.randf() < story_share:
-				var quest: Dictionary = postings[rng.randi_range(0, postings.size() - 1)]["quest_data"].duplicate(true)
+				# Once revealed, N.O.V.A. points at the main story and it leads the
+				# board: a player mostly follows it.
+				var pick: Dictionary = postings[rng.randi_range(0, postings.size() - 1)]
+				var main_arc := str(HandType.main_story(d.state).get("confrontation_arc_id", ""))
+				if not main_arc.is_empty() and str(postings[0].get("arc_id", "")) == main_arc and rng.randf() < 0.7:
+					pick = postings[0]
+				var quest: Dictionary = pick["quest_data"].duplicate(true)
 				quest["objective"]["branch_id"] = ["finish_kill", "accept_bribe"][rng.randi() % 2]
 				var terminal := "completed" if rng.randf() < 0.9 else "abandoned"
 				spent = rng.randf_range(8.0, 12.0)

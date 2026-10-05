@@ -174,3 +174,48 @@ recurring-suspect idea works.
 **For Abe:** target hours. Suggested: reveal around hours 8-12, climax with
 the Lodestar around hours 15-25 (the economy sim puts Class VI, needed for a
 depth-13 Lodestar, at ~17 h for an efficient automated captain).
+
+## 8. Abe's answers (2026-10-05, after the sim)
+
+- **Pacing:** yes. Reveal around hours 8-12; the climax at the Lodestar
+  around hours 15-25.
+- **N.O.V.A.'s database of people:** yes, as **its own button on the systems
+  menu**. One entry per named person the player dealt with: portrait, name,
+  role/faction, where met, and a very brief code-written line of how ("Agent
+  Dan · Myrion Watch — sent you on 3 jobs for ore"). Updates with what
+  happens to them (dead, jailed, owes you); after the reveal the culprit's
+  entry says what they were.
+- **Pins:** yes. The player can mark a person as suspicious; pinned people
+  weigh more when the main story chooses its culprit.
+
+Build next: the four sim fixes (re-run the sim until seasons land on those
+hours), then N.O.V.A.'s database.
+- **N.O.V.A. talks about her database (Abe):** now and then she mentions she's
+  keeping every clue and every person, to work out why we're out here and who
+  we are. Vague, in keeping with her missing memory from the intro; nothing
+  that touches the fixed-cast secret. Authored lines, short batch for Abe.
+
+## 9. Fixes landed (2026-10-05) and the sim after them
+
+1-4 from section 7 are in (`HiddenHand.gd`, `HiddenHandForge.gd`,
+`PremiseDirector.gd`): the lock waits on a busy suspect for at most 2 systems
+(and the suspect isn't cast into anything new once the evidence is ready);
+untouched stories fade by systems visited; at most 6 live stories; the main
+story leads the board. Also: the confrontation is now regional (as "local" it
+stayed behind in the system where the reveal happened), and the lock needs
+evidence from 9 systems, 12 threads seen, 5 real traces (was 4 / 6 / 3).
+
+Sim, 8 campaigns, 30 h max:
+
+| | Before | After |
+|---|---|---|
+| Main story locked | 2 of 6 | **8 of 8** |
+| Reveal | 10-25 h | **8.4-11.2 h (median 9.9)** |
+| Confrontation reached | 0 | **8 of 8**, ~1 h after the reveal |
+| Stories two campaigns share at 10 h | 17% avg | 10% avg (worst pair 52%) |
+
+Still to do: the climax moves to the Lodestar (section 3); the worst pair
+sharing half its stories shows the deck (152 cards, ~25 used per campaign by
+10 h) will start repeating after ~6 campaigns: more premise cards over time.
+Separately: headless test processes print their result and then don't exit
+(hit the 400 s timeout); worth a look.

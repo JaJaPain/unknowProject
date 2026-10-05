@@ -174,12 +174,14 @@ static func threads_for_arc(state: Dictionary, arc_id: String) -> Array:
 # --- who is it? -------------------------------------------------------------------
 
 const DRAFT_MIN_SEEN := 3
-const LOCK_MIN_SEEN := 6
-const LOCK_MIN_TRACES := 3
+## Tuned with the season sim to Abe's pacing (reveal around hours 8-12,
+## campaign spine plan section 8).
+const LOCK_MIN_SEEN := 12
+const LOCK_MIN_TRACES := 5
 const LOCK_MIN_CANDIDATES := 3
 ## Evidence must come from stories in at least this many systems, so the
 ## mystery spans the journey rather than one stop.
-const LOCK_MIN_SYSTEMS := 4
+const LOCK_MIN_SYSTEMS := 9
 
 
 ## Every person cast in an arc whose threads the player has seen, scored by how
@@ -243,12 +245,26 @@ static func update_draft(state: Dictionary) -> Dictionary:
 	return next
 
 
-static func ready_to_lock(state: Dictionary) -> bool:
+## The evidence is there: enough threads and traces, from enough systems, and
+## enough people who could explain them.
+static func evidence_ready(state: Dictionary) -> bool:
 	var story := main_story(state)
 	return not story.is_empty() and str(story["stage"]) == "hidden" \
 		and seen_threads(state).size() >= LOCK_MIN_SEEN \
 		and seen_trace_count(state) >= LOCK_MIN_TRACES \
-		and proposal(state).size() >= LOCK_MIN_CANDIDATES 		and evidence_systems(state) >= LOCK_MIN_SYSTEMS 		and not _prime_suspect_busy(state)
+		and proposal(state).size() >= LOCK_MIN_CANDIDATES \
+		and evidence_systems(state) >= LOCK_MIN_SYSTEMS
+
+
+## Evidence ready, and the prime suspect free of other live stories, or the
+## wait for that is over (`lock_wait_over`, set by the director after a couple
+## of systems). The wait used to be open-ended, and since the draft keeps the
+## suspect in new stories it almost never ended: the season sim saw the story
+## lock in 2 of 6 campaigns (campaign spine plan, section 7).
+static func ready_to_lock(state: Dictionary) -> bool:
+	if not evidence_ready(state):
+		return false
+	return not _prime_suspect_busy(state) or bool(main_story(state).get("lock_wait_over", false))
 
 
 ## The lock waits while the prime suspect is still in another live story, so
@@ -269,9 +285,9 @@ static func evidence_systems(state: Dictionary) -> int:
 
 ## Top-3 candidates handed to the Showrunner pass (or used by lock_by_code).
 static func proposal(state: Dictionary) -> Array:
-	var busy := CastRulesType.busy_ids(state)
-	var ranked := candidates(state).filter(func(p): return not busy.has(str(p["entity_id"])))
-	return ranked.slice(0, 3)
+	# Busy people stay candidates: the lock waits (briefly) on the prime
+	# suspect instead; skipping them starved the list below three.
+	return candidates(state).slice(0, 3)
 
 
 ## Commits the identity and truth. `choice` = {entity_id, truth, links: {thread_id: text}, source}.
