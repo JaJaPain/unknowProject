@@ -12183,12 +12183,19 @@ func _run_ship_facing_probe() -> void:
 					z_sum += ship.to_local((p as Node3D).global_position).z
 					n += 1
 			checked += 1
+			# Abe: and the flames themselves must stream out behind, the
+			# opposite way to travel (the ship flies toward -Z).
+			var plume_z := 0.0
+			var glow = ship.get("engine_glow")
+			if glow != null and is_instance_valid(glow):
+				var g := glow as Node3D
+				plume_z = (ship.global_basis.inverse() * g.global_basis.z).normalized().z
 			var verdict := "?"
 			if n > 0:
-				verdict = "ok" if z_sum / n > 0.0 else "REVERSED"
+				verdict = "ok" if z_sum / n > 0.0 and plume_z > 0.9 else "REVERSED"
 				if verdict == "REVERSED":
 					reversed += 1
-			print("[ShipFacing] %s %s: %d engines, mean z %.2f -> %s" % [faction, role, n, (z_sum / n) if n > 0 else 0.0, verdict])
+			print("[ShipFacing] %s %s: %d engines, mean z %.2f, flames stream %s (z %.2f) -> %s" % [faction, role, n, (z_sum / n) if n > 0 else 0.0, "back" if plume_z > 0.9 else "NOT back", plume_z, verdict])
 			ship.queue_free()
 	print("[ShipFacing] %d ships checked, %d reversed" % [checked, reversed])
 	get_tree().quit()
