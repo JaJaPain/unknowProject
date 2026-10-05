@@ -19,8 +19,8 @@ const PAY_HISTORY := 6
 const PAY_MIN_SAMPLES := 3
 const HUNT_TYPES := ["KILL_SHIPS", "RECOVER_COMBAT_DROP", "TARGET_WITH_COMMS_REVERSAL"]
 
-## Lines: pay_low and pay_high approved by Abe 2026-10-05; the rest are
-## drafts awaiting review. {pay} {item} {amount} {dest}
+## Lines: pay_low, pay_high, pickup and courier approved by Abe 2026-10-05;
+## the rest are drafts awaiting review. {pay} {item} {amount} {dest}
 ## {client}: a line is only used when the card has every detail it names.
 const LINES := {
 	"pay_low": [
