@@ -1592,7 +1592,7 @@ func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> voi
 
 
 ## The race (Abe, 2026-10-05): N.O.V.A. on the culprit heading for the
-## Lodestar. Draft lines for Abe's review. {name}: the culprit; {lodestar}: the
+## Lodestar. Lines approved by Abe 2026-10-05. {name}: the culprit; {lodestar}: the
 ## Lodestar's title.
 const RACE_START_LINES := [
 	"Captain, it's {name}. And whatever they're after, it's at {lodestar}. They've got a head start.",

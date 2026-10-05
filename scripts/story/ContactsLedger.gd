@@ -184,8 +184,8 @@ static func _in(events: Array) -> String:
 
 ## N.O.V.A. now and then about her database (Abe, 2026-10-05): she keeps every
 ## face and every odd detail, to work out why they're out here. Vague, in
-## keeping with her missing memory; nothing about the fixed cast. Draft lines
-## for Abe's review.
+## keeping with her missing memory; nothing about the fixed cast. Lines approved
+## by Abe 2026-10-05.
 const NOVA_LINES := [
 	"I'm keeping a file on everyone we meet. Don't ask me why. It feels like one of them matters.",
 	"Another name for the database. If I collect enough of them, something has to click.",
