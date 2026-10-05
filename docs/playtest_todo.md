@@ -141,16 +141,16 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## G. Music (added 2026-09-30, your stand-in tracks)
 
-- [ ] **Flying music.** Normal flight plays "Flying, safe", then "Alternate
+- [x] **Flying music.** Normal flight plays "Flying, safe", then "Alternate
       safe", and keeps going.
-- [ ] **Docked music.** Dock: over ~2 seconds the music blends into the
+- [x] **Docked music.** Dock: over ~2 seconds the music blends into the
       Docked track. Undock: it blends back to flying music.
-- [ ] **Danger and combat.** When an enemy locks onto you, the Tension track
+- [x] **Danger and combat.** When an enemy locks onto you, the Tension track
       blends in; when the fight starts, the danger stinger plays and Combat A
       takes over; win it and the victory stinger plays, then flying music.
-- [ ] **Jump and payday.** Jumping through a gate plays the jump stinger;
+- [x] **Jump and payday.** Jumping through a gate plays the jump stinger;
       turning in a job plays the mission-complete stinger.
-- [ ] **Voices over music.** When N.O.V.A. or Kaelen talk, the music dips
+- [x] **Voices over music.** When N.O.V.A. or Kaelen talk, the music dips
       smoothly (no sudden drop) and comes back after.
 
 ## H. Title screen (added 2026-09-30)
@@ -203,17 +203,17 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## I. Combat pass (added 2026-09-30)
 
-- [ ] **Boost / Reposition = evasive burn.** In a fight, queue Boost and
+- [x] **Boost / Reposition = evasive burn.** In a fight, queue Boost and
       execute: your ship visibly swerves sideways off the enemy's line and
       "EVASIVE ×1" floats up. Queue it twice for ×2. When the enemy fires,
       most shots now fly past with a "MISS" marker (about 2 in 3 per dodge).
-- [ ] **Micro-Warp = flowing flank.** Queue Micro-Warp: your ship arcs around
+- [x] **Micro-Warp = flowing flank.** Queue Micro-Warp: your ship arcs around
       the enemy (no snap), with a purple flash where it leaves and lands. The
       enemy's next shot always misses ("lost their lock"). Your hits that turn
       do more damage. Cooldown is now 2 turns.
-- [ ] **Wheel hints.** Hover each wedge of the combat wheel: a tooltip says
+- [x] **Wheel hints.** Hover each wedge of the combat wheel: a tooltip says
       what it does.
-- [ ] **Feel check.** Does a turn of Boost + Fire, or Micro-Warp + Fire, feel
+- [x] **Feel check.** Does a turn of Boost + Fire, or Micro-Warp + Fire, feel
       like it matters now? Say which one still falls flat.
 
 ## J. New-campaign load (added 2026-09-30)
@@ -517,59 +517,59 @@ campaign. Getting there takes a while; checks for when you do:
 
 ## O. Playtest fixes 2026-10-02
 
-- [ ] **Autopilot around outposts.** In the start system, Fly to Greywake
+- [x] **Autopilot around outposts.** In the start system, Fly to Greywake
       Station from beyond Iron Reach or Kova (so the outpost is in between):
       the ship swings well clear of the outpost's model, never through it.
-- [ ] **Autopilot around the gas giant.** Fly to something on the far side of
+- [x] **Autopilot around the gas giant.** Fly to something on the far side of
       the gas giant (a Reaver or an asteroid in its belt): the ship goes
       round, never into the planet. If it still dives in, tell me what was
       targeted (the target panel's name) and roughly where.
-- [ ] **Clicking a planet selects the planet.** Click the gas giant: the
+- [x] **Clicking a planet selects the planet.** Click the gas giant: the
       target panel names the planet, never "SystemContainer [Object]".
-- [ ] **T always answers.** Undock and fly out past 1 km from any station,
+- [x] **T always answers.** Undock and fly out past 1 km from any station,
       with no signal announced: press T. A RECEIVER readout appears where the
       T prompt goes, "Scanning for signals..." with a bar sweeping along its
       bottom, then "Nothing on the band." and it fades.
-- [ ] **T says why it can't.** Press T within 1 km of a station: "Too much
+- [x] **T says why it can't.** Press T within 1 km of a station: "Too much
       station noise. Move further out." During a fight: "Not in the middle of
       a fight." With a red ship close: "Hostiles close...".
-- [ ] **Peaceful patrols don't block it.** New campaign (Aurelia and Vanguard
+- [x] **Peaceful patrols don't block it.** New campaign (Aurelia and Vanguard
       at -20): with their patrols nearby but nothing red on the overview, a
       signal N.O.V.A. announces opens with T. A Reaver contract target on the
       far side of the system doesn't block it either.
-- [ ] **Kaelen only comments on her own jobs.** Finish a job from an outpost
+- [x] **Kaelen only comments on her own jobs.** Finish a job from an outpost
       agent (not Kaelen) and undock: no payout comment from her. Finish one
       of Kaelen's and undock: she comments over comms (the comms-filtered
       voice, and a Broker Kaelen line in the feed), not as if in the cockpit.
-- [ ] **N.O.V.A. teases board work.** Finish a public board job and undock:
+- [x] **N.O.V.A. teases board work.** Finish a public board job and undock:
       N.O.V.A. (not Kaelen) has a dry line about wall postings.
-- [ ] **Jenna sounds like only Jenna.** Dock at a few stations and outposts,
+- [x] **Jenna sounds like only Jenna.** Dock at a few stations and outposts,
       listen to dock control, the station radio, board "Play message"
       buttons and lounge strangers: none of them should sound like Jenna
       (the Grease Monkeys mechanic). Jenna herself is unchanged. If one
       still does, note where; godot.log also lists any "unknown voice"
       falling back to the neutral one.
-- [ ] **Kaelen's pace is back.** New campaign: her intro and the tutorial
+- [x] **Kaelen's pace is back.** New campaign: her intro and the tutorial
       turn-in ("Handled, quiet, no trail...") sound like her old self, not
       rushed. N.O.V.A. still sounds like her cloned voice.
-- [ ] **The way out is last.** Talk to any agent offering a normal job: the
+- [x] **The way out is last.** Talk to any agent offering a normal job: the
       options end with "Not this one.", after "Terms / other questions".
       Open "Terms / other questions": "Not this one." is last there too.
       Picking it closes the offer and takes you back to the agent's menu.
-- [ ] **Goal card rolls up.** Click the "−" top right of the goal card: it
+- [x] **Goal card rolls up.** Click the "−" top right of the goal card: it
       shrinks to one line ("Shields Mk II (Bulwark) · Credits 65/300"), and "+"
       opens it again. Quit and reload: it stays as you left it.
-- [ ] **It peeks when something changes.** With it rolled up, earn credits
+- [x] **It peeks when something changes.** With it rolled up, earn credits
       past the goal's amount (or bank enough ore, or set a new goal): it opens
       for about 6 seconds, then rolls back up.
-- [ ] **The maintenance bay matches Kaelen's screen.** Dock at a main station,
+- [x] **The maintenance bay matches Kaelen's screen.** Dock at a main station,
       Maintenance Bay: the mechanic's large portrait on the left, name and
       role, her greeting, any offer as numbered replies (keys 1-2, "Not this
       one." last), Repair and Ship Upgrades as buttons, "Back to Services"
       at the bottom. Ship Upgrades opens and Return brings you back to the
       bay; Back to Services returns to the station menu. Repair, accepting a
       pickup and delivering a part all still work from here.
-- [ ] **Gas giants look different.** Start two new campaigns: the start
+- [x] **Gas giants look different.** Start two new campaigns: the start
       system's gas giant has different colours and bands each time (cream,
       ice blue, teal, violet, rust, sage, rose or slate) and two or three
       storms: rough, roughly round spots whose insides keep swirling. Jump around: other systems' gas giants differ too. Bands drift
@@ -682,56 +682,56 @@ through the marked gate and flies you in):
 
 ## U. Music (added 2026-10-03, playtest findings 1-2)
 
-- [ ] **Stingers duck the music.** Landing page: press Continue; the jump
+- [x] **Stingers duck the music.** Landing page: press Continue; the jump
       stinger plays over clearly quieter music, and once it ends the music
       swells back in over a couple of seconds (no snap). Same for the danger
       sting when a fight starts and the victory sting when you win.
-- [ ] **Music never drops out.** Fly toward a Reaver (tension music), let it
+- [x] **Music never drops out.** Fly toward a Reaver (tension music), let it
       lose and regain you: the music changes smoothly and never stops. If it
       ever goes silent it comes back on its own within a few seconds.
-- [ ] **Tutorial: the way back.** New campaign, kill the starter Reaver:
+- [x] **Tutorial: the way back.** New campaign, kill the starter Reaver:
       a few seconds after her victory line N.O.V.A. says to head back and
       points at Dock at Station. Stay out a minute: one reminder to dock and
       Talk to Agent. Never again after that.
-- [ ] **Rocks and rocky planets look 3D.** Fly up to an asteroid with the
+- [x] **Rocks and rocky planets look 3D.** Fly up to an asteroid with the
       sun to one side: pits and ridges catch the light and shadow (normal
       maps). Rocky planets show crater rims. Too strong or too soft? Say
       which (asteroids 0.7, planets 0.6; `tools/make_normal_maps.py`).
       Before/after: `--normal-map-snapshot` (windowed).
-- [ ] **Freighters dock on the beam.** Hang around a main station: an
+- [x] **Freighters dock on the beam.** Hang around a main station: an
       inbound freighter is caught by the cyan tractor beam a few hundred
       metres out, pulled to the docking spot, held, then slides in. A
       departing one starts on the beam and is pushed clear before flying
       off. Outposts get some of this traffic too.
-- [ ] **Engine sound.** Undock and fly: a low engine hum, quiet at a
+- [x] **Engine sound.** Undock and fly: a low engine hum, quiet at a
       standstill, fuller and slightly higher as you speed up, swelling on
       boost; it fades out when you dock and in the jump tunnel. It's a
       generated placeholder (`tools/generate_engine_loop.py`): too loud,
       too quiet, wrong character? Say so.
-- [ ] **Wiki: new entries flash.** When a new wiki entry unlocks, a gold
+- [x] **Wiki: new entries flash.** When a new wiki entry unlocks, a gold
       "WIKI · N NEW" button appears under Inventory / Star Map and pulses;
       clicking it opens the wiki. Esc > WIKI pulses too. Reading the new
       entries makes both go quiet.
-- [ ] **Deeper systems burn more fuel.** At home the fuel line is plain;
+- [x] **Deeper systems burn more fuel.** At home the fuel line is plain;
       one jump out it says "burn x1.1", then x1.5, x2.0, x2.8 further out
       (hover for the explanation). The star map tooltip shows "Fuel burn" for
       other systems. Does it bite enough? (Base rate unchanged; cap x6.)
-- [ ] **Hostile and territorial.** In a frontier system: salvage/pilgrim
+- [x] **Hostile and territorial.** In a frontier system: salvage/pilgrim
       gunships show amber on the overview; fly within ~250 m and they hail
       "You're inside our perimeter. Back off."; stay or get within ~120 m
       and they attack; keep away and they don't. Their haulers never attack.
       Reavers (red) come for you from ~400 m. Is 400 m too far / too close?
-- [ ] **T works near peaceful ships.** With only territorial/peaceful
+- [x] **T works near peaceful ships.** With only territorial/peaceful
       ships around, the receiver works. Near a hostile it says which ship
       and how far ("Hostile close (Reaver Raider, 820 m)").
-- [ ] **Rep row in frontier systems.** Jump out of the start system: the
+- [x] **Rep row in frontier systems.** Jump out of the start system: the
       REP row shows each local faction's own short name (e.g. "REN 0 | ANK 0
       | ESH 0"), not "GEN 0" three times; hover for the full name. The star
       map detail panel lists their names.
-- [ ] **Goal card tooltips.** Hover each row on the goal card (Credits,
+- [x] **Goal card tooltips.** Hover each row on the goal card (Credits,
       Ore, a material, Power when short): it says how to get it and how far
       along you are; a finished row says "Done."
-- [ ] **Target distance.** Target anything: under its name the target
+- [x] **Target distance.** Target anything: under its name the target
       window shows the distance ("1,244 m", "12.4 km" far off) with ▼ when
       closing and ▲ when opening; it matches the overview. Outposts say
       [Outpost], not [Station].

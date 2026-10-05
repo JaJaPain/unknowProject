@@ -7,7 +7,7 @@ only; no code changes until Abe says the playtest has finished.**
 
 ## Findings
 
-### 1. Opening cinematic: add a slight vignette
+### 1. Opening cinematic: add a slight vignette -- FIXED
 
 **Abe:** add a slight vignette to the opening cinematic.
 
@@ -23,7 +23,7 @@ glitch rect and before N.O.V.A.'s panel, so her portrait and subtitles stay
 clear. Keep it slight (intensity ~0.5, tune by eye in `--intro-snapshot`).
 It goes when `_layer` hides in `_finish()`, so gameplay never has it.
 
-### 3. N.O.V.A.'s portrait stays behind when the chat moves (docking; seen over the overview too)
+### 3. N.O.V.A.'s portrait stays behind when the chat moves (docking; seen over the overview too) -- FIXED
 
 **Abe:** when docking, N.O.V.A. appears where the chat was (now an empty
 screen) but the chat has moved up. Keep her in the chat box. I've seen her
@@ -55,7 +55,7 @@ child of the chat: it clips its contents and she's often taller than it.
 Check: talk during docking and undocking (the arrival line) and she stays on
 the chat both times.
 
-### 2. Opening cinematic: no mouse cursor until control comes back
+### 2. Opening cinematic: no mouse cursor until control comes back -- FIXED
 
 **Abe:** remove the mouse completely until ship controls are released back
 to the player.
@@ -82,7 +82,7 @@ to the player.
 - Check: the cinematic shows no cursor; the cursor is back the moment the
   "Hold RIGHT MOUSE" hint shows; Esc mid-intro shows it, resuming hides it.
 
-### 4. Tractor beam hum 10% louder
+### 4. Tractor beam hum 10% louder -- FIXED
 
 **Abe:** increase the volume of the tractor beam by 10%.
 
@@ -95,7 +95,7 @@ to the player.
 the two stay in the same balance. (If it still sounds the same, 10% louder
 *to the ear* is closer to +1.4 dB.)
 
-### 5. Feature: idle station tour while docked (AFK 1m30s)
+### 5. Feature: idle station tour while docked (AFK 1m30s) -- FIXED
 
 **Abe:** if AFK for over 1m30s at a station, the HUD disappears and the
 camera flies slowly around the station, taking a tour. Any mouse or key
@@ -142,7 +142,7 @@ station, maybe taking note of NPCs docking.
   (Assumed: docked only.)
 - Also in the outposts? (Assumed: yes, same tour, smaller orbit.)
 
-### 6. Undocking: the overview stays hidden until the beam lets go
+### 6. Undocking: the overview stays hidden until the beam lets go -- FIXED
 
 **Abe:** the overview should remain gone until the ship is released from the
 tractor beam.
@@ -181,7 +181,7 @@ guard on the way out (keep it for the way in).
   yours." (So bring it back with the same short fade-in as the message, at
   the same moment, not before.)
 
-### 7. Feature: N.O.V.A. comments on about half the missions you accept
+### 7. Feature: N.O.V.A. comments on about half the missions you accept -- FIXED
 
 **Abe:** N.O.V.A. should find something to comment on for 50% of the
 missions you accept, even if it's just a snide comment about how little
@@ -253,7 +253,7 @@ over and over. The cards could even have a comment added when created.
 
 **For Abe:** the first batch of lines (short, for review) before wiring.
 
-### 8. Lounge hunt: the holder hands it over but it doesn't show in the inventory
+### 8. Lounge hunt: the holder hands it over but it doesn't show in the inventory -- FIXED
 
 **Abe:** on the board mission (get the lounge person to admit they have it),
 they said "here it is", but the item didn't go into the inventory.
@@ -295,7 +295,7 @@ hold strip and delivery text use. The lounge itself shows "Vale Venn" (via
 `QuestNextStep.person_name()`), so it's only the stored name. Fix: use
 `person_name()` when building the description, or store the clean name.
 
-### 9. "Checkpoint could not be saved" on undock (Zaren Relay, after the lounge pickup)
+### 9. "Checkpoint could not be saved" on undock (Zaren Relay, after the lounge pickup) -- FIXED
 
 **Abe (screenshot):** under Dock Control's "Controls return past the safety
 zone.": "SYSTEM WARNING: Checkpoint could not be saved. Your previous save
@@ -379,7 +379,7 @@ station). The real bug is the dock UI being up after undocking.
 - The repair prompt: switch the music and end the docking camera only once
   undocking really goes ahead, so the prompt never looks like you've left.
 
-### 10. The pickup could be turned in "without the item in the inventory"
+### 10. The pickup could be turned in "without the item in the inventory" -- FIXED
 
 **Abe:** that pickup mission let me turn it in even without an item in my
 inventory.
