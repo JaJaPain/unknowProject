@@ -174,6 +174,8 @@ static func threads_for_arc(state: Dictionary, arc_id: String) -> Array:
 # --- who is it? -------------------------------------------------------------------
 
 const DRAFT_MIN_SEEN := 3
+## How much a pinned person weighs (two real traces' worth).
+const PINNED_PERSON_WEIGHT := 4.0
 ## Tuned with the season sim to Abe's pacing (reveal around hours 8-12,
 ## campaign spine plan section 8).
 const LOCK_MIN_SEEN := 12
@@ -220,8 +222,13 @@ static func candidates(state: Dictionary) -> Array:
 						person["score"] = float(person["score"]) + 2.0
 			people[eid] = person
 	var out: Array = people.values()
+	# People the Captain pinned in N.O.V.A.'s database weigh more (Abe,
+	# 2026-10-05): a good hunch can come true.
+	var pinned_people: Dictionary = state.get("pinned_people", {})
 	for p in out:
 		p["score"] = float(p["score"]) + maxf(0.0, float((p["arcs"] as Array).size() - 1))
+		if pinned_people.has(str(p["entity_id"])):
+			p["score"] = float(p["score"]) + PINNED_PERSON_WEIGHT
 	out.sort_custom(func(a, b): return float(a["score"]) > float(b["score"]) or (float(a["score"]) == float(b["score"]) and str(a["entity_id"]) < str(b["entity_id"])))
 	return out
 

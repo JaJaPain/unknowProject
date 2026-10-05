@@ -2676,6 +2676,7 @@ func _create_pause_menu():
 	var actions := actions_card.get_child(0) as VBoxContainer
 	_add_pause_action(actions, "RESUME FLIGHT", func(): GlobalState.paused = false, true)
 	pause_wiki_button = _add_pause_action(actions, "WIKI", open_wiki)
+	_add_pause_action(actions, "N.O.V.A. DATABASE", open_nova_database)
 	_add_pause_action(actions, "GALLERY", open_gallery)
 	_add_pause_action(actions, "COMBAT HELP", func(): _show_combat_tutorial_popup(true))
 	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
@@ -2827,6 +2828,17 @@ func open_gallery() -> void:
 		return
 	_gallery_screen = load("res://scripts/ui/GalleryScreen.gd").new()
 	add_child(_gallery_screen)
+
+
+## N.O.V.A.'s database of people (Abe, 2026-10-05): its own systems-menu button.
+var _database_screen: CanvasLayer = null
+
+
+func open_nova_database() -> void:
+	if _database_screen != null and is_instance_valid(_database_screen):
+		return
+	_database_screen = load("res://scripts/ui/NovaDatabaseScreen.gd").new()
+	add_child(_database_screen)
 
 
 func open_wiki() -> void:
@@ -3806,6 +3818,8 @@ func _unhandled_input(event: InputEvent):
 		if _gallery_screen != null and is_instance_valid(_gallery_screen):
 			get_viewport().set_input_as_handled()
 			return  # the gallery handles Esc itself (viewer first, then close)
+		if _database_screen != null and is_instance_valid(_database_screen):
+			return  # the database closes itself on Esc
 		if branch_map and branch_map.visible:
 			branch_map._close()
 			return
@@ -6770,6 +6784,12 @@ func _on_lounge_card_pressed(card_data: Dictionary) -> void:
 
 func _start_lounge_conversation(card: Dictionary) -> void:
 	var card_name := str(card.get("name", ""))
+	preload("res://scripts/story/ContactsLedger.gd").note({
+		"name": preload("res://scripts/domain/QuestNextStep.gd").person_name(card_name),
+		"portrait_id": str(card.get("portrait_id", "")),
+		"role": str(card.get("role", card.get("title", ""))),
+		"faction": str(card.get("faction", "")),
+	}, "lounge")
 	var contact_key := _lounge_contact_key(card)
 	# L5a: a contact the player walked out on earlier this dock stays cold.
 	if _lounge_cold_contacts.has(contact_key):
@@ -15134,6 +15154,19 @@ func _on_partial_delivery_pressed(deliverable: float):
 func _on_quest_accepted():
 	_update_quest_tracker()
 	_refresh_visible_npc_attention_buttons()
+	# N.O.V.A.'s database: who sent you on it.
+	if QuestManager.is_quest_active():
+		var job: Dictionary = QuestManager.active_quest
+		var who := str(job.get("agent_name", "")).strip_edges()
+		# People only: a story's requester can be a whole faction.
+		if not who.is_empty() and who != "Public Board" and not str(job.get("agent_id", "")).begins_with("faction"):
+			preload("res://scripts/story/ContactsLedger.gd").note({
+				"name": preload("res://scripts/domain/QuestNextStep.gd").person_name(who),
+				"entity_id": str(job.get("agent_id", "")) if str(job.get("agent_id", "")).begins_with("npc.") else "",
+				"portrait_id": str(job.get("agent_portrait_id", "")),
+				"faction": str(job.get("faction", "")),
+				"role": "Broker" if who.contains("Kaelen") else "Agent",
+			}, "job", str(job.get("objective_type", "")))
 	# N.O.V.A.'s remark on this job (finding 7): its voice now, said halfway.
 	if QuestManager.is_quest_active() and not _is_intro_starter_contract(QuestManager.active_quest):
 		var accepted: Dictionary = QuestManager.active_quest

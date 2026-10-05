@@ -1086,6 +1086,11 @@ func mark_pickup_complete() -> bool:
 		
 	pickup["picked_up"] = true
 	print("[QuestManager] PICKUP_SPECIAL picked up: '%s' from %s" % [part_name, target_npc])
+	# N.O.V.A.'s database: who handed it over.
+	var holder_data: Dictionary = GlobalState.get_minor_npc_data(str(pickup.get("target_npc", "")))
+	preload("res://scripts/story/ContactsLedger.gd").note({"name": target_npc,
+		"portrait_id": str(holder_data.get("portrait_id", "")), "role": str(holder_data.get("role", "")),
+		"faction": str(holder_data.get("faction", ""))}, "handover", part_name)
 	_mark_objective_ready_if_completed(mission)
 	quest_progress_updated.emit()
 	return true

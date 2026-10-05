@@ -584,6 +584,50 @@ func pin_thread(thread_id: String, pinned: bool) -> void:
 	state = HandType.set_pinned(state, thread_id, pinned)
 
 
+## For N.O.V.A.'s database: the people in stories the Captain has seen,
+## [{entity_id, name, story, system, minute}].
+func known_people() -> Array:
+	var out: Array = []
+	for arc_id in (state.get("arcs", {}) as Dictionary).keys():
+		var a: Dictionary = state["arcs"][arc_id]
+		if not bool(a.get("shown", false)):
+			continue
+		var card: Dictionary = library.get_card(str(a.get("card_id", ""))) if library != null else {}
+		var story := str(card.get("title", "a story"))
+		var system := str(_system_names.get(str(a.get("system_id", "")), ""))
+		for entry in (a.get("cast", {}) as Dictionary).values():
+			if str(entry.get("kind", "")) == "person" and not str(entry.get("display_name", "")).is_empty():
+				out.append({"entity_id": str(entry.get("entity_id", "")), "name": str(entry["display_name"]),
+					"story": story, "system": system, "minute": int(a.get("started_minute", 0))})
+	return out
+
+
+func fates() -> Dictionary:
+	return (state.get("fates", {}) as Dictionary).duplicate(true)
+
+
+## The culprit's entity id once revealed, else "".
+func revealed_hand_id() -> String:
+	var story := HandType.main_story(state)
+	if str(story.get("stage", "")) in ["revealed", "closed"]:
+		return str((story.get("lock", {}) as Dictionary).get("entity_id", ""))
+	return ""
+
+
+## A person the Captain marked as suspicious in N.O.V.A.'s database: weighs on
+## who the main story settles on (HiddenHand.candidates).
+func pin_person(entity_id: String, pinned: bool) -> void:
+	if entity_id.is_empty():
+		return
+	var pins: Dictionary = state.get("pinned_people", {})
+	if pinned:
+		pins[entity_id] = true
+	else:
+		pins.erase(entity_id)
+	state["pinned_people"] = pins
+	state = HandType.update_draft(state)
+
+
 # --- main story lock -------------------------------------------------------------
 
 func _maybe_lock(world: Dictionary, now_minute: int) -> void:

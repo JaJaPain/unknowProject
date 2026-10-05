@@ -886,3 +886,9 @@ through the marked gate and flies you in):
       being idle, then roughly every 5 minutes, no repeats until all 7 played.
 - [ ] **Smooth tractor in the tour:** the first freighter the tour watches
       turns smoothly onto its pier, no sudden nose-down flip.
+- [ ] **N.O.V.A.'s database:** systems menu -> N.O.V.A. DATABASE. Everyone
+      you've dealt with is there, newest first, with a portrait and a short
+      line ("Sent you on 3 jobs for ore in ...", "Handed you the ...",
+      "Talked with you in the lounge in ...", "Came up in a story at ...").
+      ALL / THIS SYSTEM / PINNED filters; PIN AS SUSPICIOUS sticks. Now and
+      then N.O.V.A. mentions she's keeping it all.

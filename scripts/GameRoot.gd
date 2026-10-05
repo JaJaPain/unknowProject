@@ -379,6 +379,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_station_tour_snapshot")
 	elif "--pickup-intercept-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_pickup_intercept_smoke_test")
+	elif "--database-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_database_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_remark_smoke_test")
 	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
@@ -1699,6 +1701,25 @@ func premise_main_story_threads() -> Array:
 
 func premise_main_story_summary() -> Dictionary:
 	return premise_director.main_story_summary() if is_instance_valid(premise_director) else {}
+
+
+## N.O.V.A.'s database (Abe, 2026-10-05): people from stories seen, their
+## fates, and the revealed culprit's id.
+func premise_people() -> Array:
+	return premise_director.known_people() if is_instance_valid(premise_director) else []
+
+
+func premise_fates() -> Dictionary:
+	return premise_director.fates() if is_instance_valid(premise_director) else {}
+
+
+func premise_hand_id() -> String:
+	return premise_director.revealed_hand_id() if is_instance_valid(premise_director) else ""
+
+
+func premise_pin_person(entity_id: String, pinned: bool) -> void:
+	if is_instance_valid(premise_director):
+		premise_director.pin_person(entity_id, pinned)
 
 
 func premise_pin_thread(thread_id: String, pinned: bool) -> void:
@@ -12524,6 +12545,69 @@ func _run_pickup_intercept_smoke_test() -> void:
 		return
 	print("[PickupInterceptSmokeTest] PASS: warned partway home, a hijacker came, went down and N.O.V.A. noticed")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## N.O.V.A.'s database (Abe, 2026-10-05), windowed: real hooks fill it (a
+## board pickup accepted and handed over, a lounge talk, an agent job), then
+## the systems menu and the database are pictured. Exits 1 on a failure.
+##   -- --database-snapshot --baseline-offline --out=<dir>
+func _run_database_snapshot() -> void:
+	var out := "user://database_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var fail := func(message: String) -> void:
+		push_error("[DatabaseSnapshot] FAIL: " + message)
+		get_tree().quit(1)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var Ledger = load("res://scripts/story/ContactsLedger.gd")
+	StoryManager.story_state["contacts"] = {}
+	# A board pickup, accepted and handed over (the real hooks).
+	var Builder = load("res://scripts/domain/PublicBoardOfferBuilder.gd")
+	var offer := {}
+	for minute in [0, 45, 90, 135, 180]:
+		for o in Builder.build_offers(int(CampaignClock.total_minutes) + minute):
+			if str((o.get("quest_data", {}) as Dictionary).get("objective", {}).get("type", "")) == "PICKUP_SPECIAL":
+				offer = o
+				break
+		if not offer.is_empty():
+			break
+	if not offer.is_empty():
+		GlobalState.clear_cargo()
+		if QuestManager.accept_quest(offer["quest_data"], {"text": "Accepted.", "consequence": {}}):
+			QuestManager.mark_pickup_complete()
+			QuestManager.abandon_quest()
+	# An agent's jobs and a lounge talk (as the hooks would record them).
+	for i in 3:
+		Ledger.note({"name": "Dan Orel", "role": "Agent", "faction": "Zenith"}, "job", "DELIVER_ORE")
+	Ledger.note({"name": "Broker Kaelen", "role": "Broker"}, "job", "KILL_SHIPS")
+	Ledger.note({"name": "Mariska Vonn", "role": "Dock hand"}, "lounge")
+	var book: Dictionary = StoryManager.story_state.get("contacts", {})
+	print("[DatabaseSnapshot] %d people recorded" % book.size())
+	if book.size() < 3:
+		fail.call("Too few people recorded: %s" % str(book.keys()))
+		return
+	var ui = GlobalState.get_ui_manager()
+	GlobalState.paused = true
+	await get_tree().create_timer(0.8).timeout
+	await _hud_snapshot_save(out.path_join("systems_menu.png"))
+	ui.call("open_nova_database")
+	await get_tree().create_timer(0.8).timeout
+	await _hud_snapshot_save(out.path_join("database.png"))
+	var screen = ui.get("_database_screen")
+	if screen == null or (screen.call("shown_entries") as Array).size() != book.size():
+		fail.call("The database doesn't list everyone recorded.")
+		return
+	for e in screen.call("shown_entries"):
+		print("[DatabaseSnapshot]   %s: %s" % [e["name"], e["line"]])
+	print("[DatabaseSnapshot] PASS")
 	get_tree().quit(0)
 
 
