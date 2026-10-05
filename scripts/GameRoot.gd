@@ -379,6 +379,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_station_tour_snapshot")
 	elif "--pickup-intercept-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_pickup_intercept_smoke_test")
+	elif "--wreck-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_wreck_snapshot")
 	elif "--database-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_database_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
@@ -12546,6 +12548,78 @@ func _run_pickup_intercept_smoke_test() -> void:
 	print("[PickupInterceptSmokeTest] PASS: warned partway home, a hijacker came, went down and N.O.V.A. noticed")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+## The twin wreck field (ChatGPT's model, art_inbox/twin_wreck_field), first
+## engine check (windowed): placed in open space with its drift animation
+## looping, pictured from ~6 km, ~2.5 km and ~600 m, with frame rate and draw
+## calls against the same view without it. Pictures in --out.
+##   -- --wreck-snapshot --baseline-offline --out=<dir>
+func _run_wreck_snapshot() -> void:
+	var out := "user://wreck_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var spot := player.global_position + Vector3(9000.0, 400.0, -9000.0)
+	var cam := Camera3D.new()
+	cam.far = 50000.0
+	get_active_system_root().add_child(cam)
+	cam.make_current()
+	var views := [["far", Vector3(4200, 1500, 4200)], ["mid", Vector3(1800, 700, 1600)], ["near", Vector3(450, 160, 380)]]
+	var baseline := {}
+	for v in views:
+		cam.global_position = spot + (v[1] as Vector3)
+		cam.look_at(spot, Vector3.UP)
+		await _settle_frames(90)
+		baseline[v[0]] = [Performance.get_monitor(Performance.TIME_FPS), Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)]
+	var scene := load("res://assets/landmarks/twin_wreck_field.glb") as PackedScene
+	if scene == null:
+		push_error("[WreckSnapshot] FAIL: the model didn't import")
+		get_tree().quit(1)
+		return
+	var wreck := scene.instantiate() as Node3D
+	get_active_system_root().add_child(wreck)
+	wreck.global_position = spot
+	var anims := wreck.find_children("*", "AnimationPlayer", true, false)
+	for ap in anims:
+		var player_node := ap as AnimationPlayer
+		for anim_name in player_node.get_animation_list():
+			player_node.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
+			player_node.play(anim_name)
+	var meshes := wreck.find_children("*", "MeshInstance3D", true, false).size()
+	var box := AABB()
+	var first := true
+	for m in wreck.find_children("*", "MeshInstance3D", true, false):
+		var mi := m as MeshInstance3D
+		var b: AABB = mi.global_transform * mi.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	print("[WreckSnapshot] imported: %d meshes, %d animation players, size %s m" % [meshes, anims.size(), str(box.size.snapped(Vector3.ONE * 10))])
+	for v in views:
+		cam.global_position = spot + (v[1] as Vector3)
+		cam.look_at(spot, Vector3.UP)
+		await _settle_frames(90)
+		var fps := Performance.get_monitor(Performance.TIME_FPS)
+		var calls := Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+		print("[WreckSnapshot] %s view: %.0f fps (without: %.0f), %d draw calls (without: %d)" % [v[0], fps, baseline[v[0]][0], calls, baseline[v[0]][1]])
+		await _hud_snapshot_save(out.path_join("wreck_%s.png" % v[0]))
+	print("[WreckSnapshot] DONE")
+	get_tree().quit(0)
+
+
+func _settle_frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
 
 
 ## N.O.V.A.'s database (Abe, 2026-10-05), windowed: real hooks fill it (a

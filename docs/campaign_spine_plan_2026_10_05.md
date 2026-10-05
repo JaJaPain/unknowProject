@@ -219,3 +219,36 @@ sharing half its stories shows the deck (152 cards, ~25 used per campaign by
 10 h) will start repeating after ~6 campaigns: more premise cards over time.
 Separately: headless test processes print their result and then don't exit
 (hit the 400 s timeout); worth a look.
+
+## 10. Landmark: the twin wreck field (Abe, 2026-10-05)
+
+ChatGPT's model (`art_inbox/twin_wreck_field/`, copied to
+`assets/landmarks/twin_wreck_field.glb`): two ~1.4 km ships broken in half,
+a debris field ~3 km across, a 4-minute drifting-debris loop. No story yet;
+Abe: a once-per-campaign event, led to it, explore the wreckage, find clues
+to what happened and maybe something the campaign needs.
+
+**Engine check (`--wreck-snapshot`, RTX 3060):** imports cleanly, animation
+loops. 60 fps at 6 km and 2.5 km, 54 at 600 m; but ~700 draw calls (our
+busiest scene so far: ~150), from 614 separate pieces. Fix before shipping:
+hide the small debris beyond ~1.5 km (Godot visibility ranges), merge the
+static hull pieces, fewer materials. Lighting: dark under our sun; the
+approach could get work lights or a beacon.
+
+**Event shape (proposal):**
+- **Lead:** one per campaign, mid-season. A rumour, a bearing, or two dead
+  transponders N.O.V.A. picks up; it's in a system off the main lanes.
+- **Arrival:** no stations nearby, just the field; N.O.V.A. goes quiet for a
+  moment (authored line).
+- **Explore:** 4-6 scan points on the hull halves, deck modules and radiators
+  (the scan bubble). Each gives a clue: a log fragment, a damage pattern, a
+  cargo manifest. Clues are written from the campaign's own facts, so they
+  can be **real traces of the Hidden Hand** (and decoys), feeding the main
+  story like any loose thread.
+- **What happened:** drawn per campaign (battle, sabotage, collision,
+  mutiny), matching the Hidden Hand's method when it can.
+- **Something the campaign needs:** a Lodestar bearing, a keystone part, or
+  evidence that becomes leverage; plus salvage by drone dive into the decks.
+- **Risk (optional):** scavengers already working it, or arriving.
+- **Fits section 3:** the Silent Fleet Lodestar and the "bury an old crime"
+  bridge are natural homes for it.
