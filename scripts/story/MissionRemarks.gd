@@ -19,17 +19,18 @@ const PAY_HISTORY := 6
 const PAY_MIN_SAMPLES := 3
 const HUNT_TYPES := ["KILL_SHIPS", "RECOVER_COMBAT_DROP", "TARGET_WITH_COMMS_REVERSAL"]
 
-## Draft lines, for Abe's review (2026-10-05). {pay} {item} {amount} {dest}
+## Lines: pay_low and pay_high approved by Abe 2026-10-05; the rest are
+## drafts awaiting review. {pay} {item} {amount} {dest}
 ## {client}: a line is only used when the card has every detail it names.
 const LINES := {
 	"pay_low": [
-		"{pay} credits for this. I ran the numbers, Captain. The numbers laughed.",
+		"{pay} credits for this. I ran the numbers, Captain. The numbers laughed at me.",
 		"For {pay} credits I hope {client} at least says thank you. Out loud. Twice.",
 		"Our hull plating costs more per square metre than this whole job.",
 		"{pay} credits. Somewhere a pirate is being paid better to shoot at us.",
 	],
 	"pay_high": [
-		"{pay} credits? Nobody pays that well unless something is wrong. Read the small print.",
+		"{pay} credits? Nobody pays that well unless something is wrong. Please tell me you read the small print?",
 		"That's generous of {client}. Generous makes me nervous.",
 		"Good money. I'll be watching the sensors twice as hard, though.",
 	],
