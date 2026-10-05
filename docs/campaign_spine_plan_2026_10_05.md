@@ -260,3 +260,10 @@ approach could get work lights or a beacon.
   shielded ship can later reach inner scan points and better salvage, a
   reason to come back. Also the performance fix: no close-up view to render,
   so small debris can be hidden at range (most of the ~700 draw calls).
+- **Version 3 is the one (2026-10-05):** ChatGPT batched it to 44 meshes,
+  one per material per section, with debris in six drifting groups
+  (`assets/landmarks/twin_wreck_field_v3_batched.glb`). Draw calls 704 / 709 /
+  621 -> **63 / 69 / 113** at 6 km / 2.5 km / 600 m, and it looks the same
+  in the game. The lower-poly-only version changed nothing (614 pieces), as
+  expected: the cost was the piece count, not the triangles. The other two
+  stay in `art_inbox/twin_wreck_field/`.

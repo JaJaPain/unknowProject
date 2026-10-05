@@ -12554,12 +12554,16 @@ func _run_pickup_intercept_smoke_test() -> void:
 ## engine check (windowed): placed in open space with its drift animation
 ## looping, pictured from ~6 km, ~2.5 km and ~600 m, with frame rate and draw
 ## calls against the same view without it. Pictures in --out.
-##   -- --wreck-snapshot --baseline-offline --out=<dir>
+##   -- --wreck-snapshot --baseline-offline --out=<dir> [--model=res://...glb]
 func _run_wreck_snapshot() -> void:
 	var out := "user://wreck_snapshots"
+	var model := "res://assets/landmarks/twin_wreck_field_v3_batched.glb"
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--out="):
 			out = arg.substr(6)
+		elif arg.begins_with("--model="):
+			model = arg.substr(8)
+	var tag := model.get_file().get_basename()
 	DirAccess.make_dir_recursive_absolute(out)
 	var landing := get_node_or_null("LandingLayer")
 	if landing != null:
@@ -12582,7 +12586,7 @@ func _run_wreck_snapshot() -> void:
 		cam.look_at(spot, Vector3.UP)
 		await _settle_frames(90)
 		baseline[v[0]] = [Performance.get_monitor(Performance.TIME_FPS), Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)]
-	var scene := load("res://assets/landmarks/twin_wreck_field.glb") as PackedScene
+	var scene := load(model) as PackedScene
 	if scene == null:
 		push_error("[WreckSnapshot] FAIL: the model didn't import")
 		get_tree().quit(1)
@@ -12604,7 +12608,7 @@ func _run_wreck_snapshot() -> void:
 		var b: AABB = mi.global_transform * mi.get_aabb()
 		box = b if first else box.merge(b)
 		first = false
-	print("[WreckSnapshot] imported: %d meshes, %d animation players, size %s m" % [meshes, anims.size(), str(box.size.snapped(Vector3.ONE * 10))])
+	print("[WreckSnapshot] %s imported: %d meshes, %d animation players, size %s m" % [tag, meshes, anims.size(), str(box.size.snapped(Vector3.ONE * 10))])
 	for v in views:
 		cam.global_position = spot + (v[1] as Vector3)
 		cam.look_at(spot, Vector3.UP)
@@ -12612,7 +12616,7 @@ func _run_wreck_snapshot() -> void:
 		var fps := Performance.get_monitor(Performance.TIME_FPS)
 		var calls := Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
 		print("[WreckSnapshot] %s view: %.0f fps (without: %.0f), %d draw calls (without: %d)" % [v[0], fps, baseline[v[0]][0], calls, baseline[v[0]][1]])
-		await _hud_snapshot_save(out.path_join("wreck_%s.png" % v[0]))
+		await _hud_snapshot_save(out.path_join("%s_%s.png" % [tag, v[0]]))
 	print("[WreckSnapshot] DONE")
 	get_tree().quit(0)
 
