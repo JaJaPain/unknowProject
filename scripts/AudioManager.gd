@@ -747,10 +747,21 @@ func set_sfx_volume(value: float):
 func get_sfx_volume() -> float:
 	return sfx_volume_percent
 
+## A quieter music bed for a mood (the idle station tour), on top of which
+## dialogue still ducks: setting the bus directly fought the duck, and a
+## voice line's release put the music back to full (Abe, 2026-10-05).
+var ambience_dip_db := 0.0
+
+
+func set_ambience_dip(db: float) -> void:
+	ambience_dip_db = db
+	_update_bus_volumes()
+
+
 func _update_bus_volumes():
 	var music_idx = AudioServer.get_bus_index("Music")
 	if music_idx != -1:
-		var target_db = linear_to_db(music_volume_percent)
+		var target_db = linear_to_db(music_volume_percent) + ambience_dip_db
 		if is_ducked:
 			target_db -= _dialogue_duck_music_db
 		# Duck and release smoothly (a snap is audible under a voice line).

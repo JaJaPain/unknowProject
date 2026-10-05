@@ -373,6 +373,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_traffic_berth_snapshot")
 	elif "--comet-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_comet_snapshot")
+	elif "--tour-preview" in OS.get_cmdline_user_args() or "--tour-preview-check" in OS.get_cmdline_user_args():
+		call_deferred("_run_tour_preview")
 	elif "--station-tour-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_tour_snapshot")
 	elif "--pickup-intercept-smoke-test" in OS.get_cmdline_user_args():
@@ -12256,6 +12258,76 @@ func _run_comet_snapshot() -> void:
 			GlobalState.paused = false
 	Engine.time_scale = 1.0
 	print("[CometSnapshot] PASS (camera %s)" % str(cam.name if cam != null else "none"))
+	get_tree().quit(0)
+
+
+## For Abe to hear the idle tour without the tutorial (2026-10-05): docked at
+## the main station, the tour after 5 s idle, Kaelen's first away-line ~8 s
+## in, then every ~25 s; the comet comes in as normal. Real voices and music.
+##   -- --tour-preview
+## `--tour-preview-check` also logs the music bus level around her lines
+## (ducking) and quits after a minute.
+func _run_tour_preview() -> void:
+	var check := "--tour-preview-check" in OS.get_cmdline_user_args()
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	StoryManager.story_state["first_contract_handed_in"] = true
+	StoryManager.story_state["intro_agent_visited"] = true
+	StoryManager.story_state["intro_quest_delivered"] = true
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	var station := GlobalState.get_primary_station() as Node3D
+	player.global_position = station.call("berth_position")
+	player.velocity = Vector3.ZERO
+	player.is_docked = true
+	ui.call("toggle_dock_menu", station)
+	for i in 1500:
+		if ui.dock_panel.visible:
+			break
+		await get_tree().process_frame
+	var tour = ui.station_tour
+	tour.set("idle_s", 5.0)
+	tour.set("kaelen_first_s", 8.0)
+	tour.set("kaelen_every_s", 25.0)
+	print("[TourPreview] docked at %s; hands off the mouse and keys: the tour starts in 5 s" % str(station.get("display_name")))
+	# `--capture=<dir>`: frames of the first freighter the tour watches.
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--capture="):
+			var dir := arg.substr(10)
+			DirAccess.make_dir_recursive_absolute(dir)
+			while tour.get("_watch") == null:
+				await get_tree().create_timer(0.1).timeout
+			var ship: Node3D = tour.get("_watch")
+			for f in 30:
+				if is_instance_valid(ship):
+					var fwd := -ship.global_basis.z
+					print("[TourPreview] f%02d ship %s pos %s nose %s" % [f, ship.name, str(ship.global_position.snapped(Vector3.ONE)), str(fwd.snapped(Vector3.ONE * 0.01))])
+				await _hud_snapshot_save(dir.path_join("watch_%02d.png" % f))
+				await get_tree().create_timer(0.3).timeout
+			get_tree().quit(0)
+			return
+	if not check:
+		return
+	var bus := AudioServer.get_bus_index("Music")
+	var said := 0
+	var t := 0.0
+	var low := 0.0
+	var high := -80.0
+	while t < 75.0:
+		await get_tree().create_timer(0.25).timeout
+		t += 0.25
+		var db := AudioServer.get_bus_volume_db(bus)
+		var talking: bool = TTSInterface.audio_player != null and TTSInterface.audio_player.playing
+		if bool(tour.call("is_touring")):
+			low = minf(low, db)
+			high = maxf(high, db)
+		if int(tour.get("kaelen_lines_said")) != said or (talking and int(t * 4) % 4 == 0):
+			said = int(tour.get("kaelen_lines_said"))
+			print("[TourPreview] t=%.1f music %.1f dB, voice playing %s, Kaelen lines %d" % [t, db, talking, said])
+	print("[TourPreview] music during the tour: %.1f to %.1f dB (dip %.1f, duck %.1f); Kaelen lines %d" % [low, high, AudioManager.ambience_dip_db, AudioManager.get("_dialogue_duck_music_db"), said])
 	get_tree().quit(0)
 
 

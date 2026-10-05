@@ -23,7 +23,9 @@ const TRACTOR_RANGE := 350.0
 const TRACTOR_PULL_S := 4.0
 const CLAMP_HOLD_S := 1.5
 const SLIDE_IN_S := 1.2
-const PUSH_OUT_S := 3.0
+## Half the old speed (Abe, 2026-10-05: the lift off the pier was "very very
+## fast"; the overhead lane is ~1,400 units).
+const PUSH_OUT_S := 6.0
 const PUSH_OUT_DIST := 150.0
 ## Arrivals that go to an outpost instead of the main station.
 const OUTPOST_SHARE := 0.33
@@ -127,7 +129,11 @@ func _spawn() -> void:
 			# Out along its own lane, past the safety zone, then the engines.
 			var entry_point: Vector3 = station.call("lane_entry_position", dock_node)
 			var out_dir := (entry_point - from).normalized()
-			_face(ship as Node3D, entry_point)
+			# Lifted out level, as it sat at the pier, not pointed up the lane:
+			# nose-up on the overhead lane, then a flip flat when the engines
+			# took over, was the "messy" first freighter in the station tour
+			# (Abe, 2026-10-05). _push_out swings it toward the gate on the way.
+			(ship as Node3D).global_basis = station.call("berth_basis", dock_node)
 			_push_out(entry, station, entry_point + out_dir * PUSH_OUT_DIST)
 		else:
 			_push_out(entry, station, from + toward * PUSH_OUT_DIST + side * 20.0)
@@ -300,6 +306,13 @@ func _push_out(entry: Dictionary, station: Node3D, clear_point: Vector3) -> void
 	var beam := _beam(dock_node if dock_node != null and is_instance_valid(dock_node) else station, ship)
 	var tween := ship.create_tween()
 	tween.tween_property(ship, "global_position", clear_point, PUSH_OUT_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	# Level, turning gently to face where it's headed, so its engines take over
+	# already pointing the right way: no whip round at the release.
+	var heading: Vector3 = (entry["dest"] as Vector3) - clear_point
+	heading.y = 0.0
+	if heading.length() > 1.0:
+		var facing := Basis.looking_at(heading.normalized(), Vector3.UP)
+		tween.parallel().tween_property(ship, "quaternion", facing.get_rotation_quaternion(), PUSH_OUT_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_callback(func() -> void:
 		if is_instance_valid(beam):
 			beam.queue_free()

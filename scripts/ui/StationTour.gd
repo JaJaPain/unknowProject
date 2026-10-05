@@ -52,8 +52,6 @@ var _watch: Node3D = null
 var _watch_until := -1.0
 var _fade_layer: CanvasLayer = null
 var _fade: ColorRect = null
-var _music_db := 0.0
-var _music_bus := -1
 ## `--station-tour-snapshot` shortens the wait.
 var idle_s := IDLE_S
 
@@ -155,10 +153,7 @@ func start() -> void:
 		_cam.make_current()
 	)
 	tw.tween_property(_fade, "color:a", 0.0, FADE_S * 1.5)
-	_music_bus = AudioServer.get_bus_index("Music")
-	if _music_bus >= 0:
-		_music_db = AudioServer.get_bus_volume_db(_music_bus)
-		AudioServer.set_bus_volume_db(_music_bus, _music_db + MUSIC_DIP_DB)
+	AudioManager.set_ambience_dip(MUSIC_DIP_DB)
 
 
 func stop() -> void:
@@ -167,8 +162,7 @@ func stop() -> void:
 	_touring = false
 	_idle = 0.0
 	print("[StationTour] stop")
-	if _music_bus >= 0:
-		AudioServer.set_bus_volume_db(_music_bus, _music_db)
+	AudioManager.set_ambience_dip(0.0)
 	var tw := create_tween().set_ignore_time_scale(true)
 	_fade.color.a = maxf(_fade.color.a, 0.6)
 	if _prev_cam != null and is_instance_valid(_prev_cam):
@@ -299,9 +293,10 @@ func _kaelen_tick() -> void:
 	SpeechService.play_ambient(line, GlobalState.KAELEN_VOICE_PROFILE_ID, true, "Broker Kaelen")
 	kaelen_lines_said += 1
 	print("[StationTour] Kaelen: %s" % line)
-	_kaelen_next = _clock + KAELEN_EVERY_S + randf_range(-KAELEN_JITTER_S, KAELEN_JITTER_S)
+	_kaelen_next = _clock + kaelen_every_s + randf_range(-KAELEN_JITTER_S, KAELEN_JITTER_S) * kaelen_every_s / KAELEN_EVERY_S
 
 
 ## Tests: say the first one sooner, and how many she's said.
 var kaelen_first_s := KAELEN_FIRST_S
+var kaelen_every_s := KAELEN_EVERY_S
 var kaelen_lines_said := 0
