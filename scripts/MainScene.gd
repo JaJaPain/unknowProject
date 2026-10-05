@@ -11,6 +11,12 @@ const WorldScale := preload("res://scripts/domain/WorldScale.gd")
 static func start_gas_giant_seed() -> int:
 	return hash("start_gas_giant:%d" % int(GlobalState.campaign_seed))
 
+
+## The start system's rocky planet, its own look each campaign (terrestrial
+## shaders, 2026-10-04).
+static func start_rocky_planet_seed() -> int:
+	return hash("start_rocky_planet:%d" % int(GlobalState.campaign_seed))
+
 var ui_manager: Control
 @onready var gas_giant: Node3D = $GasGiant
 @onready var rocky_planet: Node3D = $RockyPlanet
@@ -38,6 +44,7 @@ func _ready():
 	PlanetRotation.apply(rocky_planet, false, rotation_rng)
 	# Each campaign's start system has its own gas giant (playtest 2026-10-02).
 	GasGiantLookType.apply(gas_giant, start_gas_giant_seed())
+	preload("res://scripts/generation/TerrestrialLook.gd").apply(rocky_planet, start_rocky_planet_seed())
 
 	# Spawn Asteroid rings around Gas Giant (radius 600, ring at 850, width 150)
 	_spawn_asteroid_ring(gas_giant, WorldScale.travel(850.0), 150.0, 75, "GasGiantBelt")

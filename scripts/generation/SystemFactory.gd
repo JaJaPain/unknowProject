@@ -229,6 +229,10 @@ func _create_planet(config: SystemConfig, index: int, force_resource_belt: bool 
 	mesh_instance.name = "MeshInstance3D"
 	mesh_instance.mesh = mesh
 	planet.add_child(mesh_instance)
+	if not is_gas:
+		# Cratered rock or ocean world (terrestrial shaders), from its own
+		# seed; visual only, so the planet stays "rocky" to everything else.
+		preload("res://scripts/generation/TerrestrialLook.gd").apply(planet, config.seed_value * 37 + index)
 	if is_gas:
 		# Its own clouds, storms and atmosphere (gas giant V2), from the same
 		# per-planet seed as before. Uses its own RNG, not this factory's.

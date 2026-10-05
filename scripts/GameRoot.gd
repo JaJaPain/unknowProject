@@ -363,6 +363,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_cruise_smoke_test")
 	elif "--route-tour-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_route_tour_smoke_test")
+	elif "--planet-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_planet_snapshot")
 	elif "--station-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
@@ -1585,6 +1587,9 @@ func _refresh_local_faction_looks() -> void:
 		var giant := start_root.get_node_or_null("GasGiant") as Node3D
 		if giant != null:
 			preload("res://scripts/generation/GasGiantLook.gd").apply(giant, start_root.start_gas_giant_seed())
+		var rocky := start_root.get_node_or_null("RockyPlanet") as Node3D
+		if rocky != null and start_root.has_method("start_rocky_planet_seed"):
+			preload("res://scripts/generation/TerrestrialLook.gd").apply(rocky, start_root.start_rocky_planet_seed())
 	# Remember what these belts hold, for the star map (saved with the story).
 	var known: Dictionary = StoryManager.story_state.get("known_system_ores", {})
 	known[str(world.get("system_id", ""))] = ores.keys()
@@ -12128,6 +12133,51 @@ func _run_cruise_smoke_test() -> void:
 	get_tree().quit(0)
 
 
+## The start system's rocky planet as each terrestrial family (ChatGPT's
+## shaders), side-lit like the gas giant snapshot (windowed).
+##   -- --planet-snapshot --baseline-offline --out=<dir>
+func _run_planet_snapshot() -> void:
+	var out := "user://planet_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var planet := get_active_system_root().get_node_or_null("RockyPlanet") as Node3D
+	if planet == null:
+		print("PLANETSHOT no rocky planet")
+		get_tree().quit(1)
+		return
+	var Look := preload("res://scripts/generation/TerrestrialLook.gd")
+	var body: MeshInstance3D = Look.body_of(planet)
+	var radius: float = body.get_aabb().size.x * 0.5 * body.global_basis.get_scale().x
+	var shot := Camera3D.new()
+	shot.far = radius * 20.0
+	get_active_system_root().add_child(shot)
+	var to_sun := Vector3(-0.62, 0.24, -0.74)
+	for light in get_active_system_root().find_children("*", "DirectionalLight3D", true, false):
+		to_sun = (light as DirectionalLight3D).global_basis.z
+		break
+	shot.global_position = planet.global_position + to_sun.rotated(Vector3.UP, deg_to_rad(65.0)).normalized() * radius * 3.2
+	shot.look_at(planet.global_position, Vector3.UP)
+	shot.current = true
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	for family in 6:
+		Look.apply(planet, 21, family)
+		print("PLANETSHOT family %d: %s" % [family, str((body.material_override as ShaderMaterial).get_meta("family", ""))])
+		for i in 20:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("planet_%d.png" % family))
+	get_tree().quit()
+
+
 ## Playtest 2026-10-04 c finding 7: the autopilot's 180s. Starts outside each
 ## station and outpost and flies (APPROACH, at cruise) to every other station,
 ## the gate and a rock in each belt, recording the biggest heading swing in
@@ -12198,6 +12248,7 @@ func _run_route_tour_smoke_test() -> void:
 						worst = swing
 					if swing > 120.0:
 						uturns += 1
+						messages.append("%.0fs U-TURN %.0f deg, %.0f u to go, speed %.0f, nav %s" % [sim, swing, now_dist, float(player.current_speed), str(player.nav_mode)])
 						headings.clear()
 				var msg := str(player.last_navigation_status_message)
 				if msg != last_msg and not msg.is_empty():
