@@ -208,10 +208,22 @@ func _setup_berths(model_root: Node3D) -> void:
 			_hull_radius = maxf(_hull_radius, box.get_endpoint(i).length())
 
 
-## Where a ship sits in the player's berth, and how it faces.
-func berth_position() -> Vector3:
+## Where a ship sits in a berth (the player's by default), and how it faces.
+func berth_position(berth: Node3D = null) -> Vector3:
+	if berth == null:
+		berth = player_berth
 	var standoff := OUTPOST_BERTH_STANDOFF if _outpost_berths else BERTH_STANDOFF
-	return player_berth.global_position + player_berth.global_basis.x.normalized() * standoff
+	return berth.global_position + berth.global_basis.x.normalized() * standoff
+
+
+## The berths traffic uses: every berth but the player's (Abe, 2026-10-05:
+## freighters stop sharing the player's berth).
+func traffic_berths() -> Array[Node3D]:
+	var out: Array[Node3D] = []
+	for b in berths:
+		if b != player_berth and is_instance_valid(b):
+			out.append(b)
+	return out
 
 
 ## Outposts are lit at this share of a main station's light size.
@@ -219,8 +231,10 @@ func light_scale() -> float:
 	return OUTPOST_LIGHT_SCALE if _outpost_berths else 1.0
 
 
-func berth_basis() -> Basis:
-	var radial := player_berth.global_position - global_position
+func berth_basis(berth: Node3D = null) -> Basis:
+	if berth == null:
+		berth = player_berth
+	var radial := berth.global_position - global_position
 	radial.y = 0.0
 	return Basis.looking_at(radial.normalized(), Vector3.UP)
 
@@ -239,11 +253,26 @@ func autopilot_radius() -> float:
 ## Where docking starts and undocking ends: the point on the approach sphere
 ## straight out from the berth. The autopilot flies here; the beam does the
 ## rest along the line to the berth.
-func lane_entry_position() -> Vector3:
-	if _outpost_berths:
-		# Where the berth's outward line (marker +X) meets the sphere.
-		var from := berth_position() - global_position
-		var dir := player_berth.global_basis.x.normalized()
+func lane_entry_position(berth: Node3D = null) -> Vector3:
+	# The player's main-station berth keeps its radial lane (unchanged); every
+	# outpost berth, and every traffic berth, runs along its own marker's +X.
+	var along_marker := _outpost_berths or (berth != null and berth != player_berth)
+	if berth == null:
+		berth = player_berth
+	if along_marker:
+		# Where the berth's lane meets the sphere. Outposts: along the marker's
+		# +X. A main station's traffic berths: straight down onto the pier from
+		# above, as ChatGPT's station harbor test brings ships in (its tested
+		# clear corridors; the marker's +X there runs along the arm).
+		var from := berth_position(berth) - global_position
+		var dir := berth.global_basis.x.normalized()
+		if not _outpost_berths:
+			# The piers sit inside the turning habitat ring: a lane straight out
+			# from the centre would pass through it (seen in the traffic
+			# snapshot). Down from above clears it, as in ChatGPT's harbor test.
+			# (The coarse hull box over the ring covers its open middle, so a
+			# ray test calls this lane blocked; the snapshot shows it clear.)
+			dir = global_basis.y.normalized()
 		var along := from.dot(dir)
 		var r := approach_sphere_radius()
 		var t := -along + sqrt(maxf(0.0, along * along + r * r - from.length_squared()))
@@ -255,7 +284,9 @@ func lane_entry_position() -> Vector3:
 
 
 ## The node the tractor beam comes from: the berth on a berthed station.
-func beam_origin() -> Node3D:
+func beam_origin(berth: Node3D = null) -> Node3D:
+	if berth != null:
+		return berth
 	return player_berth if is_berthed() else self
 
 

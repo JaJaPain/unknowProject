@@ -98,10 +98,20 @@ func _spawn() -> void:
 	root.add_child(ship)
 	# After _ready: the role setup there sets its own speed.
 	ship.set("speed", forced_speed if forced_speed > 0.0 else 16.0)
-	# The berth, not the station's centre (inside its model).
-	var berth: Vector3 = station.get_docking_position(gate.global_position) if station.has_method("get_docking_position") else station.global_position
+	# A berth of its own, never the player's (Abe, 2026-10-05): its lane entry
+	# on the approach sphere is where the beam takes it. Stations without
+	# berths keep their single docking point.
+	var dock_node: Node3D = _pick_berth(station)
+	var berth: Vector3
+	if dock_node != null:
+		berth = station.call("lane_entry_position", dock_node)
+	else:
+		berth = station.get_docking_position(gate.global_position) if station.has_method("get_docking_position") else station.global_position
 	var from: Vector3 = gate.global_position if arriving else berth
 	var to: Vector3 = berth if arriving else gate.global_position
+	if not arriving and dock_node != null:
+		# Departures start at the pier itself, then the beam carries them out.
+		from = station.call("berth_position", dock_node)
 	# Arrivals start just off the gate; departures at the berth, on the beam.
 	var toward := (to - from).normalized()
 	var side := Vector3(randf_range(-1, 1), randf_range(-0.2, 0.2), randf_range(-1, 1)).normalized()
@@ -110,16 +120,24 @@ func _spawn() -> void:
 	ship.set("patrol_center", to)
 	var route: Array[Vector3] = [to]
 	ship.set("patrol_route", route)
-	var entry := {"ship": ship, "dest": to, "kind": "dock" if arriving else "leave", "station": station, "base_speed": float(ship.get("speed"))}
+	var entry := {"ship": ship, "dest": to, "kind": "dock" if arriving else "leave", "station": station, "base_speed": float(ship.get("speed")), "berth": dock_node}
 	_ships.append(entry)
 	if not arriving:
-		_push_out(entry, station, from + toward * PUSH_OUT_DIST + side * 20.0)
+		if dock_node != null:
+			# Out along its own lane, past the safety zone, then the engines.
+			var entry_point: Vector3 = station.call("lane_entry_position", dock_node)
+			var out_dir := (entry_point - from).normalized()
+			_face(ship as Node3D, entry_point)
+			_push_out(entry, station, entry_point + out_dir * PUSH_OUT_DIST)
+		else:
+			_push_out(entry, station, from + toward * PUSH_OUT_DIST + side * 20.0)
 	print("[Traffic] %s %s (%s) %s" % [ship.name, "inbound from the gate" if arriving else "leaving for the gate", ship.get("faction"), ship.get("ship_role")])
 
 
 func _tick_ship(entry: Dictionary) -> void:
 	var ship = entry["ship"]
 	if not is_instance_valid(ship) or bool(ship.get("destroyed")):
+		_release_berth(entry)
 		_ships.erase(entry)
 		return
 	if bool(entry.get("on_beam", false)):
@@ -136,6 +154,7 @@ func _tick_ship(entry: Dictionary) -> void:
 		entry["best_dist"] = d
 		entry["stuck_since"] = now
 	elif now - int(entry.get("stuck_since", now)) > 12000:
+		_release_berth(entry)
 		_ships.erase(entry)
 		stuck_count += 1
 		var fade := (ship as Node3D).create_tween()
@@ -145,15 +164,17 @@ func _tick_ship(entry: Dictionary) -> void:
 	if entry["kind"] == "dock" and d < TRACTOR_RANGE:
 		var station = entry.get("station")
 		if station == null or not is_instance_valid(station):
+			_release_berth(entry)
 			_ships.erase(entry)
 			(ship as Node).queue_free()
 			return
 		# One ship on a berth's beam at a time; the next holds off until it's
 		# clear (it keeps circling its approach point).
-		if _busy_berths.has(station.get_instance_id()):
+		if _busy_berths.has(_berth_key(station, entry.get("berth"))):
 			return
 		_tractor_in(entry, station)
 	elif entry["kind"] == "leave" and d < GATE_RADIUS:
+		_release_berth(entry)
 		_ships.erase(entry)
 		var parent := (ship as Node3D).get_parent() as Node3D
 		if parent != null:
@@ -168,11 +189,18 @@ func _tick_ship(entry: Dictionary) -> void:
 func _tractor_in(entry: Dictionary, station: Node3D) -> void:
 	var ship: Node3D = entry["ship"]
 	entry["on_beam"] = true
-	_busy_berths[station.get_instance_id()] = true
+	var key := _berth_key(station, entry.get("berth"))
+	_busy_berths[key] = true
 	tractored_count += 1
 	_hold_engines(ship)
-	var beam := _beam(station, ship)
+	var dock_node = entry.get("berth")
+	if dock_node != null and not is_instance_valid(dock_node):
+		dock_node = null
+	var beam := _beam(dock_node if dock_node != null else station, ship)
 	var berth: Vector3 = entry["dest"]
+	if dock_node != null:
+		_tractor_to_pier(entry, station, dock_node, beam, key)
+		return
 	# Nose along the way it's being moved, never at the station's centre while
 	# being dragged somewhere else: that read as flying backwards (playtest
 	# 2026-10-04 d finding 2; the new outposts' berths sit above or beside).
@@ -187,12 +215,75 @@ func _tractor_in(entry: Dictionary, station: Node3D) -> void:
 	tween.tween_property(ship, "global_position", berth.lerp(station.global_position, 0.4), SLIDE_IN_S).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(ship, "scale", Vector3.ONE * 0.05, SLIDE_IN_S).set_ease(Tween.EASE_IN)
 	tween.tween_callback(func() -> void:
-		_busy_berths.erase(station.get_instance_id())
+		_busy_berths.erase(key)
+		_release_berth(entry)
 		_ships.erase(entry)
 		docked_count += 1
 		if str(station.get("station_type")) == "outpost":
 			outpost_docked_count += 1
 		print("[Traffic] %s docked at %s (tractor)" % [ship.name, str(station.get("display_name"))])
+		ship.queue_free())
+
+
+## Berths with traffic now: the player's is never among them, and two
+## freighters don't share one while there's a free one.
+var _berths_in_use := {}
+
+
+## A free traffic berth at `station` (null at a station without berths).
+func _pick_berth(station: Node3D) -> Node3D:
+	if not station.has_method("traffic_berths") or not bool(station.call("is_berthed")):
+		return null
+	var all: Array = station.call("traffic_berths")
+	if all.is_empty():
+		return null
+	var free: Array = all.filter(func(b): return not _berths_in_use.has(b.get_instance_id()))
+	var pick: Node3D = (free if not free.is_empty() else all)[randi() % (free if not free.is_empty() else all).size()]
+	_berths_in_use[pick.get_instance_id()] = true
+	return pick
+
+
+func _release_berth(entry: Dictionary) -> void:
+	var b = entry.get("berth")
+	if b != null and is_instance_valid(b):
+		_berths_in_use.erase(b.get_instance_id())
+
+
+static func _berth_key(station: Node3D, berth) -> int:
+	if berth != null and is_instance_valid(berth):
+		return (berth as Node).get_instance_id()
+	return station.get_instance_id()
+
+
+## A big station or outpost pier: the berth's own beam pulls the freighter
+## from its lane entry onto the pier, nose along the pull, then it settles
+## facing out like the player's ship, sits there a while (the piers look
+## busy), and is gone.
+const PIER_STAY_S := 8.0
+
+
+func _tractor_to_pier(entry: Dictionary, station: Node3D, dock_node: Node3D, beam: Node3D, key: int) -> void:
+	var ship: Node3D = entry["ship"]
+	var pier: Vector3 = station.call("berth_position", dock_node)
+	_face(ship, pier)
+	var settle: Basis = station.call("berth_basis", dock_node)
+	var tween := ship.create_tween()
+	tween.tween_property(ship, "global_position", pier, TRACTOR_PULL_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	tween.parallel().tween_property(ship, "quaternion", settle.get_rotation_quaternion(), TRACTOR_PULL_S)
+	tween.tween_interval(CLAMP_HOLD_S)
+	tween.tween_callback(func() -> void:
+		if is_instance_valid(beam):
+			beam.queue_free()
+		_busy_berths.erase(key)
+		docked_count += 1
+		if str(station.get("station_type")) == "outpost":
+			outpost_docked_count += 1
+		print("[Traffic] %s docked at %s, %s" % [ship.name, str(station.get("display_name")), dock_node.name]))
+	tween.tween_interval(PIER_STAY_S)
+	tween.tween_property(ship, "scale", Vector3.ONE * 0.05, SLIDE_IN_S).set_ease(Tween.EASE_IN)
+	tween.tween_callback(func() -> void:
+		_release_berth(entry)
+		_ships.erase(entry)
 		ship.queue_free())
 
 
@@ -202,12 +293,14 @@ func _push_out(entry: Dictionary, station: Node3D, clear_point: Vector3) -> void
 	var ship: Node3D = entry["ship"]
 	entry["on_beam"] = true
 	_hold_engines(ship)
-	var beam := _beam(station, ship)
+	var dock_node = entry.get("berth")
+	var beam := _beam(dock_node if dock_node != null and is_instance_valid(dock_node) else station, ship)
 	var tween := ship.create_tween()
 	tween.tween_property(ship, "global_position", clear_point, PUSH_OUT_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(func() -> void:
 		if is_instance_valid(beam):
 			beam.queue_free()
+		_release_berth(entry)
 		entry["on_beam"] = false
 		entry.erase("best_dist")
 		ship.set_physics_process(true))
@@ -273,4 +366,5 @@ func clear() -> void:
 			(entry["ship"] as Node).queue_free()
 	_ships.clear()
 	_busy_berths.clear()
+	_berths_in_use.clear()
 	_timer = 8.0

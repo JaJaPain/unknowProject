@@ -367,6 +367,10 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_planet_snapshot")
 	elif "--ship-facing-probe" in OS.get_cmdline_user_args():
 		call_deferred("_run_ship_facing_probe")
+	elif "--berth-probe" in OS.get_cmdline_user_args():
+		call_deferred("_run_berth_probe")
+	elif "--traffic-berth-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_traffic_berth_snapshot")
 	elif "--station-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_station_snapshot")
 	elif "--perf-probe" in OS.get_cmdline_user_args():
@@ -12143,6 +12147,107 @@ func _run_cruise_smoke_test() -> void:
 	print("[CruiseSmokeTest] PASS")
 	delete_savegame()
 	get_tree().quit(0)
+
+
+## A freighter on a main-station berth's beam and then at its pier
+## (windowed). Pictures in --out (default user://traffic_berth_snapshots).
+##   -- --traffic-berth-snapshot --baseline-offline --out=<dir>
+func _run_traffic_berth_snapshot() -> void:
+	var out := "user://traffic_berth_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var traffic = get_node_or_null("TrafficDirector")
+	if traffic == null:
+		for n in get_tree().root.find_children("*", "", true, false):
+			if n.get_script() != null and str(n.get_script().resource_path).ends_with("TrafficDirector.gd"):
+				traffic = n
+				break
+	if traffic == null:
+		print("TRAFFICSHOT no traffic director")
+		get_tree().quit(1)
+		return
+	traffic.call("clear")
+	traffic.set("forced_arriving", 1)
+	traffic.set("forced_outpost", 0)
+	traffic.call("spawn_now")
+	var entry: Dictionary = (traffic.get("_ships") as Array)[-1]
+	var ship: Node3D = entry["ship"]
+	var station: Node3D = entry["station"]
+	var berth: Node3D = entry["berth"]
+	ship.global_position = entry["dest"] + (entry["dest"] - station.global_position).normalized() * 200.0
+	var pier: Vector3 = station.call("berth_position", berth)
+	var cam := Camera3D.new()
+	cam.far = 20000.0
+	get_active_system_root().add_child(cam)
+	var outward: Vector3 = (pier - station.global_position)
+	outward.y = 0.0
+	cam.global_position = pier + outward.normalized() * 260.0 + Vector3.UP * 120.0 + outward.normalized().cross(Vector3.UP) * 160.0
+	cam.look_at(pier, Vector3.UP)
+	cam.current = true
+	for i in 120:
+		await get_tree().physics_frame
+		if bool(entry.get("on_beam", false)):
+			break
+	await get_tree().create_timer(2.0).timeout
+	await _hud_snapshot_save(out.path_join("traffic_on_beam.png"))
+	var docked_before := int(traffic.get("docked_count"))
+	for i in 600:
+		await get_tree().physics_frame
+		if int(traffic.get("docked_count")) > docked_before:
+			break
+	await get_tree().create_timer(0.5).timeout
+	await _hud_snapshot_save(out.path_join("traffic_at_pier.png"))
+	print("TRAFFICSHOT %s at %s %s, %.1f u from the pier, nose . berth +X %.2f" % [ship.name, station.name, berth.name, ship.global_position.distance_to(pier), (-ship.global_basis.z).normalized().dot(berth.global_basis.x.normalized())])
+	get_tree().quit()
+
+
+## Traffic berths (Abe, 2026-10-05: freighters stop sharing the player's
+## berth). For every station's traffic berths: does the marker's +X point out
+## of the station, and is the lane from the berth to its sphere entry clear
+## of the station's own hull? Exits 1 on a blocked lane.
+##   -- --berth-probe --baseline-offline
+func _run_berth_probe() -> void:
+	for i in 30:
+		await get_tree().physics_frame
+	var blocked := 0
+	var root := get_active_system_root()
+	for station in get_tree().get_nodes_in_group("station"):
+		if not root.is_ancestor_of(station) or not station.has_method("traffic_berths"):
+			continue
+		var list: Array = station.call("traffic_berths")
+		print("[BerthProbe] %s: %d berths, %d for traffic (player's: %s)" % [station.name, (station.get("berths") as Array).size(), list.size(), str(station.get("player_berth").name) if station.get("player_berth") != null else "none"])
+		for b in list:
+			var berth := b as Node3D
+			var at: Vector3 = station.call("berth_position", berth)
+			var entry: Vector3 = station.call("lane_entry_position", berth)
+			var radial: Vector3 = (berth.global_position - station.global_position).normalized()
+			var outward: float = radial.dot(berth.global_basis.x.normalized())
+			var query := PhysicsRayQueryParameters3D.create(at, entry)
+			query.exclude = [player.get_rid()]
+			var hit: Dictionary = get_world_3d().direct_space_state.intersect_ray(query)
+			var clear: bool = hit.is_empty() or hit.get("collider") != station
+			if not clear and str(station.get("station_type")) != "outpost":
+				# Main stations' lanes drop in from overhead through the ring's
+				# open middle, which the coarse hull box covers; checked by eye
+				# with --traffic-berth-snapshot instead.
+				print("[BerthProbe]   %s: overhead lane (hull box hit ignored)" % berth.name)
+				continue
+			if not clear:
+				blocked += 1
+			print("[BerthProbe]   %s: marker +X . radial %.2f, lane %.0f u, %s" % [berth.name, outward, at.distance_to(entry), "clear" if clear else "BLOCKED at %s" % str(hit.get("position"))])
+	print("[BerthProbe] %d blocked lanes" % blocked)
+	get_tree().quit(1 if blocked > 0 else 0)
 
 
 ## Playtest 2026-10-04 d finding 2: a ship came through a gate and flew

@@ -830,3 +830,11 @@ through the marked gate and flies you in):
 - [ ] **Traffic on the beam** faces where it's going, never slides backwards.
 - [ ] **Kaelen's routes:** after buying a route, she won't offer the next
       one until you've done 3 more contracts.
+
+## Y. Traffic uses its own berths (added 2026-10-05)
+
+- [ ] **Your berth stays yours:** at a big station, freighters come down on
+      their own beams to other piers around the ring, never yours.
+- [ ] **Freighters sit at the pier** a few seconds after docking, nose out,
+      then are gone; leaving ones lift off their pier straight up first.
+- [ ] **Outposts too:** freighters use the outpost's other berths, not yours.
