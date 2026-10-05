@@ -76,3 +76,27 @@ overview.
   (largest-extent axis / engine-glow markers), flagging any that are reversed.
 - **Ask Abe:** where was it (near a station or outpost, mid-fight, out in
   space)? Which faction or kind of ship?
+
+### 3. N.O.V.A.'s jealousy line came out garbled — CORRECTED (Abe asked for it mid-playtest)
+
+**Abe (screenshot):** N.O.V.A.: "This is a very long flight. She was just my
+main shaft. She didn't have any tools. She had her hands. I nearly vented."
+His correction: "This is a very long flight. Have I told you that mechanic
+was working on my intake shaft? She didn't use any tools, just her hands. I
+nearly vented."
+
+**Source:** not an authored line. The local model writes it from the
+quiet-moment "jealousy" template (`data/content/quiet_moment_beats.json`),
+which draws a mechanic, a part, a tool and a mishap from lists. It drew "my
+main shaft" and "nothing but his hands" for a woman mechanic, and the model
+mangled the sentence around the mismatch.
+
+**Done (data only, at Abe's request):** part "my main shaft" → "my intake
+shaft"; tool "nothing but his hands" → "no tools at all, just bare hands"
+(fits any mechanic).
+
+**Still worth doing after the playtest:** a quality check on these lines
+(reject fragments like "She was just my main shaft.": a sentence whose
+subject is the mechanic and whose object is a part, or under two clauses).
+Abe's corrected line could be an approved example for this beat, or a fixed
+fallback when the model's line fails the check.
