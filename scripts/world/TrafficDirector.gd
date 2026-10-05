@@ -265,7 +265,10 @@ const PIER_STAY_S := 8.0
 func _tractor_to_pier(entry: Dictionary, station: Node3D, dock_node: Node3D, beam: Node3D, key: int) -> void:
 	var ship: Node3D = entry["ship"]
 	var pier: Vector3 = station.call("berth_position", dock_node)
-	_face(ship, pier)
+	# No snap to face the pier: on a main station's overhead lane that pitched
+	# the ship nose-down in one frame (Abe, 2026-10-05: "the first ship you see
+	# get tractored is a bit messy"). It turns smoothly from its approach
+	# heading into its docked pose over the pull instead.
 	var settle: Basis = station.call("berth_basis", dock_node)
 	var tween := ship.create_tween()
 	tween.tween_property(ship, "global_position", pier, TRACTOR_PULL_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)

@@ -16,6 +16,25 @@ const EASE := 0.6
 const MUSIC_DIP_DB := -5.0
 ## Watch a freighter for this long after its beam lets go.
 const WATCH_AFTER_S := 4.0
+## Kaelen, voice only, while you're away (Abe, 2026-10-05): five minutes
+## into the tour, then about every five minutes, over comms (no portrait, no
+## text). Every line is heard before any repeats. Lines: Abe's two, drafts
+## for the rest.
+const KAELEN_FIRST_S := 300.0
+const KAELEN_EVERY_S := 300.0
+const KAELEN_JITTER_S := 60.0
+const KAELEN_LINES := [
+	"Shiny, you can't make me any credits if you're sleeping.",
+	"Aw, just look. Wonder if Shiny is dreaming of the credits they'll make me?",
+	"Still parked, Shiny? Docking fees don't pay themselves. Well, they do. To me.",
+	"I've had cargo pods with more ambition than you this afternoon, Shiny.",
+	"Take your time, Shiny. It's not as if there's a whole galaxy out there with my money in it.",
+	"If you're napping, I'm billing it as a consultation.",
+	"Shiny, the board's full of jobs and not one of them does itself. Believe me, I've asked.",
+]
+var _kaelen_next := -1.0
+var _kaelen_bag: Array = []
+
 ## How far the view leans from the station toward a crossing comet (0-1).
 const COMET_LEAN := 0.45
 
@@ -110,6 +129,7 @@ func start() -> void:
 		return
 	_touring = true
 	_watch = null
+	_kaelen_next = -1.0
 	_prev_cam = get_viewport().get_camera_3d()
 	_radius = _orbit_radius(_station)
 	_angle = _start_angle()
@@ -167,6 +187,7 @@ func _fly(delta: float) -> void:
 		return
 	_clock += delta
 	_angle += TAU / LAP_S * delta
+	_kaelen_tick()
 	_pick_freighter()
 	_place(1.0 - exp(-EASE * delta))
 
@@ -260,3 +281,27 @@ func _start_angle() -> float:
 		return 0.0
 	var d := _prev_cam.global_position - _station.global_position
 	return atan2(d.z, d.x)
+
+
+func _kaelen_tick() -> void:
+	if _kaelen_next < 0.0:
+		_kaelen_next = _clock + kaelen_first_s
+		# Her voice is made ahead, so it's ready when it's time.
+		for line in KAELEN_LINES:
+			SpeechService.cache(line, GlobalState.KAELEN_VOICE_PROFILE_ID)
+		return
+	if _clock < _kaelen_next or SpeechService.is_busy():
+		return
+	if _kaelen_bag.is_empty():
+		_kaelen_bag = KAELEN_LINES.duplicate()
+		_kaelen_bag.shuffle()
+	var line: String = _kaelen_bag.pop_back()
+	SpeechService.play_ambient(line, GlobalState.KAELEN_VOICE_PROFILE_ID, true, "Broker Kaelen")
+	kaelen_lines_said += 1
+	print("[StationTour] Kaelen: %s" % line)
+	_kaelen_next = _clock + KAELEN_EVERY_S + randf_range(-KAELEN_JITTER_S, KAELEN_JITTER_S)
+
+
+## Tests: say the first one sooner, and how many she's said.
+var kaelen_first_s := KAELEN_FIRST_S
+var kaelen_lines_said := 0

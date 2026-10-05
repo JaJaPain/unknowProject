@@ -64,6 +64,12 @@ func show_line(text: String, speaker: String = "", seconds: float = -1.0) -> voi
 	# The intro cinematic captions itself.
 	if gs != null and bool(gs.get("intro_cinematic_active")):
 		return
+	# The idle station tour has no overlays at all: Kaelen's away-lines are
+	# voice only (Abe, 2026-10-05).
+	var ui = gs.get_ui_manager() if gs != null and gs.has_method("get_ui_manager") else null
+	if ui != null and is_instance_valid(ui) and ui.get("station_tour") != null \
+			and bool(ui.station_tour.call("is_touring")):
+		return
 	var clean := text.strip_edges()
 	if clean.is_empty():
 		return

@@ -12296,6 +12296,7 @@ func _run_station_tour_snapshot() -> void:
 	ui.clear_dock_message()
 	var tour = ui.station_tour
 	tour.set("idle_s", 2.0)
+	tour.set("kaelen_first_s", 8.0)
 	var cam_before: Camera3D = get_viewport().get_camera_3d()
 	for i in 60:
 		await get_tree().create_timer(0.25).timeout
@@ -12325,10 +12326,23 @@ func _run_station_tour_snapshot() -> void:
 			await get_tree().create_timer(0.25).timeout
 			if tour.get("_watch") != null:
 				break
-		await get_tree().create_timer(4.0).timeout
+		# A strip of the pull: the freighter turns smoothly into its pier,
+		# no snap (Abe, 2026-10-05).
+		for f in 8:
+			await get_tree().create_timer(0.6).timeout
+			await _hud_snapshot_save(out.path_join("tour_beam_%d.png" % f))
 		await _hud_snapshot_save(out.path_join("tour_freighter.png"))
 		if tour.get("_watch") == null:
 			push_warning("[StationTourSnapshot] the tour never went to watch the freighter")
+	# Kaelen, voice only (her first line brought forward for the test).
+	for i in 40:
+		if int(tour.get("kaelen_lines_said")) > 0:
+			break
+		SpeechService.stop()
+		await get_tree().create_timer(0.25).timeout
+	if int(tour.get("kaelen_lines_said")) == 0:
+		fail.call("Kaelen never spoke during the tour.")
+		return
 	# Any key: everything back as it was.
 	var key := InputEventKey.new()
 	key.keycode = KEY_SHIFT

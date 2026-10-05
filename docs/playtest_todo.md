@@ -881,3 +881,8 @@ through the marked gate and flies you in):
       holder hands it over without asking you to sell your ore. Keep mining
       with the item aboard; the HUD says "... m³ + <item>". Selling ore keeps
       the item; handing in the item keeps the ore.
+- [ ] **Kaelen while you're away:** leave the station tour running 5+ minutes:
+      Kaelen's voice (over comms, no portrait or text) drops a line about you
+      being idle, then roughly every 5 minutes, no repeats until all 7 played.
+- [ ] **Smooth tractor in the tour:** the first freighter the tour watches
+      turns smoothly onto its pier, no sudden nose-down flip.
