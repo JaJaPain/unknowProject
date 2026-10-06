@@ -1,0 +1,328 @@
+{
+  "id": "premise.the_trembling_apprentice",
+  "schema_version": 1,
+  "title": "The Shaking Hand",
+  "logline": "An artisan's apprentice secretly buys machine-drawn cuprite wire to fake their masterwork guild trial before fuel tremors ruin their hands.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "wire_master",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "A renowned precision waveguide maker who refuses to calibrate any engine drawn by automated machinery.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "trembling_apprentice",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "A gifted metal spinner hiding advanced fuel-fume neuropathy that makes their fingers spasm under load.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "black_market_dealer",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Fences off-spec industrial components from deep-core salvage hulls with no questions asked.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "guild_forge",
+      "kind": "place",
+      "description": "The orbital craft guild's atmospheric foundry where masterwork engine coils are manually spun and inspected.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "Apprentices at {system}'s precision forge are preparing their hand-drawn waveguides for the annual journeyman assay.",
+  "private_truth": "The master's favorite apprentice secretly used illegal machine-pulled filament after nerve damage made manual wire-drawing impossible.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "apprentice_faked_waveguide_to_hide_nerve_damage"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The guild forge fires its crucible ovens for the journeyman qualification trials.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "trembling_apprentice",
+          "target": "guild_forge",
+          "reason": "The apprentice needs raw high-purity cuprite delivered to melt down so guild elders believe the wire is being pulled from raw ore.",
+          "private_fact": "The apprentice intends to dump the melted ore into slag and swap in pre-pulled black-market spools.",
+          "outcome_tags": [
+            "cuprite_delivered",
+            "cuprite_dumped"
+          ],
+          "routes": {
+            "cuprite_delivered": "next",
+            "cuprite_dumped": "resolution:trial_disqualified"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The dealer demands immediate payment before releasing the counterfeit waveguide spool.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "trembling_apprentice",
+          "target": "guild_forge",
+          "reason": "The apprentice asks the pilot to collect the machine-turned spool from the dealer's drop locker and bring it to the forge.",
+          "private_fact": "The dealer intentionally notched the spool's core with an identifying serial stamp to extort the apprentice later.",
+          "outcome_tags": [
+            "spool_retrieved",
+            "spool_lost"
+          ],
+          "routes": {
+            "spool_retrieved": "next",
+            "spool_lost": "resolution:trial_disqualified"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The master prepares the testing interferometer to certify the apprentice's finished waveguide.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "black_market_dealer",
+          "requester": "wire_master",
+          "target": "guild_forge",
+          "reason": "The master suspects foreign interference in the forge power grid and asks the pilot to scan the test rig's harmonics.",
+          "private_fact": "The master already noticed the apprentice's trembling hands and hopes the scanner will prove the boy's innocence.",
+          "outcome_tags": [
+            "reveal_machine_lattice",
+            "certify_hand_crafted",
+            "report_sensor_glitch"
+          ],
+          "routes": {
+            "reveal_machine_lattice": "next",
+            "certify_hand_crafted": "resolution:counterfeit_master",
+            "report_sensor_glitch": "resolution:trial_disqualified"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The scan reveals the waveguide's atomic lattice is machine-perfect, proving the fraud. The master looks devastated, while the apprentice begs for silence.",
+        "options": [
+          {
+            "id": "expose_apprentice",
+            "label": "Present the machine-lattice scan to uphold guild tradition",
+            "leads_to": "resolution:apprentice_expelled"
+          },
+          {
+            "id": "protect_apprentice",
+            "label": "Conceal the machine scan and vouch for the apprentice's manual craft",
+            "leads_to": "resolution:counterfeit_master"
+          },
+          {
+            "id": "blackmail_dealer",
+            "label": "Force the dealer to wipe the serial registry and sponsor the apprentice's clinic fees",
+            "leads_to": "resolution:extorted_rehab"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "apprentice_expelled",
+      "reached_by": "The pilot exposes the machine lattice to the master.",
+      "summary": "{role:wire_master} strips {role:trembling_apprentice} of guild standing, preserving traditional craftsmanship while the ruined apprentice drifts to scrap work.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wire_master",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trembling_apprentice",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "upheld_guild_craft",
+          "public_summary": "A pilot caught an apprentice sneaking machine wire into the sacred guild crucible."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "counterfeit_master",
+      "reached_by": "The pilot vouches for the apprentice or certifies the wire as handcrafted.",
+      "summary": "{role:trembling_apprentice} attains journeyman rank, though {role:black_market_dealer} holds the serial record for future blackmail.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "trembling_apprentice",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wire_master",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "black_market_dealer",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "extorted_rehab",
+      "reached_by": "The pilot forces the dealer to pay the apprentice's nerve treatments.",
+      "summary": "{role:black_market_dealer} pays for nerve treatments to avoid guild exposure, while {role:trembling_apprentice} withdraws to heal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "black_market_dealer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trembling_apprentice",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wire_master",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "trial_disqualified",
+      "reached_by": "The delivery fails or the pilot reports inconclusive sensor readings.",
+      "summary": "{role:wire_master} cancels the trials after crucible irregularities, leaving {role:trembling_apprentice} indentured to pay forge fuel debts.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "trembling_apprentice",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "wire_master",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "trial_disqualified",
+  "loose_threads": [
+    {
+      "id": "t_serial_die",
+      "surface": "cargo",
+      "detail": "The counterfeit wire spool carries an automated factory calibration stamp registered to a rival commercial engine foundry.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_clinic_ledger",
+      "surface": "price_board",
+      "detail": "Station infirmary logs record seven neuro-stabilizer prescriptions billed to an anonymous apprentice fund.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "blackmail"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Precision metal guild at {system} opens annual journeyman qualification trials.",
+    "Engine builders report delays as hand-drawn waveguide supplies dwindle.",
+    "Station clinics note sharp rise in chemical tremor among refinery laborers."
+  ],
+  "voice_direction": {
+    "wire_master": "Austere, measured, enunciating every syllable with stern pride in manual tolerances. Never raises their voice.",
+    "trembling_apprentice": "Breathless, hurried, speaking with a slight stammer and over-apologizing for minor delays.",
+    "black_market_dealer": "Casual, low-pitched, speaking in flat transactional terms without pretense of camaraderie."
+  },
+  "novelty_tags": [
+    "waveguide_craft",
+    "apprentice_trial",
+    "nerve_damage",
+    "counterfeit_component",
+    "precision_forge"
+  ]
+}

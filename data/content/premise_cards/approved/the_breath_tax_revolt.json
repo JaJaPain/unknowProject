@@ -1,0 +1,317 @@
+{
+  "id": "premise.the_breath_tax_revolt",
+  "schema_version": 1,
+  "title": "The Breath Tax Revolt",
+  "logline": "When a pompous station administrator imposes an oxygen consumption fee on docked pilots, an eccentric tramp freighter captain stages a stubborn dockside protest.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "absurd"
+  ],
+  "themes": [
+    "price_of_profit",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "lung_taxer",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "A fastidious habitat administrator who calculated that visiting pilots are breathing more station air than they pay for in berth fees.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "stubborn_captain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "A veteran tramp hauler captain who has lived aboard the same rustbucket for fifty years and refuses to pay a single breath tariff.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "customs_desk",
+      "kind": "place",
+      "description": "The bureaucratic intake booth on the main commercial ring where docking levies are assessed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tramp_berth",
+      "kind": "place",
+      "description": "A remote mooring slip where the veteran's ship is tethered with an umbilical air cord.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "rival_humiliated"
+  ],
+  "public_situation": "Dockers in {system} are laughing as customs officers threaten to impound a tramp freighter over unpaid excess atmospheric inhalation fines.",
+  "private_truth": "The administrator secretly lost station recreation funds gambling on drone races and fabricated the breathing tax to balance the office ledger.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "administrator_invented_oxygen_surcharge_to_cover_embezzlement"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The administrator posts an official tariff notice warning that uncertified pilot lungs will be subject to mandatory dockside spirometry checks.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "stubborn_captain",
+          "target": "tramp_berth",
+          "reason": "The captain needs thirty rolls of commercial duct tape and industrial sealant bought from ship chandlers to tape off every station air vent.",
+          "private_fact": "The captain has been venting compressed greenhouse gas from personal terrarium ferns to prove his ship generates more air than it breathes.",
+          "outcome_tags": [
+            "tape_delivered",
+            "tape_abandoned"
+          ],
+          "routes": {
+            "tape_delivered": "next",
+            "tape_abandoned": "resolution:captain_impounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Customs bailiffs attempt to clamp the tramp freighter's mooring ring while crowds of dockers jeer and take bets.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "stubborn_captain",
+          "target": "customs_desk",
+          "reason": "The captain asks the pilot to collect the station's historical charter from the archive annex to prove air was declared free in the station's founding charter.",
+          "private_fact": "The charter annex clerk is a drinking buddy of the captain and has already prepared the certified parchment.",
+          "outcome_tags": [
+            "charter_retrieved",
+            "charter_blocked"
+          ],
+          "routes": {
+            "charter_retrieved": "next",
+            "charter_blocked": "resolution:captain_impounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The administrator threatens to vent the entire docking bay unless the back-taxes are settled before the morning cycle.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "stubborn_captain",
+          "target": "customs_desk",
+          "reason": "The captain asks the pilot to courier the ancient founding charter straight to the magistrate's desk before the bailiff cuts the umbilical.",
+          "private_fact": "The charter contains an obscure rider granting any pilot who brings a living tree aboard free lifetime docking.",
+          "outcome_tags": [
+            "charter_delivered",
+            "charter_delayed"
+          ],
+          "routes": {
+            "charter_delivered": "next",
+            "charter_delayed": "resolution:captain_impounded"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot delivers the founding charter to the customs desk. The panicked administrator begs the pilot to hide the gambling embezzlement, while the captain demands a public apology.",
+        "options": [
+          {
+            "id": "enforce_free_air",
+            "label": "Present the charter to the magistrate to abolish the breath tax forever",
+            "leads_to": "resolution:breath_tax_scrapped"
+          },
+          {
+            "id": "blackmail_administrator",
+            "label": "Use proof of the administrator's gambling debts to secure free docking for all pilots",
+            "leads_to": "resolution:administrator_blackmailed"
+          },
+          {
+            "id": "broker_tree_compromise",
+            "label": "Invoke the tree rider and donate a hydroponic ficus to settle the dispute",
+            "leads_to": "resolution:ficus_settlement"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "breath_tax_scrapped",
+      "reached_by": "The pilot presents the charter and exposes the fraudulent tariff.",
+      "summary": "The magistrate throws out the breath tax; {role:lung_taxer} is demoted to waste recycling while {role:stubborn_captain} buys drinks for the entire dock.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lung_taxer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_free_breath",
+          "public_summary": "A pilot dug up a century-old station charter to stop a greedy administrator from taxing breathing."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "administrator_blackmailed",
+      "reached_by": "The pilot blackmails the administrator using gambling records.",
+      "summary": "{role:lung_taxer} quietly waives all docking fees for independent pilots, covering the shortfall with personal gambling winnings.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lung_taxer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "law_change",
+          "law": "docking_bribes",
+          "change": "repealed"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "ficus_settlement",
+      "reached_by": "The pilot invokes the ancient tree rider.",
+      "summary": "{role:stubborn_captain} places a potted rubber tree at customs, satisfying the legal loophole while {role:lung_taxer} sulks behind the desk.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lung_taxer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "captain_impounded",
+      "reached_by": "The delivery fails or the pilot drops the job.",
+      "summary": "Bailiffs impound {role:stubborn_captain}'s ship and levy massive fines; {role:lung_taxer} uses the proceeds to patch the gambling hole.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "stubborn_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lung_taxer",
+          "fate": "promoted"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "captain_impounded",
+  "loose_threads": [
+    {
+      "id": "t_gambling_tabs",
+      "surface": "price_board",
+      "detail": "A customs station terminal shows multiple betting slips filed under an administrator's employee identification badge.",
+      "can_carry_methods": [
+        "impersonation",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_archival_stamps",
+      "surface": "station_notice",
+      "detail": "The official station charter seal on the tax decree was affixed with an ink formula discontinued fifty years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "impersonation",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Dockers in {system} hold mock breathing protests outside habitat customs headquarters.",
+    "Station administrator defends lung volume tariffs as progressive atmospheric resource management.",
+    "Freight traffic backs up at {system} berths as pilots refuse air capacity metering."
+  ],
+  "voice_direction": {
+    "lung_taxer": "Haughty, bureaucratic, speaking in squeaky nasal cadence with relentless devotion to minor regulatory clauses.",
+    "stubborn_captain": "Booming, cantankerous, openly mocking petty officialdom and dropping colorful space sailor slang."
+  },
+  "novelty_tags": [
+    "breath_tax",
+    "bureaucratic_farce",
+    "docking_dispute",
+    "ancient_charter",
+    "atmospheric_levy"
+  ]
+}

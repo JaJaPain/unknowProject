@@ -1,0 +1,380 @@
+{
+  "id": "premise.the_ward_residency",
+  "schema_version": 1,
+  "title": "The Ward Residency",
+  "logline": "An apprentice surgeon discovers their mentor is testing experimental synthetic organ grafts on comatose quarantine patients.",
+  "scale": "local",
+  "tone": [
+    "survival",
+    "noir"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "mentor_surgeon",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Chief medical educator aboard the isolation ward; obsessive, brilliant, and convinced academic breakthroughs forgive ethical shortcuts.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "apprentice_medic",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "A top surgical resident who took the medical pledge seriously and noticed discrepancy marks in the autopsy logs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pharma_liaison",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Funds the medical residency program in exchange for proprietary biological trial data.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_ward",
+      "kind": "place",
+      "description": "A sterile, isolated habitat ring where miners exposed to toxic asteroid fumes are treated.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pharma_courier",
+      "kind": "ship",
+      "description": "A high-speed blockade runner carrying proprietary chemical catalysts for synthetic organ cultures.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "miners_fellowship",
+      "kind": "faction",
+      "description": "The mutual aid fraternal order representing sick asteroid labourers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "witness_at_large",
+    "evidence_loose"
+  ],
+  "public_situation": "Apprentice medics at {system}'s isolation hospital work around the clock as lung-rot cases from the deep asteroid veins overwhelm the intake docks.",
+  "private_truth": "The mentor surgeon is secretly implanting unlicensed bio-synthetic alveolar matrices into comatose miners to fulfill corporate clinical trial quotas.",
+  "core_why": {
+    "motive": "legacy",
+    "secret": "mentor_implanted_untested_synthetic_lungs_into_miners"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The hospital intake announces an emergency shortage of sterile surgical sealants.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "mentor_surgeon",
+          "target": "quarantine_ward",
+          "reason": "The chief surgeon needs forty ampoules of medical grade coagulant purchased from an outer depot to maintain ward operations.",
+          "private_fact": "The coagulants are actually special immunosuppressants needed to prevent the experimental synthetic organs from rejecting.",
+          "outcome_tags": [
+            "coagulant_delivered",
+            "coagulant_expired"
+          ],
+          "routes": {
+            "coagulant_delivered": "next",
+            "coagulant_expired": "resolution:ward_shuttered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The apprentice medic locks the bio-waste incinerator room after discovering anomalous tissue cultures.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "mentor_surgeon",
+          "requester": "apprentice_medic",
+          "target": "quarantine_ward",
+          "reason": "The apprentice asks the pilot to scan the hospital's internal telemetry bus and pull the deleted surgical records.",
+          "private_fact": "Six miners who officially died of toxic gas inhalation actually suffered acute rejection of unapproved corporate synthetic lung implants.",
+          "outcome_tags": [
+            "implants_documented",
+            "records_scrubbed"
+          ],
+          "routes": {
+            "implants_documented": "next",
+            "records_scrubbed": "resolution:ward_shuttered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "A corporate pharma courier arrives in the system to retrieve the clinical trial data drive.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "apprentice_medic",
+          "target": "pharma_courier",
+          "reason": "The apprentice begs the pilot to intercept the pharma courier before it docks and takes custody of the patient logs.",
+          "private_fact": "The courier hails mid-fight, offering a lucrative pharmaceutical patent stake if the pilot escorts the drive safely to the broker.",
+          "outcome_tags": [
+            "courier_crippled",
+            "accepted_pharma_deal"
+          ],
+          "routes": {
+            "courier_crippled": "next",
+            "accepted_pharma_deal": "resolution:pharma_triumph"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The miners' fellowship convenes an emergency assembly at the ward perimeter demanding answers.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "apprentice_medic",
+          "target": "quarantine_ward",
+          "reason": "The apprentice asks the pilot to deliver the extracted trial data drive to the fellowship delegation before security raids the ward.",
+          "private_fact": "The apprentice's own medical licence will be revoked as an accomplice if the scandal breaks without an official immunity grant.",
+          "outcome_tags": [
+            "trial_data_delivered",
+            "trial_data_intercepted"
+          ],
+          "routes": {
+            "trial_data_delivered": "next",
+            "trial_data_intercepted": "resolution:ward_shuttered"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the ward airlock with the clinical records. The apprentice demands accountability, while the mentor pleads that the research will cure all lung rot.",
+        "options": [
+          {
+            "id": "expose_mentor",
+            "label": "Deliver the evidence to the miners' fellowship to prosecute the medical experimentation",
+            "leads_to": "resolution:mentor_prosecuted"
+          },
+          {
+            "id": "sponsor_cure_settlement",
+            "label": "Broker a quiet settlement granting free patented treatment to all affected families",
+            "leads_to": "resolution:subsidized_restitution"
+          },
+          {
+            "id": "sell_to_broker",
+            "label": "Sell the research data drive to the pharma liaison for a private windfall",
+            "leads_to": "resolution:pharma_triumph"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mentor_prosecuted",
+      "reached_by": "The pilot delivers the records to the miners' fellowship.",
+      "summary": "{role:mentor_surgeon} is stripped of credentials and jailed, while {role:apprentice_medic} takes over the clinic under miners' oversight.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "mentor_surgeon",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_medic",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pharma_liaison",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "halted_ward_experiments",
+          "public_summary": "A pilot exposed an eminent surgeon using dying miners as guinea pigs for corporate patents."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "subsidized_restitution",
+      "reached_by": "The pilot brokers a restitution pact between the clinic and miners.",
+      "summary": "{role:pharma_liaison} funds lifetime care for afflicted miners, keeping {role:mentor_surgeon}'s research alive under strict joint supervision.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "mentor_surgeon",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_medic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pharma_liaison",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "pharma_triumph",
+      "reached_by": "The pilot accepts the pharma deal or sells the research drive.",
+      "summary": "The trial data enters corporate hands; {role:mentor_surgeon} receives a major patent promotion while {role:apprentice_medic} flees the system.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "mentor_surgeon",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_medic",
+          "fate": "fled"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "ward_shuttered",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "The hospital board buries the audit and closes the ward; untreated miners are evicted while {role:apprentice_medic} is blacklisted.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "mentor_surgeon",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_medic",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "ward_shuttered",
+  "loose_threads": [
+    {
+      "id": "t_biomarker_tags",
+      "surface": "cargo",
+      "detail": "Vials of experimental graft tissue carry patent codes licensed to an off-world commercial cosmetics and longevity syndicate.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_endowment_debt",
+      "surface": "price_board",
+      "detail": "The residency hospital's endowment charter lists an uncollateralized loan with an aggressive acceleration clause.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "bribery"
+    ],
+    "motives": [
+      "legacy",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Quarantine ward in {system} reports surge in chronic dust lung among belt drillers.",
+    "Chief surgeon appeals for emergency medical supplies amid supply chain delays.",
+    "Miners' fraternal league holds candlelight vigil outside hospital airlocks."
+  ],
+  "voice_direction": {
+    "mentor_surgeon": "Clinical, patrician, speaking with the cold intellectual warmth of a visionary who views individual lives as rounding errors.",
+    "apprentice_medic": "Distressed, earnest, speaking with fastidious medical precision while struggling to maintain professional composure.",
+    "pharma_liaison": "Silky, dismissive, speaking in corporate venture euphemisms and treating ethical objections as bargaining tactics."
+  },
+  "novelty_tags": [
+    "medical_residency",
+    "experimental_grafts",
+    "clinical_trials",
+    "corrupted_mentor",
+    "quarantine_ward"
+  ]
+}

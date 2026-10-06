@@ -1,0 +1,415 @@
+{
+  "id": "premise.the_bonded_cadets",
+  "schema_version": 1,
+  "title": "The Bonded Flight",
+  "logline": "When a regional flight academy bundles cadet indentures into traded corporate debt, cadet pilots seize an ore staging base across the jump gate.",
+  "scale": "regional",
+  "tone": [
+    "noir",
+    "political"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "academy_rector",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Administers the regional flight academy; treats cadet training as a high-margin structured finance asset.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cadet_spokesman",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "A top-ranked third-year flight apprentice leading the cadet strike after discovering their debts were tripled.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_gunboat",
+      "kind": "ship",
+      "description": "An armed heavy cutter deployed by the refinery syndicate to blockade striking cadet berths.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rector_flagship",
+      "kind": "ship",
+      "description": "The academy rector's armored executive transport equipped with escort interceptors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "academy_campus",
+      "kind": "place",
+      "description": "A prestigious orbital flight academy campus in the central core system.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "refinery_depot",
+      "kind": "place",
+      "description": "A gritty fuel and ore depot two jumps away where the striking cadets have barricaded themselves.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cadet_corps",
+      "kind": "faction",
+      "description": "The collective body of apprenticed flight cadets striking across the sector.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refinery_conglomerate",
+      "kind": "faction",
+      "description": "The heavy industrial cartel holding liens on cadet indentures.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "faction_weakened",
+    "public_outrage"
+  ],
+  "public_situation": "Flight cadets across three systems have walked out of cockpits, idling fuel convoys while the academy threatens forfeiture of pilot licences.",
+  "private_truth": "The academy rector secretly sold cadet tuition bonds to refinery cartels at impossible interest rates, turning flight schooling into indentured labour.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "academy_securitized_cadet_tuition_into_refinery_debt"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The flight academy declares the cadet strike illegal and freezes student bank accounts.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "academy_rector",
+          "target": "academy_campus",
+          "reason": "The rector hires an outsider to courier sealed indenture contracts to the system court before cadets can file for arbitration.",
+          "private_fact": "The contracts contain predatory clause riders doubling interest rates every thirty solar cycles.",
+          "outcome_tags": [
+            "indentures_filed",
+            "indentures_diverted"
+          ],
+          "routes": {
+            "indentures_filed": "next",
+            "indentures_diverted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Cadets seize an outer-system staging depot, cutting off refinery fuel shipments.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "cadet_spokesman",
+          "target": "refinery_depot",
+          "reason": "The spokesman needs replacement life support scrubbers bought from a civilian station to keep the barricaded cadets from freezing.",
+          "private_fact": "The cadets are down to three days of oxygen and their training craft lack jump fuel to escape.",
+          "outcome_tags": [
+            "parts_delivered",
+            "parts_failed"
+          ],
+          "routes": {
+            "parts_delivered": "next",
+            "parts_failed": "resolution:cadets_enslaved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The debt syndicate dispatches security cutters to starve out the cadet depot.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "cadet_spokesman",
+          "target": "syndicate_gunboat",
+          "reason": "The spokesman asks the pilot to destroy the security patrol cutter enforcing the supply blockade around the depot.",
+          "private_fact": "The patrol commander is authorized to open fire on unarmed cadet hulls if the depot does not surrender by nightfall.",
+          "outcome_tags": [
+            "gunboat_destroyed",
+            "gunboat_survived"
+          ],
+          "routes": {
+            "gunboat_destroyed": "next",
+            "gunboat_survived": "resolution:cadets_enslaved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The rector arrives at the gate junction on an armed inspection cutter to negotiate terms.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "academy_rector",
+          "requester": "cadet_spokesman",
+          "target": "refinery_depot",
+          "reason": "The spokesman needs the pilot to scan the depot's master comms transponder to extract the bond trading ledger.",
+          "private_fact": "The ledger names the refinery conglomerate as the majority debt collector holding the academy liens.",
+          "outcome_tags": [
+            "ledger_extracted",
+            "ledger_lost"
+          ],
+          "routes": {
+            "ledger_extracted": "next",
+            "ledger_lost": "resolution:cadets_enslaved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "Cadet sympathizers gather outside the central academy campus as regional arbitration convenes.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "cadet_spokesman",
+          "target": "rector_flagship",
+          "reason": "The spokesman asks the pilot to clear the final academy interceptor escorting the rector's transport.",
+          "private_fact": "The flagship captain hails mid-fight, offering full indemnity and debt cancellation if the pilot surrenders the bond ledger.",
+          "outcome_tags": [
+            "flagship_crippled",
+            "took_academy_deal"
+          ],
+          "routes": {
+            "flagship_crippled": "next",
+            "took_academy_deal": "resolution:rector_triumphs"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the bond ledger before the regional arbitration board. The cadets demand full charter liberation, while the syndicate offers to buy the debt ledger at triple face value.",
+        "options": [
+          {
+            "id": "liberate_cadets",
+            "label": "Deliver the ledger to arbitrators to dissolve the indentures and certify the cadets",
+            "leads_to": "resolution:cadet_emancipation"
+          },
+          {
+            "id": "sell_to_syndicate",
+            "label": "Sell the ledger to the conglomerate representatives in exchange for a hefty payout",
+            "leads_to": "resolution:rector_triumphs"
+          },
+          {
+            "id": "broker_guild_charter",
+            "label": "Form an independent cadet pilot co-operative under mutual insurance terms",
+            "leads_to": "resolution:cadet_cooperative"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cadet_emancipation",
+      "reached_by": "The pilot delivers the bond ledger to the arbitration board.",
+      "summary": "Arbitrators cancel the predatory tuition debt; {role:cadet_corps} earns full flight certification while {role:academy_rector} faces trial.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "cadet_corps",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "refinery_conglomerate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "academy_rector",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cadet_spokesman",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "freed_the_cadets",
+          "public_summary": "A pilot broke the debt ring that turned student pilots into refinery slaves."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "cadet_cooperative",
+      "reached_by": "The pilot brokers an independent cadet flight cooperative.",
+      "summary": "{role:cadet_corps} breaks away to form an autonomous transport union, buying out their hulls through collective freight hauling.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "cadet_corps",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "refinery_conglomerate",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "cadet_spokesman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "academy_rector",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "rector_triumphs",
+      "reached_by": "The pilot accepts the academy payoff or sells the ledger to the syndicate.",
+      "summary": "{role:refinery_conglomerate} enforces the bond contracts; striking cadets are blacklisted and reassigned to hazardous refinery runs.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_conglomerate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "cadet_corps",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "academy_rector",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cadet_spokesman",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "cadets_enslaved",
+      "reached_by": "The pilot fails the missions or abandons the cadets.",
+      "summary": "Deprived of supplies, the cadet depot surrenders; {role:refinery_conglomerate} locks the students into lifetime indentures.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_conglomerate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "cadet_spokesman",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "refugees_moving"
+      ]
+    }
+  ],
+  "default_resolution": "cadets_enslaved",
+  "loose_threads": [
+    {
+      "id": "t_bond_clearinghouse",
+      "surface": "price_board",
+      "detail": "Secondary exchange boards show cadet debt tranches bundled under an offshore shell corporation registered in another sector.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_forged_licence_chips",
+      "surface": "cargo",
+      "detail": "Confiscated cadet transponder keys carry digital signatures matching a private security firm rather than the civil aviation registry.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Cadet pilot walkout in {system} enters fifth day, halting commercial grain runs.",
+    "{role:academy_rector} threatens criminal breach of contract suits against striking students.",
+    "Refinery unions express solidarity with student navigators occupying orbital depot."
+  ],
+  "voice_direction": {
+    "academy_rector": "Cultivated, condescending, speaking with the icy bureaucratic assurance of a corporate financier discussing yield.",
+    "cadet_spokesman": "Fierce, exhausted, speaking with raw youthful intensity and sudden bursts of technical cockpit jargon."
+  },
+  "novelty_tags": [
+    "flight_academy",
+    "bonded_cadets",
+    "tuition_debt",
+    "student_strike",
+    "debt_derivatives"
+  ]
+}

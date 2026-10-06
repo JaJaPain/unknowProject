@@ -1,0 +1,325 @@
+{
+  "id": "premise.the_demolition_apprenticeship",
+  "schema_version": 1,
+  "title": "The Demolition Apprenticeship",
+  "logline": "An eccentric explosive-mining tutor tries to save his bumbling apprentice after a botched blasting drill vaporizes the station magistrate's decorative garden.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "absurd"
+  ],
+  "themes": [
+    "reinvention",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "demolition_tutor",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "A half-deaf veteran asteroid blaster who runs an uncertified explosive engineering academy from a rust-streaked tug.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "botching_apprentice",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "An over-eager demolition apprentice whose mathematical errors consistently produce ten times the calculated blast yield.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "station_magistrate",
+      "kind": "person",
+      "archetype": "official",
+      "description": "A pompous civic magistrate whose prized hydroponic orchid solarium was just turned into fine orbital dust.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "demolition_berth",
+      "kind": "place",
+      "description": "A battered industrial mooring clamp where the tutor's explosive training scow is lashed to an asteroid stub.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "rival_humiliated"
+  ],
+  "public_situation": "Habitat security in {system} is scouring the docks after an illegal mining blasting cap obliterated the magistrate's ceremonial greenhouse.",
+  "private_truth": "The apprentice mistook a salvaged naval breaching torpedo warhead for a civilian bedrock charge while trying to impress the tutor.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "apprentice_mistook_naval_warhead_for_blasting_charge"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Station bailiffs issue an emergency impound warrant for any tug carrying explosive ordnance.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "demolition_tutor",
+          "target": "demolition_berth",
+          "reason": "The tutor needs raw ferrite ore rushed to the forge to weld patch plates over the training barge's scorched launcher before bailiffs dock.",
+          "private_fact": "The tutor still has three live naval torpedoes hidden behind the water tanks that he forgot to report twenty years ago.",
+          "outcome_tags": [
+            "ferrite_delivered",
+            "ferrite_abandoned"
+          ],
+          "routes": {
+            "ferrite_delivered": "next",
+            "ferrite_abandoned": "resolution:academy_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The furious magistrate orders habitat security to freeze the tutor's fuel rations and board the berth.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "botching_apprentice",
+          "target": "demolition_berth",
+          "reason": "The terrified apprentice asks the pilot to collect an acoustic dampening report from a habitat botanist to prove the blast had positive soil benefits.",
+          "private_fact": "The apprentice paid the botanist with stolen station scrip lifted from the magistrate's ruined greenhouse desk.",
+          "outcome_tags": [
+            "report_secured",
+            "report_failed"
+          ],
+          "routes": {
+            "report_secured": "next",
+            "report_failed": "resolution:academy_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The magistrate convenes an emergency dockside hearing to revoke the tutor's blasting licence and jail the apprentice.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "station_magistrate",
+          "requester": "demolition_tutor",
+          "target": "demolition_berth",
+          "reason": "The tutor asks the pilot to scan the crater's blast resonance to certify that habitat plumbing vibration triggered the explosion, not the cap.",
+          "private_fact": "The magistrate had illegally routed station gray water through the greenhouse, creating the gas pocket that amplified the detonation.",
+          "outcome_tags": [
+            "certify_plumbing_fault",
+            "certify_apprentice_culpability"
+          ],
+          "routes": {
+            "certify_plumbing_fault": "next",
+            "certify_apprentice_culpability": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The magistrate stands at the berth with bailiffs ready to cuff the apprentice. The sensor readings prove municipal sewage leaks magnified the blast.",
+        "options": [
+          {
+            "id": "blame_sewage_leak",
+            "label": "Present evidence of the illegal sewer pipe to humiliate the magistrate into dropping charges",
+            "leads_to": "resolution:magistrate_humiliated"
+          },
+          {
+            "id": "frame_acoustic_breakthrough",
+            "label": "Present the blast as an innovative acoustic aerating experiment and demand a municipal grant",
+            "leads_to": "resolution:botched_aeration_grant"
+          },
+          {
+            "id": "turn_in_apprentice",
+            "label": "Let the magistrate jail the apprentice to preserve the tutor's personal pension",
+            "leads_to": "resolution:apprentice_jailed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "magistrate_humiliated",
+      "reached_by": "The pilot exposes the magistrate's illegal greenhouse plumbing.",
+      "summary": "{role:station_magistrate} drops all charges to conceal illegal sewer diversions, while {role:demolition_tutor} laughs over celebratory engine brew.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_magistrate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_tutor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "botching_apprentice",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_demolition_school",
+          "public_summary": "A pilot proved a pompous magistrate blew up his own orchids with leaky sewer gas."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "botched_aeration_grant",
+      "reached_by": "The pilot bluffs the council into funding acoustic kinetic aeration.",
+      "summary": "The council awards {role:botching_apprentice} an agricultural acoustic grant, leaving {role:station_magistrate} sputtering with rage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "botching_apprentice",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_magistrate",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "apprentice_jailed",
+      "reached_by": "The pilot abandons the apprentice to preserve the tutor.",
+      "summary": "{role:botching_apprentice} is sentenced to waste recycling, while {role:demolition_tutor} quietly drinks alone in the empty workshop.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "botching_apprentice",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_tutor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_magistrate",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "academy_scrapped",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "Bailiffs impound the demolition barge and auction the scrap; {role:demolition_tutor} and the apprentice are evicted from {system}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "demolition_tutor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "botching_apprentice",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_magistrate",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "refugees_moving"
+      ]
+    }
+  ],
+  "default_resolution": "academy_scrapped",
+  "loose_threads": [
+    {
+      "id": "t_naval_fuse",
+      "surface": "wreck",
+      "detail": "Fragmented casing shards retrieved from the orchid planter carry tactical military inventory stamps from an unlisted fleet depot.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_plumbing_rebate",
+      "surface": "price_board",
+      "detail": "Habitat engineering ledgers show a massive sewage maintenance rebate credited to an account registered under the magistrate's spouse.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "debt_leverage",
+      "impersonation"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Orchid solarium detonation in {system} blamed on illegal kinetic mining charges.",
+    "Station magistrate demands total ban on private demolition apprenticeship workshops.",
+    "Habitat engineers investigate mysterious dockside resonance and plumbing odor."
+  ],
+  "voice_direction": {
+    "demolition_tutor": "Loud, booming, speaking in clipped rapid phrases with complete nonchalance toward catastrophic structural damage. Never displays panic or regret.",
+    "botching_apprentice": "High-pitched, nervous, rambling through absurd defensive justifications and clutching a smoldering blast calculator.",
+    "station_magistrate": "Trembling with aristocratic indignation, spitting out florid legal threats and obsessing over rare orchid cultivars."
+  },
+  "novelty_tags": [
+    "demolition_academy",
+    "botched_explosion",
+    "hydroponic_greenhouse",
+    "magistrate_farce",
+    "sewage_gas"
+  ]
+}

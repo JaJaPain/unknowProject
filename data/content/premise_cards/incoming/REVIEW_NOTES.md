@@ -5,29 +5,27 @@ once it is done.
 
 ---
 
-## 1. premise.the_frozen_reservoir (batch_30)
+## 1. Rotate territories: no more schools or apprentices for now
 
-A strong card; one tag is wrong. `cost_of_neutrality` doesn't describe a
-water baron freezing the pipes to force a sale (nobody in it is trying to
-stay neutral). Keep `scarcity_breeds_cruelty` and pick a second theme from
-what the story is about (for example `price_of_profit` or
-`safety_vs_freedom`). Choose tags from the story, never from the
-deck report's WRITE TOWARD line.
+batch_31 used "schools and apprentices" again (batch_28 already did), and
+eight of the last twelve new cards are about apprentices, academies, cadets or
+novices. The cards were good, but the deck is now heavy on master-and-student
+stories. For the next several batches:
 
-## 2. premise.the_breath_tax_revolt (batch_30)
-
-Good farce; two things to fix:
-- **The second choice** says "Use proof of the clerk's gambling debts", but
-  the gambler is the administrator ({role:lung_taxer}); the clerk is the
-  captain's friend. Make the option and its resolution `clerk_blackmailed`
-  about the administrator (and rename the resolution id to match).
-- **"Declared free in 2180"**: no calendar years (Section 7: don't invent
-  universe history). Say "in the station's founding charter" or similar.
-
-Keep the ids (except the renamed resolution). Run the validator until clean.
+- **Don't reuse a second-lap territory.** Used so far: schools and
+  apprentices, food and farming, water and air. Pick from the rest of the
+  second-lap list (shipyards and engineering, tourism and luxury, prisons and
+  parole, language and translation, maps and lost routes, music and
+  festivals, livestock aboard ships, insurance and risk, housing and
+  eviction, the mail and message couriers, ageing and retirement, rivals and
+  twins, addiction and recovery, weather and space hazards, gambling and
+  sport rings).
+- **No apprentice, student, cadet or novice as a main role** until told
+  otherwise.
 
 ---
 
-Last round: 5 of 7 approved (the_heirloom_yeast and the_counterfeit_spoilage
-fixes, the_tampered_scrubbers, the_poisoned_vapor, the_comet_claim_war). Both
-fixes were exactly right.
+Last round: all 7 approved (the_frozen_reservoir and the_breath_tax_revolt
+fixes, the_trembling_apprentice, the_sacred_ephemeris, the_bonded_cadets,
+the_demolition_apprenticeship, the_ward_residency). Both fixes were right,
+and the demolition farce and the sacred ephemeris were highlights.

@@ -1,0 +1,364 @@
+{
+  "id": "premise.the_sacred_ephemeris",
+  "schema_version": 1,
+  "title": "The Sacred Ephemeris",
+  "logline": "When a novice navigator discovers an academy's sacred pulsar charts hide lethal drift, the abbess sends an armed cutter to silence the graduation flight.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "melancholy"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "abbess_preceptor",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Guides novice jump-pilots through sacred stellar hymns; fiercely protective of the order's infallibility.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "doubting_novice",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "A brilliant astral cartographer whose telescope sweeps revealed that holy jump corridors have drifted into debris.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "abbey_cutter",
+      "kind": "ship",
+      "description": "A heavily shielded escort vessel emblazoned with monastic sigils and intercept railguns.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "observatory_abbey",
+      "kind": "place",
+      "description": "A vaulted monastery station perched on the high rim of a pulsar radiation shadow.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pulsar_beacon",
+      "kind": "place",
+      "description": "An ancient navigation repeater anchored in the magnetic wash of the system's dead pulsar.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "monastic_chapter",
+      "kind": "faction",
+      "description": "The religious order that certifies jump coordinates for all civilian pilgrim vessels.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "pulsar"
+    ],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "public_outrage",
+    "alliance_broken"
+  ],
+  "public_situation": "Novices at {system}'s monastery observatory prepare for their solitary leap into the pulsar corridor under ancient liturgical navigation rites.",
+  "private_truth": "The abbess knows the pulsar's magnetic shift has turned the holy jump lane into an asteroid graveyard, but suppresses the data to protect church dogma.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "abbess_hid_pulsar_drift_to_preserve_ephemeris"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The monastery chapter sounds ceremonial bells across station comms to mark the graduation vigil.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "abbess_preceptor",
+          "requester": "doubting_novice",
+          "target": "pulsar_beacon",
+          "reason": "The novice hires an unaligned pilot to scan the pulsar beacon's timing drift and verify whether the sacred jump corridor is still clear.",
+          "private_fact": "The novice discovered three pilgrim hulks smashed along the holy vector that church records claimed arrived safely.",
+          "outcome_tags": [
+            "drift_confirmed",
+            "drift_denied",
+            "signal_corrupted"
+          ],
+          "routes": {
+            "drift_confirmed": "next",
+            "drift_denied": "resolution:novices_sacrificed",
+            "signal_corrupted": "resolution:novices_sacrificed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The abbess orders an emergency radio blackout across the observatory ring, citing liturgical impurity.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "doubting_novice",
+          "target": "observatory_abbey",
+          "reason": "The novice asks the pilot to sneak the verified telemetry core into the abbey reliquary before the graduation flight launches.",
+          "private_fact": "The novice's own sibling is piloting the lead graduation skiff scheduled to jump at sunrise.",
+          "outcome_tags": [
+            "telemetry_delivered",
+            "telemetry_lost"
+          ],
+          "routes": {
+            "telemetry_delivered": "next",
+            "telemetry_lost": "resolution:novices_sacrificed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "An armed monastic cutter moves to intercept approaching civilian vessels outside the abbey perimeter.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "doubting_novice",
+          "target": "abbey_cutter",
+          "reason": "The novice begs the pilot to disable the cutter before it seizes the reliquary and burns the telemetry logs.",
+          "private_fact": "The cutter captain hails mid-fight, offering a trove of church scrip and relics if the pilot surrenders the core and departs.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "took_bribe"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "took_bribe": "resolution:sacred_cover_up"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The graduation bells begin their final toll as the novice skiffs warm their jump drives in the launch bay.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "doubting_novice",
+          "target": "observatory_abbey",
+          "reason": "The novice asks the pilot to deliver emergency abort codes directly to the launch bay control terminal before the skiffs jump.",
+          "private_fact": "The monastery abbess has locked the launch bay controls from the central high altar.",
+          "outcome_tags": [
+            "codes_delivered",
+            "codes_delayed"
+          ],
+          "routes": {
+            "codes_delivered": "next",
+            "codes_delayed": "resolution:novices_sacrificed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the launch bay controls with the telemetry proving the sacred route is lethal. The abbess offers a permanent church tithe to stay silent.",
+        "options": [
+          {
+            "id": "expose_drift",
+            "label": "Broadcast the drift logs to halt the flights and shatter the sacred dogma",
+            "leads_to": "resolution:sacred_dogma_shattered"
+          },
+          {
+            "id": "accept_church_tithe",
+            "label": "Accept the church tithe and let the abbess reroute the flights in secret",
+            "leads_to": "resolution:sacred_cover_up"
+          },
+          {
+            "id": "broker_reformation",
+            "label": "Broker a compromise allowing the novice to establish an empirical cartography wing",
+            "leads_to": "resolution:reformed_heresy"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "sacred_dogma_shattered",
+      "reached_by": "The pilot delivers the abort codes and exposes the navigational drift.",
+      "summary": "{role:monastic_chapter} halts the graduation flights and updates the sacred charts, while {role:abbess_preceptor} is stripped of her preceptor veil.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "monastic_chapter",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbess_preceptor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "doubting_novice",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "corrected_sacred_charts",
+          "public_summary": "A pilot proved a holy star order was sending novices into an asteroid trap."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "sacred_cover_up",
+      "reached_by": "The pilot accepts the cutter captain's bribe or conceals the drift.",
+      "summary": "The graduation skiffs take an unrecorded detour while {role:abbess_preceptor} preserves the order's infallibility behind quiet donations.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "monastic_chapter",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbess_preceptor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "doubting_novice",
+          "fate": "disappeared"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "reformed_heresy",
+      "reached_by": "The pilot brokers a compromise allowing the novice to lead a new cartography wing.",
+      "summary": "{role:doubting_novice} establishes a secular cartography school, splitting {role:monastic_chapter} between traditionalists and reformers.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "monastic_chapter",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "doubting_novice",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbess_preceptor",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "new_leader_untested",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "novices_sacrificed",
+      "reached_by": "The pilot ignores the contract or the abort delivery fails.",
+      "summary": "The novice skiffs jump into the uncorrected drift; wreckage litters the pulsar rim while {role:abbess_preceptor} declares them holy martyrs.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "doubting_novice",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbess_preceptor",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "novices_sacrificed",
+  "loose_threads": [
+    {
+      "id": "t_abbey_tithes",
+      "surface": "price_board",
+      "detail": "Monastery bullion receipts show large quarterly payments sent to a salvage cartel specializing in outer belt recovery.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_liturgical_erasure",
+      "surface": "station_notice",
+      "detail": "A commemorative brass plaque honoring past navigation instructors had four names scrubbed out with an arc torch.",
+      "can_carry_methods": [
+        "information_control",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "information_control",
+      "debt_leverage",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "faith",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Bells toll at {system}'s monastery spire for the annual Novice Jump Vigil.",
+    "Pilgrim captains query navigational drift following pulsar magnetic storm.",
+    "{role:monastic_chapter} reaffirms canonical jump coordinates as divinely ordained."
+  ],
+  "voice_direction": {
+    "abbess_preceptor": "Regal, melodic, speaking in liturgical cadences with absolute serene conviction that brooks no dispute.",
+    "doubting_novice": "Hushed, urgent, speaking with the terrified precision of an astronomer watching an unavoidable collision."
+  },
+  "novelty_tags": [
+    "sacred_astronomy",
+    "pulsar_drift",
+    "monastic_academy",
+    "novice_pilots",
+    "doctrinal_heresy"
+  ]
+}
