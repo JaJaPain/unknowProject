@@ -1,0 +1,22 @@
+{
+  "glb_bytes": 723312,
+  "meshes": 13,
+  "surfaces": 15,
+  "materials": 6,
+  "triangles": 10318,
+  "scenes": 1,
+  "cameras": 0,
+  "lights": 0,
+  "emission_materials": [
+    "QW Faint core status",
+    "QW Sealed door seam"
+  ],
+  "vertex_colours_preserved": true,
+  "door_pivot_godot_m": [
+    0,
+    0,
+    175.04689025878906
+  ],
+  "separate_drift_plates": 3,
+  "godot_4_6_3_import": "passed; 500 m envelope, door hierarchy and loose plates verified"
+}

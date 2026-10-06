@@ -1,0 +1,20 @@
+{
+  "meshes": 13,
+  "materials": 6,
+  "material_surfaces": 15,
+  "vertices": 5640,
+  "triangles": 10318,
+  "blender_dimensions_m": [
+    500.0000305175781,
+    438.1043701171875,
+    141.97499084472656
+  ],
+  "dead_platforms": 5,
+  "loose_armour_plates": 3,
+  "door_pivot_blender_m": [
+    0.0,
+    -175.04689025878906,
+    0.0
+  ],
+  "door_material_surfaces": 3
+}

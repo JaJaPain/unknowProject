@@ -208,3 +208,40 @@ there, intact and shut, in the middle of the dead ships.
   weapons.
 - **Export:** batched (the core, the armour, the platforms, the debris, the
   lights as few meshes per material); the door separate.
+
+**#6 status (2026-10-05):** delivered and approved. `assets/landmarks/quiet_war_vault.glb`:
+13 meshes, 6 materials, ~10k triangles; the door on `VaultDoor_Pivot` (opens
+outward along local +Z), three loose plates for drift; 34-40 draw calls in
+game (19 without it).
+
+## Brief #7: A lone derelict ship
+
+A mid-size working ship (a hauler or survey vessel) found dead and drifting.
+Unlike the set pieces above, this one is **reused many times**: rumour-spawned
+finds, story wrecks, drone dives. So it should be a believable ordinary ship,
+not a landmark, and it must look right with different tints and in different
+places.
+
+- **Size:** about 300 m long.
+- **Shape:** a plain, practical ship: a long spine, a cargo or survey
+  section in the middle, a cockpit/bridge block at the front, engines at the
+  back. One side is **torn open**: a big breach running into the hull, with
+  decks, bulkheads and corridors visible inside, deep enough that a small
+  drone could fly in and look around (the game sends drones in). The rest is
+  dented but whole.
+- **Surface:** neutral, faded hull (mid grey with one muted accent colour),
+  scorch marks around the breach, frost or dust on the dark side. Nothing
+  that dates it to one faction or one story.
+- **Light:** dead by default. A few emergency lights still flickering deep
+  inside the breach (separate emissive material; the game may turn them off
+  or make them blink), and one beacon light on the hull (separate emissive
+  material) the game can use as "still transmitting".
+- **Optional:** the engine section slightly twisted or cracked loose; a
+  couple of cargo containers drifting out of the breach (separate meshes).
+- **No:** writing, registration numbers, logos, faction marks, bodies,
+  weapons firing.
+- **Export:** batched (the hull, the interior seen through the breach, the
+  debris, the lights as few meshes per material); keep it light, since
+  several may be on screen over a campaign: aim under ~30 meshes and ~20k
+  triangles. Hull colour as a material the game can tint (or vertex colours
+  plus one tintable accent material).
