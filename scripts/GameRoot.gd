@@ -13887,6 +13887,18 @@ func _run_public_board_smoke_test() -> void:
 	if ui.public_board_current_offers.size() < 3:
 		_fail_public_board_smoke_test("Public board did not produce at least 3 offers.")
 		return
+	# Playtest 2026-10-06 finding 10: fights are tagged COMBAT, nothing else is.
+	await get_tree().process_frame
+	var tagged := 0
+	var cards: Array = ui.public_board_list.get_children().filter(func(c): return c is PanelContainer)
+	for i in mini(cards.size(), ui.public_board_current_offers.size()):
+		var has_tag: bool = (cards[i] as Node).find_child("CombatTag", true, false) != null
+		var is_fight: bool = ui.board_posting_is_combat(ui.public_board_current_offers[i])
+		if has_tag != is_fight:
+			_fail_public_board_smoke_test("Card %d: COMBAT tag %s but combat=%s." % [i, str(has_tag), str(is_fight)])
+			return
+		tagged += int(has_tag)
+	print("[PublicBoardSmokeTest] %d of %d cards tagged COMBAT" % [tagged, cards.size()])
 
 	var urgent_index := -1
 	for i in range(ui.public_board_current_offers.size()):

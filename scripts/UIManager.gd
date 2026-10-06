@@ -2376,6 +2376,15 @@ func _request_public_board_text_attempt(
 		http.queue_free()
 
 
+## A board job that is plainly a fight: destroy ships, or destroy them and
+## recover their drop.
+static func board_posting_is_combat(posting: Dictionary) -> bool:
+	var quest: Dictionary = posting.get("quest_data", {}) if posting.get("quest_data", {}) is Dictionary else {}
+	var objective: Dictionary = quest.get("objective", {}) if quest.get("objective", {}) is Dictionary else {}
+	var kind := str(objective.get("type", posting.get("objective_type", ""))).to_upper()
+	return kind in ["KILL_SHIPS", "RECOVER_COMBAT_DROP"]
+
+
 func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -2419,7 +2428,27 @@ func _add_public_board_posting(posting: Dictionary, index: int) -> void:
 	title.text = str(posting.get("title", "Untitled Posting"))
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	HudStyle.style_label(title, 16, spine if urgent or investigation else HudStyle.TEXT)
-	vbox.add_child(title)
+	# Obvious fights say so (playtest 2026-10-06 finding 10). Keyed on the
+	# objective only, so a pickup that turns violent on the way home stays a
+	# surprise.
+	if board_posting_is_combat(posting):
+		var title_row := HBoxContainer.new()
+		title_row.add_theme_constant_override("separation", 10)
+		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		title_row.add_child(title)
+		var chip := Label.new()
+		chip.name = "CombatTag"
+		chip.text = "COMBAT"
+		chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		HudStyle.style_label(chip, 11, HudStyle.DANGER)
+		var chip_box := PanelContainer.new()
+		chip_box.add_theme_stylebox_override("panel", HudStyle.box(Color(HudStyle.DANGER, 0.12), HudStyle.DANGER, 1, 4, 6))
+		chip_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		chip_box.add_child(chip)
+		title_row.add_child(chip_box)
+		vbox.add_child(title_row)
+	else:
+		vbox.add_child(title)
 
 	var poster := Label.new()
 	poster.text = "Posted by: %s" % str(posting.get("poster", "Anonymous"))
