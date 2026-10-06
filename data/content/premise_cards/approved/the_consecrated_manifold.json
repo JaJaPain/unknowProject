@@ -1,0 +1,355 @@
+{
+  "id": "premise.the_consecrated_manifold",
+  "schema_version": 1,
+  "title": "The Consecrated Manifold",
+  "logline": "A shipyard chapel guards a decommissioned drive manifold as a sacred memorial to a dead hero, but an overworked engineer needs the heat-resistant alloy to save the station cooling grid.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "chapel_preacher",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Presides over the orbital shipyard shrine; fiercely defends the memorialized manifold against secular scavengers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "yard_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Chief repair engineer for the orbital slipways; watches heat monitors spike while hunting for scrap radiators.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "novice_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "An apprentice drive technician whose parent died during the historic reactor scram; torn between family honor and station safety.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ceremonial_manifold",
+      "kind": "object",
+      "description": "A scorched heavy beryllium-cuprite thruster manifold bolted to the chapel altar under brass litany plaques.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "sanctified_drydock",
+      "kind": "place",
+      "description": "A cavernous repair berth whose upper gantry houses the memorial chapel overlooking the slipway heat sinks.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted",
+    "quiet_cover_up"
+  ],
+  "public_situation": "Dockers in {system} visit a shipyard memorial chapel where a charred drive manifold honors a mechanic who died preventing a reactor meltdown.",
+  "private_truth": "The revered martyr caused the fatal core blow-out while attempting to siphon radioactive fuel, and {role:chapel_preacher} consecrated the wreckage to save the family's pension.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "preacher_consecrated_wreck_to_hide_fuel_theft"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Alarms sound across {role:sanctified_drydock} as primary coolant radiators overheat under peak shipyard load.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "yard_engineer",
+          "target": "sanctified_drydock",
+          "reason": "The engineer needs cuprite ore delivered immediately to cast emergency heat sink fins before core temperatures breach safety tolerances.",
+          "private_fact": "He knows ore casting will take days and intends to use the delay to justify confiscating the heat-rated manifold from the chapel.",
+          "outcome_tags": [
+            "cuprite_delivered",
+            "cuprite_abandoned"
+          ],
+          "routes": {
+            "cuprite_delivered": "next",
+            "cuprite_abandoned": "resolution:untested_shrine_dismantled"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The engineer brings plasma torches to the memorial chapel, but shipyard laborers form a defensive ring around the shrine.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "novice_mechanic",
+          "target": "ceremonial_manifold",
+          "culprit": "chapel_preacher",
+          "reason": "The apprentice asks the pilot to run an acoustic resonance scan on the manifold to prove cutting into it will rupture pressurized internal coolant tubes.",
+          "private_fact": "The apprentice found their parent's private log chip and fears the station telemetry will prove the martyr was fleeing rather than repairing.",
+          "outcome_tags": [
+            "telemetry_decoded",
+            "telemetry_lost"
+          ],
+          "routes": {
+            "telemetry_decoded": "next",
+            "telemetry_lost": "resolution:untested_shrine_dismantled"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The acoustic scan decodes the manifold core: the revered martyr caused the explosion during a fuel theft, and the preacher faked the heroic consecration.",
+        "options": [
+          {
+            "id": "support_engineer_scrapping",
+            "label": "Give the proof to the engineer to authorize cutting down the manifold and saving the drydock",
+            "leads_to": "beat:3"
+          },
+          {
+            "id": "arrange_dummy_replacement",
+            "label": "Help the apprentice machine a scrap bronze shell to preserve the shrine while the engineer takes the heat coils",
+            "leads_to": "resolution:devout_counterfeit"
+          },
+          {
+            "id": "bury_the_theft_record",
+            "label": "Hand the telemetry to the preacher to destroy, leaving the memorial intact at the cost of emergency power cuts",
+            "leads_to": "resolution:costly_piety"
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Thermal alarms echo across the slipway as secondary coolant loops begin venting vapor into the bay.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "yard_engineer",
+          "target": "sanctified_drydock",
+          "reason": "The engineer needs the salvaged manifold heat exchanger transferred from the upper gantry into the coolant manifold bay before pumps seize.",
+          "private_fact": "He promises to log the component as unidentified surplus to keep the truth from spreading across the union halls.",
+          "outcome_tags": [
+            "exchanger_installed",
+            "installation_failed"
+          ],
+          "routes": {
+            "exchanger_installed": "resolution:coolant_loop_stabilized",
+            "installation_failed": "resolution:untested_shrine_dismantled"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "coolant_loop_stabilized",
+      "reached_by": "The pilot reveals the truth and installs the salvaged manifold exchanger.",
+      "summary": "{role:yard_engineer} dismantles the shrine and cools the docks, but the fuel theft is exposed, stripping {role:novice_mechanic}'s family pension.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "yard_engineer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "novice_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "chapel_preacher",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "stripped_the_martyrs_altar",
+          "public_summary": "A pilot exposed a dead shipyard hero's final crime to strip their altar for cooling coils."
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "devout_counterfeit",
+      "reached_by": "The pilot and apprentice replace the manifold with a bronze shell.",
+      "summary": "The cooling grid is saved with the salvaged coils while a replica manifold sits in the chapel. {role:chapel_preacher} keeps the faith alive.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "novice_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "yard_engineer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "chapel_preacher",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_hallowed_dock",
+          "public_summary": "A pilot quietly patched a shipyard's failing grid without letting the chapel altar burn."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "costly_piety",
+      "reached_by": "The pilot surrenders the telemetry to the preacher to preserve the memorial.",
+      "summary": "{role:chapel_preacher} seals the records and preserves the martyr's shrine. The yard shuts down half its drydocks to prevent meltdown, racking up debt.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "chapel_preacher",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "yard_engineer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "novice_mechanic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "untested_shrine_dismantled",
+      "reached_by": "The pilot fails the missions or yard security breaches the chapel during runaway.",
+      "summary": "Yard crews cut apart the manifold during an emergency scram, destroying the telemetry. {role:sanctified_drydock} survives under heavy damage fines.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "chapel_preacher",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "yard_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "novice_mechanic",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "untested_shrine_dismantled",
+  "loose_threads": [
+    {
+      "id": "t_manifold_serial_grind",
+      "surface": "scan",
+      "detail": "The manifold serial plate shows the factory stamp was ground away and re-stamped with a forge mark belonging to a rival shipyard.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_chapel_maintenance_lien",
+      "surface": "station_notice",
+      "detail": "A lien notice on the chapel alcove shows its sanctuary lease was purchased by an anonymous offshore debt trust six months before the accident.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "guilt",
+      "protecting_someone",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Thermal alarms at {role:sanctified_drydock} prompt heated disputes over chapel altar preservation.",
+    "{role:yard_engineer} demands emergency salvage access to historic shipyard shrines.",
+    "Pilgrims hold candlelit vigil along gantry rails as reactor core temperatures stabilize."
+  ],
+  "voice_direction": {
+    "chapel_preacher": "Reverent, unhurried, treating industrial machinery as sacred vessels and speaking in measured, liturgical cadences.",
+    "yard_engineer": "Harried, abrasive, speaking in fast bursts of technical jargon with zero patience for religious ceremony.",
+    "novice_mechanic": "Quiet, hesitant, speaking with guarded reverence about family history while nervously double-checking heat gauges."
+  },
+  "novelty_tags": [
+    "consecrated_manifold",
+    "shipyard_shrine",
+    "heat_exchanger_salvage",
+    "martyr_record_coverup",
+    "apprentice_mechanic"
+  ]
+}

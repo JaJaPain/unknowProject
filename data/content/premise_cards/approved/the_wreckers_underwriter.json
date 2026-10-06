@@ -1,0 +1,423 @@
+{
+  "id": "premise.the_wreckers_underwriter",
+  "schema_version": 1,
+  "title": "The Wrecker's Underwriter",
+  "logline": "A predatory reinsurance broker contracts raiders to bleed freight convoys across three systems, engineering an artificial insurance panic to monopolize regional shipping lanes.",
+  "scale": "regional",
+  "tone": [
+    "noir",
+    "political"
+  ],
+  "themes": [
+    "price_of_profit",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "syndicate_underwriter",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "A charming, ruthless maritime risk broker whose private reinsurance cartel profits from rising route instability.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "convoy_commodore",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Commands an independent merchant convoy battered by coordinated strikes across the regional gate network.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "renegade_corsair",
+      "kind": "ship",
+      "description": "A fast commerce raider equipped with military-grade jamming suites and falsified hull markings.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "underwriting_citadel",
+      "kind": "place",
+      "description": "A heavily guarded corporate station housing the regional shipping registry and policy clearinghouse.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_jump_gate",
+      "kind": "place",
+      "description": "A contested orbital gate chokepoint between systems where stranded convoys wait for escorts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corsair_flotilla",
+      "kind": "faction",
+      "description": "A mercenary strike wing secretly bankrolled by false-flag maritime security retainers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "merchant_league",
+      "kind": "faction",
+      "description": "A loose alliance of independent free-traders unable to afford extortionate insurance premiums.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "faction_weakened",
+    "power_vacuum"
+  ],
+  "public_situation": "Freight insurance rates surge across three systems as coordinated commerce raiders target independent convoys approaching regional jump gates.",
+  "private_truth": "{role:syndicate_underwriter} finances the raiders through off-world escrow accounts to force unaligned merchants into usurious reinsurance cartels.",
+  "core_why": {
+    "motive": "control",
+    "secret": "broker_subsidizing_pirates_to_corner_reinsurance"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Underwriting kiosks announce a thirty percent war-risk surcharge on all unescorted gate transits.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "convoy_commodore",
+          "target": "renegade_corsair",
+          "culprit": "syndicate_underwriter",
+          "reason": "The commodore needs a deep-space sensor sweep of an intercepted raider wreck to trace how the corsairs acquired encrypted merchant convoy schedules.",
+          "private_fact": "The commodore suspects his own logistics purser was bribed with debt forgiveness to leak departure timetables.",
+          "outcome_tags": [
+            "jamming_frequency_traced",
+            "wreck_sensors_wiped"
+          ],
+          "routes": {
+            "jamming_frequency_traced": "next",
+            "wreck_sensors_wiped": "resolution:merchants_bankrupted_monopoly"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Raiders blockade {role:border_jump_gate}, stranding dozens of loaded freighters in open vacuum.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "convoy_commodore",
+          "target": "corsair_flotilla",
+          "reason": "The commodore hires the pilot to eliminate corsair skirmishers trapping merchant freighters outside the border gate.",
+          "private_fact": "The commodore is out of maneuvering fuel and cannot afford another forty-eight hours of gate demurrage fines.",
+          "outcome_tags": [
+            "picket_cleared",
+            "picket_reinforced"
+          ],
+          "routes": {
+            "picket_cleared": "next",
+            "picket_reinforced": "resolution:merchants_bankrupted_monopoly"
+          }
+        },
+        {
+          "verb": "recover_combat_drop",
+          "requester": "convoy_commodore",
+          "target": "corsair_flotilla",
+          "reason": "Recover the destroyed corsair commander's encrypted navigational core before solar drift wipes the volatile memory banks.",
+          "private_fact": "The core contains direct financial authorizations stamped with corporate seals from the underwriting citadel.",
+          "outcome_tags": [
+            "nav_core_secured",
+            "nav_core_lost"
+          ],
+          "routes": {
+            "nav_core_secured": "next",
+            "nav_core_lost": "resolution:merchants_bankrupted_monopoly"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "{role:syndicate_underwriter} issues a public proclamation offering total debt immunity to any pilot who surrenders recovered flight data.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "syndicate_underwriter",
+          "target": "underwriting_citadel",
+          "reason": "The underwriter attempts to buy off the pilot, offering triple rates to courier the recovered nav core directly to his private station suite.",
+          "private_fact": "The underwriter has already drafted execution warrants for the pilot should they dock without delivering the encryption key.",
+          "outcome_tags": [
+            "core_surrendered",
+            "delivery_refused"
+          ],
+          "routes": {
+            "core_surrendered": "resolution:pilot_indemnified_cartel_wins",
+            "delivery_refused": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds documented evidence that the regional pirate crisis was manufactured by the underwriting syndicate.",
+        "options": [
+          {
+            "id": "deliver_evidence_to_league",
+            "label": "Deliver the corsair nav logs to the merchant league tribunal to crush the underwriter's syndicate",
+            "leads_to": "beat:4"
+          },
+          {
+            "id": "extort_underwriting_partnership",
+            "label": "Blackmail the underwriter for a permanent silent partnership in the regional reinsurance monopoly",
+            "leads_to": "resolution:underwriter_cartel_partner"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The underwriter dispatches his personal heavy corsair to ambush the commodore's flagship outside the judicial station.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "convoy_commodore",
+          "target": "renegade_corsair",
+          "reason": "The commodore contracts the pilot to destroy the underwriter's assassin cruiser before it can wipe out the tribunal witness ship.",
+          "private_fact": "The corsair captain hails mid-battle offering an entire cargo bay of bearer platinum if the pilot disengages and allows the target to jump.",
+          "outcome_tags": [
+            "assassin_destroyed",
+            "bribe_accepted"
+          ],
+          "routes": {
+            "assassin_destroyed": "resolution:underwriting_ring_smashed",
+            "bribe_accepted": "resolution:corsair_escapes_compromise"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "underwriting_ring_smashed",
+      "reached_by": "The pilot destroys the assassin cruiser and presents proof to the league.",
+      "summary": "{role:syndicate_underwriter} is arrested for treason and false-flag piracy; {role:merchant_league} reclaims free navigation across regional lanes.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "merchant_league",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "corsair_flotilla",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underwriter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_commodore",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "smashed_the_reinsurance_wreckers",
+          "public_summary": "A pilot exposed a syndicate underwriter who hired pirates to corner regional transit insurance."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "route_opened",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "underwriter_cartel_partner",
+      "reached_by": "The pilot blackmails the underwriter for a share of the reinsurance syndicate.",
+      "summary": "The evidence is buried and the pilot takes a quiet share of transit premiums; independent merchants face crushing fees across three systems.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "merchant_league",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underwriter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "corsair_escapes_compromise",
+      "reached_by": "The pilot accepts the raider captain's bribe and lets them jump.",
+      "summary": "The corsair escapes with syndicate gold while {role:syndicate_underwriter} flees system jurisdiction; {role:convoy_commodore} survives but routes remain dangerous.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underwriter",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_commodore",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "pilot_indemnified_cartel_wins",
+      "reached_by": "The pilot sells the core to the underwriter for immunity.",
+      "summary": "The underwriter destroys the nav core and establishes a total reinsurance monopoly; {role:merchant_league} is forced into bankruptcy.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "merchant_league",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underwriter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_commodore",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "merchants_bankrupted_monopoly",
+      "reached_by": "The pilot fails the missions or ignores the blockade.",
+      "summary": "Corsairs wipe out the merchant convoy at {role:border_jump_gate}; {role:syndicate_underwriter} buys out bankrupt shipping charters at pennies on the credit.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "merchant_league",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underwriter",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "merchants_bankrupted_monopoly",
+  "loose_threads": [
+    {
+      "id": "t_corsair_premium_voucher",
+      "surface": "cargo",
+      "detail": "The destroyed commerce raider carried premium waiver certificates signed by the citadel chief underwriter.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_reinsurance_wire_trail",
+      "surface": "price_board",
+      "detail": "Underwriting dividend payments surge across three systems exactly forty-eight hours after each recorded raid.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "manufactured_crisis",
+      "proxy_violence",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Reinsurance syndicates report record earnings amid ongoing trade route instability.",
+    "Independent merchant convoys in {system} demand naval escorts through contested jump gates.",
+    "Commerce raider attacks spike outside regional transit corridors as freight tariffs double."
+  ],
+  "voice_direction": {
+    "syndicate_underwriter": "Affable, cultured, speaking in silky financial euphemisms and brushing off violence as unfortunate market friction.",
+    "convoy_commodore": "Gruff, gravelly, barking orders in weathered naval terminology and bitterly cursing corporate bureaucrats."
+  },
+  "novelty_tags": [
+    "wreckers_underwriter",
+    "false_flag_piracy",
+    "reinsurance_monopoly",
+    "convoy_corridor_extortion",
+    "regional_rate_spike"
+  ]
+}

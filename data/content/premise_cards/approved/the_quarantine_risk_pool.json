@@ -1,0 +1,373 @@
+{
+  "id": "premise.the_quarantine_risk_pool",
+  "schema_version": 1,
+  "title": "The Quarantine Risk Pool",
+  "logline": "When a health insurance syndicate threatens to cancel life-support coverage for an infected habitat, a doctor and a blockade runner clash over diverted oxygen filters.",
+  "scale": "local",
+  "tone": [
+    "survival",
+    "tense"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "pool_administrator",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Oversees the mutual risk pool; coldly calculates survivor ratios while threatening to drop delinquent sectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "station_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Runs the habitat infirmary; desperate for clean oxygen scrubbers to keep quarantined wards alive.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "quarantine_raider",
+      "kind": "ship",
+      "description": "A modified patrol interceptor converted into an armed blockade runner by desperate dockers.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "quarantine_habitat",
+      "kind": "place",
+      "description": "A sealed orbital cylinder under red bio-hazard beacon warning.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "medical_consortium",
+      "kind": "faction",
+      "description": "A consortium of pharmaceutical suppliers and underwriters demanding exorbitant risk premiums.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "quarantine"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "market_disrupted",
+    "faction_weakened"
+  ],
+  "public_situation": "Underwriters in {system} threaten to terminate life-support insurance policies for {role:quarantine_habitat} unless delinquent premium riders are settled.",
+  "private_truth": "{role:pool_administrator} is deliberately withholding filter shipments to trigger an automated default clause that transfers habitat docking bays to corporate creditors.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "administrator_withholding_filters_for_default_clause"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Hazard beacons flash amber around {role:quarantine_habitat} as scrubber failure alarms sound across the outer ring.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "station_doctor",
+          "target": "quarantine_habitat",
+          "reason": "The doctor hires the pilot to purchase industrial molecular filters from an unsealed trade hub and deliver them before life-support reserves fail.",
+          "private_fact": "The doctor has already pawned personal medical licenses to raise the cash for the filter down-payment.",
+          "outcome_tags": [
+            "filters_delivered",
+            "purchase_failed"
+          ],
+          "routes": {
+            "filters_delivered": "next",
+            "purchase_failed": "resolution:coverage_dropped_evacuation"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Blockade runners set up an armed perimeter around the habitat's central intake manifold.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "pool_administrator",
+          "target": "quarantine_raider",
+          "reason": "The administrator pays the pilot to destroy an unauthorized blockade interceptor harassing inbound commercial delivery shuttles.",
+          "private_fact": "The interceptor skipper hails mid-fight offering to surrender seized corporate scrip if the pilot diverts filters to the lower ward children.",
+          "outcome_tags": [
+            "interceptor_neutralized",
+            "diverted_to_lower_ward"
+          ],
+          "routes": {
+            "interceptor_neutralized": "next",
+            "diverted_to_lower_ward": "resolution:lower_deck_relief"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "aftermath",
+      "public_change": "{role:pool_administrator} docks at the main airlock to deliver an eviction writ and cancel atmospheric indemnity.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "station_doctor",
+          "target": "quarantine_habitat",
+          "reason": "The doctor needs the authenticated emergency medical audit carried directly to the habitat council chamber before the administrator cuts power.",
+          "private_fact": "The audit proves habitat infection rates dropped ten percent, proving the quarantine cancellation is medically unwarranted.",
+          "outcome_tags": [
+            "audit_delivered",
+            "audit_intercepted"
+          ],
+          "routes": {
+            "audit_delivered": "next",
+            "audit_intercepted": "resolution:coverage_dropped_evacuation"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the airlock with the medical audit while the administrator prepares to disconnect habitat power loops.",
+        "options": [
+          {
+            "id": "force_pool_compliance",
+            "label": "Present the medical audit publicly to force the consortium to maintain life-support indemnity across all wards",
+            "leads_to": "resolution:consortium_forced_coverage"
+          },
+          {
+            "id": "hand_over_habitat_charter",
+            "label": "Help the administrator seize the habitat's commercial slips in exchange for guaranteed oxygen for the upper ward",
+            "leads_to": "resolution:charter_ceded_for_care"
+          },
+          {
+            "id": "arm_the_habitat_dockers",
+            "label": "Encourage the dockers to seize the consortium intake pumps and declare complete defiance of quarantine bylaws",
+            "leads_to": "resolution:dockers_defy_quarantine"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "consortium_forced_coverage",
+      "reached_by": "The pilot reveals the audit and forces policy reinstatement.",
+      "summary": "{role:medical_consortium} is forced to reinstate full life-support coverage; {role:pool_administrator} is recalled in disgrace and the wards stabilize.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_doctor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_administrator",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_quarantined_pool",
+          "public_summary": "A pilot forced an underwriting syndicate to restore life-support policies to a quarantined habitat."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "charter_ceded_for_care",
+      "reached_by": "The administrator seizes docking slips in exchange for upper-ward oxygen.",
+      "summary": "{role:medical_consortium} assumes ownership of habitat docking slips; upper decks receive premium filters while lower deckers face eviction.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_administrator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "lower_deck_relief",
+      "reached_by": "The pilot accepts the raider deal and routes filters to lower decks.",
+      "summary": "Lower deck wards receive lifesaving scrubbers; {role:pool_administrator} cancels habitat policies in retaliation, turning the station into an armed commune.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_doctor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_administrator",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "dockers_defy_quarantine",
+      "reached_by": "The dockers seize the intake manifold and defy corporate regulations.",
+      "summary": "Habitat dockers take armed control of atmospheric controls, breaking corporate contracts and prompting a full military blockade of {system}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "medical_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_doctor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_administrator",
+          "fate": "fled"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "blockade"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "coverage_dropped_evacuation",
+      "reached_by": "The pilot abandons contracts or medical supplies are lost.",
+      "summary": "Underwriters void the risk pool; atmospheric scrubbers shut down across {role:quarantine_habitat}, forcing a chaotic emergency evacuation into deep space.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_administrator",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": [
+            "quarantine"
+          ]
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "coverage_dropped_evacuation",
+  "loose_threads": [
+    {
+      "id": "t_quarantine_premium_bond",
+      "surface": "price_board",
+      "detail": "Risk pool premium rates jumped fourfold twelve hours before the official quarantine outbreak notice was published.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_counterfeit_doctor_seal",
+      "surface": "cargo",
+      "detail": "The medical filter crates carry an inspector approval stamp from a doctor who died during last year's pandemic.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "manufactured_crisis",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:quarantine_habitat} faces imminent life-support shutdown over disputed risk pool premiums.",
+    "Medical consortium warns against unauthorized filter deliveries to quarantined sectors.",
+    "Infirmary staff in {system} plead for emergency air scrubbers as infection rate peaks."
+  ],
+  "voice_direction": {
+    "pool_administrator": "Cold, clipped, reciting actuarial mortality probabilities as though reporting weather trends.",
+    "station_doctor": "Exhausted, hoarse, speaking in short, breathy sentences while pleading for supplies."
+  },
+  "novelty_tags": [
+    "quarantine_risk_pool",
+    "life_support_cancellation",
+    "medical_premium_extortion",
+    "comms_reversal_blockade",
+    "habitat_default_clause"
+  ]
+}

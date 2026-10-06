@@ -1,0 +1,330 @@
+{
+  "id": "premise.the_anniversary_sweepstakes",
+  "schema_version": 1,
+  "title": "The Anniversary Sweepstakes",
+  "logline": "When a superstitious dock gambler accidentally buys a duplicated winning ticket for the station manager's private anniversary sweepstakes, bailiffs scramble to seize the slip.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "absurd"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "superstitious_gambler",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "Believes station atmospheric hums predict lucky lottery digits; currently sleeping in a borrowed airlock.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "lottery_teller",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Operates the station betting kiosk; sells lucky crystals and quietly covers register shortfalls with counterfeit stubs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "habitat_auditor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "A terrified civic ledger-keeper desperate to prevent an unwashed docker from claiming the station manager's jubilee pot.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "lottery_kiosk",
+      "kind": "place",
+      "description": "A greasy neon-lit kiosk crammed between two waste recycling ducts on the central promenade.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "rival_humiliated"
+  ],
+  "public_situation": "Dockers in {system} are placing side-bets as habitat bailiffs surround a lottery kiosk after a common docker claimed the station anniversary jackpot.",
+  "private_truth": "The lottery teller accidentally duplicated the station manager's pre-selected winning ticket barcode while trying to balance the till.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "teller_duplicated_winning_ticket_to_balance_till"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Habitat security posts a notice claiming the lottery kiosk is closed for unexpected mechanical re-calibration.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "superstitious_gambler",
+          "target": "lottery_kiosk",
+          "reason": "The gambler needs raw ferrite ore delivered to weld protective blast grating over the kiosk window before bailiffs pry open the booth.",
+          "private_fact": "The gambler has not eaten solid food in four days, surviving on caffeinated tea while guarding the paper stub.",
+          "outcome_tags": [
+            "ferrite_delivered",
+            "ferrite_abandoned"
+          ],
+          "routes": {
+            "ferrite_delivered": "next",
+            "ferrite_abandoned": "resolution:kiosk_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The auditor threatens to vent the entire promenade ventilation shaft unless the ticket is surrendered.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "superstitious_gambler",
+          "target": "lottery_kiosk",
+          "reason": "The gambler asks the pilot to collect the original lottery printing stamp from the teller's pawned footlocker to prove the ticket was purchased legally.",
+          "private_fact": "The teller hid three counterfeit jackpot tickets in the same footlocker for future emergencies.",
+          "outcome_tags": [
+            "stamp_retrieved",
+            "stamp_lost"
+          ],
+          "routes": {
+            "stamp_retrieved": "next",
+            "stamp_lost": "resolution:kiosk_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The auditor convenes an emergency dockside tribunal outside the kiosk to declare the ticket invalid.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "habitat_auditor",
+          "requester": "lottery_teller",
+          "target": "lottery_kiosk",
+          "reason": "The teller asks the pilot to scan the kiosk transponder to prove the auditor deliberately wiped the ticket sale timestamp from the central server.",
+          "private_fact": "The auditor had pre-rigged the jackpot draw algorithm to award the grand prize to the station manager's brother-in-law.",
+          "outcome_tags": [
+            "audit_fraud_revealed",
+            "records_unrecoverable"
+          ],
+          "routes": {
+            "audit_fraud_revealed": "next",
+            "records_unrecoverable": "resolution:kiosk_scrapped"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the kiosk with proof that the entire jubilee sweepstakes was pre-rigged for the station manager. The sweating auditor offers a secret payoff.",
+        "options": [
+          {
+            "id": "enforce_gambler_jackpot",
+            "label": "Present the audit logs to force payout of the full jackpot to the impoverished docker",
+            "leads_to": "resolution:docker_jackpot"
+          },
+          {
+            "id": "split_jubilee_chest",
+            "label": "Broker a three-way split between the docker, the kiosk teller, and a dockworkers' holiday banquet",
+            "leads_to": "resolution:jubilee_compromise"
+          },
+          {
+            "id": "take_auditor_hush_money",
+            "label": "Surrender the ticket to the auditor in exchange for a confidential municipal transfer",
+            "leads_to": "resolution:auditor_cover_up"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "docker_jackpot",
+      "reached_by": "The pilot proves the ticket is valid and forces full jackpot payout.",
+      "summary": "{role:superstitious_gambler} collects the staggering anniversary jackpot, buying the entire promenade bar ring while {role:habitat_auditor} is demoted.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "superstitious_gambler",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lottery_teller",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_station_lottery",
+          "public_summary": "A pilot proved a docker fairly won the rigged station anniversary jackpot."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "jubilee_compromise",
+      "reached_by": "The pilot brokers a compromise banquet fund.",
+      "summary": "{role:superstitious_gambler} and {role:lottery_teller} share a generous settlement, funding a week of free oxygen and beer for all habitat dockers.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "superstitious_gambler",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lottery_teller",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_auditor",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "auditor_cover_up",
+      "reached_by": "The pilot takes the auditor's hush money.",
+      "summary": "{role:habitat_auditor} burns the winning ticket and rewards the pilot; {role:superstitious_gambler} is evicted for vagrancy while the manager keeps the pot.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "habitat_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "superstitious_gambler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lottery_teller",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "kiosk_scrapped",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "Bailiffs bulldoze the kiosk and confiscate the ticket as forged; {role:superstitious_gambler} and {role:lottery_teller} are jailed for fraud.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "superstitious_gambler",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lottery_teller",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_auditor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "kiosk_scrapped",
+  "loose_threads": [
+    {
+      "id": "t_lottery_watermark",
+      "surface": "station_notice",
+      "detail": "The lottery paper stock used for the winning jubilee ticket carries an embossed watermark from the governor's personal stationery suite.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_anniversary_fund",
+      "surface": "price_board",
+      "detail": "Station finance ledgers show the anniversary prize fund was secretly financed by an uncollateralized line of credit from a freight cartel.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "impersonation"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Promenade lottery kiosk in {system} besieged by angry crowds over disputed jubilee ticket.",
+    "Habitat auditor claims technical glitch invalidated anniversary prize drawing.",
+    "Dockers hold impromptu street party outside barricaded lottery booth."
+  ],
+  "voice_direction": {
+    "superstitious_gambler": "Fast, manic, reciting numerical sequences with rapid cadence and treating a greasy lottery stub like a sacred holy relic.",
+    "lottery_teller": "Slick, rapid, pitching superstitious odds and constantly looking over their shoulder toward the customs station.",
+    "habitat_auditor": "High-strung, officious, citing station administrative bylaws in a shrill monotone while dabbing nervous sweat."
+  },
+  "novelty_tags": [
+    "station_lottery",
+    "anniversary_sweepstakes",
+    "duplicated_ticket",
+    "auditor_farce",
+    "bureaucratic_panic"
+  ]
+}

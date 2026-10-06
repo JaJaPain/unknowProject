@@ -1,0 +1,342 @@
+{
+  "id": "premise.the_actuarial_scuttle",
+  "schema_version": 1,
+  "title": "The Actuarial Scuttle",
+  "logline": "An apprentice claims adjuster investigates an insured ore tug disabled in deep space, discovering the dying skipper vented his own drive core to trigger a payout.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "junior_adjuster",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "An apprentice claims adjuster on their first solo field assignment, terrified of approving a fraudulent total-loss payout.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tug_skipper",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "An aging bulk hauler skipper drowning in medical debt who deliberately vented his own drive core to trigger an insurance settlement.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_creditor",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Holds the mortgage on the hauler's reactor and sits in the station lounge waiting to claim the payout.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scuttled_tug",
+      "kind": "ship",
+      "description": "A listing, venting ore tug tethered to an outer mooring pylon with its thrusters blown outward.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "adjuster_office",
+      "kind": "place",
+      "description": "A cramped mutual underwriting agency office smelling of stale tea and damp thermal paper.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "quiet_cover_up",
+    "market_disrupted"
+  ],
+  "public_situation": "An ore tug drifts outside {system}'s primary depot while underwriters debate whether a breached reactor qualifies as an insurable total loss.",
+  "private_truth": "{role:tug_skipper} deliberately breached the primary cooling lines to secure a terminal-care payout before syndicate loans came due.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "skipper_scuttled_tug_for_terminal_care_payout"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Depot authorities post hazard warnings around the listing hulk of {role:scuttled_tug}.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "junior_adjuster",
+          "target": "scuttled_tug",
+          "culprit": "tug_skipper",
+          "reason": "The apprentice adjuster needs thermal imaging of the ruptured reactor casing to confirm whether damage originated from external impacts or an internal scuttle valve.",
+          "private_fact": "The apprentice faces dismissal if their first certified field report approves an unsubstantiated total-loss settlement.",
+          "outcome_tags": [
+            "thermal_breach_scanned",
+            "hull_inaccessible"
+          ],
+          "routes": {
+            "thermal_breach_scanned": "next",
+            "hull_inaccessible": "resolution:tug_slip_vented"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Creditors arrive at the dock demanding custody of the tug's physical flight computer.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "tug_skipper",
+          "target": "adjuster_office",
+          "reason": "The skipper asks the pilot to retrieve his sealed navigation recorder from the damaged cockpit before station marshals seize the vessel.",
+          "private_fact": "The skipper uploaded encrypted spoofing scripts into the core to disguise the manual emergency scuttle sequence.",
+          "outcome_tags": [
+            "recorder_retrieved",
+            "recorder_lost"
+          ],
+          "routes": {
+            "recorder_retrieved": "next",
+            "recorder_lost": "resolution:tug_slip_vented"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:syndicate_creditor} files an emergency lien freezing the skipper's medical accounts pending claim resolution.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "junior_adjuster",
+          "target": "adjuster_office",
+          "reason": "The apprentice asks the pilot to courier the decrypted recorder analysis to the underwriting desk to reach a final binding claim decision.",
+          "private_fact": "The apprentice already suspects deliberate fraud but fears the creditor will murder the dying skipper if the policy lapses.",
+          "outcome_tags": [
+            "dossier_delivered",
+            "courier_aborted"
+          ],
+          "routes": {
+            "dossier_delivered": "next",
+            "courier_aborted": "resolution:tug_slip_vented"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds proof that the skipper scuttled his own ship to clear debts and fund terminal care. The apprentice adjuster awaits the decision.",
+        "options": [
+          {
+            "id": "certify_total_loss",
+            "label": "Sanitize the telemetry so the apprentice certifies a valid total loss, paying the skipper and satisfying creditors",
+            "leads_to": "resolution:payout_approved_debt_cleared"
+          },
+          {
+            "id": "expose_deliberate_scuttle",
+            "label": "Present the raw telemetry to underwriters, voiding the claim and protecting the apprentice's career",
+            "leads_to": "resolution:claim_denied_skipper_ruined"
+          },
+          {
+            "id": "broker_salvage_lien",
+            "label": "Persuade the creditor to accept the tug hulk as scrap settlement in exchange for forgiving the skipper's note",
+            "leads_to": "resolution:salvage_debt_compromise"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "payout_approved_debt_cleared",
+      "reached_by": "The pilot sanitizes the scuttle telemetry and certifies total loss.",
+      "summary": "Underwriters pay out the total-loss claim; {role:syndicate_creditor} receives full debt satisfaction while {role:tug_skipper} enters private hospice.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "tug_skipper",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_creditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "junior_adjuster",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "certified_the_mercy_scuttle",
+          "public_summary": "A pilot helped an apprentice adjuster approve a dying hauler's suspicious insurance claim."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "claim_denied_skipper_ruined",
+      "reached_by": "The pilot presents raw scuttle logs to underwriters, exposing the fraud.",
+      "summary": "The claim is rejected for intentional scuttling; {role:junior_adjuster} is commended while {role:tug_skipper} is jailed under crushing debt liens.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "junior_adjuster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tug_skipper",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_creditor",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "salvage_debt_compromise",
+      "reached_by": "The pilot brokers a scrap transfer to satisfy the creditor.",
+      "summary": "{role:syndicate_creditor} accepts ownership of {role:scuttled_tug} for salvage scrap, clearing the note while the insurance inquiry is quietly closed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "tug_skipper",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_creditor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "junior_adjuster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "tug_slip_vented",
+      "reached_by": "The pilot drops the contracts or telemetry is lost.",
+      "summary": "{role:scuttled_tug} breaks from its mooring and drifts into the exclusion zone; the claim lapses and {role:tug_skipper} is arrested for navigational neglect.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "tug_skipper",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "junior_adjuster",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_creditor",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "tug_slip_vented",
+  "loose_threads": [
+    {
+      "id": "t_underwriter_rider",
+      "surface": "station_notice",
+      "detail": "The tug insurance policy contains a newly added rider assigning total loss proceeds to an anonymous off-world holding desk.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_burned_harness",
+      "surface": "wreck",
+      "detail": "The scuttled tug flight harness has severed umbilical leads cut cleanly with standard pneumatic wire shears.",
+      "can_carry_methods": [
+        "sabotage",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "blackmail"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "protecting_someone"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Salvage crews monitor drifting ore tug outside {system} primary shipping approach.",
+    "Underwriting board delays casualty payout pending forensic inspection of cooling breach.",
+    "Dockside lenders issue formal liens against aging freight haulers across the sector."
+  ],
+  "voice_direction": {
+    "junior_adjuster": "Nervous, meticulous, reading regulatory paragraphs verbatim while hesitating before answering direct questions.",
+    "tug_skipper": "Raspy, weary, speaking in short breaths and treating the loss of his livelihood with bitter, exhausted calm.",
+    "syndicate_creditor": "Smooth, intimidating, speaking with relaxed menace and treating financial foreclosures as pleasant business lunches."
+  },
+  "novelty_tags": [
+    "actuarial_scuttle",
+    "apprentice_adjuster",
+    "deliberate_hull_breach",
+    "debt_mortgage_scam",
+    "palliative_fraud"
+  ]
+}

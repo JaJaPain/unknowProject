@@ -1,0 +1,333 @@
+{
+  "id": "premise.the_act_of_god_clause",
+  "schema_version": 1,
+  "title": "The Act of God Clause",
+  "logline": "When an insurer invokes cosmic hazard exemptions to refuse indemnity for a vaporized hauler, the surviving navigator hires a pilot to prove a station beacon was deliberately misaligned.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "noir"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "bereaved_navigator",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Surviving navigator of the vaporized hauler, obsessed with disproving the insurer's natural hazard ruling.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "claims_director",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Regional underwriting manager whose quarterly bonus depends on keeping total-loss payouts under threshold.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "relay_technician",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Night-shift navigational beacon tech who took a side payment to let a navigation buoy drift.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ion_beacon",
+      "kind": "object",
+      "description": "A solar-facing hazard buoy marking the flare boundary between the inner system and the haulage lane.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "underwriting_sanctum",
+      "kind": "place",
+      "description": "A heavily paneled corporate claims lounge inside the upper station ring.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "ion_storm"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "An underwriting cartel in {system} classifies the destruction of a freight hauler as an uninsurable cosmic flare accident.",
+  "private_truth": "{role:relay_technician} accepted a corporate payoff to delay recalibrating the warning buoy, steering ships into the coronal flare zone.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "technician_drifted_hazard_buoy_for_bribe"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Navigational warnings across {system} are updated with a retroactive notice blaming solar radiation for lost transit craft.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "bereaved_navigator",
+          "target": "ion_beacon",
+          "culprit": "relay_technician",
+          "reason": "The navigator needs a spectral scan of the buoy's thruster housing to prove its orientation gyros were intentionally disabled before the solar flare.",
+          "private_fact": "The navigator was asleep during the emergency warning sirens and carries agonizing survivor guilt over the crew's demise.",
+          "outcome_tags": [
+            "gyro_sabotage_detected",
+            "data_drift_unreadable"
+          ],
+          "routes": {
+            "gyro_sabotage_detected": "next",
+            "data_drift_unreadable": "resolution:claim_dismissed_uncontested"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:claims_director} imposes a surprise forensic filing surcharge on all outstanding casualty disputes.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "claims_director",
+          "target": "underwriting_sanctum",
+          "reason": "The director demands certified thorium ore delivered to run the office's actuarial processing reactors before opening a claim appeal window.",
+          "private_fact": "The director already shredded two internal safety memos warning that the hazard buoy had shifted fifteen degrees off axis.",
+          "outcome_tags": [
+            "thorium_delivered",
+            "thorium_delayed"
+          ],
+          "routes": {
+            "thorium_delivered": "next",
+            "thorium_delayed": "resolution:claim_dismissed_uncontested"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The station magistrate schedules a summary dismissal hearing to close the hauler's casualty file forever.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "bereaved_navigator",
+          "target": "underwriting_sanctum",
+          "reason": "The navigator asks the pilot to purchase the technician's pawned maintenance slate from a black-market broker to present at the tribunal.",
+          "private_fact": "The maintenance slate contains recorded voice memos confirming the technician received payoffs to ignore drift alerts.",
+          "outcome_tags": [
+            "logbook_presented",
+            "broker_defaulted"
+          ],
+          "routes": {
+            "logbook_presented": "next",
+            "broker_defaulted": "resolution:claim_dismissed_uncontested"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds documented proof that the hazard buoy was deliberately sabotaged, voiding the insurer's Act of God defense.",
+        "options": [
+          {
+            "id": "enforce_full_indemnity",
+            "label": "Present the evidence at the public hearing, forcing full wrongful death indemnity and ousting the director",
+            "leads_to": "resolution:indemnity_forced_director_ousted"
+          },
+          {
+            "id": "accept_confidential_pension",
+            "label": "Accept the director's private settlement offering lifetime medical stipends for surviving families in exchange for silence",
+            "leads_to": "resolution:confidential_pension_sealed"
+          },
+          {
+            "id": "sell_proof_to_cartel",
+            "label": "Sell the buoy tampering evidence to a rival transport guild seeking to break the insurer's transit monopoly",
+            "leads_to": "resolution:cartel_claims_war"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "indemnity_forced_director_ousted",
+      "reached_by": "The pilot reveals the buoy tampering at the tribunal.",
+      "summary": "Underwriters are forced to pay full indemnity to the victims' families; {role:claims_director} is dismissed in disgrace and {role:bereaved_navigator} finds closure.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bereaved_navigator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "claims_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_technician",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_act_of_god_clause",
+          "public_summary": "A pilot proved a fatal solar flare disaster was caused by a corporate hazard cover-up."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "confidential_pension_sealed",
+      "reached_by": "The pilot and navigator accept the director's private settlement.",
+      "summary": "{role:claims_director} seals the buoy logs and pays out quiet survivor pensions; {role:bereaved_navigator} leaves the system with guaranteed financial security.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bereaved_navigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "claims_director",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_technician",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "cartel_claims_war",
+      "reached_by": "The pilot sells the maintenance records to a rival guild.",
+      "summary": "Rival haulers sue the underwriting cartel into bankruptcy over systemic buoy neglect; transit premiums spike across {system}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "claims_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bereaved_navigator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "claim_dismissed_uncontested",
+      "reached_by": "The pilot fails the missions or abandons the contracts.",
+      "summary": "The tribunal upholds the Act of God exemption; {role:bereaved_navigator} is evicted from the docks while {role:claims_director} earns a quarterly bonus.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bereaved_navigator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "claims_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_technician",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "claim_dismissed_uncontested",
+  "loose_threads": [
+    {
+      "id": "t_buoy_drift_audit",
+      "surface": "station_notice",
+      "detail": "The hazard buoy calibration contract was renewed by an unregistered holding company with no registered corporate address.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_claims_escrow_freeze",
+      "surface": "price_board",
+      "detail": "The insurer casualty escrow account transferred four million credits to a debt clearinghouse the morning before the flare.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Underwriting syndicate invokes natural catastrophe exemption following freighter loss in {system}.",
+    "Coronal flare warning buoy telemetry placed under temporary administrative seal.",
+    "Bereaved shipping families rally outside claims office demanding independent review."
+  ],
+  "voice_direction": {
+    "bereaved_navigator": "Strained, intense, obsessively reciting orbital coordinates in a low, furious monotone.",
+    "claims_director": "Polite, patronizing, smoothly deflecting moral accusations with polite corporate condolences and procedural delays.",
+    "relay_technician": "Defensive, evasive, constantly shifting blame to solar interference and demanding payment upfront."
+  },
+  "novelty_tags": [
+    "act_of_god_clause",
+    "hazard_buoy_tampering",
+    "bereaved_navigator",
+    "underwriting_bonus_fraud",
+    "solar_flare_liability"
+  ]
+}

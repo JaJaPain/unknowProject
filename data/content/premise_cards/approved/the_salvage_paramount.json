@@ -1,0 +1,341 @@
+{
+  "id": "premise.the_salvage_paramount",
+  "schema_version": 1,
+  "title": "The Salvage Paramount",
+  "logline": "When an insured luxury liner crashes in deep asteroids, an insurance recovery agent and a cutthroat scrapper crew engage in an armed race to claim the bearer bond vault before title lapses.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "survival"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "recovery_agent",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Retained by underwriters to recover insured bearer bonds from the crash site before third parties claim derelict title.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_boss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Runs a rogue scrapper flotilla claiming paramount salvage rights under deep-space maritime custom.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_corvette",
+      "kind": "ship",
+      "description": "A heavily modified industrial cutter bristling with tractor beams and short-range pulse cannons.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "wrecked_transport",
+      "kind": "place",
+      "description": "The shattered hull of a luxury liner wedged in a tumbling carbonaceous asteroid.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "salvage_depot",
+      "kind": "place",
+      "description": "An unchartered staging dock where unregistered wreckage is cut up and retagged.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "underwriters_syndicate",
+      "kind": "faction",
+      "description": "A maritime insurance syndicate desperate to recover high-net-worth collateral before paying out catastrophic loss claims.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "dense_debris"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "stolen_goods_circulating",
+    "rival_humiliated"
+  ],
+  "public_situation": "Underwriters and salvage cutters converge on an asteroid belt in {system} after an insured luxury vessel impacts a tumbling rock.",
+  "private_truth": "The liner's purser deliberately scuttled the ship to fake the loss of a dynastic bearer bond chest held in the vault.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "transport_scuttled_by_crew_carrying_bearer_bonds"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Underwriters announce an emergency recovery bounty for verifiable salvage rights at {role:wrecked_transport}.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "recovery_agent",
+          "target": "wrecked_transport",
+          "culprit": "salvage_boss",
+          "reason": "The recovery agent needs a telemetry sweep of the impact crater to confirm the vault's biometric locks are still intact before scrapper torches breach them.",
+          "private_fact": "The recovery agent intends to pocket half the unregistered bonds and claim they were incinerated in the reactor flare.",
+          "outcome_tags": [
+            "vault_integrity_verified",
+            "vault_already_breached"
+          ],
+          "routes": {
+            "vault_integrity_verified": "next",
+            "vault_already_breached": "resolution:salvage_plundered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Scrapper cutters deploy interdiction drones across the asteroid field to enforce paramount salvage jurisdiction.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "recovery_agent",
+          "target": "salvage_corvette",
+          "reason": "The recovery agent contracts the pilot to disable the scrapper command cutter before its boarding team penetrates the passenger decks.",
+          "private_fact": "The scrapper crew includes escaped debt-laborers who will face life imprisonment if captured by syndicate marshals.",
+          "outcome_tags": [
+            "scrappers_neutralized",
+            "scrappers_prevail"
+          ],
+          "routes": {
+            "scrappers_neutralized": "next",
+            "scrappers_prevail": "resolution:salvage_plundered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "A rogue salvage shuttle flees the wreck carrying the severed vault core toward an unchartered depot.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "recovery_agent",
+          "target": "salvage_corvette",
+          "reason": "The pilot must shoot down the fleeing scrapper transport and retrieve the armored bond chest before it drops into the deep system.",
+          "private_fact": "The bond chest carries genetic traces proving the liner was abandoned by its officers before collision.",
+          "outcome_tags": [
+            "bonds_recovered",
+            "bonds_vaporized"
+          ],
+          "routes": {
+            "bonds_recovered": "next",
+            "bonds_vaporized": "resolution:salvage_plundered"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the recovered bearer bond chest while scrapper survivors and underwriters wait on comms.",
+        "options": [
+          {
+            "id": "deliver_to_underwriters",
+            "label": "Deliver the chest to the underwriting syndicate, closing the insurance claim and collecting the corporate fee",
+            "leads_to": "resolution:bonds_returned_claim_closed"
+          },
+          {
+            "id": "cut_deal_with_scrappers",
+            "label": "Split the bearer bonds with the salvage boss at the secret depot, letting underwriters pay the total loss",
+            "leads_to": "resolution:scrapper_syndicate_payout"
+          },
+          {
+            "id": "ransom_to_heirs",
+            "label": "Turn the bond keys over to the deceased passengers' estate representatives for an independent restitution fund",
+            "leads_to": "resolution:estate_heirs_restitution"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bonds_returned_claim_closed",
+      "reached_by": "The pilot delivers the bearer bond chest to the underwriters syndicate.",
+      "summary": "{role:underwriters_syndicate} recovers the assets and closes the claim; {role:recovery_agent} collects a massive commission while the scrapper ring dissolves.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "underwriters_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "recovery_agent",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "secured_the_paramount_bonds",
+          "public_summary": "A pilot reclaimed an insured liner's fortune from deep-space asteroid scrappers."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "scrapper_syndicate_payout",
+      "reached_by": "The pilot splits the bearer bonds with the salvage boss.",
+      "summary": "{role:salvage_boss} fences the bearer bonds through black-market channels; underwriters take catastrophic losses and transit insurance rates spike.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "underwriters_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "recovery_agent",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "estate_heirs_restitution",
+      "reached_by": "The pilot delivers the bond keys to the victim estate representatives.",
+      "summary": "Passenger families receive direct financial restitution from the vault; both {role:underwriters_syndicate} and {role:salvage_boss} are shut out of the spoils.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "underwriters_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_boss",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "recovery_agent",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "salvage_plundered",
+      "reached_by": "The pilot fails the combat drops or the scrapper fleet escapes.",
+      "summary": "Scrappers gut the liner vault and melt down the hull; underwriters declare a total loss and write off the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "underwriters_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "recovery_agent",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_boss",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "salvage_plundered",
+  "loose_threads": [
+    {
+      "id": "t_vault_override_code",
+      "surface": "scan",
+      "detail": "The luxury liner vault lock was opened from the inside three minutes prior to asteroid impact.",
+      "can_carry_methods": [
+        "sabotage",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_bearer_bond_debt",
+      "surface": "price_board",
+      "detail": "The bearer bond serial numbers match debts previously held by a defunct orbital development bank.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "proxy_violence",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "greed",
+      "survival",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Armed standoff reported between insurance wardens and scrap cutters in {system} asteroid field.",
+    "{role:underwriters_syndicate} posts heavy recovery bounty on passenger liner assets.",
+    "Black-market exchanges report sudden influx of bearer securities following luxury hull loss."
+  ],
+  "voice_direction": {
+    "recovery_agent": "Crisp, predatory, counting seconds between sentences and treating tactical combat as an annoying line item on an invoice.",
+    "salvage_boss": "Gravelly, boisterous, peppering demands with archaic maritime law citations and broad, theatrical humor."
+  },
+  "novelty_tags": [
+    "salvage_paramount",
+    "bearer_bond_recovery",
+    "crashed_luxury_liner",
+    "scrapper_cutter_dogfight",
+    "derelict_title_race"
+  ]
+}
