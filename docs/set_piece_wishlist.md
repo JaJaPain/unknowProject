@@ -309,3 +309,9 @@ file names. Up close it currently reads as a slab hull with a cube bridge.
 - **Budget:** up to ~15k triangles and under ~30 meshes / ~8 materials;
   still batched by material.
 - **No:** writing, registration numbers, logos, faction marks, bodies.
+
+**#7b status (2026-10-06):** delivered and approved. Same file, names, pivots,
+tint and emissive materials; now ~9.6k triangles with a stepped spine,
+sloped bridge with window band and dish, tanks, radiators, antennas, shaped
+engine bells, more damage and a readable interior; the 95 m drone passage
+still clear. 34-68 draw calls in game (19 without it).

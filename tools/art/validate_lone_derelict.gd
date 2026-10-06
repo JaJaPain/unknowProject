@@ -32,7 +32,7 @@ func _validate() -> void:
 		var current: AABB = mesh.global_transform * mesh.get_aabb()
 		bounds = current if first else bounds.merge(current)
 		first = false
-	var valid := meshes.size() == 13 and surfaces == 15 and cameras.is_empty() and lights.is_empty() and absf(bounds.size.x - 301.708) < 0.1
+	var valid := meshes.size() == 13 and surfaces == 15 and cameras.is_empty() and lights.is_empty() and absf(bounds.size.x - 300.0) < 0.1
 	for name in ["DriftingCargo_01", "DriftingCargo_02"]:
 		valid = valid and scene.find_child(name, true, false) != null
 	for name in ["Hull | Neutral hull tint", "Hull | Muted accent tint"]:

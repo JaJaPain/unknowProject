@@ -61,7 +61,7 @@ for i in [0,1]:
  mix=m.node_tree.nodes.new('ShaderNodeMixRGB');mix.blend_type='MULTIPLY';mix.inputs[0].default_value=1;mix.inputs[2].default_value=(*colors[i],1);mix.label='Hull tint' if i==0 else 'Accent tint'
  m.node_tree.links.new(v.outputs['Color'],mix.inputs[1]);m.node_tree.links.new(mix.outputs[0],p.inputs['Base Color'])
 # Hollow shell built from solid individual panels. The breached side is genuinely absent.
-stations=[(-123,23,17),(-91,34,24),(-68,34,24),(-35,34,24),(0,34,24),(38,34,24),(68,32,23),(98,27,21),(112,23,18),(128,17,14),(141,10,11),(150,3,7)]
+stations=[(-123,23,17),(-91,34,24),(-68,34,24),(-35,34,24),(0,34,24),(38,34,24),(68,32,23),(104,25,21),(139,15,13),(150,3,7)]
 section=[(-1,-.58),(-.7,-1),(.7,-1),(1,-.58),(1,.58),(.7,1),(-.7,1),(-1,.58)]
 def panel(key,points,thickness=1.7):
  inner=[(x,y*(1-thickness/34),z*(1-thickness/24)) for x,y,z in points]
@@ -111,6 +111,23 @@ for side in [-1,1]:
  for x in [-108,86,109]:box(('Hull accent',1),(x,side*(26 if x<100 else 21),3),(18,2,9))
 box(('Hull accent',1),(4,8,25),(139,17,2))
 for x in [-54,-13,29,63]:box(('Hull detailing',2),(x,8,26),(1,18,1))
+# Low practical bridge with dead glazed apertures, no identifying marks.
+box(('Bridge',0),(105,0,29),(41,31,19))
+box(('Bridge',1),(105,0,40),(43,33,3))
+for y in [-9,0,9]:box(('Bridge windows',2),(126,y,31),(1,6,5))
+for side in [-1,1]:
+ for x in [94,106,117]:box(('Bridge windows',2),(x,side*16,31),(6,1,4))
+# Back-mounted cold engines; cracked structural neck, slight asymmetric engine tilt.
+box(('Engine structure',2),(-128,0,0),(14,35,25))
+for y in [-17,17]:
+ p=Vector((-132,y,0));q=Vector((-150,y+(-2 if y<0 else 1),-2 if y<0 else 0))
+ beam(('Engines',0),p,q,11,16)
+ beam(('Engine structure',2),q,q+Vector((1.4,0,0)),8.5,16)
+ # Narrow rim surrounding a recessed dark nozzle, rather than luminous exhaust.
+ for i in range(16):
+  a=i*math.tau/16;b=(i+1)*math.tau/16
+  beam(('Engines',3),(q.x,q.y+9.7*math.cos(a),q.z+9.7*math.sin(a)),(q.x,q.y+9.7*math.cos(b),q.z+9.7*math.sin(b)),.9,6)
+for y in [-14,14]:beam(('Engine structure',3),(-120,y,-9),(-136,y,-9),2.2,8)
 # Sparse frost on the underside and far-side edges, not a uniform white coat.
 for j in range(22):
  x=rng.uniform(-92,83);y=rng.uniform(8,21)
@@ -130,7 +147,6 @@ for i,(p,a) in enumerate([((-28,-53,-4),.14),((21,-65,4),-.19)]):
  box((name,1),p,(17,11,10),a)
  for dx in [-6,0,6]:
   box((name,3),(p[0]+dx*math.cos(a),p[1]+dx*math.sin(a),p[2]),(1,12,11),a)
-exec(compile((ROOT/'tools/art/lone_derelict_detail.py').read_text(), 'lone_derelict_detail.py', 'exec'))
 # Build and batch static hull/interior sections; debris keeps individual centred pivots.
 root=bpy.data.objects.new('LoneDerelict',None);collection.objects.link(root)
 objects=[]
@@ -161,15 +177,6 @@ for name in ['DriftingCargo_01','DriftingCargo_02']:
  for o in parts:o.select_set(True)
  bpy.context.view_layer.objects.active=parts[0];bpy.ops.object.join();parts[0].name=name
 objects=[o for o in collection.objects if o.type=='MESH']
-# Preserve every existing exported pivot, even when new details change its bounds.
-pivot_file=OUT/'original_pivots.json'
-if pivot_file.exists():
- old_pivots=json.loads(pivot_file.read_text())
- for o in objects:
-  if o.name in old_pivots:
-   old=Vector(old_pivots[o.name]);delta=o.location-old
-   for v in o.data.vertices:v.co+=delta
-   o.location=old
 bpy.ops.object.select_all(action='DESELECT')
 for o in collection.objects:o.select_set(True)
 bpy.context.view_layer.objects.active=objects[0]

@@ -3,5 +3,6 @@
   "longitudinal_clearance_samples": 9,
   "sampled_corridor_length_m": 95,
   "sampled_corridor_width_and_height_m": 6,
+  "preserved_original_pivots": 14,
   "note": "Geometry ray samples, not a full collision or drone simulation"
 }

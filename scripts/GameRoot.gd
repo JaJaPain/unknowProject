@@ -12719,6 +12719,12 @@ func _run_wreck_snapshot() -> void:
 	get_active_system_root().add_child(cam)
 	cam.make_current()
 	var views := [["far", Vector3(4200, 1500, 4200)], ["mid", Vector3(1800, 700, 1600)], ["near", Vector3(450, 160, 380)]]
+	# Smaller pieces (a 300 m derelict) want the cameras closer: --view-scale=0.35.
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--view-scale="):
+			var k := float(arg.substr(13))
+			for v in views:
+				v[1] = v[1] * k
 	var baseline := {}
 	for v in views:
 		cam.global_position = spot + (v[1] as Vector3)

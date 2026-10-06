@@ -1,9 +1,10 @@
 {
-  "glb_bytes": 297468,
+  "revision": "Brief 7b detail revision",
+  "glb_bytes": 725708,
   "meshes": 13,
   "surfaces": 15,
   "materials": 7,
-  "triangles": 3818,
+  "triangles": 9628,
   "scenes": 1,
   "cameras": 0,
   "lights": 0,
@@ -12,8 +13,16 @@
     "LD Emergency emission"
   ],
   "tint_factors_and_vertex_colours": true,
+  "all_original_node_names_and_transforms_preserved": true,
   "separate_drifting_containers": 2,
-  "godot_4_6_3_import": "passed; dimensions, container meshes and tint materials verified",
-  "visual_review": "final render inspected",
-  "breach_clearance": "entry ray reaches far bulkhead at 118 m; nine 95 m corridor rays clear"
+  "godot_4_6_3_import": "passed; 300 m length, container meshes and tint materials verified",
+  "visual_review": "revised final render inspected",
+  "breach_clearance": {
+    "entrance_ray_first_surface_distance_m": 118.0,
+    "longitudinal_clearance_samples": 9,
+    "sampled_corridor_length_m": 95,
+    "sampled_corridor_width_and_height_m": 6,
+    "preserved_original_pivots": 14,
+    "note": "Geometry ray samples, not a full collision or drone simulation"
+  }
 }

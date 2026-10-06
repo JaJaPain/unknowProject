@@ -2,12 +2,12 @@
   "meshes": 13,
   "materials": 7,
   "material_surfaces": 15,
-  "vertices": 2420,
-  "triangles": 3818,
+  "vertices": 6154,
+  "triangles": 9628,
   "blender_dimensions_m": [
-    301.70751953125,
-    106.1196060180664,
-    71.75
+    300.0,
+    108.6196060180664,
+    84.76546478271484
   ],
   "nominal_hull_length_m": 300,
   "breach_length_m": 136,

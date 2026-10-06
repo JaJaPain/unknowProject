@@ -1,4 +1,4 @@
-# A lone derelict ship
+# A lone derelict ship — detail revision 7b
 
 Original reusable working hauler for Brief #7 in `docs/set_piece_wishlist.md`.
 Approximately 300 m long, with a plain spine, cargo hold, forward bridge and
@@ -7,6 +7,21 @@ decks, frames, bulkheads, a long clear passage and retained cargo. Jagged metal
 lips and scorching border the breach; frost/dust marks the underside.
 No writing, registration, logos, faction marks, bodies or firing weapons.
 
+## Detail revision 7b
+
+Added a stepped dorsal spine, layered roof panels, a shaped bow and sloping
+bridge with a window band and sensor dish. Hull fittings include radiators,
+pressure bottles, antennas, docking clamps, attitude jets, hatches and rails.
+The engines now have hollow bell profiles, inner rings and reinforcement.
+Additional dents, scorch marks, curled sheets and hanging cables give the
+breach depth; ceiling pipes, framed compartment doors, a ladder and racks
+make the interior more readable.
+
+All 14 original exported node names and transforms (root plus 13 meshes) are
+preserved. Both tint materials, both emission materials, containers and file
+names remain unchanged. The original GLB and builder are archived here as
+`revision7_original.glb` and `revision7_original_builder.py`.
+
 ## Files and budget
 
 - `lone_derelict.blend`: editable Blender source, derelict scene active.
@@ -14,11 +29,14 @@ No writing, registration, logos, faction marks, bodies or firing weapons.
 - `../../assets/landmarks/lone_derelict.glb`: game export, no cameras/lights.
 - `counts.json`, `validation.json`, `breach_clearance.json`: verification data.
 - `../../tools/art/build_lone_derelict.py`: reproducible builder.
+- `../../tools/art/lone_derelict_detail.py`: additional geometry used by the builder.
+- `../../tools/art/check_derelict_clearance.py`: repeatable Blender clearance check.
+- `original_pivots.json`: pivot contract retained by rebuilds.
 
-Metres, unit scale 1. Envelope **301.7 x 106.1 x 71.75 m** in Blender XYZ,
+Metres, unit scale 1. Envelope **300 x 108.6 x 84.8 m** in Blender XYZ,
 including drifting containers and the beacon mast. **13 meshes, 15 material
-surfaces, 7 materials, 3,818 triangles**, 2,420 source vertices. Well below
-the requested 30 meshes / 20k triangles. Hull and visible interior are batched
+surfaces, 7 materials, 9,628 triangles**, 6,154 source vertices. Well below
+the revised 30 meshes / 15k triangles. Hull and visible interior are batched
 by material. Two `DriftingCargo_01` / `DriftingCargo_02` objects have centred
 pivots and two material surfaces each; they can drift independently.
 
@@ -64,4 +82,6 @@ export of its Multiply nodes may omit those factors.
 Verified in Godot 4.6.3: import, dimensions, mesh/surface counts, two separate
 containers and tint materials with vertex colours. GLB checks cover geometry
 budget, material factors, scene isolation and absence of cameras/lights.
-Final render inspected and breach geometry sampled with Blender BVH rays.
+Final revised render inspected. The original nine 95 m passage rays pass again,
+and the entrance ray reaches the far bulkhead at 118 m. All original pivots
+and exported node transforms were compared with the original asset.
