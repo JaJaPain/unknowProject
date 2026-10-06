@@ -23,6 +23,8 @@ var ore_type := "silicate"
 static var ore_tint_alpha := 0.15
 ## Set by a field spawner so every field has at least one red rock.
 var force_tech_seam := false
+## Set by the field that spawns it to guarantee each local ore (or "").
+var force_ore := ""
 
 
 ## Whether the rock with this persistent id has tech-grade seams (fixed per id).
@@ -42,6 +44,30 @@ static func ore_type_for(id: String, mix: Dictionary) -> String:
 
 static func is_tech_seam_id(id: String) -> bool:
 	return not id.is_empty() and posmod((id + ":tech_seam").hash(), 1000) < tech_seam_permille
+
+
+## Every ore a system carries turns up in each field: at least `per_ore` rocks
+## of each non-silicate ore in `mix` (playtest 2026-10-06 findings 12-13: a
+## field could roll no ice at all). Returns {id: ore} for the rocks that must
+## change; rocks already of that ore count, and `skip` (the red rock) is left
+## alone. Deterministic, so the same rocks after a reload.
+static func guaranteed_ores(ids: Array, mix: Dictionary, skip: String = "", per_ore: int = 2) -> Dictionary:
+	var forced := {}
+	var ores := mix.keys().filter(func(o): return str(o) != "silicate" and float(mix[o]) > 0.0)
+	ores.sort()
+	var have := {}
+	for raw in ids:
+		var natural := ore_type_for(str(raw), mix)
+		have[natural] = int(have.get(natural, 0)) + 1
+	# Candidates: plain silicate rocks, in a stable shuffled order.
+	var pool: Array = ids.filter(func(i): return str(i) != skip and ore_type_for(str(i), mix) == "silicate")
+	pool.sort_custom(func(a, b): return posmod((str(a) + ":ore_pick").hash(), 1000003) < posmod((str(b) + ":ore_pick").hash(), 1000003))
+	for ore in ores:
+		var need := per_ore - int(have.get(ore, 0))
+		while need > 0 and not pool.is_empty():
+			forced[str(pool.pop_front())] = str(ore)
+			need -= 1
+	return forced
 
 
 ## For a field of rocks: the id that must be a red rock so the field has at
@@ -122,7 +148,7 @@ func _ready():
 		_model_index = AsteroidModels.model_index_for_seed(persistent_id.hash())
 		AsteroidModels.apply_model_index(_mesh, _model_index)
 	tech_seam = force_tech_seam or is_tech_seam_id(persistent_id)
-	ore_type = ore_type_for(persistent_id, GlobalState.system_ore_mix)
+	ore_type = force_ore if not force_ore.is_empty() else ore_type_for(persistent_id, GlobalState.system_ore_mix)
 	# An ore's own rock texture when it has one; otherwise a tint over the
 	# plain rock.
 	var ore_material: Material = null

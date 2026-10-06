@@ -32,6 +32,8 @@ func _initialize() -> void:
 
 	# The hold.
 	gs.clear_cargo()
+	# A system whose belts carry ferrite (no import premium in this sum).
+	gs.system_ore_mix = {"silicate": 0.9, "ferrite": 0.1}
 	gs.add_ore(10.0, "ferrite")
 	gs.add_ore(5.0)
 	_check(is_equal_approx(gs.cargo, 15.0) and is_equal_approx(gs.cargo_ore_amount("ferrite"), 10.0), "the hold keeps its mix")
@@ -68,7 +70,7 @@ func _initialize() -> void:
 		for k in m:
 			sum += float(m[k])
 			seen[k] = true
-		_check(is_equal_approx(sum, 1.0) and m.size() >= 3 and m.size() <= 4 and float(m["silicate"]) >= 0.5, "a belt is mostly silicate plus two others (and ice for fuel): %s" % str(m))
+		_check(is_equal_approx(sum, 1.0) and m.size() >= 3 and m.size() <= 4 and (float(m["silicate"]) >= 0.45 or float(m.get("water_ice", 0.0)) >= Profile.ICY_SHARE - 0.0001), "a belt is mostly silicate plus two others and ice for fuel, or an icy system (Abe, 2026-10-06): %s" % str(m))
 		_check(float(m.get("thorium", 0.0)) <= Profile.THORIUM_MAX_SHARE + 0.0001, "thorium stays rare")
 	for ore in Ores.TYPES:
 		_check(seen.has(ore), "%s turns up somewhere" % ore)

@@ -69,8 +69,14 @@ const THORIUM_MAX_SHARE := 0.08
 const RARE_SHARE_BY_DEPTH := [0.0, 0.08, 0.15, 0.22, 0.30, 0.36, 0.42]
 const THORIUM_MIN_DEPTH := 3
 # Water ice refines into fuel, so every belt past the start carries at least
-# this much of it, however early (a utility ore, not a rare one).
-const ICE_FLOOR := 0.06
+# this much of it, however early (a utility ore, not a rare one). Raised from
+# 6% (playtest 2026-10-06 finding 12); every field also guarantees a couple
+# of ice rocks (Asteroid.guaranteed_ores).
+const ICE_FLOOR := 0.10
+# Some systems are icy: mostly water ice, for their own flavour (Abe,
+# 2026-10-06).
+const ICY_SYSTEM_CHANCE := 0.15
+const ICY_SHARE := 0.45
 
 
 ## `depth`: gate jumps from the start system (-1 = unknown: full rarity).
@@ -147,7 +153,12 @@ static func ore_mix(system_id: String, seed_value: int, star_type: String, quirk
 		var amount: float = minf(float(share), THORIUM_MAX_SHARE) if pick == "thorium" else float(share)
 		mix[pick] = amount
 		mix["silicate"] = float(mix["silicate"]) - amount
-	return _scale_rarity(mix, depth)
+	var icy := rng.randf() < ICY_SYSTEM_CHANCE
+	var ores := _scale_rarity(mix, depth)
+	if icy and depth != 0 and float(ores.get("water_ice", 0.0)) < ICY_SHARE:
+		ores["silicate"] = float(ores["silicate"]) - (ICY_SHARE - float(ores.get("water_ice", 0.0)))
+		ores["water_ice"] = ICY_SHARE
+	return ores
 
 
 ## Shrinks the rare ores to what this depth allows (silicate takes the rest);

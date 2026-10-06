@@ -204,6 +204,37 @@ func _test_generated_system_minimum_density() -> void:
 		_expect(int(result.get("station_ids", []).size()) >= 2, "Seed %d: station_ids too sparse." % seed_val)
 		_expect(int(result.get("asteroid_count", 0)) >= 16, "Seed %d: result asteroid_count too low." % seed_val)
 		root.free()
+	# Playtest 2026-10-06 findings 12-13: 1-3 fields of 40-90 rocks, and every
+	# field has a couple of rocks of each ore the system carries.
+	var gs: Node = get_root().get_node_or_null("GlobalState")
+	if gs == null:
+		return
+	var saved_mix: Dictionary = gs.system_ore_mix
+	gs.system_ore_mix = {"silicate": 0.85, "water_ice": 0.10, "ferrite": 0.05}
+	var AsteroidScript := load("res://scripts/Asteroid.gd")
+	for seed_val in [1, 2, 3, 42, 777, 9901, 31337, 5]:
+		var config := SystemConfig.from_seed("Fields", "system.gen.fields%d" % seed_val, seed_val)
+		var result: Dictionary = factory_type.generate(config)
+		var root := result.get("root", null) as Node3D
+		if root == null:
+			continue
+		var fields := {}
+		for rock in root.find_children("*", "", true, false):
+			if not rock.is_in_group("asteroid"):
+				continue
+			var key := str(rock.name).get_slice("_Ring_", 0)
+			var field: Dictionary = fields.get(key, {"rocks": 0})
+			field["rocks"] = int(field["rocks"]) + 1
+			var ore: String = str(rock.force_ore) if not str(rock.force_ore).is_empty() else AsteroidScript.ore_type_for(str(rock.persistent_id), gs.system_ore_mix)
+			field[ore] = int(field.get(ore, 0)) + 1
+			fields[key] = field
+		_expect(fields.size() >= 1 and fields.size() <= 3, "Seed %d: %d fields" % [seed_val, fields.size()])
+		for key in fields:
+			var f: Dictionary = fields[key]
+			_expect(int(f["rocks"]) >= 40, "Seed %d field %s: only %d rocks" % [seed_val, key, int(f["rocks"])])
+			_expect(int(f.get("water_ice", 0)) >= 2 and int(f.get("ferrite", 0)) >= 2, "Seed %d field %s: ores %s" % [seed_val, key, str(f)])
+		root.free()
+	gs.system_ore_mix = saved_mix
 
 
 func _test_campaign_system_names() -> void:

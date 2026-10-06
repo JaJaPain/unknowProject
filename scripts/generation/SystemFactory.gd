@@ -113,16 +113,39 @@ func _build(config: SystemConfig) -> Dictionary:
 		fallback_ring["planet"] = planets[0]
 		ring_specs.append(fallback_ring)
 
+	# Mining fields (playtest 2026-10-06 finding 13, Abe): 2-3 fields of 40-70
+	# rocks when there are enough planets; a system with only a planet or two
+	# gets one denser field. Extra fields are further arcs on the rings there are.
+	var field_target := 1 if planets.size() <= 2 else clampi(planets.size() - 1, 2, MAX_FIELDS)
+	while ring_specs.size() > field_target:
+		ring_specs.pop_back()
+	var natural_rings := ring_specs.size()
+	var extra := 0
+	while ring_specs.size() < field_target and natural_rings > 0:
+		var twin: Dictionary = ring_specs[extra % natural_rings].duplicate()
+		twin["key"] = "%s_%s" % [str(twin["key"]), ["b", "c", "d"][extra]]
+		twin["arc_of"] = extra % natural_rings
+		ring_specs.append(twin)
+		extra += 1
 	for ring in ring_specs:
-		_spawn_asteroid_ring(
+		ring["count"] = rng.randi_range(LONE_FIELD_ROCKS.x, LONE_FIELD_ROCKS.y) if ring_specs.size() == 1 			else rng.randi_range(FIELD_ROCKS.x, FIELD_ROCKS.y)
+
+	var arc_starts: Array = []
+	for ring in ring_specs:
+		var start := -1.0
+		if ring.has("arc_of"):
+			# Opposite side of the same ring, so fields don't overlap.
+			start = float(arc_starts[int(ring["arc_of"])]) + PI
+		arc_starts.append(_spawn_asteroid_ring(
 			ring["planet"] as Node3D,
 			ring["parent"] as Node3D,
 			float(ring["ring_radius"]),
 			float(ring["ring_width"]),
 			int(ring["count"]),
 			str(ring["key"]),
-			config.seed_value
-		)
+			config.seed_value,
+			start
+		))
 
 	var stations: Array[Dictionary] = []
 	for i in range(config.station_count):
@@ -297,6 +320,13 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 	var station_type := "outpost" if index > 0 else "full_service"
 
 	var position := Vector3.ZERO
+	var free_spot := Vector3.INF
+	if not is_orbital:
+		free_spot = _find_placement(MAIN_STATION_CLEARANCE if index == 0 else MIN_STATION_CLEARANCE, 80)
+		# No clear spot in open space: orbit a planet instead of losing the
+		# station (a generated system came out with one station).
+		if free_spot == Vector3.INF and not planets.is_empty():
+			is_orbital = true
 	if is_orbital:
 		var planet: Node3D = planets[rng.randi() % planets.size()]
 		var clearance := float(planet.get_meta("navigation_clearance_radius", 500.0))
@@ -306,10 +336,9 @@ func _create_station(config: SystemConfig, index: int, planets: Array[Node3D]) -
 		var angle := rng.randf_range(0.0, TAU)
 		position = planet.position + Vector3(cos(angle) * orbit_radius, 0.0, sin(angle) * orbit_radius)
 	else:
-		var found := _find_placement(MAIN_STATION_CLEARANCE if index == 0 else MIN_STATION_CLEARANCE, 20)
-		if found == Vector3.INF:
+		if free_spot == Vector3.INF:
 			return {}
-		position = found
+		position = free_spot
 
 	if config.station_skins.size() < maxi(config.station_count, index + 1):
 		config.station_skins = StationSkinsType.pick(config.seed_value, maxi(config.station_count, index + 1) - 1, [])
@@ -359,6 +388,11 @@ func _is_clear(pos: Vector3, clearance: float) -> bool:
 	return true
 
 
+const MAX_FIELDS := 3
+const FIELD_ROCKS := Vector2i(40, 70)
+const LONE_FIELD_ROCKS := Vector2i(60, 90)
+
+
 func _spawn_asteroid_ring(
 	planet: Node3D,
 	parent: Node3D,
@@ -366,16 +400,25 @@ func _spawn_asteroid_ring(
 	ring_width: float,
 	count: int,
 	ring_key: String,
-	seed_value: int
-) -> void:
+	seed_value: int,
+	arc_start: float = -1.0
+) -> float:
 	var ids: Array = []
 	for index in range(count):
 		ids.append("entity.gen.asteroid.%s.%03d" % [ring_key, index])
-	# Every field has at least one red rock (tech-grade seams).
-	var red_id: String = (load("res://scripts/Asteroid.gd") as GDScript).guaranteed_tech_seam_id(ids)
+	# Every field has at least one red rock (tech-grade seams), and a couple of
+	# rocks of each ore the system carries (ice included).
+	var AsteroidScript := load("res://scripts/Asteroid.gd") as GDScript
+	var red_id: String = AsteroidScript.guaranteed_tech_seam_id(ids)
+	var loop := Engine.get_main_loop() as SceneTree
+	var gs: Node = loop.root.get_node_or_null("GlobalState") if loop != null else null
+	var mix: Dictionary = gs.get("system_ore_mix") if gs != null else {}
+	var forced: Dictionary = AsteroidScript.guaranteed_ores(ids, mix, red_id)
 	# The ring is bigger but rocks aren't: a mining field on an arc of it,
 	# packed as tightly as the whole ring used to be.
 	var field_start := rng.randf_range(0.0, TAU)
+	if arc_start >= 0.0:
+		field_start = arc_start
 	var field_arc := TAU / WorldScale.TRAVEL
 	for index in range(count):
 		var angle := field_start + field_arc * (float(index) / float(count)) + rng.randf_range(-0.035, 0.035) / WorldScale.TRAVEL
@@ -385,6 +428,7 @@ func _spawn_asteroid_ring(
 		asteroid.add_to_group("asteroid")
 		asteroid.persistent_id = "entity.gen.asteroid.%s.%03d" % [ring_key, index]
 		asteroid.force_tech_seam = asteroid.persistent_id == red_id
+		asteroid.force_ore = str(forced.get(asteroid.persistent_id, ""))
 		asteroid.orbit_center = planet.position
 		asteroid.orbit_radius = radius
 		# The same drift speed on the bigger ring.
@@ -396,6 +440,7 @@ func _spawn_asteroid_ring(
 		parent.add_child(asteroid)
 		var scale_factor := rng.randf_range(0.75, 1.65)
 		asteroid.scale = Vector3.ONE * scale_factor
+	return field_start
 
 
 func _roman_numeral(n: int) -> String:
