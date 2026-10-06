@@ -13562,7 +13562,7 @@ func _lodestar_snapshot(place: Node3D) -> void:
 	if ui != null:
 		ui.visible = false
 	var cam := Camera3D.new()
-	cam.far = 20000.0
+	cam.far = 60000.0
 	get_active_system_root().add_child(cam)
 	var kinds := ["beacon", "fleet", "ring", "survey", "garden", "wrecks"]
 	for kind in kinds:
@@ -13571,11 +13571,15 @@ func _lodestar_snapshot(place: Node3D) -> void:
 		get_active_system_root().add_child(mark)
 		mark.global_position = place.global_position + Vector3(0, 3000, 0)
 		place.visible = false
-		cam.global_position = mark.global_position + Vector3(700, 260, 1000)
+		# Framed by the place's size (the set pieces are up to 2 km across).
+		var reach: float = maxf(float(mark.call("radius")), 300.0)
+		cam.global_position = mark.global_position + Vector3(0.62, 0.3, 0.88).normalized() * reach * 2.3
 		cam.look_at(mark.global_position)
 		cam.make_current()
-		for i in 20:
+		for i in 40:
 			await get_tree().process_frame
+		print("[LodestarSmokeTest] %s: model=%s radius=%.0f m stop=%.0f m draw calls=%d" % [kind, str(mark.call("uses_model")), reach,
+			float(mark.call("approach_stop_distance")), int(RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))])
 		var path := ProjectSettings.globalize_path("res://.tmp_godot_user/lodestar_%s.png" % kind)
 		await _hud_snapshot_save(path)
 		print("[LodestarSmokeTest] snapshot ", path)

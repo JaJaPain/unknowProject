@@ -1434,7 +1434,10 @@ func _physics_process(delta: float):
 			
 			if nav_mode == "APPROACH":
 				var target_stop_dist = 60.0
-				if active_target.is_in_group("celestial"):
+				if active_target.has_method("approach_stop_distance"):
+					# A Destination set piece: stop at its edge, not its centre.
+					target_stop_dist = float(active_target.call("approach_stop_distance"))
+				elif active_target.is_in_group("celestial"):
 					target_stop_dist = _get_obstacle_radius(active_target) \
 						+ _get_obstacle_safety_margin(active_target)
 				elif active_target.is_in_group("station"):

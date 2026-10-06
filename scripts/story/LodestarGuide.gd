@@ -297,8 +297,15 @@ func check_arrival() -> void:
 		_nova(str(scene_data.get("approach", "There it is, Captain.")))
 		gs.emit_chatter("DESTINATION", "%s is on the overview. Fly in close." % str(card["title"]), Color(1.0, 0.82, 0.45))
 	var player = gs.player
-	if is_instance_valid(player) and (player as Node3D).global_position.distance_to(_landmark.global_position) <= ARRIVAL_RANGE:
+	if is_instance_valid(player) and (player as Node3D).global_position.distance_to(_landmark.global_position) <= arrival_range():
 		play_arrival()
+
+
+## How close counts as arrived: ARRIVAL_RANGE past the place's edge (the
+## set pieces are up to 2 km across).
+func arrival_range() -> float:
+	var edge := float(_landmark.call("radius")) if is_instance_valid(_landmark) and _landmark.has_method("radius") else 0.0
+	return ARRIVAL_RANGE + edge
 
 
 func _spawn_landmark(card: Dictionary, here: String) -> bool:

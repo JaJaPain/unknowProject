@@ -913,3 +913,10 @@ through the marked gate and flies you in):
 - [ ] **Retire the Captain:** systems menu -> RETIRE THE CAPTAIN, confirm:
       the same story as a keepsake ("How it started", "Who they met", ...,
       "retired with the ship intact"), a saved copy, then the campaign closes.
+- [ ] **Destinations are the real set pieces:** each Destination is now
+      ChatGPT's model at full size (Lighthouse, Silent Fleet, Humming Gate,
+      Cartographer's mine, Garden station over a green world, the wreck field
+      with the vault inside). Small life: the gate's inner halo turns, the
+      beacon pulses, the Garden's wings track, nav lights blink, the conveyor
+      runs. Approach (Q) stops at the edge, never inside the model; the
+      arrival scene still plays when you're close.
