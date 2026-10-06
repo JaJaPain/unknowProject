@@ -3481,6 +3481,18 @@ func record_lounge_rumor_heard(rumor_id: String) -> void:
 
 
 func get_agent_contract_availability(_context: Dictionary = {}) -> Dictionary:
+	# The first look at her desk in each new system always finds work: a break
+	# earned at home doesn't follow the Captain through the gate (playtest
+	# 2026-10-06 finding 9). After that the one shared break applies as usual.
+	var system_id := str(GlobalState.current_system_id)
+	var desk_systems: Array = story_state.get("agent_desk_systems", [])
+	if not system_id.is_empty() and not GlobalState.is_current_system_home() \
+			and not desk_systems.has(system_id):
+		desk_systems.append(system_id)
+		story_state["agent_desk_systems"] = desk_systems
+		story_state["agent_cooldown_until_minute"] = 0
+		story_state["agent_contracts_since_cooldown"] = 0
+		_save_story_state()
 	var now_minute := int(CampaignClock.total_minutes)
 	var until_minute := int(story_state.get("agent_cooldown_until_minute", 0))
 	if until_minute <= now_minute:

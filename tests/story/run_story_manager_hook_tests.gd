@@ -41,6 +41,7 @@ func _initialize() -> void:
 	_test_force_dock_rumor_fires_and_dedups()
 	_test_mood_leak_guard()
 	_test_agent_cooldown_allows_three_in_a_row()
+	_test_agent_desk_open_in_each_new_system()
 	_test_player_choice_recording_and_digest()
 	_test_regeneration_trigger_selection()
 	_test_story_quest_plot_armor_guard()
@@ -498,6 +499,25 @@ func _test_agent_cooldown_allows_three_in_a_row() -> void:
 		"Abandoning a contract should apply the cooldown immediately."
 	)
 	abandon_manager.queue_free()
+
+
+# Playtest 2026-10-06 finding 9: a break earned at home doesn't follow the
+# Captain through the gate; the first look in each new system finds work.
+func _test_agent_desk_open_in_each_new_system() -> void:
+	var gs: Node = root.get_node_or_null("GlobalState")
+	if gs == null:
+		return
+	var saved_system := str(gs.current_system_id)
+	var manager := _fresh_manager()
+	manager.start_agent_contract_cooldown("contract_abandoned")
+	gs.current_system_id = "system.gen.test_far"
+	_expect(bool(manager.get_agent_contract_availability().get("available", false)),
+		"The first look at the desk in a new system should find work.")
+	manager.start_agent_contract_cooldown("contract_abandoned")
+	_expect(not bool(manager.get_agent_contract_availability().get("available", true)),
+		"After that, the usual break applies in that system.")
+	gs.current_system_id = saved_system
+	manager.queue_free()
 
 
 # record_player_choice logs the choice, feeds the digest, and shifts faction
