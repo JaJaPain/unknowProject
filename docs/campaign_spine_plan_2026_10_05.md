@@ -293,3 +293,22 @@ approach could get work lights or a beacon.
   spread 9.7-22.7 h (median 14.6) in that run: campaigns with few story jobs
   only got it forced at the Lodestar. Worth watching in play; the
   evidence bar may want a time floor rather than more evidence.
+
+## 12. Connect the dots: the climax scene (Abe, 2026-10-05)
+
+The first time the showdown is available at the Lodestar, before the fight:
+1. **The cards.** The game pauses; N.O.V.A. walks through 3-5 real clues the
+   player saw (pinned first, spread across systems, in the order found): where
+   (system, story), the odd detail as they saw it, and one connecting line per
+   Hidden Hand method ("Forged paperwork. {name}'s hand.").
+2. **The last clue.** N.O.V.A. stops and opens a channel herself.
+3. **Kaelen answers instantly.** They talk past the Captain, clipped, too
+   familiar, a little hostile; Kaelen puts it together with the bridge line.
+4. **The snap back.** Kaelen notices the Captain listening and goes back to
+   broker; the channel closes; N.O.V.A.: "Ready when you are, Captain."
+
+Abe: "a jaw dropper... player sits there like WTF they know each other?"
+Guardrails (fixed-cast canon): never says how or why they know each other;
+the full version once per campaign, a shorter cooler one in later seasons;
+hand-authored lines, reviewed by Abe against the canon, baked voice. Abe:
+"will have to experience it to know how it hits".
