@@ -280,3 +280,32 @@ stories, so it should be mysterious without telling one specific story.
 - **No:** writing, symbols, glyphs, alien faces or creatures, faction marks,
   ships.
 - **Export:** batched; light: under ~20 meshes and ~15k triangles.
+
+## Brief #7b: Lone derelict, detail revision
+
+Revise `assets/landmarks/lone_derelict.glb` (rebuild with
+`tools/art/build_lone_derelict.py`); keep everything that works and add
+detail. Keep: the size (~300 m), the breach on the +Z side and its clear
+95 m passage (re-run the clearance check), the two tintable hull materials,
+the two drifting containers, the two emissive materials, the pivots and the
+file names. Up close it currently reads as a slab hull with a cube bridge.
+
+- **Hull shape:** break up the long flat sides and top: stepped sections,
+  chamfers, a raised dorsal spine, plating seams and panel breaks at
+  different depths. The bow shaped and tapered, not a wedge on a box.
+- **Bridge:** a proper bridge block integrated into the hull (sloped
+  front, a window band, a sensor mast or dish on top) instead of a cube.
+- **Hull fittings:** radiator fins, a few tanks or pressure spheres along
+  the spine, antenna masts, docking clamps, thruster quads, ribbing around
+  the cargo section, maintenance hatches and handrails.
+- **Engines:** more shaped nozzles with inner rings and a housing; one
+  can be cracked or sheared off.
+- **Damage:** a few smaller dents, scorch streaks and missing plates
+  elsewhere on the hull (not only the breach); torn plates curling out at
+  the breach edges; a few cables and pipes hanging loose in the breach.
+- **Interior through the breach:** more readable decks: stairs or ladders,
+  pipe runs along the ceilings, a few fixed crates or racks, door frames
+  between compartments. Keep the passage clear for drones.
+- **Budget:** up to ~15k triangles and under ~30 meshes / ~8 materials;
+  still batched by material.
+- **No:** writing, registration numbers, logos, faction marks, bodies.
