@@ -1,0 +1,348 @@
+{
+  "id": "premise.the_liturgical_dialect",
+  "schema_version": 1,
+  "title": "The Liturgical Dialect",
+  "logline": "An elderly pilgrim preacher loses the phonetic pronunciation key to an ancient chanted scripture, forcing him to seek out his estranged foster daughter who holds her late mother's prayer cylinder in an orbital scrapyard.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "melancholy"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "elder_preacher",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Guardian of an acoustic liturgical tradition; aging, regretful, struggling to remember the tones of sacred verse.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scrapyard_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "The preacher's estranged foster daughter; rebuilds freighters in grease-stained coveralls and guards her mother's audio relics.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pilgrim_shuttle",
+      "kind": "ship",
+      "description": "A weathered, unpressurized prayer barge used to ferry penitents between shrine stations.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "monastic_chapel_spire",
+      "kind": "place",
+      "description": "The quiet orbital chapel where monastic choristers recite verses to maintain navigational blessing rites.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_breaker_bay",
+      "kind": "place",
+      "description": "A noisy, sparks-filled orbital scrap dock where abandoned hulls are cut down for structural plate.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "black_hole_proximity"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "quiet_cover_up",
+    "debt_owed_to_player",
+    "witness_at_large"
+  ],
+  "public_situation": "Choral prayer cycles at {role:monastic_chapel_spire} have fallen silent as the elder clergy struggle to verify archaic phonetic chants.",
+  "private_truth": "{role:elder_preacher} banished {role:scrapyard_mechanic} years ago for questioning monastery hierarchy, taking the only genuine recording of the vocal tones with her.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "banished_foster_child_holding_liturgical_recording"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Pilgrim arrivals stall at the shrine docks as blessing certificates are withheld.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "elder_preacher",
+          "target": "salvage_breaker_bay",
+          "reason": "He asks an outside pilot to recover a sealed acoustic memory cylinder from his foster daughter's salvage berth without causing a public scene.",
+          "private_fact": "He cannot approach her directly because a formal ecclesiastical ban he signed twenty years ago forbids him from speaking to her.",
+          "outcome_tags": [
+            "cylinder_recovered",
+            "daughter_refuses"
+          ],
+          "routes": {
+            "cylinder_recovered": "next",
+            "daughter_refuses": "resolution:liturgy_fades_unspoken"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Penitents gather at {role:salvage_breaker_bay} seeking unofficial blessings from the scrap mechanics.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "scrapyard_mechanic",
+          "target": "monastic_chapel_spire",
+          "reason": "She agrees to release the cipher key only if the pilot delivers her mother's personal prayer shawls back to the shrine altar.",
+          "private_fact": "She still wears the monastery's brass baptismal ring welded onto her tool belt.",
+          "outcome_tags": [
+            "relics_returned"
+          ],
+          "routes": {
+            "relics_returned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The annual solstitial choral rite commences at {role:monastic_chapel_spire} with an assembled congregation.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "scrapyard_mechanic",
+          "target": "monastic_chapel_spire",
+          "reason": "She entrusts the decoded phonetic audio reel to the pilot to deliver to the choir podium before the final prayer chime.",
+          "private_fact": "She included a spoken voice message on the cylinder offering to forgive her foster father if he acknowledges her mother's legacy.",
+          "outcome_tags": [
+            "reel_delivered"
+          ],
+          "routes": {
+            "reel_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot delivers the phonetic audio reel. The daughter's reconciliation voice message is embedded at the start of the liturgical track.",
+        "options": [
+          {
+            "id": "play_full_recording",
+            "label": "Play the recording with the personal reconciliation message included so the congregation hears her voice",
+            "leads_to": "resolution:chant_restored_family_reconciled"
+          },
+          {
+            "id": "strip_personal_message",
+            "label": "Erase the daughter's message and deliver only the dry liturgical tones to preserve monastic dignity",
+            "leads_to": "resolution:ritual_preserved_in_solitude"
+          },
+          {
+            "id": "donate_to_archivist",
+            "label": "Hand the rare dialect cylinder to an independent secular archive to fund the scrapyard clinic",
+            "leads_to": "resolution:secular_archive_endowed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "chant_restored_family_reconciled",
+      "reached_by": "The pilot plays the cylinder with the personal reconciliation message intact.",
+      "summary": "{role:elder_preacher} rescinds the ban, welcoming {role:scrapyard_mechanic} back to {role:monastic_chapel_spire} as the sacred chants echo through the station.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_preacher",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapyard_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "reconciled_sacred_choir",
+          "public_summary": "A pilot delivered a forgotten prayer cylinder, reconciling a divided monastic family before the solstitial rite."
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "festival"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "ritual_preserved_in_solitude",
+      "reached_by": "The pilot strips the daughter's personal message from the audio track.",
+      "summary": "The liturgical chants are restored, but {role:scrapyard_mechanic} cuts all ties with {role:monastic_chapel_spire}. {role:elder_preacher} leads prayers in bitter loneliness.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_preacher",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapyard_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "cold_liturgy_preserved",
+          "public_summary": "A pilot restored ancient temple chants while cutting away the family message that came with them."
+        },
+        {
+          "type": "law_change",
+          "law": "curfew",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "secular_archive_endowed",
+      "reached_by": "The pilot delivers the rare linguistic recording to an independent museum archive.",
+      "summary": "Linguists publish the dialect openly, stripping {role:monastic_chapel_spire} of its mystic monopoly. {role:scrapyard_mechanic} funds medical equipment for scrap crews.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_preacher",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapyard_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "sacred_dialect_secularized",
+          "public_summary": "An ancient monastic dialect was published to secular archives, funding clinic beds in the scrap ring."
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "liturgy_fades_unspoken",
+      "reached_by": "The pilot avoids involvement or the daughter refuses access.",
+      "summary": "The correct phonetic pronunciation of the chant is permanently lost. {role:monastic_chapel_spire} dissolves as pilgrims abandon the silenced shrine.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_preacher",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapyard_mechanic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "liturgy_fades_unspoken",
+  "loose_threads": [
+    {
+      "id": "t_scripture_frequency_notch",
+      "surface": "cargo",
+      "detail": "The magnetic audio cylinders carry an encoded carrier tone matched to a forgotten comms channel.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_shrine_tithe_lien",
+      "surface": "price_board",
+      "detail": "A regional debt consortium purchased the lease deeds to the shrine chapel module ten days before the choir fell silent.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_mechanic_baptism_entry",
+      "surface": "station_notice",
+      "detail": "The monastery parish register shows the mechanic's family name scrubbed and replaced with an anonymous serial number.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "impersonation"
+    ],
+    "motives": [
+      "faith",
+      "guilt",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Solstitial choral festivals at {role:monastic_chapel_spire} postponed pending clerical liturgical verification.",
+    "Scrap mechanics in outer rings report unverified visits by monastics seeking old acoustic cylinders.",
+    "Secular academic foundations petition for open archival preservation of rare orbital liturgical chants."
+  ],
+  "voice_direction": {
+    "elder_preacher": "Soft, reedy delivery with drawn-out vowels and long hesitations. Frequently corrects his own diction as though constantly searching for lost holy words.",
+    "scrapyard_mechanic": "Blunt, raspy, biting delivery with sharp technical precision. Speaks with ferocious defensive irony whenever faith or clergy are mentioned."
+  },
+  "novelty_tags": [
+    "liturgical_dialect",
+    "chant_pronunciation",
+    "estranged_family",
+    "monastic_schism",
+    "acoustic_relic"
+  ]
+}

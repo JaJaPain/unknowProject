@@ -1,0 +1,413 @@
+{
+  "id": "premise.the_garbled_parley",
+  "schema_version": 1,
+  "title": "The Garbled Parley",
+  "logline": "An automated comms relay mistranslates an isolated militia bunker's offer of truce as a hostile ultimatum, prompting an aggressive naval patrol to prepare an orbital strike unless an independent courier can deliver the raw phonetic audio.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "tense"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "cipher_clerk",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "An anxious communications technician who discovered the relay translation error; hunted by task force security.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "militia_liaison",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "A desperate defensive coordinator in the besieged bunker who transmitted the original dialect offer.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "taskforce_commander",
+      "kind": "person",
+      "archetype": "official",
+      "description": "A decorated combat captain convinced the colonists are preparing an ambush; refuses to second-guess automated transcripts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "taskforce_escort",
+      "kind": "ship",
+      "description": "A forward picket interceptor deployed to jam transmission buoys around the besieged colony.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "intercept_corvette",
+      "kind": "ship",
+      "description": "A heavily armed command corvette maintaining the firing perimeter around the bunker.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sublight_recon_drone",
+      "kind": "ship",
+      "description": "An automated patrol drone carrying encrypted fire-control telemetry between the fleet and the relay.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relay_spire_array",
+      "kind": "place",
+      "description": "The orbital antenna nexus where automated linguistic algorithms process deep-space signals.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bunker_redoubt_dock",
+      "kind": "place",
+      "description": "An excavated asteroid redoubt where wounded militia personnel await terms.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "blockade"
+    ],
+    "states_forbidden": [
+      "festival"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "faction_weakened",
+    "martyr_made"
+  ],
+  "public_situation": "Naval task forces enforce a tight blockade over {system} as colonial militia forces inside {role:bunker_redoubt_dock} prepare for bombardment.",
+  "private_truth": "Atmospheric ion interference corrupted the relay's dialect lexicon, turning the militia's conditional surrender terms into a declaration of war.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "relay_translation_corruption_sparking_bombardment"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The task force broadcasts an ultimatum giving the bunker one solar cycle before bombardment starts.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "cipher_clerk",
+          "target": "sublight_recon_drone",
+          "reason": "The clerk needs an independent pilot to shoot down an automated naval drone and recover its translation cache before the fleet burns the raw logs.",
+          "private_fact": "He knows his own supervisor approved the distorted automated transcript to secure combat hazard pay for the squadron.",
+          "outcome_tags": [
+            "telemetry_recovered",
+            "drone_escapes"
+          ],
+          "routes": {
+            "telemetry_recovered": "next",
+            "drone_escapes": "resolution:colony_crushed_in_silence"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Ion interference deepens around {role:relay_spire_array}, cutting off civilian traffic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "cipher_clerk",
+          "target": "relay_spire_array",
+          "culprit": "taskforce_commander",
+          "reason": "He hires the pilot to scan the antenna coils to prove the phonetic distortion was caused by weather rather than intentional militia jamming.",
+          "private_fact": "He has already booked passage on a private tramp freighter to escape tribunal retribution.",
+          "outcome_tags": [
+            "error_certified",
+            "scan_inconclusive"
+          ],
+          "routes": {
+            "error_certified": "next",
+            "scan_inconclusive": "resolution:colony_crushed_in_silence"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Militia outposts fire warning flares as the task force advances to bombardment range.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "militia_liaison",
+          "target": "taskforce_escort",
+          "reason": "She hires the pilot to disable the forward picket interceptor that is jamming comms channels between the bunker and the flagship.",
+          "private_fact": "Her bunker is out of filtered oxygen and cannot survive another twelve hours under siege.",
+          "outcome_tags": [
+            "escort_destroyed"
+          ],
+          "routes": {
+            "escort_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:taskforce_commander} moves the flagship into firing orbit over {role:bunker_redoubt_dock}.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "cipher_clerk",
+          "target": "intercept_corvette",
+          "reason": "The clerk contracts the pilot to attack the command corvette to force the flagship to open an emergency negotiation channel.",
+          "private_fact": "The commander hails mid-combat offering a hefty naval hush-fund voucher if the pilot turns over the telemetry and allows the strike to proceed.",
+          "outcome_tags": [
+            "corvette_disabled",
+            "took_the_bribe"
+          ],
+          "routes": {
+            "corvette_disabled": "next",
+            "took_the_bribe": "resolution:bribe_taken_bunker_shelled"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the command corvette disabled and the true telemetry in hand, the pilot must choose how to deploy the proof before fleet reinforcements arrive.",
+        "options": [
+          {
+            "id": "broadcast_truth",
+            "label": "Broadcast the raw phonetic surrender audio across the sector to force an immediate cease-fire",
+            "leads_to": "resolution:truce_clarified_peace_held"
+          },
+          {
+            "id": "deliver_to_press",
+            "label": "Deliver the raw telemetry to an independent rim news desk while the bunker accepts conditional terms",
+            "leads_to": "resolution:clerk_flees_with_evidence"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truce_clarified_peace_held",
+      "reached_by": "The pilot disables the command corvette and broadcasts the raw phonetic surrender audio.",
+      "summary": "The acoustic logs prove the surrender was genuine. {role:taskforce_commander} stands down the fleet, and {role:militia_liaison} negotiates an orderly evacuation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "taskforce_commander",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_liaison",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cipher_clerk",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "mistranslated_truce_saved",
+          "public_summary": "A pilot broke a naval comms picket to deliver the true surrender audio, averting an orbital massacre."
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_opened"
+          ],
+          "remove": [
+            "blockade"
+          ]
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "bribe_taken_bunker_shelled",
+      "reached_by": "The pilot takes the commander's hush voucher and hands over the clerk's telemetry chips.",
+      "summary": "{role:taskforce_commander} orders orbital bombardment of {role:bunker_redoubt_dock}. The translation error is erased, and {role:militia_liaison} is buried under rubble.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "taskforce_commander",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_liaison",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cipher_clerk",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "surrender_silenced_for_bounty",
+          "public_summary": "Word spreads that a pilot took naval money to bury a garbled truce call before the guns fired."
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "clerk_flees_with_evidence",
+      "reached_by": "The pilot delivers the corrupted telemetry to independent reporters while the bunker surrenders.",
+      "summary": "{role:militia_liaison} surrenders under punitive military occupation. {role:cipher_clerk} reaches safe asylum on his own transport with copies of the corrupted logs.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "taskforce_commander",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_liaison",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cipher_clerk",
+          "fate": "fled"
+        },
+        {
+          "type": "law_change",
+          "law": "scanning_banned",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "colony_crushed_in_silence",
+      "reached_by": "The pilot fails to recover the telemetry or avoids intervening.",
+      "summary": "The naval strike levels {role:bunker_redoubt_dock}. Official fleet dispatches log the action as the suppression of an uncompromising hostile insurgent strongpoint.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "taskforce_commander",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_liaison",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cipher_clerk",
+          "fate": "disappeared"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "curfew"
+          ],
+          "remove": [
+            "blockade"
+          ]
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "martyr_made"
+      ]
+    }
+  ],
+  "default_resolution": "colony_crushed_in_silence",
+  "loose_threads": [
+    {
+      "id": "t_linguistic_lexicon_checksum",
+      "surface": "cargo",
+      "detail": "The translation dictionary chips show a software compile date matching a naval intelligence update.",
+      "can_carry_methods": [
+        "sabotage",
+        "false_flag"
+      ]
+    },
+    {
+      "id": "t_corvette_rearm_contract",
+      "surface": "price_board",
+      "detail": "Munitions suppliers received standing pre-orders for heavy planetary bombard ordnance forty-eight hours before the truce hail.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_supervisor_forged_signoff",
+      "surface": "station_notice",
+      "detail": "The automated transcript validation sheet bears a digital signature created during an off-duty station blackout.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "false_flag",
+      "sabotage",
+      "manufactured_crisis",
+      "impersonation"
+    ],
+    "motives": [
+      "fear",
+      "control",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Naval command issues final ultimatum to entrenched insurgent positions in {system}.",
+    "Colonial authorities dispute naval interpretation of broadcast signals, alleging severe relay translation errors.",
+    "Commercial traffic advised to clear perimeter zones near {role:relay_spire_array} due to unconfirmed skirmishes."
+  ],
+  "voice_direction": {
+    "cipher_clerk": "Fast, uneven delivery, rapidly citing timestamp numbers and frequency bands. Pauses nervously between sentences as though expecting an alarm.",
+    "militia_liaison": "Low, exhausted cadence, speaking through static-heavy transmission equipment with stoic, bitter resignation.",
+    "taskforce_commander": "Booming, rigid, formal military diction. Cuts off objections immediately and repeats protocol regulations with absolute finality."
+  },
+  "novelty_tags": [
+    "garbled_parley",
+    "relay_mistranslation",
+    "naval_blockade",
+    "automated_lexicon",
+    "orbital_ultimatum"
+  ]
+}

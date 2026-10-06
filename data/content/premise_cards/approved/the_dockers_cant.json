@@ -1,0 +1,351 @@
+{
+  "id": "premise.the_dockers_cant",
+  "schema_version": 1,
+  "title": "The Docker's Cant",
+  "logline": "A veteran wharf dockmaster coordinates off-the-books berth swaps using an archaic rhyming port argot, defying a corporate logistics auditor whose automated scheduling algorithms cannot parse the dialect.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "cost_of_neutrality"
+  ],
+  "roles": [
+    {
+      "id": "wharf_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Directs orbital slip traffic with an inherited rhyming port argot; fiercely loyal to manual crane operators.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "logistics_auditor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "An efficiency specialist tasked with replacing dock banter with an automated dispatch algorithm; perpetually exasperated.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "auditor_cutter",
+      "kind": "ship",
+      "description": "A light corporate patrol skiff used to verify berth timestamps and issue administrative fines.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "wharf_berth_ring",
+      "kind": "place",
+      "description": "The sprawling outer mooring ring where independent freighters dock amid acoustic horn signals.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_dispatch_hub",
+      "kind": "place",
+      "description": "The pressurized operations centre where automated scheduling servers monitor system commerce.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "leader_discredited",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Cargo delays mount at {role:wharf_berth_ring} as dockworkers refuse automated docking queues in favour of verbal acoustic calls.",
+  "private_truth": "{role:wharf_dockmaster} uses rhyming dock slang to conceal unauthorized berth allocations for cash-strapped tramp freighters.",
+  "core_why": {
+    "motive": "control",
+    "secret": "rhyming_argot_concealing_unauthorized_berths"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The logistics division posts compliance monitors across all manual docking bays.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "wharf_dockmaster",
+          "target": "wharf_berth_ring",
+          "reason": "She needs an unaligned pilot to courier handwritten phonetic call sheets to crane foremen before the auditor inspects the slips.",
+          "private_fact": "She is using the call sheets to hide an undocumented fuel tanker parked in berth seventeen.",
+          "outcome_tags": [
+            "call_sheets_delivered",
+            "call_sheets_intercepted"
+          ],
+          "routes": {
+            "call_sheets_delivered": "next",
+            "call_sheets_intercepted": "resolution:auditor_imposes_lockout"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:auditor_cutter} begins active sensor pinging of the acoustic horn relays.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "logistics_auditor",
+          "target": "wharf_berth_ring",
+          "culprit": "wharf_dockmaster",
+          "reason": "The auditor hires the pilot to calibrate acoustic receivers around the slips to transcribe the rhyming calls into standard text.",
+          "private_fact": "He faces immediate dismissal if automated scheduling targets are not met by the end of the operating cycle.",
+          "outcome_tags": [
+            "rhymes_transcribed",
+            "signal_scrambled"
+          ],
+          "routes": {
+            "rhymes_transcribed": "next",
+            "signal_scrambled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Corporate headquarters threatens to impound all manually docked hulls at the wharf ring.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "wharf_dockmaster",
+          "target": "corporate_dispatch_hub",
+          "reason": "She hires the pilot to retrieve the handwritten master slang ledger from her impounded office locker before security burns it.",
+          "private_fact": "The ledger contains fifty years of unrecorded safety overrides and informal debt agreements between crews.",
+          "outcome_tags": [
+            "ledger_retrieved"
+          ],
+          "routes": {
+            "ledger_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the dockers' master slang ledger. The auditor offers a lucrative consultant bounty for the translation key, while the dockers need it to maintain their off-the-books mutual aid network.",
+        "options": [
+          {
+            "id": "give_to_auditor",
+            "label": "Sell the slang lexicon to the auditor so corporate algorithms can decode every berth call",
+            "leads_to": "resolution:argot_decoded_dock_automated"
+          },
+          {
+            "id": "return_to_dockmaster",
+            "label": "Return the lexicon to the dockmaster to protect the dockworkers' informal control",
+            "leads_to": "resolution:dockers_retain_manual_slips"
+          },
+          {
+            "id": "sell_to_tramps",
+            "label": "Sell the phrasebook to independent tramp captains for unmonitored docking access",
+            "leads_to": "resolution:smugglers_buy_dialect"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "argot_decoded_dock_automated",
+      "reached_by": "The pilot sells the slang ledger to the logistics auditor.",
+      "summary": "Corporate algorithms decode the wharf slang, automating all berths. {role:wharf_dockmaster} is demoted, and {role:logistics_auditor} secures his efficiency bonus.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wharf_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "logistics_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "wharf_cant_broken",
+          "public_summary": "An outside courier sold the secret wharf dialect to the front office, ending fifty years of dockworker autonomy."
+        },
+        {
+          "type": "law_change",
+          "law": "docking_bribes",
+          "change": "repealed"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "dockers_retain_manual_slips",
+      "reached_by": "The pilot returns the master lexicon to the dockmaster.",
+      "summary": "{role:wharf_dockmaster} preserves manual berth operations, while {role:logistics_auditor} is recalled in disgrace for failing to standardize port operations.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wharf_dockmaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "logistics_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "manual_wharf_saved",
+          "public_summary": "A pilot recovered the old port phrasebook from corporate security, keeping the manual slips in docker hands."
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "smugglers_buy_dialect",
+      "reached_by": "The pilot sells copies of the slang lexicon to independent freight runners.",
+      "summary": "Tramp freighters exploit the decoded calls to slip uninspected cargo past {role:wharf_berth_ring}. Both the auditor and dockmaster lose control of the slips.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wharf_dockmaster",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "logistics_auditor",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "dock_codes_auctioned",
+          "public_summary": "A pilot auctioned the wharf's secret docking codes to independent haulers, turning the berths into a smuggler free-for-all."
+        },
+        {
+          "type": "economy",
+          "good": "contraband",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "auditor_imposes_lockout",
+      "reached_by": "The pilot fails to retrieve the ledger or ignores the contract.",
+      "summary": "{role:logistics_auditor} locks out the manual crane crews, causing massive freight logjams at {role:wharf_berth_ring} as ships drift without berth clearance.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "wharf_dockmaster",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "logistics_auditor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "auditor_imposes_lockout",
+  "loose_threads": [
+    {
+      "id": "t_rhyme_scheme_offset",
+      "surface": "dialogue",
+      "detail": "Acoustic horn callouts include an extra third stanza that corresponds to off-ledger debt balances.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_auditor_backchannel_bid",
+      "surface": "price_board",
+      "detail": "A regional shipping trust listed future lease rights for the wharf berths three weeks before the audit started.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_dock_override_key",
+      "surface": "station_notice",
+      "detail": "The manual berth override switch is certified with an operator badge belonging to an engineer retired a decade ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "control",
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Cargo delays continue at {role:wharf_berth_ring} as crane foremen insist on traditional verbal horn signals.",
+    "{role:corporate_dispatch_hub} denies allegations that algorithmic scheduling will eliminate manual docking shifts.",
+    "Tramp captains praise flexible berth assignments at outer docks, citing reasonable port customs."
+  ],
+  "voice_direction": {
+    "wharf_dockmaster": "Speaks in quick, staccato cadence laced with maritime idioms and port rhyming slang. Flatly ignores corporate terminology.",
+    "logistics_auditor": "Nervous, fast-paced delivery, over-enunciating corporate buzzwords and efficiency metrics. Speaks in rigid, formulaic clauses and repeats compliance codes when flustered."
+  },
+  "novelty_tags": [
+    "rhyming_slang",
+    "dock_cant",
+    "automated_logistics",
+    "manual_labour",
+    "algorithmic_management"
+  ]
+}

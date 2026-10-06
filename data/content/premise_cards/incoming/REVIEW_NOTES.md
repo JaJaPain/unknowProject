@@ -5,43 +5,32 @@ once it is done.
 
 ---
 
-## 1. premise.the_parole_bond_bounty (batch_37)
+## 1. Tags, once more (no action needed on these two)
 
-The bondsman's bogus penalties are a good start, but the card is thin:
-- **Two of the three endings are the same:** `parolee_buys_freedom` (jumps to
-  the rim) and the default `parolee_vanishes_untracked` (slips into dark
-  space). Make them genuinely different results; four distinct endings would
-  suit it.
-- **The parolee isn't a person.** They exist only as a ship role
-  (`parolee_freighter`), so they have no voice, no fate and nothing to want.
-  Give them a person role (with the freighter as their ship) and a fate in
-  each ending.
-- Each ending has a single consequence fate; give the people in it real
-  outcomes.
+Two cards in batch_38 still had gap-list tags despite the self-check:
+`the_pidgin_strike` had `reinvention` (inventing a new tongue isn't
+reinventing yourself) and `the_navigators_shibboleth` had `reinvention` and
+`cost_of_neutrality` (nobody reinvents or stays neutral). The reviewer
+retagged them (labour_and_exploitation / safety_vs_freedom, and
+price_of_profit / truth_vs_comfort) and approved them. Please really do the
+Section 8 item 12 check: `reinvention`, `cost_of_neutrality` and
+`faith_and_doubt` should only appear when the story is about them.
 
-## 2. premise.the_parole_board_lottery (batch_37)
-
-Too close to an approved card: `premise.the_anniversary_sweepstakes` (a
-rigged station sweepstakes; farce). This one is a rigged raffle drum; farce.
-Different prize, same engine: a station lottery fixed for an insider. Also,
-`who_owns_the_past` doesn't describe anything in it. Either take it somewhere
-genuinely different (keep paroles by lottery if you like, but make the story
-about something else), or retire it and write a new card.
-
-## 3. Keep rotating territories, and keep resting the tired engines
+## 2. Keep rotating territories, and keep resting the tired engines
 
 Used on the second lap so far: schools and apprentices, food and farming,
 water and air, gambling and sport rings, shipyards and engineering,
 insurance and risk, the mail and message couriers, tourism and luxury,
-prisons and parole. Pick from the rest (language and translation, maps and
+prisons and parole, language and translation. Pick from the rest (maps and
 lost routes, music and festivals, livestock aboard ships, housing and
 eviction, ageing and retirement, rivals and twins, addiction and recovery,
 weather and space hazards). Still resting: insurance-fraud stories; an
 apprentice, student, cadet, novice or junior as the main role; counterfeit or
-adulterated drink; and now **rigged lotteries and raffles**.
+adulterated drink; rigged lotteries and raffles.
 
 ---
 
-Last round: 4 of 6 approved (the_pleasure_liner_repo fix, the_penal_quarry_quota,
-the_chaplains_commutation, the_chain_gang_mutiny). The liner's new endings
-are exactly right, and the chaplain's commutation was a highlight.
+Last round: all 6 approved (the_parole_bond_bounty fix, the_dockers_cant,
+the_liturgical_dialect, the_garbled_parley, the_pidgin_strike,
+the_navigators_shibboleth). Retiring the lottery card was the right call. A
+strong batch: the liturgical dialect and the garbled parley were highlights.

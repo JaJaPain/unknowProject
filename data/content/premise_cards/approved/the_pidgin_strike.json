@@ -1,0 +1,373 @@
+{
+  "id": "premise.the_pidgin_strike",
+  "schema_version": 1,
+  "title": "The Pidgin Strike",
+  "logline": "Agricultural loaders develop a composite trade dialect combining five provincial lingos to coordinate an unrecorded freight slowdown, prompting a desperate terminal director to bring in unilingual strikebreakers.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "political"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "terminal_director",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Runs the orbital agricultural transfer terminal; panicked by missed shipping quotas and baffled by docker patois.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "loader_steward",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Head of the cargo loader collective; conducts shift meetings entirely in a rich, multi-origin creole dialect.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "linguist_smuggler",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "A disgraced former phonetician who codified the dockers' slang into an unhackable logistical shorthand.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "strikebreaker_transport",
+      "kind": "ship",
+      "description": "A chartered bulk transport carrying contract labourers hired to replace the dialect-speaking crews.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hydroponic_freight_ring",
+      "kind": "place",
+      "description": "The refrigerated staging ring where perishable vegetable cargo is palletized and loaded.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "administrative_spire",
+      "kind": "place",
+      "description": "The executive suite overlooking the berths where shipping executives negotiate export tariffs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "leader_discredited",
+    "alliance_formed"
+  ],
+  "public_situation": "Perishable food crates spoil on the docks of {role:hydroponic_freight_ring} as loading crews communicate via a confusing hybrid dialect.",
+  "private_truth": "{role:linguist_smuggler} developed the pidgin for {role:loader_steward} to disguise organized work stoppages from automated corporate acoustic surveillance.",
+  "core_why": {
+    "motive": "control",
+    "secret": "hybrid_dock_pidgin_masking_coordinated_slowdown"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The terminal management issues mandatory algorithmic translation headsets to all deck crew.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "terminal_director",
+          "target": "hydroponic_freight_ring",
+          "reason": "He pays the pilot to deliver a shipment of encrypted translation firmware chips directly to the gantry supervisor.",
+          "private_fact": "He secretly docked loader pay by forty percent last month to offset shipping insurance increases.",
+          "outcome_tags": [
+            "firmware_delivered"
+          ],
+          "routes": {
+            "firmware_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Headsets across the gantry emit nonsensical rhymes as loading speeds drop by half.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "terminal_director",
+          "target": "hydroponic_freight_ring",
+          "culprit": "linguist_smuggler",
+          "reason": "He hires the pilot to analyze the audio feedback loop on the gantry repeaters to identify whoever uploaded the corrupting linguistic patch.",
+          "private_fact": "His corporate superiors have warned him that one more day of spoiled produce will void his franchise licence.",
+          "outcome_tags": [
+            "sabotage_located",
+            "linguist_identified"
+          ],
+          "routes": {
+            "sabotage_located": "next",
+            "linguist_identified": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:strikebreaker_transport} arrives at the perimeter buoy carrying replacement workers.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "loader_steward",
+          "target": "strikebreaker_transport",
+          "reason": "The steward contracts the pilot to buzz the incoming transport and jam its docking approaches until the director agrees to talk.",
+          "private_fact": "The transport captain hails mid-approach offering to turn the ship back if the pilot helps them claim their full breach-of-contract cancellation fee.",
+          "outcome_tags": [
+            "transport_turned_back",
+            "docking_cleared_by_force"
+          ],
+          "routes": {
+            "transport_turned_back": "next",
+            "docking_cleared_by_force": "resolution:strikebreakers_break_union"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The strikebreakers agree to withdraw if paid. The pilot can broker a wage agreement, license the pidgin to an outside freight line, or enforce corporate discipline.",
+        "options": [
+          {
+            "id": "broker_wage_deal",
+            "label": "Force the director to sign the loaders' revised contract and recognize their shop dialect",
+            "leads_to": "resolution:loaders_win_recognition"
+          },
+          {
+            "id": "license_pidgin_code",
+            "label": "Sell the pidgin grammar to an independent shipping cartel as a proprietary encryption system",
+            "leads_to": "resolution:cartel_buys_pidgin_cipher"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "loaders_win_recognition",
+      "reached_by": "The pilot blocks the strikebreakers and compels the director to negotiate with the loaders.",
+      "summary": "{role:terminal_director} capitulates, signing wage increases for {role:loader_steward} and acknowledging the dock pidgin as an official trade tongue.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "terminal_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loader_steward",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "linguist_smuggler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "dock_creole_triumph",
+          "public_summary": "Freight loaders spoke in their own tongue until the terminal gave in and signed their wage hike."
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "cartel_buys_pidgin_cipher",
+      "reached_by": "The pilot auctions the codified pidgin dictionary to private shipping brokers.",
+      "summary": "A rival freight cartel buys the dialect for secure channel routing. {role:linguist_smuggler} profits, while {role:loader_steward} loses operational secrecy.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "linguist_smuggler",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loader_steward",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "terminal_director",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "pidgin_cipher_auctioned",
+          "public_summary": "A pilot turned a dockworker dialect into a corporate cipher, making the linguist rich while the strike unraveled."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "strikebreakers_break_union",
+      "reached_by": "The pilot forces the strikebreaker transport through and breaks the gantry boycott.",
+      "summary": "{role:strikebreaker_transport} docks, replacing the loader workforce. {role:loader_steward} is blacklisted, and automated headsets are made compulsory.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "terminal_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loader_steward",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "linguist_smuggler",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "strikebreakers_landed",
+          "public_summary": "An armed escort cleared the way for replacement loaders, breaking the dialect strike at the produce docks."
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "terminal_starves_in_babel",
+      "reached_by": "The pilot takes no contracts or negotiations completely stall.",
+      "summary": "Tons of produce rot on the gantries as neither side yields. {role:terminal_director} faces insolvency, and regional markets suffer severe fresh-ration shortages.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "terminal_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loader_steward",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "linguist_smuggler",
+          "fate": "fled"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "terminal_starves_in_babel",
+  "loose_threads": [
+    {
+      "id": "t_linguist_escrow_deposit",
+      "surface": "cargo",
+      "detail": "The linguist's encrypted data crystals carry escrow metadata linking royalties to an off-world hauler trust.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_strikebreaker_advance_booking",
+      "surface": "price_board",
+      "detail": "Berth bookings for the strikebreaker transport were filed ten days before the wage slowdown began.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_headset_firmware_key",
+      "surface": "station_notice",
+      "detail": "The management translation firmware authorization key is registered under an executive identity that does not appear in station staff logs.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Produce shipments stalled across {system} as terminal management clashes with multilingual freight loaders.",
+    "{role:administrative_spire} warns that unauthorized acoustic dialects will be treated as contractual sabotage.",
+    "Gantry workers hold sing-song rallies outside refrigeration bays, demanding fair wage calculations."
+  ],
+  "voice_direction": {
+    "terminal_director": "Pompous and high-strung, speaking in elongated formal sentences and complaining about vulgar vernaculars. Refuses to acknowledge dock idioms.",
+    "loader_steward": "Warm, melodic cadence, switching rapidly between loanwords and sharp common idioms. Uses colourful metaphors and never speaks standard dock terminology.",
+    "linguist_smuggler": "Cynical, wry, pedantic academic tone peppered with smuggler slang. Delights in explaining syntactic irregularities to confused pilots."
+  },
+  "novelty_tags": [
+    "dock_pidgin",
+    "labour_strike",
+    "translation_headsets",
+    "food_spoilage",
+    "strikebreaker_convoy"
+  ]
+}

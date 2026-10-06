@@ -1,0 +1,408 @@
+{
+  "id": "premise.the_navigators_shibboleth",
+  "schema_version": 1,
+  "title": "The Navigator's Shibboleth",
+  "logline": "A guild of deep-space gate pilots enforces exorbitant transit tariffs by claiming an unstable jump corridor requires a secret vocal harmonic password, hunted by enforcers when a banished navigator attempts to broadcast the acoustic frequency.",
+  "scale": "regional",
+  "tone": [
+    "paranoid",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "renegade_navigator",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "A banished guild navigator who knows the secret acoustic gate code; desperate to escape guild hit squads and start fresh.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "guild_warden",
+      "kind": "person",
+      "archetype": "official",
+      "description": "High-ranking official in the gate guild who ruthlessly protects transit monopolies by silencing defectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hired_interceptor",
+      "kind": "ship",
+      "description": "A modified fast scout ship deployed by the guild to track and pin down defectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "guild_picket_cruiser",
+      "kind": "ship",
+      "description": "A heavy armed warship guarding the outer gate perimeter in a neighbouring system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "gate_intake_station",
+      "kind": "place",
+      "description": "The fortified jump gate terminus in the starting system where transit fees are collected.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sub_relay_spire",
+      "kind": "place",
+      "description": "A remote orbital sensor mast in a neighbouring system containing archival gate calibration records.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freeport_haven_dock",
+      "kind": "place",
+      "description": "An independent station in a third system beyond guild operational reach.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "leader_discredited",
+    "faction_weakened"
+  ],
+  "public_situation": "Transit fees through the sector jump corridors soar as guild pilots claim solar storm flares require specialized vocal harmonic clearance.",
+  "private_truth": "The sacred harmonic shibboleth is an ordinary radio sub-carrier pulse that anyone with a common frequency generator can transmit to unlock the gates.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "manufactured_gate_harmonic_shibboleth_monopoly"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The guild locks outbound gate lanes to all vessels lacking registered guild pilot certifications.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "renegade_navigator",
+          "target": "hired_interceptor",
+          "reason": "She hires the pilot to destroy a guild tracking interceptor that has boxed her into an asteroid anchorage before she can jump.",
+          "private_fact": "She carries the master vocal modulation chips hidden inside her prosthetic breathing valve.",
+          "outcome_tags": [
+            "hunter_destroyed"
+          ],
+          "routes": {
+            "hunter_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Guild security vessels issue shoot-on-sight warnings for unverified gate approaches in the neighbouring sector.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "renegade_navigator",
+          "target": "guild_picket_cruiser",
+          "reason": "She needs the pilot to strike a guild patrol craft and recover its transponder crypt-key to bypass the perimeter blockade.",
+          "private_fact": "She was expelled from the guild because she refused to let an uninsured refugee shuttle drift to death in the gate wake.",
+          "outcome_tags": [
+            "crypt_key_recovered"
+          ],
+          "routes": {
+            "crypt_key_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Private relay frequencies go silent as guild monitoring ships search communications channels.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "renegade_navigator",
+          "target": "sub_relay_spire",
+          "reason": "She pays the pilot to courier the decrypted transponder codes to an offline relay mast before search squads locate her sanctuary.",
+          "private_fact": "She served twenty years as the guild's chief gate keeper before discovering the resonance fraud.",
+          "outcome_tags": [
+            "codes_couriered"
+          ],
+          "routes": {
+            "codes_couriered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Sensor beacons around {role:sub_relay_spire} emit distorted gate interference telemetry.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "renegade_navigator",
+          "target": "sub_relay_spire",
+          "culprit": "guild_warden",
+          "reason": "She asks the pilot to scan the relay mast to verify that the gate resonance is a simple sub-carrier tone rather than a hazardous anomaly.",
+          "private_fact": "Her vocal cords were scarred by a guild disciplinary shock collar during her escape from the inner docks.",
+          "outcome_tags": [
+            "carrier_verified",
+            "data_corrupted"
+          ],
+          "routes": {
+            "carrier_verified": "next",
+            "data_corrupted": "resolution:navigator_silenced_monopoly_secure"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:guild_picket_cruiser} ambushes the renegade as she approaches {role:freeport_haven_dock}.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "renegade_navigator",
+          "target": "guild_picket_cruiser",
+          "reason": "She contracts the pilot to attack the pursuing cruiser so she can dock and broadcast the frequency key.",
+          "private_fact": "The cruiser captain hails mid-battle offering a lifetime gate transit pass and a massive cash buyout if the pilot turns the navigator over to guild custody.",
+          "outcome_tags": [
+            "cruiser_disabled",
+            "took_the_pass"
+          ],
+          "routes": {
+            "cruiser_disabled": "next",
+            "took_the_pass": "resolution:navigator_surrendered_for_transit_pass"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The guild picket cruiser is disabled outside the freeport. The renegade navigator holds the decrypted acoustic gate key, awaiting the pilot's final signal.",
+        "options": [
+          {
+            "id": "broadcast_openly",
+            "label": "Broadcast the acoustic gate frequency across public relay channels to shatter the guild monopoly",
+            "leads_to": "resolution:shibboleth_broadcast_monopoly_shattered"
+          },
+          {
+            "id": "keep_code_secret",
+            "label": "Help the navigator slip into the rim with the private gate key to start an independent route",
+            "leads_to": "resolution:renegade_escapes_into_dark"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "shibboleth_broadcast_monopoly_shattered",
+      "reached_by": "The pilot disables the guild cruiser and broadcasts the gate frequency openly.",
+      "summary": "The acoustic gate key is published openly across all networks. The transit monopoly collapses, and {role:renegade_navigator} secures safe asylum.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "renegade_navigator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "gate_shibboleth_broken",
+          "public_summary": "A pilot shielded a rogue navigator while she broadcast the secret radio key, shattering the gate guild's transit monopoly."
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "boom"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "leader_discredited",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "navigator_surrendered_for_transit_pass",
+      "reached_by": "The pilot takes the guild's transit pass bribe and hands over the navigator.",
+      "summary": "{role:renegade_navigator} is taken into guild custody and silenced. {role:guild_warden} maintains the monopoly, and gate tariffs double across three systems.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "renegade_navigator",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_warden",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_the_navigator",
+          "public_summary": "Word travels that a pilot took a golden transit pass to betray a runaway gate pilot back to guild enforcers."
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "renegade_escapes_into_dark",
+      "reached_by": "The pilot disables the cruiser but helps the navigator keep the code private for her own crew.",
+      "summary": "{role:renegade_navigator} vanishes into the unmapped rim with her private gate key. {role:guild_warden} retains local monopolies while living in fear of future leaks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "renegade_navigator",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_warden",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "rogue_navigator_jumped",
+          "public_summary": "A rebel gate runner slipped into dark space with the secret codes, leaving guild enforcers empty-handed."
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "navigator_silenced_monopoly_secure",
+      "reached_by": "The pilot fails to intervene or the scan data is lost.",
+      "summary": "Guild enforcers apprehend {role:renegade_navigator} in deep space. The acoustic shibboleth remains a closely guarded secret, and exorbitant tariffs continue.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "renegade_navigator",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_warden",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "navigator_silenced_monopoly_secure",
+  "loose_threads": [
+    {
+      "id": "t_subharmonic_pulse_meter",
+      "surface": "scan",
+      "detail": "Gate receiver logs show the opening lock triggers on a standard 1420 megahertz acoustic tone rather than vocal magic.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_guild_escrow_kickback",
+      "surface": "price_board",
+      "detail": "Gate passage tariffs funnel twenty percent of all collected tolls into private accounts held by customs directors.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_nav_officer_synthetic_voice",
+      "surface": "station_notice",
+      "detail": "A former guild navigator was logged at three different stations using identical vocal timbre files from a synthesized soundboard.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Gate guild raises transit insurance premiums across three sectors, citing unstable vocal corridor harmonics.",
+    "Independent freight haulers protest gate tolls, demanding independent scientific audits of the jump resonance.",
+    "Armed guild security cutters reported in pursuit of an unidentified rogue shuttle near sector border gates."
+  ],
+  "voice_direction": {
+    "renegade_navigator": "Hoarse, strained cadence that catches on sharp consonants due to damaged vocal cords. Intense, hurried, fiercely determined.",
+    "guild_warden": "Silky, arrogant, aristocratic diction. Speaks with effortless condescension and treats technical questions as vulgar insolence."
+  },
+  "novelty_tags": [
+    "gate_shibboleth",
+    "acoustic_password",
+    "transit_monopoly",
+    "vocal_harmonics",
+    "renegade_pilot"
+  ]
+}

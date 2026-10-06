@@ -1,0 +1,352 @@
+{
+  "id": "premise.the_parole_bond_bounty",
+  "schema_version": 1,
+  "title": "The Parole Bond Bounty",
+  "logline": "A predatory bail bondsman inflates an ex-convict's discharge ledger with fictitious administrative penalties, prompting an armed skip toward unpatrolled outer-rim moorings.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "parole_bondsman",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Underwrites release bonds for parolees; calculates compound interest on every breath and tracks defaulters relentlessly.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "paroled_hauler",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "An ex-convict hauler striving to rebuild an honest trade route; exhausted, vigilant, terrified of losing her ship back to the cells.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "parolee_freighter",
+      "kind": "ship",
+      "description": "A patched light freighter operated by {role:paroled_hauler}, mortgaged to the bondsman under an indenture lien.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bounty_enforcer",
+      "kind": "ship",
+      "description": "A customized patrol interceptor hired by the bondsman to disable skips before they cross the jump gate.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "penal_records_dock",
+      "kind": "place",
+      "description": "The administrative station mooring where parole indentures and release filings are logged.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "free_freight_cove",
+      "kind": "place",
+      "description": "An unregulated outer-rim mooring where independent haulers take cash jobs without transponder checks.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "route_opened",
+    "grudge_against_player"
+  ],
+  "public_situation": "Station authorities in {system} have posted a recovery warrant for {role:parolee_freighter} after it departed without clearing indenture fees.",
+  "private_truth": "{role:parole_bondsman} inflated {role:paroled_hauler}'s release interest rates with bogus penalties to force the pilot into permanent indentured freight runs.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "tampered_parole_indemnity_ledger"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The administrative registry issues an amber skip alert for {role:parolee_freighter} across system channels.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "parole_bondsman",
+          "target": "penal_records_dock",
+          "culprit": "parole_bondsman",
+          "reason": "The bondsman hires an outside pilot to analyze the records dock comms beacon to isolate the freighter's departure vector.",
+          "private_fact": "He knows an audit is scheduled tomorrow that would reveal he added fictitious recovery fees to the parole contract.",
+          "outcome_tags": [
+            "vector_tracked",
+            "transponder_lost"
+          ],
+          "routes": {
+            "vector_tracked": "next",
+            "transponder_lost": "resolution:hauler_escapes_penniless"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Customs officers at {role:free_freight_cove} receive an expedited seizure notice against {role:parolee_freighter}.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "parole_bondsman",
+          "target": "free_freight_cove",
+          "reason": "He pays the pilot to deliver an expedited interdiction writ to dockmasters before the hauler can refuel and jump.",
+          "private_fact": "He forged the magistrate stamp on the writ because official authorization takes three business days.",
+          "outcome_tags": [
+            "writ_served",
+            "docking_cleared"
+          ],
+          "routes": {
+            "writ_served": "next",
+            "docking_cleared": "resolution:hauler_escapes_penniless"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:bounty_enforcer} corners {role:parolee_freighter} in open space near the outer jump buoy.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "parole_bondsman",
+          "target": "parolee_freighter",
+          "reason": "The bondsman contracts the pilot to disable the fleeing freighter's sublight engines so his enforcer can attach tow cables.",
+          "private_fact": "{role:paroled_hauler} hails to offer decrypted ledger chips showing the bondsman doubled her debt if the pilot turns and disables {role:bounty_enforcer}.",
+          "outcome_tags": [
+            "freighter_disabled",
+            "took_the_offer"
+          ],
+          "routes": {
+            "freighter_disabled": "resolution:bondsman_reclaims_collateral",
+            "took_the_offer": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The enforcer is disabled and {role:paroled_hauler} waits with the decrypted debt ledgers. The pilot must decide where the proof goes.",
+        "options": [
+          {
+            "id": "cover_rim_jump",
+            "label": "Cover the freighter's jump so the hauler can start fresh in the rim",
+            "leads_to": "resolution:parolee_buys_freedom"
+          },
+          {
+            "id": "file_with_magistrate",
+            "label": "Take the doctored ledgers to the records dock magistrate to void the bond",
+            "leads_to": "resolution:predatory_lien_voided"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bondsman_reclaims_collateral",
+      "reached_by": "The pilot disables the freighter, allowing the bondsman to impound the ship and enforce the indenture.",
+      "summary": "{role:parole_bondsman} impounds {role:parolee_freighter}, forcing {role:paroled_hauler} into an extended indentured hauling contract to cover inflated recovery fees.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_hauler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_bondsman",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "parolee_repossessed",
+          "public_summary": "A bounty runner helped an orbital bondsman drag a desperate parolee back into debt bondage."
+        },
+        {
+          "type": "law_change",
+          "law": "docking_bribes",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "parolee_buys_freedom",
+      "reached_by": "The pilot disables the enforcer and covers the freighter's jump into the outer rim.",
+      "summary": "{role:paroled_hauler} jumps {role:parolee_freighter} to unpatrolled rim territory. {role:parole_bondsman} loses his bond stake and faces mounting creditor scrutiny.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_hauler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_bondsman",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "bondsman_thwarted",
+          "public_summary": "A hired gun turned on a loan shark's enforcer to let a debt-trapped parolee make the jump."
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "predatory_lien_voided",
+      "reached_by": "The pilot delivers the decrypted ledger chips to the records magistrate at {role:penal_records_dock}.",
+      "summary": "The magistrate voids {role:paroled_hauler}'s bond after reviewing the forged penalties. {role:parole_bondsman} faces heavy regulatory fines and an operational suspension.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_hauler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_bondsman",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "predatory_bail_exposed",
+          "public_summary": "A pilot brought doctored bail accounts to the magistrate, breaking an extortion ring on parolees."
+        },
+        {
+          "type": "law_change",
+          "law": "salvage_registry",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "hauler_escapes_penniless",
+      "reached_by": "The trail goes cold, or the pilot avoids taking contracts.",
+      "summary": "{role:bounty_enforcer} cripples {role:parolee_freighter} at the jump buoy, but {role:paroled_hauler} escapes on an unmarked tanker, leaving {role:parole_bondsman} holding a worthless wreck.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_hauler",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_bondsman",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "hauler_escapes_penniless",
+  "loose_threads": [
+    {
+      "id": "t_predatory_ledger_clauses",
+      "surface": "cargo",
+      "detail": "The parole indenture slates bear interest multipliers coded to an anonymous escrow desk on an outer moon.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_magistrate_digital_seal",
+      "surface": "station_notice",
+      "detail": "The magistrate seizure authorization is stamped with an electronic signet belonging to an inspector retired three years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_hauler_lien_auction",
+      "surface": "price_board",
+      "detail": "A salvage brokerage listed {role:parolee_freighter} on an advance repo auction two days before the hauler was declared delinquent.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "impersonation",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Administrative registry issues recovery alert for uncertified freighter departure in {system}.",
+    "Independent haulers protest rising surety bond rates demanded by dockside parole agencies.",
+    "Bounty chasers congregate near outer gate beacons following reports of a high-value skip."
+  ],
+  "voice_direction": {
+    "parole_bondsman": "Fast-talking, condescending, constantly citing subsection numbers. Speaks as though everything in the cosmos is already mortgaged to him.",
+    "paroled_hauler": "Low, raspy delivery with tight, guarded sentences. Pauses before answering as if checking every word for an administrative trap."
+  },
+  "novelty_tags": [
+    "parole_skip",
+    "predatory_indenture",
+    "bounty_pursuit",
+    "forged_writ",
+    "debt_escape"
+  ]
+}
