@@ -270,5 +270,9 @@
     "chemical_spill",
     "automated_drones",
     "smuggling_accident"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "dockmaster_covering_up_narcotics_chemical_spill"
+  }
 }

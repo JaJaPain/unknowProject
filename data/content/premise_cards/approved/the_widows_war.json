@@ -320,5 +320,9 @@
     "blackmail_ledger",
     "succession_war",
     "sibling_rivalry"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "missing_blackmail_ledger_dictating_syndicate_succession"
+  }
 }

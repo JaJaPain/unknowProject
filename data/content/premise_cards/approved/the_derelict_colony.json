@@ -257,5 +257,9 @@
     "station_salvage",
     "stubborn_hermit",
     "dead_system"
-  ]
+  ],
+  "core_why": {
+    "motive": "legacy",
+    "secret": "elder_powering_reactor_to_preserve_station_archives"
+  }
 }

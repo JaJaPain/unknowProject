@@ -263,5 +263,9 @@
     "undercover_reporter",
     "industrial_sabotage",
     "factory_sweatshop"
-  ]
+  ],
+  "core_why": {
+    "motive": "ideology",
+    "secret": "journalist_hacking_drones_to_expose_labor_abuses"
+  }
 }

@@ -79,7 +79,8 @@
           ],
           "routes": {
             "beacon_scanned": "next"
-          }
+          },
+          "culprit": "guilty_negotiator"
         },
         {
           "verb": "pickup_special",
@@ -291,5 +292,9 @@
     "reactivated_beacon",
     "military_coverup",
     "phantom_regiment"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "negotiator_sold_out_military_regiment_decades_ago"
+  }
 }

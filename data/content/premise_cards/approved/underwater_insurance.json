@@ -129,7 +129,8 @@
           "routes": {
             "report_fraud": "resolution:broker_arrested",
             "report_clean": "next"
-          }
+          },
+          "culprit": "ruthless_broker"
         }
       ],
       "player_choice": null
@@ -297,5 +298,9 @@
     "staged_accidents",
     "repo_man",
     "corporate_cruelty"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "broker_syndicate_foreclosing_ships_for_insurance_fraud"
+  }
 }

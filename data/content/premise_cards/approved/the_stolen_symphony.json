@@ -275,5 +275,9 @@
     "ancient_music",
     "plagiarism",
     "art_heist"
-  ]
+  ],
+  "core_why": {
+    "motive": "legacy",
+    "secret": "composer_plagiarizing_lost_colonial_symphony"
+  }
 }

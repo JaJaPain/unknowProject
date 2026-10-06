@@ -119,7 +119,8 @@
             "report_violation": "resolution:rig_seized",
             "falsify_clean": "resolution:miner_escapes",
             "report_bureaucratic_error": "resolution:auditor_fired"
-          }
+          },
+          "culprit": "relentless_auditor"
         }
       ],
       "player_choice": null
@@ -258,5 +259,9 @@
     "bureaucratic_hell",
     "obsolete_forms",
     "no_combat"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "auditor_extending_audit_to_generate_departmental_fees"
+  }
 }

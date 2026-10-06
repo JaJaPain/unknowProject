@@ -271,5 +271,9 @@
     "religious_schism",
     "succession_crisis",
     "rigged_miracle"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "faking_divine_succession_omens_with_pyrotechnics"
+  }
 }

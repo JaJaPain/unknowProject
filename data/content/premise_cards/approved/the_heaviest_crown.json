@@ -279,5 +279,9 @@
     "family_foreclosure",
     "debt_race",
     "sibling_rivalry"
-  ]
+  ],
+  "core_why": {
+    "motive": "legacy",
+    "secret": "hidden_data_core_of_dynastic_mining_claims"
+  }
 }

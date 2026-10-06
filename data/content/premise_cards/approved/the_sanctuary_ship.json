@@ -251,5 +251,9 @@
     "debt_hostage",
     "temple_ship",
     "corrupt_sanctuary"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "sanctuary_ship_extorting_donations_for_life_support"
+  }
 }

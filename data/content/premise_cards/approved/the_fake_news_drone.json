@@ -93,13 +93,14 @@
           "requester": "tired_editor",
           "target": "news_station",
           "reason": "The editor hires the pilot to scan the drone to find its remote control frequency so they can shut it down.",
-          "private_fact": "The pilot discovers the reporter is controlling the drone from the station's cafeteria.",
+          "private_fact": "The ambitious reporter built and programmed the attack drone to manufacture breaking news crises and secure a prime anchor slot.",
           "outcome_tags": [
             "frequency_found"
           ],
           "routes": {
             "frequency_found": "next"
-          }
+          },
+          "culprit": "ambitious_reporter"
         }
       ],
       "player_choice": null
@@ -257,5 +258,9 @@
     "fake_news",
     "rogue_drone",
     "ratings_war"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "reporter_built_attack_drone_to_boost_ratings"
+  }
 }

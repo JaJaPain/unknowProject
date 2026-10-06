@@ -283,5 +283,9 @@
     "ripperdoc",
     "paralyzed_boss",
     "medical_malpractice"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "underworld_doctor_accidentally_paralyzed_boss"
+  }
 }

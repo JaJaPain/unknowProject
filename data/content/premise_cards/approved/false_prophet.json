@@ -103,7 +103,8 @@
           "routes": {
             "expose_fraud": "next",
             "keep_quiet": "resolution:prophet_rules"
-          }
+          },
+          "culprit": "false_prophet"
         },
         {
           "verb": "pickup_special",
@@ -280,5 +281,9 @@
     "religious_scam",
     "tightbeam_relay",
     "little_person_lying"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "tightbeam_transmitter_faking_prophetic_voices"
+  }
 }

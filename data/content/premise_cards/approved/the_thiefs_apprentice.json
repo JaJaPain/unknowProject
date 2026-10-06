@@ -263,5 +263,9 @@
     "accidental_theft",
     "extortion_ring",
     "investigative_journalism"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "thief_ransoming_stolen_extortion_dossier_to_blackmailer"
+  }
 }

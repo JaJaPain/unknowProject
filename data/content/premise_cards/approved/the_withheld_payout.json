@@ -283,5 +283,9 @@
     "insurance_fraud",
     "repossessed_wreck",
     "withheld_payout"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "insurance_firm_concealing_catastrophic_part_defect"
+  }
 }

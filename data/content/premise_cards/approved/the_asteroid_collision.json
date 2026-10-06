@@ -270,5 +270,9 @@
     "asteroid_impact",
     "orbital_mechanics",
     "evacuation_crisis"
-  ]
+  ],
+  "core_why": {
+    "motive": "revenge",
+    "secret": "rival_syndicate_nudged_asteroid_into_base"
+  }
 }

@@ -344,5 +344,9 @@
     "accidental_theft",
     "holy_relic",
     "no_villain"
-  ]
+  ],
+  "core_why": {
+    "motive": "faith",
+    "secret": "automated_crane_mishandled_revered_saint_sarcophagus"
+  }
 }

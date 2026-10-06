@@ -111,7 +111,8 @@
           "routes": {
             "certify_jump_point": "next",
             "falsify_report": "resolution:memorial_blown_up"
-          }
+          },
+          "culprit": "council_bureaucrat"
         }
       ],
       "player_choice": null
@@ -275,5 +276,9 @@
     "disaster_memorial",
     "jump_point_discovery",
     "manufactured_tragedy"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "clearing_memorial_for_lucrative_jump_point"
+  }
 }

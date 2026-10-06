@@ -77,7 +77,7 @@
           "requester": "desperate_stowaway",
           "target": "long_haul_transport",
           "reason": "The stowaway begs the pilot to buy and deliver thermal cloaks to the transport's refuelling stop so they can hide from the killer's scanners.",
-          "private_fact": "The pilot realizes the killer is systematically murdering anyone who gets in their way.",
+          "private_fact": "The assassin infiltrated the freight hauler under false credentials to eliminate an eyewitness to a high-profile dockside murder.",
           "outcome_tags": [
             "cloaks_delivered"
           ],
@@ -99,13 +99,14 @@
           "requester": "contract_killer",
           "target": "long_haul_transport",
           "reason": "The killer hires the pilot (pretending to be station security) to run a deep scan of the transport to pinpoint the stowaway's exact location.",
-          "private_fact": "The pilot must fake the scan results to throw the killer off the scent.",
+          "private_fact": "The assassin is impersonating a station security lieutenant to access docking sensors and track down the fleeing witness.",
           "outcome_tags": [
             "scan_faked"
           ],
           "routes": {
             "scan_faked": "next"
-          }
+          },
+          "culprit": "contract_killer"
         }
       ],
       "player_choice": null
@@ -263,5 +264,9 @@
     "stowaway",
     "contract_killer",
     "locked_room_mystery"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "assassin_hunting_eyewitness_to_dockside_murder"
+  }
 }

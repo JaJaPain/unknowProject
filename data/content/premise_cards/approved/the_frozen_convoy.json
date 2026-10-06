@@ -338,5 +338,9 @@
     "protection_racket",
     "storm_rescue",
     "towing"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "syndicate_stranded_convoy_for_extortion"
+  }
 }

@@ -260,5 +260,9 @@
     "historical_preservation",
     "suppressed_history",
     "veteran_memorial"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "monument_conceals_suppressed_record_of_historical_battle"
+  }
 }

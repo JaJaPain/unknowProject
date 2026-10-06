@@ -276,5 +276,9 @@
     "propaganda_broadcast",
     "state_censorship",
     "dissident_director"
-  ]
+  ],
+  "core_why": {
+    "motive": "ideology",
+    "secret": "director_spliced_state_massacre_footage_into_propaganda"
+  }
 }

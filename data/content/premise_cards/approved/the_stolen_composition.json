@@ -259,5 +259,9 @@
     "stolen_art",
     "music_heist",
     "copyright_dispute"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "archivist_stole_and_copyrighted_mentors_symphony"
+  }
 }

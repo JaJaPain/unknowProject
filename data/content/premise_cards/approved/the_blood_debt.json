@@ -281,5 +281,9 @@
     "debt_erasure",
     "inherited_debt",
     "financial_crash"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "erasing_cartel_debt_via_mainframe_backdoor"
+  }
 }

@@ -95,7 +95,8 @@
           "routes": {
             "scan_obtained": "beat:3",
             "scan_failed": "resolution:miners_trapped"
-          }
+          },
+          "culprit": "corporate_fixer"
         }
       ],
       "player_choice": null
@@ -266,5 +267,9 @@
     "industrial_accident",
     "corporate_coverup",
     "reactor_meltdown"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "corporation_trapping_miners_to_prevent_press_leaks"
+  }
 }

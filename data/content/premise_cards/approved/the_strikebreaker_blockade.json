@@ -298,5 +298,9 @@
     "union_blockade",
     "forged_documents",
     "worker_solidarity"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "corporation_hired_gangs_to_starve_refinery_workers"
+  }
 }

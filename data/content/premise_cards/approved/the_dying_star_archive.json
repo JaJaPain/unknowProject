@@ -88,7 +88,7 @@
           "requester": "aging_scientist",
           "target": "orbital_archive",
           "reason": "The scientist begs the pilot to physically extract the massive data cores from the melting station.",
-          "private_fact": "The pilot's ship will suffer intense heat damage during the extraction.",
+          "private_fact": "The dockmaster locked down the research station's shuttles to ensure their own illicit smuggling crates escape before the flare hits.",
           "outcome_tags": [
             "cores_extracted"
           ],
@@ -254,5 +254,9 @@
     "saving_history",
     "melting_station",
     "evacuation_panic"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "dockmaster_hoarding_evacuation_shuttle_for_smuggled_loot"
+  }
 }

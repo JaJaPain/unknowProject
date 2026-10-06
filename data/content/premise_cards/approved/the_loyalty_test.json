@@ -261,5 +261,9 @@
     "fake_assassination",
     "loyalty_test",
     "paranoid_merchant"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "merchant_staged_fake_assassination_to_test_bodyguard"
+  }
 }

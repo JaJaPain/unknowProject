@@ -140,7 +140,8 @@
             "certify_unsafe": "resolution:guild_suppression",
             "certify_safe": "resolution:progress_achieved",
             "report_unverified": "resolution:engine_explodes"
-          }
+          },
+          "culprit": "retired_legend"
         }
       ],
       "player_choice": null
@@ -282,5 +283,9 @@
     "radiation_leak",
     "scientific_hubris",
     "physics_laws"
-  ]
+  ],
+  "core_why": {
+    "motive": "legacy",
+    "secret": "hyper_efficient_engine_permanently_irradiates_hulls"
+  }
 }

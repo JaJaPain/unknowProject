@@ -287,5 +287,9 @@
     "art_forgery",
     "heist_swap",
     "insurance_fraud"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "collector_orchestrating_art_theft_for_insurance_fraud"
+  }
 }

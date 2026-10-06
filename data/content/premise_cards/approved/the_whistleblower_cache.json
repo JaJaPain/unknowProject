@@ -74,13 +74,14 @@
           "requester": "hunted_leaker",
           "target": "data_vault",
           "reason": "The leaker hires the pilot to scan the dark zone to find a clear transmission window to upload the cache.",
-          "private_fact": "The pilot realizes the fixer's gunship is waiting directly above the vault.",
+          "private_fact": "The corporate fixer dispatched armed gunships to establish a communications blockade and sanitize the vault before leaks spread.",
           "outcome_tags": [
             "window_found"
           ],
           "routes": {
             "window_found": "next"
-          }
+          },
+          "culprit": "corporate_fixer"
         }
       ],
       "player_choice": null
@@ -96,7 +97,7 @@
           "requester": "corporate_fixer",
           "target": "data_vault",
           "reason": "The fixer hires the pilot to deliver a massive EMP charge to the vault's power core to fry the servers.",
-          "private_fact": "The pilot discovers the leaker is trapped inside the vault.",
+          "private_fact": "The conglomerate's executives knowingly buried internal clinical trials proving their lucrative therapeutic regimen is obsolete.",
           "outcome_tags": [
             "emp_delivered"
           ],
@@ -274,5 +275,9 @@
     "whistleblower",
     "corporate_fixer",
     "data_vault"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "conglomerate_suppressing_disease_cure_to_sell_treatments"
+  }
 }

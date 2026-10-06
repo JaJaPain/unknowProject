@@ -97,13 +97,14 @@
           "requester": "betrayed_spouse",
           "target": "lovers_hideout",
           "reason": "The spouse hires the pilot to scan the dying star's corona to confirm the exact location of the hideout.",
-          "private_fact": "The pilot's scan accidentally pings the hideout, alerting the mercenaries to their location.",
+          "private_fact": "The high-ranking spouse fabricated the treason charges out of spite because the scientist simply packed up and left with a lover.",
           "outcome_tags": [
             "hideout_scanned"
           ],
           "routes": {
             "hideout_scanned": "next"
-          }
+          },
+          "culprit": "betrayed_spouse"
         }
       ],
       "player_choice": null
@@ -274,5 +275,9 @@
     "doomed_lovers",
     "betrayed_spouse",
     "mercenary_strike"
-  ]
+  ],
+  "core_why": {
+    "motive": "revenge",
+    "secret": "spouse_fabricated_treason_charges_over_extramarital_affair"
+  }
 }

@@ -291,5 +291,9 @@
     "bureaucratic_extortion",
     "pulsar_diving",
     "fake_permits"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "corrupt_inspector_extorting_bribes_at_pulsar_site"
+  }
 }

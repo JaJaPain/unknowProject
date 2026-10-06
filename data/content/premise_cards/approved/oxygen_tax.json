@@ -132,7 +132,8 @@
           "routes": {
             "expose_rigged": "resolution:tax_repealed",
             "keep_quiet": "next"
-          }
+          },
+          "culprit": "station_manager"
         }
       ],
       "player_choice": null
@@ -309,5 +310,9 @@
     "rigged_monitors",
     "illegal_scrubber",
     "bureaucratic_cruelty"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "rigged_monitors_forcing_debt_foreclosure"
+  }
 }

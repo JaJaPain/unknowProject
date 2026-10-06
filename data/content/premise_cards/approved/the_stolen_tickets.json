@@ -266,5 +266,9 @@
     "forged_tickets",
     "refugee_crisis",
     "corrupt_bureaucracy"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "bureaucrat_delaying_tickets_to_feed_forgery_ring"
+  }
 }

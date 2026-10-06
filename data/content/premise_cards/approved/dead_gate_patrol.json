@@ -285,5 +285,9 @@
     "unexploded_ordnance",
     "obsolete_fighter",
     "salvage_dispute"
-  ]
+  ],
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "broadcasting_code_to_suppress_active_minefield"
+  }
 }

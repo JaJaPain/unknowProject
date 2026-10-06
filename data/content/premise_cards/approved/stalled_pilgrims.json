@@ -344,5 +344,9 @@
     "border_crossing",
     "bureaucratic_cruelty",
     "refugee_crisis"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "stalling_refugee_convoy_to_drain_savings"
+  }
 }

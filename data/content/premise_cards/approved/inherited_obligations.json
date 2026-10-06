@@ -300,5 +300,9 @@
     "ruined_nobility",
     "loyal_servant",
     "legal_loophole"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "estate_collateralized_for_unpaid_syndicate_loans"
+  }
 }

@@ -290,5 +290,9 @@
     "gladiator_arena",
     "hostage_rescue",
     "prison_break"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "arena_master_extorting_fighter_with_hostage_family"
+  }
 }

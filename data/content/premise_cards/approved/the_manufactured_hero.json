@@ -97,7 +97,7 @@
           "requester": "guilt_ridden_actor",
           "target": "film_set",
           "reason": "The actor begs the pilot to meet a disillusioned prop master and collect the real master script proving the entire war is a fabrication.",
-          "private_fact": "The pilot has to dodge automated pyrotechnics to reach the script.",
+          "private_fact": "The studio director and military commanders staged every skirmish on soundstages to justify emergency defense appropriation bills.",
           "outcome_tags": [
             "script_collected"
           ],
@@ -261,5 +261,9 @@
     "fake_war",
     "propaganda_film",
     "guilt_ridden_actor"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "studio_and_military_staged_fake_war"
+  }
 }

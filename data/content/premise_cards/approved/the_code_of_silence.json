@@ -255,5 +255,9 @@
     "syndicate_hit",
     "prison_assassination",
     "loose_ends"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "syndicate_bombing_imprisoned_informant_before_trial"
+  }
 }

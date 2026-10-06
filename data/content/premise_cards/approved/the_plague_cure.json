@@ -286,5 +286,9 @@
     "quarantine_break",
     "medical_smuggling",
     "extortion"
-  ]
+  ],
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "plague_cure_requires_illegal_contraband_compounds"
+  }
 }

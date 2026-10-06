@@ -1,0 +1,315 @@
+{
+  "id": "premise.the_stolen_recommendation",
+  "schema_version": 1,
+  "title": "The False Astrogator",
+  "logline": "A navigation instructor discovers their star student altered historical gate logs to earn a premier convoy commission, and both want an outsider's ship between them.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "senior_navigator",
+      "kind": "person",
+      "archetype": "official",
+      "description": "A veteran astrogator whose word can make or break a cadet's commercial career.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "nav_cadet",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Gifted, intensely ambitious student burdened by crushing family expectations.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cadet_shuttle",
+      "kind": "ship",
+      "description": "A fast light courier the cadet uses to run gate simulation trials.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "naval_archive_dock",
+      "kind": "place",
+      "description": "The civilian annex where official gate navigation logs are deposited for certification.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "rival_humiliated",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The system's annual astrogation honours are delayed after conflicting calibration records were filed for the flagship gate course.",
+  "private_truth": "The cadet's influential family paid off the archive registrar to swap real navigational test logs with pre-calculated algorithmic simulations.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "family_bought_falsified_cadet_navigation_logs"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The navigation board flags an anomalous entry in the cadet's certified jump track.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "nav_cadet",
+          "requester": "senior_navigator",
+          "target": "naval_archive_dock",
+          "reason": "The instructor needs a pilot to scan the archive's exterior optical bus to confirm whether the cadet's run was uploaded from orbit or fed through an internal terminal.",
+          "private_fact": "The instructor previously accepted family campaign donations to overlook earlier test inconsistencies.",
+          "outcome_tags": [
+            "forgery_confirmed",
+            "logs_unreadable"
+          ],
+          "routes": {
+            "forgery_confirmed": "next",
+            "logs_unreadable": "resolution:cadet_promoted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The cadet launches in their courier and hails pilots from outside the station perimeter.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "nav_cadet",
+          "target": "naval_archive_dock",
+          "reason": "The cadet hires the pilot to buy replacement optical logic cores to overwrite the flagged log sector before the formal board review.",
+          "private_fact": "The cadet knows that admitting the fraud will destroy their family's credit standing across three neighboring systems.",
+          "outcome_tags": [
+            "cores_delivered",
+            "cores_withheld"
+          ],
+          "routes": {
+            "cores_delivered": "next",
+            "cores_withheld": "resolution:cadet_exposed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The cadet refuses to dock their shuttle until the instructor signs off on the commission recommendation.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "senior_navigator",
+          "target": "cadet_shuttle",
+          "reason": "The instructor asks the pilot to disable the runaway shuttle's propulsion manifold before the cadet jumps into dark space.",
+          "private_fact": "The cadet hails the pilot mid-flight offering an offshore investment bond and proprietary jump charts to break off the interception.",
+          "outcome_tags": [
+            "shuttle_disabled",
+            "cadet_bribe_taken"
+          ],
+          "routes": {
+            "shuttle_disabled": "next",
+            "cadet_bribe_taken": "resolution:cadet_escapes"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot corners the disabled shuttle, holding both the falsified logs and the cadet's career in their hands.",
+        "options": [
+          {
+            "id": "submit_fraud",
+            "label": "Hand the forged records to the exam tribunal",
+            "leads_to": "resolution:cadet_exposed"
+          },
+          {
+            "id": "sign_pardon",
+            "label": "Press the instructor to sign a remedial passing grade in exchange for silence",
+            "leads_to": "resolution:quiet_probation"
+          },
+          {
+            "id": "bury_dossier",
+            "label": "Take the cadet's voucher and wipe the archive logs",
+            "leads_to": "resolution:cadet_promoted"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cadet_exposed",
+      "reached_by": "The pilot disables the shuttle and submits the forged records.",
+      "summary": "{role:nav_cadet} is stripped of honours and barred from flight, while {role:senior_navigator} faces inquiries over delayed reporting.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "nav_cadet",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_navigator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_astrogation_fraud",
+          "public_summary": "A pilot caught an aristocratic cadet faking gate coordinates to steal a command berth."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "quiet_probation",
+      "reached_by": "The pilot forces a quiet remedial compromise.",
+      "summary": "{role:senior_navigator} assigns {role:nav_cadet} to two years of uncredited deep-space survey labor, burying the scandal.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "nav_cadet",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_navigator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "law_change",
+          "law": "salvage_registry",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "cadet_promoted",
+      "reached_by": "The pilot delivers the overwrite cores or buries the dossier.",
+      "summary": "{role:nav_cadet} takes command of a luxury convoy route, while {role:senior_navigator} quietly requests a transfer.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "nav_cadet",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_navigator",
+          "fate": "disappeared"
+        },
+        {
+          "type": "deed",
+          "tag": "greased_cadet_promotion",
+          "public_summary": "Word spread that a well-connected cadet bought their pilot wings with forged survey logs."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "cadet_escapes",
+      "reached_by": "The pilot takes the cadet's bribe or lets the shuttle jump away.",
+      "summary": "{role:nav_cadet} slips past the gate network into unregulated frontier space, leaving forged registry entries unresolved.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "nav_cadet",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_navigator",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "cadet_escapes",
+  "loose_threads": [
+    {
+      "id": "t_impersonated_evaluator",
+      "surface": "station_notice",
+      "detail": "The archive clerk who certified the cadet's flight time resigned under an identity that had expired three months earlier.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_family_debt_line",
+      "surface": "price_board",
+      "detail": "The cadet's family estate posted letters of credit backed by an unchartered jump route patent.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "impersonation",
+      "forged_records",
+      "debt_leverage"
+    ],
+    "motives": [
+      "fear",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Astrogation honours delayed in {system} pending registry audit.",
+    "Private shuttle sightings increase near {role:naval_archive_dock} outer boundary."
+  ],
+  "voice_direction": {
+    "senior_navigator": "Weary, formal diction, pauses frequently before speaking. Never raises tone even when furious.",
+    "nav_cadet": "Stiff, rehearsed confidence that cracks into desperate bargaining under pressure."
+  },
+  "novelty_tags": [
+    "flight_academy",
+    "falsified_flight_logs",
+    "favored_cadet",
+    "astrogation_exam",
+    "shuttle_interception"
+  ]
+}

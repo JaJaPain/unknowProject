@@ -271,5 +271,9 @@
     "life_support_failure",
     "trolley_problem",
     "class_divide"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "manifold_bypass_vents_lower_decks_into_space"
+  }
 }

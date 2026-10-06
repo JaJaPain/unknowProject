@@ -86,13 +86,14 @@
           "requester": "angry_dockmaster",
           "target": "contaminated_bay",
           "reason": "The dockmaster hires the pilot to scan the bay to figure out what the smell is.",
-          "private_fact": "The pilot's scan reveals the mold is highly corrosive and spreading fast.",
+          "private_fact": "The scientist concealed an accidental spill of black-market bio-catalyst that is dissolving load-bearing structural bulkheads.",
           "outcome_tags": [
             "bay_scanned"
           ],
           "routes": {
             "bay_scanned": "next"
-          }
+          },
+          "culprit": "guilty_scientist"
         }
       ],
       "player_choice": null
@@ -263,5 +264,9 @@
     "mutant_mold",
     "cover_up",
     "toxic_spill"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "scientist_dropped_illegal_biocatalyst_eating_hull_plating"
+  }
 }

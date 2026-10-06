@@ -264,5 +264,9 @@
     "ship_race",
     "sabotage",
     "syndicate_debt"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "syndicate_extorting_mechanic_to_sabotage_race"
+  }
 }

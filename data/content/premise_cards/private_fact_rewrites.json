@@ -1,0 +1,373 @@
+[
+  {
+    "card": "premise.forged_valor",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The association covered up the flagship's catastrophic reactor failure to protect lucrative shipyard kickbacks, blaming the veteran instead.",
+    "culprit": "veterans_association"
+  },
+  {
+    "card": "premise.the_abandoned_colony",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The former accountant stayed behind in the ruins to keep a meticulous record of every death caused by the corporation's life support systems.",
+    "culprit": "terraforming_corp"
+  },
+  {
+    "card": "premise.the_black_hole_tithe",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The doctor lost the medical shipment due to a cheap automated hauler's glitch, not through cult sabotage or religious interference."
+  },
+  {
+    "card": "premise.the_broken_oath",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The fleeing guard stole the church relic to pawn it for life-saving medicine after the priest refused to release emergency funds.",
+    "culprit": "disillusioned_guard"
+  },
+  {
+    "card": "premise.the_censored_history",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The exiled historian is preparing to broadcast documented records proving the ruling junta was founded on a bloody internal massacre.",
+    "culprit": "ruling_junta"
+  },
+  {
+    "card": "premise.the_collapsing_mine",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The mining company already knows the asteroid core is fracturing and increased crew quotas anyway to maximize insurance payouts.",
+    "culprit": "mining_corporation"
+  },
+  {
+    "card": "premise.the_defector_bounty",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The defector fled with classified telemetry proving the intelligence agency tested experimental bioweapons on civilian colonies.",
+    "culprit": "intelligence_agency"
+  },
+  {
+    "card": "premise.the_doomed_affair",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The high-ranking spouse fabricated the treason charges out of spite because the scientist simply packed up and left with a lover.",
+    "culprit": "betrayed_spouse"
+  },
+  {
+    "card": "premise.the_double_agent",
+    "beat": 1,
+    "mission": 1,
+    "private_fact": "The handling officer is the real mole selling agency dossiers to foreign buyers, using an internal purge to silence loyal agents."
+  },
+  {
+    "card": "premise.the_dying_star_archive",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The dockmaster locked down the research station's shuttles to ensure their own illicit smuggling crates escape before the flare hits."
+  },
+  {
+    "card": "premise.the_empty_casket",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The wealthy merchant packed the ceremonial casket with gravel and ballast to stage an elaborate death and flee unpaid creditors.",
+    "culprit": "faking_merchant"
+  },
+  {
+    "card": "premise.the_fake_news_drone",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The ambitious reporter built and programmed the attack drone to manufacture breaking news crises and secure a prime anchor slot.",
+    "culprit": "ambitious_reporter"
+  },
+  {
+    "card": "premise.the_hermit_hoard",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The hermit values the sentimental coffee mug above the priceless colonial reactor core humming quietly in the asteroid's basement."
+  },
+  {
+    "card": "premise.the_manufactured_hero",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The studio director and military commanders staged every skirmish on soundstages to justify emergency defense appropriation bills."
+  },
+  {
+    "card": "premise.the_mutiny_in_the_dark",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The freighter captain shut off long-range comms and life support heating to starve the crew into surrendering the vessel's cargo.",
+    "culprit": "tyrannical_captain"
+  },
+  {
+    "card": "premise.the_mutiny_in_the_dark",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The captain forged telemetry logs to make the ship look destroyed so the surviving deckhands can be quietly offloaded to slavers."
+  },
+  {
+    "card": "premise.the_pacifist_mercenary",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The revered hero stockpiled the illegal weapon cache themselves years ago and is desperate to hide their violent mercenary past."
+  },
+  {
+    "card": "premise.the_phantom_fleet",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The governor embezzled the entire orbital defense budget and fabricated rumors of an approaching fleet to explain the missing funds."
+  },
+  {
+    "card": "premise.the_phantom_fleet",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The governor configured the orbital sensors to broadcast false radar ghosts to maintain public hysteria while skimming relief money.",
+    "culprit": "desperate_mayor"
+  },
+  {
+    "card": "premise.the_phantom_manifest",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The dockmaster falsified five years of docking manifests to pocket municipal freight subsidies for ships that never existed.",
+    "culprit": "panicked_dockmaster"
+  },
+  {
+    "card": "premise.the_runaway_bride",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The fianc\u00e9 purchased precision target-designator tags disguised as trackers to guide corporate assassins directly to the bridal party."
+  },
+  {
+    "card": "premise.the_runaway_bride",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The bride fled the altar after uncovering intercepted messages that proved her fianc\u00e9 was contracted to assassinate her father.",
+    "culprit": "jilted_fiance"
+  },
+  {
+    "card": "premise.the_smear_campaign",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The journalist accepted a lucrative private syndicate bribe to manufacture fake fraud allegations against the innocent merchant."
+  },
+  {
+    "card": "premise.the_space_madness",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The isolated engineer dismantled the station scrubber valves in a paranoid frenzy, poisoning their own crew with foul nitrogen gas.",
+    "culprit": "hallucinating_engineer"
+  },
+  {
+    "card": "premise.the_stolen_bloodline",
+    "beat": 3,
+    "mission": 0,
+    "private_fact": "The desperate heir is secretly an adopted orphan whose legal claim to the dynastic fortune dissolves the moment the registry opens."
+  },
+  {
+    "card": "premise.the_stolen_thesis",
+    "beat": 3,
+    "mission": 0,
+    "private_fact": "The ambitious journalist promised credit to the original research assistants but plans to file the breakthrough under their name alone."
+  },
+  {
+    "card": "premise.the_stowaway_assassin",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The assassin infiltrated the freight hauler under false credentials to eliminate an eyewitness to a high-profile dockside murder."
+  },
+  {
+    "card": "premise.the_stowaway_assassin",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The assassin is impersonating a station security lieutenant to access docking sensors and track down the fleeing witness.",
+    "culprit": "contract_killer"
+  },
+  {
+    "card": "premise.the_toxic_spill",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The scientist concealed an accidental spill of black-market bio-catalyst that is dissolving load-bearing structural bulkheads.",
+    "culprit": "guilty_scientist"
+  },
+  {
+    "card": "premise.the_whistleblower_cache",
+    "beat": 1,
+    "mission": 0,
+    "private_fact": "The corporate fixer dispatched armed gunships to establish a communications blockade and sanitize the vault before leaks spread.",
+    "culprit": "corporate_fixer"
+  },
+  {
+    "card": "premise.the_whistleblower_cache",
+    "beat": 2,
+    "mission": 0,
+    "private_fact": "The conglomerate's executives knowingly buried internal clinical trials proving their lucrative therapeutic regimen is obsolete."
+  },
+  {
+    "card": "premise.false_prophet",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "false_prophet"
+  },
+  {
+    "card": "premise.oxygen_tax",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "station_manager"
+  },
+  {
+    "card": "premise.quarantine_loophole",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "smuggler_captain"
+  },
+  {
+    "card": "premise.revoked_charter",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "corporate_conglomerate"
+  },
+  {
+    "card": "premise.scrap_iron_memorial",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "council_bureaucrat"
+  },
+  {
+    "card": "premise.the_adopted_mine",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "corporate_inspector"
+  },
+  {
+    "card": "premise.the_automated_scab",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "tech_evangelist"
+  },
+  {
+    "card": "premise.the_crooked_mechanic",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "scam_mechanic"
+  },
+  {
+    "card": "premise.the_death_race",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "corrupt_bookie"
+  },
+  {
+    "card": "premise.the_disputed_engine",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "retired_legend"
+  },
+  {
+    "card": "premise.the_double_agent",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "handler_officer"
+  },
+  {
+    "card": "premise.the_false_relic",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "relic_broker"
+  },
+  {
+    "card": "premise.the_forgotten_oath",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "hub_manager"
+  },
+  {
+    "card": "premise.the_melting_reactor",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "corporate_fixer"
+  },
+  {
+    "card": "premise.the_perpetual_audit",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "relentless_auditor"
+  },
+  {
+    "card": "premise.the_phantom_regiment",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "guilty_negotiator"
+  },
+  {
+    "card": "premise.the_plagiarized_equation",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "old_mentor"
+  },
+  {
+    "card": "premise.the_poisoned_chalice",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "trusted_advisor"
+  },
+  {
+    "card": "premise.the_promised_land",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "development_corp"
+  },
+  {
+    "card": "premise.the_reactor_meltdown",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "corrupt_inspector"
+  },
+  {
+    "card": "premise.the_recycled_ships",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "slick_salesman"
+  },
+  {
+    "card": "premise.the_smugglers_tithe",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "corrupt_customs_officer"
+  },
+  {
+    "card": "premise.the_stolen_pension",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "corrupt_accountant"
+  },
+  {
+    "card": "premise.the_stolen_sentence",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "guilty_patrician"
+  },
+  {
+    "card": "premise.the_stolen_thesis",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "ruthless_bounty_hunter"
+  },
+  {
+    "card": "premise.the_unexploded_legacy",
+    "beat": 1,
+    "mission": 0,
+    "culprit": "ambitious_official"
+  },
+  {
+    "card": "premise.underwater_insurance",
+    "beat": 2,
+    "mission": 0,
+    "culprit": "ruthless_broker"
+  },
+  {
+    "card": "premise.worthless_scrip",
+    "beat": 3,
+    "mission": 0,
+    "culprit": "corporate_liquidator"
+  }
+]

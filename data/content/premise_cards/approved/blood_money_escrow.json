@@ -309,5 +309,9 @@
     "mercenary_betrayal",
     "decryption_keys",
     "frozen_assets"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "cartel_eliminating_mercenaries_to_avoid_payment"
+  }
 }

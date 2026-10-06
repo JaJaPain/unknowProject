@@ -296,5 +296,9 @@
     "space_cemetery",
     "grave_robbing",
     "cybernetic_harvest"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "broker_harvesting_military_cybernetics_from_cemetery_corpses"
+  }
 }

@@ -304,5 +304,9 @@
     "last_heist",
     "protege_betrayal",
     "medical_smuggling"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "smuggler_orchestrated_cargo_heist_for_retirement_fund"
+  }
 }

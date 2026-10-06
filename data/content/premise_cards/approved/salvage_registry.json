@@ -400,5 +400,9 @@
     "decaying_orbit",
     "legal_loophole",
     "bureaucratic_war"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "derelict_title_beacon_falling_into_gravity_well"
+  }
 }

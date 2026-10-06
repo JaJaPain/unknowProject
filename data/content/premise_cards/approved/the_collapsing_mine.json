@@ -93,13 +93,14 @@
           "requester": "company_bureaucrat",
           "target": "unstable_asteroid",
           "reason": "The bureaucrat hires the pilot to run a superficial sensor sweep to certify the rock is stable.",
-          "private_fact": "The pilot's deep scan reveals the rock's core is fracturing and will collapse in less than a day.",
+          "private_fact": "The mining company already knows the asteroid core is fracturing and increased crew quotas anyway to maximize insurance payouts.",
           "outcome_tags": [
             "asteroid_scanned"
           ],
           "routes": {
             "asteroid_scanned": "next"
-          }
+          },
+          "culprit": "mining_corporation"
         }
       ],
       "player_choice": null
@@ -291,5 +292,9 @@
     "mine_collapse",
     "corporate_negligence",
     "labour_strike"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "mining_company_sacrificing_workers_for_insurance"
+  }
 }

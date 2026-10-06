@@ -74,7 +74,7 @@
           "requester": "paranoid_hermit",
           "target": "hermit_asteroid",
           "reason": "The hermit begs the pilot to meet them at the asteroid's hidden dock and collect their most prized possession: a completely worthless ceramic mug.",
-          "private_fact": "The pilot discovers the mug is sitting right next to the glowing colonial reactor.",
+          "private_fact": "The hermit values the sentimental coffee mug above the priceless colonial reactor core humming quietly in the asteroid's basement.",
           "outcome_tags": [
             "mug_collected"
           ],
@@ -273,5 +273,9 @@
     "space_junk",
     "crazy_hermit",
     "colonial_reactor"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "hermit_junk_pile_conceals_colonial_reactor_core"
+  }
 }

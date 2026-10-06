@@ -248,5 +248,9 @@
     "stolen_heirloom",
     "embezzlement",
     "honor_among_thieves"
-  ]
+  ],
+  "core_why": {
+    "motive": "guilt",
+    "secret": "aging_thief_accidentally_fenced_life_savers_heirloom"
+  }
 }

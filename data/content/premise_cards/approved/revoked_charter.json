@@ -150,7 +150,8 @@
           "routes": {
             "certify_town": "resolution:town_saved",
             "certify_corp": "resolution:corp_wins"
-          }
+          },
+          "culprit": "corporate_conglomerate"
         }
       ],
       "player_choice": null
@@ -296,5 +297,9 @@
     "town_militia",
     "charter_dispute",
     "boundary_beacons"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "manufactured_charter_violation_for_thorium_seizure"
+  }
 }

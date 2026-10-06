@@ -71,7 +71,7 @@
           "requester": "pacifist_hero",
           "target": "hidden_armory",
           "reason": "The hero hires the pilot to fly to the armory and collect the main power core to render the weapons useless.",
-          "private_fact": "The hero insists the pilot must not harm the protege under any circumstances.",
+          "private_fact": "The revered hero stockpiled the illegal weapon cache themselves years ago and is desperate to hide their violent mercenary past.",
           "outcome_tags": [
             "core_extracted"
           ],
@@ -260,5 +260,9 @@
     "pacifist_hero",
     "hidden_armory",
     "prevent_uprising"
-  ]
+  ],
+  "core_why": {
+    "motive": "guilt",
+    "secret": "pacifist_hero_stockpiled_illegal_armory_years_ago"
+  }
 }

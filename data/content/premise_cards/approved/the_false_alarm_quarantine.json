@@ -274,5 +274,9 @@
     "false_quarantine",
     "research_theft",
     "military_coverup"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "military_using_false_quarantine_to_seize_research"
+  }
 }

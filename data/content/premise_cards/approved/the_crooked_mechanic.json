@@ -123,7 +123,8 @@
           "routes": {
             "certify_dirty": "resolution:victim_revenge",
             "certify_clean": "resolution:blackmail_deal"
-          }
+          },
+          "culprit": "scam_mechanic"
         }
       ],
       "player_choice": null
@@ -249,5 +250,9 @@
     "repair_scam",
     "blackmail_plot",
     "drive_sabotage"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "mechanic_sabotaging_drives_for_tow_kickbacks"
+  }
 }

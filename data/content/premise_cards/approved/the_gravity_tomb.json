@@ -339,5 +339,9 @@
     "ancient_tech",
     "habitat_collapse",
     "salvage_gone_wrong"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "salvager_bypassed_stabilizer_locks_to_steal_rods"
+  }
 }

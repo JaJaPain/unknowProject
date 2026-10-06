@@ -254,5 +254,9 @@
     "peace_treaty",
     "assassination_plot",
     "war_profiteering"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "arms_dealers_hired_mercenaries_to_kill_envoys"
+  }
 }

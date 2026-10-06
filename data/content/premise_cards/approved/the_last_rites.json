@@ -272,5 +272,9 @@
     "dying_wish",
     "military_coverup",
     "squad_wiped_out"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "commander_sacrificed_squad_to_cover_tactical_blunder"
+  }
 }

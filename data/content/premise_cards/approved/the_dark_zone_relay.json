@@ -299,5 +299,9 @@
     "media_blackout",
     "stealth_combat",
     "whistleblower"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "corporation_hiding_relay_to_maintain_blackout"
+  }
 }

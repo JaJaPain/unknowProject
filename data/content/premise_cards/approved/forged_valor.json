@@ -101,7 +101,7 @@
           "requester": "disgraced_veteran",
           "target": "battle_wreck",
           "reason": "The veteran needs a pilot to fly to the wreck and scan the flagship's reactor housing for outward-burst damage to prove it failed from the inside.",
-          "private_fact": "The pilot must choose whether to certify the true reactor failure, or falsify the report to say it was combat damage as the association claims.",
+          "private_fact": "The association covered up the flagship's catastrophic reactor failure to protect lucrative shipyard kickbacks, blaming the veteran instead.",
           "outcome_tags": [
             "certify_reactor_failure",
             "certify_combat_damage"
@@ -109,7 +109,8 @@
           "routes": {
             "certify_reactor_failure": "next",
             "certify_combat_damage": "resolution:veteran_silenced"
-          }
+          },
+          "culprit": "veterans_association"
         }
       ],
       "player_choice": null
@@ -259,5 +260,9 @@
     "historical_coverup",
     "disgraced_veteran",
     "wreck_scan"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "covered_up_flagship_reactor_failure"
+  }
 }

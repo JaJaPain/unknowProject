@@ -313,5 +313,9 @@
     "plague_ship",
     "derelict_rescue",
     "quarantine_breach"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "enforcers_paid_to_destroy_quarantined_survivors"
+  }
 }

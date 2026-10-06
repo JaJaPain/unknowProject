@@ -263,5 +263,9 @@
     "insurance_fraud",
     "hull_breach",
     "passenger_rescue"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "ship_owner_sabotaged_life_support_for_insurance"
+  }
 }

@@ -73,7 +73,7 @@
           "requester": "desperate_doctor",
           "target": "drifting_supplies",
           "reason": "The doctor begs the pilot to scan the drifting pod to calculate exactly how long until it is crushed by gravity.",
-          "private_fact": "The pilot's ship will suffer minor hull stress just getting close enough to scan.",
+          "private_fact": "The doctor lost the medical shipment due to a cheap automated hauler's glitch, not through cult sabotage or religious interference.",
           "outcome_tags": [
             "descent_calculated"
           ],
@@ -251,5 +251,9 @@
     "cult_sacrifice",
     "medical_emergency",
     "accidental_dumping"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "automated_hauler_glitch_dumped_medical_supplies"
+  }
 }

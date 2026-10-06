@@ -65,13 +65,14 @@
           "requester": "suspicious_notary",
           "target": "grand_mausoleum",
           "reason": "The notary hires the pilot to scan the casket for organic mass before they open it.",
-          "private_fact": "The pilot's scan reveals the casket contains nothing but bags of sand.",
+          "private_fact": "The wealthy merchant packed the ceremonial casket with gravel and ballast to stage an elaborate death and flee unpaid creditors.",
           "outcome_tags": [
             "casket_scanned"
           ],
           "routes": {
             "casket_scanned": "next"
-          }
+          },
+          "culprit": "faking_merchant"
         }
       ],
       "player_choice": null
@@ -261,5 +262,9 @@
     "faked_death",
     "empty_casket",
     "funeral_heist"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "merchant_staged_death_to_escape_creditors"
+  }
 }

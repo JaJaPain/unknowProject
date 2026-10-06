@@ -144,7 +144,8 @@
           ],
           "routes": {
             "override_found": "next"
-          }
+          },
+          "culprit": "tech_evangelist"
         }
       ],
       "player_choice": null
@@ -300,5 +301,9 @@
     "luddite_rebellion",
     "ai_malfunction",
     "corporate_hubris"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "botched_software_update_on_automated_mining_rig"
+  }
 }

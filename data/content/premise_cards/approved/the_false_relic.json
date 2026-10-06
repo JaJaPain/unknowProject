@@ -125,7 +125,8 @@
             "report_jammer": "resolution:truth_comes_out",
             "cover_it_up": "resolution:con_succeeds",
             "extort_broker": "resolution:con_fails"
-          }
+          },
+          "culprit": "relic_broker"
         }
       ],
       "player_choice": null
@@ -256,5 +257,9 @@
     "church_heist",
     "rigged_appraisal",
     "crisis_of_faith"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "broker_sold_forged_relic_to_congregation"
+  }
 }

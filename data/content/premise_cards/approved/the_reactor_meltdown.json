@@ -101,7 +101,8 @@
           ],
           "routes": {
             "reactor_scanned": "next"
-          }
+          },
+          "culprit": "corrupt_inspector"
         }
       ],
       "player_choice": null
@@ -270,5 +271,9 @@
     "reactor_meltdown",
     "corrupt_inspector",
     "sabotage"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "inspector_sabotaged_reactor_cooling_to_sell_replacements"
+  }
 }

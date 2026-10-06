@@ -260,5 +260,9 @@
     "gladiator_pit",
     "death_match",
     "prison_break"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "captured_officer_smuggling_explosives_for_arena_breakout"
+  }
 }

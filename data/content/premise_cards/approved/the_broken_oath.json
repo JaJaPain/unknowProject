@@ -97,13 +97,14 @@
           "requester": "fanatical_priest",
           "target": "sacred_vault",
           "reason": "The priest hires the pilot to scan the dead system to find the traitor's ion trail.",
-          "private_fact": "The pilot finds the guard desperately trying to jump out of the system.",
+          "private_fact": "The fleeing guard stole the church relic to pawn it for life-saving medicine after the priest refused to release emergency funds.",
           "outcome_tags": [
             "trail_found"
           ],
           "routes": {
             "trail_found": "next"
-          }
+          },
+          "culprit": "disillusioned_guard"
         }
       ],
       "player_choice": null
@@ -260,5 +261,9 @@
     "holy_relic",
     "broken_oath",
     "desperate_parent"
-  ]
+  ],
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "guard_stole_relic_for_childs_medicine"
+  }
 }

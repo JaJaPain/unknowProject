@@ -262,5 +262,9 @@
     "dark_zone_toll",
     "smuggler_betrayal",
     "refugee_rescue"
-  ]
+  ],
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "smuggler_secretly_escorting_refugees_past_boss_toll"
+  }
 }

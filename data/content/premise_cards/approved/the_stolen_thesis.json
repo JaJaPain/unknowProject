@@ -76,7 +76,8 @@
           ],
           "routes": {
             "thesis_located": "next"
-          }
+          },
+          "culprit": "ruthless_bounty_hunter"
         }
       ],
       "player_choice": null
@@ -112,7 +113,7 @@
           "requester": "investigative_journalist",
           "target": "publishing_servers",
           "reason": "The journalist begs the pilot to deliver the raw data directly to the publishing house's automated upload servers to force publication.",
-          "private_fact": "If the pilot does this, the journalist will become famous but the pilot will make no money.",
+          "private_fact": "The ambitious journalist promised credit to the original research assistants but plans to file the breakthrough under their name alone.",
           "outcome_tags": [
             "data_delivered",
             "abandoned"
@@ -258,5 +259,9 @@
     "structural_decay",
     "media_coverup",
     "data_auction"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "bounty_hunter_auctioning_stolen_decay_survey_data"
+  }
 }

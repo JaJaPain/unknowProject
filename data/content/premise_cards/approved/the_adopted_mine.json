@@ -115,7 +115,8 @@
           ],
           "routes": {
             "scan_safe": "next"
-          }
+          },
+          "culprit": "corporate_inspector"
         }
       ],
       "player_choice": null
@@ -320,5 +321,9 @@
     "fake_safety_violations",
     "labor_dispute",
     "corporate_eviction"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "fabricated_safety_violations_to_steal_mining_claim"
+  }
 }

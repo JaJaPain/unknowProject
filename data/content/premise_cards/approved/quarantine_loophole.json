@@ -95,7 +95,8 @@
           "routes": {
             "smuggling_found": "next",
             "report_clean": "resolution:smugglers_thrive"
-          }
+          },
+          "culprit": "smuggler_captain"
         },
         {
           "verb": "purchase_delivery",
@@ -333,5 +334,9 @@
     "diplomatic_loophole",
     "luxury_contraband",
     "class_divide"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "luxury_exemption_loophole_during_quarantine"
+  }
 }

@@ -1,0 +1,378 @@
+{
+  "id": "premise.the_foundry_walkout",
+  "schema_version": 1,
+  "title": "The Slag Flume Strike",
+  "logline": "Trade apprentices take over an orbital foundry's slag flume to protest lethal night-shift quotas, and their overseer hires mercenaries while the union organizer begs for a courier.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "bleak"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "foundry_overseer",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Hard-nosed industrial manager squeezed between quarterly quotas and aging equipment.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "apprentice_delegate",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Third-year crucible worker chosen by fellow apprentices to speak for the shift.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "strike_gunship",
+      "kind": "ship",
+      "description": "A private security gunship deployed by the overseer to clear the gantries.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_foundry",
+      "kind": "place",
+      "description": "A massive, soot-blackened smelting station orbiting a ferrite asteroid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "foundry_consortium",
+      "kind": "faction",
+      "description": "The heavy industrial cartel that owns the foundries and writes indenture terms.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "faction_weakened"
+  ],
+  "public_situation": "Red slag vents light up {role:orbital_foundry} as apprentice crews barricade the secondary crucible gantries in a wildcat strike.",
+  "private_truth": "The overseer locked the emergency blast dampers to hide the fact that three apprentices died of toxic fumes on the previous shift.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "overseer_locked_blast_dampers_to_hide_fatalities"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The foundry consortium declares an illegal wildcat strike and locks habitat docks.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "apprentice_delegate",
+          "target": "orbital_foundry",
+          "reason": "The delegate needs an outside pilot to slip past the picket and collect the maintenance shift logbook from the crucible airlock.",
+          "private_fact": "The logbook records the overseer's direct order overriding the safety ventilation alarms before the fatal shift.",
+          "outcome_tags": [
+            "logbook_retrieved",
+            "airlock_sealed"
+          ],
+          "routes": {
+            "logbook_retrieved": "next",
+            "airlock_sealed": "resolution:strike_broken"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The overseer brings in a private security gunship to sweep the exterior heat exchangers.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "apprentice_delegate",
+          "target": "strike_gunship",
+          "reason": "The delegate begs the pilot to destroy the security gunship before its targeting lasers burn through the habitat life support lines.",
+          "private_fact": "The apprentices have rigged the slag dampers to vent into space, threatening to poison the station's docking ring if fired upon.",
+          "outcome_tags": [
+            "gunship_destroyed",
+            "assault_failed"
+          ],
+          "routes": {
+            "gunship_destroyed": "next",
+            "assault_failed": "resolution:strike_broken"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "Consortium enforcers offer a massive bounty for the logbook, while the delegate tries to transmit it to the regional labor board.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "foundry_overseer",
+          "requester": "apprentice_delegate",
+          "target": "orbital_foundry",
+          "reason": "Needs a pilot to scan the foundry's main exhaust manifold to corroborate the toxic spike recorded in the logbook.",
+          "private_fact": "The manifold still holds trace residue of the prohibited solvent the overseer ordered to speed up cleaning.",
+          "outcome_tags": [
+            "solvent_confirmed",
+            "manifold_purged"
+          ],
+          "routes": {
+            "solvent_confirmed": "next",
+            "manifold_purged": "resolution:strike_broken"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Consortium auditors dock at the primary ring to negotiate terms or authorize lethal clearance.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "apprentice_delegate",
+          "target": "orbital_foundry",
+          "reason": "The delegate needs the certified manifold findings and logbook carried directly to the consortium auditor's shuttle before security breaches the gantry.",
+          "private_fact": "The overseer is waiting at the docking bay with a private discretionary payoff fund.",
+          "outcome_tags": [
+            "findings_delivered",
+            "delivery_intercepted"
+          ],
+          "routes": {
+            "findings_delivered": "next",
+            "delivery_intercepted": "resolution:strike_broken"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The overseer offers to buy the evidence off the pilot on the catwalk, while the delegate watches from behind the blast doors.",
+        "options": [
+          {
+            "id": "table_evidence",
+            "label": "Hand the chemical proof to the consortium auditor",
+            "leads_to": "resolution:overseer_dismissed"
+          },
+          {
+            "id": "sell_to_overseer",
+            "label": "Sell the logbook and scans to the overseer for cash",
+            "leads_to": "resolution:strike_crushed"
+          },
+          {
+            "id": "negotiate_contract",
+            "label": "Broker an increased apprenticeship stipend while burying the deaths",
+            "leads_to": "resolution:compromise_settlement"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "overseer_dismissed",
+      "reached_by": "The pilot delivers the evidence to the auditor and defeats the security gunship.",
+      "summary": "The consortium arrests {role:foundry_overseer} for negligence and grants the apprentices shorter shifts and safety monitors.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "foundry_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "foundry_overseer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_delegate",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_foundry_fatalities",
+          "public_summary": "A hired gun carried proof of poisoned blast ducts and broke an overseer's hold on apprentice smelters."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "strike_crushed",
+      "reached_by": "The pilot sells the logbook to the overseer.",
+      "summary": "{role:foundry_overseer} destroys the logs, militarizes the foundries, and blacklists {role:apprentice_delegate} across the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "foundry_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "foundry_overseer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_apprentice_strike",
+          "public_summary": "Word spread of a pilot taking management coin to bury the names of dead furnace apprentices."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "compromise_settlement",
+      "reached_by": "The pilot brokers a quiet financial settlement.",
+      "summary": "Apprentice wages rise while the fatal toxic leak is officially reclassified as an unpreventable valve failure.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "foundry_overseer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_delegate",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "strike_broken",
+      "reached_by": "The assault succeeds or the pilot abandons the contract.",
+      "summary": "Security forces gas the gantry catwalks, ending the mutiny and returning the furnaces to full output.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "foundry_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "apprentice_delegate",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foundry_overseer",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "curfew"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "strike_broken",
+  "loose_threads": [
+    {
+      "id": "t_consortium_audit",
+      "surface": "price_board",
+      "detail": "Foundry alloy purchase orders surged three jumps away twelve hours before the walkout was called.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_overseer_kickbacks",
+      "surface": "cargo",
+      "detail": "The toxic solvent barrels bear falsified maritime safety stamps originating from an offshore holding firm.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Slag vents glow at {role:orbital_foundry} as shift workers refuse crucible rotation.",
+    "{role:foundry_consortium} warns freight captains against harboring unauthorized personnel."
+  ],
+  "voice_direction": {
+    "foundry_overseer": "Harsh, impatient cadence, drops pronouns and rushes through sentences. Never admits technical ignorance.",
+    "apprentice_delegate": "Raspy, restrained vocal delivery, speaks in measured, deliberate phrases. Avoids discussing personal fear."
+  },
+  "novelty_tags": [
+    "foundry_strike",
+    "apprentice_mutiny",
+    "industrial_coverup",
+    "crucible_gantry",
+    "slag_venting"
+  ]
+}

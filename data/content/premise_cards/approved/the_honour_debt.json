@@ -258,5 +258,9 @@
     "underworld_code",
     "blood_debt",
     "syndicate_succession"
-  ]
+  ],
+  "core_why": {
+    "motive": "guilt",
+    "secret": "legend_paying_off_historic_blood_debt"
+  }
 }

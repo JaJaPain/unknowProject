@@ -74,13 +74,14 @@
           "requester": "corporate_liquidator",
           "target": "ruined_colony",
           "reason": "The liquidator hires the pilot to scan the colony to ensure no biological assets remain before they vaporize it.",
-          "private_fact": "The pilot discovers the survivor sitting calmly at a desk in the center of the ruins.",
+          "private_fact": "The former accountant stayed behind in the ruins to keep a meticulous record of every death caused by the corporation's life support systems.",
           "outcome_tags": [
             "survivor_found"
           ],
           "routes": {
             "survivor_found": "next"
-          }
+          },
+          "culprit": "terraforming_corp"
         }
       ],
       "player_choice": null
@@ -276,5 +277,9 @@
     "abandoned_colony",
     "corporate_coverup",
     "doomed_survivor"
-  ]
+  ],
+  "core_why": {
+    "motive": "guilt",
+    "secret": "accountant_logging_corporate_life_support_deaths"
+  }
 }

@@ -80,14 +80,15 @@
           ],
           "routes": {
             "frequency_found": "next"
-          }
+          },
+          "culprit": "handler_officer"
         },
         {
           "verb": "pickup_special",
           "requester": "burned_spy",
           "target": "intelligence_hub",
           "reason": "The spy asks the pilot to meet a bribed technician at the hub's docking bay and collect a corrupted data drive containing the handler's logs.",
-          "private_fact": "The pilot has to bypass three layers of lethal biometric security to get the drive.",
+          "private_fact": "The handling officer is the real mole selling agency dossiers to foreign buyers, using an internal purge to silence loyal agents.",
           "outcome_tags": [
             "drive_extracted"
           ],
@@ -323,5 +324,9 @@
     "burned_spy",
     "dark_zone_extraction",
     "intelligence_leak"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "handling_officer_selling_agency_secrets_to_rivals"
+  }
 }

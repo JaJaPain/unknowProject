@@ -102,7 +102,8 @@
           ],
           "routes": {
             "filters_scanned": "next"
-          }
+          },
+          "culprit": "trusted_advisor"
         }
       ],
       "player_choice": null
@@ -282,5 +283,9 @@
     "poisoned_noble",
     "treacherous_advisor",
     "succession_crisis"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "advisor_slowly_poisoning_heir_to_seize_dynasty"
+  }
 }

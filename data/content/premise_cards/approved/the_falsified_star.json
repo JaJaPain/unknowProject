@@ -345,5 +345,9 @@
     "astronomy_conspiracy",
     "hidden_system",
     "suppressed_data"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "star_charts_altered_to_erase_hidden_sector"
+  }
 }

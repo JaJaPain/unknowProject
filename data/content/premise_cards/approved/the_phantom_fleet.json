@@ -74,7 +74,7 @@
           "requester": "desperate_mayor",
           "target": "frontier_colony",
           "reason": "The mayor begs the pilot to buy and quietly deliver replacement projection lenses to fix the flickering buoy.",
-          "private_fact": "The pilot realizes the colony is completely unarmed.",
+          "private_fact": "The governor embezzled the entire orbital defense budget and fabricated rumors of an approaching fleet to explain the missing funds.",
           "outcome_tags": [
             "lenses_delivered"
           ],
@@ -96,13 +96,14 @@
           "requester": "pirate_scout",
           "target": "frontier_colony",
           "reason": "The scout hires the pilot to run a deep thermal scan of the heavy cruisers to see if they are active.",
-          "private_fact": "The pilot must fake the scan results to hide the fact that the heavy cruisers produce zero heat.",
+          "private_fact": "The governor configured the orbital sensors to broadcast false radar ghosts to maintain public hysteria while skimming relief money.",
           "outcome_tags": [
             "scan_faked"
           ],
           "routes": {
             "scan_faked": "next"
-          }
+          },
+          "culprit": "desperate_mayor"
         }
       ],
       "player_choice": null
@@ -273,5 +274,9 @@
     "hologram_fleet",
     "fake_defense",
     "desperate_mayor"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "governor_embezzled_defense_budget_leaving_hologram_buoys"
+  }
 }

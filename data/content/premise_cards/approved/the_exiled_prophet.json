@@ -268,5 +268,9 @@
     "dying_mentor",
     "fake_death",
     "religious_broadcast"
-  ]
+  ],
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "prophet_dying_of_engine_radiation_poisoning"
+  }
 }

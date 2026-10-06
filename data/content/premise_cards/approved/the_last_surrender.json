@@ -268,5 +268,9 @@
     "veteran_standoff",
     "memory_loss",
     "naval_coverup"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "demented_captain_believes_historic_war_is_ongoing"
+  }
 }

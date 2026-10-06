@@ -91,7 +91,8 @@
           "routes": {
             "trace_complete": "next",
             "abandoned": "resolution:retiree_gives_up"
-          }
+          },
+          "culprit": "corrupt_accountant"
         }
       ],
       "player_choice": null
@@ -282,5 +283,9 @@
     "yacht_chase",
     "stolen_pension",
     "white_collar_crime"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "accountant_embezzled_local_pension_fund_before_audit"
+  }
 }

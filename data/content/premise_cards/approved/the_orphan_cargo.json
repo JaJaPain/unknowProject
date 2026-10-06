@@ -339,5 +339,9 @@
     "ghost_ship",
     "humanitarian_aid",
     "salvage_race"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "automated_relief_freighter_fusion_drive_critical"
+  }
 }

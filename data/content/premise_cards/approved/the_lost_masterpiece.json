@@ -298,5 +298,9 @@
     "dark_zone_heist",
     "stolen_art",
     "tax_evasion"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "collector_hiding_stolen_masterpiece_to_evade_taxes"
+  }
 }

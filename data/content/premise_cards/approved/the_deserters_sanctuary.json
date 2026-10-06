@@ -254,5 +254,9 @@
     "deserter_bounty",
     "hidden_sanctuary",
     "pacifist_refugee"
-  ]
+  ],
+  "core_why": {
+    "motive": "guilt",
+    "secret": "deserter_stole_evidence_of_military_war_crimes"
+  }
 }

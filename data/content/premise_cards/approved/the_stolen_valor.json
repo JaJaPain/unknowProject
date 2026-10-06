@@ -277,5 +277,9 @@
     "stolen_valor",
     "memorial_gala",
     "cowards_log"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "celebrated_hero_abandoned_squad_in_star_system"
+  }
 }

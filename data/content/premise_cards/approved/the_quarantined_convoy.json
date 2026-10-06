@@ -314,5 +314,9 @@
     "military_blockade",
     "refugee_convoy",
     "dying_star_crisis"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "governor_delaying_refugees_until_air_runs_out"
+  }
 }

@@ -297,5 +297,9 @@
     "gambling_debt",
     "scrap_yard_standoff",
     "parental_guilt"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "child_sold_heritage_ship_for_gambling_debts"
+  }
 }

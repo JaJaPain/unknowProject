@@ -250,5 +250,9 @@
     "blackmail_data",
     "stolen_sins",
     "clearing_a_name"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "confessional_booth_rigged_to_record_crimes"
+  }
 }

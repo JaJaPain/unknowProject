@@ -1,0 +1,482 @@
+{
+  "premise.blood_money_escrow": {
+    "motive": "greed",
+    "secret": "cartel_eliminating_mercenaries_to_avoid_payment"
+  },
+  "premise.dead_gate_patrol": {
+    "motive": "protecting_someone",
+    "secret": "broadcasting_code_to_suppress_active_minefield"
+  },
+  "premise.false_prophet": {
+    "motive": "greed",
+    "secret": "tightbeam_transmitter_faking_prophetic_voices"
+  },
+  "premise.forged_valor": {
+    "motive": "greed",
+    "secret": "covered_up_flagship_reactor_failure"
+  },
+  "premise.inherited_obligations": {
+    "motive": "greed",
+    "secret": "estate_collateralized_for_unpaid_syndicate_loans"
+  },
+  "premise.oxygen_tax": {
+    "motive": "control",
+    "secret": "rigged_monitors_forcing_debt_foreclosure"
+  },
+  "premise.pilgrims_toll": {
+    "motive": "guilt",
+    "secret": "pilgrim_order_drive_poisoned_local_populace"
+  },
+  "premise.quarantine_loophole": {
+    "motive": "greed",
+    "secret": "luxury_exemption_loophole_during_quarantine"
+  },
+  "premise.revoked_charter": {
+    "motive": "greed",
+    "secret": "manufactured_charter_violation_for_thorium_seizure"
+  },
+  "premise.salvage_registry": {
+    "motive": "greed",
+    "secret": "derelict_title_beacon_falling_into_gravity_well"
+  },
+  "premise.scrap_iron_memorial": {
+    "motive": "greed",
+    "secret": "clearing_memorial_for_lucrative_jump_point"
+  },
+  "premise.stalled_pilgrims": {
+    "motive": "greed",
+    "secret": "stalling_refugee_convoy_to_drain_savings"
+  },
+  "premise.stolen_penance": {
+    "motive": "fear",
+    "secret": "confessional_booth_rigged_to_record_crimes"
+  },
+  "premise.the_abandoned_colony": {
+    "motive": "guilt",
+    "secret": "accountant_logging_corporate_life_support_deaths"
+  },
+  "premise.the_adopted_mine": {
+    "motive": "greed",
+    "secret": "fabricated_safety_violations_to_steal_mining_claim"
+  },
+  "premise.the_ancestral_sword": {
+    "motive": "legacy",
+    "secret": "dying_veteran_reclaiming_pawned_service_weapon"
+  },
+  "premise.the_asteroid_collision": {
+    "motive": "revenge",
+    "secret": "rival_syndicate_nudged_asteroid_into_base"
+  },
+  "premise.the_automated_scab": {
+    "motive": "greed",
+    "secret": "botched_software_update_on_automated_mining_rig"
+  },
+  "premise.the_black_hole_tithe": {
+    "motive": "survival",
+    "secret": "automated_hauler_glitch_dumped_medical_supplies"
+  },
+  "premise.the_blood_debt": {
+    "motive": "survival",
+    "secret": "erasing_cartel_debt_via_mainframe_backdoor"
+  },
+  "premise.the_botched_surgery": {
+    "motive": "fear",
+    "secret": "underworld_doctor_accidentally_paralyzed_boss"
+  },
+  "premise.the_broken_oath": {
+    "motive": "protecting_someone",
+    "secret": "guard_stole_relic_for_childs_medicine"
+  },
+  "premise.the_broken_vow": {
+    "motive": "faith",
+    "secret": "holy_order_founded_by_notorious_pirate"
+  },
+  "premise.the_buried_saint": {
+    "motive": "faith",
+    "secret": "automated_crane_mishandled_revered_saint_sarcophagus"
+  },
+  "premise.the_calibration_scam": {
+    "motive": "greed",
+    "secret": "electromagnet_device_rigging_station_ore_scales"
+  },
+  "premise.the_censored_history": {
+    "motive": "ideology",
+    "secret": "suppressed_record_of_junta_founding_massacre"
+  },
+  "premise.the_chemical_spill": {
+    "motive": "fear",
+    "secret": "dockmaster_covering_up_narcotics_chemical_spill"
+  },
+  "premise.the_chosen_successor": {
+    "motive": "control",
+    "secret": "faking_divine_succession_omens_with_pyrotechnics"
+  },
+  "premise.the_code_of_silence": {
+    "motive": "fear",
+    "secret": "syndicate_bombing_imprisoned_informant_before_trial"
+  },
+  "premise.the_collapsing_mine": {
+    "motive": "greed",
+    "secret": "mining_company_sacrificing_workers_for_insurance"
+  },
+  "premise.the_crooked_mechanic": {
+    "motive": "greed",
+    "secret": "mechanic_sabotaging_drives_for_tow_kickbacks"
+  },
+  "premise.the_dark_zone_relay": {
+    "motive": "control",
+    "secret": "corporation_hiding_relay_to_maintain_blackout"
+  },
+  "premise.the_death_race": {
+    "motive": "greed",
+    "secret": "bookie_rigged_race_to_kill_driver"
+  },
+  "premise.the_defector_bounty": {
+    "motive": "protecting_someone",
+    "secret": "intelligence_agency_testing_bioweapons_on_civilians"
+  },
+  "premise.the_derelict_colony": {
+    "motive": "legacy",
+    "secret": "elder_powering_reactor_to_preserve_station_archives"
+  },
+  "premise.the_derelict_quarantine": {
+    "motive": "fear",
+    "secret": "enforcers_paid_to_destroy_quarantined_survivors"
+  },
+  "premise.the_deserters_sanctuary": {
+    "motive": "guilt",
+    "secret": "deserter_stole_evidence_of_military_war_crimes"
+  },
+  "premise.the_disputed_engine": {
+    "motive": "legacy",
+    "secret": "hyper_efficient_engine_permanently_irradiates_hulls"
+  },
+  "premise.the_doomed_affair": {
+    "motive": "revenge",
+    "secret": "spouse_fabricated_treason_charges_over_extramarital_affair"
+  },
+  "premise.the_double_agent": {
+    "motive": "greed",
+    "secret": "handling_officer_selling_agency_secrets_to_rivals"
+  },
+  "premise.the_dying_star_archive": {
+    "motive": "greed",
+    "secret": "dockmaster_hoarding_evacuation_shuttle_for_smuggled_loot"
+  },
+  "premise.the_empty_casket": {
+    "motive": "fear",
+    "secret": "merchant_staged_death_to_escape_creditors"
+  },
+  "premise.the_empty_vow": {
+    "motive": "survival",
+    "secret": "manifold_bypass_vents_lower_decks_into_space"
+  },
+  "premise.the_exiled_prophet": {
+    "motive": "protecting_someone",
+    "secret": "prophet_dying_of_engine_radiation_poisoning"
+  },
+  "premise.the_failing_sensor_net": {
+    "motive": "greed",
+    "secret": "sensor_net_defunded_to_conceal_government_embezzlement"
+  },
+  "premise.the_fake_news_drone": {
+    "motive": "greed",
+    "secret": "reporter_built_attack_drone_to_boost_ratings"
+  },
+  "premise.the_false_alarm_quarantine": {
+    "motive": "control",
+    "secret": "military_using_false_quarantine_to_seize_research"
+  },
+  "premise.the_false_relic": {
+    "motive": "fear",
+    "secret": "broker_sold_forged_relic_to_congregation"
+  },
+  "premise.the_falsified_star": {
+    "motive": "control",
+    "secret": "star_charts_altered_to_erase_hidden_sector"
+  },
+  "premise.the_forged_masterpiece": {
+    "motive": "greed",
+    "secret": "collector_orchestrating_art_theft_for_insurance_fraud"
+  },
+  "premise.the_forgotten_monument": {
+    "motive": "control",
+    "secret": "monument_conceals_suppressed_record_of_historical_battle"
+  },
+  "premise.the_forgotten_oath": {
+    "motive": "greed",
+    "secret": "station_charter_concealing_unlawful_veteran_eviction"
+  },
+  "premise.the_frozen_convoy": {
+    "motive": "control",
+    "secret": "syndicate_stranded_convoy_for_extortion"
+  },
+  "premise.the_gladiator_pit": {
+    "motive": "survival",
+    "secret": "captured_officer_smuggling_explosives_for_arena_breakout"
+  },
+  "premise.the_gladiators_debt": {
+    "motive": "control",
+    "secret": "arena_master_extorting_fighter_with_hostage_family"
+  },
+  "premise.the_grave_robbers": {
+    "motive": "greed",
+    "secret": "broker_harvesting_military_cybernetics_from_cemetery_corpses"
+  },
+  "premise.the_gravity_tomb": {
+    "motive": "greed",
+    "secret": "salvager_bypassed_stabilizer_locks_to_steal_rods"
+  },
+  "premise.the_heaviest_crown": {
+    "motive": "legacy",
+    "secret": "hidden_data_core_of_dynastic_mining_claims"
+  },
+  "premise.the_hermit_hoard": {
+    "motive": "fear",
+    "secret": "hermit_junk_pile_conceals_colonial_reactor_core"
+  },
+  "premise.the_honorable_thief": {
+    "motive": "guilt",
+    "secret": "aging_thief_accidentally_fenced_life_savers_heirloom"
+  },
+  "premise.the_honour_debt": {
+    "motive": "guilt",
+    "secret": "legend_paying_off_historic_blood_debt"
+  },
+  "premise.the_hull_breach": {
+    "motive": "greed",
+    "secret": "ship_owner_sabotaged_life_support_for_insurance"
+  },
+  "premise.the_ice_famine": {
+    "motive": "greed",
+    "secret": "broker_diverted_water_supply_before_solar_flare"
+  },
+  "premise.the_indentured_engine": {
+    "motive": "survival",
+    "secret": "mechanic_manually_overriding_unstable_reactor_safeties"
+  },
+  "premise.the_last_rites": {
+    "motive": "fear",
+    "secret": "commander_sacrificed_squad_to_cover_tactical_blunder"
+  },
+  "premise.the_last_surrender": {
+    "motive": "fear",
+    "secret": "demented_captain_believes_historic_war_is_ongoing"
+  },
+  "premise.the_lost_masterpiece": {
+    "motive": "greed",
+    "secret": "collector_hiding_stolen_masterpiece_to_evade_taxes"
+  },
+  "premise.the_loyalty_test": {
+    "motive": "fear",
+    "secret": "merchant_staged_fake_assassination_to_test_bodyguard"
+  },
+  "premise.the_manufactured_hero": {
+    "motive": "greed",
+    "secret": "studio_and_military_staged_fake_war"
+  },
+  "premise.the_melting_reactor": {
+    "motive": "fear",
+    "secret": "corporation_trapping_miners_to_prevent_press_leaks"
+  },
+  "premise.the_minefield_harvest": {
+    "motive": "greed",
+    "secret": "scrappers_harvesting_cuprite_from_networked_minefield"
+  },
+  "premise.the_mutiny_in_the_dark": {
+    "motive": "greed",
+    "secret": "captain_starving_crew_for_illicit_cargo"
+  },
+  "premise.the_orphan_cargo": {
+    "motive": "survival",
+    "secret": "automated_relief_freighter_fusion_drive_critical"
+  },
+  "premise.the_pacifist_mercenary": {
+    "motive": "guilt",
+    "secret": "pacifist_hero_stockpiled_illegal_armory_years_ago"
+  },
+  "premise.the_perpetual_audit": {
+    "motive": "greed",
+    "secret": "auditor_extending_audit_to_generate_departmental_fees"
+  },
+  "premise.the_phantom_fleet": {
+    "motive": "greed",
+    "secret": "governor_embezzled_defense_budget_leaving_hologram_buoys"
+  },
+  "premise.the_phantom_manifest": {
+    "motive": "greed",
+    "secret": "dockmaster_falsified_freight_manifests_for_subsidies"
+  },
+  "premise.the_phantom_regiment": {
+    "motive": "fear",
+    "secret": "negotiator_sold_out_military_regiment_decades_ago"
+  },
+  "premise.the_plagiarized_equation": {
+    "motive": "legacy",
+    "secret": "mentor_stole_protege_navigation_equation"
+  },
+  "premise.the_plague_cure": {
+    "motive": "protecting_someone",
+    "secret": "plague_cure_requires_illegal_contraband_compounds"
+  },
+  "premise.the_poisoned_chalice": {
+    "motive": "greed",
+    "secret": "advisor_slowly_poisoning_heir_to_seize_dynasty"
+  },
+  "premise.the_prodigal_debt": {
+    "motive": "fear",
+    "secret": "child_sold_heritage_ship_for_gambling_debts"
+  },
+  "premise.the_promised_land": {
+    "motive": "greed",
+    "secret": "corporation_stole_refugee_colony_coordinates"
+  },
+  "premise.the_propaganda_film": {
+    "motive": "ideology",
+    "secret": "director_spliced_state_massacre_footage_into_propaganda"
+  },
+  "premise.the_pulsar_cache": {
+    "motive": "greed",
+    "secret": "corrupt_inspector_extorting_bribes_at_pulsar_site"
+  },
+  "premise.the_quarantined_convoy": {
+    "motive": "control",
+    "secret": "governor_delaying_refugees_until_air_runs_out"
+  },
+  "premise.the_reactor_meltdown": {
+    "motive": "greed",
+    "secret": "inspector_sabotaged_reactor_cooling_to_sell_replacements"
+  },
+  "premise.the_recycled_ships": {
+    "motive": "greed",
+    "secret": "scrap_yard_sold_decommissioned_warships_as_freighters"
+  },
+  "premise.the_rigged_race": {
+    "motive": "control",
+    "secret": "syndicate_extorting_mechanic_to_sabotage_race"
+  },
+  "premise.the_runaway_bride": {
+    "motive": "greed",
+    "secret": "fiance_contracted_to_assassinate_father_at_wedding"
+  },
+  "premise.the_sabotaged_shift": {
+    "motive": "ideology",
+    "secret": "journalist_hacking_drones_to_expose_labor_abuses"
+  },
+  "premise.the_sanctuary_ship": {
+    "motive": "survival",
+    "secret": "sanctuary_ship_extorting_donations_for_life_support"
+  },
+  "premise.the_smear_campaign": {
+    "motive": "greed",
+    "secret": "journalist_bribed_by_rivals_to_smear_merchant"
+  },
+  "premise.the_smugglers_pension": {
+    "motive": "greed",
+    "secret": "smuggler_orchestrated_cargo_heist_for_retirement_fund"
+  },
+  "premise.the_smugglers_tithe": {
+    "motive": "greed",
+    "secret": "customs_officer_seizing_contraband_for_resale"
+  },
+  "premise.the_smugglers_toll": {
+    "motive": "protecting_someone",
+    "secret": "smuggler_secretly_escorting_refugees_past_boss_toll"
+  },
+  "premise.the_space_madness": {
+    "motive": "fear",
+    "secret": "isolated_engineer_hallucinating_leviathans_from_nitrogen_poisoning"
+  },
+  "premise.the_stolen_bloodline": {
+    "motive": "fear",
+    "secret": "heir_secretly_adopted_facing_dynastic_disinheritance"
+  },
+  "premise.the_stolen_composition": {
+    "motive": "greed",
+    "secret": "archivist_stole_and_copyrighted_mentors_symphony"
+  },
+  "premise.the_stolen_medals": {
+    "motive": "fear",
+    "secret": "veteran_bought_fake_medals_to_feign_heroism"
+  },
+  "premise.the_stolen_pension": {
+    "motive": "greed",
+    "secret": "accountant_embezzled_local_pension_fund_before_audit"
+  },
+  "premise.the_stolen_sentence": {
+    "motive": "fear",
+    "secret": "patrician_paid_substitute_to_serve_prison_term"
+  },
+  "premise.the_stolen_symphony": {
+    "motive": "legacy",
+    "secret": "composer_plagiarizing_lost_colonial_symphony"
+  },
+  "premise.the_stolen_thesis": {
+    "motive": "greed",
+    "secret": "bounty_hunter_auctioning_stolen_decay_survey_data"
+  },
+  "premise.the_stolen_tickets": {
+    "motive": "greed",
+    "secret": "bureaucrat_delaying_tickets_to_feed_forgery_ring"
+  },
+  "premise.the_stolen_valor": {
+    "motive": "fear",
+    "secret": "celebrated_hero_abandoned_squad_in_star_system"
+  },
+  "premise.the_stowaway_assassin": {
+    "motive": "fear",
+    "secret": "assassin_hunting_eyewitness_to_dockside_murder"
+  },
+  "premise.the_strikebreaker_blockade": {
+    "motive": "greed",
+    "secret": "corporation_hired_gangs_to_starve_refinery_workers"
+  },
+  "premise.the_syndicate_truce": {
+    "motive": "revenge",
+    "secret": "widow_hired_assassins_to_sabotage_peace_treaty"
+  },
+  "premise.the_thiefs_apprentice": {
+    "motive": "greed",
+    "secret": "thief_ransoming_stolen_extortion_dossier_to_blackmailer"
+  },
+  "premise.the_toll_road": {
+    "motive": "greed",
+    "secret": "corporation_built_unlicensed_hyperlane_gate_without_charter"
+  },
+  "premise.the_toxic_spill": {
+    "motive": "fear",
+    "secret": "scientist_dropped_illegal_biocatalyst_eating_hull_plating"
+  },
+  "premise.the_unexploded_legacy": {
+    "motive": "control",
+    "secret": "official_plans_to_reverse_engineer_unexploded_superweapon"
+  },
+  "premise.the_unsteady_truce": {
+    "motive": "greed",
+    "secret": "arms_dealers_hired_mercenaries_to_kill_envoys"
+  },
+  "premise.the_whistleblower_cache": {
+    "motive": "greed",
+    "secret": "conglomerate_suppressing_disease_cure_to_sell_treatments"
+  },
+  "premise.the_widows_war": {
+    "motive": "control",
+    "secret": "missing_blackmail_ledger_dictating_syndicate_succession"
+  },
+  "premise.the_will_and_testament": {
+    "motive": "greed",
+    "secret": "favored_sibling_manipulated_mother_into_altering_will"
+  },
+  "premise.the_withheld_payout": {
+    "motive": "greed",
+    "secret": "insurance_firm_concealing_catastrophic_part_defect"
+  },
+  "premise.underwater_insurance": {
+    "motive": "greed",
+    "secret": "broker_syndicate_foreclosing_ships_for_insurance_fraud"
+  },
+  "premise.worthless_scrip": {
+    "motive": "greed",
+    "secret": "corporation_restructuring_bankruptcy_to_void_pension_scrip"
+  }
+}

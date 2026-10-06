@@ -290,5 +290,9 @@
     "blockade_running",
     "corporate_greed",
     "breaking_the_monopoly"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "corporation_built_unlicensed_hyperlane_gate_without_charter"
+  }
 }

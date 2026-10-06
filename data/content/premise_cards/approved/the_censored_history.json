@@ -74,13 +74,14 @@
           "requester": "loyalist_captain",
           "target": "hidden_archive",
           "reason": "The captain hires the pilot to sweep the dead system for unauthorized transmissions.",
-          "private_fact": "The pilot discovers the historian desperately trying to bring the ancient satellite's power grid online.",
+          "private_fact": "The exiled historian is preparing to broadcast documented records proving the ruling junta was founded on a bloody internal massacre.",
           "outcome_tags": [
             "archive_found"
           ],
           "routes": {
             "archive_found": "next"
-          }
+          },
+          "culprit": "ruling_junta"
         },
         {
           "verb": "deliver_ore",
@@ -297,5 +298,9 @@
     "suppressed_history",
     "censor_frigate",
     "exiled_historian"
-  ]
+  ],
+  "core_why": {
+    "motive": "ideology",
+    "secret": "suppressed_record_of_junta_founding_massacre"
+  }
 }

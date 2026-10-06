@@ -137,7 +137,8 @@
             "turn_in_clerk": "resolution:corp_reclaims",
             "cover_for_clerk": "resolution:miner_survives",
             "blackmail_liquidator": "resolution:sold_on_black_market"
-          }
+          },
+          "culprit": "corporate_liquidator"
         }
       ],
       "player_choice": null
@@ -277,5 +278,9 @@
     "voided_pension",
     "medical_theft",
     "corporate_bankruptcy"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "corporation_restructuring_bankruptcy_to_void_pension_scrip"
+  }
 }

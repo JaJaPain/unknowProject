@@ -315,5 +315,9 @@
     "syndicate_war",
     "assassins",
     "ceremonial_wine"
-  ]
+  ],
+  "core_why": {
+    "motive": "revenge",
+    "secret": "widow_hired_assassins_to_sabotage_peace_treaty"
+  }
 }

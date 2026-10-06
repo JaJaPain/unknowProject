@@ -310,5 +310,9 @@
     "inheritance_dispute",
     "destroyed_will",
     "legal_escort"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "favored_sibling_manipulated_mother_into_altering_will"
+  }
 }

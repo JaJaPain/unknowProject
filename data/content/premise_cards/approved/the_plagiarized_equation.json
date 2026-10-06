@@ -97,7 +97,8 @@
           "routes": {
             "evidence_found": "beat:3",
             "scan_failed": "resolution:thesis_published"
-          }
+          },
+          "culprit": "old_mentor"
         }
       ],
       "player_choice": null
@@ -268,5 +269,9 @@
     "academic_theft",
     "data_forgery",
     "mentor_betrayal"
-  ]
+  ],
+  "core_why": {
+    "motive": "legacy",
+    "secret": "mentor_stole_protege_navigation_equation"
+  }
 }

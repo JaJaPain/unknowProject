@@ -1,0 +1,343 @@
+{
+  "id": "premise.the_curriculum_schism",
+  "schema_version": 1,
+  "title": "The Resonant Drill",
+  "logline": "A mining trade academy splits when an instructor teaches students to bypass safety interlocks for higher yields, and the dean hires a pilot to prove the old textbooks are right.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "paranoid"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "orthodox_dean",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Tired, rigid educator who believes old drill manuals were written in blood.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "radical_instructor",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Charismatic speed-driller who promises apprentices triple wages on the belt.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_academy",
+      "kind": "place",
+      "description": "An aging orbital habitat where belt miners have trained for three generations.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ore_smelter_dock",
+      "kind": "place",
+      "description": "The intake dock where academy practice loads are smelted and graded.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "academy_board",
+      "kind": "faction",
+      "description": "The governing trust that funds scholarships and controls faculty appointments.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "leader_discredited"
+  ],
+  "public_situation": "Shouting matches between apprentice drill crews at {role:mining_academy} are delaying commercial ore shipments across the inner belt.",
+  "private_truth": "The radical instructor was bribed by a commercial mining consortium to flood the labor pool with fast, disposable drillers who won't join safety committees.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "instructor_bribed_to_train_disposable_drillers"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The academy posts dual competing bounties for raw ore mined under rival drilling methods.",
+      "missions_mode": "one_of",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "orthodox_dean",
+          "target": "ore_smelter_dock",
+          "reason": "The dean needs an unaligned pilot to mine silicate using standard slow acoustic frequencies to demonstrate stable purity.",
+          "private_fact": "The dean's own academy operating funds are heavily invested in the traditional manufacturer of slow acoustic bits.",
+          "outcome_tags": [
+            "slow_ore_delivered"
+          ],
+          "routes": {
+            "slow_ore_delivered": "next"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "radical_instructor",
+          "target": "ore_smelter_dock",
+          "reason": "The instructor needs a hired pilot to run hot resonant pulses through cuprite veins to prove rapid fracture yields more mass.",
+          "private_fact": "The instructor knows hot resonant drilling micro-fractures the surrounding habitat rock, risking catastrophic depressurization over time.",
+          "outcome_tags": [
+            "hot_ore_delivered"
+          ],
+          "routes": {
+            "hot_ore_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "A training rig suffers thermal stress, and both factions demand an inspection of the telemetry.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "radical_instructor",
+          "requester": "orthodox_dean",
+          "target": "mining_academy",
+          "reason": "The dean needs a pilot to scan the academy's intake array and extract the telemetry logs before the instructor wipes the buffer.",
+          "private_fact": "The instructor installed corporate bypass chips in all thirty training pods, disabling automatic heat cutoffs.",
+          "outcome_tags": [
+            "tampering_exposed",
+            "telemetry_clean"
+          ],
+          "routes": {
+            "tampering_exposed": "next",
+            "telemetry_clean": "resolution:curriculum_overhauled"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The academy board convenes an emergency tribunal on the main concourse to vote on the curriculum.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "orthodox_dean",
+          "target": "mining_academy",
+          "reason": "The dean asks the pilot to rush the sealed diagnostic logs from the smelter dock directly to the tribunal podium.",
+          "private_fact": "The board president has already prepared two conflicting press statements depending on how public the telemetry becomes.",
+          "outcome_tags": [
+            "evidence_submitted",
+            "courier_intercepted"
+          ],
+          "routes": {
+            "evidence_submitted": "next",
+            "courier_intercepted": "resolution:curriculum_overhauled"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The board offers the pilot three ways to present the findings before the vote.",
+        "options": [
+          {
+            "id": "testify_tradition",
+            "label": "Certify the acoustic standards and condemn the reckless shortcuts",
+            "leads_to": "resolution:orthodox_triumph"
+          },
+          {
+            "id": "testify_compromise",
+            "label": "Recommend adopting hot drilling with mandatory acoustic cooling cycles",
+            "leads_to": "resolution:blended_standards"
+          },
+          {
+            "id": "sell_to_consortium",
+            "label": "Withhold the failure data in exchange for an instructor stipend",
+            "leads_to": "resolution:consortium_takeover"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "orthodox_triumph",
+      "reached_by": "The pilot delivers the logs and testifies in support of traditional standards.",
+      "summary": "{role:orthodox_dean} expels the radical faction, preserving strict drill traditions while apprentice graduation rates fall.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "academy_board",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "orthodox_dean",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "radical_instructor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "upheld_academy_safety",
+          "public_summary": "A pilot brought the logs that stopped an orbital school from teaching suicidal mining shortcuts."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "blended_standards",
+      "reached_by": "The pilot proposes a hybrid curriculum blending both methods.",
+      "summary": "{role:mining_academy} adopts hybrid drilling rules, satisfying neither faction but keeping students employed and alive.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "orthodox_dean",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "radical_instructor",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "consortium_takeover",
+      "reached_by": "The pilot withholds the failure telemetry or takes the instructor stipend.",
+      "summary": "{role:radical_instructor} replaces the dean, fast-tracking cut-rate miners into commercial contracts with rising accident rates.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "academy_board",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "orthodox_dean",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "radical_instructor",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_academy_curriculum",
+          "public_summary": "Word spread that a pilot took cash to let an unhinged instructor turn an academy into a meat grinder."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "curriculum_overhauled",
+      "reached_by": "The telemetry is wiped or the courier job is dropped.",
+      "summary": "The board dissolves the traditional faculty, replacing instructors with commercial training simulators.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "academy_board",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "orthodox_dean",
+          "fate": "disappeared"
+        },
+        {
+          "type": "law_change",
+          "law": "mining_charter_required",
+          "change": "repealed"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "law_loosened"
+      ]
+    }
+  ],
+  "default_resolution": "curriculum_overhauled",
+  "loose_threads": [
+    {
+      "id": "t_academy_bribe",
+      "surface": "dialogue",
+      "detail": "The instructor's new drilling rigs were bought under a commercial lease co-signed by an anonymous freight trust.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_dean_investments",
+      "surface": "price_board",
+      "detail": "Stock in the traditional acoustic drill manufacturer tumbled an hour before the academy vote was announced.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "bribery",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Ore output slumps at {role:mining_academy} amid philosophical faculty dispute.",
+    "Commercial smelters in {system} refuse uncertified apprentice cuprite loads."
+  ],
+  "voice_direction": {
+    "orthodox_dean": "Pedantic, gravelly rhythm, quotes century-old safety manuals from memory. Never uses industry slang.",
+    "radical_instructor": "Rapid-fire sales pitch delivery, peppers speech with exaggerated praise for working hands."
+  },
+  "novelty_tags": [
+    "curriculum_feud",
+    "mining_academy",
+    "shortcut_drilling",
+    "faculty_politics",
+    "apprentice_strike"
+  ]
+}

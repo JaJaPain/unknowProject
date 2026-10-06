@@ -77,7 +77,8 @@
           ],
           "routes": {
             "beacons_scanned": "next"
-          }
+          },
+          "culprit": "development_corp"
         }
       ],
       "player_choice": null
@@ -265,5 +266,9 @@
     "garden_world",
     "corporate_claim",
     "refugee_settlement"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "corporation_stole_refugee_colony_coordinates"
+  }
 }

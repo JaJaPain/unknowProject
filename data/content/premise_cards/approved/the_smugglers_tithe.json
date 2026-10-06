@@ -124,7 +124,8 @@
           "routes": {
             "scan_complete": "next",
             "abandoned": "resolution:officer_wins"
-          }
+          },
+          "culprit": "corrupt_customs_officer"
         }
       ],
       "player_choice": {
@@ -271,5 +272,9 @@
     "radiation_blind",
     "smuggling_decoy",
     "customs_shakedown"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "customs_officer_seizing_contraband_for_resale"
+  }
 }

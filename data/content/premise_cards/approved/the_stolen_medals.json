@@ -263,5 +263,9 @@
     "stolen_valor",
     "fake_medals",
     "forgery_swap"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "veteran_bought_fake_medals_to_feign_heroism"
+  }
 }

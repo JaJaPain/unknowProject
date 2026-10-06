@@ -85,13 +85,14 @@
           "requester": "panicked_dockmaster",
           "target": "luxury_market",
           "reason": "The dockmaster needs the pilot to scan the auditor's equipment to find its jamming frequency.",
-          "private_fact": "The pilot must get dangerously close to the auditor to do this.",
+          "private_fact": "The dockmaster falsified five years of docking manifests to pocket municipal freight subsidies for ships that never existed.",
           "outcome_tags": [
             "scanner_jammed"
           ],
           "routes": {
             "scanner_jammed": "next"
-          }
+          },
+          "culprit": "panicked_dockmaster"
         },
         {
           "verb": "pickup_special",
@@ -274,5 +275,9 @@
     "audit_panic",
     "bureaucratic_fraud",
     "scrap_metal"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "dockmaster_falsified_freight_manifests_for_subsidies"
+  }
 }

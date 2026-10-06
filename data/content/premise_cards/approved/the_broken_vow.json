@@ -274,5 +274,9 @@
     "heretical_text",
     "orbital_bombardment",
     "martyr_monk"
-  ]
+  ],
+  "core_why": {
+    "motive": "faith",
+    "secret": "holy_order_founded_by_notorious_pirate"
+  }
 }

@@ -70,7 +70,8 @@
           ],
           "routes": {
             "hardpoints_found": "next"
-          }
+          },
+          "culprit": "slick_salesman"
         }
       ],
       "player_choice": null
@@ -251,5 +252,9 @@
     "used_ship_salesman",
     "dangerous_cargo",
     "military_surplus"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "scrap_yard_sold_decommissioned_warships_as_freighters"
+  }
 }

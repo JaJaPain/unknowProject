@@ -278,5 +278,9 @@
     "water_heist",
     "drought_crisis",
     "cartel_monopoly"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "broker_diverted_water_supply_before_solar_flare"
+  }
 }

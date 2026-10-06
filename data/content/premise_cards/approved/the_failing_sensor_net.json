@@ -254,5 +254,9 @@
     "rogue_engineers",
     "weather_warning",
     "infrastructure_sabotage"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "sensor_net_defunded_to_conceal_government_embezzlement"
+  }
 }

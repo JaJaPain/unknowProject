@@ -278,5 +278,9 @@
     "minefield_scavengers",
     "unexploded_ordnance",
     "cuprite_harvest"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "scrappers_harvesting_cuprite_from_networked_minefield"
+  }
 }

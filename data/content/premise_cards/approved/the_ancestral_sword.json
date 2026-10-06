@@ -262,5 +262,9 @@
     "stolen_valor",
     "museum_ship",
     "dying_wish"
-  ]
+  ],
+  "core_why": {
+    "motive": "legacy",
+    "secret": "dying_veteran_reclaiming_pawned_service_weapon"
+  }
 }

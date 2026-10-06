@@ -80,13 +80,14 @@
           "requester": "honorable_hunter",
           "target": "safe_house",
           "reason": "The hunter hires the pilot to scan the dark zone relay for any encrypted transmissions matching the defector's signature.",
-          "private_fact": "The pilot discovers the defector hiding in a shielded cargo container.",
+          "private_fact": "The defector fled with classified telemetry proving the intelligence agency tested experimental bioweapons on civilian colonies.",
           "outcome_tags": [
             "defector_located"
           ],
           "routes": {
             "defector_located": "next"
-          }
+          },
+          "culprit": "intelligence_agency"
         },
         {
           "verb": "pickup_special",
@@ -302,5 +303,9 @@
     "whistleblower",
     "honorable_hunter",
     "bioweapon_plot"
-  ]
+  ],
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "intelligence_agency_testing_bioweapons_on_civilians"
+  }
 }

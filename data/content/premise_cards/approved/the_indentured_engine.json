@@ -247,5 +247,9 @@
     "toxic_coolants",
     "indentured_servitude",
     "corporate_negligence"
-  ]
+  ],
+  "core_why": {
+    "motive": "survival",
+    "secret": "mechanic_manually_overriding_unstable_reactor_safeties"
+  }
 }

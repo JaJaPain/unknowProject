@@ -286,5 +286,9 @@
     "medical_emergency",
     "sacred_comet",
     "no_villain"
-  ]
+  ],
+  "core_why": {
+    "motive": "guilt",
+    "secret": "pilgrim_order_drive_poisoned_local_populace"
+  }
 }

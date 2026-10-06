@@ -96,7 +96,7 @@
           "requester": "corrupt_journalist",
           "target": "publishing_hub",
           "reason": "The journalist hires the pilot (not realizing they are the thief) to deliver a backup drive from a secondary server.",
-          "private_fact": "The pilot realizes the backup drive contains the exact same fabricated data.",
+          "private_fact": "The journalist accepted a lucrative private syndicate bribe to manufacture fake fraud allegations against the innocent merchant.",
           "outcome_tags": [
             "backup_delivered"
           ],
@@ -275,5 +275,9 @@
     "smear_campaign",
     "media_drone",
     "corporate_espionage"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "journalist_bribed_by_rivals_to_smear_merchant"
+  }
 }

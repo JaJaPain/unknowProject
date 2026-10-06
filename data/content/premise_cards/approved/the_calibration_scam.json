@@ -268,5 +268,9 @@
     "scale_tampering",
     "snake_oil_salesman",
     "union_corruption"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "electromagnet_device_rigging_station_ore_scales"
+  }
 }

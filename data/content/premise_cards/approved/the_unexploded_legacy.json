@@ -75,7 +75,8 @@
           "routes": {
             "scan_tampered": "beat:2",
             "scan_untampered": "beat:2"
-          }
+          },
+          "culprit": "ambitious_official"
         },
         {
           "verb": "delivery_courier",
@@ -310,5 +311,9 @@
     "unexploded_bomb",
     "cold_war_threat",
     "civilian_habitat"
-  ]
+  ],
+  "core_why": {
+    "motive": "control",
+    "secret": "official_plans_to_reverse_engineer_unexploded_superweapon"
+  }
 }

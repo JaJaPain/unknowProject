@@ -121,7 +121,7 @@
           "requester": "desperate_heir",
           "target": "neutral_bank",
           "reason": "The pilot must rush the drive to the neutral bank to be permanently sealed before the sibling's lawyers can claim it.",
-          "private_fact": "The pilot now holds the drive and knows exactly what it contains.",
+          "private_fact": "The desperate heir is secretly an adopted orphan whose legal claim to the dynastic fortune dissolves the moment the registry opens.",
           "outcome_tags": [
             "drive_delivered",
             "abandoned"
@@ -287,5 +287,9 @@
     "adoption_secret",
     "family_feud",
     "locked_vault"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "heir_secretly_adopted_facing_dynastic_disinheritance"
+  }
 }

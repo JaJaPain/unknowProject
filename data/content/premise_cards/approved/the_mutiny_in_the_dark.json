@@ -74,13 +74,14 @@
           "requester": "mutinous_navigator",
           "target": "rescue_station",
           "reason": "The navigator begs the pilot to scan the dark zone anomalies to pinpoint the freighter's drifting location.",
-          "private_fact": "The pilot discovers the freighter is actively venting oxygen to conserve power.",
+          "private_fact": "The freighter captain shut off long-range comms and life support heating to starve the crew into surrendering the vessel's cargo.",
           "outcome_tags": [
             "freighter_located"
           ],
           "routes": {
             "freighter_located": "next"
-          }
+          },
+          "culprit": "tyrannical_captain"
         },
         {
           "verb": "deliver_ore",
@@ -110,7 +111,7 @@
           "requester": "tyrannical_captain",
           "target": "rescue_station",
           "reason": "The captain hires the pilot to deliver forged engine telemetry to the guild to make them think the ship exploded.",
-          "private_fact": "The pilot realizes the captain is planning to sell the crew to slavers.",
+          "private_fact": "The captain forged telemetry logs to make the ship look destroyed so the surviving deckhands can be quietly offloaded to slavers.",
           "outcome_tags": [
             "telemetry_delivered"
           ],
@@ -311,5 +312,9 @@
     "space_mutiny",
     "starving_crew",
     "insurance_scam"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "captain_starving_crew_for_illicit_cargo"
+  }
 }

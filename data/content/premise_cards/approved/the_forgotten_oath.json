@@ -77,7 +77,8 @@
           ],
           "routes": {
             "charter_found": "next"
-          }
+          },
+          "culprit": "hub_manager"
         }
       ],
       "player_choice": null
@@ -250,5 +251,9 @@
     "hidden_charter",
     "veterans_rights",
     "centennial_celebration"
-  ]
+  ],
+  "core_why": {
+    "motive": "greed",
+    "secret": "station_charter_concealing_unlawful_veteran_eviction"
+  }
 }

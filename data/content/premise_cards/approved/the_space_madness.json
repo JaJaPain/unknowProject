@@ -97,13 +97,14 @@
           "requester": "concerned_psychiatrist",
           "target": "isolated_outpost",
           "reason": "The psychiatrist asks the pilot to run a deep biometric scan on the outpost to figure out why the engineer is screaming.",
-          "private_fact": "The pilot realizes the engineer is suffering from severe nitrogen narcosis.",
+          "private_fact": "The isolated engineer dismantled the station scrubber valves in a paranoid frenzy, poisoning their own crew with foul nitrogen gas.",
           "outcome_tags": [
             "scan_complete"
           ],
           "routes": {
             "scan_complete": "next"
-          }
+          },
+          "culprit": "hallucinating_engineer"
         }
       ],
       "player_choice": null
@@ -274,5 +275,9 @@
     "space_madness",
     "hallucination",
     "unarmed_target"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "isolated_engineer_hallucinating_leviathans_from_nitrogen_poisoning"
+  }
 }

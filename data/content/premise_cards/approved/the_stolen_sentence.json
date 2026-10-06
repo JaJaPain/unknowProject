@@ -121,7 +121,8 @@
           "routes": {
             "confirm_identity": "next",
             "expose_transfer": "resolution:patrician_arrested"
-          }
+          },
+          "culprit": "guilty_patrician"
         }
       ],
       "player_choice": null
@@ -297,5 +298,9 @@
     "corrupt_warden",
     "stolen_pardon",
     "prison_heist"
-  ]
+  ],
+  "core_why": {
+    "motive": "fear",
+    "secret": "patrician_paid_substitute_to_serve_prison_term"
+  }
 }

@@ -1,0 +1,398 @@
+{
+  "id": "premise.the_wandering_scholar",
+  "schema_version": 1,
+  "title": "The Circuit Teacher",
+  "logline": "An itinerant scholar travels between neglected fringe colonies teaching children navigation and literature, until a regional education trust orders them arrested for unlicensed instruction.",
+  "scale": "regional",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "faith_and_doubt"
+  ],
+  "roles": [
+    {
+      "id": "wandering_teacher",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "A gentle, stubborn educator who has spent forty years teaching kids on ore barges.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "trust_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A zealous regional regulator determined to enforce state curriculum monopolies.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "inspector_cutter",
+      "kind": "ship",
+      "description": "A fast enforcement cutter tasked with tracking unauthorized civilian schools.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "fringe_classroom",
+      "kind": "place",
+      "description": "A hollowed-out cargo module converted into a makeshift school for miner children.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "central_academy_hall",
+      "kind": "place",
+      "description": "The imposing stone-clad administrative headquarters of the regional education trust.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "education_trust",
+      "kind": "faction",
+      "description": "The monolithic corporate trust holding exclusive charter rights to all accredited education.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "relay_dark_zone",
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "law_tightened",
+    "evidence_loose"
+  ],
+  "public_situation": "Station lounges across three systems buzz with news of an arrest warrant issued for an unlicensed tutor serving remote mining outposts.",
+  "private_truth": "The education trust's mandatory standardized curriculum deliberately excludes orbital mechanics so belt children can never pass commercial pilot certification.",
+  "core_why": {
+    "motive": "control",
+    "secret": "curriculum_monopoly_engineered_to_prevent_cadet_accreditation"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Enforcement notices appear at gate lounges demanding the surrender of an unlicensed school ship.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "wandering_teacher",
+          "target": "fringe_classroom",
+          "reason": "The teacher needs an independent pilot to collect handwritten primer textbooks from a hidden depot before inspectors impound the module.",
+          "private_fact": "The textbooks contain handwritten astronomical tables that allow students to calculate independent gate jump trajectories.",
+          "outcome_tags": [
+            "primers_secured",
+            "depot_raided"
+          ],
+          "routes": {
+            "primers_secured": "next",
+            "depot_raided": "resolution:teacher_detained"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The teacher flees to a neighboring mining belt, where families gather supplies to sustain the hidden classroom.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "wandering_teacher",
+          "target": "fringe_classroom",
+          "reason": "The teacher hires the pilot to buy and deliver basic student rations and paper stylus packs to the new asteroid anchorage.",
+          "private_fact": "Three of the teacher's former students are now navigators on commercial freighters flying under forged credentials.",
+          "outcome_tags": [
+            "rations_delivered",
+            "anchor_abandoned"
+          ],
+          "routes": {
+            "rations_delivered": "next",
+            "anchor_abandoned": "resolution:teacher_detained"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The trust inspector's cutter intercepts communications in the neighboring belt, cornering the classroom module.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "wandering_teacher",
+          "target": "inspector_cutter",
+          "reason": "The teacher asks the pilot to draw the cutter's fire so the children's module can decouple and hide in the belt debris.",
+          "private_fact": "The inspector hails the pilot offering an official navigation voucher and fuel permits to stand aside and transmit the classroom coordinates.",
+          "outcome_tags": [
+            "cutter_crippled",
+            "bounty_accepted"
+          ],
+          "routes": {
+            "cutter_crippled": "next",
+            "bounty_accepted": "resolution:classroom_impounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The inspector tracks the teacher to the regional capital where the trust's governing board is holding its annual convocation.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "wandering_teacher",
+          "target": "central_academy_hall",
+          "reason": "The teacher asks the pilot to deliver their complete forty-year teaching archive directly to the trust's public audit desk.",
+          "private_fact": "The archive contains comparative test scores proving fringe children taught by the teacher scored higher than the trust's private academies.",
+          "outcome_tags": [
+            "archive_delivered",
+            "courier_intercepted"
+          ],
+          "routes": {
+            "archive_delivered": "next",
+            "courier_intercepted": "resolution:teacher_detained"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The board offers the pilot three paths to settle the unlicensed instruction dispute.",
+        "options": [
+          {
+            "id": "force_accreditation",
+            "label": "Present the comparative scores and compel official charter status for the fringe classes",
+            "leads_to": "beat:5"
+          },
+          {
+            "id": "accept_pension",
+            "label": "Broker an honourable retirement pension for the teacher on the condition they cease teaching",
+            "leads_to": "resolution:honourable_exile"
+          },
+          {
+            "id": "sell_student_roster",
+            "label": "Hand over the names of the teacher's unlicensed navigators for a trust reward",
+            "leads_to": "resolution:classroom_impounded"
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "function": "aftermath",
+      "location": "same_system",
+      "public_change": "News of the board's decision reaches the mining habitats as families await the final outcome.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "wandering_teacher",
+          "target": "fringe_classroom",
+          "reason": "The teacher needs the finalized legal charter papers carried back to the waiting families at the asteroid belt.",
+          "private_fact": "The teacher is preparing to train a new generation of apprentice instructors to continue the circuit.",
+          "outcome_tags": [
+            "charter_returned"
+          ],
+          "routes": {
+            "charter_returned": "resolution:fringe_charter_granted"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fringe_charter_granted",
+      "reached_by": "The pilot delivers the archive, cripples the cutter, and returns the charter papers.",
+      "summary": "The trust grants independent charters to fringe schools, allowing miner children to legally qualify for pilot licences.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "education_trust",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "wandering_teacher",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trust_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "salvage_registry",
+          "change": "repealed"
+        },
+        {
+          "type": "deed",
+          "tag": "chartered_the_belt_schools",
+          "public_summary": "A pilot carried an old tutor's primers across three systems and broke a trust's monopoly on flight teaching."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "honourable_exile",
+      "reached_by": "The pilot brokers an honourable retirement pension.",
+      "summary": "{role:wandering_teacher} retires to an inner-system garden station while remote mining outposts lose their only teacher.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "education_trust",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "wandering_teacher",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trust_inspector",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "classroom_impounded",
+      "reached_by": "The pilot takes the inspector's bounty or turns over the student roster.",
+      "summary": "Enforcers impound the classroom module, arresting the navigator graduates and tightening trust control across the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "education_trust",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "wandering_teacher",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trust_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_fringe_pupils",
+          "public_summary": "Word spread that a pilot turned over an old teacher's student roster to corporate auditors."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "teacher_detained",
+      "reached_by": "The teacher is captured when the pilot fails or abandons jobs.",
+      "summary": "Enforcement cutters seize the itinerant tutor, dissolving the mobile classes and restoring state educational control.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "education_trust",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "wandering_teacher",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "trust_inspector",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "teacher_detained",
+  "loose_threads": [
+    {
+      "id": "t_trust_subsidies",
+      "surface": "price_board",
+      "detail": "Educational trust bond yields climbed steadily in three systems right before the tutor's arrest warrant was published.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_inspector_credentials",
+      "surface": "ship_marking",
+      "detail": "The inspector's enforcement cutter bore an automated charter registration that lapsed twelve months ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "impersonation",
+      "debt_leverage"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Regional Education Trust seeks information on itinerant tutor operating without license.",
+    "Mining families in {system} petition for recognition of local mobile classroom charters."
+  ],
+  "voice_direction": {
+    "wandering_teacher": "Slow, grandfatherly cadences, pauses to let listener process thoughts. Never sounds bitter.",
+    "trust_inspector": "Sharp, clipped, cites legal codes by number and refuses to answer questions outside protocol."
+  },
+  "novelty_tags": [
+    "itinerant_teacher",
+    "curriculum_monopoly",
+    "fringe_schoolhouse",
+    "unlicensed_astrogation",
+    "primer_textbooks"
+  ]
+}
