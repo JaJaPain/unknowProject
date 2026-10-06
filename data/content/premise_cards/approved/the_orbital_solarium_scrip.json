@@ -1,0 +1,351 @@
+{
+  "id": "premise.the_orbital_solarium_scrip",
+  "schema_version": 1,
+  "title": "The Orbital Solarium Scrip",
+  "logline": "Trapped maintenance workers at a luxury coronal radiation spa are paid in worthless scrip while management hides cracked cuprite heat sinks that threaten a meltdown.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "melancholy"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "solarium_manager",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Runs the elite coronal sunbathing retreat; polished, ruthless, drowning staff in company-store debt.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "solarium_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Senior life-support engineer on the habitat; coughing from ozone, desperate to save his apprentice crew.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hospitality_workers_union",
+      "kind": "faction",
+      "description": "A federation of service and maintenance laborers organizing across frontier stations.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "orbital_solarium_hub",
+      "kind": "place",
+      "description": "A luxury observation habitat hovering in close solar orbit, offering therapeutic coronal views.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "regional_union_dock",
+      "kind": "place",
+      "description": "A working-class transport station where labour magistrates hear contract disputes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "industrial_parts_foundry",
+      "kind": "place",
+      "description": "A heavy foundry depot producing radiation baffles and heat exchanger assemblies.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "dying_star"
+    ],
+    "quirks_preferred": [
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "faction_emboldened",
+    "market_disrupted"
+  ],
+  "public_situation": "The premier solar retreat in {system} advertises sold-out coronal wellness suites, even as maintenance crews report chronic life-support power flickers.",
+  "private_truth": "{role:solarium_manager} is paying habitat workers in non-convertible resort scrip while concealing cracked cuprite heat sinks to keep booking VIP radiation tourists.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "scrip_wages_concealing_failing_solarium_shields"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The solarium engineering bay posts an urgent procurement contract for high-purity cuprite ore.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "solarium_mechanic",
+          "target": "orbital_solarium_hub",
+          "reason": "He needs raw cuprite ore delivered directly to habitat fabrication bays to cast emergency heat dissipation shunts.",
+          "private_fact": "The station's secondary thermal radiators will melt through during the next solar flare without conductive cuprite alloy.",
+          "outcome_tags": [
+            "cuprite_delivered"
+          ],
+          "routes": {
+            "cuprite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Station management issues an inspection contract to confirm that outer radiation levels comply with marketing guidelines.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "solarium_manager",
+          "target": "orbital_solarium_hub",
+          "culprit": "solarium_manager",
+          "reason": "The manager hires the pilot to scan exterior heat exchanger fins and certify that flare exposure remains within certified spa parameters.",
+          "private_fact": "He has already bribed regional tourism inspectors to ignore ionizing radiation spikes leaking into worker quarters.",
+          "outcome_tags": [
+            "leak_verified",
+            "levels_falsified"
+          ],
+          "routes": {
+            "leak_verified": "next",
+            "levels_falsified": "resolution:catastrophic_flare_exposure"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Ozone alarms sound across the habitat's lower engineering decks as solar activity surges.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "solarium_mechanic",
+          "target": "orbital_solarium_hub",
+          "reason": "He pays the pilot to purchase factory-grade cooling coils from an industrial foundry to bypass the manager's locked supply vault.",
+          "private_fact": "He drained his private life savings in legitimate credits to pay for the coils after the manager refused to spend resort funds.",
+          "outcome_tags": [
+            "coils_delivered",
+            "purchase_failed"
+          ],
+          "routes": {
+            "coils_delivered": "next",
+            "purchase_failed": "resolution:catastrophic_flare_exposure"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot delivers the coils. {role:solarium_manager} offers a massive executive bonus to conceal the near-meltdown, while {role:solarium_mechanic} begs to send evidence to the union.",
+        "options": [
+          {
+            "id": "take_manager_bonus",
+            "label": "Take the manager's hush bonus and keep quiet",
+            "leads_to": "resolution:manager_suppresses_hazard"
+          },
+          {
+            "id": "deliver_union_dossier",
+            "label": "Courier the unedited radiation logs to the trade union",
+            "leads_to": "beat:4"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "aftermath",
+      "public_change": "The workers union convenes an emergency tribunal at the regional dock to review habitat telemetry.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "solarium_mechanic",
+          "target": "regional_union_dock",
+          "reason": "He contracts the pilot to carry sealed telemetry slates and scrip wage ledgers to union magistrates before the manager can delete them.",
+          "private_fact": "The evidence proves the manager deducted life-support breathing charges from worker wages while venting irradiated gas into their bunks.",
+          "outcome_tags": [
+            "logs_submitted",
+            "dossier_lost"
+          ],
+          "routes": {
+            "logs_submitted": "resolution:resort_condemned_by_union",
+            "dossier_lost": "resolution:manager_suppresses_hazard"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "resort_condemned_by_union",
+      "reached_by": "The pilot delivers the evidence to the union, triggering an immediate shutdown and evacuation of the solarium.",
+      "summary": "{role:hospitality_workers_union} shuts down {role:orbital_solarium_hub}. Trapped staff are evacuated to safety, and {role:solarium_manager} faces trial.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "hospitality_workers_union",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "solarium_manager",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "solarium_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_solarium_scrip",
+          "public_summary": "A pilot hauled the radiation logs that freed an exploited engineering crew from a solar resort."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "manager_suppresses_hazard",
+      "reached_by": "The pilot takes the manager's bribe or loses the union dossier.",
+      "summary": "{role:solarium_manager} patches the radiators quietly and continues issuing scrip. {role:solarium_mechanic} is placed on unpaid suspension.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "hospitality_workers_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "solarium_manager",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "solarium_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "catastrophic_flare_exposure",
+      "reached_by": "The pilot fakes the readings or fails to deliver the replacement cooling coils.",
+      "summary": "The coronal flare burns through the unshielded habitat. Guests and workers suffer radiation poisoning, and the station is permanently abandoned.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "hospitality_workers_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "solarium_manager",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "solarium_mechanic",
+          "fate": "disappeared"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "catastrophic_flare_exposure",
+  "loose_threads": [
+    {
+      "id": "t_scrip_currency_spec",
+      "surface": "cargo",
+      "detail": "The solarium payroll tokens are minted on low-purity ferrite blanks with no legal bullion backing.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_cuprite_futures_corner",
+      "surface": "price_board",
+      "detail": "All local futures contracts for cuprite radiator coils were bought out by an anonymous corporate broker.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_union_whistleblower_tag",
+      "surface": "station_notice",
+      "detail": "A maintenance engineer's personnel file was flagged with an internal sabotage code three weeks before the flare.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Sunbathing suites at {role:orbital_solarium_hub} report record occupancy ahead of projected stellar flare.",
+    "Union organizers demand independent safety inspection of high-radiation habitats in {system}.",
+    "Hospitality scrip trading at heavy discount on unregulated border station exchanges."
+  ],
+  "voice_direction": {
+    "solarium_manager": "Soothing, modulated hospitality tones that never waver. Treats lethal ionizing radiation as a marketing feature and shrugs off worker grievances.",
+    "solarium_mechanic": "Hoarse, exhausted, and urgent. Rattles off coolant temperature limits and core decay rates like someone reciting a will."
+  },
+  "novelty_tags": [
+    "orbital_solarium",
+    "company_scrip",
+    "coronal_flare_hazard",
+    "cuprite_heat_sink",
+    "labour_tribunal"
+  ]
+}

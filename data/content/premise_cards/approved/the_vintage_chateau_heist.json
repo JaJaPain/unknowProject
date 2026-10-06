@@ -1,0 +1,347 @@
+{
+  "id": "premise.the_vintage_chateau_heist",
+  "schema_version": 1,
+  "title": "The Vintage Chateau Heist",
+  "logline": "A disgruntled cellar hand at a renowned orbital vineyard tries to preserve an authentic century-old wine cask before management can replace it with toxic synthetic spirits.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "melancholy"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "master_vintner",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Curator of the elite orbital vineyard dome; polished, aristocratic, fiercely protective of the estate's mythos.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "veteran_cellarer",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Tended the orbital aging casks for forty years; coughing from sulfur fumes, heartbroken by corporate shortcuts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "distillery_consortium",
+      "kind": "faction",
+      "description": "A syndicate of luxury spirit houses holding exclusive distribution patents across the sector.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "orbital_vineyard_chateau",
+      "kind": "place",
+      "description": "A rotating botanical dome station producing celebrated vintages under artificial starlight.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "public_trade_depot",
+      "kind": "place",
+      "description": "A bustling neutral dock where independent merchant guilds inspect and certify bulk commodities.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "The prestigious orbital vineyard in {system} prepares for its centennial gala, advertising tasting flights of its legendary hundred-year oak vintage.",
+  "private_truth": "{role:master_vintner} substituted ordinary irradiated mash spiked with prohibited chemical aromatics for the gala vintage, intending to destroy {role:veteran_cellarer}'s last genuine oak barrel.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "synthetic_aromatics_faking_century_vintage"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The orbital chateau posts an off-the-books scanning contract to check radiation seals around its outer cellars.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "master_vintner",
+          "target": "orbital_vineyard_chateau",
+          "culprit": "master_vintner",
+          "reason": "The vintner hires the pilot to scan the estate's outer storage cellar to certify that radiation wash from the star has not breached the aging seals.",
+          "private_fact": "He deliberately opened the cellar's solar vents to artificially accelerate fermentation with forbidden gamma rays.",
+          "outcome_tags": [
+            "solar_venting_logged",
+            "cellar_certified_safe"
+          ],
+          "routes": {
+            "solar_venting_logged": "next",
+            "cellar_certified_safe": "resolution:synthetic_vintage_served"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:veteran_cellarer} secretly contacts the pilot, begging for assistance in removing the estate's last genuine heritage barrel.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "veteran_cellarer",
+          "target": "orbital_vineyard_chateau",
+          "reason": "The cellarer pays the pilot to collect the genuine antique oak cask from a hidden crawlway before the vintner destroys it.",
+          "private_fact": "He hid the authentic cask in an unmonitored air reclamation shaft to protect it from synthetic adulteration.",
+          "outcome_tags": [
+            "cask_secured",
+            "cask_left_behind"
+          ],
+          "routes": {
+            "cask_secured": "next",
+            "cask_left_behind": "resolution:synthetic_vintage_served"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the authentic hundred-year cask. {role:master_vintner} offers a massive bribe to return it, while {role:distillery_consortium} wants it to force a corporate buyout.",
+        "options": [
+          {
+            "id": "sell_to_vintner",
+            "label": "Return the cask to the master vintner for hush money",
+            "leads_to": "resolution:vintner_buys_silence"
+          },
+          {
+            "id": "deliver_to_public_depot",
+            "label": "Haul the cask to the public trade depot for certification",
+            "leads_to": "beat:3"
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Port authorities announce an emergency historical appraisal hearing at the public trade depot.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "veteran_cellarer",
+          "target": "public_trade_depot",
+          "reason": "He hires the pilot to deliver the heritage barrel safely to the public depot guild masters to register it as protected cultural property.",
+          "private_fact": "Public registration will trigger an immediate mandatory assay of the chateau's remaining commercial stocks.",
+          "outcome_tags": [
+            "cask_registered",
+            "courier_diverted"
+          ],
+          "routes": {
+            "cask_registered": "resolution:heritage_vintage_saved",
+            "courier_diverted": "resolution:consortium_takeover"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heritage_vintage_saved",
+      "reached_by": "The pilot registers the heritage cask at the public depot, proving the chateau's current production is synthetic fraud.",
+      "summary": "The authentic cask is registered as cultural heritage. {role:master_vintner} faces criminal fraud charges, and {role:veteran_cellarer} receives an artisan pension.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "distillery_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "master_vintner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_cellarer",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_heritage_vintage",
+          "public_summary": "A pilot hauled the last real barrel of hundred-year wine out of an aristocratic fake."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "vintner_buys_silence",
+      "reached_by": "The pilot returns the cask to the vintner for a private payoff.",
+      "summary": "{role:master_vintner} burns the cask and serves synthetic wine to the gala. {role:veteran_cellarer} is quietly banished from {role:orbital_vineyard_chateau}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "distillery_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "master_vintner",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_cellarer",
+          "fate": "fled"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "consortium_takeover",
+      "reached_by": "The pilot diverts the cask to consortium representatives, who use it to blackmail the estate.",
+      "summary": "{role:distillery_consortium} uses proof of adulteration to seize the vineyard. {role:master_vintner} is ousted, and production is fully industrialized.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "distillery_consortium",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "master_vintner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_cellarer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "synthetic_vintage_served",
+      "reached_by": "The pilot ignores the contract or abandons the cellarer's plea.",
+      "summary": "The gala takes place as planned, serving synthetic liquor to oblivious aristocrats. {role:veteran_cellarer} is fired without back pay.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "master_vintner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_cellarer",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "synthetic_vintage_served",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_flavoring_patent",
+      "surface": "cargo",
+      "detail": "A shipping crate in the cellar holds industrial chemical barrels labeled with a banned cosmetic dye patent.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_vintner_forged_pedigree",
+      "surface": "station_notice",
+      "detail": "The chateau's centennial pedigree certificate bears an assay registry number belonging to a scrapped ore barge.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_consortium_lien_transfer",
+      "surface": "price_board",
+      "detail": "Debt covenants on the orbital vineyard dome were quietly assigned to a blind offshore holding trust.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "blackmail"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "forged_records",
+      "blackmail"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Centennial gala tickets at {role:orbital_vineyard_chateau} fetch record prices on the luxury exchange.",
+    "Guild inspectors report unusual synthetic aromatic residue in system waste reclamation channels.",
+    "Prominent socialites arrive in {system} for annual vintage tasting exhibition."
+  ],
+  "voice_direction": {
+    "master_vintner": "Grand, perfumed eloquence that drips with condescension. Uses archaic botanical jargon to evade direct questions about chemical additives.",
+    "veteran_cellarer": "Low, gravelly rasp delivered in weary murmurs. Speaks of oak barrels like fallen comrades and curses modern synthetic chemists."
+  },
+  "novelty_tags": [
+    "orbital_vineyard",
+    "synthetic_vintage",
+    "cellar_heist",
+    "botanical_dome",
+    "heritage_cask"
+  ]
+}

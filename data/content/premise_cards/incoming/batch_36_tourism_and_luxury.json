@@ -1,0 +1,451 @@
+[
+  {
+    "id": "premise.the_pleasure_liner_repo",
+    "schema_version": 1,
+    "title": "The Pleasure Liner Repo",
+    "logline": "A defaulted luxury starliner flees across three star systems under a fabricated quarantine, hunted by an aggressive repo agent and desperate for black-market reactor coolant.",
+    "scale": "regional",
+    "tone": [
+      "farce",
+      "tense"
+    ],
+    "themes": [
+      "debt_and_obligation",
+      "safety_vs_freedom"
+    ],
+    "roles": [
+      {
+        "id": "repo_factor",
+        "kind": "person",
+        "archetype": "debt_collector",
+        "description": "A relentless asset recovery agent pursuing defaulted commercial vessels across jump corridors.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "liner_commodore",
+        "kind": "person",
+        "archetype": "pilot",
+        "description": "Veteran master of the luxury liner; vain, desperate, willing to fake a plague to keep his command.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "cruise_socialite",
+        "kind": "person",
+        "archetype": "heir",
+        "description": "An influential passenger in the penthouse cabins; spoiled, terrified, secretly bankrolling the ship.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "luxury_flagship_yacht",
+        "kind": "ship",
+        "description": "A grand three-deck passenger liner with gold-leaf hull accents and failing cooling radiators.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "transit_gate_depot",
+        "kind": "place",
+        "description": "A bustling jump-gate staging platform in the origin system crowded with refueling haulers.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "fringe_border_quay",
+        "kind": "place",
+        "description": "An isolated, lightly regulated dock in a neighbouring border system known for discreet repairs.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "ion_storm",
+        "relay_dark_zone"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "blockade"
+      ]
+    },
+    "accepts_seeds": [
+      "route_closed",
+      "route_opened",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "A multi-system search is underway across {system} as port authorities attempt to locate an overdue luxury liner carrying hundreds of holidaymakers.",
+    "private_truth": "{role:liner_commodore} defaulted on vessel bond payments and faked a fatal biohazard quarantine aboard {role:luxury_flagship_yacht} to slip past {role:repo_factor}'s dock liens.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "fake_quarantine_to_delay_yacht_repossession"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Port authorities at the transit gate post an urgent tracking bounty for the missing luxury liner.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "repo_factor",
+            "target": "transit_gate_depot",
+            "culprit": "liner_commodore",
+            "reason": "The repo factor hires the pilot to scan gate sensor buffers to determine which jump corridor the defaulted luxury liner entered.",
+            "private_fact": "The factor holds a private bounty clause that pays double if the ship is secured before the fiscal quarter expires.",
+            "outcome_tags": [
+              "vector_identified",
+              "gate_logs_wiped"
+            ],
+            "routes": {
+              "vector_identified": "next",
+              "gate_logs_wiped": "resolution:liner_slips_jurisdiction"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "Commercial comms in the border system report an unidentifiable liner idling outside normal approach vectors.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "repo_factor",
+            "target": "fringe_border_quay",
+            "reason": "He pays the pilot to rush an official maritime lien warrant to the border stationmaster to freeze fuel lines to the approaching yacht.",
+            "private_fact": "He knows the commodore has bribed border dock personnel with luxury cruise vouchers to secure emergency propellant.",
+            "outcome_tags": [
+              "lien_served",
+              "warrant_delayed"
+            ],
+            "routes": {
+              "lien_served": "next",
+              "warrant_delayed": "resolution:liner_slips_jurisdiction"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "crisis",
+        "location": "neighbouring_system",
+        "public_change": "The liner drops anchor in open space, emitting automated quarantine warnings while requesting coolant supplies.",
+        "missions_mode": "one_of",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "liner_commodore",
+            "target": "fringe_border_quay",
+            "reason": "The commodore hires the pilot to purchase emergency thermal coolant couplings from local suppliers and deliver them to his drop pod.",
+            "private_fact": "The ship's ballroom air conditioning has failed, and angry passengers are threatening to smash the bridge doors.",
+            "outcome_tags": [
+              "coolant_delivered",
+              "purchase_failed"
+            ],
+            "routes": {
+              "coolant_delivered": "resolution:passengers_finance_escape",
+              "purchase_failed": "next"
+            }
+          },
+          {
+            "verb": "pickup_special",
+            "requester": "repo_factor",
+            "target": "fringe_border_quay",
+            "reason": "The factor contracts the pilot to pick up the liner's impounded navigation authorization slate from the station customs vault.",
+            "private_fact": "He promised customs officials a percentage of the recovered scrap value to ensure the authorization slate was seized.",
+            "outcome_tags": [
+              "authorization_secured",
+              "slate_withheld"
+            ],
+            "routes": {
+              "authorization_secured": "next",
+              "slate_withheld": "resolution:liner_slips_jurisdiction"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "reversal",
+        "location": "any_system",
+        "public_change": "A coded distress transmission from {role:luxury_flagship_yacht} penetrates the dark corridor.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "cruise_socialite",
+            "target": "luxury_flagship_yacht",
+            "reason": "The socialite pays the pilot to scan the yacht's life support exhaust to verify whether the quarantine is genuine or manufactured.",
+            "private_fact": "The commodore forged the medical alert codes to prevent passengers from disembarking and revealing their location.",
+            "outcome_tags": [
+              "hoax_confirmed",
+              "quarantine_sustained"
+            ],
+            "routes": {
+              "hoax_confirmed": "next",
+              "quarantine_sustained": "resolution:passengers_finance_escape"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The quarantine is proven fake. {role:cruise_socialite} offers to purchase the yacht's mortgage, while {role:repo_factor} orders an immediate board-and-seize intercept.",
+          "options": [
+            {
+              "id": "socialite_bailout",
+              "label": "Help the socialite wire funds to clear the vessel's debt",
+              "leads_to": "resolution:socialite_buys_flagship"
+            },
+            {
+              "id": "enforce_repossession",
+              "label": "Assist the repo factor in disabling the flagship",
+              "leads_to": "beat:5"
+            }
+          ]
+        }
+      },
+      {
+        "n": 5,
+        "function": "climax",
+        "location": "any_system",
+        "public_change": "{role:luxury_flagship_yacht} makes a break for the ungoverned outer rim gate under sputtering ion drives.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "repo_factor",
+            "target": "luxury_flagship_yacht",
+            "reason": "The factor hires the pilot to disable the yacht's jump drive before it can cross into an unpoliced border system.",
+            "private_fact": "The commodore offers a locker filled with untraceable casino bearer scrip if the pilot breaks off the attack.",
+            "outcome_tags": [
+              "drive_disabled",
+              "bribe_taken"
+            ],
+            "routes": {
+              "drive_disabled": "resolution:factor_seizes_flagship",
+              "bribe_taken": "resolution:commodore_bribes_freedom"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "factor_seizes_flagship",
+        "reached_by": "The pilot disables the yacht's drive, allowing the repo factor to impound the vessel.",
+        "summary": "{role:repo_factor} impounds {role:luxury_flagship_yacht}. The passengers are disembarked at a freight terminal, and {role:liner_commodore} is arrested.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "repo_factor",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "liner_commodore",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "cast_fate",
+            "target": "cruise_socialite",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "pleasure_liner_impounded",
+            "public_summary": "A pilot helped a repo man chase down and disable a runaway luxury liner across three systems."
+          }
+        ],
+        "seeds": [
+          "route_closed",
+          "law_tightened"
+        ]
+      },
+      {
+        "id": "socialite_buys_flagship",
+        "reached_by": "The socialite wires trust fund capital to clear the ship's mortgage note.",
+        "summary": "{role:cruise_socialite} pays off the defaulted bond. {role:luxury_flagship_yacht} is converted into a private estate, leaving {role:repo_factor} empty-handed.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "cruise_socialite",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "repo_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "liner_commodore",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "economy",
+            "good": "luxury",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "commodore_bribes_freedom",
+        "reached_by": "The pilot accepts the commodore's casino scrip bribe and allows the yacht to escape.",
+        "summary": "{role:liner_commodore} vanishes into outer rim space with the yacht and its wealthy guests. {role:repo_factor} is blacklisted by maritime insurance firms.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "liner_commodore",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "repo_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "cruise_socialite",
+            "fate": "disappeared"
+          },
+          {
+            "type": "deed",
+            "tag": "liner_escaped_rim",
+            "public_summary": "Word is a stolen luxury liner slipped into the lawless rim with a cargo of aristocrats."
+          }
+        ],
+        "seeds": [
+          "route_opened",
+          "witness_at_large"
+        ]
+      },
+      {
+        "id": "passengers_finance_escape",
+        "reached_by": "The commodore delivers the coolant, and wealthy passengers pool credits to refuel the yacht.",
+        "summary": "The liner completes emergency repairs and jumps out of corporate space. {role:repo_factor} fails to recover the asset before the fiscal deadline.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "liner_commodore",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "repo_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "fuel",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "route_closed",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "liner_slips_jurisdiction",
+        "reached_by": "The trail goes cold, or the pilot avoids taking contracts.",
+        "summary": "{role:luxury_flagship_yacht} slips across the outer frontier boundary. Creditors write off the defaulted bonds, and {role:repo_factor} abandons the hunt.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "liner_commodore",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "repo_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "power_vacuum"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "route_opened",
+          "quiet_cover_up"
+        ]
+      }
+    ],
+    "default_resolution": "liner_slips_jurisdiction",
+    "loose_threads": [
+      {
+        "id": "t_scrip_treasury_ledger",
+        "surface": "cargo",
+        "detail": "The liner's onboard casino vault holds millions in bearer certificates registered to a foreign mining trust.",
+        "can_carry_methods": [
+          "impersonation",
+          "debt_leverage"
+        ]
+      },
+      {
+        "id": "t_broker_bond_short",
+        "surface": "price_board",
+        "detail": "A regional bond market logged heavy short positions against the liner's operating firm days before the default.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "manufactured_crisis"
+        ]
+      },
+      {
+        "id": "t_lien_transfer_memo",
+        "surface": "station_notice",
+        "detail": "The recovery warrant on the yacht was reassigned through four shell corporations in forty-eight hours.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "slow_infiltration"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "impersonation",
+        "manufactured_crisis"
+      ],
+      "motives": [
+        "greed",
+        "fear",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders",
+      "docking_bribes"
+    ],
+    "radio_hooks": [
+      "Flagship pleasure liner fails to report at scheduled gate checkpoint in {system}.",
+      "Maritime repo factors offer substantial finder fees for sightings of overdue luxury craft.",
+      "Border systems report unusual surge in distress pings along unpatrolled transit lanes."
+    ],
+    "voice_direction": {
+      "repo_factor": "Aggressive, staccato, relentless energy. Treats multi-system ship hunts like delinquent credit card calls and quotes contract paragraphs without pausing.",
+      "liner_commodore": "Pompous, theatrical, and steeped in unearned dignity. Covers mounting panic with aristocratic bluster about maritime traditions.",
+      "cruise_socialite": "Petulant, entitled, and wildly out of touch with frontier realities. Assumes every problem in space can be resolved by demanding someone's superior."
+    },
+    "novelty_tags": [
+      "starliner_repossession",
+      "fake_quarantine",
+      "multi_system_chase",
+      "penthouse_mutiny",
+      "yacht_lien"
+    ]
+  }
+]

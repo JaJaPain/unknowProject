@@ -1,0 +1,351 @@
+{
+  "id": "premise.the_safari_reef_cull",
+  "schema_version": 1,
+  "title": "The Safari Reef Cull",
+  "logline": "A luxury orbital hunting lodge seeds live-fire military drones into a scenic ring reef to thrill wealthy tourists, until the weapons malfunction and target civilian yachts.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "price_of_profit",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "safari_director",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Runs a luxury big-game space safari outfit; smooth-talking promoter who cuts lethal corners on safety.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "lodge_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Chief mechanic at the hunting lodge; exhausted, terrified of a catastrophe, keeping quiet to feed her family.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "resort_syndicate",
+      "kind": "faction",
+      "description": "A cartel of leisure operators providing high-paying orbital entertainment across the sector.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scenic_ring_reef",
+      "kind": "place",
+      "description": "A shimmering crystalline asteroid field marketed as an untouched wilderness for luxury shooting tours.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rogue_target_drone",
+      "kind": "ship",
+      "description": "A decommissioned combat target drone drifting through the ring with live targeting sensors activated.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "drone_strike_swarm",
+      "kind": "ship",
+      "description": "A coordinated pack of surplus combat drones converging on tourist flight corridors.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "nebula"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "The luxury safari lodge in {system} reports an unexpected flight pause in the crystalline ring reef due to navigational telemetry recalibration.",
+  "private_truth": "{role:safari_director} seeded surplus combat target drones into {role:scenic_ring_reef} to simulate beast hunts for rich patrons, but the drones' live combat protocols reactivated.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "military_surplus_drones_seeded_for_tourist_safari"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The safari lodge issues commercial scan contracts to verify corridor telemetry across the crystalline reef.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "safari_director",
+          "target": "scenic_ring_reef",
+          "culprit": "safari_director",
+          "reason": "He contracts the pilot to scan drone telemetry buoys across the outer reef and certify that the tourist excursion lane is clear of hazards.",
+          "private_fact": "He knows three surplus drones failed to respond to the remote shutdown beacon before the morning cruise departed.",
+          "outcome_tags": [
+            "hazard_located",
+            "lane_certified_clean"
+          ],
+          "routes": {
+            "hazard_located": "next",
+            "lane_certified_clean": "resolution:tourist_barge_ambushed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Distress pings echo through the reef as an uncrewed target drone begins pinging commercial frequencies with weapon locks.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "safari_director",
+          "target": "rogue_target_drone",
+          "reason": "The director hires the pilot to destroy the rogue target drone and recover its internal telemetry core before authorities detect missile fire.",
+          "private_fact": "The recovered telemetry core contains flight logs proving {role:resort_syndicate} stripped the drone's safety dampening chips.",
+          "outcome_tags": [
+            "core_recovered",
+            "drone_escaped"
+          ],
+          "routes": {
+            "core_recovered": "next",
+            "drone_escaped": "resolution:tourist_barge_ambushed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:lodge_engineer} establishes private comms with the pilot, begging for the recovered core before it can be incinerated.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "safari_director",
+          "target": "scenic_ring_reef",
+          "reason": "The director pays the pilot to purchase industrial signal jamming arrays and rush them to the reef to blind local maritime radar.",
+          "private_fact": "Activating the jammer will cut emergency distress channels for every civilian transport in the sector.",
+          "outcome_tags": [
+            "jammers_delivered",
+            "purchase_aborted"
+          ],
+          "routes": {
+            "jammers_delivered": "next",
+            "purchase_aborted": "resolution:safari_operator_exposed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the telemetry core and jamming gear. {role:lodge_engineer} wants the core delivered to port inspectors, while {role:safari_director} demands the swarm be suppressed.",
+        "options": [
+          {
+            "id": "give_core_to_engineer",
+            "label": "Hand the telemetry core to the lodge engineer",
+            "leads_to": "resolution:safari_operator_exposed"
+          },
+          {
+            "id": "deploy_jamming_and_fight",
+            "label": "Help the director destroy the remaining swarm",
+            "leads_to": "beat:4"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "A swarm of rearmed target drones converges on the luxury viewing platform in the center of the reef.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "lodge_engineer",
+          "target": "drone_strike_swarm",
+          "reason": "The engineer hires the pilot to destroy the combat drone swarm attacking the tourist barge before the observation hull breaches.",
+          "private_fact": "The excursion barge carries the families of high-ranking system magistrates who believe they are participating in a game.",
+          "outcome_tags": [
+            "swarm_eliminated",
+            "strike_failed"
+          ],
+          "routes": {
+            "swarm_eliminated": "resolution:tourists_saved_quietly",
+            "strike_failed": "resolution:tourist_barge_ambushed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "tourists_saved_quietly",
+      "reached_by": "The pilot destroys the strike swarm, and the director covers up the malfunction with hush money.",
+      "summary": "The combat drones are eliminated in the reef. {role:safari_director} buries the incident with payouts, while {role:lodge_engineer} resigns in disgust.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "resort_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "safari_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lodge_engineer",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "quiet_reef_cull",
+          "public_summary": "A pilot shot down rogue combat drones in the tourist reef and kept quiet about the owner."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "safari_operator_exposed",
+      "reached_by": "The pilot hands the telemetry core to the engineer, who delivers the proof to safety inspectors.",
+      "summary": "{role:lodge_engineer} delivers the telemetry core to authorities. {role:safari_director} is arrested for manslaughter, and the hunting lodge is shut down.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "resort_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "safari_director",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lodge_engineer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "law_change",
+          "law": "scanning_banned",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "tourist_barge_ambushed",
+      "reached_by": "The drones breach the viewing barge, or the pilot abandons the fight.",
+      "summary": "The rogue swarm ravages the tourist barge. {role:scenic_ring_reef} is declared an exclusion zone, and {role:resort_syndicate} suffers disastrous losses.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "resort_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "safari_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lodge_engineer",
+          "fate": "disappeared"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "quarantine"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "tourist_barge_ambushed",
+  "loose_threads": [
+    {
+      "id": "t_surplus_drone_manifest",
+      "surface": "cargo",
+      "detail": "The drone warhead crating is stenciled with surplus lot numbers belonging to a decommissioned planetary militia.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_director_kickback_wire",
+      "surface": "station_notice",
+      "detail": "The lodge director's offshore account received a series of structured deposits from a scrap yard factor.",
+      "can_carry_methods": [
+        "bribery",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_reef_lease_monopoly",
+      "surface": "price_board",
+      "detail": "Exclusive commercial shooting leases for the entire ring system were secured by a single syndicate holding firm.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Sightseeing flights into {role:scenic_ring_reef} temporarily delayed for scheduled telemetry sweep.",
+    "Maritime safety board launches surprise inspection of luxury big-game outfitters in {system}.",
+    "Frontier lodge promises unmatched excitement on newly expanded orbital safari packages."
+  ],
+  "voice_direction": {
+    "safari_director": "Rapid, theatrical sales patter loaded with patronizing charm. Glides over lethal hazards by calling them unscripted thrills.",
+    "lodge_engineer": "Harsh, blunt, and exhausted. Spews technical component numbers under her breath and refuses to make direct eye contact."
+  },
+  "novelty_tags": [
+    "space_safari",
+    "rogue_target_drones",
+    "luxury_hunting",
+    "tourist_barge_ambush",
+    "telemetry_coverup"
+  ]
+}

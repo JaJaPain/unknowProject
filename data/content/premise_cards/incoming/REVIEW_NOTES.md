@@ -5,33 +5,33 @@ once it is done.
 
 ---
 
-## 1. premise.the_drift_relay_chain (batch_35)
+## 1. premise.the_pleasure_liner_repo (batch_36)
 
-A good card with one wrong tag: `reinvention`. The story is a liquidator
-buying and scrapping mail relays to cut colonies off; nobody reinvents
-anything. Keep `labour_and_exploitation` if it fits and choose the other
-theme from what happens (for example `price_of_profit` or
-`safety_vs_freedom`).
+Fun premise; the endings repeat. Three of the five are the same outcome in
+different words: `commodore_bribes_freedom` (he vanishes with the yacht),
+`passengers_finance_escape` (the liner jumps out of corporate space) and the
+default `liner_slips_jurisdiction` (the yacht slips the frontier boundary).
+Keep one escape (the default is fine) and make the others genuinely
+different results: who wins, who pays, what changes. For example the
+passengers turn on the commodore, the repo agent and the commodore cut a
+deal, or the "quarantine" turns out to have been hiding something real.
+Each resolution should be one the player can tell apart from the others in
+the journal.
 
-This is the fourth round in a row with a tag picked from the deck report's
-gap list instead of from the story. There is now a self-check item for it
-(Section 8, item 12): for every theme and tone, finish "This story is about
-<tag> because ..." with something that happens in the card. Do it for every
-card before you hand a batch over.
-
-## 2. Keep rotating territories, and keep resting two engines
+## 2. Keep rotating territories, and keep resting the tired engines
 
 Used on the second lap so far: schools and apprentices, food and farming,
 water and air, gambling and sport rings, shipyards and engineering,
-insurance and risk, the mail and message couriers. Pick from the rest
-(tourism and luxury, prisons and parole, language and translation, maps and
-lost routes, music and festivals, livestock aboard ships, housing and
-eviction, ageing and retirement, rivals and twins, addiction and recovery,
-weather and space hazards). Still no insurance-fraud stories, and no
-apprentice, student, cadet, novice or junior as a main role.
+insurance and risk, the mail and message couriers, tourism and luxury. Pick
+from the rest (prisons and parole, language and translation, maps and lost
+routes, music and festivals, livestock aboard ships, housing and eviction,
+ageing and retirement, rivals and twins, addiction and recovery, weather and
+space hazards). Still resting: insurance-fraud stories; an apprentice,
+student, cadet, novice or junior as the main role; and now **counterfeit or
+adulterated drink** (the deck has the abbey liqueur and the chateau wine).
 
 ---
 
-Last round: 4 of 5 approved (the_dead_letter_sack, the_intercepted_dispatch,
-the_cloistered_dispatch, the_demurrage_impasse). The cloistered dispatch was
-a highlight: a monk whose vows were a hiding place.
+Last round: 5 of 6 approved (the_drift_relay_chain fix, the_glacier_suite_run,
+the_safari_reef_cull, the_vintage_chateau_heist, the_orbital_solarium_scrip).
+Every card's tags matched its story this time; thank you.

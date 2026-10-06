@@ -1,0 +1,346 @@
+{
+  "id": "premise.the_glacier_suite_run",
+  "schema_version": 1,
+  "title": "The Glacier Suite Run",
+  "logline": "A stressed concierge at an orbital ice retreat hires an outsider to pamper a difficult penthouse guest, unaware the guest is hiding from a syndicate repossession agent.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "resort_concierge",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Runs guest logistics at the orbital glacier lodge; perpetually stressed, drowning in hotel debt.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "eccentric_guest",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "A flashy patron occupying the panoramic suite on exhausted credit, desperate to delay checkout.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_bailiff",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "A methodical repossession officer waiting patiently in the arrival lounge with a debt attachment warrant.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "guest_chartered_skiff",
+      "kind": "ship",
+      "description": "A sleek rented pleasure craft docked in the lodge's private berth with engines idling.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "glacier_resort_dock",
+      "kind": "place",
+      "description": "A luxury orbital lodge built into a hollowed comet spur, famous for zero-gravity ice baths.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "market_disrupted",
+    "law_tightened"
+  ],
+  "public_situation": "The luxury glacier lodge in {system} faces dockside tension as private security and repossession agents monitor arriving shuttles.",
+  "private_truth": "{role:eccentric_guest} ran up enormous casino debts and holed up in {role:glacier_resort_dock}, stalling {role:resort_concierge} with worthless promissory notes while {role:syndicate_bailiff} closes in.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "counterfeit_drafts_in_luxury_penthouse"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The lodge concierge posts an expedited contract for rare comet ice to satisfy a VIP penthouse guest.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "resort_concierge",
+          "target": "glacier_resort_dock",
+          "reason": "The concierge needs unpolluted comet core ice delivered immediately to appease the penthouse guest before his billing window expires.",
+          "private_fact": "The resort faces an immediate mortgage default if the high-roller checks out without settling his astronomical bar bill.",
+          "outcome_tags": [
+            "ice_delivered"
+          ],
+          "routes": {
+            "ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The guest refuses to depart after receiving the ice, demanding an outside courier retrieve his private vault lockbox.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "eccentric_guest",
+          "target": "glacier_resort_dock",
+          "reason": "He pays the pilot to retrieve a sealed diplomatic pouch from his impounded locker so he can settle his resort bill.",
+          "private_fact": "The pouch holds forged bearer drafts drawn on a defunct colonial trust rather than legitimate credits.",
+          "outcome_tags": [
+            "pouch_retrieved",
+            "pouch_refused"
+          ],
+          "routes": {
+            "pouch_retrieved": "next",
+            "pouch_refused": "resolution:guest_evicted_broke"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "{role:syndicate_bailiff} intercepts the pilot on the gangway, demanding the pouch to enforce the debt warrant, while {role:resort_concierge} begs to deposit it immediately.",
+        "options": [
+          {
+            "id": "give_to_bailiff",
+            "label": "Hand the pouch to the syndicate bailiff",
+            "leads_to": "beat:3"
+          },
+          {
+            "id": "give_to_concierge",
+            "label": "Deliver the pouch to the resort concierge",
+            "leads_to": "resolution:resort_cashes_counterfeit"
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:eccentric_guest} bolts for his chartered skiff as the bailiff moves to seize his assets.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "syndicate_bailiff",
+          "target": "guest_chartered_skiff",
+          "reason": "The bailiff contracts the pilot to disable the fleeing debtor's pleasure craft before it can jump beyond the system perimeter.",
+          "private_fact": "The fleeing guest offers a hoard of smuggled gemstones if the pilot breaks off the attack and lets him jump.",
+          "outcome_tags": [
+            "skiff_disabled",
+            "took_the_bribe"
+          ],
+          "routes": {
+            "skiff_disabled": "resolution:bailiff_seizes_debtor",
+            "took_the_bribe": "resolution:debtor_escapes_clean"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bailiff_seizes_debtor",
+      "reached_by": "The pilot delivers the pouch to the bailiff and disables the guest's chartered skiff.",
+      "summary": "{role:syndicate_bailiff} arrests {role:eccentric_guest} and impounds his assets. {role:resort_concierge} is left with unpaid lodge bills.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "eccentric_guest",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_bailiff",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "resort_concierge",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "glacier_suite_repossession",
+          "public_summary": "A pilot helped a repo bailiff drag a deadbeat high-roller out of the glacier penthouse."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "debtor_escapes_clean",
+      "reached_by": "The pilot accepts the guest's gemstone bribe during the dogfight and lets the skiff escape.",
+      "summary": "{role:eccentric_guest} jumps to safety with his fortune. {role:syndicate_bailiff} files a formal complaint against {role:glacier_resort_dock}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "eccentric_guest",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_bailiff",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "resort_concierge",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "resort_cashes_counterfeit",
+      "reached_by": "The pilot delivers the pouch directly to the concierge to clear the lodge's accounts.",
+      "summary": "{role:resort_concierge} books the forged drafts to stave off foreclosure, leaving {role:syndicate_bailiff} empty-handed when the audit hits.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "resort_concierge",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_bailiff",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "eccentric_guest",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "glacier_lodge_bailout",
+          "public_summary": "Word is a bankrupt resort stayed open by cashing deadbeat paper."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "guest_evicted_broke",
+      "reached_by": "The pilot refuses the guest's errand, or avoids involvement entirely.",
+      "summary": "The lodge cuts power to the penthouse suite. Creditors seize {role:glacier_resort_dock}, and {role:eccentric_guest} is taken into custody at the dock.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "eccentric_guest",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "resort_concierge",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_crash"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "guest_evicted_broke",
+  "loose_threads": [
+    {
+      "id": "t_resort_mortgage_lien",
+      "surface": "station_notice",
+      "detail": "The glacier lodge's mortgage note was assigned to a shell company sharing an office with the system tax tribunal.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_counterfeit_draft_seal",
+      "surface": "cargo",
+      "detail": "The guest's bearer drafts bear the embossed wax seal of an investment bank that closed three decades ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_ice_contract_corner",
+      "surface": "price_board",
+      "detail": "All commercial extraction rights for the outer comet shelf were quietly bought out by a single blind syndicate broker.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "High-roller suite at {role:glacier_resort_dock} reportedly locked from the inside amid billing dispute.",
+    "Syndicate repossession agents spotted inspecting private berths in {system} outer belt.",
+    "Comet water ice prices fluctuate as luxury lodge demands emergency hospitality deliveries."
+  ],
+  "voice_direction": {
+    "resort_concierge": "Speaks in breathy, frantic customer service cadences. Constantly rephrases financial catastrophe as minor scheduling inconveniences.",
+    "eccentric_guest": "Flamboyant, drawling, and condescending. Dismisses multi-million credit debts with airy hand-waving and changes the subject when asked for ID.",
+    "syndicate_bailiff": "Slow, quiet, bureaucratic monotony. Recites statutory impound codes like grocery lists and never raises his pitch."
+  },
+  "novelty_tags": [
+    "glacier_resort",
+    "penthouse_standoff",
+    "comet_ice_run",
+    "debt_repossession",
+    "counterfeit_drafts"
+  ]
+}
