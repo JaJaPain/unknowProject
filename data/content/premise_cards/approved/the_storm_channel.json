@@ -1,0 +1,385 @@
+{
+  "id": "premise.the_storm_channel",
+  "schema_version": 1,
+  "title": "The Storm Channel",
+  "logline": "A cartographer tracks an antique colonial distress echo echoing inside an ion storm's magnetic corridor, racing to recover the lost land charter before an extraction trust jams the signal.",
+  "scale": "regional",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "frontier_cartographer",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "An astrophysicist who maps deep solar magnetic channels; stubborn, patient, tracking faint radio anomalies across the cluster.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "charter_advocate",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Represents displaced families whose ancestral homesteads were expropriated; passionate, meticulous, searching for legal proof of title.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corridor_enforcer",
+      "kind": "ship",
+      "description": "A heavy security cruiser deployed by the extraction trust to patrol the ion front and silence unauthorized broadcasts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "extraction_trust",
+      "kind": "faction",
+      "description": "The mineral conglomerate currently leasing the contested planetary plains under a disputed provincial charter.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "homestead_league",
+      "kind": "faction",
+      "description": "The coalition of pioneer descendants seeking restitution for lost ancestral land claims.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "storm_observatory",
+      "kind": "place",
+      "description": "A listening platform positioned on the rim of the primary ion storm front.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_relay",
+      "kind": "place",
+      "description": "A long-range telemetry buoy anchored in a neighboring star system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "records_sanctuary",
+      "kind": "place",
+      "description": "A planetary archive vault in an adjacent sector where historical land titles are verified and registered.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [
+      "ion_storm"
+    ],
+    "quirks_preferred": [
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "leader_discredited"
+  ],
+  "public_situation": "Pioneer descendants demand reparations at {role:records_sanctuary}, claiming their families' original planetary land grants were unlawfully erased.",
+  "private_truth": "{role:frontier_cartographer} detected an un-corrupted colonial survey broadcast trapped inside the ion storm's magnetic channel that proves the settlers' title.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "suppressed_survey_echo_in_storm_channel"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "{role:frontier_cartographer} aligns long-baseline receiver dishes at {role:storm_observatory} to isolate the storm-trapped signal.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "frontier_cartographer",
+          "target": "storm_observatory",
+          "reason": "She needs an outside pilot to extract the cryptographic decryption keys before corporate agents seal the observatory on false safety charges.",
+          "private_fact": "She initially sold preliminary wave data to {role:extraction_trust} before realizing the recording proved the homesteaders' case.",
+          "outcome_tags": [
+            "keys_secured",
+            "keys_lost"
+          ],
+          "routes": {
+            "keys_secured": "next",
+            "keys_lost": "resolution:trust_erases_broadcast"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The trapped radio echo shifts into a neighboring system as the magnetic eye migrates across orbital lanes.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "frontier_cartographer",
+          "target": "border_relay",
+          "culprit": "extraction_trust",
+          "reason": "She needs the pilot to jump to the adjacent system and triangulate the reflective wave bounce before atmospheric noise degrades the audio.",
+          "private_fact": "The original recording contains the voice of her own grandfather declaring the colony charter before he disappeared.",
+          "outcome_tags": [
+            "coordinates_locked",
+            "signal_degraded"
+          ],
+          "routes": {
+            "coordinates_locked": "next",
+            "signal_degraded": "resolution:trust_erases_broadcast"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Autonomous corporate jamming probes flood the relay sector with static, blocking the trapped signal's downlink.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "charter_advocate",
+          "target": "extraction_trust",
+          "reason": "He needs the jamming picket destroyed immediately so the raw telemetry can download before the storm channel disperses into deep space.",
+          "private_fact": "He promised his dying mother that he would restore the family homestead name to the public ledger.",
+          "outcome_tags": [
+            "picket_destroyed",
+            "jamming_prevails"
+          ],
+          "routes": {
+            "picket_destroyed": "next",
+            "jamming_prevails": "resolution:trust_erases_broadcast"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "The uncorrupted audio file is downloaded, but requires heavy magnetic shielding to transport through deep-space interference.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "charter_advocate",
+          "target": "records_sanctuary",
+          "reason": "He needs cryogenic Faraday containment units purchased from industrial markets and brought to the archive vault to preserve the data core.",
+          "private_fact": "He liquidated the homestead league's legal defense fund to pay for the purchase.",
+          "outcome_tags": [
+            "containment_delivered",
+            "archive_closed"
+          ],
+          "routes": {
+            "containment_delivered": "next",
+            "archive_closed": "resolution:trust_erases_broadcast"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "{role:corridor_enforcer} intercepts traffic on the archive approach, broadcasting an order to surrender all salvage data.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "charter_advocate",
+          "target": "corridor_enforcer",
+          "reason": "He needs the trust's gunboat broken so the survey evidence can be entered into the judicial registry under armed protection.",
+          "private_fact": "The corporate captain hails mid-combat offering two hundred thousand credits in bearer scrip to hand over the recording.",
+          "outcome_tags": [
+            "gunboat_repelled",
+            "took_settlement_bribe"
+          ],
+          "routes": {
+            "gunboat_repelled": "resolution:charter_reclaimed",
+            "took_settlement_bribe": "resolution:charter_extinguished"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "charter_reclaimed",
+      "reached_by": "The pilot breaks the corporate gunboat and enters the historic recording into the archives.",
+      "summary": "The restored colonial survey verifies the original deeds. {role:extraction_trust} is forced to pay back-royalties, restoring ancestral titles to {role:homestead_league}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "homestead_league",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "extraction_trust",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "frontier_cartographer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "charter_advocate",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "recovered_storm_charter",
+          "public_summary": "A mercenary broke through corporate jammers to recover a century-old survey echo trapped in the ion storm."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "charter_extinguished",
+      "reached_by": "The pilot accepts the corporate settlement and hands over the audio core.",
+      "summary": "{role:extraction_trust} incinerates the recording and secures permanent mining leases. {role:charter_advocate} is disgraced, and {role:homestead_league} is evicted from the basin.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "extraction_trust",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "homestead_league",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "charter_advocate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "frontier_cartographer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_ancestral_charter",
+          "public_summary": "Word leaked that a pilot took mining syndicate gold to erase the last recording of the colony founders."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "trust_erases_broadcast",
+      "reached_by": "The pilot abandons the contract, or corporate jammers scatter the signal.",
+      "summary": "The storm channel collapses before the broadcast can be recorded. {role:extraction_trust} keeps the contested plains, and the pioneer claims are dismissed for lack of evidence.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "extraction_trust",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "homestead_league",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "frontier_cartographer",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "charter_advocate",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "trust_erases_broadcast",
+  "loose_threads": [
+    {
+      "id": "t_unlogged_storm_beacon",
+      "surface": "scan",
+      "detail": "The telemetry buoy at {role:border_relay} contains a hardwired frequency lock tuned to corporate frequencies six months before the storm hit.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_lease_indemnity_clause",
+      "surface": "price_board",
+      "detail": "The mineral lease for {role:extraction_trust} carries an indemnity clause covering forged historical surveys held by an offshore debt trust.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_impersonated_notary_seal",
+      "surface": "station_notice",
+      "detail": "The original dismissal of the homestead deeds was signed by a colonial registrar whose identification card was duplicated across two sectors.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "forged_records",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Demonstrators gather at {role:records_sanctuary} demanding access to historical planetary surveys.",
+    "{role:extraction_trust} warns that uncertified radio claims inside ion storms are 'acoustic mirages'.",
+    "Storm front shifts outward; communications blackouts reported across three star systems."
+  ],
+  "voice_direction": {
+    "frontier_cartographer": "Measured, pedantic, and deeply focused on atmospheric resonance. Speaks of century-old radio waves bouncing in the storm with quiet reverent fascination.",
+    "charter_advocate": "Passionate, fast-talking, and chronically anxious. Every sentence sounds like a closing argument before a judge who has already made up their mind."
+  },
+  "novelty_tags": [
+    "storm_channel",
+    "trapped_radio_echo",
+    "ancestral_charter",
+    "corporate_jamming",
+    "historical_deed"
+  ]
+}

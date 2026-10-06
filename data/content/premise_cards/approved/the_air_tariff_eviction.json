@@ -1,0 +1,391 @@
+{
+  "id": "premise.the_air_tariff_eviction",
+  "schema_version": 1,
+  "title": "The Air Tariff Eviction",
+  "logline": "A station clinic doctor suspects station managers are intentionally venting oxygen to manufacture a life-support shortage, using soaring air tariffs to evict impoverished tenants.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "district_physician",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Chief medical officer of the lower-deck charity clinic; exhausted, angry, treating hundreds of children suffering from hypoxic fatigue.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "utility_director",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Oversees the life support distribution grid; smooth, defensive, blaming reactor wear for oxygen surcharges.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tenants_union",
+      "kind": "faction",
+      "description": "The collective of lower-deck residential families refusing to pay emergency life support surcharges.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "station_management_trust",
+      "kind": "faction",
+      "description": "The private corporate landlord entity controlling residential leases and atmospheric recycling on the station.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "clinic_module",
+      "kind": "place",
+      "description": "The overcrowded medical shelter on the lower residential ring, running on portable emergency oxygen bottles.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrubber_vault",
+      "kind": "place",
+      "description": "The restricted industrial level housing the station's massive carbon-scrubbing turbines and liquid gas reservoirs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "management_tower",
+      "kind": "place",
+      "description": "The luxurious high-pressure executive hub at the station core where atmosphere is filtered and scented.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "shortage"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "leader_discredited"
+  ],
+  "public_situation": "Emergency life-support surcharges triple on lower decks across {system}, sparking rent strikes while {role:clinic_module} overflows with hypoxic patients.",
+  "private_truth": "{role:utility_director} is venting breathable gas into industrial storage pods to create an artificial shortage, pricing lower-deck families into mass eviction.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "utility_director_vented_air_to_force_evictions"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The management trust posts eviction warrants across four residential rings for tenants who defaulted on the new oxygen tariff.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "district_physician",
+          "target": "clinic_module",
+          "reason": "She needs high-purity medical oxygen bottles purchased from an unaligned fuel refinery to keep infant incubators running in the clinic.",
+          "private_fact": "She is paying for the oxygen with unminted dental gold scavenged from miners who died under her care.",
+          "outcome_tags": [
+            "oxygen_delivered",
+            "clinic_starved"
+          ],
+          "routes": {
+            "oxygen_delivered": "next",
+            "clinic_starved": "resolution:mass_eviction_executed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Management cuts ventilation fans in Sector Four, declaring the atmosphere non-compliant with commercial habitability standards.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "district_physician",
+          "target": "scrubber_vault",
+          "culprit": "utility_director",
+          "reason": "She needs the pilot to scan the exhaust manifolds on the scrubber level and verify that pure oxygen is being shunted into private reserve tanks.",
+          "private_fact": "Her own nephew works as an apprentice mechanic on the scrubber deck and slipped her the manifold schematics.",
+          "outcome_tags": [
+            "diversion_proven",
+            "sensors_blinded"
+          ],
+          "routes": {
+            "diversion_proven": "next",
+            "sensors_blinded": "resolution:mass_eviction_executed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "Private security seals the central elevator shaft, barring tenant representatives from entering the appeals office.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "district_physician",
+          "target": "scrubber_vault",
+          "reason": "She needs the physical flow-meter recording drive retrieved from the scrubber maintenance locker before security wipes the telemetry.",
+          "private_fact": "The drive also contains proof that the executive tower has been enjoying double the legal oxygen allocation.",
+          "outcome_tags": [
+            "drive_extracted",
+            "locker_purged"
+          ],
+          "routes": {
+            "drive_extracted": "next",
+            "locker_purged": "resolution:mass_eviction_executed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Thousands of suffocating tenants gather outside the management tower as security lines draw stun batons.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "district_physician",
+          "target": "management_tower",
+          "reason": "She needs the verified flow logs delivered into the emergency arbitration session to force an immediate restoration of life support.",
+          "private_fact": "{role:utility_director} is offering the pilot a thirty-year free residential lease in the luxury tower to destroy the drive.",
+          "outcome_tags": [
+            "logs_delivered",
+            "settlement_accepted"
+          ],
+          "routes": {
+            "logs_delivered": "resolution:tariffs_struck_down",
+            "settlement_accepted": "resolution:luxury_suite_bribe"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the telemetry showing the oxygen was deliberately hoarded to evict the poor. Who gets the record?",
+        "options": [
+          {
+            "id": "release_to_union",
+            "label": "Broadcast the telemetry to the tenants' union and council",
+            "leads_to": "resolution:tariffs_struck_down"
+          },
+          {
+            "id": "accept_director_bribe",
+            "label": "Take the luxury penthouse lease and hand the drive to the director",
+            "leads_to": "resolution:luxury_suite_bribe"
+          },
+          {
+            "id": "compromise_quota",
+            "label": "Force a private rebate for the clinic while leaving general tariffs in place",
+            "leads_to": "resolution:clinic_exemption"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "tariffs_struck_down",
+      "reached_by": "The pilot presents the flow meter logs to the council and tenants.",
+      "summary": "The manufactured shortage is exposed. Emergency tariffs are repealed, {role:utility_director} is dismissed, and full ventilation is restored to the lower decks.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "tenants_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "station_management_trust",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "district_physician",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "utility_director",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_air_monopoly",
+          "public_summary": "A pilot uncovered evidence that landlords were hoarding life-support oxygen to evict working families."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "luxury_suite_bribe",
+      "reached_by": "The pilot accepts the penthouse lease and surrenders the drive.",
+      "summary": "The evidence is incinerated. {role:utility_director} executes mass evictions across four decks, converting the empty sectors into high-rent automated warehouses.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_management_trust",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "tenants_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "utility_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "district_physician",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "took_the_penthouse_payout",
+          "public_summary": "Rumors swirl that a pilot traded proof of life-support extortion for a private penthouse suite in the core."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "clinic_exemption",
+      "reached_by": "The pilot brokers a quiet oxygen supply deal solely for the clinic.",
+      "summary": "The clinic receives free oxygen bottles, but the wider tariffs remain. Lower decks are gradually cleared of residents as families run out of scrip.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "district_physician",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "utility_director",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "station_management_trust",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "mass_eviction_executed",
+      "reached_by": "The pilot abandons the contract or fails the mission line.",
+      "summary": "Suffocating tenants surrender their keys. Over eight hundred families are put on cargo shuttles to the rim, and the management trust secures complete control.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_management_trust",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "district_physician",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "utility_director",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "mass_eviction_executed",
+  "loose_threads": [
+    {
+      "id": "t_reserve_tank_manifest",
+      "surface": "cargo",
+      "detail": "The shipping logs on the industrial gas tanks indicate they were sold forward to an off-station mining syndicate at three times domestic rates.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_manipulated_sensor_hash",
+      "surface": "scan",
+      "detail": "The central atmospheric purity monitor runs software modified with an electronic key belonging to an executive holding firm.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_ghost_auditor_signoff",
+      "surface": "station_notice",
+      "detail": "The quarterly habitability inspection for the lower decks was signed by an inspector whose official badge expired four years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "forged_records",
+      "slow_infiltration",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Life support utility director denies claims of deliberate oxygen rationing on residential rings.",
+    "Lower deck medical clinics report acute oxygen shortages as respiratory hospitalizations climb.",
+    "Tenant unions stage peaceful sit-ins outside municipal environmental engineering offices."
+  ],
+  "voice_direction": {
+    "district_physician": "Exhausted, sharp, and incandescent with rage. Spits medical statistics like accusations, pausing occasionally to catch her own breath in the thinning air.",
+    "utility_director": "Pompous, condescending, and smoothly unruffled. Speaks in the patient, patronizing tone of a senior accountant explaining fiscal reality to unruly debtors."
+  },
+  "novelty_tags": [
+    "air_tariff",
+    "oxygen_rationing",
+    "manufactured_shortage",
+    "clinic_crisis",
+    "landlord_extortion"
+  ]
+}

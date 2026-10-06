@@ -1,0 +1,344 @@
+{
+  "id": "premise.the_foreclosed_keel",
+  "schema_version": 1,
+  "title": "The Foreclosed Keel",
+  "logline": "A predatory maritime bank forecloses on a multi-generational ore freighter whose bridge is barricaded by its founding family, hiring a pilot to break the repo blockade.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "melancholy"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "freighter_matriarch",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Born in the forward cabin of the freighter sixty years ago; weathered, fierce, refusing to yield the ship to banking bailiffs.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "repo_marshal",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Contracted by maritime lenders to seize indebted hulls; heavily armed, methodical, unmoved by family sentiment.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "marshal_corvette",
+      "kind": "ship",
+      "description": "A high-acceleration gunboat clamping the freighter's stern with magnetic mooring locks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "banking_syndicate",
+      "kind": "faction",
+      "description": "The commercial credit trust that purchased the family's mortgaged fuel debt at a predatory discount.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "freighter_clans",
+      "kind": "faction",
+      "description": "The loose brotherhood of independent family-operated cargo vessels watching the confrontation from nearby slipways.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "family_freighter",
+      "kind": "place",
+      "description": "A sprawling, patched bulk ore transport that houses twelve family members and three generations of mining gear.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "admiralty_court",
+      "kind": "place",
+      "description": "The station judicial registry dock where vessel property liens and repossession warrants are contested.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "market_disrupted",
+    "alliance_formed"
+  ],
+  "public_situation": "Armed repossession marshals clamp the docking collars of {role:family_freighter}, preparing to breach the airlocks under a bank foreclosure order.",
+  "private_truth": "{role:banking_syndicate} forged an acceleration clause in the family's mortgage contract to liquidate the hull ahead of a lucrative scrap metal spike.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "bank_forged_acceleration_clause_to_seize_freighter"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Station security cordons the pier while marshals sever external power lines to the family vessel.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "freighter_matriarch",
+          "target": "family_freighter",
+          "reason": "She needs structural ferrite delivered to the dorsal cargo hatch to weld barricades across the airlock before the repo crew breaches the hull.",
+          "private_fact": "She is hiding her teenage granddaughter in the bilge to prevent bank bailiffs from placing her in indentured transit custody.",
+          "outcome_tags": [
+            "plating_welded",
+            "airlock_breached"
+          ],
+          "routes": {
+            "plating_welded": "next",
+            "airlock_breached": "resolution:freighter_liquidated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The matriarch transmits the ship's original mortgage scroll over open channels, revealing an altered payment schedule.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "freighter_matriarch",
+          "target": "admiralty_court",
+          "culprit": "banking_syndicate",
+          "reason": "She needs the pilot to scan the admiralty court's registry archive and extract the authentic mortgage document stamped forty years ago.",
+          "private_fact": "Her late husband signed the mortgage amendment while hospitalized with nitrogen narcosis without understanding the terms.",
+          "outcome_tags": [
+            "authentic_deed_found",
+            "archive_sealed"
+          ],
+          "routes": {
+            "authentic_deed_found": "next",
+            "archive_sealed": "resolution:freighter_liquidated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "pressure",
+      "public_change": "The bank hires strike-breaking skiffs to board the freighter's engine bay from open space, bypassing the welded airlocks.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "freighter_matriarch",
+          "target": "banking_syndicate",
+          "reason": "She needs the privateer boarding skiffs destroyed in open flight and their electronic override bypass core recovered.",
+          "private_fact": "The freighter's main reactor is running on bypass circuits and could detonate if breached by boarding lasers.",
+          "outcome_tags": [
+            "override_captured",
+            "reactor_compromised"
+          ],
+          "routes": {
+            "override_captured": "next",
+            "reactor_compromised": "resolution:freighter_liquidated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:marshal_corvette} powers main railguns, preparing to sever the freighter's cockpit module directly from the spine.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "freighter_matriarch",
+          "target": "marshal_corvette",
+          "reason": "She needs the marshal's corvette disabled so her family can ignite their main engines and break out of the station slipway.",
+          "private_fact": "The repo marshal hails mid-fight offering a fifty percent split of the vessel's refined copper cargo if the pilot withdraws.",
+          "outcome_tags": [
+            "corvette_disabled",
+            "took_marshal_bounty"
+          ],
+          "routes": {
+            "corvette_disabled": "resolution:keel_defended",
+            "took_marshal_bounty": "resolution:foreclosure_executed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "keel_defended",
+      "reached_by": "The pilot disables the marshal's gunboat and protects the family.",
+      "summary": "The marshal's gunboat is disabled. {role:family_freighter} breaks mooring and escapes into independent space, keeping the multi-generational family together.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freighter_clans",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "banking_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_matriarch",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "repo_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_family_freighter",
+          "public_summary": "A mercenary broke through bank gunboats to help an asteroid family save their multi-generational home ship from repossession."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "foreclosure_executed",
+      "reached_by": "The pilot accepts the marshal's bounty and allows the seizure.",
+      "summary": "The freighter is boarded and seized. {role:banking_syndicate} strips the hull for scrap, and the family is broken up into bonded mining labor.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "banking_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "freighter_clans",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "repo_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_matriarch",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_the_freighter_clan",
+          "public_summary": "Dockworkers whisper of a pilot who took bank scrip to let repossession marshals strip a family of their ancestral home ship."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "freighter_liquidated",
+      "reached_by": "The pilot fails the mission line or the reactor is breached.",
+      "summary": "Marshals breach the vessel's hull. The matriarch is arrested, and {role:family_freighter} is auctioned off to pay accumulated legal penalties.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "banking_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_matriarch",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "repo_marshal",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "freighter_liquidated",
+  "loose_threads": [
+    {
+      "id": "t_scrap_metal_index_spike",
+      "surface": "price_board",
+      "detail": "The exchange board lists forward contracts for heavy freighter hull scrap surging forty percent, funded by the bank's investment arm.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_altered_loan_stamp",
+      "surface": "station_notice",
+      "detail": "The acceleration clause rider on the bank warrant bears an electronic signature timestamped after the registry courthouse closed for the holiday.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_unregistered_marshal_livery",
+      "surface": "ship_marking",
+      "detail": "The transponder code on {role:marshal_corvette} is registered to an offshore mercenary firm rather than official system bailiffs.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "cornering_a_market",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Admiralty court issues repossession warrant against unregistered cargo transport in Berth Four.",
+    "Freighter clan captains stage horn-blowing protest outside banking district offices.",
+    "Scrap metal syndicates predict surge in decommissioned hull supply this quarter."
+  ],
+  "voice_direction": {
+    "freighter_matriarch": "Gravelly, deep, and fiercely maternal. Speaks of her rusty freighter like a living matriarch, refusing to concede an inch of hull plating to bank agents.",
+    "repo_marshal": "Cold, professional, and completely detached. Delivers legal notices of eviction and violence with the calm efficiency of a customs clerk reviewing shipping manifests."
+  },
+  "novelty_tags": [
+    "foreclosed_keel",
+    "generational_ship",
+    "repo_marshals",
+    "family_eviction",
+    "maritime_mortgage"
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "id": "premise.the_jubilee_clemency",
+  "schema_version": 1,
+  "title": "The Jubilee Clemency",
+  "logline": "A dockworker holding an unpayable station mortgage races to deposit his debt slate before the midnight bell of a decennial jubilee festival, hunted by collectors cutting the power.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "hopeful"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "indebted_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "An aging environmental technician whose habitat lease has doubled every year under compound collection penalties.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "jubilee_bailiff",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Presides over the ceremonial debt-burning urn at the central civic dais; strict on protocol, but weary of lender lawsuits.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "collection_factor",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Represents the private factoring firm that bought the worker's mortgage; methodical, polite, monitoring the countdown clock.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "recovery_consortium",
+      "kind": "faction",
+      "description": "The private debt enforcement syndicate holding delinquent orbital habitat liens across the sector.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "jubilee_plaza",
+      "kind": "place",
+      "description": "The decorated central concourse where citizens gather beneath lanterns to burn certified debt contracts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dockside_workshop",
+      "kind": "place",
+      "description": "A dark lower-deck maintenance bay where station mechanics store their emergency equipment and personal safes.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "market_disrupted",
+    "quiet_cover_up"
+  ],
+  "public_situation": "The decennial Jubilee chimes ring across {system}, where custom dictates all debts presented at {role:jubilee_plaza} before midnight are legally void.",
+  "private_truth": "{role:collection_factor} tripped the lower-deck substation breaker to seal {role:indebted_mechanic} inside his shop until the midnight deadline expires.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "power_grid_sabotaged_to_block_debt_jubilee"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Festival bells begin their eight-hour sequence while transit tram power suddenly fails across the lower industrial decks.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "indebted_mechanic",
+          "target": "dockside_workshop",
+          "reason": "He needs an independent pilot to dock at his dark berth and extract his sealed debt ledger slate through the emergency manual airlock.",
+          "private_fact": "His debt originated from medical oxygen charges he accrued while nursing three apprentice fitters through an air scrubber fire.",
+          "outcome_tags": [
+            "slate_retrieved",
+            "airlock_jammed"
+          ],
+          "routes": {
+            "slate_retrieved": "next",
+            "airlock_jammed": "resolution:midnight_foreclosure"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The collection consortium posts legal notices declaring all un-stamped ledgers will default to compound interest at midnight.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "indebted_mechanic",
+          "target": "jubilee_plaza",
+          "reason": "He needs portable battery cells rushed to the plaza approach gate to power the mechanical elevator before the midnight chimes finish.",
+          "private_fact": "{role:collection_factor} offered the elevator guard a quarterly bonus to pretend the hydraulic pump suffered a mechanical breakdown.",
+          "outcome_tags": [
+            "elevator_powered",
+            "countdown_expired"
+          ],
+          "routes": {
+            "elevator_powered": "next",
+            "countdown_expired": "resolution:midnight_foreclosure"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The crowd packs the ceremonial dais while {role:collection_factor} waits beside the bailiff holding foreclosure warrants.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "indebted_mechanic",
+          "target": "jubilee_plaza",
+          "reason": "He needs the verified mortgage slate carried directly into the ceremonial burning urn before the twelfth toll of the solstice gong.",
+          "private_fact": "{role:collection_factor} is authorized to settle out of court for fifty percent cash if the slate reaches the dais before the strike.",
+          "outcome_tags": [
+            "delivered_to_urn",
+            "intercepted_by_factor"
+          ],
+          "routes": {
+            "delivered_to_urn": "next",
+            "intercepted_by_factor": "resolution:midnight_foreclosure"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the ceremonial dais as the final chimes echo. Three people demand the slate.",
+        "options": [
+          {
+            "id": "drop_in_urn",
+            "label": "Toss the slate into the ceremonial urn to incinerate the debt",
+            "leads_to": "resolution:jubilee_granted"
+          },
+          {
+            "id": "accept_factor_bribe",
+            "label": "Sell the slate to the collection factor for a cash buyout",
+            "leads_to": "resolution:foreclosure_executed"
+          },
+          {
+            "id": "hand_to_bailiff",
+            "label": "Demand the bailiff impound the slate for an official tampering inquiry",
+            "leads_to": "resolution:judicial_stay"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "jubilee_granted",
+      "reached_by": "The pilot deposits the slate into the ceremonial fire before midnight.",
+      "summary": "The mortgage slate burns to ash before the crowd. {role:indebted_mechanic}'s home is declared free, and {role:recovery_consortium} takes a total loss.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "recovery_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "indebted_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "collection_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "burned_the_jubilee_slate",
+          "public_summary": "A pilot sprinted through festival crowds to drop an old mechanic's mortgage into the jubilee flames just as midnight chimed."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "foreclosure_executed",
+      "reached_by": "The pilot sells the slate to the collection factor for private scrip.",
+      "summary": "{role:collection_factor} secures the slate before midnight. The mechanic's workshop is seized, and the factored loan is converted into lifelong servitude.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "recovery_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "collection_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "indebted_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_jubilee_mortgage",
+          "public_summary": "Word circulated that a runner sold an honest mechanic's jubilee slate to the bailiff's collectors on the steps of the square."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "judicial_stay",
+      "reached_by": "The pilot hands the slate to the bailiff citing sabotaged station power.",
+      "summary": "{role:jubilee_bailiff} freezes the foreclosure pending an inquiry into the deliberate power outage, leaving both the worker and lender tied up in legal limbo.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "jubilee_bailiff",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "indebted_mechanic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "collection_factor",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "midnight_foreclosure",
+      "reached_by": "The pilot fails the delivery runs or abandons the contract before midnight.",
+      "summary": "Midnight tolls across the darkened lower decks. Without a registered presentation, the debt default clause takes effect and the workshop is padlocked.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "recovery_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "indebted_mechanic",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "collection_factor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "debt_owed_to_player"
+      ]
+    }
+  ],
+  "default_resolution": "midnight_foreclosure",
+  "loose_threads": [
+    {
+      "id": "t_breaker_tamper_seal",
+      "surface": "scan",
+      "detail": "The main circuit breaker for the tram route shows chemical burn marks from an industrial cutting torch applied thirty minutes before sundown.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_consortium_debt_transfer",
+      "surface": "price_board",
+      "detail": "The debt ledger lists the mechanic's mortgage bundle bundled into an investment trust holding seventy percent of the station's life support bonds.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_duplicate_bailiff_ledger",
+      "surface": "station_notice",
+      "detail": "The jubilee registry at {role:jubilee_plaza} lists two identical cancellation logbooks signed by different clerks in the same handwriting.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "sabotage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Crowds assemble at {role:jubilee_plaza} for the traditional lighting of the cancellation brazier.",
+    "Power outages reported across lower industrial decks; municipal engineers cite 'grid strain'.",
+    "{role:recovery_consortium} urges citizens to resolve outstanding liens before midnight."
+  ],
+  "voice_direction": {
+    "indebted_mechanic": "Trembling, hoarse, and breathless from climbing unpowered ladders. Speaks with the desperate rhythm of a gambler watching their last stake on the table.",
+    "jubilee_bailiff": "Dry, formal, and bureaucratic. Delivers ancient liturgical legal phrasing with total indifference, checking his pocket timepiece every thirty seconds.",
+    "collection_factor": "Silky, unbothered, and relentlessly cheerful. Speaks of financial ruin with warm corporate friendliness, never dropping his polished customer service cadence."
+  },
+  "novelty_tags": [
+    "debt_jubilee",
+    "festival_clemency",
+    "power_grid_sabotage",
+    "foreclosure_deadline",
+    "municipal_clemency"
+  ]
+}

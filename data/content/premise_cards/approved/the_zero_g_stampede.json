@@ -1,0 +1,346 @@
+{
+  "id": "premise.the_zero_g_stampede",
+  "schema_version": 1,
+  "title": "The Zero-G Stampede",
+  "logline": "A cattle freighter captain suspects a livestock speculator hacked his artificial gravity coils to cause a stampede in the hold, forcing the crew to jettison the herd so meat futures soar.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "tense"
+  ],
+  "themes": [
+    "price_of_profit",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "livestock_drover",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Skipper of an ungainly bulk livestock freighter; smelling of manure, stubborn, wrestling a failing ship through chaotic cattle stampedes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "meat_speculator",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "An aggressive meat futures arbitrageur; ruthless, dressed in tailored silk, holding massive long options on frozen beef.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "speculator_skiff",
+      "kind": "ship",
+      "description": "A high-speed raider skiff deployed to shadow the cattle hauler and jam distress transmissions.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "drover_guild",
+      "kind": "faction",
+      "description": "The union of independent livestock haulers who transport live herds between orbital agriculture domes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "packing_cartel",
+      "kind": "faction",
+      "description": "The processing consortium that owns the station abattoirs and wholesale protein distribution channels.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cattle_transport",
+      "kind": "place",
+      "description": "A battered, multi-decked bulk hauler holding two thousand bellowing cattle in tumbling zero-g pens.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "intake_stockyards",
+      "kind": "place",
+      "description": "The pressurized orbital feedlots where herds are quarantined and inspected before processing.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "debt_owed_to_player",
+    "rival_humiliated"
+  ],
+  "public_situation": "Emergency sirens sound as {role:cattle_transport} tumbles off station approach vectors, its hold compromised by a violent interior livestock stampede.",
+  "private_truth": "{role:meat_speculator} uploaded an oscillation pulse into the ship's artificial gravity drive to spook the herd and force the captain to jettison the livestock.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "speculator_spiked_gravity_drives_for_futures"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Bellowing cattle and buckled hull plating are broadcast over station approach channels as the transport lists twenty degrees.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "livestock_drover",
+          "target": "cattle_transport",
+          "reason": "He needs structural ferrite delivered to the ventral loading ramp to weld emergency internal baffles before two thousand cows breach the outer hull.",
+          "private_fact": "His chief engineer was knocked unconscious by a flying heifer when the artificial gravity first flickered.",
+          "outcome_tags": [
+            "ferrite_welded",
+            "hull_breached"
+          ],
+          "routes": {
+            "ferrite_welded": "next",
+            "hull_breached": "resolution:herd_jettisoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The drover pulls diagnostic telemetry from the gravity engine, discovering an unauthorized sub-routine broadcast from a shadowing skiff.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "livestock_drover",
+          "target": "cattle_transport",
+          "culprit": "meat_speculator",
+          "reason": "He needs an independent scan of the ship's grav-drive transmitter logs to isolate the exact frequency key used to cycle the deck gravity.",
+          "private_fact": "He borrowed fifty thousand credits from the speculator's brother to finance this voyage's fodder supplies.",
+          "outcome_tags": [
+            "hack_proven",
+            "drive_fried"
+          ],
+          "routes": {
+            "hack_proven": "next",
+            "drive_fried": "resolution:distressed_cargo_penalty"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "pressure",
+      "public_change": "Raider drones deploy from the shadowing skiff, firing EMP darts into the freighter's auxiliary thruster pods to prevent docking.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "livestock_drover",
+          "target": "packing_cartel",
+          "reason": "He needs the drone picket destroyed and the electronic transmitter controller recovered to prove the cattle stampede was manufactured.",
+          "private_fact": "The freighter's hold airlocks are currently tied off with cargo straps and could give way at any second.",
+          "outcome_tags": [
+            "controller_recovered",
+            "picket_escaped"
+          ],
+          "routes": {
+            "controller_recovered": "next",
+            "picket_escaped": "resolution:herd_jettisoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:speculator_skiff} maneuvers into the approach lane between the freighter and {role:intake_stockyards}, preparing boarding cables.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "livestock_drover",
+          "target": "speculator_skiff",
+          "reason": "He needs the speculator's ship disabled so the herd can be guided into the stockyard docking slipway intact.",
+          "private_fact": "The speculator hails mid-fight offering forty percent of his meat futures profits if the pilot forces the drover to blow the cargo hatches.",
+          "outcome_tags": [
+            "skiff_disabled",
+            "took_futures_cut",
+            "docked_under_penalty"
+          ],
+          "routes": {
+            "skiff_disabled": "resolution:herd_docked_safely",
+            "took_futures_cut": "resolution:herd_jettisoned",
+            "docked_under_penalty": "resolution:distressed_cargo_penalty"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "herd_docked_safely",
+      "reached_by": "The pilot disables the skiff and guides the cattle hauler to port.",
+      "summary": "Two thousand cattle are safely unloaded into {role:intake_stockyards}. {role:meat_speculator} faces fraud and sabotage charges, and meat prices stabilize.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "drover_guild",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "packing_cartel",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "livestock_drover",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "meat_speculator",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_space_cattle",
+          "public_summary": "A mercenary broke through raider skiffs to help an exhausted drover dock two thousand stampeding cows in zero gravity."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "distressed_cargo_penalty",
+      "reached_by": "The pilot brokers an emergency docking clearance under distressed cargo terms, or the gravity drive burns out.",
+      "summary": "The herd is docked without jettison, but {role:packing_cartel} levies heavy salvage penalty deductions, leaving {role:livestock_drover} deep in debt.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "packing_cartel",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "livestock_drover",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "meat_speculator",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "herd_jettisoned",
+      "reached_by": "The pilot accepts the speculator's cut or the hull gives way.",
+      "summary": "The cargo doors are blown, venting two thousand head of cattle into space. Meat prices skyrocket, and {role:meat_speculator} reaps a fortune.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "packing_cartel",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "drover_guild",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "meat_speculator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "livestock_drover",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "profited_from_the_cattle_dump",
+          "public_summary": "Dark frontier ballads sing of a mercenary who took a bribe to let two thousand prize heifers be blown out an airlock to spike meat prices."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "herd_jettisoned",
+  "loose_threads": [
+    {
+      "id": "t_speculator_long_options",
+      "surface": "price_board",
+      "detail": "The exchange board lists forward contracts for frozen meat surging three hundred percent, heavily purchased by the speculator's shell firm.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_gravity_override_subroutine",
+      "surface": "scan",
+      "detail": "The grav-drive firmware contains an oscillator virus programmed with an encryption signature belonging to a cartel software broker.",
+      "can_carry_methods": [
+        "sabotage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_skiff_forged_registry",
+      "surface": "ship_marking",
+      "detail": "The registration stencil on {role:speculator_skiff} conceals an older corporate security identification code from an adjacent sector.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "sabotage",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Port authority issues debris advisory around Berth Twelve citing 'tumbling livestock transport'.",
+    "Meat futures trade wildly on rumors of impending cargo loss on inner system approaches.",
+    "Drover guild spokesmen accuse commercial meatpackers of reckless predatory tactics."
+  ],
+  "voice_direction": {
+    "livestock_drover": "Loud, bellowing, and thoroughly unhinged. Constantly yells obscenities at errant cattle over the comms while trying to keep his ship from rolling into a station gantry.",
+    "meat_speculator": "Polished, smooth, and coldly aristocratic. Speaks of orbital slaughter and economic strangulation with the effortless charm of a private banker enjoying vintage wine."
+  },
+  "novelty_tags": [
+    "space_cattle",
+    "gravity_stampede",
+    "meat_futures_fraud",
+    "drover_freighter",
+    "orbital_abattoir"
+  ]
+}

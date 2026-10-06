@@ -1,0 +1,669 @@
+[
+  {
+    "id": "premise.the_stolen_chime_array",
+    "schema_version": 1,
+    "title": "The Stolen Chime Array",
+    "logline": "A cultural curator hires an armed pilot to recover a bronze ceremonial chime array stolen by a smuggler right before the Centennial Founding Festival, before security destroys the pirate hull.",
+    "scale": "personal",
+    "tone": [
+      "absurd",
+      "tense"
+    ],
+    "themes": [
+      "who_owns_the_past",
+      "price_of_profit"
+    ],
+    "roles": [
+      {
+        "id": "festival_curator",
+        "kind": "person",
+        "archetype": "archivist",
+        "description": "The station cultural preservationist; proud, fussy, frantic that the century-old bronze bells will be melted into scrap.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "fence_corsair",
+        "kind": "person",
+        "archetype": "smuggler",
+        "description": "An opportunistic black-market salvager holding the chimes in a stripped blockade runner.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "raider_cutter",
+        "kind": "ship",
+        "description": "A light combat raider fitted with oversized cargo grapples and illegal military thruster overburners.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "civic_guard",
+        "kind": "faction",
+        "description": "The heavy-handed station defense militia, eager to execute pirates on live holiday broadcasts.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "curator_vault",
+        "kind": "place",
+        "description": "A reinforced display pavilion on the station concourse designed to showcase founding historical relics.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "perimeter_berth",
+        "kind": "place",
+        "description": "An unmonitored docking pylon in the outer debris ring used by black-market fuel traders.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [
+        "festival"
+      ],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "stolen_goods_circulating",
+      "evidence_loose",
+      "public_outrage"
+    ],
+    "public_situation": "The Centennial Founding Festival is twelve hours away, but the historic orbital chime array has vanished from {role:curator_vault}.",
+    "private_truth": "{role:festival_curator} staged the theft with {role:fence_corsair} to claim municipal insurance, but the smuggler doubled the ransom demand.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "curator_orchestrated_chime_theft_to_pocket_fund"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "{role:civic_guard} puts the station on general combat alert, threatening to open fire on any vessel departing the perimeter berth.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "festival_curator",
+            "target": "perimeter_berth",
+            "reason": "He needs certified industrial alloy bars purchased from exchange docks and brought to the perimeter berth as the down payment on the ransom.",
+            "private_fact": "He diverted the museum's annual endowment fund to purchase the alloy without logging it in the municipal audit.",
+            "outcome_tags": [
+              "bullion_delivered",
+              "drop_aborted"
+            ],
+            "routes": {
+              "bullion_delivered": "next",
+              "drop_aborted": "resolution:chimes_melted_down"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "public_change": "The smuggler demands a secondary handover code, deploying automated escort drones to ward off approaching patrol ships.",
+        "missions": [
+          {
+            "verb": "recover_combat_drop",
+            "requester": "festival_curator",
+            "target": "civic_guard",
+            "reason": "He needs the patrol picket attacking the perimeter dock destroyed before their stray railgun slugs rupture the chime crates.",
+            "private_fact": "The civic guard captain is his ex-brother-in-law, who suspects the curator is running a personal embezzlement scheme.",
+            "outcome_tags": [
+              "key_recovered",
+              "escort_destroyed"
+            ],
+            "routes": {
+              "key_recovered": "next",
+              "escort_destroyed": "resolution:chimes_melted_down"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "{role:raider_cutter} breaks moorings and heads for the system jump gate with the chime array lashed to its dorsal hull.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "festival_curator",
+            "target": "raider_cutter",
+            "reason": "He needs the raider's sublight engines crippled before the pirate jumps out of system with the sacred bells.",
+            "private_fact": "The corsair hails mid-fight offering to split the bronze chimes into raw foundry ingot bars and share thirty percent of the scrap payout.",
+            "outcome_tags": [
+              "raider_subdued",
+              "took_pirate_split"
+            ],
+            "routes": {
+              "raider_subdued": "resolution:bells_restored",
+              "took_pirate_split": "resolution:chimes_fenced_away"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "bells_restored",
+        "reached_by": "The pilot disables the raider and returns the chime array to the pavilion.",
+        "summary": "The bronze chimes sound on time across {system}. {role:fence_corsair} is imprisoned, and {role:festival_curator} conceals his role in the original heist.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "civic_guard",
+            "delta": 2
+          },
+          {
+            "type": "cast_fate",
+            "target": "festival_curator",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "fence_corsair",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "deed",
+            "tag": "saved_the_centennial_chimes",
+            "public_summary": "A pilot shot the engines off a pirate cutter to save the station's founding bells in time for opening ceremonies."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "quiet_cover_up"
+        ]
+      },
+      {
+        "id": "chimes_fenced_away",
+        "reached_by": "The pilot accepts the corsair's deal and lets the raider jump out.",
+        "summary": "{role:fence_corsair} escapes with the antique chimes. {role:festival_curator} is arrested when the audit discovers the empty vault, and the festival opens in silence.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "civic_guard",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "fence_corsair",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "festival_curator",
+            "fate": "exposed"
+          },
+          {
+            "type": "deed",
+            "tag": "sold_the_founding_bells",
+            "public_summary": "Dockside lore claims a mercenary helped a smuggler scrap the colony's sacred bronze bells for black-market copper."
+          }
+        ],
+        "seeds": [
+          "stolen_goods_circulating",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "chimes_melted_down",
+        "reached_by": "The pilot fails the combat contracts or the ransom exchange falls apart.",
+        "summary": "Militia fire shatters the cargo cradle in open space. The founding bells are pulverized into orbital shrapnel, ruining the festival.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "civic_guard",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "festival_curator",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "fence_corsair",
+            "fate": "fled"
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "leader_discredited"
+        ]
+      }
+    ],
+    "default_resolution": "chimes_melted_down",
+    "loose_threads": [
+      {
+        "id": "t_museum_insurance_draft",
+        "surface": "cargo",
+        "detail": "The shipping crate contains an unsigned insurance payout rider dated two days before the chime array was reported stolen.",
+        "can_carry_methods": [
+          "forged_records",
+          "debt_leverage"
+        ]
+      },
+      {
+        "id": "t_scrap_ingot_order",
+        "surface": "price_board",
+        "detail": "A commercial scrap furnace on the rim posted a purchase order for ancient bell-grade bronze twelve hours before the vault alarm sounded.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_counterfeit_guard_transponder",
+        "surface": "ship_marking",
+        "detail": "The transponder code on {role:raider_cutter} displays a decommissioned civic guard serial number registered to the curator's brother-in-law.",
+        "can_carry_methods": [
+          "impersonation",
+          "sabotage"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "forged_records",
+        "cornering_a_market",
+        "impersonation",
+        "debt_leverage"
+      ],
+      "motives": [
+        "greed",
+        "survival"
+      ]
+    },
+    "law_hooks": [
+      "contraband_list",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Station authorities announce reward for information regarding missing founding chimes.",
+      "Centennial preparations continue under heavy armed security deployment.",
+      "Black market chatter spikes around antique high-tin bronze scrap ingots."
+    ],
+    "voice_direction": {
+      "festival_curator": "Flustered, high-pitched, and incessantly wiping sweat from his brow. Speaks of antique metallurgy with religious fervor while desperately trying to conceal his balance sheet.",
+      "fence_corsair": "Gravelly, sarcastic, and completely unimpressed by historical heritage. Treats sacred century-old bells like generic copper ore awaiting a smelting torch."
+    },
+    "novelty_tags": [
+      "chime_array",
+      "stolen_relic",
+      "founding_festival",
+      "curator_heist",
+      "bronze_ransom"
+    ]
+  },
+  {
+    "id": "premise.the_procession_beacon",
+    "schema_version": 1,
+    "title": "The Procession Beacon",
+    "logline": "A cantor organizing an annual orbital lantern parade discovers navigation guide buoys have been deliberately skewed, threatening to steer hundreds of pilgrim shuttles into asteroid shears.",
+    "scale": "local",
+    "tone": [
+      "melancholy",
+      "hopeful"
+    ],
+    "themes": [
+      "faith_and_doubt",
+      "progress_vs_tradition"
+    ],
+    "roles": [
+      {
+        "id": "procession_cantor",
+        "kind": "person",
+        "archetype": "preacher",
+        "description": "Guides the ceremonial flight patterns of civilian pilgrim ships; devout, cautious, struggling with whether ritual is worth civilian lives.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "port_inspector",
+        "kind": "person",
+        "archetype": "inspector",
+        "description": "Station flight safety auditor; secular, impatient, eager for an excuse to cancel the un-taxed religious gathering.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "pilgrim_congregation",
+        "kind": "faction",
+        "description": "Hundreds of independent mining families who pilot their shuttle craft in close orbital formation for annual blessings.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "traditionalist_league",
+        "kind": "faction",
+        "description": "A radical ideological faction determined to engineer an accident to prove modern navigational automation is cursed.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "lantern_sanctuary",
+        "kind": "place",
+        "description": "An ancient domed temple station perched over the system's primary asteroid ring.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "parade_waypoint",
+        "kind": "place",
+        "description": "An automated navigational beacon mooring that marks the turning point of the ceremonial orbital run.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "civic_concourse",
+        "kind": "place",
+        "description": "The central observation hub where municipal officials and families gather to watch the illuminated formation.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [
+        "festival"
+      ],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "leader_discredited",
+      "alliance_formed"
+    ],
+    "public_situation": "Shuttle pilots across {system} mount amber illumination beacons for the annual Pilgrimage of Lanterns around {role:lantern_sanctuary}.",
+    "private_truth": "{role:traditionalist_league} re-angled the optical lenses at {role:parade_waypoint} so the procession's lead ships will drift directly into rock shears.",
+    "core_why": {
+      "motive": "ideology",
+      "secret": "traditionalists_tampered_procession_buoys_to_cause_crisis"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Pilgrim vessels assemble in loose formation while {role:port_inspector} warns telemetry drift will result in flight bans.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "procession_cantor",
+            "target": "parade_waypoint",
+            "reason": "He needs certified high-precision optical collimator lenses brought from station optics shops to replace fogged beacon mirrors before the parade launches.",
+            "private_fact": "He suspects his own deacon assisted the saboteurs to protest the introduction of automated formation computers.",
+            "outcome_tags": [
+              "lenses_delivered",
+              "delivery_failed"
+            ],
+            "routes": {
+              "lenses_delivered": "next",
+              "delivery_failed": "resolution:pilgrimage_cancelled"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Telemetry alarms chime as test drones following the optical guide path drift three kilometers into unmapped rock spurs.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "procession_cantor",
+            "target": "parade_waypoint",
+            "culprit": "traditionalist_league",
+            "reason": "He needs an independent ship to scan the waypoint array and pinpoint exactly which prism alignment has been falsified.",
+            "private_fact": "The cantor is privately terrified that his entire lifetime of navigational scripture is mathematically flawed.",
+            "outcome_tags": [
+              "tampering_documented",
+              "signal_obscured"
+            ],
+            "routes": {
+              "tampering_documented": "next",
+              "signal_obscured": "resolution:pilgrimage_cancelled"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "public_change": "{role:port_inspector} issues an official decree revoking the parade charter unless manual ground-truth charts are produced.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "procession_cantor",
+            "target": "lantern_sanctuary",
+            "reason": "He needs the sealed historical ledger containing the manual triangulation coordinates retrieved from the temple sanctuary crypt.",
+            "private_fact": "The temple ledger contains marginal notes showing that a previous procession disaster thirty years ago was also blamed on divine will.",
+            "outcome_tags": [
+              "ledger_secured",
+              "temple_sealed"
+            ],
+            "routes": {
+              "ledger_secured": "next",
+              "temple_sealed": "resolution:pilgrimage_cancelled"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "The pilgrim fleet begins engine warm-ups outside the airlocks, refusing to disembark despite conflicting beacon readings.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "procession_cantor",
+            "target": "civic_concourse",
+            "reason": "He needs the verified triangulation slate delivered to the inspector before hotheaded pilgrim captains trigger an unguided mass launch.",
+            "private_fact": "{role:traditionalist_league} representatives are offering to endorse the cantor as high patriarch if he buries the proof of sabotage.",
+            "outcome_tags": [
+              "delivered_to_inspector",
+              "surrendered_to_league"
+            ],
+            "routes": {
+              "delivered_to_inspector": "resolution:procession_saved",
+              "surrendered_to_league": "resolution:parade_tragedy_averted"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The pilot holds the proof of sabotage and the manual correction tables. The crowd waits on the flight line.",
+          "options": [
+            {
+              "id": "certify_safe_path",
+              "label": "Deliver the corrected coordinates to guide the fleet safely",
+              "leads_to": "resolution:procession_saved"
+            },
+            {
+              "id": "back_the_ban",
+              "label": "Support the inspector's complete cancellation of the flight",
+              "leads_to": "resolution:pilgrimage_cancelled"
+            },
+            {
+              "id": "quiet_compromise",
+              "label": "Let the cantor quietly adjust the formation without exposing the saboteurs",
+              "leads_to": "resolution:parade_tragedy_averted"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "procession_saved",
+        "reached_by": "The pilot delivers the true coordinates and exposes the tampering.",
+        "summary": "The pilgrim fleet completes their illuminated flight along true coordinates. {role:traditionalist_league} is exposed, and {role:procession_cantor} preserves the holy tradition.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "pilgrim_congregation",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "traditionalist_league",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "procession_cantor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "port_inspector",
+            "fate": "promoted"
+          },
+          {
+            "type": "deed",
+            "tag": "guided_the_lantern_fleet",
+            "public_summary": "A pilot uncovered sabotaged navigation buoys and guided five hundred lantern ships through the asteroid shoals."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "alliance_formed"
+        ]
+      },
+      {
+        "id": "parade_tragedy_averted",
+        "reached_by": "The pilot allows the cantor to quietly correct the mirrors without arresting the league.",
+        "summary": "The procession flies safely along corrected mirrors, but the sabotage is hidden. {role:traditionalist_league} retains their influence, and the cantor lives in quiet shame.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "traditionalist_league",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "procession_cantor",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "port_inspector",
+            "fate": "alive_grudge"
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "pilgrimage_cancelled",
+        "reached_by": "The pilot fails the mission runs or backs the safety shutdown.",
+        "summary": "The lantern procession is officially grounded. Bitter rioting breaks out across the berths, and {role:pilgrim_congregation} accuses the port authority of religious persecution.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "pilgrim_congregation",
+            "delta": -2
+          },
+          {
+            "type": "standing",
+            "target": "traditionalist_league",
+            "delta": 2
+          },
+          {
+            "type": "cast_fate",
+            "target": "procession_cantor",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "strike"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "leader_discredited",
+          "public_outrage"
+        ]
+      }
+    ],
+    "default_resolution": "pilgrimage_cancelled",
+    "loose_threads": [
+      {
+        "id": "t_optical_prism_crate",
+        "surface": "cargo",
+        "detail": "The replacement collimator crate bears customs shipping stencils invoiced to an ideological printing press three jumps away.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_clerical_debt_debenture",
+        "surface": "price_board",
+        "detail": "The temple sanctuary's auxiliary oxygen line is encumbered by a debt contract held by a corporate director aligned with the league.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_absent_auditor_seal",
+        "surface": "station_notice",
+        "detail": "The safety certificate on {role:parade_waypoint} was stamped with the seal of an inspector who died during the previous eclipse season.",
+        "can_carry_methods": [
+          "impersonation",
+          "forged_records"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "slow_infiltration",
+        "debt_leverage",
+        "forged_records",
+        "impersonation"
+      ],
+      "motives": [
+        "ideology",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "scanning_banned",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Lantern procession pilots tune thruster radios across {system} in preparation for evening launch.",
+      "Port inspection office warns of severe navigational hazards along the ceremonial route.",
+      "Temple council dismisses safety warnings as administrative interference with sacred rites."
+    ],
+    "voice_direction": {
+      "procession_cantor": "Soft-spoken, melodic, and burdened by immense responsibility. Speaks with rhythmic poetic cadences that falter into strained pauses when calculating debris velocities.",
+      "port_inspector": "Abrasive, blunt, and dismissive of ceremonial tradition. Speaks in clipped operational terminology, treating hundred-year-old prayers as air traffic control violations."
+    },
+    "novelty_tags": [
+      "lantern_parade",
+      "procession_beacon",
+      "astronomical_pilgrimage",
+      "sabotaged_prisms",
+      "religious_aviation"
+    ]
+  }
+]

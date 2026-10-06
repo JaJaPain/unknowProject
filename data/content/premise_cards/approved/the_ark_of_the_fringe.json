@@ -1,0 +1,377 @@
+{
+  "id": "premise.the_ark_of_the_fringe",
+  "schema_version": 1,
+  "title": "The Ark of the Fringe",
+  "logline": "A rogue ecologist attempts to transport breeding stock of an endangered zero-g silkworm across three star systems to establish a sanctuary, hunted by synthetic polymer corporations determined to protect their patent monopoly.",
+  "scale": "regional",
+  "tone": [
+    "tense",
+    "hopeful"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "renegade_ecologist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Spent three decades adapting silkworms to produce radiation-shielding thread; visionary, stubborn, refusing to let the species be exterminated.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "patent_director",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Enforcement director for the synthetic polymer trust; elegant, ruthless, protecting multi-billion-credit petroleum shielding contracts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "patent_interdictor",
+      "kind": "ship",
+      "description": "A heavy corporate cruiser patrolling jump gates to seize un-patented biological manufacturing stock.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "conservation_league",
+      "kind": "faction",
+      "description": "The underground network of frontier station gardeners and independent bio-engineers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "synthetic_trust",
+      "kind": "faction",
+      "description": "The chemical manufacturing monopoly holding exclusive military and civilian hull-shielding contracts.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "seed_nursery",
+      "kind": "place",
+      "description": "A clandestine hydroponic nursery hidden in the shadow of a hollowed moon in the home system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relay_cocoon",
+      "kind": "place",
+      "description": "An abandoned orbital laboratory in a neighbouring system equipped with zero-g incubation chambers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sanctuary_belt",
+      "kind": "place",
+      "description": "An unmapped asteroid haven two jumps away where the silkworms can multiply without corporate interference.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "market_disrupted",
+    "secret_half_exposed"
+  ],
+  "public_situation": "Corporate enforcement marshals raid un-patented bio-domes across three star systems, seizing all living specimens of orbital textile organisms.",
+  "private_truth": "{role:synthetic_trust} declared the radiation-shielding silkworms an invasive hazard because the organic silk offers three times the protection of their synthetic plating at one-tenth the cost.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "polymer_trust_mandated_species_eradication_for_patents"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Corporate gunboats surround {role:seed_nursery}, preparing to vent the greenhouse modules with industrial pesticides.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "renegade_ecologist",
+          "target": "seed_nursery",
+          "reason": "She needs an outside pilot to extract three pressurized brood canisters of dormant zero-g silkworm cocoons before the extermination gas is released.",
+          "private_fact": "She originally developed the silkworm genome while working on corporate grant money and stole the breeding line when they ordered it shredded.",
+          "outcome_tags": [
+            "cocoons_secured",
+            "nursery_gassed"
+          ],
+          "routes": {
+            "cocoons_secured": "next",
+            "nursery_gassed": "resolution:species_eradicated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Patrol craft in the neighboring system deploy biological sensors at the jump gate, scanning all passing freighters for live organic heat signatures.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "renegade_ecologist",
+          "target": "relay_cocoon",
+          "culprit": "synthetic_trust",
+          "reason": "She hires an outsider to navigate into the border system and download diagnostic telemetry directly from the nursery relay lab, confirming the thermal beds are stable.",
+          "private_fact": "The silkworm larvae will perish within twelve hours if incubator humidity falls below eighty percent.",
+          "outcome_tags": [
+            "incubator_ready",
+            "lab_compromised"
+          ],
+          "routes": {
+            "incubator_ready": "next",
+            "lab_compromised": "resolution:species_eradicated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Corporate hunter packs intercept the relay platform, deploying pesticide drones into the habitat intake ducts.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "renegade_ecologist",
+          "target": "synthetic_trust",
+          "reason": "She needs the corporate exterminator drones destroyed immediately before their toxic spray breaches the larval incubation chambers.",
+          "private_fact": "Her own daughter is among the conservation volunteers defending the relay lab from the interior.",
+          "outcome_tags": [
+            "drones_destroyed",
+            "larvae_poisoned"
+          ],
+          "routes": {
+            "drones_destroyed": "next",
+            "larvae_poisoned": "resolution:species_eradicated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "The silkworms hatch into active feeding larvae, requiring emergency nutrient paste to survive the final jump leg.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "renegade_ecologist",
+          "target": "sanctuary_belt",
+          "reason": "She needs specialized organic mulberry leaf slurry purchased from open commercial ports and brought to the sanctuary to sustain the caterpillars.",
+          "private_fact": "She spent her entire lifetime pension and family savings to purchase the specialized feed.",
+          "outcome_tags": [
+            "feed_delivered",
+            "larvae_starved"
+          ],
+          "routes": {
+            "feed_delivered": "next",
+            "larvae_starved": "resolution:species_eradicated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "{role:patent_interdictor} positions across the sanctuary approach lanes, charging pulse batteries to interdict the transport.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "renegade_ecologist",
+          "target": "patent_interdictor",
+          "reason": "She needs the corporate cruiser disabled so the ark transport can slip into the unmapped asteroid haven and establish the colony.",
+          "private_fact": "The corporate commander hails mid-combat offering a lifetime patent royalty annuity to incinerate the silkworm canisters on the spot.",
+          "outcome_tags": [
+            "cruiser_disabled",
+            "took_patent_bounty"
+          ],
+          "routes": {
+            "cruiser_disabled": "resolution:sanctuary_established",
+            "took_patent_bounty": "resolution:species_commercialized"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "sanctuary_established",
+      "reached_by": "The pilot disables the cruiser and delivers the silkworms to the sanctuary.",
+      "summary": "The silkworm breeding colony takes root in {role:sanctuary_belt}. Cheap biological radiation shielding reaches frontier miners, shattering {role:synthetic_trust}'s monopoly.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "conservation_league",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "synthetic_trust",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_ecologist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "patent_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_radiation_silkworms",
+          "public_summary": "A mercenary broke through corporate interdictors to carry the last zero-g silkworms across three star systems to a secret asteroid haven."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "species_commercialized",
+      "reached_by": "The pilot accepts the corporate royalty deal and surrenders the cocoons.",
+      "summary": "{role:synthetic_trust} locks the silkworms into proprietary corporate bio-vaults. Shielding prices remain extortionate, and {role:renegade_ecologist} is imprisoned for intellectual property theft.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "synthetic_trust",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "conservation_league",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "patent_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_ecologist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_endangered_cocoon",
+          "public_summary": "Dark rumors tell of a courier who traded an endangered species of living radiation-shielding silkworms to a chemical monopoly for a patent royalty."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "species_eradicated",
+      "reached_by": "The pilot fails the mission lines or the larvae perish.",
+      "summary": "The last breeding stock of orbital silkworms is wiped out. {role:synthetic_trust} retains absolute control over radiation shielding, and frontier miners continue paying exorbitant costs.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "synthetic_trust",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_ecologist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "patent_director",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "species_eradicated",
+  "loose_threads": [
+    {
+      "id": "t_synthetic_shield_margin",
+      "surface": "price_board",
+      "detail": "The regional exchange reports an eight-hundred percent profit margin on synthetic polymer shielding sold to civilian transport fleets.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_altered_pesticide_charter",
+      "surface": "station_notice",
+      "detail": "The municipal bio-hazard clearance warrant classifying the silkworms as lethal vermin was signed by a director holding stock in the polymer trust.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_unmarked_interdictor_crest",
+      "surface": "ship_marking",
+      "detail": "The hull armor on {role:patent_interdictor} bears repainted insignias from a private mercenary army contracted by the chemical cartel.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "forged_records",
+      "debt_leverage",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Synthetic polymer trust warns against uncertified biological materials aboard frontier vessels.",
+    "Miners report rising hull degradation as official radiation shielding prices climb.",
+    "Ecological activists accuse chemical manufacturers of waging corporate war against nature."
+  ],
+  "voice_direction": {
+    "renegade_ecologist": "Fierce, articulate, and fiercely defiant. Speaks of her adapted silkworms with the tender reverence of a mother defending endangered infants, brushing off corporate lawsuits with cold scorn.",
+    "patent_director": "Silky, aristocratic, and coldly transactional. Treats the extinction of a unique species as an unavoidable legal requirement for patent protection."
+  },
+  "novelty_tags": [
+    "radiation_silkworms",
+    "zero_g_livestock",
+    "patent_extermination",
+    "ecological_ark",
+    "polymer_monopoly"
+  ]
+}

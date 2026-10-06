@@ -1,0 +1,304 @@
+{
+  "id": "premise.the_station_terriers",
+  "schema_version": 1,
+  "title": "The Station Terriers",
+  "logline": "A retired station pest handler refuses to surrender thirty aging radiation-hunting terriers marked for euthanasia by sanitation authorities, hiring an armed pilot to defend their evacuation.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "hopeful"
+  ],
+  "themes": [
+    "chosen_family",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "retired_handler",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Spent forty years clearing electrical-eating rodents from station conduits alongside his pack of terriers; scarred, fierce, protective.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sanitation_commissioner",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Enforces biological contamination codes; treats working animals as unnecessary atmospheric consumers that should be purged.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "exterminator_gunboat",
+      "kind": "ship",
+      "description": "A heavy municipal pest-control cutter equipped with chemical fumigation cannons and boarding clamps.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "port_sanitation_corps",
+      "kind": "faction",
+      "description": "The administrative agency responsible for biological containment and vermin extermination across the docks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pest_control_depot",
+      "kind": "place",
+      "description": "A cold, unpressurized lower-deck kennel where working dogs sleep between maintenance shifts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sanctuary_outpost",
+      "kind": "place",
+      "description": "A disused orbital greenhouse on the system rim whose owners have offered a permanent home to the dogs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "public_outrage",
+    "quiet_cover_up"
+  ],
+  "public_situation": "Sanitation authorities issue an emergency cull notice for working ship terriers across {system}, citing an unverified flea-borne pathogen.",
+  "private_truth": "{role:sanitation_commissioner} fabricated the disease report to clear {role:pest_control_depot} and sell the valuable lower-deck real estate to a data-server firm.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "commissioner_faked_canine_blight_for_server_space"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Sanitation marshals padlock the kennel airlocks, deploying gas cylinders to fumigate the animals.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_handler",
+          "target": "pest_control_depot",
+          "reason": "He needs canine emergency oxygen hoods and medical sedatives delivered through a maintenance hatch to prepare thirty dogs for vacuum transfer.",
+          "private_fact": "His lead terrier saved his life twenty years ago by dragging him out of a flooded reactor conduit.",
+          "outcome_tags": [
+            "dogs_stabilized",
+            "airlock_fumigated"
+          ],
+          "routes": {
+            "dogs_stabilized": "next",
+            "airlock_fumigated": "resolution:pack_euthanized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The commissioner announces that any vessel attempting to carry quarantined animals will be fired upon on sight.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_handler",
+          "target": "pest_control_depot",
+          "culprit": "sanitation_commissioner",
+          "reason": "He needs the pilot to scan the sanitation bureau's bio-sensor relays and prove the dogs' blood samples test completely clean of infection.",
+          "private_fact": "The commissioner offered him a comfortable retirement pension if he agreed to lead the dogs to the gas chamber himself.",
+          "outcome_tags": [
+            "clean_health_proven",
+            "data_encrypted"
+          ],
+          "routes": {
+            "clean_health_proven": "next",
+            "data_encrypted": "resolution:pack_euthanized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:exterminator_gunboat} deploys into open flight outside the depot, powering chemical dispersal cannons to vent the kennel.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "retired_handler",
+          "target": "exterminator_gunboat",
+          "reason": "He needs the exterminator gunboat disabled so his transport shuttle can break mooring and reach {role:sanctuary_outpost}.",
+          "private_fact": "The gunboat skipper hails mid-fight offering fifty thousand credits in municipal scrip to withdraw and let the gas deployment finish.",
+          "outcome_tags": [
+            "gunboat_disabled",
+            "took_sanitation_bribe"
+          ],
+          "routes": {
+            "gunboat_disabled": "resolution:pack_escapes",
+            "took_sanitation_bribe": "resolution:pack_surrendered"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pack_escapes",
+      "reached_by": "The pilot disables the gunboat and secures the dog transport.",
+      "summary": "The terriers reach {role:sanctuary_outpost} safely. The fabricated contamination is exposed, and {role:sanitation_commissioner} is removed from office.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "port_sanitation_corps",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_handler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanitation_commissioner",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_station_hounds",
+          "public_summary": "A mercenary crippled a sanitation gunboat to help an old rat-catcher save thirty working ship dogs from the gas chambers."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "pack_surrendered",
+      "reached_by": "The pilot accepts the sanitation bribe and lets the gas proceed.",
+      "summary": "The working dogs are destroyed. {role:sanitation_commissioner} sells the kennel to data server developers, and {role:retired_handler} is left broken and alone.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "port_sanitation_corps",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanitation_commissioner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_handler",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_the_working_dogs",
+          "public_summary": "Dockside whispers recount how a hired pilot took sanitation money to look away while thirty faithful ship dogs were euthanized."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "pack_euthanized",
+      "reached_by": "The pilot abandons the contract or fails the mission line.",
+      "summary": "Sanitation crews breach the kennel and administer lethal gas. The depot is cleared for server installations, and the working hounds are forgotten.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "port_sanitation_corps",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_handler",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanitation_commissioner",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "pack_euthanized",
+  "loose_threads": [
+    {
+      "id": "t_server_lease_draft",
+      "surface": "station_notice",
+      "detail": "A draft lease for {role:pest_control_depot} was signed with an offshore data-mining firm two weeks before the contamination was declared.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_clean_pathology_hash",
+      "surface": "scan",
+      "detail": "The municipal bio-lab blood tests on the terriers show negative pathogen markers, stored under an encrypted supervisor lock.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_gunboat_demolition_voucher",
+      "surface": "cargo",
+      "detail": "The gunboat's chemical cargo receipt was billed to municipal development accounts rather than veterinary quarantine reserves.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Sanitation department announces mandatory bio-hazard culling for domestic vermin control packs.",
+    "Station engineers protest the loss of canine pipe-sniffers ahead of scheduled reactor refits.",
+    "Commercial server companies announce plans to expand lower-deck data processing facilities."
+  ],
+  "voice_direction": {
+    "retired_handler": "Raspy, choked with emotion, and fiercely protective. Speaks of his dogs with the deep, reverent loyalty normally reserved for squad mates in a trenches war.",
+    "sanitation_commissioner": "Polished, cold, and utterly patronizing. Treats the execution of thirty faithful working animals as a routine facilities modernization exercise."
+  },
+  "novelty_tags": [
+    "ship_hounds",
+    "vermin_handlers",
+    "sanitation_cull",
+    "animal_evacuation",
+    "real_estate_scheme"
+  ]
+}

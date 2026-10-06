@@ -1,0 +1,351 @@
+{
+  "id": "premise.the_condemned_cavern",
+  "schema_version": 1,
+  "title": "The Condemned Cavern",
+  "logline": "An elderly miner refuses to vacate her hollowed asteroid dwelling after habitat officials fabricate structural fatigue reports to clear the sector for luxury executive docks.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "tenacious_resident",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "A retired drill operator who spent fifty years carving her home into native asteroid bedrock; proud, stubborn, refuses to be relocated.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "housing_adjudicator",
+      "kind": "person",
+      "archetype": "official",
+      "description": "The district development director; polished, defensive, under heavy pressure from offshore developers to deliver vacant berths.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "private_bailiff",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "An enforcement agent contracted to serve eviction writs and weld containment bulkheads across non-compliant dwellings.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "expansion_syndicate",
+      "kind": "faction",
+      "description": "A luxury station development firm acquiring low-income mining sectors for high-margin private yacht slips.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cavern_residence",
+      "kind": "place",
+      "description": "A sprawling hand-carved habitat module deep in the asteroid strata, filled with antique hydroponics and mining memorabilia.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "adjudication_chamber",
+      "kind": "place",
+      "description": "The administrative appeals office on the station concourse where property condemnations are officially stamped.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Notices of immediate emergency condemnation are posted across Sector Nine, citing catastrophic structural fractures in the asteroid bedrock.",
+  "private_truth": "{role:housing_adjudicator} falsified the acoustic stress logs to condemn {role:cavern_residence} so {role:expansion_syndicate} can build private berthing.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "housing_authority_faked_fatigue_for_luxury_docks"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Bailiffs erect barricades around the cavern sector, cutting primary atmospheric recycling to force residents out.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "tenacious_resident",
+          "target": "cavern_residence",
+          "culprit": "housing_adjudicator",
+          "reason": "She needs an outside pilot to deploy seismic acoustic probes through her cavern walls and record true bedrock density readings.",
+          "private_fact": "She found the corporate surveyor's forgotten calibration beacon left inside her water cistern three weeks ago.",
+          "outcome_tags": [
+            "strata_certified_solid",
+            "fractures_detected"
+          ],
+          "routes": {
+            "strata_certified_solid": "next",
+            "fractures_detected": "resolution:cavern_demolished"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:private_bailiff} arrives with heavy cutting teams, threatening to weld the cavern airlock shut in three hours.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "tenacious_resident",
+          "target": "cavern_residence",
+          "reason": "She needs heavy hydraulic airlock bracing jacks bought from station industrial suppliers and brought to her berth to block the welders.",
+          "private_fact": "She spent her entire terminal miner pension to buy the bracing equipment.",
+          "outcome_tags": [
+            "jacks_installed",
+            "airlock_breached"
+          ],
+          "routes": {
+            "jacks_installed": "next",
+            "airlock_breached": "resolution:cavern_demolished"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The final eviction deadline expires as {role:housing_adjudicator} prepares to sign the demolition certificate at {role:adjudication_chamber}.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "tenacious_resident",
+          "target": "adjudication_chamber",
+          "reason": "She needs the verified seismic proof delivered directly into the public registry hearing before the adjudicator signs the demolition warrant.",
+          "private_fact": "{role:housing_adjudicator} is authorized to offer the pilot thirty thousand credits in developer stock to misplace the data slate.",
+          "outcome_tags": [
+            "delivered_to_hearing",
+            "slate_withheld"
+          ],
+          "routes": {
+            "delivered_to_hearing": "next",
+            "slate_withheld": "resolution:cavern_demolished"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands in the hearing chamber with the proof that the bedrock is solid. Three parties want the outcome.",
+        "options": [
+          {
+            "id": "file_honest_survey",
+            "label": "Enter the true seismic survey into public records to cancel the eviction",
+            "leads_to": "resolution:eviction_dismissed"
+          },
+          {
+            "id": "take_syndicate_payoff",
+            "label": "Sell the seismic core to the developer for an executive slip voucher",
+            "leads_to": "resolution:luxury_redevelopment"
+          },
+          {
+            "id": "broker_quiet_settlement",
+            "label": "Force the adjudicator to grant the resident a lifelong tenancy guarantee in exchange for silence",
+            "leads_to": "resolution:quiet_tenancy"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "eviction_dismissed",
+      "reached_by": "The pilot delivers the true seismic survey and exposes the fraud.",
+      "summary": "The true seismic data enters the public record. The condemnation is revoked, {role:housing_adjudicator} is removed, and {role:tenacious_resident} keeps her home.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "expansion_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "tenacious_resident",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "housing_adjudicator",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_cavern_eviction",
+          "public_summary": "A pilot proved an asteroid dwelling was structurally solid, halting a corrupt developer from evicting a retired miner."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "luxury_redevelopment",
+      "reached_by": "The pilot takes the developer payoff and suppresses the survey.",
+      "summary": "{role:expansion_syndicate} demolishes the home to build private yacht berths. {role:tenacious_resident} is forced into transit dormitories, and property values soar.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "expansion_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "housing_adjudicator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tenacious_resident",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_the_asteroid_miner",
+          "public_summary": "Word leaked that a pilot took developer kickbacks to help bulldoze an old miner's bedrock home for private docks."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "quiet_tenancy",
+      "reached_by": "The pilot blackmails the adjudicator into granting private lifetime tenancy.",
+      "summary": "{role:tenacious_resident} is granted lifelong immunity from eviction, but adjacent mining families are cleared out anyway without public protest.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "tenacious_resident",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "housing_adjudicator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "expansion_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "cavern_demolished",
+      "reached_by": "The pilot abandons the contract or fails the delivery runs.",
+      "summary": "Bailiffs breach the airlock and vent the cavern. {role:tenacious_resident} is evicted under armed guard, and corporate construction begins.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "expansion_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "tenacious_resident",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "housing_adjudicator",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "cavern_demolished",
+  "loose_threads": [
+    {
+      "id": "t_surveyor_retainer_receipt",
+      "surface": "price_board",
+      "detail": "The development registry records an advance bonus paid to the structural inspector from an offshore account owned by {role:expansion_syndicate}.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_doctored_seismic_frequency",
+      "surface": "scan",
+      "detail": "The condemned safety report relies on acoustic frequencies recorded in an entirely different asteroid cluster five hundred light-seconds away.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_duplicate_demolition_seal",
+      "surface": "station_notice",
+      "detail": "The demolition order posted on the airlock bears the official signature of an inspector who resigned from station service six months ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Station administration defends condemnation of Sector Nine, citing 'geological instability'.",
+    "Protests erupt at {role:adjudication_chamber} over rapid expansion of luxury yacht slips.",
+    "Retired miners rally outside Sector Nine airlocks in solidarity with evicted residents."
+  ],
+  "voice_direction": {
+    "tenacious_resident": "Craggy, slow, and completely immovable. Speaks with the quiet authority of someone who has lived fifty years in hard rock, spitting contempt at polished bureaucrats.",
+    "housing_adjudicator": "Defensive, rapid, and strained. Constantly cites building regulations and civic progress to drown out any mention of who actually profits from the redevelopment."
+  },
+  "novelty_tags": [
+    "condemned_cavern",
+    "housing_fraud",
+    "eviction_warrant",
+    "luxury_redevelopment",
+    "bedrock_dispute"
+  ]
+}

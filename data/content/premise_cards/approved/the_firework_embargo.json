@@ -1,0 +1,388 @@
+{
+  "id": "premise.the_firework_embargo",
+  "schema_version": 1,
+  "title": "The Firework Embargo",
+  "logline": "A peace envoy attempts to import festive pyrotechnic oxidizers across three star systems to celebrate a historic ceasefire, but defense contractors declare the reagents illegal munitions to reignite the war.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "jubilee_envoy",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Orchestrator of the tripartite peace celebration; dignified, exhausted, betting the armistice on a shared public festival.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "security_provost",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Regional customs enforcement director; cold, legalistic, aligned with private defense manufacturers who dread peacetime.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "blockade_corvette",
+      "kind": "ship",
+      "description": "A heavy militarized customs gunboat patrolling inter-system jump coordinates to intercept embargoed cargo.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "peace_coalition",
+      "kind": "faction",
+      "description": "The alliance of civilian star systems seeking to finalize the armistice through simultaneous festival displays.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "defense_trust",
+      "kind": "faction",
+      "description": "The weapons manufacturing conglomerate that holds exclusive military supply contracts across the frontier.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "embassy_station",
+      "kind": "place",
+      "description": "A neutral orbital platform where the peace treaties are scheduled to be ratified.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "chemical_depot",
+      "kind": "place",
+      "description": "An industrial storage facility in an adjacent star system warehousing the ceremonial pyrotechnic compounds.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "jubilee_orbital",
+      "kind": "place",
+      "description": "The central celebration stadium two jumps away where the opening fireworks are meant to illuminate the skies.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "alliance_broken",
+    "market_disrupted"
+  ],
+  "public_situation": "Three star systems prepare for the Ceasefire Jubilee, but {role:security_provost} has declared all festive barium and strontium shipments to be prohibited munitions.",
+  "private_truth": "{role:defense_trust} lobbied for the emergency chemical embargo to abort the peace jubilee and provoke a return to lucrative border warfare.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "chemical_embargo_manufactured_to_sabotage_peace"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "{role:jubilee_envoy} issues an emergency plea at {role:embassy_station} after customs marshals seal departing chemical transports.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "jubilee_envoy",
+          "target": "embassy_station",
+          "reason": "She needs an unaligned pilot to carry the diplomatic immunity release seals before the provost's guards revoke civilian courier licenses.",
+          "private_fact": "She used her personal family estate as collateral to purchase the ceremonial chemicals from off-system manufacturers.",
+          "outcome_tags": [
+            "seals_retrieved",
+            "embassy_cordoned"
+          ],
+          "routes": {
+            "seals_retrieved": "next",
+            "embassy_cordoned": "resolution:armistice_collapses"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Customs patrol craft in the neighboring system lock down cargo lanes, searching every freighter for pyrotechnic oxidizers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "jubilee_envoy",
+          "target": "chemical_depot",
+          "culprit": "defense_trust",
+          "reason": "She requires an independent runner to hyperspace across the border and pull raw telemetry from the storage depot's loading docks, proving the crated compounds are ceremonial colorants.",
+          "private_fact": "The depot manager was bribed with twenty thousand credits by defense lobbyists to report the inventory as missile fuel.",
+          "outcome_tags": [
+            "cargo_certified",
+            "depot_sealed"
+          ],
+          "routes": {
+            "cargo_certified": "next",
+            "depot_sealed": "resolution:armistice_collapses"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Unmarked privateer gunboats attack the chemical depot, attempting to ignite the stored compounds in a catastrophic sabotage blast.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "jubilee_envoy",
+          "target": "defense_trust",
+          "reason": "She needs the corporate raiders eliminated immediately before their incendiary torpedoes incinerate the entire orbital depot.",
+          "private_fact": "The raider ships were supplied directly from the provost's surplus de-commissioned naval reserves.",
+          "outcome_tags": [
+            "raiders_destroyed",
+            "depot_ignited"
+          ],
+          "routes": {
+            "raiders_destroyed": "next",
+            "depot_ignited": "resolution:armistice_collapses"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "The convoy must purchase heavy inert nitrogen stabilizer units to transit civilian space without tripping hazardous goods sensors.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "jubilee_envoy",
+          "target": "jubilee_orbital",
+          "reason": "She needs industrial cryogenic nitrogen tanks purchased from open markets and delivered to the launch stadium to stabilize the flash powder.",
+          "private_fact": "She is suffering from late-stage radiation sickness and knows this jubilee is her final political act.",
+          "outcome_tags": [
+            "coolant_delivered",
+            "powder_destabilized"
+          ],
+          "routes": {
+            "coolant_delivered": "next",
+            "powder_destabilized": "resolution:armistice_collapses"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "neighbouring_system",
+      "public_change": "{role:blockade_corvette} takes firing position across the stadium approach lanes, raising primary energy shields.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "jubilee_envoy",
+          "target": "blockade_corvette",
+          "reason": "She needs the customs corvette disabled so the fireworks transport can slip into the stadium launch cradle before the treaty signing deadline.",
+          "private_fact": "The corvette commander hails mid-combat offering five years of tax-free weapons transport licenses to turn over the chemical freighters.",
+          "outcome_tags": [
+            "corvette_neutralized",
+            "took_customs_deal"
+          ],
+          "routes": {
+            "corvette_neutralized": "resolution:jubilee_illuminated",
+            "took_customs_deal": "resolution:embargo_enforced"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "jubilee_illuminated",
+      "reached_by": "The pilot breaks the customs corvette and delivers the pyrotechnic cargo.",
+      "summary": "Synchronized fireworks light the skies of three systems. The armistice treaty is signed amidst cheering crowds, breaking {role:defense_trust}'s war monopoly.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "peace_coalition",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "defense_trust",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "jubilee_envoy",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_provost",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "illuminated_the_peace_jubilee",
+          "public_summary": "A mercenary smashed through an illegal weapons embargo to deliver festival fireworks that sealed a three-system peace treaty."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "embargo_enforced",
+      "reached_by": "The pilot accepts the corvette commander's license bribe and yields the cargo.",
+      "summary": "{role:security_provost} seizes the fireworks as illegal munitions. {role:jubilee_envoy} is disgraced, the peace festival is cancelled, and weapons stocks soar.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "defense_trust",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "peace_coalition",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_provost",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "jubilee_envoy",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "surrendered_the_peace_cargo",
+          "public_summary": "Pilots tell of a smuggler who took a naval transport licence to sell out the peace jubilee fireworks to the arms lobby."
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "armistice_collapses",
+      "reached_by": "The pilot fails the mission runs or the chemical depot is destroyed.",
+      "summary": "Without the ceremonial fireworks, the festive summit breaks down in mutual paranoia. Border patrols exchange live fire, and the regional war reignites.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "defense_trust",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "peace_coalition",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "jubilee_envoy",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": [
+            "festival"
+          ]
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "armistice_collapses",
+  "loose_threads": [
+    {
+      "id": "t_provost_munition_contract",
+      "surface": "price_board",
+      "detail": "The regional exchange records an options purchase for three million railgun slugs held by the provost's personal blind trust.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_altered_chemical_classification",
+      "surface": "station_notice",
+      "detail": "The customs hazard registry reclassified strontium nitrate from festival grade to class-one munition using an electronic signature logged after hours.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_unregistered_picket_callsign",
+      "surface": "ship_marking",
+      "detail": "The raider gunboats attacking the chemical depot bear repainted hull numbers matching a defense trust security subsidiary based in the capital.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "forged_records",
+      "debt_leverage",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Jubilee delegates express cautious optimism as armistice summit approaches final ratification.",
+    "Customs enforcement impounds five civilian freighters carrying 'unauthorized oxidizers'.",
+    "Defense contractors report quarterly revenue drop ahead of expected peacetime transition."
+  ],
+  "voice_direction": {
+    "jubilee_envoy": "Graceful, low, and laced with absolute exhaustion. Every phrase carries the solemn weight of someone holding back a catastrophic regional war with sheer willpower.",
+    "security_provost": "Crisp, cold, and relentlessly smug. Treats the potential outbreak of mass war as a simple matter of administrative regulatory compliance."
+  },
+  "novelty_tags": [
+    "peace_jubilee",
+    "firework_embargo",
+    "armistice_sabotage",
+    "defense_lobby",
+    "chemical_blockade"
+  ]
+}

@@ -1,0 +1,353 @@
+{
+  "id": "premise.the_minstrels_ransom",
+  "schema_version": 1,
+  "title": "The Minstrel's Ransom",
+  "logline": "A holiday concert promoter hires an armed pilot to intercept a beloved acoustic balladeer who is fleeing with the festival deposit to join a rival mining colony.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "noir"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "festival_promoter",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "An overextended entertainment factor who mortgaged his family shuttle to organize the solstice concert.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "celebrated_minstrel",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "An aging acoustic balladeer whose songs have defined frontier miners for forty years; vain, tired, looking for an honest exit.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "promoter_gunboat",
+      "kind": "ship",
+      "description": "A rented heavy patrol craft armed with tractor grapples and EMP disabling arrays.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "solstice_syndicate",
+      "kind": "faction",
+      "description": "The casino and entertainment trust controlling tickets and vendor concessions for the holiday.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rival_mining_guild",
+      "kind": "faction",
+      "description": "A competing rim cooperative that offered the minstrel a debt-free retirement villa in exchange for exclusive performances.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "solstice_amphitheater",
+      "kind": "place",
+      "description": "The massive transparent pleasure dome on the primary station where thirty thousand miners await the concert.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outpost_haven",
+      "kind": "place",
+      "description": "An unaligned mineral waystation on the system rim where the minstrel's getaway transport is refueling.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "market_disrupted",
+    "rival_humiliated"
+  ],
+  "public_situation": "Thirty thousand ticket-holders gather at {role:solstice_amphitheater}, unaware that {role:celebrated_minstrel} has slipped his mooring and fled.",
+  "private_truth": "{role:festival_promoter} slipped a lifetime performance indenture into the minstrel's booking contract, forcing the musician to flee for his freedom.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "promoter_forged_exclusive_lifetime_performance_clause"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Stage technicians discover the minstrel's dressing cabin empty while sound checks echo across the cavernous amphitheater.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "festival_promoter",
+          "target": "solstice_amphitheater",
+          "reason": "He needs structural ferrite delivered to shore up temporary speaker gantries while he stalls the angry audience and tracks the singer.",
+          "private_fact": "He already spent the box office ticket receipts to pay off his personal gambling arrears at the station tables.",
+          "outcome_tags": [
+            "ferrite_delivered",
+            "gantry_collapsed"
+          ],
+          "routes": {
+            "ferrite_delivered": "next",
+            "gantry_collapsed": "resolution:solstice_riot"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "A faint encrypted distress ping broadcasts from the asteroid fringe, revealing the minstrel's ship was intercepted by bounty hunters.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "festival_promoter",
+          "target": "outpost_haven",
+          "culprit": "festival_promoter",
+          "reason": "He needs the pilot to scan the fringe asteroid relays and identify which hidden landing bay is harboring the singer's vessel.",
+          "private_fact": "The singer's acoustic guitar holds the only original copy of the forged booking contract hidden inside its soundboard.",
+          "outcome_tags": [
+            "minstrel_located",
+            "trail_lost"
+          ],
+          "routes": {
+            "minstrel_located": "next",
+            "trail_lost": "resolution:solstice_riot"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "pressure",
+      "public_change": "Privateer skirmishers hired by the syndicate swarm the refuge bay, attempting to breach the singer's docking clamps.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "celebrated_minstrel",
+          "target": "solstice_syndicate",
+          "reason": "The singer needs the syndicate enforcers driven off and the master electronic contract key recovered from their command gunboat.",
+          "private_fact": "He composed an entirely new ballad during the chase that mocks the promoter's corrupt booking practices by name.",
+          "outcome_tags": [
+            "contract_recovered",
+            "hull_breached"
+          ],
+          "routes": {
+            "contract_recovered": "next",
+            "hull_breached": "resolution:solstice_riot"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:promoter_gunboat} enters orbital space above {role:outpost_haven}, charging pulse cannons to disable the singer's engines.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "celebrated_minstrel",
+          "target": "promoter_gunboat",
+          "reason": "The singer needs the promoter's gunboat broken so his passenger transport can break orbit and reach the rival mining guild safely.",
+          "private_fact": "The gunboat skipper hails mid-fight offering fifty thousand credits in festival scrip to force the singer back to the amphitheater stage.",
+          "outcome_tags": [
+            "gunboat_disabled",
+            "took_promoter_payout"
+          ],
+          "routes": {
+            "gunboat_disabled": "resolution:singer_escapes_free",
+            "took_promoter_payout": "resolution:coerced_performance"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "singer_escapes_free",
+      "reached_by": "The pilot disables the gunboat and secures the singer's flight.",
+      "summary": "{role:celebrated_minstrel} reaches the rival colony safely. {role:festival_promoter} is ruined when the festival crowd riots over the empty stage.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "rival_mining_guild",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "solstice_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "celebrated_minstrel",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_promoter",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "freed_the_solstice_minstrel",
+          "public_summary": "A mercenary broke through syndicate muscle to help a legendary frontier singer escape a predatory festival contract."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "coerced_performance",
+      "reached_by": "The pilot accepts the promoter's payout and forces the singer back to the stage.",
+      "summary": "{role:celebrated_minstrel} performs under armed guard to thunderous applause. {role:festival_promoter} pockets the ticket fortune, and the singer remains bonded for life.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "solstice_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "rival_mining_guild",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_promoter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "celebrated_minstrel",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "dragged_the_singer_to_stage",
+          "public_summary": "Pilots recount how a hired gun hauled an aging musician back to the stage at gunpoint so the promoters could collect their gate receipts."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "solstice_riot",
+      "reached_by": "The contract is lost or the pilot abandons the chase.",
+      "summary": "Thirty thousand drunken miners tear down {role:solstice_amphitheater} when midnight passes with no music. Both the singer and promoter flee the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "solstice_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "celebrated_minstrel",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_promoter",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "solstice_riot",
+  "loose_threads": [
+    {
+      "id": "t_advance_ticket_payout",
+      "surface": "price_board",
+      "detail": "The ticket sales ledger shows eighty percent of advance receipts were diverted to an offshore shell firm forty-eight hours before showtime.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_forged_singer_rider",
+      "surface": "cargo",
+      "detail": "The contract document tucked into the guitar case shows an ink signature applied with an automated plotter machine rather than human hand.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_fake_security_livery",
+      "surface": "ship_marking",
+      "detail": "The hull numbering on {role:promoter_gunboat} matches an impounded customs interceptor sold at auction without stripped armaments.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Solstice concert organizers reassure crowds that sound checks are merely running behind schedule.",
+    "Miners pack the amphitheater concourse singing traditional frontier mining laments.",
+    "Rival mining outposts broadcast open invitations offering asylum to stranded artists."
+  ],
+  "voice_direction": {
+    "festival_promoter": "Rapid-fire, oily, and perpetually hysterical. Uses high-energy showmanship to mask intense panic, constantly checking his phone while promising impossible bonuses.",
+    "celebrated_minstrel": "Deep, weary, and dryly cynical. Speaks with theatrical eloquence when he wants to, but sounds mostly like an exhausted tradesman whose tools have been stolen."
+  },
+  "novelty_tags": [
+    "solstice_concert",
+    "escaped_minstrel",
+    "promoter_fraud",
+    "indentured_artist",
+    "amphitheater_riot"
+  ]
+}

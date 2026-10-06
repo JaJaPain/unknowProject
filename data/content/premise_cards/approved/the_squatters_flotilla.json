@@ -1,0 +1,304 @@
+{
+  "id": "premise.the_squatters_flotilla",
+  "schema_version": 1,
+  "title": "The Squatters' Flotilla",
+  "logline": "A makeshift orbital settlement of evicted refinery families is towed toward a solar radiation flare by corporate security tugs, hiring an armed pilot to cut the lines.",
+  "scale": "personal",
+  "tone": [
+    "survival",
+    "tense"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "flotilla_delegate",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Represents two hundred evicted smelter workers living inside chained freight containers; fierce, sleep-deprived, guarding children.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "security_skipper",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Captains the heavy corporate salvage tug; cold, disciplined, treating human settlement clusters as orbital hazards.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "repo_tug",
+      "kind": "ship",
+      "description": "A reinforced industrial tug equipped with heavy magnetic winches and high-output cutting lasers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refinery_consortium",
+      "kind": "faction",
+      "description": "The corporate extraction syndicate that evicted the workers after automating their refinery modules.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "squatter_cluster",
+      "kind": "place",
+      "description": "A jury-rigged habitat of fifty pressurized cargo containers lashed together with heavy towing cables.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "free_port_dock",
+      "kind": "place",
+      "description": "An independent scrapper haven outside corporate jurisdiction willing to grant temporary berthing.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "faction_weakened",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Corporate tugs attach magnetic grapples to {role:squatter_cluster}, claiming the container settlement poses an uncertified navigation hazard.",
+  "private_truth": "{role:refinery_consortium} programmed the towing vector directly through an unshielded solar flare zone to incinerate the settlement and avoid paying severance.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "consortium_steered_evicted_flotilla_into_flare_zone"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Alarms wail inside the lashed cargo pods as magnetic towing winches engage, dragging the cluster outward.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "flotilla_delegate",
+          "target": "squatter_cluster",
+          "reason": "She needs emergency life-support scrubber filter cartridges rushed into the cluster through the external airlock before the pods lose pressure.",
+          "private_fact": "The consortium cut the cluster's auxiliary umbilical line thirty minutes before attaching the tow clamps.",
+          "outcome_tags": [
+            "scrubbers_delivered",
+            "umbilical_ruptured"
+          ],
+          "routes": {
+            "scrubbers_delivered": "next",
+            "umbilical_ruptured": "resolution:flotilla_incinerated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Telemetry scans reveal the tug's trajectory intersects a severe coronal magnetic flare loop in forty minutes.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "flotilla_delegate",
+          "target": "squatter_cluster",
+          "culprit": "refinery_consortium",
+          "reason": "She needs the pilot to scan the tug's guidance beacon and broadcast the lethal trajectory telemetry to public station radios.",
+          "private_fact": "Her eldest daughter is among the mechanics locked inside the pod maintenance hub trying to manually cut the cables.",
+          "outcome_tags": [
+            "trajectory_exposed",
+            "transmitters_jammed"
+          ],
+          "routes": {
+            "trajectory_exposed": "next",
+            "transmitters_jammed": "resolution:flotilla_incinerated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:repo_tug} accelerates thrusters into the flare vector, ignoring emergency hails from the container community.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "flotilla_delegate",
+          "target": "repo_tug",
+          "reason": "She needs the tug's winch nacelles disabled before the cluster enters the fatal radiation boundary.",
+          "private_fact": "The tug skipper hails mid-fight offering sixty thousand credits in mineral vouchers to escort the tug through the scrapper lines.",
+          "outcome_tags": [
+            "tug_disabled",
+            "accepted_clearance_fee"
+          ],
+          "routes": {
+            "tug_disabled": "resolution:flotilla_liberated",
+            "accepted_clearance_fee": "resolution:flotilla_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "flotilla_liberated",
+      "reached_by": "The pilot disables the tug and severs the towing lines.",
+      "summary": "The tow cables are severed in time. The container flotilla is towed to {role:free_port_dock}, and {role:refinery_consortium}'s lethal eviction is exposed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "flotilla_delegate",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_skipper",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_squatters_flotilla",
+          "public_summary": "A mercenary shot the winches off a corporate tug that was dragging two hundred evicted families into a solar flare."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "flotilla_abandoned",
+      "reached_by": "The pilot accepts the skipper's payout and lets the tow continue.",
+      "summary": "The tow continues into the outer flare boundary. The containers suffer fatal decompression, and {role:refinery_consortium} closes the ledger on all back-pay claims.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_skipper",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "flotilla_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "took_the_eviction_blood_money",
+          "public_summary": "Dark rumours persist of a hired pilot who took corporate scrip to look away while an evicted container colony drifted into the fire."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "flotilla_incinerated",
+      "reached_by": "The pilot fails the missions or abandons the contract before the flare strike.",
+      "summary": "The container pods cross the solar radiation threshold. Life support fails across all units, and the consortium lists the incident as an accidental navigation loss.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "flotilla_delegate",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_skipper",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "flotilla_incinerated",
+  "loose_threads": [
+    {
+      "id": "t_automated_winch_log",
+      "surface": "scan",
+      "detail": "The autopilot memory on {role:repo_tug} shows the flare vector was pre-calculated and uploaded three weeks before the eviction was announced.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_severance_escrow_void",
+      "surface": "price_board",
+      "detail": "The consortium's payroll ledger lists five million credits in severance escrow scheduled to revert to company reserves if the workers cease claiming berths.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_counterfeit_salvage_decree",
+      "surface": "station_notice",
+      "detail": "The hazard eviction decree posted on the dock is authenticated with an expired notary serial belonging to an attorney who died two years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Port control warns civilian traffic to avoid uncertified squatter container clusters.",
+    "{role:refinery_consortium} declares automated smelting operations are achieving record efficiency.",
+    "Refugee advocates protest hazardous drift towing outside {role:free_port_dock}."
+  ],
+  "voice_direction": {
+    "flotilla_delegate": "Raspy, raw, and trembling with fury. Delivers curt, desperate commands over blaring hull decompression alarms.",
+    "security_skipper": "Monotone, clinical, and totally remorseless. Treats two hundred living people as generic 'derelict freight mass' requiring routine orbital clearance."
+  },
+  "novelty_tags": [
+    "squatter_flotilla",
+    "hazardous_tow",
+    "refinery_eviction",
+    "solar_flare_danger",
+    "cable_cutting"
+  ]
+}

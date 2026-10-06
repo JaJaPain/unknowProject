@@ -1,0 +1,381 @@
+[
+  {
+    "id": "premise.the_evacuee_exodus",
+    "schema_version": 1,
+    "title": "The Evacuee Exodus",
+    "logline": "A colonial delegate discovers a planetary radiation evacuation order was faked across three star systems so a mining conglomerate can seize empty orbital habitats without paying relocation costs.",
+    "scale": "regional",
+    "tone": [
+      "survival",
+      "tense"
+    ],
+    "themes": [
+      "truth_vs_comfort",
+      "scarcity_breeds_cruelty"
+    ],
+    "roles": [
+      {
+        "id": "evacuation_delegate",
+        "kind": "person",
+        "archetype": "refugee",
+        "description": "Leads a convoy of twenty thousand displaced miners crammed aboard unshielded freight lighters; desperate, watchful, demanding proof.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "provincial_surveyor",
+        "kind": "person",
+        "archetype": "scientist",
+        "description": "An independent solar astrophysicist who discovered the solar flare warning was manufactured using altered telemetry.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "interdictor_frigate",
+        "kind": "ship",
+        "description": "A heavy corporate cruiser enforcing quarantine lanes to prevent evacuated residents from returning home.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "habitat_refugees",
+        "kind": "faction",
+        "description": "Thousands of evicted orbital families displaced from their moon habitats and crowded into transit holding bays.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "mineral_conglomerate",
+        "kind": "faction",
+        "description": "The extraction holding company that stands to acquire vacant orbital real estate once the evacuation is declared permanent.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "quarantined_outpost",
+        "kind": "place",
+        "description": "The evacuated lunar orbital station in the home system, its residential rings dark and silent.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "solar_observatory",
+        "kind": "place",
+        "description": "A deep-space solar telescope platform in an adjacent system that monitors stellar flare cycles.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "sanctuary_terminus",
+        "kind": "place",
+        "description": "An overcrowded refugee receiving platform two jumps away where displaced families face starvation and disease.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dying_star"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [
+        "evacuation"
+      ],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "refugees_moving",
+      "market_disrupted",
+      "leader_discredited"
+    ],
+    "public_situation": "Twenty thousand citizens are evacuated across three systems after {role:mineral_conglomerate} announces imminent catastrophic solar coronal ejections.",
+    "private_truth": "{role:provincial_surveyor} discovered the solar flare warning was entirely fabricated by the conglomerate to clear the mineral-rich moon for automated strip-mining.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "fake_solar_emergency_to_seize_moon"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Sirens wail as civilian families are herded onto un-provisioned bulk ore barges while corporate security seals the habitat airlocks.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "evacuation_delegate",
+            "target": "quarantined_outpost",
+            "reason": "She needs an outside pilot to slip past corporate patrols and recover the surveyor's raw solar sensor log drive from the sealed observatory deck.",
+            "private_fact": "Her younger brother was arrested as a 'panic-monger' when he questioned the evacuation timing at the primary docks.",
+            "outcome_tags": [
+              "sensor_drive_secured",
+              "outpost_compromised"
+            ],
+            "routes": {
+              "sensor_drive_secured": "next",
+              "outpost_compromised": "resolution:evacuation_permanent"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "Corporate patrols in the neighboring system order all civilian vessels away from solar observatory relays under threat of impoundment.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "evacuation_delegate",
+            "target": "solar_observatory",
+            "culprit": "mineral_conglomerate",
+            "reason": "She requires a fast courier to enter the neighboring sector and sample sensor arrays along the solar corona, proving the flare cycle remains entirely placid.",
+            "private_fact": "{role:provincial_surveyor} is currently in hiding inside the telescope's maintenance pod, subsisting on emergency nutrient paste.",
+            "outcome_tags": [
+              "dormancy_proven",
+              "telescope_blinded"
+            ],
+            "routes": {
+              "dormancy_proven": "next",
+              "telescope_blinded": "resolution:evacuation_permanent"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "crisis",
+        "location": "neighbouring_system",
+        "public_change": "Corporate hunter packs intercept the refugee barge communication channels, transmitting virus payloads to disable navigation beacons.",
+        "missions": [
+          {
+            "verb": "kill_ships",
+            "requester": "evacuation_delegate",
+            "target": "mineral_conglomerate",
+            "reason": "She needs the corporate interceptors destroyed before their jamming arrays cause the overloaded refugee barges to collide in transit.",
+            "private_fact": "The refugee barges have less than twenty-four hours of breathable air remaining in their unventilated holds.",
+            "outcome_tags": [
+              "interceptors_destroyed",
+              "convoy_scattered"
+            ],
+            "routes": {
+              "interceptors_destroyed": "next",
+              "convoy_scattered": "resolution:evacuation_permanent"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "reversal",
+        "location": "any_system",
+        "public_change": "The refugee convoy stalls outside the border gate as sanitation systems fail and drinking water runs out.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "evacuation_delegate",
+            "target": "sanctuary_terminus",
+            "reason": "She needs industrial water purification filters purchased from open commercial ports and brought to the sanctuary dock to keep the refugees alive.",
+            "private_fact": "She sold her family's ancestral land allotment deed to a scrapper broker to pay for the filters.",
+            "outcome_tags": [
+              "water_secured",
+              "sanitation_failed"
+            ],
+            "routes": {
+              "water_secured": "next",
+              "sanitation_failed": "resolution:evacuation_permanent"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 5,
+        "function": "climax",
+        "location": "neighbouring_system",
+        "public_change": "{role:interdictor_frigate} blocks the return hyperlane, broadcasting that the home system is an unapproachable dead zone.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "evacuation_delegate",
+            "target": "interdictor_frigate",
+            "reason": "She needs the corporate cruiser disabled so the truth of the fake emergency can be broadcast to the entire sector and the refugees can turn back.",
+            "private_fact": "The cruiser commander hails mid-combat offering lifetime mineral royalties from the seized moon if the pilot turns over the solar data.",
+            "outcome_tags": [
+              "frigate_disabled",
+              "took_conglomerate_deal"
+            ],
+            "routes": {
+              "frigate_disabled": "resolution:exodus_reversed",
+              "took_conglomerate_deal": "resolution:colony_absorbed"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "exodus_reversed",
+        "reached_by": "The pilot disables the frigate and exposes the fake solar emergency.",
+        "summary": "The solar emergency is proven a fraud. Twenty thousand refugees turn their ships around and reclaim their habitats, breaking {role:mineral_conglomerate}'s land grab.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "habitat_refugees",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "mineral_conglomerate",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "evacuation_delegate",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "provincial_surveyor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "reversed_the_false_exodus",
+            "public_summary": "A mercenary exposed a fabricated solar flare panic and guided twenty thousand displaced miners back to their homes."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "leader_discredited"
+        ]
+      },
+      {
+        "id": "colony_absorbed",
+        "reached_by": "The pilot accepts the corporate royalty deal and buries the solar survey.",
+        "summary": "The solar emergency is cemented in law. {role:mineral_conglomerate} takes title to the abandoned lunar habitats, and the refugees are scattered across distant squatter ports.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "mineral_conglomerate",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "habitat_refugees",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "evacuation_delegate",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "provincial_surveyor",
+            "fate": "disappeared"
+          },
+          {
+            "type": "deed",
+            "tag": "sold_out_the_lunar_exodus",
+            "public_summary": "Dark rumors tell of a pilot who took mining shares to help corporate landlords steal an entire moon under a fake radiation alarm."
+          }
+        ],
+        "seeds": [
+          "debt_owed_to_player",
+          "refugees_moving"
+        ]
+      },
+      {
+        "id": "evacuation_permanent",
+        "reached_by": "The pilot fails the missions or abandons the convoy.",
+        "summary": "Without verified solar proof, the evacuation becomes permanent. Overcrowding and famine decimate the refugee convoys, while automated strip-mining begins on the moon.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "mineral_conglomerate",
+            "delta": 2
+          },
+          {
+            "type": "cast_fate",
+            "target": "evacuation_delegate",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "provincial_surveyor",
+            "fate": "disappeared"
+          }
+        ],
+        "seeds": [
+          "refugees_moving",
+          "faction_emboldened"
+        ]
+      }
+    ],
+    "default_resolution": "evacuation_permanent",
+    "loose_threads": [
+      {
+        "id": "t_automated_mining_manifest",
+        "surface": "cargo",
+        "detail": "Automated drill rigs arriving at the moon bear shipping manifests dated two weeks before the flare warning was issued.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_refugee_bond_shortage",
+        "surface": "price_board",
+        "detail": "The regional banking exchange shows corporate options shorting municipal habitat bonds thirty-six hours before the evacuation order.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_doctored_solar_archive",
+        "surface": "station_notice",
+        "detail": "The solar warning advisory posted at the gates bears an electronic signature hash copied from a century-old flare record in another system.",
+        "can_carry_methods": [
+          "impersonation",
+          "sabotage"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "forged_records",
+        "debt_leverage",
+        "cornering_a_market",
+        "impersonation"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Provincial authorities declare total evacuation of lunar orbital sectors citing solar radiation.",
+      "Refugee convoys face critical water and medical shortages across intermediate transit platforms.",
+      "{role:mineral_conglomerate} announces emergency deployment of automated infrastructure to 'protect assets'."
+    ],
+    "voice_direction": {
+      "evacuation_delegate": "Gravelly, hurried, and fierce. Speaks with the desperate authority of someone keeping twenty thousand panicking people from mutiny while checking life-support gauges.",
+      "provincial_surveyor": "Furtive, rapid, and terrified. Uses hushed, conspiratorial cadences, delivering astrophysics equations in panicked bursts."
+    },
+    "novelty_tags": [
+      "fake_evacuation",
+      "lunar_land_grab",
+      "solar_flare_fraud",
+      "refugee_convoy",
+      "interdictor_blockade"
+    ]
+  }
+]
