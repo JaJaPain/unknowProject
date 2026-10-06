@@ -910,7 +910,9 @@ through the marked gate and flies you in):
       ended), all true to what you played. "Open the saved copy" opens a page
       in your browser; "Close the campaign" deletes that campaign and returns
       to the campaign manager. "Load Last Save" still carries on as before.
-- [ ] **Retire the Captain:** systems menu -> RETIRE THE CAPTAIN, confirm:
+- [ ] **Retire the Captain:** SYSTEMS menu -> CAMPAIGNS & SAVES -> the red
+      END THIS CAMPAIGN area -> RETIRE THE CAPTAIN... -> its own screen; hold
+      the button ~3 s (letting go cancels):
       the same story as a keepsake ("How it started", "Who they met", ...,
       "retired with the ship intact"), a saved copy, then the campaign closes.
 - [ ] **Destinations are the real set pieces:** each Destination is now

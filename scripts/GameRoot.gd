@@ -3524,12 +3524,16 @@ func can_start_new_campaign() -> bool:
 		and not campaign_slot_registry.first_empty_slot_id().is_empty()
 
 
-func start_new_campaign_after_death() -> bool:
+## `slot_id`: the empty slot to start it in (Campaigns & Saves), or the first
+## empty one.
+func start_new_campaign_after_death(slot_id: String = "") -> bool:
 	if campaign_slot_registry == null:
 		_initialize_campaign_registry()
 	if campaign_slot_registry == null:
 		return false
 	var target_slot_id := campaign_slot_registry.first_empty_slot_id()
+	if not slot_id.is_empty() and not bool(campaign_slot_registry.get_slot(slot_id).get("occupied", true)):
+		target_slot_id = slot_id
 	if target_slot_id.is_empty():
 		_notify_system_warning(
 			"All three campaigns are occupied. Delete one to start another."
@@ -13019,6 +13023,31 @@ func _run_keepsake_snapshot() -> void:
 	for i in 60:
 		await get_tree().process_frame
 	var ui = GlobalState.get_ui_manager()
+	# Playtest 2026-10-06 finding 3: no new-campaign or retire buttons among
+	# the everyday ones; both live in Campaigns & Saves, retire behind a hold.
+	for b in (ui.get("pause_panel") as Node).find_children("*", "Button", true, false):
+		if str((b as Button).text) in ["START NEW CAMPAIGN", "RETIRE THE CAPTAIN"]:
+			fail.call("'%s' is still on the systems menu." % (b as Button).text)
+			return
+	ui.call("_open_campaign_manager")
+	await get_tree().create_timer(0.5).timeout
+	await _hud_snapshot_save(out.path_join("campaigns.png"))
+	var area: Node = (ui.get("campaign_panel") as Node).find_child("EndCampaignArea", true, false)
+	if active_campaign_slot_id != "" and area == null:
+		fail.call("Campaigns & Saves has no 'End this campaign' area.")
+		return
+	var retire_screen: CanvasLayer = ui.call("retire_captain")
+	var retired := [false]
+	retire_screen.confirmed.connect(func() -> void: retired[0] = true)
+	await get_tree().create_timer(0.4).timeout
+	await _hud_snapshot_save(out.path_join("retire_screen.png"))
+	retire_screen.call("hold_for", 1.0)
+	if retired[0]:
+		fail.call("A one-second hold retired the Captain.")
+		return
+	retire_screen.queue_free()
+	(ui.get("campaign_panel") as Control).visible = false
+	print("[KeepsakeSnapshot] retire is gated: Campaigns & Saves, its own screen, a 3 s hold")
 	var death: Control = ui.get("death_panel")
 	death.visible = true
 	await get_tree().create_timer(0.6).timeout

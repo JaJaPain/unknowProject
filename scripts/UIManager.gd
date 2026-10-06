@@ -2709,13 +2709,8 @@ func _create_pause_menu():
 	_add_pause_action(actions, "GALLERY", open_gallery)
 	_add_pause_action(actions, "COMBAT HELP", func(): _show_combat_tutorial_popup(true))
 	_add_pause_action(actions, "CAMPAIGNS & SAVES", _open_campaign_manager)
-	pause_new_campaign_button = _add_pause_action(
-		actions,
-		"START NEW CAMPAIGN",
-		_start_new_campaign
-	)
-	_refresh_new_campaign_availability()
-	_add_pause_action(actions, "RETIRE THE CAPTAIN", retire_captain)
+	# New campaign and Retire live in CAMPAIGNS & SAVES, away from the everyday
+	# buttons (playtest 2026-10-06 finding 3).
 	_add_pause_action(actions, "QUIT TO DESKTOP", func(): get_tree().quit())
 
 	var controls_card := _make_pause_card("FLIGHT CONTROLS")
@@ -3220,6 +3215,7 @@ func _refresh_campaign_manager() -> void:
 			selected_campaign_name = str(
 				slot.get("display_name", "Campaign")
 			)
+	_add_end_campaign_area(game_root)
 	var manual: Array = state.get("manual", [])
 	if selected_slot_id.is_empty():
 		var empty_message := Label.new()
@@ -3388,13 +3384,15 @@ func _add_campaign_slot_row(
 		)
 		actions.add_child(delete_button)
 	else:
-		var available := Label.new()
-		available.text = "Available for the next new campaign"
-		available.add_theme_color_override(
-			"font_color",
-			Color(0.65, 0.72, 0.82)
-		)
-		actions.add_child(available)
+		var new_button := Button.new()
+		new_button.name = "NewCampaignIn_" + slot_id
+		new_button.text = "NEW CAMPAIGN IN THIS SLOT"
+		new_button.tooltip_text = "Starts a new campaign here. Your current campaign stays saved in its own slot."
+		new_button.pressed.connect(func() -> void:
+			var game_root := get_tree().current_scene
+			if game_root and game_root.has_method("start_new_campaign_after_death"):
+				game_root.call("start_new_campaign_after_death", slot_id))
+		actions.add_child(new_button)
 
 
 func _add_manual_checkpoint_row(
@@ -3779,13 +3777,52 @@ func _create_death_screen():
 	death_panel.visible = false
 
 
-## Systems menu: the campaign closes for good and the Captain's story is kept.
-func retire_captain() -> void:
-	_confirm_ending(
-		"Retire the Captain? The campaign closes for good and its saves are deleted. "
-		+ "You keep the Captain's story.",
-		"Retire",
-		func() -> void: show_keepsake("retire"))
+## Campaigns & Saves: the playing campaign's red "End this campaign" area,
+## set apart from the saves, with the only way to retire.
+func _add_end_campaign_area(game_root: Node) -> void:
+	if game_root == null or str(game_root.get("active_campaign_slot_id")).is_empty():
+		return
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0, 18)
+	campaign_slots_vbox.add_child(gap)
+	var panel := PanelContainer.new()
+	panel.name = "EndCampaignArea"
+	panel.add_theme_stylebox_override("panel", _make_menu_style(Color(0.08, 0.03, 0.035, 0.92), Color(0.92, 0.3, 0.28, 0.6), 12))
+	campaign_slots_vbox.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 8)
+	panel.add_child(column)
+	var heading := Label.new()
+	heading.text = "END THIS CAMPAIGN"
+	heading.add_theme_color_override("font_color", Color(0.92, 0.3, 0.28))
+	column.add_child(heading)
+	var note := Label.new()
+	note.text = "Retire the Captain and keep their story. The campaign and its saves are deleted."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_color_override("font_color", Color(0.75, 0.7, 0.72))
+	column.add_child(note)
+	var retire := Button.new()
+	retire.name = "RetireCaptainButton"
+	retire.text = "RETIRE THE CAPTAIN..."
+	retire.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	retire.pressed.connect(retire_captain)
+	column.add_child(retire)
+
+
+## The gated retire (finding 3): its own screen with a held confirm; then the
+## keepsake, then the campaign closes. Returns the screen (tests).
+func retire_captain() -> CanvasLayer:
+	var game_root := get_tree().current_scene
+	var facts: Dictionary = game_root.call("keepsake_facts", "retire") if game_root != null and game_root.has_method("keepsake_facts") else {}
+	var screen: CanvasLayer = load("res://scripts/ui/RetireScreen.gd").new()
+	screen.summary = {"campaign": str(facts.get("campaign", "")), "days": int(facts.get("days", 1)),
+		"stories": (facts.get("journal", []) as Array).size(), "credits": int(facts.get("credits", 0))}
+	screen.confirmed.connect(func() -> void:
+		if campaign_panel != null:
+			campaign_panel.visible = false
+		show_keepsake("retire"))
+	add_child(screen)
+	return screen
 
 
 ## Death screen: end the campaign here and keep the story, told as a eulogy.
