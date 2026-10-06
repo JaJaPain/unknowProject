@@ -261,6 +261,34 @@ A loose thread is a small, concrete, **observable oddity** that the card doesn't
 - It must **not be resolved** inside the card. The card's own story works whether or not the thread ever pays off.
 - `can_carry_methods` names which hidden-hand methods this detail could plausibly be evidence of.
 
+### Where players read your words (new)
+
+Three fields now appear on screen as written (with `{role:...}` filled in by
+the game), long after the story happened. Each must make sense **on its own**,
+to a player who has forgotten the details:
+
+- **`public_situation`**: the ship companion's journal shows it for a story
+  that is still unfinished. Present tense, what anyone could see.
+- **Resolution `summary`**: the journal shows it once the story ends, and the
+  end-of-campaign keepsake (the Captain's story, read when the player retires
+  or ends the campaign) repeats it. Write it as a plain record of what
+  happened: who won, who paid, what changed. Use role placeholders for
+  people, not bare job titles where a role exists ("{role:assay_chief} kept
+  her office" rather than "the chief kept her office"). No director notes,
+  no "if the pilot...". Under ~200 characters.
+- **Loose thread `detail`**: shown on its own on the player's clue board and,
+  at the season's climax, laid on the table as one card of the evidence. One
+  concrete, present-tense observation of 60-160 characters. No "the pilot
+  notices"; just the oddity.
+
+**The main story is short of threads for four methods.** Across your next
+batches, give at least one thread per card that can carry `debt_leverage`,
+`cornering_a_market`, `impersonation` or `slow_infiltration` when the story
+honestly allows it (a loan rewritten at odd terms, one buyer quietly holding
+every contract for a part, a signature that doesn't match its owner's hand,
+a new hire who has been on every crew that failed). Never stretch a thread
+to fit.
+
 ---
 
 ## 6. A complete example

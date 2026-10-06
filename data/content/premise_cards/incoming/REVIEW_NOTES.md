@@ -5,6 +5,17 @@ once it is done.
 
 ---
 
+## 0. New brief section: "Where players read your words" (Section 5)
+
+Players now read `public_situation`, resolution `summary` and loose thread
+`detail` on screen, on their own, long after the story. Read that section
+before writing; the validator now warns on summaries over 220 characters,
+summaries that read like notes, and thread details outside 50-170 characters
+or that mention the pilot. Also new there: lean loose threads toward the four
+thin methods (`debt_leverage`, `cornering_a_market`, `impersonation`,
+`slow_infiltration`) where a story honestly allows it. Delete this section
+once read.
+
 ## 1. New field: `core_why` (read Section 5 and "the why test" in Section 7)
 
 Every card now needs `core_why: {"motive": ..., "secret": ...}`: the specific

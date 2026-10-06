@@ -570,6 +570,19 @@ def validate_card(card, report):
     thin_summaries = [r for r in card["resolutions"] if len(r.get("summary", "")) < 70]
     if thin_summaries:
         report.add("WARN", card_id, "%d resolution summary(ies) under 70 characters; say who wins, who pays and what changes" % len(thin_summaries))
+    # Players read these on screen, alone (brief: "Where players read your words").
+    long_summaries = [r for r in card["resolutions"] if len(r.get("summary", "")) > 220]
+    if long_summaries:
+        report.add("WARN", card_id, "%d resolution summary(ies) over 220 characters; the journal and keepsake show them as written" % len(long_summaries))
+    for r in card["resolutions"]:
+        if re.search(r"\bif (the )?pilot\b", str(r.get("summary", "")), re.I):
+            report.add("WARN", card_id, "resolution %r summary reads like a note; write the record of what happened" % r.get("id"))
+    for t in card.get("loose_threads", []):
+        detail = str(t.get("detail", ""))
+        if len(detail) < 50 or len(detail) > 170:
+            report.add("WARN", card_id, "loose thread %r is %d characters; a clue card wants 60-160" % (t.get("id"), len(detail)))
+        if re.search(r"\b(the pilot|you)\b", detail, re.I):
+            report.add("WARN", card_id, "loose thread %r mentions the pilot; state just the oddity: %r" % (t.get("id"), detail[:80]))
     avg_conseq = sum(len(r.get("consequences", [])) for r in card["resolutions"]) / max(1, len(card["resolutions"]))
     if avg_conseq < 2.5:
         report.add("WARN", card_id, "endings average %.1f consequences; aim for 3 or more so outcomes change the world" % avg_conseq)
