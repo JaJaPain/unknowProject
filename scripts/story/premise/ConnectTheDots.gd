@@ -32,7 +32,7 @@ const METHOD_LINES := {
 	"false_flag": "Blame laid at the wrong door. {name} laid it.",
 }
 
-## The scene's spoken lines. DRAFT, for Abe's review. {name}: the culprit;
+## The scene's spoken lines. Approved by Abe 2026-10-05. {name}: the culprit;
 ## {lodestar}: the Lodestar's title; {bridge}: the season's approved bridge.
 const NOVA_OPEN := "I kept everything, Captain. Every odd detail. Look."
 ## As she lays the cards down; the method's line lands on the last one.
