@@ -41,6 +41,9 @@ const BOOST_SPEED_MULTIPLIER := 1.25
 ## Manual flight and orbiting never cruise.
 const CRUISE_NEAR := 150.0
 const CRUISE_RAMP := 700.0
+## Fly to a station stops this far past its visible edge, then orbits.
+const STATION_STANDOFF_MARGIN := 150.0
+const ORBIT_ARRIVAL_SLACK := 40.0
 const CRUISE_MODES := ["APPROACH", "APPROACH_1K", "JUMP_APPROACH", "DOCK", "MOVE_TO_POINT", "MINE", "ATTACK"]
 const BOOST_DURATION_SECONDS := 5.0
 const BOOST_COOLDOWN_SECONDS := 60.0
@@ -1278,6 +1281,11 @@ func _physics_process(delta: float):
 		match nav_mode:
 			"APPROACH":
 				target_position = active_target.global_position
+				# Fly to a station or outpost: arrive at its edge and settle
+				# into an orbit there, never in close (playtest 2026-10-06
+				# finding 4). Only Dock goes in.
+				if active_target.is_in_group("station") and dist <= _standoff_radius(active_target) + ORBIT_ARRIVAL_SLACK:
+					nav_mode = "ORBIT"
 					
 			"APPROACH_1K":
 				target_position = active_target.global_position
@@ -1370,7 +1378,7 @@ func _physics_process(delta: float):
 						
 			"ORBIT":
 				var to_target = global_position - active_target.global_position
-				var orbit_radius = 25.0
+				var orbit_radius := _orbit_radius_for(active_target)
 				var tangent = Vector3(-to_target.z, 0, to_target.x).normalized()
 				var radial = to_target.normalized()
 				
@@ -1446,10 +1454,9 @@ func _physics_process(delta: float):
 					target_stop_dist = _get_obstacle_radius(active_target) \
 						+ _get_obstacle_safety_margin(active_target)
 				elif active_target.is_in_group("station"):
-					target_stop_dist = 110.0
-					# A big main station: stop at its approach sphere.
-					if active_target.has_method("is_berthed") and bool(active_target.call("is_berthed")):
-						target_stop_dist = float(active_target.call("approach_sphere_radius"))
+					# Stations and outposts: the edge of what you can see (or a
+					# big main station's approach sphere), then an orbit.
+					target_stop_dist = _standoff_radius(active_target)
 				elif active_target.is_in_group("asteroid") or active_target.is_in_group("ship"):
 					target_stop_dist = 60.0
 				target_speed = clamp((dist - target_stop_dist) * 4.0, -speed_limit, speed_limit)
@@ -2219,6 +2226,35 @@ func _emit_navigation_route_clear(obstacle: Node3D) -> void:
 		Color(0.0, 0.9, 0.9)
 	)
 	navigation_notice_obstacle_id = 0
+
+
+## How far out the autopilot keeps from a station, outpost, gate, planet or
+## Destination: past the edge of what you can see. A big main station uses
+## its approach sphere (playtest 2026-10-06 finding 4).
+func _standoff_radius(target: Node3D) -> float:
+	if target.has_method("approach_stop_distance"):
+		return float(target.call("approach_stop_distance"))
+	var margin := _get_obstacle_safety_margin(target)
+	if not target.is_in_group("station"):
+		return _get_obstacle_radius(target) + margin
+	# Stations and outposts: past the visible model, never just its
+	# collision; a berthed main station at least out to its approach sphere.
+	var Bounds := preload("res://scripts/navigation/ObstacleBounds.gd")
+	var out := maxf(_get_obstacle_radius(target), Bounds.visual_radius(target)) + maxf(margin, STATION_STANDOFF_MARGIN)
+	if target.has_method("is_berthed") and bool(target.call("is_berthed")):
+		out = maxf(out, float(target.call("approach_sphere_radius")))
+	return out
+
+
+## Orbit: wide around big things (stations, outposts, gates, planets, the
+## Destination), tight around rocks and ships.
+func _orbit_radius_for(target: Node3D) -> float:
+	if target.is_in_group("station") or target.is_in_group("jumpgate") or target.is_in_group("celestial") \
+			or target.has_method("approach_stop_distance"):
+		return _standoff_radius(target)
+	if target.is_in_group("asteroid"):
+		return maxf(25.0, _get_obstacle_radius(target) + 20.0)
+	return 25.0
 
 
 func _get_obstacle_safety_margin(obstacle: Node3D) -> float:

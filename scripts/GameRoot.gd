@@ -321,6 +321,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_public_board_smoke_test")
 	elif "--generation-diagnostics-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_generation_diagnostics_smoke_test")
+	elif "--fly-to-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_fly_to_smoke_test")
 	elif "--dock-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_dock_smoke_test")
 	elif "--jump-smoke-test" in OS.get_cmdline_user_args():
@@ -8513,6 +8515,67 @@ func _minimum_float_value(values: Array[float]) -> float:
 	for value in values:
 		minimum = minf(minimum, value)
 	return minimum
+
+## Playtest 2026-10-06 finding 4: Fly to a station or outpost never comes
+## inside what you can see, and settles into an orbit at its edge.
+##   -- --fly-to-smoke-test --baseline-offline
+func _run_fly_to_smoke_test() -> void:
+	await get_tree().process_frame
+	GlobalState.paused = false
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	for i in 30:
+		await get_tree().process_frame
+	var fail := func(message: String) -> void:
+		push_error("[FlyToSmokeTest] FAIL: " + message)
+		get_tree().quit(1)
+	var Bounds := preload("res://scripts/navigation/ObstacleBounds.gd")
+	var system_root := get_active_system_root()
+	var stations: Array[Node3D] = []
+	for candidate in get_tree().get_nodes_in_group("station"):
+		if candidate is Node3D and system_root.is_ancestor_of(candidate):
+			stations.append(candidate)
+	if stations.is_empty():
+		fail.call("No stations to fly to.")
+		return
+	Engine.time_scale = 4.0
+	for station in stations:
+		var edge: float = Bounds.visual_radius(station)
+		var standoff: float = player.call("_standoff_radius", station)
+		var away := Vector3(1, 0.15, 0.6).normalized()
+		player.global_position = station.global_position + away * (standoff + 2500.0)
+		player.velocity = Vector3.ZERO
+		player.current_speed = 0.0
+		player.look_at(station.global_position, Vector3.UP)
+		player.sync_camera_to_ship()
+		GlobalState.active_target = station
+		player.call("begin_target_navigation", "APPROACH")
+		var closest := INF
+		var orbit_time := 0.0
+		var t0 := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < 45000:
+			await get_tree().physics_frame
+			var d: float = player.global_position.distance_to(station.global_position)
+			closest = minf(closest, d)
+			if str(player.nav_mode) == "ORBIT":
+				orbit_time += get_physics_process_delta_time() * Engine.time_scale
+				if orbit_time > 20.0:
+					break
+		print("[FlyToSmokeTest] %s: edge %.0f m, standoff %.0f m, closest %.0f m, mode %s" % [station.name, edge, standoff, closest, player.nav_mode])
+		if closest < edge:
+			Engine.time_scale = 1.0
+			fail.call("Flew inside %s (closest %.0f m, edge %.0f m)." % [station.name, closest, edge])
+			return
+		if str(player.nav_mode) != "ORBIT":
+			Engine.time_scale = 1.0
+			fail.call("Didn't settle into an orbit at %s (mode %s)." % [station.name, player.nav_mode])
+			return
+		player.call("cancel_autopilot", true)
+	Engine.time_scale = 1.0
+	print("[FlyToSmokeTest] PASS: every station and outpost: stopped outside it and orbiting")
+	get_tree().quit(0)
+
 
 func _run_dock_smoke_test() -> void:
 	await get_tree().process_frame
