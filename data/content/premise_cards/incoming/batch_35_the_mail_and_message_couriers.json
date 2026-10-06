@@ -1,0 +1,362 @@
+[
+  {
+    "id": "premise.the_drift_relay_chain",
+    "schema_version": 1,
+    "title": "The Drift Relay Chain",
+    "logline": "An independent packet runner fights to keep a string of low-margin frontier mail hops alive after an aggressive logistics conglomerate begins buying and scrapping the relays to isolate mining colonies.",
+    "scale": "regional",
+    "tone": [
+      "bleak",
+      "melancholy"
+    ],
+    "themes": [
+      "reinvention",
+      "labour_and_exploitation"
+    ],
+    "roles": [
+      {
+        "id": "packet_courier",
+        "kind": "person",
+        "archetype": "pilot",
+        "description": "Inherited her deceased partner's battered postal runner; exhausted, fiercely loyal to remote mining outposts.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "conglomerate_liquidator",
+        "kind": "person",
+        "archetype": "debt_collector",
+        "description": "A cold asset manager buying up distressed communications routes to dismantle competitive freight channels.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "outpost_cooperative",
+        "kind": "faction",
+        "description": "A league of isolated colony settlements relying on scheduled packet boats for medical news and trade letters.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "central_dispatch_dock",
+        "kind": "place",
+        "description": "A decaying regional hub in the core system where frontier mail sacks are sorted and stamped.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "deep_relay_station",
+        "kind": "place",
+        "description": "An uncrewed solar relay buoy anchored in a neighbouring border system along the fringe jump corridor.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "fringe_colony_depot",
+        "kind": "place",
+        "description": "A remote pressurized habitat dock in an outer system cut off from mainline commercial comms.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "ion_storm",
+        "relay_dark_zone"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "route_closed",
+      "route_opened",
+      "market_disrupted"
+    ],
+    "public_situation": "Fringe mining outposts across three star systems face complete isolation as automated relay buoys are systematically decommissioned by asset liquidators.",
+    "private_truth": "{role:conglomerate_liquidator} is buying up defaulted packet franchises specifically to sever free communication, forcing frontier settlements into monopolistic corporate comms contracts.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "liquidator_shuttering_relays_to_monopolize_frontier_data"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Central dispatch posts notices warning that overdue relay maintenance will suspend packet boat clearances within forty-eight hours.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "packet_courier",
+            "target": "central_dispatch_dock",
+            "reason": "She needs replacement solar battery capacitors purchased from commercial vendors and hauled to her dock before her courier license lapses.",
+            "private_fact": "She took an extortionate mortgage on her ship's engine core from the liquidator to pay for previous route permits.",
+            "outcome_tags": [
+              "parts_delivered",
+              "purchase_failed"
+            ],
+            "routes": {
+              "parts_delivered": "next",
+              "purchase_failed": "resolution:outposts_subjugated"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "location": "neighbouring_system",
+        "public_change": "The jump beacon in the transit corridor powers down, leaving incoming cargo haulers blind without packet telemetry.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "packet_courier",
+            "target": "deep_relay_station",
+            "culprit": "conglomerate_liquidator",
+            "reason": "The border system's relay beacon went dark; she hires the pilot to scan the station's diagnostic telemetry and verify why power was cut.",
+            "private_fact": "She already suspected the liquidator cut the relay power manually, but lacked objective sensor proof to file an injunction.",
+            "outcome_tags": [
+              "sabotage_verified",
+              "buoy_decommissioned"
+            ],
+            "routes": {
+              "sabotage_verified": "next",
+              "buoy_decommissioned": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "location": "neighbouring_system",
+        "public_change": "Corporate tugs arrive in the transit sector to commence demolition of the dormant solar relay buoy.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "conglomerate_liquidator",
+            "target": "deep_relay_station",
+            "reason": "He pays the pilot handsomely to collect the buoy's core encryption slate and transfer custody directly to his corporate salvage office.",
+            "private_fact": "If the encryption slate is removed, the entire relay route legally reverts to unassigned corporate salvage under salvage statutes.",
+            "outcome_tags": [
+              "slate_secured",
+              "pickup_declined"
+            ],
+            "routes": {
+              "slate_secured": "next",
+              "pickup_declined": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "location": "any_system",
+        "public_change": "The fringe habitat council convenes an emergency assembly to vote on whether to accept corporate data franchise terms.",
+        "missions_mode": "one_of",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "packet_courier",
+            "target": "fringe_colony_depot",
+            "reason": "She needs the emergency mail cylinder carried through the dark corridor to the isolated habitat before the settlement agrees to the buyout.",
+            "private_fact": "The cylinder holds cooperative funding vouchers that would allow the colony to purchase their own relay maintenance equipment.",
+            "outcome_tags": [
+              "mail_delivered",
+              "mail_dumped"
+            ],
+            "routes": {
+              "mail_delivered": "resolution:independent_route_preserved",
+              "mail_dumped": "resolution:outposts_subjugated"
+            }
+          },
+          {
+            "verb": "delivery_courier",
+            "requester": "conglomerate_liquidator",
+            "target": "fringe_colony_depot",
+            "reason": "He hires the pilot to deliver formal foreclosure notices and corporate monopoly terms to the colony magistrates.",
+            "private_fact": "His contract locks the miners into triple-rate data fees for fifty years once signed.",
+            "outcome_tags": [
+              "notices_served",
+              "contract_rejected"
+            ],
+            "routes": {
+              "notices_served": "resolution:conglomerate_monopoly_sealed",
+              "contract_rejected": "resolution:outposts_subjugated"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "independent_route_preserved",
+        "reached_by": "The pilot delivers the cooperative mail cylinder, funding the colony's independent relay network.",
+        "summary": "{role:outpost_cooperative} buys their own relay equipment. {role:packet_courier} secures long-term mail contracts, breaking the liquidator's blockade.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "outpost_cooperative",
+            "delta": 3
+          },
+          {
+            "type": "cast_fate",
+            "target": "packet_courier",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "conglomerate_liquidator",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "data",
+            "price": "crash"
+          },
+          {
+            "type": "deed",
+            "tag": "saved_the_drift_relay",
+            "public_summary": "A long-haul courier braved dead jump sectors to keep independent mail lines flowing to isolated colonies."
+          }
+        ],
+        "seeds": [
+          "route_opened",
+          "faction_emboldened"
+        ]
+      },
+      {
+        "id": "conglomerate_monopoly_sealed",
+        "reached_by": "The pilot serves the corporate foreclosure notices to the colony habitat.",
+        "summary": "The colony signs the exclusive monopoly agreement. {role:conglomerate_liquidator} shuts down public relays, and {role:packet_courier} is forced out of business.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "outpost_cooperative",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "conglomerate_liquidator",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "packet_courier",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "data",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "route_closed",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "outposts_subjugated",
+        "reached_by": "The pilot ignores the contracts or abandons the mail run midway.",
+        "summary": "Without mail or funding, the frontier settlements capitulate to corporate terms. Public packet routes across the sector are permanently dismantled.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "outpost_cooperative",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "packet_courier",
+            "fate": "disappeared"
+          },
+          {
+            "type": "cast_fate",
+            "target": "conglomerate_liquidator",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "route_closed",
+          "power_vacuum"
+        ]
+      }
+    ],
+    "default_resolution": "outposts_subjugated",
+    "loose_threads": [
+      {
+        "id": "t_liquidator_debt_ledger",
+        "surface": "station_notice",
+        "detail": "The courier skiff's mortgage note was acquired by a blind investment trust that shares its physical address with the planetary mint.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_relay_spectrum_monopoly",
+        "surface": "price_board",
+        "detail": "Broadcast rights for the entire jump sector were auctioned off in a closed-door midnight sitting of the transport ministry.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "bribery"
+        ]
+      },
+      {
+        "id": "t_relocated_transponder_tag",
+        "surface": "ship_marking",
+        "detail": "The liquidator's inspection cutter flies with an emergency postal pennant stolen from a scrapped hospital shuttle.",
+        "can_carry_methods": [
+          "impersonation",
+          "forged_records"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "greed",
+        "control",
+        "survival"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "docking_bribes"
+    ],
+    "radio_hooks": [
+      "Outpost clusters in fringe sectors report losing connection to scheduled commercial packet hops.",
+      "{role:conglomerate_liquidator} announces acquisition of twelve bankrupt frontier communication corridors.",
+      "Independent courier unions protest rising gate tariffs on unescorted mail skiffs."
+    ],
+    "voice_direction": {
+      "packet_courier": "Fast, intense delivery flavored with pilot slang. Becomes defensive and sharp whenever her ship's mortgage is brought up.",
+      "conglomerate_liquidator": "Smooth, calm, corporate articulation. Speaks entirely in passive voice about economic inevitability and efficiency."
+    },
+    "novelty_tags": [
+      "drift_relay",
+      "frontier_mail_route",
+      "conglomerate_buyout",
+      "packet_skiff",
+      "route_abandonment"
+    ]
+  }
+]

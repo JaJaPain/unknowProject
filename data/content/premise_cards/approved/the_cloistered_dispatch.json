@@ -1,0 +1,310 @@
+{
+  "id": "premise.the_cloistered_dispatch",
+  "schema_version": 1,
+  "title": "The Cloistered Dispatch",
+  "logline": "A dying labourer travels to a remote monastic redoubt to hand-deliver a blood-stained letter to a hermit monk who took holy vows thirty years ago to escape a vendetta.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "melancholy"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "penitent_monk",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "An aged hermit living in monastic isolation; wears coarse robes and refuses to speak his secular family name.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "vengeful_pilgrim",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "A sick, gaunt miner who worked twenty years to afford travel across systems carrying his murdered brother's last testament.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "monastic_order",
+      "kind": "faction",
+      "description": "A strict contemplative brotherhood maintaining perpetual radio silence and absolute sanctuary on a hollow asteroid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hermitage_cloister",
+      "kind": "place",
+      "description": "A shielded monastery hollowed out of an asteroid core where docking is strictly regulated by prayer bells.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "wayside_shrine_dock",
+      "kind": "place",
+      "description": "A drafty communal waystation chapel where off-shift miners and transient pilgrims sleep between transit runs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "festival"
+    ]
+  },
+  "accepts_seeds": [
+    "quiet_cover_up",
+    "martyr_made",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "A solitary pilgrim at {role:wayside_shrine_dock} seeks a pilot to carry a handwritten wax-sealed letter across the silence zone to {role:hermitage_cloister}.",
+  "private_truth": "{role:penitent_monk} took religious vows three decades ago not out of divine inspiration, but because church sanctuary statutes shielded him from criminal execution for murder.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "monk_claimed_sanctuary_to_evade_vendetta_justice"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "A seasonal radiation storm prompts the monastery to initiate their annual thirty-day radio blackout.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "vengeful_pilgrim",
+          "target": "wayside_shrine_dock",
+          "reason": "He is coughing blood and cannot pilot through the radiation zone; he pays the pilot to deliver the wax-sealed cylinder to the hermit dock.",
+          "private_fact": "He swore a deathbed oath to deliver the letter directly into the monk's hands so the killer would know his victim's family never forgot.",
+          "outcome_tags": [
+            "cylinder_collected",
+            "mission_refused"
+          ],
+          "routes": {
+            "cylinder_collected": "next",
+            "mission_refused": "resolution:pilgrim_perishes_alone"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Sanctuary wardens sound warning gongs as outside ships approach the cloister dock without monastic clearance.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "vengeful_pilgrim",
+          "target": "hermitage_cloister",
+          "reason": "He begs the pilot to present the cylinder at the monastery gate before the order's evening vespers seal the sanctuary airlock.",
+          "private_fact": "The wax cylinder does not contain threats, but a forged declaration of family forgiveness designed to test if the monk truly repented.",
+          "outcome_tags": [
+            "delivered_to_monk",
+            "monk_refuses_letter"
+          ],
+          "routes": {
+            "delivered_to_monk": "next",
+            "monk_refuses_letter": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "aftermath",
+      "public_change": "The hermit monk emerges from cloistered isolation for the first time in thirty years to face the outside dock.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "penitent_monk",
+          "target": "hermitage_cloister",
+          "culprit": "penitent_monk",
+          "reason": "The monk asks the pilot to scan the sanctuary cloister registry beacon to verify whether the order's founding charter grants absolute immunity from secular law.",
+          "private_fact": "He fears that if the charter is expired, the victim's kin can petition the planetary magistrate to drag him back to the mines in chains.",
+          "outcome_tags": [
+            "charter_affirmed",
+            "charter_invalid"
+          ],
+          "routes": {
+            "charter_affirmed": "next",
+            "charter_invalid": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The monk stands at the cloister portal with the unopened letter. The pilot can persuade him to unseal the testament, return it to the dying pilgrim, or consign it to the sanctuary furnace.",
+        "options": [
+          {
+            "id": "unseal_the_letter",
+            "label": "Press the monk to open and read the testament before witnesses",
+            "leads_to": "resolution:penance_acknowledged"
+          },
+          {
+            "id": "burn_the_letter",
+            "label": "Cast the cylinder into the monastery furnace to preserve the monk's holy peace",
+            "leads_to": "resolution:sanctuary_silence_preserved"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "penance_acknowledged",
+      "reached_by": "The monk breaks the wax seal and reads the forgiveness letter before the altar.",
+      "summary": "{role:penitent_monk} publicly confesses his secular crimes before {role:monastic_order}. He renounces his vows and departs to care for the dying pilgrim.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "penitent_monk",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vengeful_pilgrim",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "monastic_order",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_hermit_silence",
+          "public_summary": "A courier carried a thirty-year-old letter into a silent cloister and compelled an old killer to confess."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "sanctuary_silence_preserved",
+      "reached_by": "The letter is consigned to the sacred furnace unread.",
+      "summary": "The letter is reduced to cinders. {role:penitent_monk} remains cloistered in inviolable silence, while {role:vengeful_pilgrim} dies believing he was ignored.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "penitent_monk",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vengeful_pilgrim",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "monastic_order",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "pilgrim_perishes_alone",
+      "reached_by": "The pilot declines the contract or abandons the transit run.",
+      "summary": "{role:vengeful_pilgrim} succumbs to illness at the wayside dock. The unread testament is discarded with common refuse, leaving the ancient vendetta unresolved.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "vengeful_pilgrim",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "penitent_monk",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "pilgrim_perishes_alone",
+  "loose_threads": [
+    {
+      "id": "t_erased_cloister_charter",
+      "surface": "scan",
+      "detail": "The illuminated register of sanctuary brothers has a surname scraped clean with a razor beneath thirty layers of shellac.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_shrine_donation_ledger",
+      "surface": "station_notice",
+      "detail": "An anonymous endowment paid fifty thousand credits into the monastery fuel account the week the hermit took vows.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_pilgrim_transit_permit",
+      "surface": "cargo",
+      "detail": "The dying pilgrim's transit pass was countersigned by a magistrate who was executed for treason twelve years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "impersonation",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "faith",
+      "guilt",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Hermit brothers at {role:hermitage_cloister} observe seasonal silence; docking requests deferred to prayer bells.",
+    "Wayside chapels across {system} report influx of destitute pilgrims seeking medical sanctuary.",
+    "Magistrates debate legal validity of century-old ecclesiastical sanctuary charters on mining asteroids."
+  ],
+  "voice_direction": {
+    "penitent_monk": "Speaks in flat, measured liturgical cadences. Refuses to use first-person pronouns and avoids speaking past events directly.",
+    "vengeful_pilgrim": "Hoarse, dry, relentless speech punctuated by pauses to catch breath. Repeats his dead brother's name like a talisman."
+  },
+  "novelty_tags": [
+    "monastic_sanctuary",
+    "sealed_penance",
+    "blood_feud",
+    "unopened_confession",
+    "religious_refuge"
+  ]
+}

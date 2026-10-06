@@ -5,30 +5,33 @@ once it is done.
 
 ---
 
-## 1. Keep rotating territories
+## 1. premise.the_drift_relay_chain (batch_35)
+
+A good card with one wrong tag: `reinvention`. The story is a liquidator
+buying and scrapping mail relays to cut colonies off; nobody reinvents
+anything. Keep `labour_and_exploitation` if it fits and choose the other
+theme from what happens (for example `price_of_profit` or
+`safety_vs_freedom`).
+
+This is the fourth round in a row with a tag picked from the deck report's
+gap list instead of from the story. There is now a self-check item for it
+(Section 8, item 12): for every theme and tone, finish "This story is about
+<tag> because ..." with something that happens in the card. Do it for every
+card before you hand a batch over.
+
+## 2. Keep rotating territories, and keep resting two engines
 
 Used on the second lap so far: schools and apprentices, food and farming,
 water and air, gambling and sport rings, shipyards and engineering,
-insurance and risk. Pick from the rest (tourism and luxury, prisons and
-parole, language and translation, maps and lost routes, music and festivals,
-livestock aboard ships, housing and eviction, the mail and message couriers,
-ageing and retirement, rivals and twins, addiction and recovery, weather and
-space hazards).
-
-## 2. Rest two engines for a while
-
-- **Insurance fraud.** The deck now has 13 stories driven by an insurance
-  payout (a ship scuttled or sabotaged for the claim, an insurer dodging one,
-  a fake loss). Until told otherwise, don't make an insurance claim the
-  reason a story exists.
-- **Apprentices and juniors.** Still no apprentice, student, cadet, novice
-  or "junior" as the main role (the_actuarial_scuttle's junior adjuster
-  slipped through this time).
+insurance and risk, the mail and message couriers. Pick from the rest
+(tourism and luxury, prisons and parole, language and translation, maps and
+lost routes, music and festivals, livestock aboard ships, housing and
+eviction, ageing and retirement, rivals and twins, addiction and recovery,
+weather and space hazards). Still no insurance-fraud stories, and no
+apprentice, student, cadet, novice or junior as a main role.
 
 ---
 
-Last round: all 7 approved (the_anniversary_sweepstakes and
-the_consecrated_manifold fixes, the_actuarial_scuttle, the_act_of_god_clause,
-the_salvage_paramount, the_quarantine_risk_pool, the_wreckers_underwriter).
-The manifold rework is a genuinely new story; the dying skipper's scuttle
-and the act-of-god clause were highlights.
+Last round: 4 of 5 approved (the_dead_letter_sack, the_intercepted_dispatch,
+the_cloistered_dispatch, the_demurrage_impasse). The cloistered dispatch was
+a highlight: a monk whose vows were a hiding place.

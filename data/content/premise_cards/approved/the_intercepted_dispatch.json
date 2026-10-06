@@ -1,0 +1,344 @@
+{
+  "id": "premise.the_intercepted_dispatch",
+  "schema_version": 1,
+  "title": "The Intercepted Dispatch",
+  "logline": "When a neutral packet-boat line has its dispatch runner gunned down in transit, the station dispatcher hires an outsider to hunt the raiders and retrieve the encrypted treaty mail.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "station_dispatcher",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Oversees the system courier relay docks; exhausted, chain-smoker demeanor, deeply entangled in station fuel arrears.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corsair_corslet",
+      "kind": "ship",
+      "description": "A heavily modified gun-skiff flown by privateers who ambushed the scheduled mail courier.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "raider_syndicate",
+      "kind": "faction",
+      "description": "A ruthless fringe raiding network intercepting unprotected courier runs across unmonitored lanes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "miners_coalition",
+      "kind": "faction",
+      "description": "An alliance of independent drillers whose confidential peace treaty dispatches were stolen in transit.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "relay_hub_seven",
+      "kind": "place",
+      "description": "The central pressurized hub where courier ships refuel and swap encrypted mail canisters.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "derelict_waypoint",
+      "kind": "place",
+      "description": "An unlit navigation beacon in a dense debris belt where the raiders stashed the intercepted mail pod.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "route_closed",
+    "secret_half_exposed"
+  ],
+  "public_situation": "Scheduled mail service across {system} ground to a halt after an independent courier boat was destroyed near {role:derelict_waypoint}.",
+  "private_truth": "{role:station_dispatcher} sold the mail boat's flight coordinates to {role:raider_syndicate} to settle the hub's unpaid fuel bills, expecting them to steal only cargo rather than slaughter the crew.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "dispatcher_sold_flight_manifests_for_fuel_debts"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Armed raider pickets establish an interdiction cordon around the primary jump relay lane.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "station_dispatcher",
+          "target": "raider_syndicate",
+          "reason": "She needs the raider picket vessels around the transit corridor destroyed before local traffic flees the system and freezes station revenues.",
+          "private_fact": "She leaked the patrol timetable to the raiders on encrypted channels and now fears the corsairs will use the comms logs to blackmail her.",
+          "outcome_tags": [
+            "pickets_destroyed",
+            "raiders_escaped"
+          ],
+          "routes": {
+            "pickets_destroyed": "next",
+            "raiders_escaped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The miners coalition threatens to suspend all system ore exports unless their stolen treaty packet is recovered.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "station_dispatcher",
+          "target": "corsair_corslet",
+          "reason": "She hires the pilot to hunt down the raider flagship and retrieve the encrypted mail pod before the corsairs crack the coalition's cryptographic seal.",
+          "private_fact": "The pod contains proof that the coalition agreed to secret concessions that would bankrupt independent haulers.",
+          "outcome_tags": [
+            "mail_pod_recovered",
+            "pod_damaged"
+          ],
+          "routes": {
+            "mail_pod_recovered": "next",
+            "pod_damaged": "resolution:treaty_destroyed_by_battle"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Coalition delegates assemble at the relay hub demanding custody of the recovered dispatch canister.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "station_dispatcher",
+          "target": "relay_hub_seven",
+          "reason": "She wants the mail pod handed directly to her in person at the relay hub rather than routed through standard customs intake.",
+          "private_fact": "She intends to erase the dispatch registry records of the ambush before the coalition leadership inspects the canister.",
+          "outcome_tags": [
+            "delivered_to_hub",
+            "delivery_refused"
+          ],
+          "routes": {
+            "delivered_to_hub": "next",
+            "delivery_refused": "resolution:packet_line_collapses"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the encrypted dispatches in hand, the pilot can deliver them quietly to the compromised dispatcher, hand them to the miners coalition, or turn them over to system inspectors.",
+        "options": [
+          {
+            "id": "return_to_dispatcher",
+            "label": "Deliver the pod quietly to the station dispatcher",
+            "leads_to": "resolution:dispatcher_covers_tracks"
+          },
+          {
+            "id": "give_to_coalition",
+            "label": "Hand the unedited mail pod directly to the miners coalition",
+            "leads_to": "resolution:coalition_receives_truth"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "coalition_receives_truth",
+      "reached_by": "The pilot delivers the recovered mail pod directly to the miners coalition.",
+      "summary": "{role:miners_coalition} secures their diplomatic dispatches. The dispatcher's route sale is exposed, forcing her resignation and rupturing {role:raider_syndicate}'s grip.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_coalition",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "raider_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_dispatcher",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_coalition_mail",
+          "public_summary": "A freelance pilot recovered the stolen treaty dispatches from raiders and broke the courier blockade."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "dispatcher_covers_tracks",
+      "reached_by": "The pilot hands the mail pod to the station dispatcher for a private fee.",
+      "summary": "{role:station_dispatcher} buries the registry records and settles the station fuel debt. Courier runs resume under armed escort, though the corsairs remain at large.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_dispatcher",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "raider_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "treaty_destroyed_by_battle",
+      "reached_by": "The mail pod is shattered during the skirmish with the corsair flagship.",
+      "summary": "The diplomatic dispatches are obliterated in vacuum. Mistrust flares between {role:miners_coalition} and station authorities, stalling negotiations indefinitely.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_coalition",
+          "delta": -1
+        },
+        {
+          "type": "standing",
+          "target": "raider_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "packet_line_collapses",
+      "reached_by": "The pilot ignores the contract or the delivery is refused.",
+      "summary": "{role:raider_syndicate} dominates the transit lane. Independent courier services abandon the route entirely, leaving fringe stations cut off from regular mail.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "raider_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "packet_line_collapses",
+  "loose_threads": [
+    {
+      "id": "t_packet_encoder_badge",
+      "surface": "cargo",
+      "detail": "The courier pod's encryption keycard bears an official seal for a communications firm that was liquidated six months ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_prepaid_demurrage_receipt",
+      "surface": "station_notice",
+      "detail": "Docking berthing fees for the destroyed mail skiff were paid two weeks in advance by an offshore holding syndicate.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_intercepted_carrier_frequency",
+      "surface": "radio",
+      "detail": "A recurring encrypted burst on the emergency beacon channel matches the pulse frequency of an unlisted corporate scout.",
+      "can_carry_methods": [
+        "information_control",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "cornering_a_market",
+      "blackmail"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Scheduled mail packet overdue at {role:relay_hub_seven}; freight insurance rates jump ten percent.",
+    "{role:miners_coalition} warns that disruption of dispatch runs threatens upcoming treaty talks.",
+    "Unidentified armed skiffs reported prowling transit beacons near {role:derelict_waypoint}."
+  ],
+  "voice_direction": {
+    "station_dispatcher": "Speaks in raspy, hurried tones with frequent pauses to check background monitors. Deflects questions about fuel bills."
+  },
+  "novelty_tags": [
+    "mail_corsairs",
+    "diplomatic_packet",
+    "stolen_cyphers",
+    "ambushed_courier",
+    "dispatcher_corruption"
+  ]
+}

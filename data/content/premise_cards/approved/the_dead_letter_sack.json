@@ -1,0 +1,289 @@
+{
+  "id": "premise.the_dead_letter_sack",
+  "schema_version": 1,
+  "title": "The Dead Letter Sack",
+  "logline": "An aging packet boat skipper hoards undelivered probate mail from an abandoned mining hub to shield his deceased partner's adopted daughter from being disinherited.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "bleak"
+  ],
+  "themes": [
+    "chosen_family",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "packet_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Runs a defunct independent packet boat route; stubborn, arthritic, protective of old debts.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "probate_claimant",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "Biological kin claiming a deceased miner's estate before the dead man's foster children learn of the death.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "repo_cutter",
+      "kind": "ship",
+      "description": "An armed repossession cutter hired by dock creditors to seize the veteran's packet boat and its cargo.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dead_letter_depot",
+      "kind": "place",
+      "description": "A decommissioned orbital postal buoy where undelivered probate packets have gathered dust for years.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "district_registry",
+      "kind": "place",
+      "description": "The system probate magistrate's intake dock where testament cylinders are formally unsealed.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "evidence_loose",
+    "witness_at_large"
+  ],
+  "public_situation": "An obsolete mail tender docked at {role:dead_letter_depot} holds thirty years of undelivered letters from abandoned fringe claims, and creditors are moving to impound the hull.",
+  "private_truth": "{role:packet_veteran} deliberately buried a dying partner's true testament to prevent an estranged biological relative from stripping the foster family's refinery share.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "courier_withheld_probate_mail_for_kin"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Bailiffs post an impound notice on the postal buoy, giving thirty-six hours before the dead-letter locker is auctioned off.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "packet_veteran",
+          "target": "dead_letter_depot",
+          "reason": "He pays the pilot to collect a sealed lead-lined probate dispatch pouch from the depot vault before court bailiffs lock the hatch.",
+          "private_fact": "The pouch holds the holographic seal of a deceased prospector whose estate is being quietly liquidated without his heirs knowing.",
+          "outcome_tags": [
+            "pouch_retrieved",
+            "depot_evaded"
+          ],
+          "routes": {
+            "pouch_retrieved": "next",
+            "depot_evaded": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The biological heir arrives in the system demanding the immediate release of all sealed succession cylinders.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "probate_claimant",
+          "target": "district_registry",
+          "culprit": "packet_veteran",
+          "reason": "She hires the pilot to scan the probate registry intake terminal to prove that the deceased prospector's probate dispatch was illegally suppressed.",
+          "private_fact": "She bought the debt paper on the veteran's ship specifically to force the postal vault open before the statutory claim deadline expires.",
+          "outcome_tags": [
+            "registry_verified",
+            "records_corrupted"
+          ],
+          "routes": {
+            "registry_verified": "next",
+            "records_corrupted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "An armed debt recovery cutter takes up position across the approach corridor to intercept the veteran's skiff.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "packet_veteran",
+          "target": "repo_cutter",
+          "reason": "The creditor cutter has ambushed the route between the depot and the registry; the veteran needs the interdiction broken so the letters reach safe hands.",
+          "private_fact": "The cutter captain offers to clear the veteran's ship debt and pay cash if the pilot surrenders the sealed probate pouch.",
+          "outcome_tags": [
+            "cutter_destroyed",
+            "took_creditor_offer"
+          ],
+          "routes": {
+            "cutter_destroyed": "resolution:foster_heirs_shielded",
+            "took_creditor_offer": "resolution:probate_sold_to_creditors"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "foster_heirs_shielded",
+      "reached_by": "The pilot destroys the repossession cutter and delivers the probate pouch to the foster family.",
+      "summary": "{role:packet_veteran} keeps his ship. The deceased prospector's foster children retain their claim, and the biological heir's petition is dismissed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "packet_veteran",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "probate_claimant",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_dead_letter_sack",
+          "public_summary": "A pilot ran an armed blockade to deliver probate mail that saved an adopted family's home."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "probate_sold_to_creditors",
+      "reached_by": "The pilot accepts the cutter captain's buyout offer and surrenders the probate pouch.",
+      "summary": "{role:probate_claimant} acquires the probate pouch. The foster kin are evicted from the refinery claim, and {role:packet_veteran} is left without a route.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "probate_claimant",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "packet_veteran",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "fenced_dead_letters",
+          "public_summary": "Word spread that a courier sold thirty years of private probate mail to debt collectors for quick scrip."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "stolen_goods_circulating",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "vault_seized_by_default",
+      "reached_by": "The pilot refuses all contracts or ignores the repossession standoff.",
+      "summary": "Bailiffs breach the postal depot. The probate packets are auctioned for paper scrap, leaving the disputed refinery claim in limbo.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "packet_veteran",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "probate_claimant",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "law_change",
+          "law": "salvage_registry",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "vault_seized_by_default",
+  "loose_threads": [
+    {
+      "id": "t_probate_wax_stamp",
+      "surface": "cargo",
+      "detail": "The wax seal on the probate cylinder bears a notary registration number that was retired ten years before the signature date.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_discounted_lien",
+      "surface": "station_notice",
+      "detail": "The debt note on the veteran packet boat was purchased at ninety percent discount by an anonymous clearing account.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_registry_docket_gap",
+      "surface": "scan",
+      "detail": "The probate registry terminal records a three-hour power blackout on the night the disputed prospector died.",
+      "can_carry_methods": [
+        "sabotage",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "guilt",
+      "protecting_someone"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Creditors petition probate court to liquidate obsolete mail pods at {role:dead_letter_depot}.",
+    "{role:district_registry} reminds prospector heirs that unclaimed estate filings expire at cycle end.",
+    "Independent packet skiff cited for unpaid mooring fees near {role:dead_letter_depot}."
+  ],
+  "voice_direction": {
+    "packet_veteran": "Speaks in gravelly fragments with long pauses between sentences. Avoids naming the deceased or the foster daughter.",
+    "probate_claimant": "Crisp, legalistic, fast-cadenced speech. Emphasizes bloodlines, property statutes, and rightful contractual succession."
+  },
+  "novelty_tags": [
+    "probate_mail",
+    "dead_letter_office",
+    "unopened_inheritance",
+    "disinheritance",
+    "family_secrecy"
+  ]
+}

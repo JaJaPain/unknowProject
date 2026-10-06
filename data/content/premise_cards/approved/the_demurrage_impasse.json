@@ -1,0 +1,341 @@
+{
+  "id": "premise.the_demurrage_impasse",
+  "schema_version": 1,
+  "title": "The Demurrage Impasse",
+  "logline": "An insulting diplomatic treaty sent by cheap bulk parcel freight gets locked in an automated mail vault for unpaid storage fees, threatening an armed border dispute over a two-credit late fee.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "political"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "postal_factor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Runs an automated orbital mail locker depot; pedantic, obsessed with procedural bylaws, terrified of pension penalties.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "canton_negotiator",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "An anxious envoy from an asteroid mining canton whose treaty draft will trigger war if delivered with its attached insults.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "customs_interdictor",
+      "kind": "ship",
+      "description": "A heavy planetary customs cutter deployed by the governor to breach the mail locker by main force.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "canton_miners",
+      "kind": "faction",
+      "description": "The sovereign asteroid mining league whose tariff treaty was mislabeled by junior postal clerks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "depot_rock_nine",
+      "kind": "place",
+      "description": "A hollowed asteroid automated postal depot where dead-letter lockers are guarded by automated lockouts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consular_mooring",
+      "kind": "place",
+      "description": "The neutral diplomatic berthing station where treaty delegations await the arrival of the physical charter.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "leader_discredited",
+    "law_tightened"
+  ],
+  "public_situation": "Diplomatic talks between {role:canton_miners} and system customs stalled after the physical treaty parcel was seized for back demurrage at {role:depot_rock_nine}.",
+  "private_truth": "{role:postal_factor} intentionally categorized the diplomatic cylinder as commercial bulk freight so that compounding late storage penalties would cover his station's operational deficit.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "postal_factor_inflated_demurrage_for_station_deficit"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The automated postal station clamps heavy security dampers over all storage lockers pending unpaid fee settlement.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "postal_factor",
+          "target": "depot_rock_nine",
+          "reason": "He refuses to power down the automated locker quarantine until someone delivers bulk silicate ore to repack the vault's micrometeorite blast baffles.",
+          "private_fact": "He secretly vented the old shielding gravel himself to fabricate an emergency safety condition that legally freezes all parcel releases.",
+          "outcome_tags": [
+            "shielding_delivered"
+          ],
+          "routes": {
+            "shielding_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Customs cutters assemble near the depot rock, announcing imminent forfeiture of all overdue commercial parcel freight.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "canton_negotiator",
+          "target": "consular_mooring",
+          "reason": "He pays the pilot to extract the released treaty canister from the depot and haul it straight to the consular dock before customs impounds it.",
+          "private_fact": "He scribbled vulgar caricatures of the customs commissioner in the treaty margins during a drunken committee recess three years ago.",
+          "outcome_tags": [
+            "canister_delivered",
+            "canister_detained"
+          ],
+          "routes": {
+            "canister_delivered": "next",
+            "canister_detained": "resolution:customs_seizes_packet"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "Customs auditors challenge the validity of the dispatch intake receipt, claiming the demurrage lien was forged.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "canton_negotiator",
+          "target": "depot_rock_nine",
+          "culprit": "postal_factor",
+          "reason": "Customs claims the treaty cylinder was tampered with; the negotiator needs the depot intake terminal scanned to prove the postal factor logged the late fee fraudulently.",
+          "private_fact": "The terminal logs prove the postal factor altered the intake timestamp by twelve days to trigger the automatic maximum forfeiture tier.",
+          "outcome_tags": [
+            "fraud_certified",
+            "fraud_disproven"
+          ],
+          "routes": {
+            "fraud_certified": "next",
+            "fraud_disproven": "resolution:customs_seizes_packet"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The flagship customs interdictor moves to block the consular docking lane by force of arms.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "canton_negotiator",
+          "target": "customs_interdictor",
+          "reason": "The customs cutter has blockaded the approach to the consular dock to seize the cylinder; the negotiator needs the interdiction broken so the treaty can be ratified.",
+          "private_fact": "The customs captain hails mid-fight offering to drop all tariff liens and pay a bounty if the pilot surrenders the cylinder for quiet incineration.",
+          "outcome_tags": [
+            "interdictor_destroyed",
+            "accepted_customs_deal"
+          ],
+          "routes": {
+            "interdictor_destroyed": "resolution:treaty_ratified_peace",
+            "accepted_customs_deal": "resolution:customs_seizes_packet"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "treaty_ratified_peace",
+      "reached_by": "The pilot defeats the customs cutter and delivers the intact treaty cylinder to the consular mooring.",
+      "summary": "The treaty is signed and trade borders reopen. {role:postal_factor} is stripped of his postal license for demurrage fraud, saving {role:canton_miners} millions.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "canton_miners",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "postal_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "canton_negotiator",
+          "fate": "promoted"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "repealed"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_postal_impasse",
+          "public_summary": "A pilot blasted through an armed customs blockade to deliver a misfiled treaty held hostage for late fees."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "customs_seizes_packet",
+      "reached_by": "The pilot accepts the customs buyout or the parcel is impounded during transit.",
+      "summary": "Customs burns the treaty cylinder in secret. {role:postal_factor} pockets the demurrage payout, and {role:canton_miners} face harsh retaliatory trade embargoes.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "canton_miners",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "postal_factor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "canton_negotiator",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "customs_war_erupts",
+      "reached_by": "The pilot declines the jobs and the standoff remains unresolved.",
+      "summary": "Customs gunboats storm the automated depot and arrest {role:postal_factor} for treason. The treaty is impounded, plunging the system into an armed tariff dispute.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "canton_miners",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "postal_factor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "blockade"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "customs_war_erupts",
+  "loose_threads": [
+    {
+      "id": "t_demurrage_factoring_pool",
+      "surface": "price_board",
+      "detail": "Unpaid postal demurrage vouchers across three systems are traded as junk derivatives by an offshore clearing house.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_forged_weigh_bill",
+      "surface": "cargo",
+      "detail": "The courier freight bill lists the treaty canister's weight as four hundred kilos rather than four, triggering heavy-freight fees.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_customs_radio_squawk",
+      "surface": "radio",
+      "detail": "The customs cutter's combat transponder broadcast an encrypted identity token registered to a private security firm.",
+      "can_carry_methods": [
+        "impersonation",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Automated postal depot at {role:depot_rock_nine} locks vaults over disputed two-credit handling fee.",
+    "{role:canton_miners} threaten full export strike unless diplomatic mail pouch is released immediately.",
+    "Customs cutter {role:customs_interdictor} deployed to enforce storage liens against orbital mail lockers."
+  ],
+  "voice_direction": {
+    "postal_factor": "Clips each consonant sharply, citing subsection bylaws and fee schedules with pedantic relish. Never admits error.",
+    "canton_negotiator": "Frantic, breathy cadence with high-pitch bursts when discussing deadlines. Shifts tone abruptly to smooth diplomatic flattery."
+  },
+  "novelty_tags": [
+    "postal_demurrage",
+    "bureaucrat_impasse",
+    "misrouted_treaty",
+    "automated_post_office",
+    "unpaid_storage"
+  ]
+}

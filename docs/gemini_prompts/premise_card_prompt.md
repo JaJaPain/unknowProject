@@ -507,6 +507,10 @@ For every card, confirm:
 9. Director notes read as notes, not as dialogue, and `voice_direction` describes words and rhythm, not sounds.
 10. Beat and mission counts match the card's `scale`, and nothing needed later was destroyed or removed earlier on the same route.
 11. The JSON is valid: double quotes, no trailing commas, no comments.
+12. **Tags are honest.** For each theme and tone, finish the sentence "This
+    story is about <theme> because ..." using something that actually
+    happens in the card. If you can't, the tag is wrong: change it. Never
+    keep a tag because the deck report lists it as thin.
 
 ---
 
