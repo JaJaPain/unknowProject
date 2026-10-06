@@ -27,6 +27,12 @@ We need one clear icon per kind of thing the player can target.
 
 ## Deliverables
 
+> **For future orders (Abe, 2026-10-06):** small graphics like these come as
+> ONE image with all of them in a grid (16 icons = one 4 x 4 sheet, even
+> cells, same background, nothing crossing cell borders), not one image per
+> icon; it costs about 1/16 of the compute. This order was already under way
+> as separate files, so it stays as written below.
+
 - 16 PNGs, **256 x 256**, transparent, white art, named exactly as below,
   in `art_inbox/target_icons/`.
 - A short `README.md` in the same folder listing each file and anything to
