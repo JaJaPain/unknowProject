@@ -10,6 +10,7 @@ full stop where "!" makes F5 lift the last word); subtitles keep "text". Needs t
 
   python tools/bake_undercurrent_audio.py [--force] [--preview]
   python tools/bake_undercurrent_audio.py --take <line_id> <picked_file>   (install a take chosen by ear)
+  python tools/bake_undercurrent_audio.py --preview --only <line_id> --takes 3   (takes to choose from)
 """
 import io
 import json
@@ -99,6 +100,10 @@ def main():
     # folder so Abe can listen before approving. Nothing lands in the game.
     preview = "--preview" in sys.argv
     lines = json.load(io.open(LINES, encoding="utf-8"))["lines"]
+    if "--only" in sys.argv:
+        only = sys.argv[sys.argv.index("--only") + 1]
+        lines = [l for l in lines if l["id"] == only]
+    takes = int(sys.argv[sys.argv.index("--takes") + 1]) if "--takes" in sys.argv else 1
     mappings = json.load(io.open(VOICES, encoding="utf-8"))["mappings"]
     clones = json.load(io.open(CLONES, encoding="utf-8")) if os.path.exists(CLONES) else {"voices": {}}
     made = skipped = refused = 0
@@ -111,28 +116,30 @@ def main():
             print("not approved, skipping:", line["id"])
             refused += 1
             continue
-        out = res_to_path(line["audio"]) if not preview else os.path.join(PREVIEW_DIR, line["id"] + ".ogg")
-        if os.path.exists(out) and not force:
-            skipped += 1
-            continue
-        # An exchange (parts) is rendered part by part, each in its own
-        # voice, and joined into one clip with a short gap.
-        parts = line.get("parts") or [{"voice_profile": line["voice_profile"], "text": line["text"]}]
-        chunks = []
-        rate = None
-        for part in parts:
-            chunk, part_rate = render_part(part, line, mappings, clones)
-            if rate is not None and part_rate != rate:
-                raise SystemExit("%s: parts render at different sample rates (%d vs %d)" % (line["id"], rate, part_rate))
-            rate = part_rate
-            if chunks:
-                chunks.append(numpy.zeros((int(rate * PART_GAP_SECONDS),) + chunk.shape[1:], dtype="float32"))
-            chunks.append(chunk)
-        data = numpy.concatenate(chunks)
-        os.makedirs(os.path.dirname(out), exist_ok=True)
-        sf.write(out, data, rate, format="OGG", subtype="VORBIS")
-        print("baked", line["id"], "->", out, "(%.1fs)" % (len(data) / rate))
-        made += 1
+        for take in range(takes):
+            name = line["id"] + ("_take%d" % (take + 1) if takes > 1 else "")
+            out = res_to_path(line["audio"]) if not preview else os.path.join(PREVIEW_DIR, name + ".ogg")
+            if os.path.exists(out) and not force:
+                skipped += 1
+                continue
+            # An exchange (parts) is rendered part by part, each in its own
+            # voice, and joined into one clip with a short gap.
+            parts = line.get("parts") or [{"voice_profile": line["voice_profile"], "text": line["text"]}]
+            chunks = []
+            rate = None
+            for part in parts:
+                chunk, part_rate = render_part(part, line, mappings, clones)
+                if rate is not None and part_rate != rate:
+                    raise SystemExit("%s: parts render at different sample rates (%d vs %d)" % (line["id"], rate, part_rate))
+                rate = part_rate
+                if chunks:
+                    chunks.append(numpy.zeros((int(rate * PART_GAP_SECONDS),) + chunk.shape[1:], dtype="float32"))
+                chunks.append(chunk)
+            data = numpy.concatenate(chunks)
+            os.makedirs(os.path.dirname(out), exist_ok=True)
+            sf.write(out, data, rate, format="OGG", subtype="VORBIS")
+            print("baked", name, "->", out, "(%.1fs)" % (len(data) / rate))
+            made += 1
     print("made %d, skipped %d, not approved %d" % (made, skipped, refused))
 
 

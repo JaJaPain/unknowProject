@@ -97,6 +97,17 @@
       "approved_by_abe": true,
       "approval_note": "Approved by ear 2026-09-24 (Kaelen, Kokoro).",
       "chosen_take": true
+    },
+    {
+      "id": "kaelen_second_station",
+      "kind": "kaelen_doubt",
+      "speaker": "nova",
+      "voice_profile": "voice.nova.v1",
+      "text": "Why is Kaelen at this station too? Captain, I'm not sure we should trust her.",
+      "spoken": "Why is Kaylen at this station too? Captain, I'm not sure we should trust her.",
+      "audio": "res://assets/audio/undercurrent/kaelen_second_station.ogg",
+      "approved_by_abe": false,
+      "approval_note": "Abe's line (playtest 2026-10-06 finding 8), 'that' dropped; wording and take pending."
     }
   ]
 }

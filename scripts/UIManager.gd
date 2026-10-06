@@ -7796,6 +7796,7 @@ func _kaelen_lounge_available() -> bool:
 
 func _on_kaelen_lounge_pressed() -> void:
 	_contacts_with_rumor.erase("kaelen")
+	_note_kaelen_met_here()
 	var line := _kaelen_lounge_line()
 	var color := Color(0.0, 0.95, 1.0)
 	var portrait := GameContentRegistry.shared().portrait_texture(
@@ -9925,6 +9926,7 @@ func open_kaelen_hail(line: String) -> void:
 func _on_kaelen_intel_btn_pressed() -> void:
 	if _pending_kaelen_intel.is_empty():
 		return
+	_note_kaelen_met_here()
 	var line := _pending_kaelen_intel
 	_pending_kaelen_intel = ""
 	if _kaelen_intel_btn and is_instance_valid(_kaelen_intel_btn):
@@ -13622,6 +13624,7 @@ func _station_player_is_at() -> Node3D:
 ## together, the overview fading in with "Controls are yours." (finding 6).
 func _on_undock_released() -> void:
 	_undock_in_progress = false
+	_maybe_say_kaelen_doubt()
 	_set_overview_dock_locked(false)
 	set_overview_collapsed(false)
 	if overview_panel and is_instance_valid(overview_panel):
@@ -13962,7 +13965,56 @@ const KAELEN_WAITING_LINES: Array[String] = [
 ]
 
 
+## N.O.V.A. wonders why Kaelen is here too (playtest 2026-10-06 finding 8):
+## the first time the Captain deals with her at a main station outside the
+## home system, the line is due; it plays after the next undock. Baked audio
+## only (fixed-cast cover); without its approved clip it waits.
+const KAELEN_DOUBT_KEY := "nova_kaelen_doubt"
+const KAELEN_DOUBT_LINE := "kaelen_second_station"
+const KAELEN_DOUBT_DELAY_S := 4.0
+
+
+func _note_kaelen_met_here() -> void:
+	if GlobalState.is_current_system_home() or current_station == null 			or current_station != GlobalState.get_primary_station():
+		return
+	if str(StoryManager.story_state.get(KAELEN_DOUBT_KEY, "")).is_empty():
+		StoryManager.story_state[KAELEN_DOUBT_KEY] = "pending"
+
+
+func _maybe_say_kaelen_doubt() -> void:
+	if str(StoryManager.story_state.get(KAELEN_DOUBT_KEY, "")) != "pending":
+		return
+	var line := _undercurrent_line(KAELEN_DOUBT_LINE)
+	if line.is_empty() or not bool(line.get("approved_by_abe", false)):
+		return
+	var stream: AudioStream = preload("res://scripts/story/undercurrent/UndercurrentDirector.gd").load_line_audio(str(line.get("audio", "")))
+	if stream == null:
+		return
+	StoryManager.story_state[KAELEN_DOUBT_KEY] = "said"
+	await get_tree().create_timer(KAELEN_DOUBT_DELAY_S).timeout
+	var player := AudioStreamPlayer.new()
+	player.stream = stream
+	player.bus = "Voice"
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+	if is_instance_valid(subtitle_overlay):
+		subtitle_overlay.show_line(str(line.get("text", "")), "N.O.V.A.", stream.get_length() + 1.0)
+
+
+static func _undercurrent_line(line_id: String) -> Dictionary:
+	var file := FileAccess.open("res://data/content/undercurrent_lines.json", FileAccess.READ)
+	if file == null:
+		return {}
+	var data = JSON.parse_string(file.get_as_text())
+	for line in (data.get("lines", []) if data is Dictionary else []):
+		if str(line.get("id", "")) == line_id:
+			return line
+	return {}
+
+
 func _refresh_agent_quest_board():
+	_note_kaelen_met_here()
 	# This also repairs saves from the old return-briefing bypass: even if its
 	# accepted flag is already true, ordinary cached work cannot skip the tutor.
 	if _should_offer_starter_contract():
