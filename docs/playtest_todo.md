@@ -892,3 +892,9 @@ through the marked gate and flies you in):
       "Talked with you in the lounge in ...", "Came up in a story at ...").
       ALL / THIS SYSTEM / PINNED filters; PIN AS SUSPICIOUS sticks. Now and
       then N.O.V.A. mentions she's keeping it all.
+- [ ] **The season climax (once you reach the Lodestar after the reveal):**
+      before the showdown the game pauses: N.O.V.A. lays down 3-5 clues you
+      really saw (where, the detail), the last with "{method}. {name}'s
+      hand.", then opens a channel to Kaelen herself; they talk past you,
+      Kaelen puts it together and catches you listening. Nothing about it
+      shows up in the comms log or subtitles afterwards. How does it hit?

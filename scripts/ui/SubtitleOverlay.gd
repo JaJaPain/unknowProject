@@ -64,6 +64,9 @@ func show_line(text: String, speaker: String = "", seconds: float = -1.0) -> voi
 	# The intro cinematic captions itself.
 	if gs != null and bool(gs.get("intro_cinematic_active")):
 		return
+	# A scene that shows its own words (the climax's connect-the-dots).
+	if not get_tree().get_nodes_in_group("suppress_subtitles").is_empty():
+		return
 	# The idle station tour has no overlays at all: Kaelen's away-lines are
 	# voice only (Abe, 2026-10-05).
 	var ui = gs.get_ui_manager() if gs != null and gs.has_method("get_ui_manager") else null

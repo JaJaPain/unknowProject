@@ -30,6 +30,7 @@ const ArcsType := preload("res://scripts/story/premise/ArcEngine.gd")
 const CastingType := preload("res://scripts/story/premise/PremiseCasting.gd")
 const ComposerType := preload("res://scripts/story/premise/PremiseMissionComposer.gd")
 const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
+const DotsType := preload("res://scripts/story/premise/ConnectTheDots.gd")
 const ForgeType := preload("res://scripts/story/premise/HiddenHandForge.gd")
 const ShowType := preload("res://scripts/story/premise/Showrunner.gd")
 const RadioType := preload("res://scripts/story/premise/RadioBroadcaster.gd")
@@ -581,6 +582,12 @@ func main_story_threads() -> Array:
 		var entry := {"id": str(t["id"]), "text": CastingType.fill_text(str(t["detail"]), a.get("cast", {}), {"system_display": system_name}),
 			"pinned": bool(t["pinned"]), "system": system_name, "seen_minute": int(t.get("seen_minute", -1))}
 		if revealed:
+			# For the climax's connect-the-dots (only after the reveal, so the
+			# pin board never hints which notes are real).
+			entry["trace"] = bool(t.get("trace", false))
+			var card: Dictionary = library.get_card(str(a.get("card_id", ""))) if library != null else {}
+			entry["story"] = str(card.get("title", ""))
+		if revealed:
 			if links.has(str(t["id"])):
 				entry["explanation"] = str(links[str(t["id"])])
 			else:
@@ -709,6 +716,30 @@ func _send_showrunner(world: Dictionary, now_minute: int) -> void:
 
 static func LocalModelGatewayURL() -> String:
 	return preload("res://scripts/ai/LocalModelGateway.gd").OLLAMA_GENERATE_URL
+
+
+## The climax's connect-the-dots (campaign spine plan, 12): ready when the
+## Captain is at the Lodestar, the culprit is revealed and the showdown chapter
+## is live, once per season. Returns the scene's steps and marks it shown, or
+## [] when it isn't time. The full version (N.O.V.A. calling Kaelen) plays once
+## per campaign; later seasons get the short one.
+func connect_the_dots(at_lodestar: bool) -> Array:
+	var story := HandType.main_story(state)
+	if not at_lodestar or str(story.get("stage", "")) != "revealed" or bool(story.get("dots_shown", false)):
+		return []
+	var conf := ArcsType.arc(state, str(story.get("confrontation_arc_id", "")))
+	if conf.is_empty() or str(conf.get("status", "")) != "active":
+		return []
+	var card: Dictionary = library.get_card(str(conf.get("card_id", "")))
+	if not bool(LibraryType.beat(card, int(conf.get("beat", 1))).get("at_lodestar", false)):
+		return []
+	var first := not bool(state.get("dots_full_done", false))
+	var steps: Array = DotsType.build(main_story_threads(), str((story.get("lock", {}) as Dictionary).get("display_name", "")),
+		str(story.get("method", "")), str(story.get("bridge", "")), lodestar_title(), first)
+	state["main_story"]["dots_shown"] = true
+	if first and not steps.is_empty():
+		state["dots_full_done"] = true
+	return steps
 
 
 ## The season's Lodestar, as the player knows it ("" before it's drawn).

@@ -381,6 +381,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_pickup_intercept_smoke_test")
 	elif "--wreck-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_wreck_snapshot")
+	elif "--dots-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_dots_snapshot")
 	elif "--database-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_database_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
@@ -1456,6 +1458,13 @@ func _init_undercurrent_director() -> void:
 	mining_risk = load("res://scripts/world/MiningRisk.gd").new()
 	mining_risk.name = "MiningRisk"
 	add_child(mining_risk)
+	# The climax's connect-the-dots, checked now and then in calm flight.
+	var dots_timer := Timer.new()
+	dots_timer.name = "ConnectTheDotsCheck"
+	dots_timer.wait_time = 2.0
+	dots_timer.autostart = true
+	dots_timer.timeout.connect(_check_connect_the_dots)
+	add_child(dots_timer)
 	# Pickups get intercepted on the way back half the time (Abe, 2026-10-05).
 	if get_node_or_null("PickupIntercept") == null:
 		var intercept := load("res://scripts/world/PickupIntercept.gd").new() as Node
@@ -1589,6 +1598,44 @@ func _on_premise_main_story_locked(display_name: String, _arc_id: String) -> voi
 	if not lodestar.is_empty() and is_instance_valid(Nova):
 		var line := str(RACE_START_LINES.pick_random()).replace("{name}", display_name).replace("{lodestar}", lodestar)
 		get_tree().create_timer(8.0).timeout.connect(func() -> void: Nova.speak(line, Nova.Severity.NAV, "serious"))
+
+
+var _dots_playing := false
+
+
+## At the Lodestar with the showdown live: the connect-the-dots scene, once per
+## season, in calm flight only (not docked, in a fight, a cutscene, a jump or
+## the station tour). Voices are made first, then it plays.
+func _check_connect_the_dots() -> void:
+	if _dots_playing or not is_instance_valid(premise_director) or not is_instance_valid(player):
+		return
+	if GlobalState.paused or get_tree().paused or bool(GlobalState.intro_cinematic_active) or transition_in_progress or jump_request_pending:
+		return
+	if bool(player.get("is_docked")) or bool(player.get("destroyed")) or (is_instance_valid(Nova) and bool(Nova.get("_in_combat"))):
+		return
+	var ui = GlobalState.get_ui_manager()
+	if ui != null and ui.get("station_tour") != null and bool(ui.station_tour.call("is_touring")):
+		return
+	var Lodestar = load("res://scripts/domain/Lodestar.gd")
+	var ls: Dictionary = Lodestar.state(StoryManager.story_state, int(GlobalState.campaign_seed))
+	var here := not str(ls.get("pinned_system", "")).is_empty() and str(ls.get("pinned_system", "")) == str(GlobalState.current_system_id)
+	var steps: Array = premise_director.connect_the_dots(here)
+	if steps.is_empty():
+		return
+	play_connect_the_dots(steps)
+
+
+func play_connect_the_dots(steps: Array, voice_wait_s: float = 4.0) -> Node:
+	_dots_playing = true
+	for s in steps:
+		var who := str(s.get("who", ""))
+		SpeechService.cache(str(s.get("text", "")), GlobalState.KAELEN_VOICE_PROFILE_ID if who == "kaelen" else Nova.NOVA_VOICE_PROFILE_ID, -1.0, true)
+	await get_tree().create_timer(voice_wait_s).timeout
+	var scene: Node = load("res://scripts/ui/ConnectTheDotsScene.gd").new()
+	scene.set("steps", steps)
+	scene.connect("finished", func() -> void: _dots_playing = false)
+	add_child(scene)
+	return scene
 
 
 ## The race (Abe, 2026-10-05): N.O.V.A. on the culprit heading for the
@@ -12696,6 +12743,49 @@ func _wreck_anim_capture(wreck: Node3D, anims: Array, spot: Vector3, cam: Camera
 func _settle_frames(n: int) -> void:
 	for i in n:
 		await get_tree().process_frame
+
+
+## The climax's connect-the-dots scene with sample clues (windowed): a card
+## and the Kaelen call pictured. Pictures in --out.
+##   -- --dots-snapshot --baseline-offline --out=<dir>
+func _run_dots_snapshot() -> void:
+	var out := "user://dots_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var threads := [
+		{"id": "a", "text": "A customs stamp dated two hours after the office closed.", "system": "Myrion Watch", "story": "The Last Patrol", "seen_minute": 10, "trace": true, "explanation": "x"},
+		{"id": "b", "text": "The same cargo seal number on two different manifests.", "system": "Kova Reach", "story": "Sins of the Father", "seen_minute": 40, "trace": true, "explanation": "x"},
+		{"id": "c", "text": "A clerk who quit the day after you docked.", "system": "Zaren Relay", "story": "The Service Pistol", "seen_minute": 90, "trace": true, "explanation": "x"},
+	]
+	var steps: Array = load("res://scripts/story/premise/ConnectTheDots.gd").build(threads, "Oren Vask", "forged_records",
+		"The beacon logs every ship that ever asked it for a course. One of those logs puts them where they swore they never were.", "The Lighthouse", true)
+	var scene = await play_connect_the_dots(steps, 0.2)
+	var shot_card := false
+	var shot_kaelen := false
+	for i in 1200:
+		await get_tree().create_timer(0.1, true, false, true).timeout
+		if not is_instance_valid(scene):
+			break
+		var idx := int(scene.call("current_index"))
+		if idx >= 2 and not shot_card:
+			await get_tree().create_timer(1.0, true, false, true).timeout
+			await _hud_snapshot_save(out.path_join("dots_card.png"))
+			shot_card = true
+		if idx >= 0 and str(steps[idx].get("who", "")) == "kaelen" and not shot_kaelen:
+			await get_tree().create_timer(0.8, true, false, true).timeout
+			await _hud_snapshot_save(out.path_join("dots_kaelen.png"))
+			shot_kaelen = true
+			break
+	print("[DotsSnapshot] %d steps, card %s, kaelen %s" % [steps.size(), shot_card, shot_kaelen])
+	get_tree().quit(0)
 
 
 ## N.O.V.A.'s database (Abe, 2026-10-05), windowed: real hooks fill it (a
