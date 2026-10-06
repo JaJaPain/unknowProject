@@ -133,3 +133,40 @@ efficient, hidden industrial operation that officially doesn't exist.
 - **No:** writing, logos, symbols, faction marks, ships flying, weapons.
 - **Export:** batched (the asteroid, the pit structures, the refinery, the
   cranes, the haulers, lights as few meshes per material).
+
+**#4 status (2026-10-05):** delivered and approved. `assets/landmarks/cartographer_mine.glb`:
+29 meshes, 8 materials, ~39k triangles; conveyor belt on its own mesh with UVs
+for a scrolling shader; 48-71 draw calls in game (19 without it).
+
+## Brief #5: The Garden keepers' station
+
+A small habitat in orbit over a green world, kept by a line of botanists who
+have tended its seed vaults for generations. They aren't hiding and they
+aren't rich: they're careful. The planet itself is the game's planet shader;
+this is only the station above it.
+
+- **Size:** small for a destination, about 600 m across. It should feel
+  intimate next to the planet, not compete with it.
+- **Shape:** a central spine or hub with long **greenhouse modules** branching
+  off it: glass-roofed cylinders or ribbed domes, some long, some short,
+  added over time but in a consistent, tidy style. A pair of broad **solar
+  wings** (or a slowly turning ring of panels) on one end; a seed vault, a
+  heavy, closed, armoured block at the core, clearly the most protected part;
+  a small docking ring with room for one or two ships; water and nutrient
+  tanks; a few hanging cargo nets or pods of supplies.
+- **Surface:** soft, light hull colours (off-white, pale sage, warm grey),
+  well-kept and clean, small repairs neatly done; glass panes on the
+  greenhouses (a slightly tinted glass material). Cared-for, gentle,
+  lived-in: the opposite of the mine.
+- **Light:** soft green growing light inside the greenhouses (separate
+  emissive material, visible through the glass); a few warm window lights in
+  the living modules (separate emissive material); small navigation lights
+  on the docking ring (they want visitors to find them).
+- **Optional:** the solar wings or panel ring on their own pivot (the game
+  may turn them to track the sun); a couple of small tending drones
+  (separate meshes).
+- **No:** writing, logos, symbols, faction marks, weapons, ships flying,
+  plants modelled leaf by leaf (a few simple plant-mass shapes inside the
+  glass are enough).
+- **Export:** batched (the hub and vault, the greenhouses, the glass, the
+  wings, the lights as few meshes per material); glass as its own material.
