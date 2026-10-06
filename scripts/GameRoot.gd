@@ -11669,6 +11669,14 @@ func _run_mining_risk_smoke_test() -> void:
 	if not str(ui._asteroid_type_label(rock)).contains("Thorium"):
 		fail.call("The overview doesn't name the rock's ore: '%s'" % ui._asteroid_type_label(rock))
 		return
+	# Playtest 2026-10-06 finding 6: another order turns the mining beams off.
+	player.set("nav_mode", "MINE")
+	(player.get("mining_laser") as Node3D).visible = true
+	player.set("nav_mode", "DOCK")
+	if (player.get("mining_laser") as Node3D).visible:
+		fail.call("Docking left the mining laser on.")
+		return
+	player.set("nav_mode", "MANUAL")
 	print("[MiningRiskSmokeTest] PASS: no risk before the first upgrade, one announced claim jumper for thorium, a guard beside a red rock and N.O.V.A.'s call-out, ore on the overview.")
 	GlobalState.current_upgrades = saved_upgrades
 	delete_savegame()

@@ -113,7 +113,12 @@ var is_aligning: bool = false:
 var nav_mode: String = "MANUAL":
 	set(val):
 		if val != nav_mode:
+			# Leaving MINE or ATTACK for any other order turns the beams off
+			# (playtest 2026-10-06 finding 6: Dock left them firing at the rock).
+			var was_beaming := nav_mode in ["MINE", "ATTACK"]
 			nav_mode = val
+			if was_beaming and not val in ["MINE", "ATTACK"] and is_inside_tree():
+				_hide_mining_beams()
 			if val != "DOCK":
 				dock_stuck_timer = 0.0
 				last_dock_distance = INF

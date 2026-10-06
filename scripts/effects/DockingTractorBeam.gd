@@ -14,10 +14,17 @@ const BEAM_WIDTH_PER_LENGTH := 0.004
 ## looping at the ship's end for as long as the beam holds it. The player's
 ## own beam at the mining tractor's level; traffic quieter and only up close.
 const HUM_STREAM := preload("res://sound/Mining/TractorBeam.mp3")
-## 10% louder (Abe, playtest 2026-10-05 finding 4): linear_to_db(1.1) = +0.83.
-const HUM_PLAYER_DB := -3.2
+## The player's own beam is heard at a steady level wherever the camera is
+## (playtest 2026-10-06 finding 1: as a 3D sound at the ship, the chase camera's
+## distance took ~20 dB off it). Traffic beams stay 3D and fade with distance.
+const HUM_PLAYER_DB := -8.0
 const HUM_TRAFFIC_DB := -11.2
-var hum: AudioStreamPlayer3D
+## A latch click when the beam takes hold and when it lets go (finding 2).
+const CLICK_STREAM := preload("res://sound/ShipSounds/tractor_click.wav")
+const CLICK_DB := -4.0
+## AudioStreamPlayer for the player's beam, AudioStreamPlayer3D for traffic.
+var hum: Node
+var _is_player := false
 
 
 func configure(station: Node3D, ship: Node3D) -> void:
@@ -43,21 +50,47 @@ func configure(station: Node3D, ship: Node3D) -> void:
 
 
 func _start_hum() -> void:
-	hum = AudioStreamPlayer3D.new()
-	hum.name = "TractorHum"
-	hum.stream = HUM_STREAM
-	hum.bus = "SFX"
-	hum.unit_size = 15.0
-	hum.max_db = 2.0
 	var gs := get_node_or_null("/root/GlobalState")
-	var is_player: bool = _ship != null and gs != null and _ship == gs.get("player")
-	hum.volume_db = HUM_PLAYER_DB if is_player else HUM_TRAFFIC_DB
-	hum.max_distance = 350.0 if is_player else 250.0
+	_is_player = _ship != null and gs != null and _ship == gs.get("player")
+	if _is_player:
+		var flat := AudioStreamPlayer.new()
+		flat.volume_db = HUM_PLAYER_DB
+		hum = flat
+		_click()
+	else:
+		var spatial := AudioStreamPlayer3D.new()
+		spatial.unit_size = 15.0
+		spatial.max_db = 2.0
+		spatial.volume_db = HUM_TRAFFIC_DB
+		spatial.max_distance = 250.0
+		hum = spatial
+	hum.name = "TractorHum"
+	hum.set("stream", HUM_STREAM)
+	hum.set("bus", "SFX")
 	add_child(hum)
-	hum.finished.connect(func() -> void:
+	hum.connect("finished", func() -> void:
 		if is_inside_tree():
-			hum.play())
-	hum.play()
+			hum.call("play"))
+	hum.call("play")
+
+
+## The latch: played on the scene root so the let-go click outlives the beam.
+func _click() -> void:
+	var tree := get_tree() if is_inside_tree() else null
+	if tree == null or tree.current_scene == null:
+		return
+	var click := AudioStreamPlayer.new()
+	click.stream = CLICK_STREAM
+	click.bus = "SFX"
+	click.volume_db = CLICK_DB
+	tree.current_scene.add_child(click)
+	click.finished.connect(click.queue_free)
+	click.play()
+
+
+func _exit_tree() -> void:
+	if _is_player:
+		_click()
 
 
 func _process(_delta: float) -> void:
@@ -78,8 +111,8 @@ func _update_beam() -> void:
 	# player camera. This makes the tether visibly terminate at its target.
 	var direction := offset / length
 	var end_point := _ship.global_position - direction * SHIP_SURFACE_CLEARANCE
-	if hum != null:
-		hum.global_position = _ship.global_position
+	if hum is Node3D:
+		(hum as Node3D).global_position = _ship.global_position
 	var beam_length := station_origin.distance_to(end_point)
 	visible = true
 	global_position = station_origin.lerp(end_point, 0.5)
