@@ -338,6 +338,7 @@ var store_btn: Button
 var _store_current_id: String = ""
 var inventory_panel: Panel
 const InventoryScreenScript := preload("res://scripts/ui/InventoryScreen.gd")
+const HaggleScript := preload("res://scripts/domain/Haggle.gd")
 const MissionRemarksScript := preload("res://scripts/story/MissionRemarks.gd")
 const MissionRemarkRunnerScript := preload("res://scripts/story/MissionRemarkRunner.gd")
 var _mission_remark_runner: Node = null
@@ -14839,6 +14840,11 @@ func _show_quest_briefing(quest_data: Dictionary, is_fallback: bool):
 
 func _on_choice_selected(quest_data: Dictionary, choice: Dictionary):
 	SpeechService.start_interaction("Select Choice: " + choice.get("text", ""))
+	# Pushing for more can backfire (playtest 2026-10-06 finding 5).
+	var faction := str(quest_data.get("faction", "neutral"))
+	var standing := float(GlobalState.reputations.get(faction, 0.0))
+	var is_kaelen := str(quest_data.get("agent_name", "")).to_lower().contains("kaelen") or faction in ["neutral", ""]
+	choice = HaggleScript.resolve(choice, standing, randf(), is_kaelen)
 	if is_instance_valid(Nova):
 		quest_data = Nova.prepare_mission_hunt_reaction(quest_data)
 	MissionRemarksScript.attach(quest_data)

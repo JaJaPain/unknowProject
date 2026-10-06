@@ -1346,6 +1346,13 @@ points (stations, fields, gates, planets), the generator filling the points.
 Pros: nothing overlaps or goes missing, composed look, easy to test. Cons: a
 rewrite of SystemFactory placement, authoring 20 layouts, and players
 recognising the shapes across campaigns (against "every game unique").
+**Abe's refinement (same day):** each template has *many* candidate spawn
+points per kind (several station spots, several planet spots, field spots),
+and a system fills only some of them, so one template yields many different
+systems. Templates with exactly 1 station spot and 3 planet spots would get
+repetitive fast, so don't do that. This keeps hand-made spacing (no overlaps,
+nothing vanishes) while staying varied: 20 templates x which points get
+filled x rotation/mirroring.
 Middle ground: keep the generator and add composition rules (main station by
 the biggest planet, fields opposite the gate, outposts by fields). Revisit if
 systems still look wrong after the bigger fields (playtest 2026-10-06 finding
