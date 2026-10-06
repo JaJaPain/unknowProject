@@ -1,0 +1,326 @@
+{
+  "id": "premise.the_abbey_mash",
+  "schema_version": 1,
+  "title": "The Abbey Mash",
+  "logline": "When an orbital monastery's holy tuber harvest fails, the cellarer secretly cuts the sacred liqueur with industrial spirits while the abbot proclaims a miracle.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "absurd"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "cellar_monk",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "The abbey's practical brewmaster; panicked, pragmatically cynical, and desperate to conceal an empty cellar.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "abbey_prior",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "A serene monastic superior who mistakes a fraudulent fermentation pipeline for divine intervention.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "abbey_distillery",
+      "kind": "place",
+      "description": "A peaceful cloisters station adrift in the asteroid shadow, famous for its hundred-proof tuber spirit.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smugglers_saloon",
+      "kind": "place",
+      "description": "A disreputable dive bar docked at the lower mining ring where black-market liquor changes hands.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "public_outrage"
+  ],
+  "public_situation": "The sacred orbital abbey in {system} claims its antique still is producing twice its normal output of blessed tuber liqueur despite severe blight.",
+  "private_truth": "The cellarer accidentally killed the mother yeast with bleach and has been buying cheap industrial engine alcohol to blend into the communion barrels.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "cellarer_cutting_holy_spirits_with_industrial_solvent"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The abbey announces a doubled distribution of commemorative blessed bottles to local station chapels.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "cellar_monk",
+          "target": "smugglers_saloon",
+          "reason": "The monk needs an outsider to discreetly fetch thirty drums of unlabeled grain alcohol from a saloon backroom before evening vespers begin.",
+          "private_fact": "The monk is paying for the bootleg solvent with coins taken directly from the monastery's sanctuary restoration fund.",
+          "outcome_tags": [
+            "drums_secured",
+            "deal_compromised"
+          ],
+          "routes": {
+            "drums_secured": "next",
+            "deal_compromised": "resolution:rot_revealed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Miners who drink the new batch begin suffering severe optical dizziness, prompting station dockers to question the brew.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "cellar_monk",
+          "target": "abbey_distillery",
+          "reason": "The cellarer asks the pilot to scan the distillery's condenser pipes and isolate the contaminated tanks before the prior leads pilgrims inside.",
+          "private_fact": "The prior has locked the main cellar gates with prayer ribbons, believing any inspection would show lack of faith in the miraculous vat.",
+          "outcome_tags": [
+            "mash_analyzed",
+            "inspection_aborted"
+          ],
+          "routes": {
+            "mash_analyzed": "next",
+            "inspection_aborted": "resolution:rot_revealed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The prior orders the remaining sixty casks loaded for public sale, while hospital clinics treat poisoned dockers.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "cellar_monk",
+          "target": "abbey_distillery",
+          "reason": "The monk begs the pilot to courier an urgent chemical neutralizing reagent to the bottling line before the communion casks ship out.",
+          "private_fact": "The neutralizing reagent will render the booze completely tasteless, ruining the abbey's legendary recipe forever.",
+          "outcome_tags": [
+            "reagent_delivered",
+            "casks_shipped_raw"
+          ],
+          "routes": {
+            "reagent_delivered": "next",
+            "casks_shipped_raw": "resolution:rot_revealed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the bottling vats with the neutralizing agent. The prior proclaims the sweet taste is holy proof, while the terrified cellarer begs to dump the batch.",
+        "options": [
+          {
+            "id": "dump_into_space",
+            "label": "Trigger the emergency drainage vents and dump the entire poisonous batch into space",
+            "leads_to": "resolution:holy_drains"
+          },
+          {
+            "id": "neutralize_batch",
+            "label": "Administer the reagent to save lives, reducing the sacred spirit to flat mineral water",
+            "leads_to": "resolution:miracle_deflated"
+          },
+          {
+            "id": "sell_to_saloon",
+            "label": "Divert the uncut barrels to the smugglers' saloon for quick cash before anyone notices",
+            "leads_to": "resolution:bootleg_windfall"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "holy_drains",
+      "reached_by": "The pilot vents the toxic spirit into open space.",
+      "summary": "The contaminated mash freezes in glittering clouds across {system}; {role:abbey_prior} laments a lost miracle while {role:cellar_monk} silently weeps in relief.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cellar_monk",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbey_prior",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "vented_holy_moonshine",
+          "public_summary": "A pilot blew the valves on a monastic distillery and showered the trade lane in hundred-proof holy rot."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "miracle_deflated",
+      "reached_by": "The pilot neutralizes the mash into tasteless water.",
+      "summary": "The liqueur cures but loses all flavour; pilgrims conclude the blessing has departed and {role:abbey_distillery} turns to selling ordinary filtered water.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cellar_monk",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbey_prior",
+          "fate": "exposed"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "bootleg_windfall",
+      "reached_by": "The pilot diverts the toxic barrels to the black-market saloon.",
+      "summary": "{role:cellar_monk} pockets a small fortune from miners seeking cheap thrills, while {role:abbey_prior} wonders why the sanctuary fund is suddenly overflowing.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cellar_monk",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbey_prior",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "contraband_list",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "fenced_monk_shine",
+          "public_summary": "A pilot helped a corrupt monk fence adulterated holy booze to miners on the rim."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "rot_revealed",
+      "reached_by": "The batch ships uncut or the delivery is abandoned.",
+      "summary": "Dozens of pilgrims suffer severe methanol poisoning, station constables seal {role:abbey_distillery}, and {role:cellar_monk} is locked in the brig.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cellar_monk",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "abbey_prior",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "rot_revealed",
+  "loose_threads": [
+    {
+      "id": "t_saloon_manifest",
+      "surface": "cargo",
+      "detail": "The saloon's solvent barrels were labeled as ecclesiastical candle oil with forged bishopric seals.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_stolen_tithes",
+      "surface": "station_notice",
+      "detail": "The monastery ledger records a sudden deficit in chapel renovation funds matching the distillery's solvent purchases.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "impersonation",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Pilgrims flock to {system} shrine as abbey claims miraculous bumper yield of tuber brandy.",
+    "Clinic doctors in {system} issue warning regarding counterfeit monastery spirits.",
+    "Dockers in {system} joke that the latest batch of holy liqueur can strip hull varnish."
+  ],
+  "voice_direction": {
+    "cellar_monk": "Nervous, breathless, stammering between piety and sheer criminal terror. Constantly recites frantic prayers while doing shady deals.",
+    "abbey_prior": "Pompous, beatific, speaking in flowery cadence with unwavering conviction that everything is a miraculous sign."
+  },
+  "novelty_tags": [
+    "monastic_brewing",
+    "adulterated_alcohol",
+    "miracle_scam",
+    "tuber_farming",
+    "religious_farce"
+  ]
+}

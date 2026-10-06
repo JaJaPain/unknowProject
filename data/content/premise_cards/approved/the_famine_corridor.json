@@ -1,0 +1,456 @@
+{
+  "id": "premise.the_famine_corridor",
+  "schema_version": 1,
+  "title": "The Famine Corridor",
+  "logline": "When a shipping cartel cuts off hydroponic supplies to a rebellious border sector, an independent logistics broker hires a blockade runner to restart the grain run.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "melancholy"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "blockade_broker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "A retired merchant marine captain running an illegal relief pipeline from a neutral border waystation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cartel_commodore",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Commander of the shipping consortium's armed blockade flotilla; cold, legalistic, enforcing financial sanctions.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relief_coordinator",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Head of the triage committee on the starving mining habitats; overworked, pragmatic, and desperate for bulk calories.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shipping_consortium",
+      "kind": "faction",
+      "description": "The dominant logistics conglomerate enforcing a total debt embargo against non-compliant systems.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "miner_republic",
+      "kind": "faction",
+      "description": "An unrecognised confederation of outer mining stations facing starvation over unpaid transport tariffs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "neutral_depot",
+      "kind": "place",
+      "description": "A freeport station situated just outside the embargo perimeter, packed with impounded grain barges.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "starving_habitat",
+      "kind": "place",
+      "description": "A crowded mining settlement on the edge of the dark zone where life support and food rations have failed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_picket",
+      "kind": "ship",
+      "description": "A heavy patrol gunboat guarding the gate corridor into the embargoed system.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "relay_dark_zone",
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "market_disrupted",
+    "route_opened",
+    "route_closed"
+  ],
+  "public_situation": "The {role:shipping_consortium} has locked down transit gates into the outer rim, cutting food deliveries until the mining stations pay delinquent tariffs.",
+  "private_truth": "The embargo was declared to force the miners to forfeit their private ore charters to the consortium, using engineered starvation as debt leverage.",
+  "core_why": {
+    "motive": "control",
+    "secret": "consortium_starving_miners_to_seize_ore_charters"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Food riots erupt across border gates as merchant haulers are turned back by consortium enforcers.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "blockade_broker",
+          "target": "neutral_depot",
+          "reason": "The broker needs emergency medical supplements and freeze-dried yeast bought from local markets and staged at the neutral freeport.",
+          "private_fact": "The broker lost his own brother to a corporate famine thirty years ago and will bankrupt himself before letting this sector starve.",
+          "outcome_tags": [
+            "supplies_staged",
+            "staging_failed"
+          ],
+          "routes": {
+            "supplies_staged": "next",
+            "staging_failed": "resolution:embargo_strangles"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The consortium moves armed gunboats into the gate transit lanes, threatening to impound any vessel carrying unchartered provisions.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "blockade_broker",
+          "target": "starving_habitat",
+          "reason": "The habitat's hydroponics need raw water ice hauled immediately from deep comet belts to restart the wilted algae scrubbers.",
+          "private_fact": "The habitat council has already drafted a surrender petition, ready to sign over their mines if water does not arrive within forty-eight hours.",
+          "outcome_tags": [
+            "ice_delivered",
+            "ice_diverted"
+          ],
+          "routes": {
+            "ice_delivered": "next",
+            "ice_diverted": "resolution:embargo_strangles"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "blockade_broker",
+          "target": "consortium_picket",
+          "reason": "The broker pays the pilot to destroy the picket ship blocking the approach lane so unescorted relief haulers can jump through.",
+          "private_fact": "The picket crew is operating under private mercenary contracts with bounty clauses for every captured relief hauler.",
+          "outcome_tags": [
+            "picket_destroyed",
+            "picket_repelled"
+          ],
+          "routes": {
+            "picket_destroyed": "next",
+            "picket_repelled": "resolution:embargo_strangles"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "With the picket broken, consortium headquarters sends an armed escort to seize the grain barges at the freeport dock.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "relief_coordinator",
+          "target": "starving_habitat",
+          "reason": "The coordinator asks the pilot to courier emergency baby formula and protein concentrates directly to the habitat clinic docks.",
+          "private_fact": "The coordinator is secretly rationing meals to children only while hospital staff survive on saline drips.",
+          "outcome_tags": [
+            "relief_landed",
+            "relief_intercepted"
+          ],
+          "routes": {
+            "relief_landed": "next",
+            "relief_intercepted": "resolution:embargo_strangles"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "The commodore realizes military force has failed to stop the runs and offers a diplomatic truce at the border gate.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "shipping_consortium",
+          "requester": "blockade_broker",
+          "target": "neutral_depot",
+          "reason": "The broker asks the pilot to scan the consortium's intercepted logistics transmissions to verify if the truce terms are genuine or an ambush.",
+          "private_fact": "The transmissions reveal the consortium's shareholders are panic-selling stock due to the public relations disaster of the famine.",
+          "outcome_tags": [
+            "ambush_exposed",
+            "truce_confirmed"
+          ],
+          "routes": {
+            "ambush_exposed": "next",
+            "truce_confirmed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The commodore docks at the neutral depot to present an ultimatum to the assembled station delegates.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "blockade_broker",
+          "target": "neutral_depot",
+          "reason": "The broker needs the pilot to deliver the ratified treaty documents to the treaty table before privateer skirmishes resume.",
+          "private_fact": "The commodore's personal flagship is low on fuel and cannot maintain the blockade for more than three more days.",
+          "outcome_tags": [
+            "treaty_couriered",
+            "treaty_rejected"
+          ],
+          "routes": {
+            "treaty_couriered": "next",
+            "treaty_rejected": "resolution:embargo_strangles"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the treaty council with the food supply lines open. The commodore offers a compromised settlement, while the miners demand complete debt cancellation.",
+        "options": [
+          {
+            "id": "enforce_free_corridor",
+            "label": "Deliver the terms guaranteeing permanent free trade and breaking the embargo",
+            "leads_to": "resolution:corridor_opened"
+          },
+          {
+            "id": "accept_corporate_amnesty",
+            "label": "Support the consortium's compromise amnesty in exchange for miner debt restructuring",
+            "leads_to": "resolution:compromise_amnesty"
+          },
+          {
+            "id": "sell_out_to_cartel",
+            "label": "Surrender the broker's supply chain routes to the commodore for private reward",
+            "leads_to": "resolution:cartel_consolidation"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "corridor_opened",
+      "reached_by": "The pilot delivers the treaty breaking the embargo.",
+      "summary": "The food blockade collapses; {role:miner_republic} secures permanent free transit rights while {role:shipping_consortium} loses its monopoly.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miner_republic",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "shipping_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_broker",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_food_blockade",
+          "public_summary": "A pilot broke the shipping cartel's grip and hauled grain into the starving rim."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "faction_weakened",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "compromise_amnesty",
+      "reached_by": "The pilot supports the compromise amnesty.",
+      "summary": "{role:shipping_consortium} resumes grain shipments under heavy tariffs, while {role:miner_republic} remains burdened by twenty years of restructured debt.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_consortium",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "miner_republic",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_broker",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_coordinator",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "cartel_consolidation",
+      "reached_by": "The pilot sells out the supply routes to the commodore.",
+      "summary": "{role:blockade_broker} is arrested as an outlaw runner; {role:shipping_consortium} seizes the mining outposts and claims complete regional ownership.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_consortium",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "miner_republic",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_broker",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_commodore",
+          "fate": "promoted"
+        },
+        {
+          "type": "law_change",
+          "law": "docking_bribes",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "embargo_strangles",
+      "reached_by": "The relief deliveries fail or the pilot never gets involved.",
+      "summary": "The blockade holds until {role:miner_republic} capitulates; {role:blockade_broker} is executed for sedition and the mines are forfeit.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_consortium",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "miner_republic",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_broker",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "martyr_made"
+      ]
+    }
+  ],
+  "default_resolution": "embargo_strangles",
+  "loose_threads": [
+    {
+      "id": "t_consortium_bonds",
+      "surface": "price_board",
+      "detail": "Cartel bond issuances offered triple yield contingent on foreclosing the border mining charters before quarter end.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_forged_registry",
+      "surface": "ship_marking",
+      "detail": "The picket gunboat's hull bears welded-over registry plates from an independent logistics registry.",
+      "can_carry_methods": [
+        "impersonation",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "false_flag"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Bread lines stretch for kilometers through {system} as shipping embargo enters third month.",
+    "{role:shipping_consortium} warns third-party haulers against entering restricted gate sectors.",
+    "Miner delegates in {system} denounce debt sanctions as manufactured starvation."
+  ],
+  "voice_direction": {
+    "blockade_broker": "Gravelly, weary, speaking with the grim determination of someone who knows the odds and refuses to quit. Avoids sentimental nostalgia.",
+    "cartel_commodore": "Crisp, icy, delivering corporate ultimatums as though reciting basic navigation geometry. Never displays anger.",
+    "relief_coordinator": "Exhausted, speaking in rapid, clipped sentences stripped of all emotion except triage arithmetic."
+  },
+  "novelty_tags": [
+    "food_blockade",
+    "famine_relief",
+    "debt_embargo",
+    "hydroponic_collapse",
+    "smuggling_corridor"
+  ]
+}

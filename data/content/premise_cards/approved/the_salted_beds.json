@@ -1,0 +1,403 @@
+{
+  "id": "premise.the_salted_beds",
+  "schema_version": 1,
+  "title": "The Salted Beds",
+  "logline": "When an asteroid colony's ancient soil greenhouse begins dying of chemical poisoning, farmers accuse a synthetic protein cartel of poisoning the loam.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "soil_elder",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Spokesperson for third-generation dirt farmers; proud, stubborn, with soil permanently ground beneath their fingernails.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "synth_commissar",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Regional manager of the synthetic protein concession; insists industrial vat mush is the only sustainable future.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "soil_dome",
+      "kind": "place",
+      "description": "A massive pressurised hollow inside the asteroid lined with millions of tons of imported real earth.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "synth_refinery",
+      "kind": "place",
+      "description": "An automated nutrient synthesiser facility humming on the station's upper industrial spine.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "agrarian_council",
+      "kind": "faction",
+      "description": "A cooperative of traditional soil farmers clinging to their historic charter.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "protein_syndicate",
+      "kind": "faction",
+      "description": "A corporate conglomerate pushing synthetic protein paste contracts across the sector.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_interceptor",
+      "kind": "ship",
+      "description": "A patrol gunboat deployed to prevent unauthorised mineral shipments from docking at the dome.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "faction_weakened",
+    "public_outrage"
+  ],
+  "public_situation": "The soil beds inside {system}'s oldest hollowed asteroid are wilting from unexplained salinity, sparking protests between dirt farmers and synthetic paste vendors.",
+  "private_truth": "The synthetic cartel bribed an irrigation engineer to leak saline coolant into the dome aquifers to ruin the harvest and force the colony into an exclusive paste supply contract.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "cartel_salinized_soil_aquifer_for_paste_contracts"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The agrarian council issues an emergency appeal for raw silicate buffer minerals to neutralize the rising soil acidity.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "soil_elder",
+          "target": "soil_dome",
+          "reason": "The elder needs unrefined silicate ore brought directly from the asteroid belts to grind into agricultural lime before the current crop of legumes dies.",
+          "private_fact": "The elder already discovered chemical traces of synthetic vat coolant in the runoff but lacks the political pull to confront the council without saved crops.",
+          "outcome_tags": [
+            "ore_delivered",
+            "ore_abandoned"
+          ],
+          "routes": {
+            "ore_delivered": "next",
+            "ore_abandoned": "resolution:cartel_takes_over"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The syndicate claims the acidity is natural soil exhaustion and sends technical teams to audit the dome's drainage conduits.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "protein_syndicate",
+          "requester": "soil_elder",
+          "target": "synth_refinery",
+          "reason": "The elder hires an outside pilot to scan the refinery's discharge manifold and compare its toxic runoff signature against the poisoned dome water.",
+          "private_fact": "The refinery logs show deliberate valve purges scheduled every midnight during the irrigation cycle.",
+          "outcome_tags": [
+            "sabotage_verified",
+            "levels_ambiguous"
+          ],
+          "routes": {
+            "sabotage_verified": "next",
+            "levels_ambiguous": "resolution:cartel_takes_over"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The protein syndicate discovers the telemetry leak and dispatches an armed gunboat to blockade the dome's cargo intake.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "soil_elder",
+          "target": "syndicate_interceptor",
+          "reason": "The elder needs the blockade gunboat driven away so agricultural relief can dock. The council has no ships armed to fight corporate escorts.",
+          "private_fact": "The interceptor captain hails the pilot mid-combat, offering to pay off the contract if the pilot certifies the runoff was harmless agricultural decay.",
+          "outcome_tags": [
+            "gunboat_destroyed",
+            "accepted_syndicate_bribe"
+          ],
+          "routes": {
+            "gunboat_destroyed": "next",
+            "accepted_syndicate_bribe": "resolution:cartel_takes_over"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "With the gunboat disabled, the proof of intentional poisoning reaches the colony station tribunal for immediate ruling.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "soil_elder",
+          "target": "soil_dome",
+          "reason": "The elder asks the pilot to courier the physical water telemetry drive straight to the agrarian hall before company lawyers seal the docket.",
+          "private_fact": "The telemetry drive contains encrypted corporate communications directly ordering the destruction of the loam.",
+          "outcome_tags": [
+            "evidence_lodged",
+            "courier_diverted"
+          ],
+          "routes": {
+            "evidence_lodged": "next",
+            "courier_diverted": "resolution:cartel_takes_over"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the council hall. The elder demands full public prosecution of the cartel, while the commissar offers to fund total greenhouse modernization if the pilot buries the report.",
+        "options": [
+          {
+            "id": "prosecute_cartel",
+            "label": "Submit the telemetry to the council to revoke the syndicate's trade charter",
+            "leads_to": "resolution:syndicate_expelled"
+          },
+          {
+            "id": "accept_modernization",
+            "label": "Broker a settlement trading the silence for funded dome rehabilitation",
+            "leads_to": "resolution:compromise_modernization"
+          },
+          {
+            "id": "sell_proof_quietly",
+            "label": "Sell the corporate telemetry back to the protein syndicate for hush money",
+            "leads_to": "resolution:quiet_hush_money"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "syndicate_expelled",
+      "reached_by": "The pilot lodges the telemetry and backs public prosecution.",
+      "summary": "{role:protein_syndicate} loses its operating licence in {system}, while {role:agrarian_council} secures permanent water rights for the soil beds.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "agrarian_council",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "protein_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "synth_commissar",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "soil_elder",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_soil_beds",
+          "public_summary": "A pilot hauled the evidence that corporate suits deliberately salted an asteroid's dirt."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "compromise_modernization",
+      "reached_by": "The pilot brokers funded modernization in exchange for sealed evidence.",
+      "summary": "{role:protein_syndicate} pays for soil desalination, while {role:agrarian_council} cedes forty percent of greenhouse acreage to synthetic vats.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "agrarian_council",
+          "delta": -1
+        },
+        {
+          "type": "standing",
+          "target": "protein_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "soil_elder",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "synth_commissar",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "quiet_hush_money",
+      "reached_by": "The pilot sells the telemetry back to the syndicate.",
+      "summary": "The poisoning is written off as mineral fatigue; {role:protein_syndicate} expands its paste monopoly while {role:soil_elder} loses the farm.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "protein_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "agrarian_council",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "synth_commissar",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "soil_elder",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_soil_evidence",
+          "public_summary": "Rumors say a pilot took corporate credits to bury proof of an asteroid's poisoned crops."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "cartel_takes_over",
+      "reached_by": "The pilot takes the gunboat bribe, fails missions, or never engages.",
+      "summary": "The soil beds die completely, forcing {system}'s population onto rationed protein sludge sold exclusively by {role:protein_syndicate}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "agrarian_council",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "protein_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "soil_elder",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "cartel_takes_over",
+  "loose_threads": [
+    {
+      "id": "t_synthetic_options",
+      "surface": "price_board",
+      "detail": "Futures contracts for synthetic protein paste spiked sharply three weeks before the first soil bed withered.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_saline_additives",
+      "surface": "cargo",
+      "detail": "Dozens of unlabeled brine drums were cleared through maintenance docks with altered hazardous waste manifests.",
+      "can_carry_methods": [
+        "forged_records",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "sabotage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Soil farmers in {system} clash with security contractors over irrigation canal access.",
+    "{role:protein_syndicate} promises nutritional security as asteroid vegetable yields plummet.",
+    "Station grocers in {system} report record lines for real carrots and fresh cabbage."
+  ],
+  "voice_direction": {
+    "soil_elder": "Blunt, raspy, speaking with fierce tactile pride about earth and roots. Never uses technical business jargon.",
+    "synth_commissar": "Smooth, condescendingly patient, repeating corporate sustainability slogans whenever challenged about crop failures."
+  },
+  "novelty_tags": [
+    "soil_farming",
+    "synthetic_protein",
+    "crop_poisoning",
+    "agricultural_monopoly",
+    "asteroid_greenhouse"
+  ]
+}
