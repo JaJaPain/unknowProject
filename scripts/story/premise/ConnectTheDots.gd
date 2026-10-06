@@ -16,7 +16,7 @@ extends RefCounted
 const MAX_CARDS := 5
 
 ## The connecting line for each Hidden Hand method. {name}: the culprit.
-## DRAFT, for Abe's review.
+## Approved by Abe 2026-10-05.
 const METHOD_LINES := {
 	"debt_leverage": "A debt, bought and called in. {name} held the note.",
 	"sabotage": "Not an accident. {name} arranged it.",
