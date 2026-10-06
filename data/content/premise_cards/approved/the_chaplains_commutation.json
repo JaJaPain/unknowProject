@@ -1,0 +1,322 @@
+{
+  "id": "premise.the_chaplains_commutation",
+  "schema_version": 1,
+  "title": "The Chaplain's Commutation",
+  "logline": "A weary station chaplain seeks compassionate release for a dying convict, unaware the wealthy donor funding the hospice ward was the convict's old accomplice and will pay anything to keep him silenced.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "prison_chaplain",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Tends to convicts aboard the penal hulk; gentle, weary, troubled by the weight of confessions.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "avenging_sponsor",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Endowed the prison medical wing; outwardly a righteous patron of justice, privately terrified of exposure.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "penal_hulk_parish",
+      "kind": "place",
+      "description": "A decommissioned freighter converted into an orbital penal chapel and palliative ward.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "arbitration_chancery",
+      "kind": "place",
+      "description": "The administrative station module where judicial petitions and medical commutations are ratified.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "nebula"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "debt_owed_to_player",
+    "quiet_cover_up"
+  ],
+  "public_situation": "The orbital parish aboard {role:penal_hulk_parish} has lodged a compassionate release petition with {role:arbitration_chancery} for a terminally ill prisoner.",
+  "private_truth": "{role:avenging_sponsor} is funding dock delays to keep the prisoner from leaving alive, because the dying man's final confession exposes the sponsor as his former partner in crime.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "dying_confession_exposes_sponsor_as_accomplice"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The chancery places the commutation petition on the emergency docket with a seventy-two hour filing deadline.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "prison_chaplain",
+          "target": "arbitration_chancery",
+          "reason": "The chaplain hires an uncompromised outside pilot to deliver the sworn medical affidavit and petition before station registrars leave.",
+          "private_fact": "He discovered a wax-sealed confession cylinder inside the prisoner's prayer book that names the ward's patron.",
+          "outcome_tags": [
+            "petition_delivered",
+            "docket_closed"
+          ],
+          "routes": {
+            "petition_delivered": "next",
+            "docket_closed": "resolution:petition_expires_in_docket"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "{role:avenging_sponsor} registers priority salvage and mooring liens against {role:penal_hulk_parish} to delay clearance.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "avenging_sponsor",
+          "target": "arbitration_chancery",
+          "reason": "The sponsor pays the pilot to purchase administrative docket suspension vouchers to push the hearing into next term.",
+          "private_fact": "He is using shell company credits borrowed against future shipping yields to buy the docket delays.",
+          "outcome_tags": [
+            "delay_purchased",
+            "purchase_declined"
+          ],
+          "routes": {
+            "delay_purchased": "next",
+            "purchase_declined": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Medical monitors from {role:penal_hulk_parish} signal the patient has entered critical organ failure.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "prison_chaplain",
+          "target": "penal_hulk_parish",
+          "reason": "The chaplain needs the pilot to retrieve the prisoner's sealed personal testament and confession reliquary from the chapel altar.",
+          "private_fact": "The chaplain is terrified that exposing the truth will destroy the hospice charity that keeps sixty other inmates alive.",
+          "outcome_tags": [
+            "testament_secured",
+            "reliquary_withheld"
+          ],
+          "routes": {
+            "testament_secured": "next",
+            "reliquary_withheld": "resolution:petition_expires_in_docket"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the dying confession. The sponsor offers a massive settlement to burn it, while the chaplain prays for justice without destroying the parish.",
+        "options": [
+          {
+            "id": "deliver_to_chancery",
+            "label": "Deliver the confession to the chancery magistrate to force the pardon",
+            "leads_to": "resolution:commutation_ratified"
+          },
+          {
+            "id": "sell_silence_to_sponsor",
+            "label": "Hand the confession cylinder to the sponsor in exchange for his hush money",
+            "leads_to": "resolution:sponsor_buys_vengeance"
+          },
+          {
+            "id": "broker_parish_endowment",
+            "label": "Compel the sponsor to fund permanent hospice care in exchange for sealing the cylinder",
+            "leads_to": "resolution:mercy_endows_parish"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "commutation_ratified",
+      "reached_by": "The pilot submits the confession cylinder directly to the chancery magistrate.",
+      "summary": "The chancery pardons the prisoner and arrests {role:avenging_sponsor}. The dying man spends his final hours in civilian care while the sponsor faces trial.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "prison_chaplain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "avenging_sponsor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "dying_confession_ratified",
+          "public_summary": "A pilot brought a dying convict's confession to court, unmasking a pious sponsor as his old partner."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "sponsor_buys_vengeance",
+      "reached_by": "The pilot sells the confession cylinder to the sponsor.",
+      "summary": "{role:avenging_sponsor} burns the confession and enforces the mooring lien. The prisoner dies in the penal ward, and the chaplain loses his faith in the court.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "avenging_sponsor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "prison_chaplain",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "mercy_endows_parish",
+      "reached_by": "The pilot forces the sponsor to endow the parish hospice in exchange for quiet burial.",
+      "summary": "{role:avenging_sponsor} endows the chapel with permanent life-support funding. The confession is buried unread, and the chaplain carries the secret alone.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "prison_chaplain",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "avenging_sponsor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "hospice_endowed_in_secret",
+          "public_summary": "Word spread of a substantial anonymous bequest that saved an orbital prison chapel from closing."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "petition_expires_in_docket",
+      "reached_by": "Filings are delayed or the pilot ignores the contract.",
+      "summary": "The commutation filing deadline lapses while paperwork idles in {role:arbitration_chancery}. The prisoner passes away behind bars without receiving a hearing.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "prison_chaplain",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "avenging_sponsor",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "petition_expires_in_docket",
+  "loose_threads": [
+    {
+      "id": "t_reliquary_loan_contract",
+      "surface": "cargo",
+      "detail": "The prayer book contains a pawn promissory note tying {role:avenging_sponsor} to an outer system banking house.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_chancery_docket_alteration",
+      "surface": "station_notice",
+      "detail": "The emergency docket index was altered overnight using administrative clearance credentials belonging to a deceased magistrate.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_hulk_scrap_options",
+      "surface": "price_board",
+      "detail": "A scrap speculator acquired future demolition options on {role:penal_hulk_parish} six weeks before the parish petitioned for relief.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "fear",
+      "guilt",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Station registrars in {system} debate proposed revisions to prison compassionate release guidelines.",
+    "Donations to orbital medical ministries drop as commercial shipping rates rise across the sector.",
+    "Administrative disputes between private sponsors and parish chaplains stall chancery dockets."
+  ],
+  "voice_direction": {
+    "prison_chaplain": "Quiet, unhurried, long thoughtful pauses between sentences. Chooses words carefully like fragile glassware; avoids using legal terminology.",
+    "avenging_sponsor": "Forceful, righteous, highly practiced moral outrage. Shifts abruptly to venomous pragmatism whenever financial exposure is raised."
+  },
+  "novelty_tags": [
+    "prison_chaplain",
+    "dying_confession",
+    "compassionate_commutation",
+    "sponsor_accomplice",
+    "parish_endowment"
+  ]
+}

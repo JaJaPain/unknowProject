@@ -1,0 +1,386 @@
+{
+  "id": "premise.the_penal_quarry_quota",
+  "schema_version": 1,
+  "title": "The Penal Quarry Quota",
+  "logline": "Failing scrubbers in an asteroid penal mine force convict drillers to smuggle raw ice, while the warden schemes to destroy maintenance records before corporate auditors arrive.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "survival"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "quarry_warden",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Supervises the asteroid extraction penal site; polite, bureaucratic, terrified of headquarters audits.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "convict_delegate",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Elected by convict drilling teams to bargain for ration scrip; cynical, scarred, fiercely protective of the crews.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "penal_rock_complex",
+      "kind": "place",
+      "description": "A subterranean mining outpost drilled deep into an airless carbonaceous asteroid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "guard_patrol_cutter",
+      "kind": "ship",
+      "description": "An automated security cutter modified with heavy pulse lasers to police the quarry perimeter.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "contraband_depot",
+      "kind": "place",
+      "description": "A decommissioned slag lock where off-shift convicts barter smuggled supplies.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarry_trust_syndicate",
+      "kind": "faction",
+      "description": "A regional resource trust holding the correctional extraction lease from system authorities.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "faction_weakened"
+  ],
+  "public_situation": "Work teams at the penal asteroid quarry have fallen behind extraction quotas, prompting the management trust to freeze outbound mail.",
+  "private_truth": "{role:quarry_warden} pocketed the environmental scrubber refurbishment fund, leaving {role:penal_rock_complex} dangerously short of breathable air.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "embezzled_environmental_scrubber_subsidy"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Emergency ration rationing is announced across all work levels of {role:penal_rock_complex}.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "convict_delegate",
+          "target": "penal_rock_complex",
+          "reason": "The delegate hires a freelance miner to bring unrefined ice directly to the secondary life-support condensers.",
+          "private_fact": "She is paying using stolen industrial diamond cutting heads stashed in the slag chute.",
+          "outcome_tags": [
+            "ice_delivered",
+            "ore_seized"
+          ],
+          "routes": {
+            "ice_delivered": "next",
+            "ore_seized": "resolution:quarry_suffocates_quietly"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:quarry_warden} declares an unscheduled contraband sweep and halts all private docking.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "quarry_warden",
+          "target": "penal_rock_complex",
+          "culprit": "convict_delegate",
+          "reason": "The warden hires the pilot to scan external maintenance shafts to pinpoint an unauthorized transmitter broadcasting distress bursts.",
+          "private_fact": "The broadcasts contain sensor logs proving that lower galleries are venting toxic ammonia.",
+          "outcome_tags": [
+            "transmitter_located",
+            "sensor_static"
+          ],
+          "routes": {
+            "transmitter_located": "next",
+            "sensor_static": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Shift leaders threaten a total extraction strike unless atmospheric scrubbers are brought to full power.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "convict_delegate",
+          "target": "contraband_depot",
+          "reason": "She needs the pilot to retrieve the station maintenance log slate hidden inside an unmonitored ore pod before guards locate it.",
+          "private_fact": "The slate details the warden's personal diversion of corporate repair grants into offshore bond trusts.",
+          "outcome_tags": [
+            "log_secured",
+            "pod_raided"
+          ],
+          "routes": {
+            "log_secured": "next",
+            "pod_raided": "resolution:quarry_suffocates_quietly"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the proof of embezzled scrubber repairs. The warden offers double payment to wipe it, while the miners demand armed escort to transmit it.",
+        "options": [
+          {
+            "id": "deliver_proof_to_trust",
+            "label": "Fly the proof out and deliver it to system health inspectors",
+            "leads_to": "resolution:syndicate_concession_revoked"
+          },
+          {
+            "id": "help_miners_fight",
+            "label": "Back the inmate strike against the warden's enforcement patrol",
+            "leads_to": "beat:4"
+          },
+          {
+            "id": "take_warden_payout",
+            "label": "Sell the slate back to the warden and keep out of the strike",
+            "leads_to": "resolution:warden_suppresses_riot"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:guard_patrol_cutter} establishes an aggressive firing perimeter around {role:penal_rock_complex} to enforce quarantine.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "convict_delegate",
+          "target": "guard_patrol_cutter",
+          "reason": "The delegate hires the pilot to destroy the guard cutter so the miners can breach the reserve air depot and force a broadcast.",
+          "private_fact": "The cutter crew has orders to scuttle the lower habitat shafts if prisoners breach the secure lift.",
+          "outcome_tags": [
+            "cutter_destroyed"
+          ],
+          "routes": {
+            "cutter_destroyed": "resolution:convicts_barricade_quarry"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "syndicate_concession_revoked",
+      "reached_by": "The pilot delivers the maintenance log to system regulators.",
+      "summary": "Regulators revoke the operating lease for {role:penal_rock_complex}. {role:quarry_warden} is removed in disgrace, and emergency scrubbers are installed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "quarry_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convict_delegate",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "quarry_trust_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "quarry_neglect_exposed",
+          "public_summary": "A hauler exposed an asteroid warden who was skimming scrubber credits while convict miners choked."
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "convicts_barricade_quarry",
+      "reached_by": "The pilot destroys the guard cutter, enabling the miners to seize the complex.",
+      "summary": "Inmates seize control of {role:penal_rock_complex} after destroying the guard cutter. They fortify the airlocks, establishing an armed labor standoff.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "quarry_warden",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "quarry_trust_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike",
+            "power_vacuum"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "penal_cutter_shattered",
+          "public_summary": "A private prison patrol ship was blown out of orbit during an asteroid quarry mutiny."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "warden_suppresses_riot",
+      "reached_by": "The pilot sells the evidence slate back to the warden.",
+      "summary": "{role:quarry_warden} suppresses the labor unrest and destroys the incriminating maintenance records. Rations and air allowances are cut in half.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "convict_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "quarry_warden",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "quarry_trust_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "law_change",
+          "law": "mining_charter_required",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "quarry_suffocates_quietly",
+      "reached_by": "Emergency deliveries fail or the pilot ignores the contract.",
+      "summary": "Scrubber failure cripples {role:penal_rock_complex}. {role:quarry_trust_syndicate} evacuates upper supervisory staff, leaving convict shifts in dormant lockdown.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "convict_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "quarry_warden",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "quarry_suffocates_quietly",
+  "loose_threads": [
+    {
+      "id": "t_reassigned_subsidy_slates",
+      "surface": "station_notice",
+      "detail": "A mining regulator signed off on full scrubber repairs without visiting {role:penal_rock_complex} in eighteen months.",
+      "can_carry_methods": [
+        "bribery",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_ice_broker_holdings",
+      "surface": "price_board",
+      "detail": "An unlisted logistics broker bought up all secondary water ice reserves in the belt days before the quarry filters choked.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_cutter_munitions_bill",
+      "surface": "cargo",
+      "detail": "The guard cutter's pulse cannons were billed to a corporate security company that operates solely in an adjacent system.",
+      "can_carry_methods": [
+        "proxy_violence",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "slow_infiltration",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "greed",
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Output reports from {role:penal_rock_complex} drop sharply as station management cites technical delays.",
+    "Miners' rights advocates petition system authorities over unconfirmed atmospheric leaks in the outer belt.",
+    "Security patrols around penal mining leases in {system} increased following rumors of unauthorized comms."
+  ],
+  "voice_direction": {
+    "quarry_warden": "Speaks in smooth, rehearsed administrative euphemisms. Calls toxic air 'transitional particulate elevation' and never raises his voice.",
+    "convict_delegate": "Short, breathless phrases worn down by years underground. Blunt, biting humor; avoids speaking of the world beyond the quarry."
+  },
+  "novelty_tags": [
+    "penal_quarry",
+    "failing_scrubbers",
+    "diverted_subsidies",
+    "ore_delivery",
+    "inmate_strike"
+  ]
+}

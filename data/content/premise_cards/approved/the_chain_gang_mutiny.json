@@ -1,0 +1,429 @@
+{
+  "id": "premise.the_chain_gang_mutiny",
+  "schema_version": 1,
+  "title": "The Chain Gang Mutiny",
+  "logline": "Convict laborers seize an unshielded modular prison barge during a gate transit, fleeing across three systems to escape corporate hunters determined to silence proof of criminal radiation neglect.",
+  "scale": "regional",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "convict_coxswain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Former commercial pilot serving eight years for union smuggling; navigating the runaway penal barge.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "penal_superintendent",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Executive warden for the private correctional corporation; focused on suppressing liability before shareholder meetings.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "prison_barge_hulk",
+      "kind": "ship",
+      "description": "An aging modular penal hauler with unshielded crew blocks, leaking coolant, and failing attitude thrusters.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "warden_hunter_frigate",
+      "kind": "ship",
+      "description": "A private corporate gunship outfitted with heavy tracking arrays and high-yield torpedo launchers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "penal_contractor_corps",
+      "kind": "faction",
+      "description": "The private security syndicate holding transport contracts for planetary correctional ministries.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "waypoint_refuel_spire",
+      "kind": "place",
+      "description": "A high-orbit propellant transfer platform situated along the border jump transit corridor.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "neutral_free_haven",
+      "kind": "place",
+      "description": "An unaligned asteroid trading hub outside corporate jurisdiction that grants sanctuary to stranded crews.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "route_opened",
+    "faction_weakened"
+  ],
+  "public_situation": "System security networks across three systems broadcast urgent pursuit alerts for an armed runaway prison transport barge.",
+  "private_truth": "{role:penal_contractor_corps} stripped the radiation baffling from {role:prison_barge_hulk} to cut refit costs, knowingly exposing convict crews to lethal stellar flare wash.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "stripped_radiation_shielding_to_cut_transport_costs"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Security alerts echo across {system} as {role:penal_contractor_corps} posts a high-priority bounty for flight telemetry.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "penal_superintendent",
+          "target": "waypoint_refuel_spire",
+          "culprit": "penal_superintendent",
+          "reason": "The superintendent contracts an independent pilot to analyze gate telemetry buoys to determine which branch corridor the barge entered.",
+          "private_fact": "He needs the barge destroyed before maritime inspectors can examine its compromised reactor bulkhead.",
+          "outcome_tags": [
+            "wake_identified",
+            "telemetry_purged"
+          ],
+          "routes": {
+            "wake_identified": "next",
+            "telemetry_purged": "resolution:barge_drifts_lifeless"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Fuel prices spike at border depots as corporate security escorts requisition civilian fuel pods.",
+      "missions_mode": "one_of",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "good": "fuel",
+          "requester": "convict_coxswain",
+          "target": "waypoint_refuel_spire",
+          "reason": "The coxswain hails the pilot over encrypted channels, offering seized commissary gold to buy emergency reactor propellant.",
+          "private_fact": "Half the inmates are already showing early symptoms of radiation sickness from unshielded jump drives.",
+          "outcome_tags": [
+            "fuel_delivered",
+            "barge_starved"
+          ],
+          "routes": {
+            "fuel_delivered": "next",
+            "barge_starved": "resolution:barge_drifts_lifeless"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "penal_superintendent",
+          "target": "waypoint_refuel_spire",
+          "reason": "He pays the pilot to rush an impound warrant to border station fuel brokers to choke off all supplies to the runaway barge.",
+          "private_fact": "He authorized lethal ordnance for his hunter frigate without waiting for ministerial approval.",
+          "outcome_tags": [
+            "impound_served",
+            "barge_escaped_dock"
+          ],
+          "routes": {
+            "impound_served": "next",
+            "barge_escaped_dock": "resolution:barge_drifts_lifeless"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "{role:warden_hunter_frigate} engages the runaway barge's outer picket in deep space.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "convict_coxswain",
+          "target": "warden_hunter_frigate",
+          "reason": "The coxswain contracts the pilot to attack the hunter frigate's scout wing and recover their jump gate clearance keycard.",
+          "private_fact": "The keycard will unlock the frontier gate into neutral territory before the corporate blockade locks the system down.",
+          "outcome_tags": [
+            "keycard_recovered"
+          ],
+          "routes": {
+            "keycard_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "{role:neutral_free_haven} receives conflicting demands to impound or shelter approaching vessels.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "penal_superintendent",
+          "target": "neutral_free_haven",
+          "reason": "The superintendent hires the pilot to deliver an armed extradition demand to haven authorities before the barge arrives.",
+          "private_fact": "The extradition paperwork claims the inmates murdered their medical staff, concealing that the guards fled first.",
+          "outcome_tags": [
+            "demand_delivered"
+          ],
+          "routes": {
+            "demand_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds both the haven docking credentials and the corporate extradition writ. The haven will act on the pilot's counsel.",
+        "options": [
+          {
+            "id": "authorize_haven_sanctuary",
+            "label": "Certify the mutineers' distress status to guarantee emergency haven docking",
+            "leads_to": "resolution:refugees_reach_haven"
+          },
+          {
+            "id": "enforce_corporate_extradition",
+            "label": "Deliver the extradition writ and guide the hunter frigate in for the kill",
+            "leads_to": "beat:5"
+          }
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:warden_hunter_frigate} prepares a terminal torpedo run against {role:prison_barge_hulk} on the perimeter of the haven.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "penal_superintendent",
+          "target": "prison_barge_hulk",
+          "reason": "The superintendent pays the pilot to destroy the barge's bridge modules before it crosses into sovereign haven range.",
+          "private_fact": "The coxswain hails mid-engagement, offering corporate maintenance telemetry proving criminal shielding neglect if the pilot turns and disables the hunter frigate.",
+          "outcome_tags": [
+            "barge_destroyed",
+            "hunter_disabled"
+          ],
+          "routes": {
+            "barge_destroyed": "resolution:barge_annihilated",
+            "hunter_disabled": "resolution:contractor_scandal_exposed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "refugees_reach_haven",
+      "reached_by": "The pilot secures docking clearance at the neutral haven.",
+      "summary": "{role:prison_barge_hulk} docks safely at {role:neutral_free_haven}. The surviving convicts claim political asylum, leaving {role:penal_contractor_corps} empty-handed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "convict_coxswain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "penal_superintendent",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "penal_contractor_corps",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "convict_barge_rescued",
+          "public_summary": "A pilot helped an escaped prison transport slip past corporate hunters to claim haven sanctuary."
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "contractor_scandal_exposed",
+      "reached_by": "The pilot accepts the coxswain's offer, disables the hunter frigate, and transmits the shielding telemetry.",
+      "summary": "Scandal erupts as records prove {role:penal_contractor_corps} stripped reactor shielding. {role:penal_superintendent} is indicted, and surviving convicts receive medical care.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "convict_coxswain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "penal_superintendent",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "penal_contractor_corps",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "unshielded_convicts_championed",
+          "public_summary": "A gunfighter turned against a private prison armada after uncovering illegal radiation neglect."
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "barge_annihilated",
+      "reached_by": "The pilot destroys the runaway barge on behalf of the superintendent.",
+      "summary": "{role:prison_barge_hulk} is destroyed in deep space. {role:penal_contractor_corps} reports an accidental catastrophic reactor containment failure, burying all evidence.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "convict_coxswain",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "penal_superintendent",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "penal_contractor_corps",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "mutineer_barge_purged",
+          "public_summary": "A hired mercenary silenced an escaped convict ship in deep space for corporate bounty credits."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "barge_drifts_lifeless",
+      "reached_by": "Fuel runs out or the pilot avoids taking contracts.",
+      "summary": "{role:prison_barge_hulk} runs out of propellant in an unpatrolled jump corridor. Life-support systems freeze, leaving the hulk to drift indefinitely as a tomb.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "convict_coxswain",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "penal_superintendent",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "penal_contractor_corps",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "barge_drifts_lifeless",
+  "loose_threads": [
+    {
+      "id": "t_baffling_scrap_manifest",
+      "surface": "wreck",
+      "detail": "Debris from the transport's engine casing shows radiation shielding plates were unbolted and replaced with sheet iron.",
+      "can_carry_methods": [
+        "sabotage",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_superintendent_stock_short",
+      "surface": "price_board",
+      "detail": "A major investment fund divested from {role:penal_contractor_corps} shares hours before the mutiny was reported.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_haven_customs_bribe",
+      "surface": "station_notice",
+      "detail": "Dock records at {role:neutral_free_haven} record an advance retainer paid by a corporate security front company.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Multi-system dragnet launched after unconfirmed reports of mutiny aboard a private penal transport.",
+    "Border haven authorities reject corporate extradition requests, citing maritime neutrality covenants.",
+    "Shares in private correctional syndicates fluctuate wildly as rumors of transport safety failures circulate."
+  ],
+  "voice_direction": {
+    "convict_coxswain": "Hoarse, urgent, barking commands over ship-wide comms while maintaining professional flight terminology under extreme fire.",
+    "penal_superintendent": "Smooth, icy corporate executive cadence. Treats human casualties as operational variances and never raises his voice above a murmur."
+  },
+  "novelty_tags": [
+    "prison_barge_escape",
+    "stripped_shielding",
+    "radiation_neglect",
+    "multi_system_pursuit",
+    "haven_sanctuary"
+  ]
+}
