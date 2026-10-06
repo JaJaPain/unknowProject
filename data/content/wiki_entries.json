@@ -216,16 +216,16 @@
 		{
 			"id": "lodestar",
 			"category": "Exploration",
-			"title": "The Lodestar",
+			"title": "Your destination",
 			"unlocked": false,
-			"body": "Every campaign has one place out past the edge of the charts worth reaching: the [b]Lodestar[/b]. Nobody knows quite what it is or where. N.O.V.A. hears the first rumour once you start travelling.\n\nOn the star map it shows as a faint gold wedge at the edge: roughly which way. It lies beyond the [b]Class VI[/b] gates, so the whole gate ladder leads towards it. Each new gate class you open can turn up a [b]bearing[/b]: a clue that narrows the wedge, until the last one marks the system itself. Hover over the wedge to see what you know so far."
+			"body": "Every campaign has one place out past the edge of the charts worth reaching: your [b]destination[/b]. N.O.V.A. calls it a lodestar, after the stars old sailors steered by: people from all around are guiding their way by it toward something nobody has found. Nobody knows quite what it is or where. N.O.V.A. hears the first rumour once you start travelling.\n\nOn the star map it shows as a faint gold wedge at the edge: roughly which way. It lies beyond the [b]Class VI[/b] gates, so the whole gate ladder leads towards it. Each new gate class you open can turn up a [b]bearing[/b]: a clue that narrows the wedge, until the last one marks the system itself. Hover over the wedge to see what you know so far."
 		},
 		{
 			"id": "lodestar_reached",
 			"category": "Exploration",
-			"title": "Reaching the Lodestar",
+			"title": "Reaching your destination",
 			"unlocked": false,
-			"body": "When the last bearing is found, the Lodestar's system is marked: a gold ring on the star map, and the gate that leads there goes on your charts for free (you still need the Ship Rating for its class). In that system the place itself shows on the overview as [b]Lodestar[/b]. Fly in close and it tells its story.\n\nReaching it pays well and closes the [b]season[/b]. Then, after a while, a new rumour starts: the next Lodestar, further out past deeper gates, with five new bearings to find. There is always another one. Places you've reached stay on the map with their gold ring."
+			"body": "When the last bearing is found, your destination's system is marked: a gold ring on the star map, and the gate that leads there goes on your charts for free (you still need the Ship Rating for its class). In that system the place itself shows on the overview as [b]Destination[/b]. Fly in close and it tells its story.\n\nReaching it pays well and closes the [b]season[/b]. Then, after a while, a new rumour starts: the next destination, further out past deeper gates, with five new bearings to find. There is always another one. Places you've reached stay on the map with their gold ring."
 		},
 		{
 			"id": "keystone",

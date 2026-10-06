@@ -24,7 +24,7 @@ const POOLS := {
 	],
 	"bearing": [
 		"I've got a feeling there's a bearing in this system. The receiver, a drone dive or an anomaly might turn it up.",
-		"If the Lodestar left a trace here, an activity will find it. Receiver, drones, anomalies. Your pick.",
+		"If our destination left a trace here, an activity will find it. Receiver, drones, anomalies. Your pick.",
 		"This far out, the trail picks up. Let's do something here and see what comes back.",
 	],
 	"loose_end": [

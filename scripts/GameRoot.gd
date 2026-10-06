@@ -1796,6 +1796,10 @@ func premise_people() -> Array:
 	return premise_director.known_people() if is_instance_valid(premise_director) else []
 
 
+func premise_journal() -> Array:
+	return premise_director.journal() if is_instance_valid(premise_director) else []
+
+
 func premise_fates() -> Dictionary:
 	return premise_director.fates() if is_instance_valid(premise_director) else {}
 
@@ -12847,6 +12851,11 @@ func _run_database_snapshot() -> void:
 		return
 	for e in screen.call("shown_entries"):
 		print("[DatabaseSnapshot]   %s: %s" % [e["name"], e["line"]])
+	for tab in ["clues", "destination", "journal"]:
+		screen.call("show_tab", tab)
+		await get_tree().create_timer(0.6).timeout
+		await _hud_snapshot_save(out.path_join("database_%s.png" % tab))
+		print("[DatabaseSnapshot] tab %s shown" % screen.call("current_tab"))
 	print("[DatabaseSnapshot] PASS")
 	get_tree().quit(0)
 

@@ -11,7 +11,7 @@ const GOLD := Color(1.0, 0.82, 0.45)
 ## Built at a modest size, shown three times larger: a destination, not a prop.
 const SCALE := 3.0
 
-var display_name := "Lodestar"
+var display_name := "Destination"
 var kind := "beacon"
 var _spin: Node3D = null
 var _light: OmniLight3D = null

@@ -3952,7 +3952,7 @@ func update_overview_list(entities: Array):
 			elif entity.is_in_group("wreckage"):
 				type_str = "Wreckage"
 			elif entity.is_in_group("lodestar"):
-				type_str = "Lodestar"
+				type_str = "Destination"
 			elif entity.is_in_group("anomaly"):
 				# Resolved anomalies earn their real name in the overview too, so a
 				# place the player has already been reads as known rather than
@@ -3988,7 +3988,7 @@ func update_overview_list(entities: Array):
 				row_color = Color(1.0, 0.27, 0.22)   # Mission hunt target red
 			elif type_str == "Anomaly":
 				row_color = Color(1.0, 0.78, 0.1)     # Amber — unknown contact
-			elif type_str == "Lodestar":
+			elif type_str == "Destination":
 				row_color = Color(1.0, 0.82, 0.45)    # The Lodestar's gold
 			elif entity.is_in_group("ship") and GlobalState.ship_disposition(entity) == GlobalState.DISPOSITION_HOSTILE:
 				row_color = Color(1.0, 0.45, 0.4)     # Hostile: attacks on sight (finding 10b)
@@ -8629,7 +8629,7 @@ func _refresh_loose_ends_button() -> void:
 	var pinned := threads.filter(func(t): return bool(t.get("pinned", false))).size()
 	loose_ends_btn.text = "Loose ends (%d noticed, %d pinned)" % [threads.size(), pinned]
 	if not lodestar_info.is_empty():
-		loose_ends_btn.text += "  ·  Lodestar %d/%d" % [int(lodestar_info["found"]), int(lodestar_info["total"])]
+		loose_ends_btn.text += "  ·  Destination %d/%d" % [int(lodestar_info["found"]), int(lodestar_info["total"])]
 
 
 ## A new loose end is a reward, and should feel like one (Abe, 2026-10-01): a

@@ -898,3 +898,9 @@ through the marked gate and flies you in):
       hand.", then opens a channel to Kaelen herself; they talk past you,
       Kaelen puts it together and catches you listening. Nothing about it
       shows up in the comms log or subtitles afterwards. How does it hit?
+- [ ] **N.O.V.A.'s database tabs:** PEOPLE / CLUES (your pins; after the
+      reveal, which were real) / DESTINATION (what's known of it) / JOURNAL
+      (each story you saw or took part in, how it ended, your deeds).
+- [ ] **"Destination", not "Lodestar":** the overview, chat and wiki say
+      Destination; once, a little after she first hears of it, N.O.V.A. says
+      "This destination is like a lodestar, Captain..."

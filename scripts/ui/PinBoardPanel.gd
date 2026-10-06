@@ -28,6 +28,8 @@ var _summary: Dictionary = {}
 ## [text], found, total, next_class} or {} while the captain hasn't heard of it.
 var _lodestar: Dictionary = {}
 var _tab := "loose"
+## Shown inside N.O.V.A.'s database (no title, tabs or back button of its own).
+var embedded := false
 var _tabs: HBoxContainer
 var _title: Label
 
@@ -56,7 +58,7 @@ func _ready() -> void:
 	_tabs.alignment = BoxContainer.ALIGNMENT_CENTER
 	_tabs.add_theme_constant_override("separation", 8)
 	layout.add_child(_tabs)
-	for tab in [["loose", "Loose ends"], ["lodestar", "Lodestar log"]]:
+	for tab in [["loose", "Loose ends"], ["lodestar", "Destination"]]:
 		var b := Button.new()
 		b.name = "Tab_" + str(tab[0])
 		b.text = str(tab[1])
@@ -84,6 +86,12 @@ func _ready() -> void:
 		visible = false
 		closed.emit())
 	layout.add_child(back)
+	if embedded:
+		# Inside N.O.V.A.'s database: its tabs and frame take over.
+		add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		_title.visible = false
+		_tabs.visible = false
+		back.visible = false
 
 
 func show_threads(threads: Array, summary: Dictionary = {}, lodestar: Dictionary = {}) -> void:
@@ -104,7 +112,7 @@ func show_tab(tab: String) -> void:
 
 
 func _render() -> void:
-	_tabs.visible = not _lodestar.is_empty()
+	_tabs.visible = not _lodestar.is_empty() and not embedded
 	for b in _tabs.get_children():
 		(b as Button).set_pressed_no_signal(str(b.name) == "Tab_" + _tab)
 	if _tab == "lodestar":
@@ -120,7 +128,7 @@ func _render_lodestar() -> void:
 	for child in _rows.get_children():
 		_rows.remove_child(child)
 		child.queue_free()
-	_title.text = "LODESTAR LOG"
+	_title.text = "DESTINATION"
 	var found := int(_lodestar.get("found", 0))
 	var total := int(_lodestar.get("total", 5))
 	var marked := str(_lodestar.get("marked", ""))

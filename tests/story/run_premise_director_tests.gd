@@ -115,6 +115,14 @@ func _test_campaign_simulation() -> void:
 	_check(bribe_deeds == bribed_twists, "every bribe taken on a twisted job leaves a deed (%d of %d)" % [bribe_deeds, bribed_twists])
 	_check(d_signal.size() == resolved, "arc_resolved should fire once per resolution")
 	_check((d.state["ledger"] as Array).size() > 10, "the story ledger should have grown")
+	# N.O.V.A.'s journal: the stories seen, newest first, in plain filled text.
+	var journal: Array = d.journal()
+	_check(journal.size() >= 4, "the journal should hold the stories played (%d)" % journal.size())
+	for e in journal:
+		_check(not str(e["title"]).is_empty() and not str(e["text"]).is_empty(), "journal entries have a title and text")
+		_check(not str(e["text"]).contains("{role:") and not str(e["text"]).contains("{system"), "journal text is filled: %s" % e["text"])
+	for i in range(1, journal.size()):
+		_check(int(journal[i - 1]["minute"]) >= int(journal[i]["minute"]), "journal newest first")
 	_check(not d.on_mission_terminal({"title": "Ordinary job", "narrative_metadata": {}}, "completed", now),
 		"ordinary missions must be ignored")
 	var history = load("res://scripts/story/premise/PremiseCardHistoryStore.gd").load_history(HISTORY_PATH)["history"]

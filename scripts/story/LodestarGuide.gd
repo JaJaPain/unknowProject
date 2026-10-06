@@ -95,7 +95,7 @@ func offer(source: String) -> bool:
 	var bearing: Dictionary = card["bearings"][index]
 	var gs := get_node_or_null("/root/GlobalState")
 	if gs != null:
-		gs.emit_chatter("LODESTAR", "%s: %s" % [str(SOURCES.get(source, SOURCES["rumour"])), str(bearing["text"])], Color(1.0, 0.82, 0.45))
+		gs.emit_chatter("DESTINATION", "%s: %s" % [str(SOURCES.get(source, SOURCES["rumour"])), str(bearing["text"])], Color(1.0, 0.82, 0.45))
 		var ui = gs.get_ui_manager() if gs.has_method("get_ui_manager") else null
 		if ui != null and ui.has_method("show_reward_banner"):
 			var found := LodestarType.bearings_found(s)
@@ -174,12 +174,18 @@ func try_introduce() -> bool:
 	if card.is_empty():
 		return false
 	s["known"] = true
-	gs.emit_chatter("LODESTAR", "%s: %s" % [str(card["title"]), str(card["first_hint"])], Color(1.0, 0.82, 0.45))
+	gs.emit_chatter("DESTINATION", "%s: %s" % [str(card["title"]), str(card["first_hint"])], Color(1.0, 0.82, 0.45))
 	var nova := get_node_or_null("/root/Nova")
 	if nova != null and nova.has_method("ask_captain"):
 		# A later season's Lodestar: she knows the feeling by now.
 		var opener := NEXT_SEASON_OPENER + " " if LodestarType.season(s) > 1 else ""
 		nova.ask_captain("%s%s %s" % [opener, str(card["nova_first"]), MAP_LINE], "nav")
+		# The word, once, with its meaning (Abe, 2026-10-05): the game calls
+		# it a "destination"; she gives it the old name and says why.
+		if LodestarType.season(s) <= 1 and nova.has_method("speak"):
+			get_tree().create_timer(LODESTAR_EXPLAINED_DELAY_S).timeout.connect(func() -> void:
+				if is_instance_valid(nova):
+					nova.call("speak", LODESTAR_EXPLAINED, 1, "thoughtful"))
 	load("res://scripts/ui/Wiki.gd").unlock("lodestar")
 	return true
 
@@ -189,6 +195,9 @@ func try_introduce() -> bool:
 const LandmarkScript := preload("res://scripts/story/LodestarLandmark.gd")
 const KaelenLockedGateType := preload("res://scripts/story/KaelenLockedGate.gd")
 const NEXT_SEASON_OPENER := "Here we go again, Captain."
+## Abe's line (2026-10-05), said once, after she first hears of the destination.
+const LODESTAR_EXPLAINED := "This destination is like a lodestar, Captain. People from all around are using it to guide their way to some unknown goal."
+const LODESTAR_EXPLAINED_DELAY_S := 14.0
 ## The scene plays when the ship is this close to the place.
 const ARRIVAL_RANGE := 900.0
 ## Where the place sits, from the system's centre.
@@ -252,7 +261,7 @@ func try_pin() -> bool:
 	var dest_def = registry.get_system(chosen["dest"])
 	var where := str(dest_def.display_name) if dest_def != null else "the next system out"
 	print("[Lodestar] pinned %s at %s via %s" % [str(s["id"]), str(chosen["dest"]), str(chosen["gate_id"])])
-	gs.emit_chatter("LODESTAR", "%s is marked on the star map: %s, through a gate out of this system." % [str(LodestarType.card_of(s)["title"]), where], Color(1.0, 0.82, 0.45))
+	gs.emit_chatter("DESTINATION", "%s is marked on the star map: %s, through a gate out of this system." % [str(LodestarType.card_of(s)["title"]), where], Color(1.0, 0.82, 0.45))
 	return true
 
 
@@ -286,7 +295,7 @@ func check_arrival() -> void:
 		_approach_said_in = here
 		var scene_data: Dictionary = card.get("arrival_scene", {})
 		_nova(str(scene_data.get("approach", "There it is, Captain.")))
-		gs.emit_chatter("LODESTAR", "%s is on the overview. Fly in close." % str(card["title"]), Color(1.0, 0.82, 0.45))
+		gs.emit_chatter("DESTINATION", "%s is on the overview. Fly in close." % str(card["title"]), Color(1.0, 0.82, 0.45))
 	var player = gs.player
 	if is_instance_valid(player) and (player as Node3D).global_position.distance_to(_landmark.global_position) <= ARRIVAL_RANGE:
 		play_arrival()

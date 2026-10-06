@@ -610,6 +610,40 @@ func pin_thread(thread_id: String, pinned: bool) -> void:
 	state = HandType.set_pinned(state, thread_id, pinned)
 
 
+## N.O.V.A.'s journal (the database's story-so-far tab): one entry per story
+## the Captain saw or took part in, newest first, in plain text from the
+## records (never a model): {minute, system, title, text, ended, deeds: [text]}.
+## Stories the Captain never saw stay out of it.
+func journal() -> Array:
+	var out: Array = []
+	var deeds_by_arc := {}
+	for d in state.get("deeds", []):
+		var list: Array = deeds_by_arc.get(str(d.get("arc_id", "")), [])
+		var summary := str(d.get("public_summary", "")).strip_edges()
+		if not summary.is_empty():
+			list.append(CastingType.fill_text(summary, d.get("cast", {}), {}))
+		deeds_by_arc[str(d.get("arc_id", ""))] = list
+	for arc_id in (state.get("arcs", {}) as Dictionary).keys():
+		var a: Dictionary = state["arcs"][arc_id]
+		if not bool(a.get("shown", false)) and not _engaged(a):
+			continue
+		var card: Dictionary = library.get_card(str(a.get("card_id", ""))) if library != null else {}
+		var system := str(_system_names.get(str(a.get("system_id", "")), ""))
+		var names := {"system_display": system if not system.is_empty() else "this system"}
+		var ended := str(a.get("status", "")) == "resolved"
+		var text := ""
+		if ended:
+			text = str(LibraryType.resolution(card, str(a.get("resolution_id", ""))).get("summary", ""))
+		else:
+			text = str(card.get("public_situation", card.get("logline", "")))
+		out.append({"minute": int(a.get("resolved_minute", -1)) if ended and int(a.get("resolved_minute", -1)) >= 0 else int(a.get("started_minute", 0)),
+			"system": system, "title": str(card.get("title", "A story")), "ended": ended,
+			"text": CastingType.fill_text(text, a.get("cast", {}), names).strip_edges(),
+			"deeds": deeds_by_arc.get(arc_id, [])})
+	out.sort_custom(func(x, y): return int(x["minute"]) > int(y["minute"]))
+	return out
+
+
 ## For N.O.V.A.'s database: the people in stories the Captain has seen,
 ## [{entity_id, name, story, system, minute}].
 func known_people() -> Array:

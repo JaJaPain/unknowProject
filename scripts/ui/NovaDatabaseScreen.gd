@@ -12,6 +12,11 @@ const PIN_COLOR := Color(1.0, 0.78, 0.35)
 const HAND_COLOR := Color(1.0, 0.45, 0.35)
 const ROW_PORTRAIT := 56
 const BIG_PORTRAIT := 220
+const PinBoardType := preload("res://scripts/ui/PinBoardPanel.gd")
+## N.O.V.A.'s whole memory in one place (Abe, 2026-10-05): the people, the
+## clues (pins; after the reveal, which were real), the destination (what's
+## known of it), and the journal (the story so far).
+const TABS := [["people", "PEOPLE"], ["clues", "CLUES"], ["destination", "DESTINATION"], ["journal", "JOURNAL"]]
 
 signal closed
 
@@ -24,6 +29,12 @@ var _filter_buttons := {}
 var _entries: Array = []
 var _selected := ""
 var _here := ""
+var _tab := "people"
+var _tab_buttons := {}
+var _people_body: Control
+var _board: Control
+var _journal_scroll: ScrollContainer
+var _journal_rows: VBoxContainer
 
 
 func _ready() -> void:
@@ -54,6 +65,18 @@ func _ready() -> void:
 	HudStyle.style_label(_count, 13, HudStyle.DIM)
 	_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(_count)
+	for tab in TABS:
+		var tb := Button.new()
+		tb.text = tab[1]
+		tb.toggle_mode = true
+		HudStyle.style_button(tb, 13)
+		var tab_id: String = tab[0]
+		tb.pressed.connect(func() -> void: show_tab(tab_id))
+		header.add_child(tb)
+		_tab_buttons[tab_id] = tb
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(18, 0)
+	header.add_child(gap)
 	for f in [["all", "ALL"], ["here", "THIS SYSTEM"], ["pinned", "PINNED"]]:
 		var b := Button.new()
 		b.text = f[1]
@@ -80,6 +103,25 @@ func _ready() -> void:
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 16)
 	outer.add_child(body)
+	_people_body = body
+	_board = PinBoardType.new()
+	_board.set("embedded", true)
+	_board.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_board.visible = false
+	outer.add_child(_board)
+	_board.connect("pin_toggled", func(thread_id: String, pinned: bool) -> void:
+		var scene := get_tree().current_scene
+		if scene != null and scene.has_method("premise_pin_thread"):
+			scene.call("premise_pin_thread", thread_id, pinned))
+	_journal_scroll = ScrollContainer.new()
+	_journal_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_journal_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_journal_scroll.visible = false
+	outer.add_child(_journal_scroll)
+	_journal_rows = VBoxContainer.new()
+	_journal_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_journal_rows.add_theme_constant_override("separation", 10)
+	_journal_scroll.add_child(_journal_rows)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.size_flags_stretch_ratio = 1.4
@@ -139,7 +181,31 @@ func shown_entries() -> Array:
 	return _entries
 
 
+## One of TABS.
+func show_tab(tab: String) -> void:
+	_tab = tab
+	_render()
+
+
+func current_tab() -> String:
+	return _tab
+
+
 func _render() -> void:
+	for id in _tab_buttons:
+		(_tab_buttons[id] as Button).button_pressed = id == _tab
+	var people := _tab == "people"
+	_people_body.visible = people
+	for id in _filter_buttons:
+		(_filter_buttons[id] as Button).visible = people
+	_board.visible = _tab in ["clues", "destination"]
+	_journal_scroll.visible = _tab == "journal"
+	if _tab in ["clues", "destination"]:
+		_render_board()
+		return
+	if _tab == "journal":
+		_render_journal()
+		return
 	for id in _filter_buttons:
 		(_filter_buttons[id] as Button).button_pressed = id == _filter
 	for c in _list.get_children():
@@ -151,6 +217,59 @@ func _render() -> void:
 	for e in shown:
 		_list.add_child(_row(e))
 	_render_detail()
+
+
+func _render_board() -> void:
+	var scene := get_tree().current_scene
+	var threads: Array = scene.call("premise_main_story_threads") if scene != null and scene.has_method("premise_main_story_threads") else []
+	var summary: Dictionary = scene.call("premise_main_story_summary") if scene != null and scene.has_method("premise_main_story_summary") else {}
+	var ui = GlobalState.get_ui_manager()
+	var dest: Dictionary = ui.call("lodestar_log") if ui != null and ui.has_method("lodestar_log") else {}
+	_board.call("show_threads", threads, summary, dest)
+	_board.call("show_tab", "lodestar" if _tab == "destination" else "loose")
+	if _tab == "destination" and dest.is_empty():
+		_board.get("_header").text = "Nothing yet. N.O.V.A. will tell you when she hears of somewhere worth reaching."
+
+
+## The story so far, newest first (PremiseDirector.journal).
+func _render_journal() -> void:
+	for c in _journal_rows.get_children():
+		c.queue_free()
+	var scene := get_tree().current_scene
+	var entries: Array = scene.call("premise_journal") if scene != null and scene.has_method("premise_journal") else []
+	if entries.is_empty():
+		var none := Label.new()
+		none.text = "Nothing written yet. The stories you take part in go in here."
+		HudStyle.style_label(none, 15, HudStyle.DIM)
+		_journal_rows.add_child(none)
+		return
+	for e in entries:
+		var box := PanelContainer.new()
+		box.add_theme_stylebox_override("panel", HudStyle.box(Color(0.04, 0.06, 0.09, 0.9), HudStyle.EDGE.darkened(0.4), 1, 6, 12))
+		_journal_rows.add_child(box)
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 4)
+		box.add_child(col)
+		var head := Label.new()
+		var day := 1 + int(e.get("minute", 0)) / 1440
+		head.text = "Day %d  ·  %s%s" % [day, str(e.get("system", "")), "" if bool(e.get("ended", false)) else "  ·  ongoing"]
+		HudStyle.style_label(head, 12, HudStyle.DIM)
+		col.add_child(head)
+		var title := Label.new()
+		title.text = str(e.get("title", ""))
+		HudStyle.style_label(title, 16, HudStyle.ACCENT if bool(e.get("ended", false)) else PIN_COLOR)
+		col.add_child(title)
+		var body := Label.new()
+		body.text = str(e.get("text", ""))
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		HudStyle.style_label(body, 13, HudStyle.TEXT)
+		col.add_child(body)
+		for d in e.get("deeds", []):
+			var deed := Label.new()
+			deed.text = "› " + str(d)
+			deed.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			HudStyle.style_label(deed, 12, HudStyle.DIM)
+			col.add_child(deed)
 
 
 func _row(e: Dictionary) -> Control:
