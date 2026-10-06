@@ -1,0 +1,413 @@
+{
+  "id": "premise.the_bastion_standoff",
+  "schema_version": 1,
+  "title": "The Bastion Standoff",
+  "logline": "Two rival scrapper syndicates trade fire over a drifting orbital defense platform whose automated gun pods remain hot because station management concealed the shutdown codes.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "station_manager",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Torn between feuding scrapper crews while local scrap metal prices plummet under unharvested platform debris.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scrapper_boss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Controls an outlaw salvage outfit that uses militarized cutters to claim derelict platforms.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_marshal",
+      "kind": "person",
+      "archetype": "official",
+      "description": "An unyielding port authority officer who insists that all orbital wreckage belongs to the station commonwealth.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "defense_platform",
+      "kind": "place",
+      "description": "A gutted orbital bastion floating dead in an unlit debris ring with active weapon capacitors.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "automated_gun_turrets",
+      "kind": "ship",
+      "description": "Automated defense pods still slaved to the platform's corrupted targeting beacon.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "scrapper_flagship",
+      "kind": "ship",
+      "description": "An armored salvage cutter retrofitted with heavy plasma cutters and rail mounts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrapper_syndicate",
+      "kind": "faction",
+      "description": "A confederation of independent breakers claiming customary salvage rights over decommissioned hulls.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "dense_debris"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "faction_weakened",
+    "power_vacuum"
+  ],
+  "public_situation": "A decommissioned orbital defense platform is drifting into commercial transit lanes, but salvage crews cannot approach its automated guns.",
+  "private_truth": "The station manager deliberately withheld the platform's shutdown frequency to let rival salvage outfits destroy each other over the scrap rights.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "withheld_bastion_codes_to_bleed_scrappers"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Navigation beacons issue a navigation exclusion zone around the drifting defense bastion after a scrapper tug is vaporized.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "salvage_marshal",
+          "target": "defense_platform",
+          "culprit": "station_manager",
+          "reason": "He needs an outside reconnaissance scan of the platform's capacitor relays to locate the master telemetry beacon before outlaw scrappers breach it.",
+          "private_fact": "He already suspects station administration is stalling the disarmament to force salvage crews into dangerous breach attempts.",
+          "outcome_tags": [
+            "frequency_located",
+            "relays_scrambled"
+          ],
+          "routes": {
+            "frequency_located": "next",
+            "relays_scrambled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Outlaw scrapper cutters surround the perimeter, trading fire with automated gun pods while attempting to latch cutting lines.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "station_manager",
+          "target": "automated_gun_turrets",
+          "reason": "He needs an experienced mercenary pilot to destroy the active gun pods so station salvage teams can board the central umbilical.",
+          "private_fact": "He plans to award the platform's salvage rights exclusively to an offshore trust that quietly holds his gambling debts.",
+          "outcome_tags": [
+            "turrets_destroyed"
+          ],
+          "routes": {
+            "turrets_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Outlaw scrappers board the gantry and attempt to pry open the armor magazine, triggering an emergency security scramble.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "salvage_marshal",
+          "target": "scrapper_syndicate",
+          "reason": "He needs the platform's cryptographic transponder recovered from scrapper looters before they broadcast false salvage title claims.",
+          "private_fact": "The transponder records show the station manager received the shutdown codes three weeks before the first scrapper died.",
+          "outcome_tags": [
+            "transponder_recovered"
+          ],
+          "routes": {
+            "transponder_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The recovered transponder proves {role:station_manager} let salvagers die for scrap profit, but {role:scrapper_boss} offers a massive bounty to bury the data.",
+        "options": [
+          {
+            "id": "give_to_marshal",
+            "label": "Hand the transponder to the marshal to arrest the station manager",
+            "leads_to": "resolution:manager_arrested_for_negligence"
+          },
+          {
+            "id": "sell_to_boss",
+            "label": "Sell the transponder to the scrapper boss to secure monopoly rights",
+            "leads_to": "beat:4"
+          },
+          {
+            "id": "broker_quiet_split",
+            "label": "Force the manager and scrapper boss into an equal scrap partnership",
+            "leads_to": "resolution:compromise_salvage_charter"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Port authority cutters deploy to seize the scrapper fleet, sparking a pitched skirmish outside the defense platform trench.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "salvage_marshal",
+          "target": "scrapper_flagship",
+          "reason": "He needs the heavily armed scrapper cutter neutralized before its plasma cannons breach the platform's core reactor.",
+          "private_fact": "The scrapper captain hails mid-fight, offering a cut of the platform's armor plating if the pilot disables the marshal's patrol sensor buoys instead.",
+          "outcome_tags": [
+            "flagship_disabled",
+            "scrapper_deal_struck"
+          ],
+          "routes": {
+            "flagship_disabled": "resolution:marshal_secures_platform",
+            "scrapper_deal_struck": "resolution:outlaw_salvage_triumph"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "manager_arrested_for_negligence",
+      "reached_by": "The pilot gives the cryptographic transponder to the marshal, proving the manager withheld safety codes.",
+      "summary": "{role:station_manager} is arrested for reckless endangerment. The platform is decommissioned under naval oversight, while {role:salvage_marshal} takes control of port salvage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_manager",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_salvage_ambush",
+          "public_summary": "A pilot uncovered records showing a station manager let scrappers die to clear an orbital platform."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "marshal_secures_platform",
+      "reached_by": "The pilot disables the scrapper cutter and backs port authority enforcement.",
+      "summary": "Port authority forces secure {role:defense_platform}. {role:scrapper_syndicate} is driven from the sector, and platform scrap is auctioned into the station treasury.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "scrapper_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_marshal",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "outlaw_salvage_triumph",
+      "reached_by": "The pilot takes the scrapper flagship captain's offer, helping the syndicate seize the platform.",
+      "summary": "{role:scrapper_syndicate} strips {role:defense_platform} down to the frame. The marshal is recalled in disgrace, while cheap armor plate floods local black markets.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "scrapper_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapper_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "compromise_salvage_charter",
+      "reached_by": "The pilot forces a split between station management and the scrapper syndicate.",
+      "summary": "A shared salvage compact is signed. Scrappers dismantle the platform under station tax stamps, ending the standoff without prosecution.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_manager",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapper_boss",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "law_change",
+          "law": "salvage_registry",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "automated_guns_lock_corridor",
+      "reached_by": "The pilot never engages or scans fail.",
+      "summary": "Uncontrolled platform fire damages commercial freighters, forcing harbor authorities to seal the orbital corridor and declare the sector an unnavigable hazard zone.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_manager",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "scrapper_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "automated_guns_lock_corridor",
+  "loose_threads": [
+    {
+      "id": "t_capacitor_override_code",
+      "surface": "cargo",
+      "detail": "The emergency battery override manifest includes a forged authorization stamp identical to customs clearance seals.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_scrapper_debt_lien",
+      "surface": "station_notice",
+      "detail": "A foreclosure notice against the scrapper syndicate's repair dock was purchased by a port administration shell company.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "manufactured_crisis",
+      "proxy_violence"
+    ],
+    "motives": [
+      "greed",
+      "guilt",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Commercial transit corridor rerouted as decommissioned platform weapons remain hot.",
+    "Scrapper crews exchange threats with port marshals over derelict salvage permits.",
+    "{role:station_manager} calls for patience regarding orbital battery disarming efforts."
+  ],
+  "voice_direction": {
+    "station_manager": "Hedging, evasive, and polite. Always redirects technical questions toward legal jurisdictional boundaries.",
+    "scrapper_boss": "Gravelly, direct, and aggressive. Speaks in short declarations and sneers whenever station regulations are cited.",
+    "salvage_marshal": "Rigid, clipped, and procedural. Cites administrative subsection numbers verbatim when issuing navigational orders."
+  },
+  "novelty_tags": [
+    "automated_defense_platform",
+    "scrapper_turf_war",
+    "withheld_shutdown_code",
+    "capacitor_overload",
+    "salvage_rights_dispute"
+  ]
+}

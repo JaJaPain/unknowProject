@@ -1,0 +1,363 @@
+{
+  "id": "premise.the_latency_gambit",
+  "schema_version": 1,
+  "title": "The Latency Gambit",
+  "logline": "When an orbital combat drone arena rigs wagers with artificial transmission delay, a destitute former operator hires a pilot to expose the broadcast jammer.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "price_of_profit",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "arena_bookmaker",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Controls the drone arena betting slate; smooth, calculating, and alters cockpit comms latency to manipulate dogfight outcomes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "ruined_operator",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "A bankrupt remote drone pilot who lost their ship and reputation when an engineered latency spike crashed their champion chassis.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relay_cutter",
+      "kind": "ship",
+      "description": "A modified electronic-warfare cutter disguised as an ordinary orbital broadcast relay dish.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "joust_colosseum",
+      "kind": "place",
+      "description": "A cavernous depressurized dome where remote-piloted kinetic drones battle for paying crowds.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "betting_exchange",
+      "kind": "place",
+      "description": "The raucous trading mezzanine where syndicates trade leveraged wagers on drone structural integrity.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "operators_guild",
+      "kind": "faction",
+      "description": "The mutual union of freelance drone pilots whose livelihoods depend on fair telemetry latency.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "witness_at_large",
+    "rival_humiliated"
+  ],
+  "public_situation": "Crowds pack the viewing galleries of {system}'s combat drone arena as syndicate bookmakers offer lopsided odds on the evening dogfights.",
+  "private_truth": "The arena bookmaker operates a covert transmitter that injects hundred-millisecond latency spikes into underdog cockpits to guarantee favored wins.",
+  "core_why": {
+    "motive": "control",
+    "secret": "bookmaker_transmitted_telemetry_lag_to_rig_wagers"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The arena announces record betting pools for the upcoming heavyweight drone elimination bracket.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "ruined_operator",
+          "target": "joust_colosseum",
+          "reason": "The operator asks the pilot to purchase shielded fiber-optic telemetry couplers from an outer depot to bypass arena comms repeaters.",
+          "private_fact": "The operator pawned their cybernetic neural jack to buy the replacement couplers.",
+          "outcome_tags": [
+            "couplers_delivered",
+            "couplers_intercepted"
+          ],
+          "routes": {
+            "couplers_delivered": "next",
+            "couplers_intercepted": "resolution:operator_silenced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The bookmaker issues a security decree banning third-party diagnostic scanners inside the arena dome.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "arena_bookmaker",
+          "requester": "ruined_operator",
+          "target": "joust_colosseum",
+          "reason": "The operator needs the pilot to scan the arena's broadcast gantry to isolate the directional jamming frequency.",
+          "private_fact": "The telemetry recorder shows thirty prior matches where losing drones suffered identical sub-space lag spikes right before impact.",
+          "outcome_tags": [
+            "jamming_isolated",
+            "jammer_unreachable"
+          ],
+          "routes": {
+            "jamming_isolated": "next",
+            "jammer_unreachable": "resolution:operator_silenced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "A broadcast relay cutter takes up position along the arena perimeter to flood the band with static.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "ruined_operator",
+          "target": "relay_cutter",
+          "reason": "The operator begs the pilot to cripple the cutter before it burns out the diagnostic recorder with an electromagnetic pulse.",
+          "private_fact": "The cutter captain hails mid-fight, offering a lucrative percentage of the evening's betting spread to drop the pursuit.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "accepted_syndicate_cut"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "accepted_syndicate_cut": "resolution:bookmaker_triumphs"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The championship bout begins as thousands of spectators roar from the gallery stands.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "ruined_operator",
+          "target": "betting_exchange",
+          "reason": "The operator asks the pilot to deliver the extracted jamming telemetry straight to the exchange board before bets settle.",
+          "private_fact": "The operator's own former co-pilot is flying the favored drone and is unaware the match has been pre-rigged.",
+          "outcome_tags": [
+            "telemetry_posted",
+            "transmission_jammed"
+          ],
+          "routes": {
+            "telemetry_posted": "next",
+            "transmission_jammed": "resolution:operator_silenced"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the betting exchange with proof of the bookmaker's latency rigging. The bookmaker offers a massive bribe to bury the drive.",
+        "options": [
+          {
+            "id": "expose_latency_scam",
+            "label": "Broadcast the jamming logs to void all rigged bets and ruin the bookmaker",
+            "leads_to": "resolution:bookmaker_ruined"
+          },
+          {
+            "id": "demand_restitution_pool",
+            "label": "Force the bookmaker to fund a restitution chest compensating ruined drone operators",
+            "leads_to": "resolution:restitution_chest"
+          },
+          {
+            "id": "take_syndicate_bribe",
+            "label": "Sell the drive to the bookmaker and let the rigged finals proceed",
+            "leads_to": "resolution:bookmaker_triumphs"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bookmaker_ruined",
+      "reached_by": "The pilot broadcasts the latency logs to the betting exchange.",
+      "summary": "{role:operators_guild} riots and seizes the arena floor; {role:arena_bookmaker} is ruined while {role:ruined_operator} regains operator accreditation.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "operators_guild",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "arena_bookmaker",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruined_operator",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_latency_rig",
+          "public_summary": "A pilot proved the combat drone arena was lagging pilots' controls to fix dogfights."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "restitution_chest",
+      "reached_by": "The pilot forces the bookmaker to fund operator restitution.",
+      "summary": "{role:arena_bookmaker} pays massive restitution to {role:operators_guild}, keeping the arena open under strict latency monitoring.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "operators_guild",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "arena_bookmaker",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruined_operator",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "bookmaker_triumphs",
+      "reached_by": "The pilot takes the bribe or sells the diagnostic drive.",
+      "summary": "The rigged dogfight concludes as planned; {role:arena_bookmaker} reaps a fortune while {role:ruined_operator} is barred from the arena.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "arena_bookmaker",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruined_operator",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "operators_guild",
+          "delta": -2
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "operator_silenced",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "The bookmaker's jammer wipes the diagnostic drive; {role:ruined_operator} defaults on debts while {role:arena_bookmaker} tightens arena security.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "arena_bookmaker",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "ruined_operator",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "operators_guild",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "operator_silenced",
+  "loose_threads": [
+    {
+      "id": "t_latency_spikes",
+      "surface": "scan",
+      "detail": "Telemetry recordings show directional microwave pulses synchronized precisely with bookmaker betting shifts.",
+      "can_carry_methods": [
+        "sabotage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_broker_collateral",
+      "surface": "price_board",
+      "detail": "The bookmaker's betting escrow is underwritten by high-interest debt instruments held by an offshore banking cartel.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "debt_leverage",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Combat drone arena in {system} posts record betting handle for championship elimination.",
+    "Drone operators' guild demands external audit following spate of erratic telemetry crashes.",
+    "Arena bookmakers dismiss interference claims, citing localized ion storm interference."
+  ],
+  "voice_direction": {
+    "arena_bookmaker": "Smooth, calculating, speaking with easy theatrical charm while masking total indifference to pilot safety.",
+    "ruined_operator": "Edgy, twitchy, speaking in rapid staccato bursts filled with technical avionics jargon and bitter resentment."
+  },
+  "novelty_tags": [
+    "combat_drones",
+    "latency_rigging",
+    "arena_bookmaker",
+    "dogfight_betting",
+    "subspace_jamming"
+  ]
+}

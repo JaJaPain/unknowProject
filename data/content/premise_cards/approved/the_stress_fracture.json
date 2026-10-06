@@ -1,0 +1,392 @@
+{
+  "id": "premise.the_stress_fracture",
+  "schema_version": 1,
+  "title": "The Stress Fracture",
+  "logline": "A shipyard chief tries to patch a cracked freighter spine with cosmetic plating, while a union safety inspector threatens a walkout that will paralyze the system's shipping lanes.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "paranoid"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "chief_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Oversees orbital gantry overhauls under strict penalty clauses; exhausted, calculating, and smelling of burnt hydraulic fluid.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "safety_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A veteran dock safety assessor who refuses to certify pressurized bulkheads without verified acoustic scans.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freight_consortium",
+      "kind": "faction",
+      "description": "A powerful logistics syndicate that faces heavy demurrage fines if bulk ore haulers miss scheduled convoy gates.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dockside_union",
+      "kind": "faction",
+      "description": "Orbital yard fitters and welders who stage wildcat walkouts whenever structural safety protocols are bypassed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "haulage_slipway",
+      "kind": "place",
+      "description": "A high-orbit gantry cradle clamped around the warped hull of a laden ore transport.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_enforcer",
+      "kind": "ship",
+      "description": "An armed security cutter dispatched by dispatchers to prevent unauthorized dock strikes.",
+      "reuse": "must_be_new"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "curfew"
+    ]
+  },
+  "accepts_seeds": [
+    "faction_weakened",
+    "public_outrage",
+    "law_tightened"
+  ],
+  "public_situation": "A deep-draft bulk hauler is locked in the orbital slipway with an unconfirmed hull fracture while departure deadlines tick down.",
+  "private_truth": "The chief engineer concealed acoustic test results showing the main thrust spine is fractured, gambling that the hull will survive one more transit.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "falsified_acoustic_hull_test_under_penalty_deadline"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The consortium requests emergency transit couriers to ferry replacement bulkhead plates from an off-station depot.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "chief_engineer",
+          "target": "haulage_slipway",
+          "reason": "He needs high-tensile structural plating purchased and delivered off the record before the formal safety shift begins.",
+          "private_fact": "He plans to weld cosmetic patch plates over the fractured spine to conceal the structural crack from regulators.",
+          "outcome_tags": [
+            "plates_delivered"
+          ],
+          "routes": {
+            "plates_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Dockside rumors spread that the hauler's spine popped under cold-docking pressure, prompting a snap union inspection.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "safety_inspector",
+          "target": "haulage_slipway",
+          "culprit": "chief_engineer",
+          "reason": "She needs independent external sensor scans of the hauler's thrust frame before the engineer can seal the gantry umbilical.",
+          "private_fact": "She was demoted two years ago after signing off on a similar stressed hull that ruptured near a jump gate.",
+          "outcome_tags": [
+            "fracture_verified",
+            "scans_inconclusive"
+          ],
+          "routes": {
+            "fracture_verified": "next",
+            "scans_inconclusive": "resolution:silent_catastrophic_launch"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "Union reps threaten to cut umbilical power unless the station magistrate impounds the vessel for acoustic disassembly.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "safety_inspector",
+          "target": "haulage_slipway",
+          "reason": "She needs certified acoustic sensor logs delivered to the yard magistrate's intake office before the consortium can force a launch clearance.",
+          "private_fact": "She knows the consortium has already paid the magistrate's clerk to misfile any unsealed paper filings.",
+          "outcome_tags": [
+            "affidavit_filed",
+            "filing_blocked"
+          ],
+          "routes": {
+            "affidavit_filed": "next",
+            "filing_blocked": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The acoustic logs confirm the hull will likely tear apart under main burn, but filing them will bankrupt the shipyard and trigger massive contract lawsuits.",
+        "options": [
+          {
+            "id": "back_union_strike",
+            "label": "Deliver the evidence to the dockside union to trigger a general yard shutdown",
+            "leads_to": "beat:4"
+          },
+          {
+            "id": "take_consortium_bribe",
+            "label": "Return the logs to the chief engineer for a private cash settlement",
+            "leads_to": "resolution:patch_and_launch"
+          },
+          {
+            "id": "alert_harbor_police",
+            "label": "Submit the evidence directly to harbor navigation to revoke the hauler's transponder",
+            "leads_to": "resolution:slipway_impounded"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Consortium security deploys an armed cutter to break the union picket and manually cycle the gantry release clamps.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "safety_inspector",
+          "target": "consortium_enforcer",
+          "reason": "She needs the armed enforcer driven back before security forces open fire on picketing dock mechanics at the umbilical locks.",
+          "private_fact": "The enforcer captain offers to transfer the hauler's emergency fuel allocation codes in exchange for being allowed to decouple the ship.",
+          "outcome_tags": [
+            "enforcer_driven_off",
+            "took_the_bribe"
+          ],
+          "routes": {
+            "enforcer_driven_off": "resolution:union_forces_overhaul",
+            "took_the_bribe": "resolution:patch_and_launch"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "union_forces_overhaul",
+      "reached_by": "The pilot breaks the consortium security cutter and delivers proof to the union, halting the launch.",
+      "summary": "{role:dockside_union} shuts down the slipway. The hauler is condemned for drydock rebuild, and {role:chief_engineer} faces criminal negligence inquiries.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dockside_union",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "freight_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_engineer",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "safety_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "prevented_spine_failure",
+          "public_summary": "A pilot defended shipyard picketers and grounded a freighter whose spine was cracked."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "patch_and_launch",
+      "reached_by": "The pilot accepts the consortium payoff or the enforcer captain's offer, allowing the cosmetic patch to proceed.",
+      "summary": "The cosmetic patch is signed off and the hauler slips its moorings into the shipping lane. {role:chief_engineer} pockets his bonus while dock workers protest.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "dockside_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "safety_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_engineer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "repealed"
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "slipway_impounded",
+      "reached_by": "The pilot routes the structural evidence to harbor authorities to freeze the slipway legally.",
+      "summary": "Harbor control locks the gantry clamps. {role:freight_consortium} forfeits its transit bond, while {role:dockside_union} wins an audited inspection schedule.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_consortium",
+          "delta": -1
+        },
+        {
+          "type": "standing",
+          "target": "dockside_union",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "safety_inspector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "silent_catastrophic_launch",
+      "reached_by": "The pilot provides inconclusive scans, or never gets involved.",
+      "summary": "The uninspected freighter fires main thrusters and suffers catastrophic frame shear near the gate, closing the lane and bankrupting the repair gantry.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "silent_catastrophic_launch",
+  "loose_threads": [
+    {
+      "id": "t_weld_batch_ledger",
+      "surface": "cargo",
+      "detail": "The delivery crates of replacement high-tensile plates were signed by a shipping broker who vanished from station manifests.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_demurrage_guarantee",
+      "surface": "dialogue",
+      "detail": "The hauler's demurrage bond includes an indemnity rider paying three times market value if the hull is condemned in port.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "manufactured_crisis",
+      "sabotage"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Ore hauler departure delayed in orbital slipway amid unconfirmed hull weld rumors.",
+    "{role:dockside_union} warns of immediate walkout if uncertified hulls are released.",
+    "{role:freight_consortium} denies structural damage, citing routine telemetry updates."
+  ],
+  "voice_direction": {
+    "chief_engineer": "Speaks in tense, rushed bursts with repeated references to contractual deadlines. Evades direct questions about acoustic scan readings.",
+    "safety_inspector": "Flat, measured, and deliberate. Uses bureaucratic terminology as armor and refuses to let others interrupt her technical descriptions."
+  },
+  "novelty_tags": [
+    "hull_stress_fracture",
+    "wildcat_dock_strike",
+    "acoustic_sensor_scan",
+    "cosmetic_patch_weld",
+    "demurrage_deadline"
+  ]
+}

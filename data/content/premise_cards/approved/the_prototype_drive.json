@@ -1,0 +1,422 @@
+{
+  "id": "premise.the_prototype_drive",
+  "schema_version": 1,
+  "title": "The Prototype Drive",
+  "logline": "An erratic propulsion architect develops an unshielded pulse-resonance drive that blind-scrambles gate navigation across adjacent systems, attracting corporate repossession gunboats.",
+  "scale": "regional",
+  "tone": [
+    "paranoid",
+    "noir"
+  ],
+  "themes": [
+    "reinvention",
+    "progress_vs_tradition"
+  ],
+  "roles": [
+    {
+      "id": "renegade_shipwright",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "A brilliant, erratic propulsion architect constructing an unchartered drive in an asteroid cradle.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "gate_commissioner",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Regulates jump gate beacon synchronization; terrified of undocumented harmonic frequencies.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corporate_retriever",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "A relentless industrial recovery agent hunting patent infringement across jump corridors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "prototype_cutter",
+      "kind": "ship",
+      "description": "A sleek test vessel fitted with an unshielded pulse-resonance thruster bell.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "corporate_interceptor",
+      "kind": "ship",
+      "description": "A heavy security patrol craft armed with pulse disruptors and corporate salvage grapnels.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "asteroid_slipway",
+      "kind": "place",
+      "description": "A hollowed nickel asteroid converted into an unlisted propulsion test cradle.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "transit_gate_complex",
+      "kind": "place",
+      "description": "The navigation and relay hub anchoring gate transit lanes in a neighbouring system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shipwright_guild",
+      "kind": "faction",
+      "description": "An independent fraternity of custom hull builders struggling under megacorporate engine patent monopolies.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "route_closed",
+    "evidence_loose"
+  ],
+  "public_situation": "Unregistered engine tests in rim sectors are sending harmonic interference pulses that disrupt jump gate telemetry across multiple systems.",
+  "private_truth": "The prototype drive does not just violate patents; its harmonic pulse desynchronizes gate transit beacons, making mass jump travel unstable.",
+  "core_why": {
+    "motive": "ideology",
+    "secret": "prototype_drive_harmonics_destabilize_jump_gate_beacons"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The shipwright guild posts an urgent requisition for regulated thorium fuel rods to initiate a test firing.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "renegade_shipwright",
+          "target": "asteroid_slipway",
+          "reason": "She needs sealed thorium ignition canisters couriered through sector checkpoints without triggering commercial reactor permits.",
+          "private_fact": "She knows the drive design was stolen from her former employer when they canceled her independent safety program.",
+          "outcome_tags": [
+            "canisters_delivered"
+          ],
+          "routes": {
+            "canisters_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The test firing triggers a cascade of navigation dropouts, causing gate relays in adjacent systems to fail safe into lockdown.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "gate_commissioner",
+          "target": "transit_gate_complex",
+          "culprit": "renegade_shipwright",
+          "reason": "He needs a pilot to scan the transit gate's sensor arrays in the next system to determine what triggered the relay blackout.",
+          "private_fact": "He concealed initial reports of gate drift to avoid triggering an audit of his sector's maintenance budget.",
+          "outcome_tags": [
+            "resonance_source_identified",
+            "telemetry_lost"
+          ],
+          "routes": {
+            "resonance_source_identified": "next",
+            "telemetry_lost": "resolution:gate_network_blackout"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Corporate recovery agents arrive at the gate hub with repossession warrants, tracking the drive's unique ionization trail.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "gate_commissioner",
+          "target": "transit_gate_complex",
+          "reason": "He needs the prototype's raw emission logs couriered to a secure regulator vault before corporate recovery agents seize them.",
+          "private_fact": "The logs prove the gate network itself was built with vulnerable legacy frequencies that the corporation knew about for decades.",
+          "outcome_tags": [
+            "logs_secured",
+            "logs_seized"
+          ],
+          "routes": {
+            "logs_secured": "next",
+            "logs_seized": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The logs show the drive renders corporate patents obsolete but risks tearing down gate stability sector-wide.",
+        "options": [
+          {
+            "id": "warn_shipwright",
+            "label": "Deliver the corporate tracking vectors to the renegade shipwright to help her jump out",
+            "leads_to": "beat:4"
+          },
+          {
+            "id": "sell_to_retriever",
+            "label": "Sell the telemetry coordinates to the corporate retriever for an executive bounty",
+            "leads_to": "resolution:prototype_seized_by_conglomerate"
+          },
+          {
+            "id": "submit_to_commissioner",
+            "label": "Deliver the evidence to the commissioner to issue a permanent sector quarantine on the drive",
+            "leads_to": "resolution:drive_permanently_mothballed"
+          }
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "function": "crisis",
+      "location": "any_system",
+      "public_change": "Corporate interceptors box in the prototype vessel in deep space as it attempts an emergency warp calibration burn.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "renegade_shipwright",
+          "target": "corporate_interceptor",
+          "reason": "She needs the corporate tracking transponder blown off the interceptor hull and recovered so she can scramble their search grid.",
+          "private_fact": "Her test vessel's containment field is leaking, and she will have to vent her reactor if she cannot jump immediately.",
+          "outcome_tags": [
+            "transponder_recovered"
+          ],
+          "routes": {
+            "transponder_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The interceptor fleet regroups at the asteroid slipway to destroy the prototype before its blueprints can be broadcast.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "renegade_shipwright",
+          "target": "corporate_interceptor",
+          "reason": "She needs the lead interceptor destroyed at the slipway threshold so she can upload the drive schematics to open data buoys.",
+          "private_fact": "She knows broadcasting the plans will invite hundreds of amateur builders to construct unstable drives across the stars.",
+          "outcome_tags": [
+            "interceptor_destroyed",
+            "shipwright_abandoned"
+          ],
+          "routes": {
+            "interceptor_destroyed": "resolution:drive_schematics_liberated",
+            "shipwright_abandoned": "resolution:prototype_seized_by_conglomerate"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "drive_schematics_liberated",
+      "reached_by": "The pilot destroys the corporate interceptor and helps the shipwright broadcast the drive plans.",
+      "summary": "The drive schematics are broadcast across open frequencies. {role:shipwright_guild} gains access to radical propulsion tech, while gate authorities scramble to patch transit sensors.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_shipwright",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_retriever",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "liberated_prototype_drive",
+          "public_summary": "A pilot defended a renegade yard and broadcast blueprints for a drive that broke corporate patents."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "prototype_seized_by_conglomerate",
+      "reached_by": "The pilot sells the coordinates to the retriever or abandons the shipwright.",
+      "summary": "Corporate security impounds {role:prototype_cutter} and seals the blueprints in private vaults. {role:renegade_shipwright} is discredited while corporate patent dominance remains absolute.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "renegade_shipwright",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corporate_retriever",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": -2
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "drive_permanently_mothballed",
+      "reached_by": "The pilot hands evidence to the commissioner, who legally outlaws the propulsion frequency.",
+      "summary": "{role:gate_commissioner} seals the prototype under safety quarantine. The test data is buried to safeguard gate integrity, leaving both the guild and corporate hunters empty-handed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "gate_commissioner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_shipwright",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "law_change",
+          "law": "quarantine_orders",
+          "change": "enacted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "gate_network_blackout",
+      "reached_by": "The pilot never engages or scans fail to isolate the resonance source.",
+      "summary": "Resonant pulses from unshielded drive tests trip automated safety cutoffs across regional gates, stranding convoys and closing commercial lanes for weeks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "gate_commissioner",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": -1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "blockade"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "gate_network_blackout",
+  "loose_threads": [
+    {
+      "id": "t_unregistered_alloy_manifest",
+      "surface": "cargo",
+      "detail": "The prototype magnetic coils were wound from exotic alloys purchased under a shell company fronting for a major logistics bank.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_gate_echo_log",
+      "surface": "scan",
+      "detail": "Gate sensor telemetry shows harmonic dropouts recurring at exact forty-minute intervals matching automated patrol schedules.",
+      "can_carry_methods": [
+        "sabotage",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "sabotage",
+      "information_control"
+    ],
+    "motives": [
+      "ideology",
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Navigation authorities investigate anomalous harmonic pulses causing gate telemetry flickers.",
+    "Corporate security vectors heavy patrol vessels into rim sectors on intellectual property sweeps.",
+    "Independent yard workers celebrate rumored breakthrough in sublight thruster efficiency."
+  ],
+  "voice_direction": {
+    "renegade_shipwright": "Passionate, fast, and defensive. Talks in intricate mathematical metaphors and treats administrative objections as intellectual cowardice.",
+    "gate_commissioner": "Tired, anxious, and rigid. Repeatedly emphasizes transit safety statistics and avoids acknowledging that gate hardware is decades past its design life.",
+    "corporate_retriever": "Smooth, polite, and unhurried. Uses corporate legal euphemisms for physical enforcement and speaks with quiet certainty of eventual repossession."
+  },
+  "novelty_tags": [
+    "pulse_resonance_thruster",
+    "gate_harmonic_destabilization",
+    "corporate_patent_repossession",
+    "unchartered_test_cradle",
+    "open_source_propulsion"
+  ]
+}

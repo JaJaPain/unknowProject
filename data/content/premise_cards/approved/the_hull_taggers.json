@@ -1,0 +1,366 @@
+{
+  "id": "premise.the_hull_taggers",
+  "schema_version": 1,
+  "title": "The Hull Taggers",
+  "logline": "When an underground vacuum racer dies in a high-speed debris sprint, their mechanic discovers the syndicate sponsor rigged the reactor shielding for insurance.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "paranoid"
+  ],
+  "themes": [
+    "price_of_profit",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "syndicate_sponsor",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Finances the illegal hull-tagging syndicate; views young fliers as disposable fuel for viewing wagers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "paddock_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "A veteran tuner who rebuilt the victim's interceptor and noticed deliberate cuts in the heat exchanger.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "drone_sentry",
+      "kind": "ship",
+      "description": "An automated security picket guarding the wreckage in the scrap field.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sponsor_cutter",
+      "kind": "ship",
+      "description": "An armed interceptor sent by the sponsor to erase flight telemetry from the derelict racer.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "derby_paddock",
+      "kind": "place",
+      "description": "A pressurized hangar welded inside a derelict freighter where outlaw interceptors are modified.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "debris_field",
+      "kind": "place",
+      "description": "A dense asteroid and wreckage ring where the illegal tagging derby is flown.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "racing_syndicate",
+      "kind": "faction",
+      "description": "The outlaw wagering ring that broadcasts high-speed hull runs to private station lounges.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "evidence_loose",
+    "faction_weakened"
+  ],
+  "public_situation": "Bookmakers across {system} are mourning an outlaw sprint pilot killed after colliding with reactor debris during the midnight derby.",
+  "private_truth": "The syndicate sponsor secretly vented the racer's cooling fluid to cause a fatal engine flameout and claim a massive contingency insurance payout.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "sponsor_sabotaged_racer_coolant_for_insurance_payout"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The racing syndicate suspends tag flights while clearing debris from the main sprint run.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "syndicate_sponsor",
+          "requester": "paddock_mechanic",
+          "target": "debris_field",
+          "reason": "The mechanic hires an outsider to scan the crashed interceptor before the syndicate's scrap tugs crush the evidence.",
+          "private_fact": "Telemetry proves the ship's reactor safety interlock was manually overridden from the sponsor's pit terminal.",
+          "outcome_tags": [
+            "telemetry_secured",
+            "debris_cleared"
+          ],
+          "routes": {
+            "telemetry_secured": "next",
+            "debris_cleared": "resolution:racer_forgotten"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Syndicate sweepers lock down the approach vector with armed picket drones.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "paddock_mechanic",
+          "target": "drone_sentry",
+          "reason": "The mechanic asks the pilot to destroy the security drone guarding the wreck and recover the severed cooling manifold.",
+          "private_fact": "The manifold has a physical drill hole through the primary intake pipe disguised as collision wear.",
+          "outcome_tags": [
+            "manifold_recovered",
+            "salvage_lost"
+          ],
+          "routes": {
+            "manifold_recovered": "next",
+            "salvage_lost": "resolution:racer_forgotten"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "An armed cutter bearing the sponsor's corporate livery moves to intercept incoming couriers.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "paddock_mechanic",
+          "target": "sponsor_cutter",
+          "reason": "The mechanic begs the pilot to disable the cutter before it burns down the paddock and executes the crew.",
+          "private_fact": "The cutter captain hails mid-fight, offering a cut of the insurance settlement if the pilot surrenders the drilled manifold.",
+          "outcome_tags": [
+            "cutter_neutralized",
+            "accepted_settlement"
+          ],
+          "routes": {
+            "cutter_neutralized": "next",
+            "accepted_settlement": "resolution:sponsor_absolved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Outlaw pilots assemble in the paddock as word of the rigged collision spreads through the berths.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "paddock_mechanic",
+          "target": "derby_paddock",
+          "reason": "The mechanic asks the pilot to deliver the drilled manifold directly to the pilots' council before the sponsor flees.",
+          "private_fact": "The mechanic owes three years of back hangar rent to the sponsor that will be enforced if the case fails.",
+          "outcome_tags": [
+            "proof_delivered",
+            "delivery_intercepted"
+          ],
+          "routes": {
+            "proof_delivered": "next",
+            "delivery_intercepted": "resolution:racer_forgotten"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the drilled manifold before the enraged paddock fliers. The sponsor begs for a quiet buyout, while the fliers demand the sponsor's execution.",
+        "options": [
+          {
+            "id": "expose_sponsor",
+            "label": "Present the drilled manifold to the fliers to dismantle the crooked syndicate",
+            "leads_to": "resolution:syndicate_toppled"
+          },
+          {
+            "id": "extort_safety_charter",
+            "label": "Force the sponsor to sign an enforceable pilot safety covenant funded by the insurance pool",
+            "leads_to": "resolution:safety_covenant"
+          },
+          {
+            "id": "sell_to_sponsor",
+            "label": "Sell the manifold back to the sponsor for personal credits",
+            "leads_to": "resolution:sponsor_absolved"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "syndicate_toppled",
+      "reached_by": "The pilot presents the drilled manifold to the pilots' council.",
+      "summary": "Outlaw pilots sack {role:syndicate_sponsor}'s offices and dissolve {role:racing_syndicate}, while {role:paddock_mechanic} takes over the empty paddock.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "racing_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_sponsor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paddock_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_the_derby_murder",
+          "public_summary": "A pilot proved a racing sponsor drilled holes in a champion's engine for insurance scrip."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "safety_covenant",
+      "reached_by": "The pilot forces the sponsor to sign a pilots' safety pact.",
+      "summary": "{role:syndicate_sponsor} pays restitution to the dead flier's estate and funds a mutual paddock fund managed by {role:paddock_mechanic}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "racing_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_sponsor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paddock_mechanic",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "sponsor_absolved",
+      "reached_by": "The pilot accepts the payoff or sells the manifold.",
+      "summary": "{role:syndicate_sponsor} collects the insurance windfall and silences {role:paddock_mechanic}, cementing total control over {role:racing_syndicate}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "racing_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_sponsor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paddock_mechanic",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "racer_forgotten",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "The wreck is incinerated as routine scrap; {role:syndicate_sponsor} collects the insurance while the dead racer is blamed for reckless flying.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "syndicate_sponsor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paddock_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "racer_forgotten",
+  "loose_threads": [
+    {
+      "id": "t_stripped_hull",
+      "surface": "wreck",
+      "detail": "The crash telemetry transponder was calibrated using commercial fleet navigation keys registered to an offshore broker.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_insurance_bond",
+      "surface": "price_board",
+      "detail": "An insurance syndicate posted an anomalous ten-million credit policy on the doomed racer twenty-four hours before launch.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "debt_leverage",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Tragic collision in {system} outer belt claims life of outlaw sprint champion.",
+    "Habitat betting boards freeze payouts pending crash telemetry certification.",
+    "Outlaw racing syndicate announces memorial fly-by across junkyard approach vectors."
+  ],
+  "voice_direction": {
+    "syndicate_sponsor": "Charming, patronizing, speaking with glossy executive polish and dismissing mortal danger as cost of doing business.",
+    "paddock_mechanic": "Tired, hoarse, speaking in blunt monosyllables with suppressed grief and sharp mechanical specificity."
+  },
+  "novelty_tags": [
+    "vacuum_derby",
+    "hull_tagging",
+    "sabotaged_coolant",
+    "insurance_murder",
+    "outlaw_racing"
+  ]
+}

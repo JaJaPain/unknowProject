@@ -1,0 +1,415 @@
+{
+  "id": "premise.the_jump_derby",
+  "schema_version": 1,
+  "title": "The Jump Derby",
+  "logline": "When an inter-system betting pool corners gate coolant to fix an endurance jump rally, independent courier pilots fight to keep their engines alive.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "pool_director",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Oversees the inter-system rally book; smooth, immaculate, and quietly manipulating gate coolant supplies to protect bookmaker margins.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "independent_navigator",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "A veteran freight pilot who mortgaged their family ship to enter the cross-system jump rally.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "gate_blockader",
+      "kind": "ship",
+      "description": "An armed heavy patrol corvette deployed to enforce private coolant monopolies around the midpoint jump gate.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "director_yacht",
+      "kind": "ship",
+      "description": "A high-speed corporate transport carrying the syndicate's mobile betting mainframe and audit drives.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "starting_pavilion",
+      "kind": "place",
+      "description": "The glittering orbital casino station where opening odds and rally route charters are officially posted.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "midpoint_gate",
+      "kind": "place",
+      "description": "A remote jump gate junction two systems out where overheated rally craft must vent core radiation.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "courier_fraternity",
+      "kind": "faction",
+      "description": "The collective fellowship of independent cargo pilots flying in the cross-sector derby.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "wagering_syndicate",
+      "kind": "faction",
+      "description": "The massive inter-system bookmaking conglomerate holding the rally escrow pool.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "faction_weakened",
+    "public_outrage"
+  ],
+  "public_situation": "Tens of thousands gather at {system}'s wagering pavilion as the tri-system Jump Derby begins, backing long-haul couriers against corporate teams.",
+  "private_truth": "The pool director quietly bought up all thorium-doped thermal coolant at the midpoint gate, forcing independent pilots to withdraw from overheating.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "syndicate_cornered_midpoint_coolant_to_fix_rally"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The rally pavilion broadcasts departure green-lights as sixty couriers burn toward the first jump gate.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "independent_navigator",
+          "target": "starting_pavilion",
+          "reason": "The navigator hires an outsider to courier their certified navigational flight slate to the registrar before the entry deadline closes.",
+          "private_fact": "The navigator pawned their life savings to pay the registration fee and faces debtor prison if disqualified.",
+          "outcome_tags": [
+            "slate_registered",
+            "slate_rejected"
+          ],
+          "routes": {
+            "slate_registered": "next",
+            "slate_rejected": "resolution:couriers_bankrupted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Racers arrive at the midpoint gate only to find thermal coolant priced ten times above normal rates.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "independent_navigator",
+          "target": "midpoint_gate",
+          "reason": "The navigator asks the pilot to purchase emergency coolant drums from a nearby civilian fuel depot and haul them to the staging berths.",
+          "private_fact": "Over half the independent fleet has red-lined their jump drives and cannot jump without immediate coolant flushes.",
+          "outcome_tags": [
+            "coolant_delivered",
+            "coolant_failed"
+          ],
+          "routes": {
+            "coolant_delivered": "next",
+            "coolant_failed": "resolution:couriers_bankrupted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Syndicate enforcers deploy an armed corvette to impound unmetered coolant canisters at the gate.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "independent_navigator",
+          "target": "gate_blockader",
+          "reason": "The navigator begs the pilot to destroy the private corvette preventing the independent ships from loading the coolant canisters.",
+          "private_fact": "The corvette captain carries standing orders to scuttle any independent craft attempting an unauthorized jump.",
+          "outcome_tags": [
+            "blockader_destroyed",
+            "blockader_survived"
+          ],
+          "routes": {
+            "blockader_destroyed": "next",
+            "blockader_survived": "resolution:couriers_bankrupted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The syndicate director arrives on an inspection yacht to declare the independent ships disqualified for schedule delay.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "pool_director",
+          "requester": "independent_navigator",
+          "target": "midpoint_gate",
+          "reason": "The navigator needs the pilot to scan the gate's commercial registry beacon to extract proof of the artificial coolant embargo.",
+          "private_fact": "The beacon logs prove the director purchased exclusive supply rights through a dummy shell company two weeks before the race.",
+          "outcome_tags": [
+            "embargo_proven",
+            "records_erased"
+          ],
+          "routes": {
+            "embargo_proven": "next",
+            "records_erased": "resolution:couriers_bankrupted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The surviving rally ships approach the final system pavilion where crowds await the championship finish.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "independent_navigator",
+          "target": "director_yacht",
+          "reason": "The navigator asks the pilot to disable the director's escort yacht before it can transmit forged disqualification orders to the judges.",
+          "private_fact": "The director hails mid-fight, offering a share of the grand betting escrow if the pilot hands over the embargo logs.",
+          "outcome_tags": [
+            "yacht_subdued",
+            "took_escrow_cut"
+          ],
+          "routes": {
+            "yacht_subdued": "next",
+            "took_escrow_cut": "resolution:syndicate_reigns"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the proof of market cornering before the rally arbitration box. The couriers demand justice, while the syndicate offers a private payout.",
+        "options": [
+          {
+            "id": "award_couriers",
+            "label": "Present the embargo logs to crown the independent couriers champions and break the monopoly",
+            "leads_to": "resolution:courier_triumph"
+          },
+          {
+            "id": "broker_cooperative_charter",
+            "label": "Broker a permanent pilot-owned coolant utility cooperative under shared gate oversight",
+            "leads_to": "resolution:coolant_cooperative"
+          },
+          {
+            "id": "sell_to_syndicate",
+            "label": "Sell the evidence to the director in exchange for an escrow payout",
+            "leads_to": "resolution:syndicate_reigns"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "courier_triumph",
+      "reached_by": "The pilot delivers the embargo logs to the judges.",
+      "summary": "Arbitrators award the grand prize to {role:courier_fraternity}; {role:pool_director} is disgraced while {role:independent_navigator} buys back family ships.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "courier_fraternity",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "wagering_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_navigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_derby_corner",
+          "public_summary": "A pilot proved a gambling syndicate tried to boil out independent racers at the midpoint gate."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "coolant_cooperative",
+      "reached_by": "The pilot brokers a cooperative utility pact.",
+      "summary": "{role:courier_fraternity} secures permanent refueling shares at {role:midpoint_gate}, stabilizing long-haul margins against speculative cartels.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "courier_fraternity",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "wagering_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_navigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_director",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "syndicate_reigns",
+      "reached_by": "The pilot takes the escrow cut or sells the logs.",
+      "summary": "{role:wagering_syndicate} collects on all favored corporate hulls; independent couriers default on debts while {role:pool_director} receives bonuses.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "wagering_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "courier_fraternity",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "pool_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_navigator",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "couriers_bankrupted",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "Overheated independent engines burn out at the gate; {role:wagering_syndicate} forecloses on stranded hulls and sweeps all betting pots.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "wagering_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_navigator",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "refugees_moving"
+      ]
+    }
+  ],
+  "default_resolution": "couriers_bankrupted",
+  "loose_threads": [
+    {
+      "id": "t_coolant_monopoly",
+      "surface": "price_board",
+      "detail": "Spot prices for thorium thermal coolant spiked fortyfold twelve hours before the official derby departure.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_gate_override",
+      "surface": "cargo",
+      "detail": "Digital seals on the seized coolant containers carried authorization stamps from an off-system transit regulatory commission.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Tri-system Jump Derby launches from {system} with record betting handle.",
+    "Independent couriers lodge formal protest over exorbitant gate refueling charges.",
+    "{role:wagering_syndicate} defends gate coolant surge pricing as legitimate free-market logistics."
+  ],
+  "voice_direction": {
+    "pool_director": "Cultivated, silky, speaking in measured corporate aphorisms and smiling while explaining why contractual clauses are unavoidable.",
+    "independent_navigator": "Gravelly, fatigued, speaking with fierce stubborn pride and dropping sharp orbital slang between calculations."
+  },
+  "novelty_tags": [
+    "jump_derby",
+    "gate_coolant",
+    "cornering_a_market",
+    "courier_race",
+    "endurance_rally"
+  ]
+}

@@ -1,0 +1,305 @@
+{
+  "id": "premise.the_heritage_keel",
+  "schema_version": 1,
+  "title": "The Heritage Keel",
+  "logline": "A bankrupt drydock master tries to protect an antique survey keel from the scrap gantries, hiding that its core contains a fortune in unrefined ore.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "dock_foreman",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Runs the oldest manual repair cradle in the belt; deaf in one ear and fiercely defensive of historic spaceframes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scrap_broker",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Buys decommissioned hulls for orbital cutting mills; tracks salvage margins to the fourth decimal place.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "survey_keel",
+      "kind": "object",
+      "description": "A century-old beryllium-bronze exploration keel sitting on cradle blocks awaiting cutting torches.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "orbital_scrapyard",
+      "kind": "place",
+      "description": "A cavernous unpressurized scrap dock ringed with cutting gantries and magnetic cranes.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "evidence_loose",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The belt's oldest orbital slipway faces foreclosure, and creditors have marked an uncatalogued exploration keel for scrap cutting.",
+  "private_truth": "The keel core contains unrefined cuprite alloys deposited during an ancient deep-field survey, which {role:dock_foreman} hid to keep the cradle solvent.",
+  "core_why": {
+    "motive": "legacy",
+    "secret": "unrefined_cuprite_vein_concealed_in_historic_keel"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The scrapyard posts an urgent procurement notice for industrial ferrite to meet immediate structural quotas.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "dock_foreman",
+          "target": "orbital_scrapyard",
+          "reason": "He needs bulk ferrite delivered immediately to satisfy an overdue maintenance bond before bailiffs arrive with cutting permits.",
+          "private_fact": "He is stalling the creditors while trying to arrange a private metallurgical appraisal for the keel.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Creditors reject the bond extension and send an ultrasonic assessor to certify the keel for destruction.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "scrap_broker",
+          "target": "survey_keel",
+          "culprit": "dock_foreman",
+          "reason": "She wants an independent spectral scan of the keel's structural lattice to confirm whether the dock foreman falsified the density logs.",
+          "private_fact": "She suspects the alloy is enriched and plans to pocket the smelter margin without crediting the dock's debt ledger.",
+          "outcome_tags": [
+            "certified_enriched_alloy",
+            "certified_worthless_slag"
+          ],
+          "routes": {
+            "certified_enriched_alloy": "next",
+            "certified_worthless_slag": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The scan proves the keel contains rare cuprite veins that could clear the dock's debts or make the scrap broker wealthy.",
+        "options": [
+          {
+            "id": "support_foreman",
+            "label": "Hand the raw telemetry to the dock foreman to negotiate a debt settlement",
+            "leads_to": "beat:3"
+          },
+          {
+            "id": "sell_to_broker",
+            "label": "Deliver the assay directly to the scrap broker to trigger an immediate auction",
+            "leads_to": "resolution:keel_auctioned_to_smelters"
+          },
+          {
+            "id": "tamper_records",
+            "label": "Certify the keel as worthless slag to preserve it from cutting gantries",
+            "leads_to": "resolution:keel_preserved_in_secret"
+          }
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Smelting tenders gather at the yard perimeter as the foreman attempts to transport the enriched core before seizures take effect.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "dock_foreman",
+          "target": "orbital_scrapyard",
+          "reason": "He needs a trusted courier to take the cut alloy samples to the station assay registry before the broker can impound the cradle.",
+          "private_fact": "He intends to surrender his operating charter in exchange for full debt clearance for his retired yard crew.",
+          "outcome_tags": [
+            "samples_registered",
+            "broker_intercepted"
+          ],
+          "routes": {
+            "samples_registered": "resolution:foreman_clears_yard_debt",
+            "broker_intercepted": "resolution:keel_auctioned_to_smelters"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "foreman_clears_yard_debt",
+      "reached_by": "The pilot registers the alloy samples, proving the keel's value and clearing the dock's balance sheet.",
+      "summary": "{role:dock_foreman} surrenders the enriched keel to settle the cradle's arrears. The yard stays open under new management, and the old crew receives their severance.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dock_foreman",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrap_broker",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "settled_cradle_debt",
+          "public_summary": "A pilot proved an old survey keel held enough rare cuprite to buy out an entire shipyard."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "keel_auctioned_to_smelters",
+      "reached_by": "The broker receives the assay report or intercepts the samples, liquidating the cradle.",
+      "summary": "{role:survey_keel} is cut into salvage ingots. {role:scrap_broker} claims a windfall commission while the historic yard is permanently shuttered.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dock_foreman",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrap_broker",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "cut_historic_keel",
+          "public_summary": "An antique exploration keel was cut up for industrial scrap after creditors foreclosed."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "keel_preserved_in_secret",
+      "reached_by": "The pilot certifies the keel as worthless slag, causing creditors to abandon foreclosure as unprofitable.",
+      "summary": "Creditors abandon the claim, leaving the historic keel untouched in the cradle. {role:dock_foreman} maintains the quiet shrine, though operating funds remain critically tight.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dock_foreman",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrap_broker",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "keel_auctioned_to_smelters",
+  "loose_threads": [
+    {
+      "id": "t_foreclosure_lien",
+      "surface": "station_notice",
+      "detail": "The drydock foreclosure lien lists an offshore holding trust that acquired the mortgage four days before default.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_spectrometer_seal",
+      "surface": "cargo",
+      "detail": "The inspector's ultrasonic spectrometer casing bears an inspection seal with an invalid registry checksum.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Historic shipyard cradle facing foreclosure after century of continuous service.",
+    "Belt scrap auctions hit record volume as obsolete hulls are cleared for berth space.",
+    "Creditors demand immediate cutting of uncatalogued survey relic in {system}."
+  ],
+  "voice_direction": {
+    "dock_foreman": "Speaks in short, gravelly sentences with long pauses between clauses. Avoids mentioning the monetary value of metals, referring only to structural integrity.",
+    "scrap_broker": "Crisp, courteous, and rapid. Uses legal jargon to deflect complaints and never raises her tone even when issuing ultimatums."
+  },
+  "novelty_tags": [
+    "beryllium_keel",
+    "drydock_foreclosure",
+    "density_tampering",
+    "antique_survey_ship",
+    "scrap_appraisal"
+  ]
+}

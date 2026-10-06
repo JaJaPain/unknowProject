@@ -1,0 +1,326 @@
+[
+  {
+    "id": "premise.the_consecrated_manifold",
+    "schema_version": 1,
+    "title": "The Consecrated Manifold",
+    "logline": "An eccentric shipyard preacher anoints sublight thruster bells with sacred holy tallow, which a cynical mechanic discovers is just rendered kitchen cooking grease.",
+    "scale": "personal",
+    "tone": [
+      "farce",
+      "absurd"
+    ],
+    "themes": [
+      "faith_and_doubt",
+      "price_of_profit"
+    ],
+    "roles": [
+      {
+        "id": "chapel_preacher",
+        "kind": "person",
+        "archetype": "preacher",
+        "description": "Administers an orbital chapel-dock; fervently preaches that thrust chamber harmonic hums reflect the moral purity of the pilot.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "drive_technician",
+        "kind": "person",
+        "archetype": "mechanic",
+        "description": "An exhausted drive specialist buried in dockage fees who despises liturgical maintenance rituals.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "ceremonial_manifold",
+        "kind": "object",
+        "description": "A massive forged drive manifold adorned with copper litany ribbons and drenched in sacred tallow.",
+        "reuse": "must_be_new"
+      },
+      {
+        "id": "sanctified_drydock",
+        "kind": "place",
+        "description": "A converted fuel bay filled with incense vapor, altar racks, and brass oil basins.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "ion_storm"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "debt_owed_to_player",
+      "market_disrupted"
+    ],
+    "public_situation": "Pilots in {system} queue at an orbital monastery dock where engines are anointed with holy tallow to cure high-frequency vibration.",
+    "private_truth": "The chapel replaces expensive synthetic fluorocarbon lubricant with cheap rendered food fat, pocketing the surplus to fund shrine expansions.",
+    "core_why": {
+      "motive": "faith",
+      "secret": "monastery_substituting_cooking_grease_for_drive_coolant"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "The monastery announces an urgent call for consecrated supplies before a planetary pilgrimage fleet docks for engine blessings.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "chapel_preacher",
+            "target": "sanctified_drydock",
+            "reason": "He needs specialized bulk cooking grease purchased from hydroponic stations and delivered quietly to the sanctuary storage tanks.",
+            "private_fact": "He genuinely believes animal fat infused with station prayer achieves equal heat dissipation to synthetic fluorocarbon oil.",
+            "outcome_tags": [
+              "grease_delivered"
+            ],
+            "routes": {
+              "grease_delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Several freshly anointed freighters suffer drive stall and foul-smelling exhaust fumes during orbital maneuvering burns.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "drive_technician",
+            "target": "ceremonial_manifold",
+            "culprit": "chapel_preacher",
+            "reason": "She wants an independent spectral scan of the burnt manifold deposits to prove the sacred oil is caramelizing into solid carbon tar.",
+            "private_fact": "She is secretly skimming the chapel's discarded fluorocarbon drums and reselling them to illicit street racers.",
+            "outcome_tags": [
+              "carbon_deposits_proven",
+              "sacred_tallow_cleared"
+            ],
+            "routes": {
+              "carbon_deposits_proven": "next",
+              "sacred_tallow_cleared": "resolution:consecrated_sludge_persists"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The test reveals the holy anointing oil is literally rendered fryer tallow, which is gumming up thrust injectors across the sector.",
+          "options": [
+            {
+              "id": "support_technician",
+              "label": "Hand the chemical proof to the technician to halt the blessings before the fleet arrives",
+              "leads_to": "beat:3"
+            },
+            {
+              "id": "blackmail_chapel",
+              "label": "Sell the test results to the chapel preacher in exchange for private absolution and free fuel credits",
+              "leads_to": "resolution:sacred_kickback_deal"
+            },
+            {
+              "id": "quiet_synthetic_swap",
+              "label": "Sell industrial solvent to the preacher as a secret divine purifying water",
+              "leads_to": "resolution:secret_solvent_blessing"
+            }
+          ]
+        }
+      },
+      {
+        "n": 3,
+        "function": "aftermath",
+        "public_change": "Dock mechanics refuse to hook up fuel lines to anointed ships, causing massive traffic congestion outside the monastery bay.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "drive_technician",
+            "target": "sanctified_drydock",
+            "reason": "She needs certified industrial detergent retrieved from a hazmat locker to flush the fouled manifold before the pilot's reactor overheats.",
+            "private_fact": "She intends to display the greasy sludge container in the station common room to publicly mock liturgical mechanics.",
+            "outcome_tags": [
+              "detergent_flushed",
+              "flush_botched"
+            ],
+            "routes": {
+              "detergent_flushed": "resolution:monastery_grease_scandal",
+              "flush_botched": "resolution:consecrated_sludge_persists"
+            }
+          }
+        ],
+        "player_choice": null
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "monastery_grease_scandal",
+        "reached_by": "The technician proves the oil is tallow and flushes the manifold, exposing the chapel's fraudulent maintenance rites.",
+        "summary": "{role:chapel_preacher} is exposed for using cooking fat on thrusters. The monastery loses its certification, and {role:drive_technician} opens an honest repair stall.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "chapel_preacher",
+            "fate": "exposed"
+          },
+          {
+            "type": "cast_fate",
+            "target": "drive_technician",
+            "fate": "promoted"
+          },
+          {
+            "type": "economy",
+            "good": "parts",
+            "price": "spike"
+          },
+          {
+            "type": "deed",
+            "tag": "unmasked_grease_miracle",
+            "public_summary": "A pilot showed that a shipyard chapel's miracle engine oil was just burnt fryer grease."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "sacred_kickback_deal",
+        "reached_by": "The pilot blackmails the preacher for fuel credits, keeping the cooking grease substitution secret.",
+        "summary": "The chapel pays off quiet pilots to keep complaints muffled. Thrusters across {system} smell faintly of fried onions, but the monastery remains open for business.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "chapel_preacher",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "drive_technician",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "economy",
+            "good": "food",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "debt_owed_to_player",
+          "quiet_cover_up"
+        ]
+      },
+      {
+        "id": "secret_solvent_blessing",
+        "reached_by": "The pilot supplies synthetic detergent disguised as holy baptismal water, quietly fixing the problem without breaking faith.",
+        "summary": "Industrial detergent cleans the fouled thrusters under the guise of an holy ritual. The engines run clear, and {role:chapel_preacher} declares a miraculous cure.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "chapel_preacher",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "drive_technician",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "boom"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "consecrated_sludge_persists",
+        "reached_by": "The pilot clears the tallow or ignores the situation completely.",
+        "summary": "The monastery continues anointing engines with frying oil. Burnt carbon tars up local trade shuttles, driving repair costs up while the preacher blesses the smoke.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "chapel_preacher",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "drive_technician",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "parts",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "leader_discredited"
+        ]
+      }
+    ],
+    "default_resolution": "consecrated_sludge_persists",
+    "loose_threads": [
+      {
+        "id": "t_drum_stencil",
+        "surface": "cargo",
+        "detail": "The holy anointing oil casks have commercial bakery wholesale serial numbers poorly painted over with ecclesiastical stencils.",
+        "can_carry_methods": [
+          "forged_records",
+          "impersonation"
+        ]
+      },
+      {
+        "id": "t_hydroponic_invoice",
+        "surface": "station_notice",
+        "detail": "A station agricultural ledger records bulk tallow shipments billed directly to a mysterious offshore debt escrow.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "bribery",
+        "forged_records",
+        "debt_leverage"
+      ],
+      "motives": [
+        "faith",
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Orbital monastery reports thirty percent drop in sublight engine vibrations following incense rites.",
+      "Dockside pilots complain of caramel odor and clogged injector filters after routine maintenance.",
+      "Station health officials open inquiry into missing agricultural fryer grease reserves."
+    ],
+    "voice_direction": {
+      "chapel_preacher": "Slow, rhythmic, and chanting. Speaks of fuel injectors and magnetic seals as sacred vessels, effortlessly ignoring worldly complaints.",
+      "drive_technician": "Sharp, sarcastic, and clipped. Rattles off exact part specifications and refuses to validate any metaphysical explanations for mechanical failures."
+    },
+    "novelty_tags": [
+      "consecrated_lubricant",
+      "fryer_tallow_fraud",
+      "monastery_shipyard",
+      "manifold_anointing",
+      "liturgical_engineering"
+    ]
+  }
+]

@@ -1,0 +1,343 @@
+{
+  "id": "premise.the_weighted_sphere",
+  "schema_version": 1,
+  "title": "The Weighted Sphere",
+  "logline": "A destitute zero-g billiards hustler uses a magnetized cue ball to beat an orbital bookmaker's collection agent.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "old_hustler",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "A veteran zero-g billiards hustler whose arthritic fingers rely on hidden electromagnetic cheat rings.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dockside_bookie",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "Enforces betting lines behind the freight berths; calm, polite, and tracks debts down to the last decimal.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hall_umpire",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A retired docker who certifies table grav-dampeners and takes quiet pride in half a century of honest wagers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "billiards_bay",
+      "kind": "place",
+      "description": "A cavernous decommissioned cargo sphere converted into a tiered zero-gravity kinetic sport hall.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "rival_humiliated"
+  ],
+  "public_situation": "Dockers pack the observation gantries in {system} as an aging billiards champion plays a high-stakes match to clear personal debts.",
+  "private_truth": "The hustler secretly weighted the cue ball with high-density silicate cores to curve rebounds across the zero-gravity table.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "hustler_magnetized_cue_ball_to_escape_debts"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The bookie's enforcers post sentries around the billiards bay to ensure the match goes forward.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "old_hustler",
+          "target": "billiards_bay",
+          "reason": "The hustler needs dense refined silicate ore delivered to cast magnetic counterbalance weights before table inspection.",
+          "private_fact": "The hustler already lost two fingers to the bookie's collectors and cannot survive another beating.",
+          "outcome_tags": [
+            "silicate_delivered",
+            "silicate_diverted"
+          ],
+          "routes": {
+            "silicate_delivered": "next",
+            "silicate_diverted": "resolution:hustler_broken"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The umpire demands a certified inspection of all game spheres before opening wagers.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "old_hustler",
+          "target": "billiards_bay",
+          "reason": "The hustler asks the pilot to collect the concealed magnetic ring from a pawn broker's security locker.",
+          "private_fact": "The pawn broker tipped off the bookie that the hustler bought specialized electromagnetic coils.",
+          "outcome_tags": [
+            "ring_retrieved",
+            "ring_intercepted"
+          ],
+          "routes": {
+            "ring_retrieved": "next",
+            "ring_intercepted": "resolution:hustler_broken"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Spectators crowd the viewing gallery as the final frame begins under heavy betting action.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "dockside_bookie",
+          "requester": "hall_umpire",
+          "target": "billiards_bay",
+          "reason": "The umpire asks the pilot to scan the table's grav-dampener field to verify there is no outside interference with the balls.",
+          "private_fact": "The bookie has secretly installed a magnetic bias plate under the corner pocket to force a scratch.",
+          "outcome_tags": [
+            "table_tampering_revealed",
+            "cue_ball_exposed",
+            "table_certified_honest"
+          ],
+          "routes": {
+            "table_tampering_revealed": "next",
+            "cue_ball_exposed": "resolution:hustler_banned",
+            "table_certified_honest": "resolution:hustler_broken"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The scan reveals that both sides cheated: the hustler uses a magnetic cue ball, while the bookie wired the pocket. The umpire demands an immediate ruling.",
+        "options": [
+          {
+            "id": "expose_bookie",
+            "label": "Present evidence of the bookie's wired pocket to wipe the hustler's debt clean",
+            "leads_to": "resolution:bookie_discredited"
+          },
+          {
+            "id": "expose_both",
+            "label": "Expose both frauds and let the umpire seize all wagered stakes for the dockers' relief fund",
+            "leads_to": "resolution:stakes_confiscated"
+          },
+          {
+            "id": "blackmail_bookie",
+            "label": "Conceal the bookie's cheating in exchange for a hefty cut of table profits",
+            "leads_to": "resolution:bookie_triumphs"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bookie_discredited",
+      "reached_by": "The pilot exposes the bookie's pocket bias plate.",
+      "summary": "{role:hall_umpire} cancels {role:old_hustler}'s debt and bans {role:dockside_bookie} from the hall, while dockers celebrate the hustler's victory.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dockside_bookie",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "old_hustler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hall_umpire",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "busted_the_billiards_wire",
+          "public_summary": "A pilot proved the house bookie was rigging the zero-gravity pool table."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "stakes_confiscated",
+      "reached_by": "The pilot exposes both players for table fraud.",
+      "summary": "{role:hall_umpire} seizes all wagered funds for the station relief chest, barring both {role:old_hustler} and {role:dockside_bookie} from the berths.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_hustler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dockside_bookie",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hall_umpire",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "bookie_triumphs",
+      "reached_by": "The pilot covers for the bookie in exchange for credits.",
+      "summary": "{role:dockside_bookie} collects on the fixed match and forecloses on {role:old_hustler}, while the pilot receives a quiet transfer.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dockside_bookie",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "old_hustler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hall_umpire",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "hustler_banned",
+      "reached_by": "The pilot exposes only the hustler's cue ball.",
+      "summary": "The crowd turns on {role:old_hustler} for using magnetic weights; {role:dockside_bookie} seizes the hustler's ship for back debts.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_hustler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dockside_bookie",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "hustler_broken",
+      "reached_by": "The deliveries fail or the pilot drops the contract.",
+      "summary": "The match proceeds on the rigged table; {role:old_hustler} scratches on the final ball and loses everything to {role:dockside_bookie}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_hustler",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dockside_bookie",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "debt_owed_to_player"
+      ]
+    }
+  ],
+  "default_resolution": "hustler_broken",
+  "loose_threads": [
+    {
+      "id": "t_magnetic_core",
+      "surface": "cargo",
+      "detail": "The silicate sphere's internal induction coil matches micro-actuators salvaged from industrial cargo crane solenoids.",
+      "can_carry_methods": [
+        "sabotage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_hustler_tab",
+      "surface": "price_board",
+      "detail": "A dockside credit ledger shows the bookie bought up third-party medical debts belonging to the hustler's family.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "sabotage"
+    ],
+    "motives": [
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Zero-gravity billiards championship draws record wagers across {system} cargo ring.",
+    "Dockside bookmakers offer five-to-one odds against veteran hustler clearing slate.",
+    "Station inspectors announce sudden integrity sweeps on kinetic game spheres."
+  ],
+  "voice_direction": {
+    "old_hustler": "Raspy, weary, speaking in dry cynical metaphors and masking panic with practiced saloon bravado.",
+    "dockside_bookie": "Soft-spoken, polite, speaking with the chilling patience of an accountant reviewing delinquent balances.",
+    "hall_umpire": "Stern, formal, enunciating rules with liturgical reverence for dockside tradition."
+  },
+  "novelty_tags": [
+    "zero_g_billiards",
+    "magnetic_cue_ball",
+    "dockside_bookmaker",
+    "table_hustler",
+    "fixed_match"
+  ]
+}
