@@ -1,0 +1,17 @@
+{
+  "meshes": 13,
+  "materials": 7,
+  "material_surfaces": 15,
+  "vertices": 2420,
+  "triangles": 3818,
+  "blender_dimensions_m": [
+    301.70751953125,
+    106.1196060180664,
+    71.75
+  ],
+  "nominal_hull_length_m": 300,
+  "breach_length_m": 136,
+  "separate_drifting_containers": 2,
+  "emergency_points": 4,
+  "beacon_points": 1
+}

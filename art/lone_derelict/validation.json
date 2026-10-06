@@ -1,0 +1,19 @@
+{
+  "glb_bytes": 297468,
+  "meshes": 13,
+  "surfaces": 15,
+  "materials": 7,
+  "triangles": 3818,
+  "scenes": 1,
+  "cameras": 0,
+  "lights": 0,
+  "emission_materials": [
+    "LD Beacon emission",
+    "LD Emergency emission"
+  ],
+  "tint_factors_and_vertex_colours": true,
+  "separate_drifting_containers": 2,
+  "godot_4_6_3_import": "passed; dimensions, container meshes and tint materials verified",
+  "visual_review": "final render inspected",
+  "breach_clearance": "entry ray reaches far bulkhead at 118 m; nine 95 m corridor rays clear"
+}

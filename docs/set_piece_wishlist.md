@@ -245,3 +245,38 @@ places.
   several may be on screen over a campaign: aim under ~30 meshes and ~20k
   triangles. Hull colour as a material the game can tint (or vertex colours
   plus one tintable accent material).
+
+**#7 status (2026-10-05):** delivered and usable. `assets/landmarks/lone_derelict.glb`:
+13 meshes, 7 materials, only ~3.8k triangles; breach facing +Z with a clear
+95 m passage; hull and accent tintable; two drifting containers; 34-40 draw
+calls in game (19 without it). Note for a possible later revision: it reads
+quite plain and boxy up close (a slab hull and a cube bridge). There's lots
+of budget left (3.8k of 20k triangles) for hull detail: plating breaks,
+antennas, tanks, ribbing, a more shaped bow.
+
+## Brief #8: A signal anomaly site
+
+Investigations and data cores lead to places where something is
+broadcasting that shouldn't be. This is the thing at the end: old, strange,
+not obviously made by anyone the player knows. Reused across several
+stories, so it should be mysterious without telling one specific story.
+
+- **Size:** about 150 m, small enough to fly right up to.
+- **Shape:** an object that doesn't match anything else in the game: for
+  example a cluster of tall, thin, dark monoliths or shards arranged in a
+  rough ring around an empty centre, slightly tilted, as if grown rather
+  than built; or a single smooth, faceted shape with deep grooves. Clean
+  geometry, very few details, unsettling proportions. Nothing that reads as
+  a ship, a station or a machine with obvious parts.
+- **Surface:** very dark, almost black, slightly glossy material with faint
+  fine lines etched across it (geometry or a pattern in the material, not
+  writing or symbols); a little dust settled in the grooves.
+- **Light:** a thin, cold light running in the grooves or along the shard
+  edges (separate emissive material; the game will pulse it in time with
+  the signal); a faint glow in the empty centre (separate emissive
+  material, or a small separate mesh the game can scale or fade).
+- **Optional:** two or three small shards floating loose around it
+  (separate meshes, centred pivots; the game may rotate them slowly).
+- **No:** writing, symbols, glyphs, alien faces or creatures, faction marks,
+  ships.
+- **Export:** batched; light: under ~20 meshes and ~15k triangles.
