@@ -1339,7 +1339,7 @@ _Four places where the game hands the player a moment but doesn't tell them what
 - [ ] **Lodestar follow-ups (core loop step 12, 2026-10-02).** (1) **Choices at the arrival**: several cards' arrivals imply a decision (the Silent Fleet asks you to keep their secret, the Cartographer: who learns the system exists, the Garden: the mining fleet behind you, the Humming Gate: which faction gets it); today the scene is linear. Could reuse the premise decision panel. (2) **Showrunner season-end pass** (plan 4.5): reaching a Lodestar should let the premise director close leftover threads; today the Lodestar season and the premise main story's season are separate counters. (3) **Voice the place's lines** (a neutral comms voice per card; text only now). (4) **Art pass on the six landmarks** (scripts/story/LodestarLandmark.gd builds them from primitives; the Garden could use a planet shader like the gas giant's). (5) Reached places could offer something on return (a trader at the Lighthouse, the fleet's market).
 - [ ] **After ship: save migrations** (Abe, 2026-10-03: none during development; he deletes saves between playtests). Collect save-format changes here as they happen: world-scale factor (positions x factor, if/when the systems grow; playtest 2026-10-03 b finding 9).
 
-## Parked: system layout templates (Abe's idea, 2026-10-06)
+## Parked, TALK WITH ABE BEFORE DOING IT: system layout templates (Abe's idea, 2026-10-06)
 
 Instead of fully procedural placement, ~20 hand-made system layouts with spawn
 points (stations, fields, gates, planets), the generator filling the points.

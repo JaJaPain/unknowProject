@@ -8261,8 +8261,10 @@ func _run_core_smoke_test() -> void:
 		return
 	GlobalState.paused = true
 	ui.call("_open_campaign_manager")
-	if not bool(ui.get("campaign_panel").visible) \
-			or ui.get("campaign_slots_vbox").get_child_count() != 4:
+	# Three slot rows (the red End this campaign area isn't a slot).
+	var slot_rows: Array = ui.get("campaign_slots_vbox").get_children().filter(
+		func(c): return c is PanelContainer and str(c.name) != "EndCampaignArea")
+	if not bool(ui.get("campaign_panel").visible) or slot_rows.size() != 3:
 		_fail_core_smoke_test(
 			"Campaign manager did not render exactly three campaign slots."
 		)
