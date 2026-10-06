@@ -1,0 +1,724 @@
+[
+  {
+    "id": "premise.the_frozen_reservoir",
+    "schema_version": 1,
+    "title": "The Frozen Reservoir",
+    "logline": "When an orbital habitat's primary heating core fails and freezes the water grid, a water baron exploits the freeze while miners demand emergency cometary ice.",
+    "scale": "local",
+    "tone": [
+      "survival",
+      "political"
+    ],
+    "themes": [
+      "scarcity_breeds_cruelty",
+      "cost_of_neutrality"
+    ],
+    "roles": [
+      {
+        "id": "water_baron",
+        "kind": "person",
+        "archetype": "merchant",
+        "description": "Owns the only heated thermal reservoir in the sector; shrewd, polite, and completely indifferent to frostbite.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "miner_delegate",
+        "kind": "person",
+        "archetype": "union_organiser",
+        "description": "A fiery representative of the belt miners whose children are shivering in unheated hab modules.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "reservoir_station",
+        "kind": "place",
+        "description": "A heavily insulated orbital storage sphere holding thousands of cubic meters of liquid drinking water.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "frozen_habitat",
+        "kind": "place",
+        "description": "The sprawling residential station whose internal pipes have frozen solid following a grid blackout.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "water_syndicate",
+        "kind": "faction",
+        "description": "A private utility consortium that controls commercial moisture distribution.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "miners_union",
+        "kind": "faction",
+        "description": "The loose federation of independent drillers and station labourers fighting for survival.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "baron_gunboat",
+        "kind": "ship",
+        "description": "An armed patrol cutter enforcing water payment checkpoints along the habitat approach vector.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "market_disrupted",
+      "public_outrage",
+      "faction_weakened"
+    ],
+    "public_situation": "Sub-zero temperatures have frozen the municipal water lines of {system}'s residential habitat, sparking riots at commercial distribution berths.",
+    "private_truth": "The water baron deliberately shut the auxiliary thermal valves to freeze the municipal pipes and force the habitat council into selling the public aquifer.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "baron_froze_aquifer_valves_to_privatize_water"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "The miners' union broadcasts an urgent distress hail requesting raw water-ice to feed emergency thawing boilers.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "water_ice",
+            "requester": "miner_delegate",
+            "target": "frozen_habitat",
+            "reason": "The delegate needs raw water-ice hauled from cometary fragments to charge the habitat's central boiler before the life support chillers burst.",
+            "private_fact": "The union has only enough pooled scrip to pay for one delivery before they must mortgage their drilling ships.",
+            "outcome_tags": [
+              "ice_delivered",
+              "ice_abandoned"
+            ],
+            "routes": {
+              "ice_delivered": "next",
+              "ice_abandoned": "resolution:baron_forecloses"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "The water syndicate raises prices fivefold, claiming off-station supply lines are blocked by cometary debris.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "water_syndicate",
+            "requester": "miner_delegate",
+            "target": "reservoir_station",
+            "reason": "The delegate hires an outside pilot to scan the reservoir's thermal exhaust and check whether the syndicate's heating loops are running at full power.",
+            "private_fact": "Telemetry indicates the baron has diverted eighty percent of heating capacity to luxury private greenhouses while public lines freeze.",
+            "outcome_tags": [
+              "diversion_exposed",
+              "scans_inconclusive"
+            ],
+            "routes": {
+              "diversion_exposed": "next",
+              "scans_inconclusive": "resolution:baron_forecloses"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "public_change": "The baron deploys an armed gunboat to intercept unchartered water couriers approaching the habitat.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "miner_delegate",
+            "target": "baron_gunboat",
+            "reason": "The delegate needs the pilot to break the gunboat blockade so unmetered melted water can reach the residential docks.",
+            "private_fact": "The gunboat captain hails mid-fight, offering a huge fuel bribe if the pilot diverts the ice hauler directly to the syndicate reservoir.",
+            "outcome_tags": [
+              "gunboat_repelled",
+              "took_baron_offer"
+            ],
+            "routes": {
+              "gunboat_repelled": "next",
+              "took_baron_offer": "resolution:baron_forecloses"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "With the gunboat driven back, the habitat council convenes an emergency session to decide ownership of the water grid.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "miner_delegate",
+            "target": "frozen_habitat",
+            "reason": "The delegate asks the pilot to courier the verified thermal telemetry drive straight to the council chamber to prove the artificial freeze.",
+            "private_fact": "The council president is terrified of syndicate lawsuits and will only act if presented with physical evidence in public session.",
+            "outcome_tags": [
+              "evidence_lodged",
+              "courier_intercepted"
+            ],
+            "routes": {
+              "evidence_lodged": "next",
+              "courier_intercepted": "resolution:baron_forecloses"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The pilot stands in the freezing council chamber with the telemetry drive. The baron offers to forgive all municipal debts if the evidence is handed over, while the shivering miners demand municipalization.",
+          "options": [
+            {
+              "id": "municipalize_water",
+              "label": "Submit the evidence to seize the reservoir under municipal public health laws",
+              "leads_to": "resolution:aquifer_socialized"
+            },
+            {
+              "id": "broker_utility_pact",
+              "label": "Broker a price-capped utility compromise with shared council oversight",
+              "leads_to": "resolution:regulated_compromise"
+            },
+            {
+              "id": "sell_to_syndicate",
+              "label": "Hand the drive to the baron in exchange for a lifetime water stipend and credits",
+              "leads_to": "resolution:private_monopoly"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "aquifer_socialized",
+        "reached_by": "The pilot submits the proof to seize the reservoir for the public.",
+        "summary": "{role:miners_union} municipalizes the reservoir and restores free drinking water, while {role:water_baron} faces bankruptcy and exile.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "water_syndicate",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "water_baron",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "miner_delegate",
+            "fate": "promoted"
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "water_ice",
+            "price": "crash"
+          },
+          {
+            "type": "deed",
+            "tag": "broke_the_ice_monopoly",
+            "public_summary": "A pilot hauled the evidence that thawed out an entire station and broke the water baron."
+          }
+        ],
+        "seeds": [
+          "faction_weakened",
+          "public_outrage",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "regulated_compromise",
+        "reached_by": "The pilot brokers a compromise price cap.",
+        "summary": "{role:water_syndicate} retains ownership under strict price caps, while {role:miners_union} secures guaranteed rations at subsidized rates.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": 1
+          },
+          {
+            "type": "standing",
+            "target": "water_syndicate",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "water_baron",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "miner_delegate",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "law_change",
+            "law": "tariff_on_goods",
+            "change": "enacted"
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "alliance_formed"
+        ]
+      },
+      {
+        "id": "private_monopoly",
+        "reached_by": "The pilot sells the evidence to the baron.",
+        "summary": "{role:water_baron} completes the privatization of the aquifer, leaving {role:miners_union} to purchase melted drinking ice on credit.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "water_syndicate",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "water_baron",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "miner_delegate",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "water_ice",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "debt_owed_to_player",
+          "secret_half_exposed"
+        ]
+      },
+      {
+        "id": "baron_forecloses",
+        "reached_by": "The pilot fails the missions or accepts the gunboat bribe.",
+        "summary": "The pipes shatter from ice expansion; {role:water_syndicate} buys the ruined habitat for salvage while the miners are evicted.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "water_syndicate",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "miner_delegate",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "power_vacuum",
+          "refugees_moving"
+        ]
+      }
+    ],
+    "default_resolution": "baron_forecloses",
+    "loose_threads": [
+      {
+        "id": "t_thermal_bypass",
+        "surface": "scan",
+        "detail": "Telemetry records a secret valve installation on the main municipal intake manifold completed shortly before the freeze.",
+        "can_carry_methods": [
+          "sabotage",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_water_debt_lien",
+        "surface": "price_board",
+        "detail": "Secondary municipal debt bonds were quietly snapped up by a dummy subsidiary linked to the water baron's family office.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "sabotage"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "mining_charter_required"
+    ],
+    "radio_hooks": [
+      "Habitat pipe freeze in {system} enters second week as municipal heating stays offline.",
+      "{role:water_syndicate} denies price gouging claims, citing extraordinary thermal pump costs.",
+      "Miners in {system} organize bucket brigades across freezing residential rings."
+    ],
+    "voice_direction": {
+      "water_baron": "Polite, smooth, speaking with the effortless calm of someone whose assets appreciate every time the temperature drops. Never shows irritation.",
+      "miner_delegate": "Gruff, urgent, speaking with clipped, shivering intensity and passionate working-class fury. Avoids ideological posturing in favor of raw logistics."
+    },
+    "novelty_tags": [
+      "frozen_habitat",
+      "water_monopoly",
+      "ice_deliveries",
+      "utility_dispute",
+      "cometary_mining"
+    ]
+  },
+  {
+    "id": "premise.the_breath_tax_revolt",
+    "schema_version": 1,
+    "title": "The Breath Tax Revolt",
+    "logline": "When a pompous station administrator imposes an oxygen consumption fee on docked pilots, an eccentric tramp freighter captain stages a stubborn dockside protest.",
+    "scale": "personal",
+    "tone": [
+      "farce",
+      "absurd"
+    ],
+    "themes": [
+      "price_of_profit",
+      "who_owns_the_past"
+    ],
+    "roles": [
+      {
+        "id": "lung_taxer",
+        "kind": "person",
+        "archetype": "bureaucrat",
+        "description": "A fastidious habitat clerk who calculated that visiting pilots are breathing more station air than they pay for in berth fees.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "stubborn_captain",
+        "kind": "person",
+        "archetype": "pilot",
+        "description": "A veteran tramp hauler captain who has lived aboard the same rustbucket for fifty years and refuses to pay a single breath tariff.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "customs_desk",
+        "kind": "place",
+        "description": "The bureaucratic intake booth on the main commercial ring where docking levies are assessed.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "tramp_berth",
+        "kind": "place",
+        "description": "A remote mooring slip where the veteran's ship is tethered with an umbilical air cord.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": []
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "rival_humiliated"
+    ],
+    "public_situation": "Dockers in {system} are laughing as customs officers threaten to impound a tramp freighter over unpaid excess atmospheric inhalation fines.",
+    "private_truth": "The administrator secretly lost station recreation funds gambling on drone races and fabricated the breathing tax to balance the office ledger.",
+    "core_why": {
+      "motive": "fear",
+      "secret": "administrator_invented_oxygen_surcharge_to_cover_embezzlement"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "The administrator posts an official tariff notice warning that uncertified pilot lungs will be subject to mandatory dockside spirometry checks.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "stubborn_captain",
+            "target": "tramp_berth",
+            "reason": "The captain needs thirty rolls of commercial duct tape and industrial sealant bought from ship chandlers to tape off every station air vent.",
+            "private_fact": "The captain has been venting compressed greenhouse gas from personal terrarium ferns to prove his ship generates more air than it breathes.",
+            "outcome_tags": [
+              "tape_delivered",
+              "tape_abandoned"
+            ],
+            "routes": {
+              "tape_delivered": "next",
+              "tape_abandoned": "resolution:captain_impounded"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Customs bailiffs attempt to clamp the tramp freighter's mooring ring while crowds of dockers jeer and take bets.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "stubborn_captain",
+            "target": "customs_desk",
+            "reason": "The captain asks the pilot to collect the station's historical founding charter from the archive annex to prove air was declared free in 2180.",
+            "private_fact": "The charter annex clerk is a drinking buddy of the captain and has already prepared the certified parchment.",
+            "outcome_tags": [
+              "charter_retrieved",
+              "charter_blocked"
+            ],
+            "routes": {
+              "charter_retrieved": "next",
+              "charter_blocked": "resolution:captain_impounded"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "The administrator threatens to vent the entire docking bay unless the back-taxes are settled before the morning cycle.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "stubborn_captain",
+            "target": "customs_desk",
+            "reason": "The captain asks the pilot to courier the ancient founding charter straight to the magistrate's desk before the bailiff cuts the umbilical.",
+            "private_fact": "The charter contains an obscure rider granting any pilot who brings a living tree aboard free lifetime docking.",
+            "outcome_tags": [
+              "charter_delivered",
+              "charter_delayed"
+            ],
+            "routes": {
+              "charter_delivered": "next",
+              "charter_delayed": "resolution:captain_impounded"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The pilot delivers the founding charter to the customs desk. The panicked administrator begs the pilot to hide the gambling embezzlement, while the captain demands a public apology.",
+          "options": [
+            {
+              "id": "enforce_free_air",
+              "label": "Present the charter to the magistrate to abolish the breath tax forever",
+              "leads_to": "resolution:breath_tax_scrapped"
+            },
+            {
+              "id": "blackmail_clerk",
+              "label": "Use proof of the clerk's gambling debts to secure free docking for all pilots",
+              "leads_to": "resolution:clerk_blackmailed"
+            },
+            {
+              "id": "broker_tree_compromise",
+              "label": "Invoke the tree rider and donate a hydroponic ficus to settle the dispute",
+              "leads_to": "resolution:ficus_settlement"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "breath_tax_scrapped",
+        "reached_by": "The pilot presents the charter and exposes the fraudulent tariff.",
+        "summary": "The magistrate throws out the breath tax; {role:lung_taxer} is demoted to waste recycling while {role:stubborn_captain} buys drinks for the entire dock.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "lung_taxer",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "stubborn_captain",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "economy",
+            "good": "luxury",
+            "price": "spike"
+          },
+          {
+            "type": "deed",
+            "tag": "saved_free_breath",
+            "public_summary": "A pilot dug up a century-old station charter to stop a greedy clerk from taxing breathing."
+          }
+        ],
+        "seeds": [
+          "rival_humiliated",
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "clerk_blackmailed",
+        "reached_by": "The pilot blackmails the clerk using gambling records.",
+        "summary": "{role:lung_taxer} quietly waives all docking fees for independent pilots, covering the shortfall with personal gambling winnings.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "lung_taxer",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "stubborn_captain",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "law_change",
+            "law": "docking_bribes",
+            "change": "repealed"
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "ficus_settlement",
+        "reached_by": "The pilot invokes the ancient tree rider.",
+        "summary": "{role:stubborn_captain} places a potted rubber tree at customs, satisfying the legal loophole while {role:lung_taxer} sulks behind the desk.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "stubborn_captain",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "lung_taxer",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "economy",
+            "good": "luxury",
+            "price": "crash"
+          }
+        ],
+        "seeds": [
+          "rival_humiliated",
+          "witness_at_large"
+        ]
+      },
+      {
+        "id": "captain_impounded",
+        "reached_by": "The delivery fails or the pilot drops the job.",
+        "summary": "Bailiffs impound {role:stubborn_captain}'s ship and levy massive fines; {role:lung_taxer} uses the proceeds to patch the gambling hole.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "stubborn_captain",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "lung_taxer",
+            "fate": "promoted"
+          },
+          {
+            "type": "law_change",
+            "law": "tariff_on_goods",
+            "change": "enacted"
+          }
+        ],
+        "seeds": [
+          "law_tightened",
+          "power_vacuum"
+        ]
+      }
+    ],
+    "default_resolution": "captain_impounded",
+    "loose_threads": [
+      {
+        "id": "t_gambling_tabs",
+        "surface": "price_board",
+        "detail": "A customs station terminal shows multiple betting slips filed under an administrator's employee identification badge.",
+        "can_carry_methods": [
+          "impersonation",
+          "debt_leverage"
+        ]
+      },
+      {
+        "id": "t_archival_stamps",
+        "surface": "station_notice",
+        "detail": "The official station charter seal on the tax decree was affixed with an ink formula discontinued fifty years ago.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "impersonation",
+        "debt_leverage",
+        "forged_records"
+      ],
+      "motives": [
+        "fear",
+        "greed"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "docking_bribes"
+    ],
+    "radio_hooks": [
+      "Dockers in {system} hold mock breathing protests outside habitat customs headquarters.",
+      "Station clerk defends lung volume tariffs as progressive atmospheric resource management.",
+      "Freight traffic backs up at {system} berths as pilots refuse air capacity metering."
+    ],
+    "voice_direction": {
+      "lung_taxer": "Haughty, bureaucratic, speaking in squeaky nasal cadence with relentless devotion to minor regulatory clauses.",
+      "stubborn_captain": "Booming, cantankerous, openly mocking petty officialdom and dropping colorful space sailor slang."
+    },
+    "novelty_tags": [
+      "breath_tax",
+      "bureaucratic_farce",
+      "docking_dispute",
+      "ancient_charter",
+      "atmospheric_levy"
+    ]
+  }
+]

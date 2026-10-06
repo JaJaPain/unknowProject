@@ -1,0 +1,387 @@
+{
+  "id": "premise.the_poisoned_vapor",
+  "schema_version": 1,
+  "title": "The Poisoned Vapor",
+  "logline": "When a toxic sedative leak in a refinery sector knocks out an entire shift, a station physician hires an outsider to discover who opened the ventilation bypass.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "noir"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "station_physician",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "The overworked chief of industrial emergency medicine; cynical, vigilant, treating chemical burns with steady hands.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "desperate_chemist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "A brilliant atmospheric engineer who compromised the ventilation grid to help a sibling escape from corporate indenture.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refinery_wards",
+      "kind": "place",
+      "description": "The chemical extraction ward where dozens of refinery workers are recovering from inhalation poisoning.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "vent_nexus",
+      "kind": "place",
+      "description": "The central circulation junction linking the industrial refinery to the station's main life support.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refinery_consortium",
+      "kind": "faction",
+      "description": "The heavy industry syndicate that owns the fuel synthesis crackers and treats worker health as an operating expense.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smuggler_syndicate",
+      "kind": "faction",
+      "description": "A criminal network operating covert extraction routes through the station's unmonitored exhaust flues.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_cutter",
+      "kind": "ship",
+      "description": "A fast, stealth-shielded transport waiting in the exhaust shadow to extract the fugitive.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted",
+    "witness_at_large"
+  ],
+  "public_situation": "A sudden chemical vapor leak in {system}'s fuel cracking facility hospitalizes forty workers and leaves the industrial district under emergency seal.",
+  "private_truth": "The chemist introduced synthetic neuro-sedative into the air ducts to incapacitate security patrols so a fugitive relative could slip into an exhaust cutter.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "chemist_vented_sedative_to_conceal_ward_escape"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Hazard teams seal off the fuel crackers while hospital sirens echo through the upper residential tiers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "desperate_chemist",
+          "requester": "station_physician",
+          "target": "vent_nexus",
+          "reason": "The doctor needs an outsider to scan the ventilation mixing chambers and identify whether the vapor was industrial exhaust or military-grade gas.",
+          "private_fact": "Toxicology scans confirm the compound was an exotic anesthetic never stocked in the refinery's official medical inventory.",
+          "outcome_tags": [
+            "sedative_identified",
+            "tests_inconclusive"
+          ],
+          "routes": {
+            "sedative_identified": "next",
+            "tests_inconclusive": "resolution:incident_suppressed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "A sensor ping detects an unregistered cutter burning away from the station's primary cooling flue.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "station_physician",
+          "target": "syndicate_cutter",
+          "reason": "The physician hires the pilot to disable the fleeing cutter and recover its flight logs before the vessel jumps clear of the system.",
+          "private_fact": "The cutter crew is armed with syndicate security hardware and was hired specifically to extract the chemist's indentured sister.",
+          "outcome_tags": [
+            "logs_recovered",
+            "cutter_escaped"
+          ],
+          "routes": {
+            "logs_recovered": "next",
+            "cutter_escaped": "resolution:incident_suppressed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The recovered logs expose the chemist's role, but the consortium threatens to declare the entire ward a contagion quarantine zone.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "station_physician",
+          "target": "refinery_wards",
+          "reason": "The doctor asks the pilot to courier antidote synthesizing enzymes to the ward before the consortium cuts emergency power to the beds.",
+          "private_fact": "The chemist has surrendered to the clinic and is offering full testimony in exchange for sanctuary for the rescued sibling.",
+          "outcome_tags": [
+            "antidote_delivered",
+            "power_severed"
+          ],
+          "routes": {
+            "antidote_delivered": "next",
+            "power_severed": "resolution:incident_suppressed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "With the patients stabilized, consortium executives arrive with an armed security detail to reclaim the chemist and erase the logs.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "station_physician",
+          "target": "refinery_wards",
+          "reason": "The doctor needs the pilot to collect the chemist's signed confession and chemical samples directly from the clinic before security storms the ward.",
+          "private_fact": "The consortium director personally authorized hazardous shifts with known faulty seals, making the company liable for massive damages.",
+          "outcome_tags": [
+            "confession_secured",
+            "confession_lost"
+          ],
+          "routes": {
+            "confession_secured": "next",
+            "confession_lost": "resolution:incident_suppressed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the chemist's confession and the toxic samples. The consortium offers a massive settlement to burn the proof, while the physician demands justice for the poisoned shift.",
+        "options": [
+          {
+            "id": "prosecute_consortium",
+            "label": "Hand the evidence to station magistrates to indict the consortium and protect the chemist",
+            "leads_to": "resolution:consortium_prosecuted"
+          },
+          {
+            "id": "take_consortium_payout",
+            "label": "Surrender the evidence to consortium executives for a quiet six-figure settlement",
+            "leads_to": "resolution:corporate_coverup"
+          },
+          {
+            "id": "protect_chemist_family",
+            "label": "Trade the logs to the syndicate in exchange for permanent safe passage for the chemist's family",
+            "leads_to": "resolution:syndicate_flight"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "consortium_prosecuted",
+      "reached_by": "The pilot delivers the confession and samples to the magistrates.",
+      "summary": "{role:refinery_consortium} is fined millions for safety neglect; {role:station_physician} secures worker medical funds while {role:desperate_chemist} enters protective custody.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "smuggler_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_physician",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_chemist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_refinery_poison",
+          "public_summary": "A pilot carried the proof that exposed corporate gas leaks and protected poisoned refinery workers."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_weakened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "corporate_coverup",
+      "reached_by": "The pilot takes the consortium's settlement payout.",
+      "summary": "{role:refinery_consortium} buries the incident as an accidental filter failure; {role:station_physician} is silenced while {role:desperate_chemist} is quietly arrested.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_physician",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_chemist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "syndicate_flight",
+      "reached_by": "The pilot trades the logs to the syndicate for family escape.",
+      "summary": "{role:desperate_chemist} and her sister escape into the outer belt under syndicate protection, leaving {role:refinery_consortium} and {role:station_physician} in bitter gridlock.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smuggler_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_chemist",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_physician",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "incident_suppressed",
+      "reached_by": "The pilot drops the contract or fails the interception.",
+      "summary": "The consortium seals the wards under quarantine; {role:desperate_chemist} disappears and {role:station_physician} loses hospital operating privileges.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_physician",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "desperate_chemist",
+          "fate": "disappeared"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "quarantine"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "incident_suppressed",
+  "loose_threads": [
+    {
+      "id": "t_sedative_cannister",
+      "surface": "wreck",
+      "detail": "Debris from the intercept cutter contains aerosol dispersal valves marked with a syndicate laboratory insignia.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_indenture_bounty",
+      "surface": "station_notice",
+      "detail": "A bounty for an escaped refinery apprentice was posted three hours before the gas leak was officially discovered.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "protecting_someone",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Forty refinery crew treated for acute vapor inhalation in {system} industrial sector.",
+    "Syndicate executives deny rumors of intentional nerve toxin discharge in fuel refinery.",
+    "Health union in {system} calls for independent environmental inspection of cooling flues."
+  ],
+  "voice_direction": {
+    "station_physician": "Tired, clinical, clipped, reciting medical readings with fierce suppressed anger. Refuses to sugarcoat patient prognosis.",
+    "desperate_chemist": "Frantic, guilt-ridden, speaking in rapid rationalizations about familial loyalty while terrified of corporate retribution."
+  },
+  "novelty_tags": [
+    "chemical_vapor",
+    "refinery_sabotage",
+    "indentured_escape",
+    "industrial_toxicology",
+    "ward_quarantine"
+  ]
+}

@@ -1,0 +1,329 @@
+{
+  "id": "premise.the_tampered_scrubbers",
+  "schema_version": 1,
+  "title": "The Tampered Scrubbers",
+  "logline": "When life support filters in the lower docks begin failing, an environmental mechanic hires a pilot to trace who is siphoning fresh charcoal cartridges.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "mechanic_whistleblower",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "A night-shift life support technician whose lungs rattle from inhaling unscrubbed carbon dioxide.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corrupt_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Oversees cargo allocation with an iron ledger; sells refurbished air parts to illegal mining rigs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrubber_vault",
+      "kind": "place",
+      "description": "The subterranean atmospheric filtration plant beneath the station's heavy industrial docks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refurbishing_berth",
+      "kind": "place",
+      "description": "An unmonitored docking slip where scrapped atmospheric hardware is packed into generic shipping crates.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "Dockworkers on {system}'s industrial tier report chronic headaches and stale air as atmospheric scrubbers fail daily inspection.",
+  "private_truth": "The dockmaster has been swapping fresh scrubber cartridges with spent units and fencing the medical-grade activated carbon to off-grid asteroid smelters.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "dockmaster_skimming_scrubber_carbon_filters_for_resale"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Station safety officers issue an advisory urging lower deck residents to limit strenuous work due to carbon spikes.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "mechanic_whistleblower",
+          "target": "scrubber_vault",
+          "reason": "The technician needs an outsider to collect a set of spent filter cores directly from the maintenance airlock before the daytime shift wipes the logs.",
+          "private_fact": "The technician tampered with the core seals last night to leave unique dye markers on whoever handled the stolen filters.",
+          "outcome_tags": [
+            "cores_collected",
+            "cores_seized"
+          ],
+          "routes": {
+            "cores_collected": "next",
+            "cores_seized": "resolution:air_smothered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Alarms sound across the berths as the secondary scrubber manifold overheats from blocked porous mesh.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "corrupt_dockmaster",
+          "requester": "mechanic_whistleblower",
+          "target": "refurbishing_berth",
+          "reason": "The mechanic asks the pilot to scan cargo pallets docked at the scrap berth to verify if the tagged filter cores are being crated for export.",
+          "private_fact": "The dockmaster is logged as the registered owner of the export barge and receives payment directly to a personal blind escrow.",
+          "outcome_tags": [
+            "theft_confirmed",
+            "signal_lost"
+          ],
+          "routes": {
+            "theft_confirmed": "next",
+            "signal_lost": "resolution:air_smothered"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The dockmaster locks down the freight lifts to trap the mechanic before station inspectors arrive.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "mechanic_whistleblower",
+          "target": "scrubber_vault",
+          "reason": "The technician asks the pilot to courier an emergency diagnostic bypass module straight to the vault to keep the breathable air flowing.",
+          "private_fact": "The bypass module will overload the backup turbine within forty-eight hours unless permanent fresh filters are installed.",
+          "outcome_tags": [
+            "module_delivered",
+            "bypass_failed"
+          ],
+          "routes": {
+            "module_delivered": "next",
+            "bypass_failed": "resolution:air_smothered"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot delivers the bypass to the vault while holding proof of the dockmaster's theft. The dockmaster offers a lucrative freight kickback to suppress the logs, while the choking mechanic begs for justice.",
+        "options": [
+          {
+            "id": "expose_dockmaster",
+            "label": "Hand the scan logs to the station magistrates to arrest the dockmaster",
+            "leads_to": "resolution:dockmaster_ousted"
+          },
+          {
+            "id": "take_dockmaster_kickback",
+            "label": "Accept the dockmaster's hush money and let the refurbished filters ship",
+            "leads_to": "resolution:kickback_secured"
+          },
+          {
+            "id": "force_quiet_restitution",
+            "label": "Blackmail the dockmaster into returning all stolen filters without involving magistrates",
+            "leads_to": "resolution:quiet_restitution"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "dockmaster_ousted",
+      "reached_by": "The pilot exposes the theft logs to the station magistrates.",
+      "summary": "{role:corrupt_dockmaster} is stripped of office and imprisoned, while {role:mechanic_whistleblower} receives a promotion to chief life support engineer.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_dockmaster",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mechanic_whistleblower",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "cleared_the_air",
+          "public_summary": "A pilot uncovered who was stealing the breathing filters from the lower dock scrubbers."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "kickback_secured",
+      "reached_by": "The pilot takes the dockmaster's bribe.",
+      "summary": "{role:corrupt_dockmaster} continues siphoning life support parts, while {role:mechanic_whistleblower} is fired on trumped-up safety charges.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_dockmaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mechanic_whistleblower",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_dock_lungs",
+          "public_summary": "Rumors claim a pilot took a payout to look the other way while dock air went bad."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "quiet_restitution",
+      "reached_by": "The pilot blackmails the dockmaster into restoring the filters.",
+      "summary": "{role:corrupt_dockmaster} quietly returns the filters to avoid arrest, while {role:mechanic_whistleblower} monitors the air in uneasy silence.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_dockmaster",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mechanic_whistleblower",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "air_smothered",
+      "reached_by": "The bypass fails or the pilot drops the contract.",
+      "summary": "The lower docks choke on toxic exhaust; {role:corrupt_dockmaster} blames equipment age and {role:mechanic_whistleblower} flees the system.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "corrupt_dockmaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mechanic_whistleblower",
+          "fate": "fled"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "air_smothered",
+  "loose_threads": [
+    {
+      "id": "t_filter_serials",
+      "surface": "cargo",
+      "detail": "Refurbished filter drums bear serial stamps matching an off-system supply order cancelled six months ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_carbon_escrow",
+      "surface": "price_board",
+      "detail": "An offshore account held in a scrap broker's name received regular monthly transfers from the dockmaster's payroll.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Lower dock workers in {system} stage walkout over deteriorating atmospheric quality.",
+    "Station engineering denies atmospheric shortages, citing seasonal ventilation lag.",
+    "Black market prices for pressurized oxygen cannisters double across {system} outposts."
+  ],
+  "voice_direction": {
+    "mechanic_whistleblower": "Raspy, persistent, speaking in fast short bursts with grim, humourless urgency.",
+    "corrupt_dockmaster": "Smooth, condescending, speaking in comfortable administrative clichés to minimise serious emergencies."
+  },
+  "novelty_tags": [
+    "air_scrubbers",
+    "stolen_filters",
+    "dockside_blackout",
+    "corrupt_dockmaster",
+    "life_support_theft"
+  ]
+}

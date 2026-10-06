@@ -1,0 +1,395 @@
+{
+  "id": "premise.the_counterfeit_spoilage",
+  "schema_version": 1,
+  "title": "The Counterfeit Spoilage",
+  "logline": "When an agronomist fakes a catastrophic fungal blight to write off orbital grain reserves, an undercover inspector hires an outsider to intercept the smuggled harvest.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "paranoid"
+  ],
+  "themes": [
+    "price_of_profit",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "farm_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "An unsmiling food safety inspector who suspects half the system's grain surplus is being written off on paper and sold off-grid.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rogue_agronomist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "A brilliant greenhouse geneticist who figured out how to fake crop rot on scanner buoys to pocket the insurance payout.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "food_trust",
+      "kind": "faction",
+      "description": "The regional grain distribution monopoly that controls orbital silage silos.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "black_market_cartel",
+      "kind": "faction",
+      "description": "An illicit distribution network that buys diverted food stores to sell at hyper-inflated prices in frontier belts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_freighter",
+      "kind": "ship",
+      "description": "A shielded bulk freighter running dark through asteroid alleys with stolen unblemished grain.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "grain_silo",
+      "kind": "place",
+      "description": "A massive pressurized drum station storing millions of metric bushels of freeze-dried wheat.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_crematory",
+      "kind": "place",
+      "description": "The disposal dock where condemned organic matter is supposedly flash-incinerated.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "market_disrupted",
+    "leader_discredited"
+  ],
+  "public_situation": "Emergency phytosanitary alerts in {system} order the incineration of forty thousand tons of wheat following a reported black-rot infestation.",
+  "private_truth": "The agronomist programmed sensor buoys to display false fungal spore signatures so the cartel could quietly siphon uninfected grain into ghost haulers.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "agronomist_faked_grain_blight_for_cartel_theft"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Agricultural safety officers lock down the primary grain silo and begin venting test chambers under yellow warning banners.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "rogue_agronomist",
+          "requester": "farm_inspector",
+          "target": "grain_silo",
+          "reason": "The inspector needs an outside pilot to fly close to the silo exhaust vents and sample the biological spore count before local officials clear the quarantine.",
+          "private_fact": "The inspector was already offered a quiet transfer and a five-figure bonus to rubber-stamp the disposal manifest without testing.",
+          "outcome_tags": [
+            "blight_faked",
+            "spores_verified"
+          ],
+          "routes": {
+            "blight_faked": "next",
+            "spores_verified": "resolution:grain_incinerated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Instead of burning the wheat, a clandestine bulk hauler slips out of the crematory slipway toward the outer jump gate.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "farm_inspector",
+          "target": "cartel_freighter",
+          "reason": "The inspector needs the smuggler hauler disabled and its encrypted navigation manifests recovered before the stolen grain leaves the system.",
+          "private_fact": "The hauler is escorted by cartel mercenaries who were promised a twenty percent cut of the off-grid grain sale.",
+          "outcome_tags": [
+            "manifest_recovered",
+            "hauler_escaped"
+          ],
+          "routes": {
+            "manifest_recovered": "next",
+            "hauler_escaped": "resolution:grain_incinerated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The recovered manifest exposes the agronomist's bank accounts, but the cartel threatens to cut all food shipments to the station if charges are filed.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "farm_inspector",
+          "target": "quarantine_crematory",
+          "reason": "The inspector asks the pilot to courier the seized proof to the crematory security magistrate before the cartel's legal team obtains an injunction.",
+          "private_fact": "The agronomist is hiding inside the crematory control cabin, desperately shredding local disposal telemetry.",
+          "outcome_tags": [
+            "proof_lodged",
+            "proof_seized"
+          ],
+          "routes": {
+            "proof_lodged": "next",
+            "proof_seized": "resolution:grain_incinerated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "With the evidence secured at the dock, the trust board and cartel reps arrive to negotiate the fate of the remaining silos.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "farm_inspector",
+          "target": "quarantine_crematory",
+          "reason": "The inspector needs the pilot to collect the encrypted transaction drive directly from the cornered agronomist before cartel security arrives to silence him.",
+          "private_fact": "The agronomist is bargaining for an escort off-station and will only hand over the decryption keys once docked.",
+          "outcome_tags": [
+            "ledger_secured",
+            "ledger_lost"
+          ],
+          "routes": {
+            "ledger_secured": "next",
+            "ledger_lost": "resolution:grain_incinerated"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the ledger implicating both the agronomist and the food trust. The cartel offers a fortune to erase the manifest, while the inspector demands full exposure.",
+        "options": [
+          {
+            "id": "expose_the_scam",
+            "label": "Hand the unredacted ledger to the public broadcasting terminal to break the trust",
+            "leads_to": "resolution:trust_shattered"
+          },
+          {
+            "id": "blackmail_the_trust",
+            "label": "Sell the ledger directly to the food trust directors in exchange for a quiet retirement payoff",
+            "leads_to": "resolution:blackmail_settlement"
+          },
+          {
+            "id": "release_to_miners",
+            "label": "Transmit the grain release codes to independent asteroid miners so they can claim the impounded silos",
+            "leads_to": "resolution:miners_fed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "trust_shattered",
+      "reached_by": "The pilot broadcasts the unredacted ledger.",
+      "summary": "The staged blight is exposed; {role:food_trust} directors face criminal charges while {role:rogue_agronomist} is arrested at the departure airlock.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "food_trust",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "black_market_cartel",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "rogue_agronomist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "busted_grain_conspiracy",
+          "public_summary": "A pilot proved the Great Blight was just corporate paperwork covering up stolen wheat."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "blackmail_settlement",
+      "reached_by": "The pilot sells the ledger to the food trust.",
+      "summary": "{role:food_trust} quietly buries the investigation; {role:farm_inspector} is reassigned to an unpopulated buoy while the cartel shares the subsidy.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "food_trust",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "black_market_cartel",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rogue_agronomist",
+          "fate": "promoted"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "miners_fed",
+      "reached_by": "The pilot transmits the grain release codes to the miners.",
+      "summary": "Using the leaked release codes, independent miners drain the silos for cheap flour, while {role:food_trust} and {role:black_market_cartel} swear revenge.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "food_trust",
+          "delta": -2
+        },
+        {
+          "type": "standing",
+          "target": "black_market_cartel",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_inspector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rogue_agronomist",
+          "fate": "fled"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "grain_incinerated",
+      "reached_by": "The pilot drops the contract or fails the interception.",
+      "summary": "The cartel slips away with the pristine harvest while {role:food_trust} burns empty chaff and collects millions in disaster relief.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "food_trust",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "secret_half_exposed"
+      ]
+    }
+  ],
+  "default_resolution": "grain_incinerated",
+  "loose_threads": [
+    {
+      "id": "t_burner_readings",
+      "surface": "scan",
+      "detail": "Thermal scans of the disposal incinerator show no organic ash signatures despite forty recorded burn cycles.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_subsidies_advance",
+      "surface": "station_notice",
+      "detail": "Disaster insurance claims were pre-approved by the agrarian ministry six days before the blight was reported.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "forged_records",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Agricultural inspectors in {system} confirm fifty thousand tons of condemned wheat earmarked for burn.",
+    "Grain futures jump fourteen percent as {role:food_trust} warns of regional starch shortfalls.",
+    "Dock unions in {system} demand safety gear before unloading alleged blight silos."
+  ],
+  "voice_direction": {
+    "farm_inspector": "Flat, relentless, speaking with monotonous bureaucratic precision that hides intense personal fury. Never raises their voice.",
+    "rogue_agronomist": "Nervously witty, over-explaining plant biology whenever pressed on inventory records. Changes the subject constantly."
+  },
+  "novelty_tags": [
+    "grain_blight",
+    "insurance_fraud",
+    "food_cartel",
+    "crop_inspection",
+    "phytosanitary_lockdown"
+  ]
+}

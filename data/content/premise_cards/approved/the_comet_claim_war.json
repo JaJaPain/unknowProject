@@ -1,0 +1,435 @@
+{
+  "id": "premise.the_comet_claim_war",
+  "schema_version": 1,
+  "title": "The Comet Claim War",
+  "logline": "When a massive water-ice comet enters the sector, an old ice-harvester dynasty and an automated utility giant battle for the rights to thaw it.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "melancholy"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "legacy_ice_captain",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "A weathered octogenarian who has harpooned comets by hand for fifty years and refuses to see the old lanes automated.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "corp_director",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Regional head of the automated utility giant; regards manual ice-rigging as an unsafe, obsolete anachronism.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "harvester_guild",
+      "kind": "faction",
+      "description": "The guild of independent cometary ice haulers whose livelihoods depend on unautomated harvesting.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "water_conglomerate",
+      "kind": "faction",
+      "description": "A mega-utility corporation deploying autonomous thermal drillers to monopolize sector water.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "comet_core",
+      "kind": "place",
+      "description": "The jagged, glittering nucleus of the passing rogue comet, venting plumes of pressurized steam.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_waystation",
+      "kind": "place",
+      "description": "A neutral frontier fueling depot where ice tenders and corporate drones converge to refuel.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_gunboat",
+      "kind": "ship",
+      "description": "A heavy privateer frigate deployed by the conglomerate to enforce its exclusive navigation charter.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "route_opened",
+    "route_closed",
+    "martyr_made"
+  ],
+  "public_situation": "A newly charted rogue comet carrying millions of tons of pure water-ice enters {system}, sparking armed claim disputes between legacy haulers and corporate drillers.",
+  "private_truth": "The conglomerate deliberately faked orbital hazard calculations to declare the comet an imminent navigation threat and justify seizing sole salvage rights.",
+  "core_why": {
+    "motive": "revenge",
+    "secret": "falsified_comet_trajectory_to_seize_water"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The conglomerate posts an exclusive safety perimeter around the approaching comet nucleus, barring all guild tenders.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "legacy_ice_captain",
+          "target": "border_waystation",
+          "reason": "The veteran captain needs a cargo of hand-harvested cometary ice delivered to the frontier waystation to prove the guild's manual claim is already active.",
+          "private_fact": "The veteran mortgaged his family's signature harvester ship to pay for the pilot's contract, wagering everything on this claim.",
+          "outcome_tags": [
+            "claim_ice_delivered",
+            "claim_abandoned"
+          ],
+          "routes": {
+            "claim_ice_delivered": "next",
+            "claim_abandoned": "resolution:corp_monopolizes_ice"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Corporate gunboats jump into the neighbouring gate sector, ambushing guild tugs attempting to establish telemetry beacons.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "legacy_ice_captain",
+          "target": "corporate_gunboat",
+          "reason": "The captain pays the pilot to destroy the lead corporate gunboat guarding the gate corridor so the guild's deep-space tenders can jump through safely.",
+          "private_fact": "The gunboat's transponder logs prove it was contracted through an offshore security subsidiary to skirt sector warfare bans.",
+          "outcome_tags": [
+            "gunboat_destroyed",
+            "gunboat_escaped"
+          ],
+          "routes": {
+            "gunboat_destroyed": "next",
+            "gunboat_escaped": "resolution:corp_monopolizes_ice"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The conglomerate initiates automated thermal drilling on the comet core, threatening to shatter the nucleus into hazardous fragments.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "water_conglomerate",
+          "requester": "legacy_ice_captain",
+          "target": "comet_core",
+          "reason": "The captain needs the pilot to scan the automated drilling array on the comet nucleus and retrieve the geological stress telemetry.",
+          "private_fact": "The telemetry proves the corporate thermal drills are causing structural fissures that will splinter the comet within days.",
+          "outcome_tags": [
+            "flaws_detected",
+            "scans_jammed"
+          ],
+          "routes": {
+            "flaws_detected": "next",
+            "scans_jammed": "resolution:corp_monopolizes_ice"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "reversal",
+      "location": "same_system",
+      "public_change": "Faced with telemetry proof of catastrophic fragmentation risk, the corporate director requests an emergency bilateral hearing.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "corp_director",
+          "target": "border_waystation",
+          "reason": "The director asks the pilot to courier formal settlement parameters to the waystation to negotiate a joint operational easement.",
+          "private_fact": "The director's private brief authorizes offering the old captain a lavish lifetime pension if the guild surrenders all claim rights.",
+          "outcome_tags": [
+            "terms_delivered",
+            "negotiations_stalled"
+          ],
+          "routes": {
+            "terms_delivered": "next",
+            "negotiations_stalled": "resolution:corp_monopolizes_ice"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 5,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "Both fleets anchor around the border waystation as delegates assemble to sign the final cometary harvesting accord.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "legacy_ice_captain",
+          "target": "border_waystation",
+          "reason": "The old captain needs the pilot to deliver the finalized treaty charter to the arbitrator's rostrum before privateer skirmishes reignite.",
+          "private_fact": "The captain's health is failing rapidly from space radiation and this accord is his final bid to preserve his crew's future.",
+          "outcome_tags": [
+            "charter_ratified",
+            "charter_vetoed"
+          ],
+          "routes": {
+            "charter_ratified": "next",
+            "charter_vetoed": "resolution:corp_monopolizes_ice"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot delivers the treaty charter to the summit. The director offers a fortune to convert the comet into an automated corporate utility, while the old captain pleads for guild heritage rights.",
+        "options": [
+          {
+            "id": "ratify_guild_commons",
+            "label": "Deliver the charter reserving sixty percent of the comet for independent guild harvesters",
+            "leads_to": "resolution:guild_commons_secured"
+          },
+          {
+            "id": "sign_corporate_concession",
+            "label": "Support the conglomerate's full automation buyout in exchange for a massive broker payoff",
+            "leads_to": "resolution:corporate_automation"
+          },
+          {
+            "id": "broker_joint_enterprise",
+            "label": "Force a fifty-fifty joint venture pairing automated drills with manual guild pilots",
+            "leads_to": "resolution:joint_ice_venture"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "guild_commons_secured",
+      "reached_by": "The pilot ratifies the guild commons treaty.",
+      "summary": "{role:harvester_guild} preserves its traditional harvesting grounds, securing cheap water across three systems while {role:corp_director} is reassigned.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "harvester_guild",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "water_conglomerate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "legacy_ice_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corp_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_comet_commons",
+          "public_summary": "A pilot stood with the old ice captains and saved a rogue comet from corporate automation."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "faction_emboldened",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "corporate_automation",
+      "reached_by": "The pilot backs the corporate automation buyout.",
+      "summary": "{role:water_conglomerate} automates the comet; {role:legacy_ice_captain} sells the family rig for scrap while water prices double under corporate monopoly.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "water_conglomerate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "harvester_guild",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "corp_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "legacy_ice_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "mining_charter_required",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "joint_ice_venture",
+      "reached_by": "The pilot brokers a joint venture accord.",
+      "summary": "{role:water_conglomerate} and {role:harvester_guild} launch a shared harvesting consortium, balancing automation efficiency with guild labor.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "harvester_guild",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "water_conglomerate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "legacy_ice_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "corp_director",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "corp_monopolizes_ice",
+      "reached_by": "The negotiations collapse or the pilot never gets involved.",
+      "summary": "The corporate gunboats crush the guild fleet; {role:legacy_ice_captain} dies in the comet's tail and the conglomerate seizes the entire water supply.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "water_conglomerate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "harvester_guild",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "legacy_ice_captain",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "martyr_made"
+      ]
+    }
+  ],
+  "default_resolution": "corp_monopolizes_ice",
+  "loose_threads": [
+    {
+      "id": "t_conglomerate_charter",
+      "surface": "price_board",
+      "detail": "Futures contracts on municipal water delivery were bought up by a conglomerate front company before the comet was discovered.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_gunboat_registry",
+      "surface": "ship_marking",
+      "detail": "The corporate gunboat's transponder matches a decommissioned border patrol cutter sold off through a private security tender.",
+      "can_carry_methods": [
+        "impersonation",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "impersonation",
+      "debt_leverage"
+    ],
+    "motives": [
+      "revenge",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Rogue cometary nucleus enters {system}, sparking armed standoff between ice miners and corporate security.",
+    "{role:water_conglomerate} appeals to sector court for exclusive emergency life support navigation charters.",
+    "Harvester guild vessels in {system} sound horns in protest across commercial orbital gates."
+  ],
+  "voice_direction": {
+    "legacy_ice_captain": "Deep, weathered, gravelly, speaking with the slow deliberate dignity of someone who has outlived an era. Refuses modern slang.",
+    "corp_director": "Crisp, brisk, condescendingly efficient, framing total corporate takeover as an objective logistical optimization."
+  },
+  "novelty_tags": [
+    "comet_mining",
+    "water_ice_harvest",
+    "legacy_harvesters",
+    "utility_monopoly",
+    "ice_commons"
+  ]
+}

@@ -1,0 +1,328 @@
+{
+  "id": "premise.the_heirloom_yeast",
+  "schema_version": 1,
+  "title": "The Heirloom Yeast",
+  "logline": "When an orbital greenhouse sector is foreclosed, an aging vat-tender hires an outsider to save an eighty-year-old sourdough starter before the liquidators bleach the tanks.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "legacy",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "vat_tender",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Tended the orbital yeast tanks for forty years; smells of sour mash and refuses to leave without the primary culture.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "foreclosure_agent",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "A debt collector hired to liquidate biological assets; meticulous, impatient, and looking for a quick settlement.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hydroponics_bay",
+      "kind": "place",
+      "description": "The sealed greenhouse module where heritage starch and fungal strains are cultivated.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_lock",
+      "kind": "place",
+      "description": "The station's secondary decontamination airlock where biologicals are cleared for transit.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "Bailiffs in {system} have padlocked the lower hydroponics ring, preparing to incinerate heritage cultures to satisfy an outstanding mortgage.",
+  "private_truth": "The estate heir defaulted on purpose after pre-selling exclusive licensing rights to a food conglomerate, but the master culture on the tanks cannot be synthetically replicated.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "heir_defaulted_to_monopolize_heirloom_yeast"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The foreclosure agency seals the nutrient lines and posts an eviction notice on the habitat ring.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "vat_tender",
+          "target": "hydroponics_bay",
+          "reason": "The vat-tender needs thermal insulation blankets purchased from the dry docks to keep the heritage starter alive while the power mains are severed.",
+          "private_fact": "The tender has kept the starter alive across three corporate bankruptcies by feeding it personal ration sugar.",
+          "outcome_tags": [
+            "blankets_delivered",
+            "blankets_refused"
+          ],
+          "routes": {
+            "blankets_delivered": "next",
+            "blankets_refused": "resolution:starter_bleached"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Bailiffs disconnect the air scrubbers, forcing the vat-tender to extract the core yeast jar before the scrub cycle begins.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "vat_tender",
+          "target": "hydroponics_bay",
+          "reason": "The tender needs an outsider to take custody of the sealed starter flask from the bay airlock before the bailiffs inventory the equipment.",
+          "private_fact": "The flask holds genetic markers that prove the strain was developed communally by station dockworkers rather than the foreclosed estate.",
+          "outcome_tags": [
+            "flask_secured",
+            "flask_confiscated"
+          ],
+          "routes": {
+            "flask_secured": "next",
+            "flask_confiscated": "resolution:starter_bleached"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The foreclosure agent flags the station departure queue, waiting at the secondary lock to intercept unauthorized cargo.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "vat_tender",
+          "target": "quarantine_lock",
+          "reason": "The tender asks the pilot to transport the starter flask through the quarantine lock to an independent transport waiting in the berth.",
+          "private_fact": "The foreclosure agent is authorized to offer a cash bribe to any courier who surrenders the sample quietly.",
+          "outcome_tags": [
+            "courier_arrived",
+            "courier_intercepted"
+          ],
+          "routes": {
+            "courier_arrived": "next",
+            "courier_intercepted": "resolution:starter_bleached"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the living culture flask at the quarantine dock. The foreclosure agent offers to buy it for company liquidation, while the old tender pleads for it to be smuggled out to free kitchens.",
+        "options": [
+          {
+            "id": "deliver_to_kitchens",
+            "label": "Smuggle the starter out to the independent bakery cooperative",
+            "leads_to": "resolution:starter_preserved"
+          },
+          {
+            "id": "sell_to_bailiff",
+            "label": "Hand the culture flask to the foreclosure agent for the cash bounty",
+            "leads_to": "resolution:culture_monopolized"
+          },
+          {
+            "id": "divide_the_starter",
+            "label": "Split the living culture between both parties to force a compromise",
+            "leads_to": "resolution:compromise_split"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "starter_preserved",
+      "reached_by": "The pilot delivers the culture flask to the independent transport.",
+      "summary": "{role:vat_tender} escapes to an outer belt station where the heirloom starter feeds a network of independent bakeries.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "vat_tender",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foreclosure_agent",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_heirloom_culture",
+          "public_summary": "A pilot slipped an eighty-year-old bread starter right past the habitat bailiffs."
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "culture_monopolized",
+      "reached_by": "The pilot sells the culture flask to the foreclosure agent.",
+      "summary": "{role:foreclosure_agent} secures the strain for corporate patent filing, while {role:vat_tender} is left with empty pockets on the loading docks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "foreclosure_agent",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vat_tender",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_heritage_culture",
+          "public_summary": "A courier turned over an heirloom yeast flask to corporate patent liquidators."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "compromise_split",
+      "reached_by": "The pilot divides the yeast starter between the tender and the agent.",
+      "summary": "{role:foreclosure_agent} closes the mortgage file with half the strain, while {role:vat_tender} restarts a stunted vat in the habitat basement.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "vat_tender",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foreclosure_agent",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "starter_bleached",
+      "reached_by": "The starter is confiscated or the delivery is abandoned.",
+      "summary": "Bailiffs pump industrial bleach through the vats, destroying {role:vat_tender}'s life work and driving local ration bread prices up.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "vat_tender",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foreclosure_agent",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "starter_bleached",
+  "loose_threads": [
+    {
+      "id": "t_mortgage_lien",
+      "surface": "price_board",
+      "detail": "The foreclosure lien was purchased by an offshore holding bank two hours before the mortgage defaulted.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_bleach_manifest",
+      "surface": "cargo",
+      "detail": "Crates of industrial decontamination solvent arrived at the docks weeks before any arrears were declared.",
+      "can_carry_methods": [
+        "sabotage",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "sabotage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Bailiffs clear lower hydroponic bays in {system} amid contested agricultural foreclosure.",
+    "Ration bread prices tick upward across {system} stations following vat sanitization.",
+    "Independent bakers in {system} protest corporate yeast licensing fees."
+  ],
+  "voice_direction": {
+    "vat_tender": "Speaks slowly in raspy, measured tones, using sensory metaphors about fermentation and sourdough. Avoids speaking about money.",
+    "foreclosure_agent": "Terse, efficient, rattling off legal paragraphs like automated inventory codes. Never acknowledges moral appeals."
+  },
+  "novelty_tags": [
+    "hydroponic_yeast",
+    "agricultural_foreclosure",
+    "heirloom_crop",
+    "estate_liquidation",
+    "ration_bread"
+  ]
+}
