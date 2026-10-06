@@ -102,3 +102,6 @@ art_inbox/
 # Local review/scratch folders (not part of the game)
 .tmp_image_review/
 assets/NewForReview/
+
+# Blender auto-backups
+*.blend1
