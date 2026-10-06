@@ -98,10 +98,38 @@ here still, in the ships that brought them, and want to stay hidden.
 - **Export:** batched (each ship hull, the connectors, the hub, lights as few
   meshes per material).
 
-**#3 status (2026-10-05):** delivered and usable. `assets/landmarks/silent_fleet.glb`:
+**#3 status (2026-10-05):** delivered and approved. `assets/landmarks/silent_fleet.glb`:
 32 meshes, 7 materials; 51-64 draw calls in game. Note for a possible later
 revision: the layout is a neat hub-and-spoke wheel (ships evenly spaced on long
 straight bridges), which reads more like a designed station than ships lashed
 together over generations; pulling the ships in close, at irregular angles,
 hull to hull with short improvised tubes, would land the brief's feel.
 
+
+## Brief #4: The Cartographer's secret mine
+
+A famous surveyor found a system rich in rare ore, and a powerful consortium
+erased it from the registry to mine it in secret. This is their mine: a big,
+efficient, hidden industrial operation that officially doesn't exist.
+
+- **Size:** a large asteroid about 1.5 km across, with the operation built
+  into and around it.
+- **Shape:** an irregular, heavy, cratered asteroid (not a smooth ball) with a
+  deep **open-cut pit** carved into one face, terraced in steps. Built into
+  and onto it: a refinery block, ore conveyors or rail lines running out of
+  the pit, a few loading cranes, storage silos/tanks, a small crew habitat
+  sunk half into the rock (out of sight on purpose), and a docking arm with
+  two or three moored ore haulers (static). Industrial, functional, corporate;
+  everything built for output, nothing for show.
+- **Surface:** dark grey-brown rock with lighter freshly cut faces in the pit
+  and a faint mineral glint; the structures in clean, uniform corporate
+  plating (the opposite of the Lighthouse's patchwork), with dust and wear
+  where the work happens.
+- **Light:** work floodlights in the pit and along the conveyors (separate
+  emissive material, cold white); a few amber windows in the habitat
+  (separate emissive material). Kept low: they're hiding too.
+- **Optional:** a conveyor belt or ore carts as their own mesh (the game may
+  move them).
+- **No:** writing, logos, symbols, faction marks, ships flying, weapons.
+- **Export:** batched (the asteroid, the pit structures, the refinery, the
+  cranes, the haulers, lights as few meshes per material).
