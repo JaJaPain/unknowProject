@@ -904,3 +904,12 @@ through the marked gate and flies you in):
 - [ ] **"Destination", not "Lodestar":** the overview, chat and wiki say
       Destination; once, a little after she first hears of it, N.O.V.A. says
       "This destination is like a lodestar, Captain..."
+- [ ] **Death is your choice:** on the death screen, "End the Story" asks
+      first, then shows the Captain's story told as a eulogy (who the Captain
+      was, who they left behind, what they did, the Destination, how it
+      ended), all true to what you played. "Open the saved copy" opens a page
+      in your browser; "Close the campaign" deletes that campaign and returns
+      to the campaign manager. "Load Last Save" still carries on as before.
+- [ ] **Retire the Captain:** systems menu -> RETIRE THE CAPTAIN, confirm:
+      the same story as a keepsake ("How it started", "Who they met", ...,
+      "retired with the ship intact"), a saved copy, then the campaign closes.

@@ -125,6 +125,12 @@ added or wrong. The fixed-cast secret never appears (existing leak test).
 4. **Connect the dots** scene at the climax.
 5. **Story so far** tab.
 6. **Endings:** retire + keepsake reader/file; death choice + eulogy.
+   **Done 2026-10-05:** `scripts/story/Keepsake.gd` (chapters from the
+   journal, people + fates, Destination log; reserved-topic lines dropped;
+   no model, no speaker), `scripts/ui/KeepsakeScreen.gd`, systems menu
+   RETIRE THE CAPTAIN, death screen "End the Story"; copy saved as HTML in
+   user://keepsakes (outlives the campaign); the campaign slot is then
+   deleted. Optional model rewrite for flow not built yet.
 7. **More Lodestar cards** and bridges (writing, in short review batches).
 
 Lines and bridges are authored and go to Abe in short batches.

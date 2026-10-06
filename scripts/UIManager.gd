@@ -2686,6 +2686,7 @@ func _create_pause_menu():
 		_start_new_campaign
 	)
 	_refresh_new_campaign_availability()
+	_add_pause_action(actions, "RETIRE THE CAPTAIN", retire_captain)
 	_add_pause_action(actions, "QUIT TO DESKTOP", func(): get_tree().quit())
 
 	var controls_card := _make_pause_card("FLIGHT CONTROLS")
@@ -3699,6 +3700,19 @@ func _create_death_screen():
 	restart_btn.pressed.connect(_load_last_save_after_death)
 
 	vbox.add_child(restart_btn)
+
+	# Death is the player's choice (campaign spine plan, Section 5): carry on
+	# from the last save, or end the campaign and keep the story as a eulogy.
+	var end_gap = Control.new()
+	end_gap.custom_minimum_size = Vector2(0, 10)
+	vbox.add_child(end_gap)
+	var end_btn = Button.new()
+	end_btn.name = "EndTheStoryButton"
+	end_btn.text = "End the Story"
+	end_btn.custom_minimum_size = Vector2(220, 42)
+	end_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	end_btn.pressed.connect(end_story_after_death)
+	vbox.add_child(end_btn)
 	
 	var gap = Control.new()
 	gap.custom_minimum_size = Vector2(0, 10)
@@ -3734,6 +3748,58 @@ func _create_death_screen():
 	vbox.add_child(quit_btn)
 	
 	death_panel.visible = false
+
+
+## Systems menu: the campaign closes for good and the Captain's story is kept.
+func retire_captain() -> void:
+	_confirm_ending(
+		"Retire the Captain? The campaign closes for good and its saves are deleted. "
+		+ "You keep the Captain's story.",
+		"Retire",
+		func() -> void: show_keepsake("retire"))
+
+
+## Death screen: end the campaign here and keep the story, told as a eulogy.
+func end_story_after_death() -> void:
+	_confirm_ending(
+		"End the story here? The campaign closes for good and its saves are deleted. "
+		+ "You keep the Captain's story.",
+		"End the Story",
+		func() -> void: show_keepsake("eulogy"))
+
+
+func _confirm_ending(text: String, ok_text: String, on_yes: Callable) -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.process_mode = Node.PROCESS_MODE_ALWAYS
+	dialog.dialog_text = text
+	dialog.dialog_autowrap = true
+	dialog.ok_button_text = ok_text
+	dialog.min_size = Vector2i(460, 0)
+	add_child(dialog)
+	dialog.confirmed.connect(func() -> void:
+		dialog.queue_free()
+		on_yes.call())
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered()
+
+
+## Builds and saves the keepsake, then shows the reader; closing it closes
+## the campaign. Returns the reader (snapshots and tests).
+func show_keepsake(mode: String) -> CanvasLayer:
+	var game_root := get_tree().current_scene
+	if game_root == null or not game_root.has_method("end_campaign_with_keepsake"):
+		return null
+	var result: Dictionary = game_root.end_campaign_with_keepsake(mode)
+	var screen: CanvasLayer = load("res://scripts/ui/KeepsakeScreen.gd").new()
+	screen.keepsake = result.get("keepsake", {})
+	screen.saved_path = str(result.get("path", ""))
+	screen.finished.connect(func() -> void:
+		if game_root.has_method("close_ended_campaign"):
+			game_root.close_ended_campaign())
+	add_child(screen)
+	if death_panel != null:
+		death_panel.visible = false
+	return screen
 
 
 func _load_last_save_after_death() -> void:

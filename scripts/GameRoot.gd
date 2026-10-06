@@ -385,6 +385,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_dots_snapshot")
 	elif "--database-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_database_snapshot")
+	elif "--keepsake-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_keepsake_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_remark_smoke_test")
 	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
@@ -1806,6 +1808,54 @@ func premise_fates() -> Dictionary:
 
 func premise_hand_id() -> String:
 	return premise_director.revealed_hand_id() if is_instance_valid(premise_director) else ""
+
+
+## The records an ending is told from (Keepsake.gd): mode "retire" or "eulogy".
+func keepsake_facts(mode: String) -> Dictionary:
+	var kills := 0
+	for count in GlobalState.faction_kills.values():
+		kills += int(count)
+	var slot: Dictionary = campaign_slot_registry.get_slot(active_campaign_slot_id) \
+		if campaign_slot_registry != null and not active_campaign_slot_id.is_empty() else {}
+	var here = system_registry.get_system(GlobalState.current_system_id) if system_registry != null else null
+	var dest: Dictionary = {}
+	var ui = GlobalState.get_ui_manager() if GlobalState.has_method("get_ui_manager") else null
+	if ui != null and is_instance_valid(ui) and ui.has_method("lodestar_log"):
+		dest = ui.lodestar_log()
+	var summary := premise_main_story_summary()
+	return {"mode": mode, "campaign": str(slot.get("display_name", "")),
+		"days": int(CampaignClock.total_minutes / 1440.0) + 1,
+		"credits": int(GlobalState.player_credits), "kills": kills,
+		"journal": premise_journal(), "people": premise_people(), "fates": premise_fates(),
+		"hand": str(summary.get("hand", "")),
+		"destination": str(dest.get("title", "")), "reached": dest.get("reached", []),
+		"lost_in": str(here.display_name) if here != null else ""}
+
+
+## Ends the campaign with its story: builds the keepsake and saves a copy to
+## user://keepsakes (outside the campaign's folder, so it outlives it).
+## Returns {keepsake, path}; path is "" if the copy could not be written.
+func end_campaign_with_keepsake(mode: String) -> Dictionary:
+	var Keepsake := preload("res://scripts/story/Keepsake.gd")
+	var keepsake: Dictionary = Keepsake.build(keepsake_facts(mode))
+	DirAccess.make_dir_recursive_absolute("user://keepsakes")
+	var path := "user://keepsakes/" + Keepsake.file_name(keepsake, int(Time.get_unix_time_from_system()))
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		push_warning("[Keepsake] could not write %s" % path)
+		path = ""
+	else:
+		file.store_string(Keepsake.to_html(keepsake))
+		file.close()
+	return {"keepsake": keepsake, "path": ProjectSettings.globalize_path(path) if not path.is_empty() else ""}
+
+
+## After the keepsake is read: the campaign is closed for good (its slot is
+## freed) and the game returns to the campaign manager.
+func close_ended_campaign() -> void:
+	if not active_campaign_slot_id.is_empty():
+		delete_campaign_slot(active_campaign_slot_id)
+	reset_after_active_campaign_deleted()
 
 
 func premise_pin_person(entity_id: String, pinned: bool) -> void:
@@ -12857,6 +12907,80 @@ func _run_database_snapshot() -> void:
 		await _hud_snapshot_save(out.path_join("database_%s.png" % tab))
 		print("[DatabaseSnapshot] tab %s shown" % screen.call("current_tab"))
 	print("[DatabaseSnapshot] PASS")
+	get_tree().quit(0)
+
+
+## The endings (campaign spine plan, Section 5), windowed: the death screen
+## with its two choices, the confirm, then the eulogy reader (sample records,
+## so the page has something to show) and the real path from this world's
+## records: built, clean, saved. Never closes the campaign. Exits 1 on a failure.
+##   -- --keepsake-snapshot --baseline-offline --out=<dir>
+func _run_keepsake_snapshot() -> void:
+	var out := "user://keepsake_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var fail := func(message: String) -> void:
+		push_error("[KeepsakeSnapshot] FAIL: " + message)
+		get_tree().quit(1)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	var death: Control = ui.get("death_panel")
+	death.visible = true
+	await get_tree().create_timer(0.6).timeout
+	await _hud_snapshot_save(out.path_join("death_screen.png"))
+	if death.find_child("EndTheStoryButton", true, false) == null or death.find_child("LoadLastSaveButton", true, false) == null:
+		fail.call("The death screen lacks its two choices.")
+		return
+	ui.call("end_story_after_death")
+	await get_tree().create_timer(0.6).timeout
+	await _hud_snapshot_save(out.path_join("end_confirm.png"))
+	for child in ui.get_children():
+		if child is ConfirmationDialog:
+			child.queue_free()
+	# The real path, from this world's (young) records.
+	var real: Dictionary = end_campaign_with_keepsake("eulogy")
+	var Keepsake := preload("res://scripts/story/Keepsake.gd")
+	var real_text: String = Keepsake.to_text(real.get("keepsake", {}))
+	print("[KeepsakeSnapshot] live eulogy:
+" + real_text)
+	if str(real.get("path", "")).is_empty() or not FileAccess.file_exists(str(real["path"])):
+		fail.call("The keepsake copy was not saved.")
+		return
+	if not preload("res://scripts/story/ReservedTopics.gd").is_clean(real_text):
+		fail.call("The live eulogy is not clean.")
+		return
+	DirAccess.remove_absolute(str(real["path"]))
+	# The reader, with sample records.
+	death.visible = false
+	var sample := Keepsake.build({"mode": "eulogy", "campaign": "The Long Quiet", "days": 41, "credits": 18250, "kills": 12,
+		"journal": [
+			{"minute": 100, "system": "Myrion", "title": "Spare Parts", "ended": true, "text": "Eric got his parts, and a story to tell about the pilot who brought them.", "deeds": []},
+			{"minute": 9000, "system": "Kova", "title": "The Cold Ledger", "ended": true, "text": "The books were balanced, at a price.", "deeds": ["A dock boss was paid off, quietly."]},
+			{"minute": 12000, "system": "Ashis", "title": "The Last Signal", "ended": false, "text": "Someone is still listening.", "deeds": []}],
+		"people": [{"entity_id": "p1", "name": "Eric Dahl", "system": "Myrion"}, {"entity_id": "p2", "name": "Oren Vask", "system": "Kova"},
+			{"entity_id": "p3", "name": "Sela Moor", "system": "Ashis"}],
+		"fates": {"p1": ["alive_grateful"], "p2": ["exposed"]},
+		"hand": "Oren Vask", "destination": "The Lighthouse", "reached": [{"title": "The Humming Gate", "season": 1}], "lost_in": "Ashis"})
+	var screen: CanvasLayer = load("res://scripts/ui/KeepsakeScreen.gd").new()
+	screen.keepsake = sample
+	screen.saved_path = ProjectSettings.globalize_path("user://keepsakes/the-long-quiet-1700000000.html")
+	ui.add_child(screen)
+	await get_tree().create_timer(0.8).timeout
+	await _hud_snapshot_save(out.path_join("eulogy_reader.png"))
+	print("[KeepsakeSnapshot] reader:
+" + str(screen.call("page_text")))
+	var html := FileAccess.open(out.path_join("eulogy_sample.html"), FileAccess.WRITE)
+	if html != null:
+		html.store_string(Keepsake.to_html(sample))
+		html.close()
+	print("[KeepsakeSnapshot] PASS")
 	get_tree().quit(0)
 
 
