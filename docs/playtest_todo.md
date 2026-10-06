@@ -922,3 +922,22 @@ through the marked gate and flies you in):
       beacon pulses, the Garden's wings track, nav lights blink, the conveyor
       runs. Approach (Q) stops at the edge, never inside the model; the
       arrival scene still plays when you're close.
+- [ ] **Beam sound (2026-10-06 fixes 1-2):** the docking/undocking hum is
+      clearly audible wherever the camera is; a latch click when the beam
+      grabs and when it lets go (four per visit).
+- [ ] **Fly to a station:** stops well outside the model and starts
+      orbiting it; Orbit around a station or gate circles outside it.
+- [ ] **Mining lasers off:** start mining, press Dock: the lasers stop.
+- [ ] **Kaelen in a new system:** her desk has jobs the first time you see
+      it there, even right after a break at home.
+- [ ] **COMBAT tag:** kill/drop jobs on the board say COMBAT; pickups don't.
+- [ ] **Reserve drones:** a new campaign's inventory shows a locked RESERVE
+      card (x2); the first red-rock dive uses them.
+- [ ] **Asteroid fields:** systems past the first have 2-3 fuller fields
+      (or one big one), each with ice and every local ore; some systems are
+      mostly ice. Watch the frame rate.
+- [ ] **Haggling:** pushing for more sometimes cuts the pay with a cocky
+      line; good standing helps.
+- [ ] **N.O.V.A. on Kaelen:** after dealing with Kaelen at the second
+      system's station, undocking: "Why is Kaelen at this station too?..."
+      once (after the take is installed).
