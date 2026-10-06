@@ -1,0 +1,16 @@
+{
+  "ships": 8,
+  "meshes": 32,
+  "materials": 7,
+  "material_surfaces": 32,
+  "vertices": 18018,
+  "triangles": 29946,
+  "blender_dimensions_m": [
+    2000.0001220703125,
+    1753.0887451171875,
+    313.11822509765625
+  ],
+  "greenhouses": 3,
+  "radiator_fields": 2,
+  "inhabited_bridges": 13
+}

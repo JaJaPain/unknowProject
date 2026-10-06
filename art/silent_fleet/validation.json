@@ -1,0 +1,18 @@
+{
+  "glb_bytes": 2162704,
+  "ships": 8,
+  "meshes": 32,
+  "surfaces": 32,
+  "materials": 7,
+  "triangles": 29946,
+  "scenes": 1,
+  "cameras": 0,
+  "lights": 0,
+  "emission_materials": [
+    "SF Greenhouse glow",
+    "SF Dim warm windows"
+  ],
+  "vertex_colours_preserved": true,
+  "godot_4_6_3_import": "passed; bounds 2000 x 313.118 x 1753.089 m in Godot Y-up",
+  "visual_review": "final rendered overview inspected"
+}

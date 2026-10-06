@@ -97,3 +97,11 @@ here still, in the ships that brought them, and want to stay hidden.
 - **No:** writing, symbols, faction marks, weapons, damage from battle.
 - **Export:** batched (each ship hull, the connectors, the hub, lights as few
   meshes per material).
+
+**#3 status (2026-10-05):** delivered and usable. `assets/landmarks/silent_fleet.glb`:
+32 meshes, 7 materials; 51-64 draw calls in game. Note for a possible later
+revision: the layout is a neat hub-and-spoke wheel (ships evenly spaced on long
+straight bridges), which reads more like a designed station than ships lashed
+together over generations; pulling the ships in close, at irregular angles,
+hull to hull with short improvised tubes, would land the brief's feel.
+
