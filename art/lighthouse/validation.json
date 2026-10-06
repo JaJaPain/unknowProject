@@ -1,0 +1,18 @@
+{
+  "glb_bytes": 5149076,
+  "meshes": 18,
+  "materials": 8,
+  "surfaces": 19,
+  "triangles": 84280,
+  "scenes": 1,
+  "cameras": 0,
+  "lights": 0,
+  "emission_materials": [
+    "LH Beacon emission",
+    "LH Warm windows emission",
+    "LH Navigation emission"
+  ],
+  "vertex_colours_preserved": true,
+  "godot_4_6_3_import": "passed; 900 m tall, emitter pivot Y=347 m, two-surface emitter mesh",
+  "visual_review": "final Blender render inspected"
+}

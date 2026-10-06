@@ -70,6 +70,9 @@ aren't on any chart.
 - **Export:** batched (tower, clan additions, lights as few meshes per
   material); the emitter ring on its own pivot.
 
+**#2 status (2026-10-05):** delivered and approved. `assets/landmarks/lighthouse.glb`:
+18 meshes, 8 materials, emitter ring on its own pivot; 38-68 draw calls in game.
+
 ## Brief #3: The Silent Fleet's settlement
 
 A colony convoy that jumped beyond the charts long ago to escape a war, and

@@ -1,0 +1,17 @@
+{
+  "meshes": 18,
+  "materials": 8,
+  "material_surfaces": 19,
+  "vertices": 48612,
+  "triangles": 84280,
+  "blender_dimensions_m": [
+    594.1592407226562,
+    421.2178497314453,
+    900.0
+  ],
+  "height_m": 900.0,
+  "habitat_modules": 29,
+  "converted_docked_hulls": 3,
+  "solar_wings": 3,
+  "emitter_pivot_blender_z_m": 347
+}
