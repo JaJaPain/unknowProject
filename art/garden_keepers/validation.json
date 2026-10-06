@@ -1,0 +1,22 @@
+{
+  "glb_bytes": 2783936,
+  "meshes": 17,
+  "surfaces": 17,
+  "materials": 8,
+  "triangles": 37456,
+  "scenes": 1,
+  "cameras": 0,
+  "lights": 0,
+  "emission_materials": [
+    "GK Dock navigation",
+    "GK Growing light",
+    "GK Living windows"
+  ],
+  "vertex_colours_preserved": true,
+  "glass_alpha": 0.19,
+  "glass_mode": "BLEND, double-sided",
+  "independent_solar_pivots": 2,
+  "godot_4_6_3_import": "passed; 600 m span, glass transparency and both pivot hierarchies checked",
+  "godot_glass_transparency": "alpha depth pre-pass, alpha 0.19",
+  "visual_review": "final Blender render inspected; crop masses visible through all six glass roofs"
+}

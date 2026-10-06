@@ -130,7 +130,8 @@ added or wrong. The fixed-cast secret never appears (existing leak test).
    no model, no speaker), `scripts/ui/KeepsakeScreen.gd`, systems menu
    RETIRE THE CAPTAIN, death screen "End the Story"; copy saved as HTML in
    user://keepsakes (outlives the campaign); the campaign slot is then
-   deleted. Optional model rewrite for flow not built yet.
+   deleted. Optional model rewrite for flow not built yet. All ending
+   lines approved by Abe (2026-10-05).
 7. **More Lodestar cards** and bridges (writing, in short review batches).
 
 Lines and bridges are authored and go to Abe in short batches.

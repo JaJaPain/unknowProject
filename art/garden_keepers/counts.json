@@ -1,0 +1,17 @@
+{
+  "meshes": 17,
+  "materials": 8,
+  "material_surfaces": 17,
+  "vertices": 21828,
+  "triangles": 37456,
+  "blender_dimensions_m": [
+    404.5,
+    600.0,
+    90.0
+  ],
+  "greenhouses": 6,
+  "solar_wings": 2,
+  "docking_berths": 2,
+  "supply_pods": 3,
+  "life_support_tanks": 3
+}

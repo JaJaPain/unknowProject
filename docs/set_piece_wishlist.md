@@ -170,3 +170,41 @@ this is only the station above it.
   glass are enough).
 - **Export:** batched (the hub and vault, the greenhouses, the glass, the
   wings, the lights as few meshes per material); glass as its own material.
+
+**#5 status (2026-10-05):** delivered and approved. `assets/landmarks/garden_keepers.glb`:
+17 meshes, 8 materials, ~37k triangles; both solar wings on their own pivots
+(`SolarPort_Pivot`, `SolarStarboard_Pivot`); glass as one alpha-blended
+material; 37 draw calls in game (19 without it). Check the glass sorting once
+it's placed over its planet.
+
+## Brief #6: The Quiet War cache vault
+
+Before the network's decline, two powers fought a war nobody remembers the
+reason for. One side sealed something in an armoured vault and fleets died
+guarding it; the twin wreck field is what's left of them. The vault is still
+there, intact and shut, in the middle of the dead ships.
+
+- **Size:** about 500 m across; dense and heavy, not tall. It should feel
+  like the one thing in the battlefield that nothing could break.
+- **Shape:** a squat, faceted armoured core (think a sealed bunker or a
+  closed seed of metal, not a station), wrapped in thick overlapping armour
+  plates and buttress ribs. One great sealed door or hatch on one face,
+  clearly the only way in, closed. Around it, a ring of dead defence
+  platforms or turret mounts (inert, barrels drooping or broken off), and
+  anchor arms reaching out into nothing. Old, military, overbuilt: built
+  to outlast everyone.
+- **Surface:** dark gunmetal and dull bronze armour, scorched and pitted from
+  weapon fire, deep gouges and craters that never got through; the
+  platforms around it far more damaged than the core. No rust patches or
+  repairs: nobody has touched it since.
+- **Light:** almost none. A few faint, slow status lights still alive on the
+  core (separate emissive material, dim red or amber), and a thin seam of
+  light around the sealed door (separate emissive material; the game may
+  pulse it or open it later).
+- **Optional:** the door as its own mesh with its pivot at the hinge or
+  centre (the game may open it in a later story); a few loose armour plates
+  drifting nearby (separate meshes).
+- **No:** writing, symbols, faction marks, flags, ships, bodies, working
+  weapons.
+- **Export:** batched (the core, the armour, the platforms, the debris, the
+  lights as few meshes per material); the door separate.
