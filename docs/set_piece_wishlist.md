@@ -315,3 +315,12 @@ tint and emissive materials; now ~9.6k triangles with a stepped spine,
 sloped bridge with window band and dish, tanks, radiators, antennas, shaped
 engine bells, more damage and a readable interior; the 95 m drone passage
 still clear. 34-68 draw calls in game (19 without it).
+
+**#8 status (2026-10-06):** delivered and usable. `assets/landmarks/signal_anomaly.glb`:
+7 meshes, 4 materials, only ~1.3k triangles; seven dark leaning shards round
+an empty centre, `SA Cold seam emission` seams for the game to pulse with the
+signal, `CentreGlow` as its own mesh to scale or fade, three loose shards for
+drift; 27-47 draw calls in game (19 without it). Very spare: in game it reads
+as black silhouettes with thin cyan lines. When it's wired to investigations,
+the game should pulse the seams brightly and grow the centre glow so it
+reads from a distance.

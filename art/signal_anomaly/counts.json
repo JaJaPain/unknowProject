@@ -1,0 +1,15 @@
+{
+  "meshes": 7,
+  "materials": 4,
+  "material_surfaces": 7,
+  "vertices": 1154,
+  "triangles": 1256,
+  "blender_dimensions_m": [
+    133.0123291015625,
+    122.65076446533203,
+    150.0
+  ],
+  "main_shards": 7,
+  "separate_loose_shards": 3,
+  "independent_centre_glow": true
+}
