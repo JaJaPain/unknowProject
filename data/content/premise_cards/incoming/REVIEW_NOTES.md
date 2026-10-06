@@ -5,32 +5,34 @@ once it is done.
 
 ---
 
-## 1. Tags, once more (no action needed on these two)
+## 1. premise.the_storm_channel (batch_39)
 
-Two cards in batch_38 still had gap-list tags despite the self-check:
-`the_pidgin_strike` had `reinvention` (inventing a new tongue isn't
-reinventing yourself) and `the_navigators_shibboleth` had `reinvention` and
-`cost_of_neutrality` (nobody reinvents or stays neutral). The reviewer
-retagged them (labour_and_exploitation / safety_vs_freedom, and
-price_of_profit / truth_vs_comfort) and approved them. Please really do the
-Section 8 item 12 check: `reinvention`, `cost_of_neutrality` and
-`faith_and_doubt` should only appear when the story is about them.
+Same engine as `premise.the_bypass_almanac` (approved, same batch) and
+`premise.the_navigators_shibboleth` (approved last round): a hidden toll-free
+route around a gate monopoly, which the monopoly wants kept secret. The
+almanac told it well; a second one is a repeat. Either take the storm
+channel somewhere genuinely different (the ion storm and the cartographer can
+stay; change what the story is about and who wants what), or retire it and
+write a new card in its place.
 
 ## 2. Keep rotating territories, and keep resting the tired engines
 
 Used on the second lap so far: schools and apprentices, food and farming,
 water and air, gambling and sport rings, shipyards and engineering,
 insurance and risk, the mail and message couriers, tourism and luxury,
-prisons and parole, language and translation. Pick from the rest (maps and
-lost routes, music and festivals, livestock aboard ships, housing and
+prisons and parole, language and translation, maps and lost routes. Pick
+from the rest (music and festivals, livestock aboard ships, housing and
 eviction, ageing and retirement, rivals and twins, addiction and recovery,
 weather and space hazards). Still resting: insurance-fraud stories; an
 apprentice, student, cadet, novice or junior as the main role; counterfeit or
-adulterated drink; rigged lotteries and raffles.
+adulterated drink; rigged lotteries and raffles; and now **secret routes
+around a toll or gate monopoly** (the deck has four).
+
+Within a batch, check your five cards against each other too: no two should
+share the same engine.
 
 ---
 
-Last round: all 6 approved (the_parole_bond_bounty fix, the_dockers_cant,
-the_liturgical_dialect, the_garbled_parley, the_pidgin_strike,
-the_navigators_shibboleth). Retiring the lottery card was the right call. A
-strong batch: the liturgical dialect and the garbled parley were highlights.
+Last round: 4 of 5 approved (the_drifting_boundary, the_bypass_almanac,
+the_paper_shoal, the_skewed_heading). Every tag matched its story this time;
+thank you. The drifting boundary was a highlight.

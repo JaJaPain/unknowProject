@@ -1,0 +1,355 @@
+{
+  "id": "premise.the_bypass_almanac",
+  "schema_version": 1,
+  "title": "The Bypass Almanac",
+  "logline": "A stranded convoy dispatcher seeks a retired gatekeeper's handwritten solar navigation almanac to bypass an extortionate gate tariff, while a salvage factor tries to buy the route to strip forgotten derelicts.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "who_owns_the_past"
+  ],
+  "roles": [
+    {
+      "id": "retired_gatekeeper",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Former chief signalman of the dead colonial bypass; lives in a cold habitat module surrounded by obsolete navigational parchment.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "convoy_dispatcher",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Organizes supply runs for independent border habitats; exhausted, counting every liter of reaction mass.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_factor",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Deals in unrecovered hulls and proprietary wreckage coordinates; charming, clinical, sees dead ships as uncollected dividend payments.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "transit_authority",
+      "kind": "faction",
+      "description": "The bureaucratic gate administration that exercises a legal monopoly over system entry lanes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bypass_observatory",
+      "kind": "place",
+      "description": "A decommissioned relay station positioned at the entrance of a dormant solar corona passage.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "convoy_haven",
+      "kind": "place",
+      "description": "A free-port orbital platform where independent cargo runners assemble before dangerous transit legs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "route_closed",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Cargo freighters face week-long queues and triple transit fees at {role:transit_authority} gates, leaving perishables rotting in holding orbits.",
+  "private_truth": "{role:retired_gatekeeper} holds forty years of manual solar flare tables that can guide ships through the dormant bypass without paying {role:transit_authority} tolls.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "concealing_bypass_almanac_to_evade_toll"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "{role:convoy_dispatcher} announces an open bounty at {role:convoy_haven} for any functional charts of the old corona bypass.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "convoy_dispatcher",
+          "target": "bypass_observatory",
+          "reason": "She needs an outside courier to coax the handwritten solar almanac from {role:retired_gatekeeper} before the stranded haulers run out of station maneuvering fuel.",
+          "private_fact": "Her own transport company is three days from foreclosure by {role:transit_authority} creditors if the cargo is delayed.",
+          "outcome_tags": [
+            "almanac_retrieved",
+            "refused"
+          ],
+          "routes": {
+            "almanac_retrieved": "next",
+            "refused": "resolution:almanac_mouldering"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:salvage_factor} intercepts telemetry channels, warning that the bypass route is cluttered with uncertified gravitational debris.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_gatekeeper",
+          "target": "bypass_observatory",
+          "reason": "He asks the pilot to calibrate three antique navigational transmitters along the passage to confirm his calculated solar flare clearance windows still hold true.",
+          "private_fact": "He fears his eyesight failed him years ago and his manual calculations may send modern hulls directly into solar flares.",
+          "outcome_tags": [
+            "route_verified",
+            "route_lethal"
+          ],
+          "routes": {
+            "route_verified": "next",
+            "route_lethal": "resolution:authority_monopolizes_passage"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The verified route calculations circulate among dockside brokers, drawing competing bids from the convoy and commercial salvagers.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "convoy_dispatcher",
+          "target": "convoy_haven",
+          "reason": "She urgently needs the verified navigation tables delivered directly to her flagship so forty cargo vessels can make the solar run simultaneously.",
+          "private_fact": "{role:salvage_factor} has placed a standing bribe at {role:convoy_haven} to intercept the data slate before departure.",
+          "outcome_tags": [
+            "delivered_to_convoy",
+            "diverted_to_salvage"
+          ],
+          "routes": {
+            "delivered_to_convoy": "next",
+            "diverted_to_salvage": "resolution:route_plundered"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the verified bypass calculations. Two buyers and the official authority each offer an exit.",
+        "options": [
+          {
+            "id": "give_to_convoy",
+            "label": "Upload the almanac to the convoy flagship",
+            "leads_to": "resolution:convoy_navigates_free"
+          },
+          {
+            "id": "sell_to_salvager",
+            "label": "Sell exclusive route coordinates to the salvage factor",
+            "leads_to": "resolution:route_plundered"
+          },
+          {
+            "id": "register_with_authority",
+            "label": "Hand the almanac to the transit authority for an amnesty bounty",
+            "leads_to": "resolution:authority_monopolizes_passage"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "convoy_navigates_free",
+      "reached_by": "The pilot delivers the verified navigation tables to the convoy dispatcher.",
+      "summary": "Forty freighters navigate the solar bypass safely, breaking {role:transit_authority}'s toll monopoly and reviving trade across independent outposts.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_authority",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_dispatcher",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_gatekeeper",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "opened_corona_bypass",
+          "public_summary": "A courier carried the old gatekeeper's lost solar tables and guided forty starving freighters around the toll gate."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "route_plundered",
+      "reached_by": "The pilot sells the exclusive navigational coordinates to the salvage factor.",
+      "summary": "{role:salvage_factor} stakes proprietary salvage claims across the bypass, stripping valuable wrecks while the stranded convoy is forced to pay ruinous gate tolls.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_authority",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_factor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_bypass_to_wreckers",
+          "public_summary": "Pilots say the old bypass charts were sold off to a scrapper who looted the route while freight haulers starved."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "authority_monopolizes_passage",
+      "reached_by": "The pilot surrenders the almanac to the transit authority, or route verification proves fatal.",
+      "summary": "{role:transit_authority} classifies the bypass as an illegal hazard corridor, installing automated sentry buoys and raising system tariffs even higher.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_authority",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_gatekeeper",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_dispatcher",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "law_change",
+          "law": "scanning_banned",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "almanac_mouldering",
+      "reached_by": "The gatekeeper refuses cooperation or the pilot ignores the contract.",
+      "summary": "The handwritten tables remain unverified. {role:convoy_dispatcher}'s shipping fleet defaults on docking mortgages, and the bypass remains lost to history.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_authority",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "convoy_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_gatekeeper",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "debt_owed_to_player"
+      ]
+    }
+  ],
+  "default_resolution": "almanac_mouldering",
+  "loose_threads": [
+    {
+      "id": "t_foreclosed_freighter_registry",
+      "surface": "price_board",
+      "detail": "The loan collateral on seven convoy freighters lists the exact corporate debt ledger number of {role:salvage_factor}'s brokerage firm.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_erased_station_stamp",
+      "surface": "cargo",
+      "detail": "The leather cover of the navigation almanac bears an official customs seal that was scraped off with a wire brush thirty years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_impersonated_inspector_pass",
+      "surface": "station_notice",
+      "detail": "The clearance log at {role:bypass_observatory} shows three site visits signed under the name of an inspector who died before the war.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "impersonation"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Freighters at {role:convoy_haven} sound horns in protest over {role:transit_authority} toll increases.",
+    "Old-timers claim the solar corona lane was flown with slide rules before the gate existed.",
+    "{role:transit_authority} warns unauthorized navigation through solar corridors carries immediate vessel impoundment."
+  ],
+  "voice_direction": {
+    "retired_gatekeeper": "Rough, breathy delivery with long reminiscing digressions. Becomes fiercely possessive and hostile whenever digital nav-computers are mentioned.",
+    "convoy_dispatcher": "Harried, curt sentences delivered at breakneck speed. Sounds like someone calculating fuel burn penalties in her head while speaking.",
+    "salvage_factor": "Silky, patient, and excessively courteous. Uses bureaucratic euphemisms like 'asset transition' instead of salvage or grave-robbing."
+  },
+  "novelty_tags": [
+    "solar_bypass",
+    "navigational_almanac",
+    "gate_monopoly",
+    "freighter_convoy",
+    "handwritten_charts"
+  ]
+}

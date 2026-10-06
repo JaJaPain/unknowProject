@@ -1,0 +1,401 @@
+{
+  "id": "premise.the_paper_shoal",
+  "schema_version": 1,
+  "title": "The Paper Shoal",
+  "logline": "A cartography official keeps a crucial trade lane officially marked as an impassable asteroid shoal to protect the refueling profits of waystation merchants.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "cartography_warden",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Supervises the sector hydrographic bureau; polished, defensive, deeply invested in preserving stable shipping lanes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "independent_surveyor",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "An unaccredited acoustic probe operator who noticed the supposed asteroid belt contains mostly empty vacuum.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "waystation_syndicate",
+      "kind": "faction",
+      "description": "The consortium of merchant platforms situated along the forty-hour detour route around the supposed hazard.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "freight_guild",
+      "kind": "faction",
+      "description": "The independent logistics pilots who burn a third of their profit margins taking the mandatory long detour.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "shoal_marker_depot",
+      "kind": "place",
+      "description": "An automated navigational beacon depot stationed at the edge of the charted asteroid hazard zone.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_waystation",
+      "kind": "place",
+      "description": "A sprawling orbital bazaar and fuel depot that caters exclusively to detour freight traffic.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freight_exchange",
+      "kind": "place",
+      "description": "The union shipping terminal where freight pilots take on bulk contracts.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "evidence_loose",
+    "law_loosened"
+  ],
+  "public_situation": "Every vessel crossing {system} takes a forty-hour detour around the Iron Shoal, paying premium propellant prices at {role:syndicate_waystation}.",
+  "private_truth": "{role:cartography_warden} takes quarterly stipends from {role:waystation_syndicate} to keep the Iron Shoal officially classified as an active navigational hazard long after the debris dispersed.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "fake_shoal_hazard_invented_for_waystation_monopoly"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "{role:independent_surveyor} posts a call for replacement telemetry sensors at {role:freight_exchange} after her probes are seized.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "independent_surveyor",
+          "target": "shoal_marker_depot",
+          "reason": "She needs high-grade sensor calibration parts purchased off-station and brought to the perimeter depot to finish mapping the empty corridor.",
+          "private_fact": "She is running out of food rations in the observation module and cannot afford dock fees anywhere else.",
+          "outcome_tags": [
+            "parts_delivered",
+            "delivery_refused"
+          ],
+          "routes": {
+            "parts_delivered": "next",
+            "delivery_refused": "resolution:detour_perpetuated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The surveyor begins active radar pings into the hazard zone; {role:cartography_warden} issues a public warning that scanning uncertified lanes is illegal.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "independent_surveyor",
+          "target": "shoal_marker_depot",
+          "culprit": "cartography_warden",
+          "reason": "She needs an outside ship to fly three scan vectors through the heart of the charted shoal and document the complete lack of collision hazards.",
+          "private_fact": "She was expelled from the hydrographic academy years ago and wants revenge on the warden just as much as truth for the miners.",
+          "outcome_tags": [
+            "shoal_empty",
+            "shoal_active"
+          ],
+          "routes": {
+            "shoal_empty": "next",
+            "shoal_active": "resolution:detour_perpetuated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:waystation_syndicate} offers an open bounty for 'stolen hydrographic records' and invites the pilot to meet at {role:syndicate_waystation}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "cartography_warden",
+          "target": "syndicate_waystation",
+          "reason": "The warden asks the pilot to collect a confidential registry dossier from his private suite and return it without opening the seal.",
+          "private_fact": "The dossier contains bank receipts proving every director of {role:waystation_syndicate} has funded his private villa.",
+          "outcome_tags": [
+            "dossier_retrieved",
+            "turned_away"
+          ],
+          "routes": {
+            "dossier_retrieved": "next",
+            "turned_away": "resolution:detour_perpetuated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The freight guild discovers proof of the empty lane and gathers in force outside the hydrographic offices.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "independent_surveyor",
+          "target": "freight_exchange",
+          "reason": "She needs the verified scan plates delivered to the guild delegates before the syndicate can bribe station magistrates to confiscate them.",
+          "private_fact": "She intends to sell exclusive rights to the shortcut route if the guild does not offer her a lifetime pension.",
+          "outcome_tags": [
+            "delivered_to_guild",
+            "sold_to_syndicate"
+          ],
+          "routes": {
+            "delivered_to_guild": "resolution:shortcut_opened",
+            "sold_to_syndicate": "resolution:hazard_maintained"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the proof that the shoal is empty and the receipts linking the warden to the merchants. How should the map be redrawn?",
+        "options": [
+          {
+            "id": "publish_charts",
+            "label": "Release the true survey to the freight guild",
+            "leads_to": "resolution:shortcut_opened"
+          },
+          {
+            "id": "take_syndicate_bribe",
+            "label": "Hand the evidence to the waystation syndicate for a cash settlement",
+            "leads_to": "resolution:hazard_maintained"
+          },
+          {
+            "id": "settle_with_warden",
+            "label": "Allow the warden to quietly update the charts as a newly cleared path",
+            "leads_to": "resolution:quiet_recharting"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "shortcut_opened",
+      "reached_by": "The pilot delivers the true survey to the freight guild.",
+      "summary": "The true charts are published. Freighters pour through the open corridor, fuel prices at {role:syndicate_waystation} collapse, and {role:cartography_warden} is removed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_guild",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "waystation_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartography_warden",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_surveyor",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "opened_the_iron_shoal",
+          "public_summary": "A pilot proved the deadly Iron Shoal was empty vacuum and broke the waystation fuel cartel."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "hazard_maintained",
+      "reached_by": "The pilot accepts the syndicate's settlement and buries the survey.",
+      "summary": "{role:waystation_syndicate} incinerates the radar data. The detour remains mandatory, fuel profits soar, and {role:independent_surveyor} is run out of the system.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "waystation_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "freight_guild",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_surveyor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartography_warden",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_the_shoal",
+          "public_summary": "Dockworkers whisper that a pilot sold the safe route survey to the waystation kings for a private fortune."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "quiet_recharting",
+      "reached_by": "The pilot lets the warden reclassify the shoal as naturally dissipated.",
+      "summary": "{role:cartography_warden} logs the lane as newly cleared, opening the shortcut without facing fraud inquiries or paying back-rebates to the miners.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cartography_warden",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "freight_guild",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "waystation_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "detour_perpetuated",
+      "reached_by": "The pilot abandons the contract or survey readings fail.",
+      "summary": "The Iron Shoal remains marked as impassable. Cargo haulers burn fuel on the detour, and {role:waystation_syndicate} maintains their artificial monopoly.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "waystation_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "freight_guild",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_surveyor",
+          "fate": "disappeared"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "detour_perpetuated",
+  "loose_threads": [
+    {
+      "id": "t_waystation_scrip_discount",
+      "surface": "price_board",
+      "detail": "The fuel board at {role:syndicate_waystation} lists a forty percent rebate for ships holding registry bonds issued by the warden's family firm.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_shoal_buoy_tamper_seal",
+      "surface": "scan",
+      "detail": "The radar reflector at {role:shoal_marker_depot} broadcasts recorded rock echoes on an automated twelve-minute playback loop.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_auditor_absentee_berth",
+      "surface": "station_notice",
+      "detail": "The dock manifest at the registry depot lists an inspector assigned to monitor the shoal who hasn't checked in since three governors ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "forged_records",
+      "bribery",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Fuel merchants at {role:syndicate_waystation} raise prices again, citing 'debris hazard transit surcharges'.",
+    "Independent haulers threaten to blockade {role:shoal_marker_depot} over falsified navigation advisories.",
+    "{role:cartography_warden} insists the Iron Shoal remains dangerous to all civilian hull configurations."
+  ],
+  "voice_direction": {
+    "cartography_warden": "Stately, condescending, and patronizingly patient. Speaks like an elder statesman explaining basic reality to unruly children, avoiding any direct discussion of kickbacks.",
+    "independent_surveyor": "Nervous, biting, and relentlessly sarcastic. Her voice is frayed with exhaustion and caffeine, spitting out technical coordinates with vindictive precision."
+  },
+  "novelty_tags": [
+    "phantom_shoal",
+    "hazard_map_fraud",
+    "waystation_monopoly",
+    "freight_detour",
+    "cartographic_corruption"
+  ]
+}

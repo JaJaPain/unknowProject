@@ -1,0 +1,304 @@
+{
+  "id": "premise.the_drifting_boundary",
+  "schema_version": 1,
+  "title": "The Drifting Boundary",
+  "logline": "A veteran surveyor discovers a commercial navigation beacon has drifted for decades, slowly handing an independent asteroid claim over to a mining consortium.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "aging_cartographer",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A veteran orbital surveyor who mapped the system boundaries thirty years ago; stiff, methodical, refuses to alter his ledger.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "boundary_auditor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "The local land registry representative; polite, underfunded, terrified of an open legal challenge.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "conglomerate_escort",
+      "kind": "ship",
+      "description": "A heavy gunboat registered to private extraction security, loitering along the disputed claim perimeter.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "prospecting_consortium",
+      "kind": "faction",
+      "description": "The primary commercial mineral holding company in the sector, aggressively absorbing unclaimed periphery veins.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "disputed_beacon",
+      "kind": "object",
+      "description": "A solar-powered navigation pylon whose mooring has drifted tens of thousands of kilometers off true station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "survey_depot",
+      "kind": "place",
+      "description": "An unpressurized peripheral station housing the system cartographic archive and registry offices.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "gravity_tides",
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "The border between independent prospecting plots and {role:prospecting_consortium} leases has shifted outward, sparking protests at {role:survey_depot}.",
+  "private_truth": "{role:disputed_beacon} was never anchored to bedrock, allowing thirty years of solar wind to push the legal boundary line directly into the independent miners' claim.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "beacon_drift_tampered_to_shift_boundary"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "{role:aging_cartographer} docks at the perimeter depot demanding an official calibration inspection.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "aging_cartographer",
+          "target": "disputed_beacon",
+          "culprit": "prospecting_consortium",
+          "reason": "He needs an unaligned pilot to scan the beacon's orbital telemetry and verify that its true position has drifted from the historical charter coordinates.",
+          "private_fact": "He missed the drift on his own survey twenty years ago and wants the error corrected before his professional license expires.",
+          "outcome_tags": [
+            "drift_confirmed",
+            "drift_refuted"
+          ],
+          "routes": {
+            "drift_confirmed": "next",
+            "drift_refuted": "resolution:consortium_absorbs_claim"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:prospecting_consortium} files an emergency claim renewal, moving {role:conglomerate_escort} into the buffer zone.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "aging_cartographer",
+          "target": "survey_depot",
+          "reason": "He needs the sealed telemetry core delivered directly to {role:boundary_auditor} before consortium lobbyists petition to seal the public registry.",
+          "private_fact": "The consortium offered him a quiet retirement stipend this morning to drop the audit and leave the system.",
+          "outcome_tags": [
+            "delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "delivered": "next",
+            "abandoned": "resolution:consortium_absorbs_claim"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:conglomerate_escort} blocks departure lanes from {role:survey_depot}, hailing all traffic carrying telemetry archives.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "boundary_auditor",
+          "target": "conglomerate_escort",
+          "reason": "The auditor needs the escort driven off so the registry decree can be broadcast without armed interference, and has no official security to call upon.",
+          "private_fact": "The gunboat captain offers to pay the pilot fifty thousand credits in mineral scrip to surrender the survey logs.",
+          "outcome_tags": [
+            "escort_repelled",
+            "took_consortium_payout"
+          ],
+          "routes": {
+            "escort_repelled": "resolution:boundary_restored",
+            "took_consortium_payout": "resolution:drift_concealed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "boundary_restored",
+      "reached_by": "The pilot delivers the true telemetry and repels the consortium gunboat.",
+      "summary": "{role:boundary_auditor} certifies the original boundary lines. {role:prospecting_consortium} is forced to surrender the encroached claims, restoring the independent miners' leases.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospecting_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_cartographer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "boundary_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "restored_claim_boundary",
+          "public_summary": "A pilot proved the consortium's boundary beacon had drifted and broke their gunboat to enforce it."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "drift_concealed",
+      "reached_by": "The pilot accepts the consortium escort's payout and hands over the telemetry logs.",
+      "summary": "{role:prospecting_consortium} destroys the drift records and cements their new boundary. {role:aging_cartographer} is dismissed as senile and loses his registry license.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospecting_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_cartographer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "boundary_auditor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_cartographer",
+          "public_summary": "Word circulated that a pilot took consortium gold to bury forty years of stolen asteroid claims."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "consortium_absorbs_claim",
+      "reached_by": "The pilot abandons the contract, or drift measurements fail to verify.",
+      "summary": "Without verified outside telemetry, the old boundary markers are replaced. {role:prospecting_consortium} quietly absorbs the disputed plots into corporate leases.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospecting_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_cartographer",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "boundary_auditor",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "consortium_absorbs_claim",
+  "loose_threads": [
+    {
+      "id": "t_unmatched_serial",
+      "surface": "scan",
+      "detail": "The mooring strut on {role:disputed_beacon} bears a maintenance serial issued to a freight logistics monopoly, not the system surveyor.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_backdated_deed",
+      "surface": "station_notice",
+      "detail": "The title registry at {role:survey_depot} records five plot transfers signed by an official who died three months before the filing date.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_escort_charter_fee",
+      "surface": "price_board",
+      "detail": "The patrol roster at the depot lists security subsidies funded entirely by an anonymous debt holding company in an adjacent star system.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "forged_records",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Prospectors claim {role:disputed_beacon} wandered forty clicks while nobody was looking.",
+    "{role:prospecting_consortium} calls boundary complaints 'astronomical confusion by amateurs'.",
+    "Registry officials at {role:survey_depot} decline comment on pending claim appeals."
+  ],
+  "voice_direction": {
+    "aging_cartographer": "Speaks in measured, pedantic cadences with long technical pauses. Never raises his voice, even when describing thirty years of stolen mineral claims.",
+    "boundary_auditor": "Rapid, defensive speech with frequent hedging clauses. Constantly cites filing sections and avoids stating who actually authorized the boundary update."
+  },
+  "novelty_tags": [
+    "drifting_beacon",
+    "boundary_dispute",
+    "surveyor_audit",
+    "encroached_claim",
+    "registry_corruption"
+  ]
+}

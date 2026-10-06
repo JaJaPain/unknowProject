@@ -1,0 +1,330 @@
+{
+  "id": "premise.the_skewed_heading",
+  "schema_version": 1,
+  "title": "The Skewed Heading",
+  "logline": "A harbor dockmaster suspects a salvage crew is intentionally recalibrating navigational approach buoys to ground heavy ore transports on a gravitational reef.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "survival"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "harbor_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Chief of inbound space traffic; underslept, fiercely protective of docking crews, tracking a disturbing spike in hull fractures.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_captain",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Skipper of a heavy deep-space recovery tug; weathered, practical, viewing navigational disasters as the natural harvest of space.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_syndicate",
+      "kind": "faction",
+      "description": "The competitive scrapper collective licensed under system salvage registry charters.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_tug",
+      "kind": "ship",
+      "description": "A massive reinforced hauler equipped with heavy tractor grapples and cutting lasers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "gravity_reef",
+      "kind": "place",
+      "description": "A dense field of magnetized asteroids trapped in a tight planetary Lagrange gravity well.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "traffic_control_hub",
+      "kind": "place",
+      "description": "The orbital nerve center governing approach vectors and navigational beacon arrays for the inner system.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "gravity_tides"
+    ],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "law_tightened",
+    "witness_at_large"
+  ],
+  "public_situation": "Three heavy ore freighters have suffered catastrophic navigational lock failures near {role:gravity_reef}, leaving their hulls shattered across the rocks.",
+  "private_truth": "{role:salvage_captain} has been altering the frequency offset on the reef approach beacon so autopilots overcompensate for tidal drift and steer directly into asteroid shears.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "gravity_reef_beacons_calibrated_to_cause_groundings"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "{role:harbor_dockmaster} declares emergency repair priority for approach telemetry after another transport clips the reef.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "harbor_dockmaster",
+          "target": "traffic_control_hub",
+          "reason": "He needs high-purity cuprite delivered to rebuild burnt-out waveguide circuits in the central traffic relay before more freighters drift off course.",
+          "private_fact": "He secretly suspects station engineers were bribed to ignore the drift warnings and needs outside ore to bypass the dock warehouse.",
+          "outcome_tags": [
+            "delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "delivered": "next",
+            "abandoned": "resolution:reef_toll_mounts"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The repaired relay reveals that the reef beacon is transmitting false magnetic offsets; {role:harbor_dockmaster} dispatches a survey probe.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "harbor_dockmaster",
+          "target": "gravity_reef",
+          "culprit": "salvage_captain",
+          "reason": "He needs an armed pilot to scan the outer marker buoys and extract the physical transmitter logs before someone deletes the spoofed broadcast record.",
+          "private_fact": "The station manager ordered him to bury the inquiry because {role:salvage_syndicate} pays the port's docking deficit.",
+          "outcome_tags": [
+            "spoof_discovered",
+            "signal_scrambled"
+          ],
+          "routes": {
+            "spoof_discovered": "next",
+            "signal_scrambled": "resolution:reef_toll_mounts"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "pressure",
+      "public_change": "An automated spoof transmitter drone deploys near the reef, guarded by unmarked privateer pickets.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "harbor_dockmaster",
+          "target": "salvage_syndicate",
+          "reason": "He needs the drone picket destroyed and the transmitter's encrypted memory core recovered to prove the beacon frequency was altered deliberately.",
+          "private_fact": "The dockmaster's younger brother was chief engineer on the last freighter wrecked in the rocks.",
+          "outcome_tags": [
+            "core_recovered",
+            "picket_escaped"
+          ],
+          "routes": {
+            "core_recovered": "next",
+            "picket_escaped": "resolution:reef_toll_mounts"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:salvage_tug} moves to hook the newest stranded bulk carrier while emergency docking sirens wail across the sector.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "harbor_dockmaster",
+          "target": "salvage_tug",
+          "reason": "He needs the salvage tug disabled before it can strip the stranded vessel's life support core to fabricate a total loss claim.",
+          "private_fact": "The salvage captain hails mid-combat offering a thirty percent split of the derelict's refined copper cargo in exchange for withdrawing.",
+          "outcome_tags": [
+            "tug_disabled",
+            "took_salvage_deal"
+          ],
+          "routes": {
+            "tug_disabled": "resolution:wreckers_broken",
+            "took_salvage_deal": "resolution:salvage_syndicate_share"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "wreckers_broken",
+      "reached_by": "The pilot disables the salvage tug and secures the transmitter proof.",
+      "summary": "{role:salvage_captain} is arrested at the berth. The approach buoys are restored to true frequencies, ending the string of fabricated reef groundings.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_dockmaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_captain",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_gravity_wreckers",
+          "public_summary": "A pilot hunted down the salvage tug that was rigging orbital beacons to smash freighters into the reef."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "salvage_syndicate_share",
+      "reached_by": "The pilot accepts the salvage captain's cargo split and leaves the tug to finish the salvage.",
+      "summary": "The stranded ore hauler is stripped to the ribs. {role:salvage_captain} escapes prosecution, and {role:harbor_dockmaster} is forced into early retirement.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "took_the_wreckers_cut",
+          "public_summary": "Rumor has it a mercenary took a hold full of stolen copper to let the reef scavengers finish their work."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "reef_toll_mounts",
+      "reached_by": "The pilot fails the combat missions or ignores the dockmaster's calls.",
+      "summary": "The tampered beacon remains uncorrected. Two more bulk carriers run aground on the reef, cementing {role:salvage_syndicate}'s dominance over emergency repair contracts.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_dockmaster",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_captain",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "reef_toll_mounts",
+  "loose_threads": [
+    {
+      "id": "t_advance_scrap_contract",
+      "surface": "price_board",
+      "detail": "The exchange board lists forward salvage options for the wrecked freighter's scrap iron purchased six days before the vessel lost navigational lock.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_counterfeit_buoy_firmware",
+      "surface": "scan",
+      "detail": "The firmware hash on the reef beacon's transmitter matches a security patch code registered to an offshore corporate shell with no active crew.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_unlogged_tug_refit",
+      "surface": "ship_marking",
+      "detail": "The registration stencils on {role:salvage_tug} mask an older naval hull identifier that was reported scuttled during the previous colonial insurrection.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Traffic control reports third hull failure this month in the {role:gravity_reef} approach.",
+    "{role:salvage_syndicate} defends rapid response salvage times, calling accusations 'insulting'.",
+    "Miners protest rising freight insurance rates following repeated navigational losses."
+  ],
+  "voice_direction": {
+    "harbor_dockmaster": "Hoarse, clipped, and visibly fraying under stress. Barking concise flight instructions between bouts of bitter profanity regarding dockside safety.",
+    "salvage_captain": "Slow, gravelly drawl with an easy, unhurried warmth. Talks about twisted wreckage and drowning crews with the nonchalant detachment of a grain farmer discussing a harvest."
+  },
+  "novelty_tags": [
+    "tampered_beacon",
+    "wreckers",
+    "gravity_reef",
+    "salvage_fraud",
+    "dockmaster_inquiry"
+  ]
+}
