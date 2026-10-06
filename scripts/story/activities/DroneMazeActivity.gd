@@ -27,6 +27,11 @@ const LeverageType := preload("res://scripts/story/premise/Leverage.gd")
 const LAUNCH_KEY := KEY_G
 const LAUNCH_RANGE := 300.0
 const DRONE_ITEM := "survey_drone"
+## The ship's own two drones, kept by N.O.V.A. for the first dives (playtest
+## 2026-10-06 finding 11): in the story state, not the inventory, so they
+## can't be sold, banked or moved. Spent before bought ones; never refilled.
+const RESERVE_KEY := "ship_drone_reserve"
+const RESERVE_START := 2
 
 ## Common ore and salvage pay a little; the materials are the prize.
 const PAY := {"mineral": 120, "salvage": 110, "recorder": 0}
@@ -141,7 +146,9 @@ func _update_prompt(delta: float) -> void:
 		return
 	var drones := drones_aboard()
 	if drones > 0:
-		_prompt_label.text = "[%s]  LAUNCH SURVEY DRONE   ·   %d aboard" % [OS.get_keycode_string(LAUNCH_KEY), drones]
+		var reserve := reserve_drones()
+		_prompt_label.text = "[%s]  LAUNCH SURVEY DRONE   ·   %d aboard%s" % [OS.get_keycode_string(LAUNCH_KEY), drones,
+			(" (%d ship's reserve)" % reserve) if reserve > 0 else ""]
 		_prompt_t += delta
 		_prompt.modulate.a = 0.75 + 0.25 * sin(_prompt_t * 3.0)
 	else:
@@ -203,7 +210,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func drones_aboard() -> int:
 	var gs := get_node_or_null("/root/GlobalState")
-	return int(gs.inventory.get_quantity(DRONE_ITEM)) if gs != null and gs.inventory != null else 0
+	var bought := int(gs.inventory.get_quantity(DRONE_ITEM)) if gs != null and gs.inventory != null else 0
+	return reserve_drones() + bought
+
+
+## The ship's reserve still aboard (2 in a new campaign).
+func reserve_drones() -> int:
+	var story := get_node_or_null("/root/StoryManager")
+	return maxi(0, int(story.story_state.get(RESERVE_KEY, RESERVE_START))) if story != null else 0
 
 
 ## The targeted asteroid or wreck, close enough and not yet worked, or null.
@@ -274,7 +288,10 @@ static func material_name(item_id: String) -> String:
 ## Spends one drone and sends it in. False (and nothing spent) without one.
 func launch(target: Node3D) -> bool:
 	var gs := get_node_or_null("/root/GlobalState")
-	if gs == null or gs.inventory == null or not gs.inventory.remove(DRONE_ITEM, 1):
+	var reserve := reserve_drones()
+	if reserve > 0:
+		get_node("/root/StoryManager").story_state[RESERVE_KEY] = reserve - 1
+	elif gs == null or gs.inventory == null or not gs.inventory.remove(DRONE_ITEM, 1):
 		return false
 	var kind := kind_of(target)
 	_worked[_id_for(target)] = true

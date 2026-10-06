@@ -11732,6 +11732,17 @@ func _run_mining_risk_smoke_test() -> void:
 	if not str(ui._asteroid_type_label(rock)).contains("Thorium"):
 		fail.call("The overview doesn't name the rock's ore: '%s'" % ui._asteroid_type_label(rock))
 		return
+	# Playtest 2026-10-06 finding 11: a new campaign's inventory shows the
+	# ship's two reserve drones, locked, outside the slots.
+	StoryManager.story_state.erase("ship_drone_reserve")
+	var ui_inv = GlobalState.get_ui_manager()
+	ui_inv.inventory_panel.visible = true
+	ui_inv.inventory_panel.call("refresh")
+	await get_tree().process_frame
+	if ui_inv.inventory_panel.find_child("ReserveDrones", true, false) == null:
+		fail.call("The inventory doesn't show the ship's reserve drones.")
+		return
+	ui_inv.inventory_panel.visible = false
 	# Playtest 2026-10-06 finding 6: another order turns the mining beams off.
 	player.set("nav_mode", "MINE")
 	(player.get("mining_laser") as Node3D).visible = true

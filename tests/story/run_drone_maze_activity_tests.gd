@@ -86,6 +86,18 @@ func _initialize() -> void:
 	_check(activity.eligible_target() == null, "not while docked")
 	ship.is_docked = false
 
+	# Playtest 2026-10-06 finding 11: a new campaign has the ship's two reserve
+	# drones, outside the inventory, spent first.
+	var sm: Node = root.get_node("StoryManager")
+	gs.inventory.clear()
+	sm.story_state.erase(ActivityType.RESERVE_KEY)
+	_check(activity.reserve_drones() == 2 and activity.drones_aboard() == 2 and gs.inventory.get_quantity("survey_drone") == 0,
+		"two reserve drones aboard, none in the inventory")
+	gs.inventory.add("survey_drone", 1)
+	_check(activity.drones_aboard() == 3, "bought drones add to the reserve")
+	gs.inventory.clear()
+	sm.story_state[ActivityType.RESERVE_KEY] = 0
+
 	# No drone, no flight; each flight uses one up.
 	gs.inventory.clear()
 	_check(not activity.launch(rock) and activity._view == null, "no survey drone, no launch")
@@ -98,8 +110,10 @@ func _initialize() -> void:
 	story.story_state.erase(ActivityType.SPARE_FLAG)
 	_check(activity.rock_material(rock) == "rad_quartz", "the first red rock dived carries rad-quartz")
 	# The view pauses the game, and recalling gives it back.
+	sm.story_state[ActivityType.RESERVE_KEY] = 1
 	_check(activity.launch(rock), "a drone aboard launches")
-	_check(gs.inventory.get_quantity("survey_drone") == 1, "the launch uses one drone")
+	_check(activity.reserve_drones() == 0 and gs.inventory.get_quantity("survey_drone") == 2, "the reserve is spent before a bought drone")
+	gs.inventory.remove("survey_drone", 1)
 	var view = activity._view
 	_check(view != null and paused, "flying the drone pauses the game")
 	view.finished.connect(func(o: String, s: Dictionary) -> void: _results.append([o, s]))

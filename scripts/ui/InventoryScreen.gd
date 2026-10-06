@@ -31,6 +31,7 @@ const GRID_COLUMNS := 7
 ## (Abe, playtest 2026-10-05 finding 8). It gets a card of its own, first on
 ## the All tab, with an icon from the story-props sheet matched on its name.
 const MISSION_CARGO_ID := "__mission_cargo__"
+const DroneActivity := preload("res://scripts/story/activities/DroneMazeActivity.gd")
 const MISSION_COLOR := Color(1.0, 0.82, 0.35)
 const STORY_PROPS_SHEET := "res://assets/PropIconsStory.png"
 ## Name word -> story-props cell [column, row]; first match wins.
@@ -269,6 +270,10 @@ func _fill_grid(gs: Node) -> void:
 			_grid.add_child(_slot(id, int(items[id]), reg.get_item(id)))
 	if mission_cargo:
 		ids.erase(MISSION_CARGO_ID)  # not an inventory slot: the hold carries it
+	# The ship's reserve drones (N.O.V.A.'s): shown, locked, not a slot.
+	var reserve := _reserve_drones()
+	if reserve > 0 and (_tab == "all" or _tab == _tab_of(reg.get_item(DroneActivity.DRONE_ITEM))):
+		_grid.add_child(_reserve_slot(reserve, reg.get_item(DroneActivity.DRONE_ITEM)))
 	# The All tab shows every slot: empty ones up to the limit, then locked
 	# ones (more slots come with ship upgrades). Other tabs pad out the row.
 	if _tab == "all":
@@ -349,6 +354,45 @@ func _slot(item_id: String, quantity: int, def) -> Control:
 		warn.position = Vector2(8, 4)
 		warn.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		slot.add_child(warn)
+	return slot
+
+
+func _reserve_drones() -> int:
+	var story := get_node_or_null("/root/StoryManager")
+	return int(story.story_state.get(DroneActivity.RESERVE_KEY, DroneActivity.RESERVE_START)) if story != null else 0
+
+
+## The ship's two survey drones, kept by N.O.V.A. for the drone bay: they
+## can't be sold, banked or moved (playtest 2026-10-06 finding 11).
+func _reserve_slot(count: int, def) -> Control:
+	var slot := Panel.new()
+	slot.name = "ReserveDrones"
+	slot.custom_minimum_size = Vector2(SLOT_SIZE, SLOT_SIZE)
+	slot.tooltip_text = "Survey drone x%d: the ship's reserve. N.O.V.A. keeps these for the drone bay; they can't be sold or moved." % count
+	slot.add_theme_stylebox_override("panel", _box(Color(0.06, 0.08, 0.1), Color(0.55, 0.6, 0.68, 0.7), 2, 8))
+	var icon := TextureRect.new()
+	icon.texture = _icon(def)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	icon.offset_left = 8
+	icon.offset_top = 8
+	icon.offset_right = -8
+	icon.offset_bottom = -8
+	icon.modulate = Color(1, 1, 1, 0.8)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(icon)
+	var tag := _label("RESERVE", 10, Color(0.75, 0.8, 0.88))
+	tag.position = Vector2(8, 4)
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(tag)
+	var qty := _label("x%d" % count, 12, TEXT)
+	qty.anchor_left = 1.0
+	qty.anchor_right = 1.0
+	qty.offset_left = -34
+	qty.offset_top = 4
+	qty.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	slot.add_child(qty)
 	return slot
 
 
