@@ -4414,6 +4414,65 @@ func _sort_overview_list():
 	_overview_divider.visible = pinned_count > 0 and pinned_count < children.size()
 
 # Target signal callbacks
+const TARGET_ICON_SHEET := preload("res://assets/ui/target_icons.png")
+const TARGET_ICON_CELL := 256
+## Cells of assets/ui/target_icons.png (tools/compose_target_icons.py).
+const TARGET_ICON := {"ship_hauler": 0, "ship_combat": 1, "asteroid_rock": 2, "asteroid_ice": 3,
+	"station": 4, "outpost": 5, "gate": 6, "planet_rocky": 7, "planet_ocean": 8, "planet_gas": 9,
+	"star": 10, "wreckage": 11, "derelict": 12, "anomaly": 13, "cargo": 14, "destination": 15}
+const TARGET_TINT_NEUTRAL := Color(0.86, 0.93, 1.0)
+const TARGET_TINT_HOSTILE := Color(1.0, 0.36, 0.32)
+const TARGET_TINT_TERRITORIAL := Color(1.0, 0.68, 0.3)
+const TARGET_TINT_FRIENDLY := Color(0.45, 0.95, 0.55)
+const TARGET_TINT_DIM := Color(0.55, 0.6, 0.66)
+const TARGET_TINT_GOLD := Color(1.0, 0.82, 0.45)
+
+
+## The target panel's icon for `node`: {index, tint}.
+func target_icon_for(node: Node) -> Dictionary:
+	var tint := TARGET_TINT_NEUTRAL
+	var key := "cargo"
+	if node.is_in_group("lodestar"):
+		return {"index": TARGET_ICON["destination"], "tint": TARGET_TINT_GOLD}
+	if node.is_in_group("asteroid"):
+		key = "asteroid_ice" if str(node.get("ore_type")) == "water_ice" else "asteroid_rock"
+	elif node.is_in_group("station"):
+		key = "outpost" if str(node.get("station_type")) == "outpost" else "station"
+	elif node.is_in_group("jumpgate"):
+		key = "gate"
+		match str(node.get("knowledge_state") if node.get("knowledge_state") else "known"):
+			"hidden": tint = TARGET_TINT_DIM
+			"blocked": tint = TARGET_TINT_HOSTILE
+			"damaged": tint = TARGET_TINT_TERRITORIAL
+	elif node.is_in_group("ship"):
+		var role := str(node.get("ship_role"))
+		key = "ship_hauler" if role in ["MiningHauler", "Logistics"] else "ship_combat"
+		match _ship_standing(node):
+			"Hostile": tint = TARGET_TINT_HOSTILE
+			"Territorial": tint = TARGET_TINT_TERRITORIAL
+			"Friendly": tint = TARGET_TINT_FRIENDLY
+	elif node.is_in_group("wreckage"):
+		key = "wreckage"
+	elif node.is_in_group("anomaly") or node.is_in_group("mission_investigation_marker"):
+		key = "anomaly"
+	elif node.is_in_group("celestial"):
+		key = _planet_icon_key(node)
+	return {"index": TARGET_ICON[key], "tint": tint}
+
+
+func _planet_icon_key(planet: Node) -> String:
+	var kind := str(planet.get_meta("planet_kind", ""))
+	if kind == "gas_giant":
+		return "planet_gas"
+	if kind == "star":
+		return "star"
+	var body := preload("res://scripts/generation/TerrestrialLook.gd").body_of(planet as Node3D) if planet is Node3D else null
+	var surface = body.material_override if body != null else null
+	if surface != null and str(surface.get_meta("family", "")).to_lower().contains("ocean") 			or surface != null and str(surface.get_meta("family", "")).to_lower().contains("archipelago"):
+		return "planet_ocean"
+	return "planet_rocky"
+
+
 func _on_target_changed(new_target: Node3D):
 	# Selecting a new target is what clears the hysteresis latch — being in
 	# reach of the last ship says nothing about this one.
@@ -4465,19 +4524,22 @@ func _on_target_changed(new_target: Node3D):
 		elif new_target.is_in_group("celestial"):
 			type_str = "Planet"
 			icon_index = 3
-			
+		elif new_target.is_in_group("lodestar"):
+			type_str = "Destination"
+
 		var target_name = new_target.get("display_name") if new_target.get("display_name") else new_target.name
 		target_label.text = target_name + " [" + type_str + "]"
-		
-		# Set target icon
-		if target_icon and icons_sheet:
-			var atlas = AtlasTexture.new()
-			atlas.atlas = icons_sheet
-			
-			var col = icon_index % 4
-			var row = icon_index / 4
-			atlas.region = Rect2(col * 384, row * 512, 384, 512)
+
+		# One icon per kind of target, tinted by standing or state
+		# (playtest 2026-10-06 finding 7; ChatGPT's set, docs/target_icon_brief.md).
+		if target_icon:
+			var pick := target_icon_for(new_target)
+			var atlas := AtlasTexture.new()
+			atlas.atlas = TARGET_ICON_SHEET
+			var cell := int(pick["index"])
+			atlas.region = Rect2((cell % 4) * TARGET_ICON_CELL, (cell / 4) * TARGET_ICON_CELL, TARGET_ICON_CELL, TARGET_ICON_CELL)
 			target_icon.texture = atlas
+			target_icon.modulate = pick["tint"]
 			target_icon.visible = true
 			
 		if target_scan_btn:

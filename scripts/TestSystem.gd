@@ -169,6 +169,8 @@ func _create_planet(spec: Dictionary) -> Node3D:
 	add_child(planet)
 	planet.global_position = spec["position"] as Vector3
 	var is_gas := (spec["texture"] as Texture2D) == GAS_TEXTURE
+	# Same marker as generated systems (the target panel's icon reads it).
+	planet.set_meta("planet_kind", "gas_giant" if is_gas else "rocky")
 	PlanetRotation.apply(planet, is_gas, rng)
 	return planet
 

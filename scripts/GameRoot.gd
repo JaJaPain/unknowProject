@@ -8072,6 +8072,13 @@ func _run_hud_snapshot() -> void:
 		for i in 30:
 			await get_tree().process_frame
 		await _hud_snapshot_save(out.path_join("hud_target.png"))
+	# Target icons (playtest 2026-10-06 finding 7): a station and a gate too.
+	for group in ["station", "jumpgate", "asteroid"]:
+		var pick_node: Node = get_tree().get_first_node_in_group(group)
+		if pick_node != null:
+			GlobalState.active_target = pick_node
+			await get_tree().create_timer(0.4).timeout
+			await _hud_snapshot_save(out.path_join("hud_target_%s.png" % group))
 	GlobalState.paused = true
 	for i in 20:
 		await get_tree().process_frame
@@ -8579,6 +8586,18 @@ func _run_fly_to_smoke_test() -> void:
 			return
 		player.call("cancel_autopilot", true)
 	Engine.time_scale = 1.0
+	# Playtest 2026-10-06 finding 7: each kind of target gets its own icon.
+	var ui = GlobalState.get_ui_manager()
+	var want := {"station": [4, 5], "jumpgate": [6], "asteroid": [2, 3], "celestial": [7, 8, 9, 10]}
+	for group in want:
+		for node in get_tree().get_nodes_in_group(group):
+			if not system_root.is_ancestor_of(node):
+				continue
+			var pick: Dictionary = ui.call("target_icon_for", node)
+			if not int(pick["index"]) in want[group]:
+				fail.call("%s (%s) got icon %d" % [node.name, group, int(pick["index"])])
+				return
+	print("[FlyToSmokeTest] target icons match their kinds")
 	print("[FlyToSmokeTest] PASS: every station and outpost: stopped outside it and orbiting")
 	get_tree().quit(0)
 
