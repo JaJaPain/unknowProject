@@ -53,6 +53,30 @@ share a look with the signal anomaly set piece).
 None of these touch the fixed-cast secret: no thinking machines, no
 returning dead, nothing about the Captain.
 
+## Reusing set pieces (Abe's idea, same day)
+
+Every model arrived as separate parts, so the game can hide parts, re-tint
+materials, rescale and add surroundings (a planet, a comet tail, particle
+plumes) to make one model read as another place. A per-Destination
+**variant** setting in `LodestarLandmark` (hide these nodes, tint these
+materials, scale, extra effects) makes reuse pure data. Reuse works best with
+generic pieces or big changes; a returning player may recognise a distinctive
+silhouette.
+
+- **The Last Shipyard: reuse the lone derelict hull,** clean and ~3x scale,
+  with its torn side reading as unfinished plating, inside a code-built
+  scaffold with cranes and welding-spark emissives. Convincing.
+- **The Hollow Market: reuse the Cartographer mine's asteroid** with the mine
+  structures hidden, an ice tint, the comet tail shader, and lantern lights at
+  the pit and bores. Convincing.
+- **The Neutral Ground:** the Quiet War vault, re-tinted clean and pale, is
+  possible but reads as a bunker. Prefer new art.
+- **The Archive:** the Garden station re-lit as reading windows over a gas
+  giant is too recognisable. New art.
+- **The Halo, The Wellhead:** nothing fits. New art.
+
+So: two reuses, four new set pieces (four ChatGPT windows instead of six).
+
 ## Build order
 
 1. **Abe picks** (all six, or swaps in the alternate).
