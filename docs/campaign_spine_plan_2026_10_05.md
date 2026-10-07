@@ -364,3 +364,8 @@ Open: in 2 of 10 campaigns the season closed 15-30 min after the reveal
 (`hand_slips_away`): the sim abandoned the confrontation's first job (the
 proof pickup), and abandoning it ends the season with no chase and no
 Lodestar. A real player failing or dropping that one job would get the same.
+
+Fixed (Abe, 2026-10-07): dropping or failing the proof job no longer ends
+the season. The chase and showdown still come; the culprit gets a head start
+of `PremiseDirector.PROOF_LOST_HEAD_START` (2) race steps, so the showdown at
+the Lodestar brings one more ship.

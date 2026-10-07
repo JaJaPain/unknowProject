@@ -24,7 +24,9 @@ const MODELS := {
 	"market": ["res://assets/landmarks/cartographer_mine.glb"],
 	"shipyard": ["res://assets/landmarks/lone_derelict.glb"],
 	# New set pieces from ChatGPT (briefs #9, #10); stand-ins until they land.
-	"archive": ["res://assets/landmarks/archive.glb"],
+	# ChatGPT's textured Archive (9b), as a game copy with 2048 maps
+	# (tools/art/shrink_glb_textures.py); the 100 MB original is in art/archive_v2/.
+	"archive": ["res://assets/landmarks/archive_v2_game.glb"],
 	"treaty": ["res://assets/landmarks/neutral_ground.glb"],
 	"halo": ["res://assets/landmarks/halo.glb"],
 	"wellhead": ["res://assets/landmarks/wellhead.glb"],
@@ -32,7 +34,6 @@ const MODELS := {
 ## Surface detail laid over set pieces whose materials are flat colours
 ## (SurfaceDetail): material name substring -> preset.
 const SURFACE_DETAIL := {
-	"archive": {"Warm limestone": "stone", "Aged bronze": "metal", "woven envelopes": "fabric"},
 	"wellhead": {"Frosted ice": "ice"},
 }
 ## Tests and before/after shots can turn the detail off.
@@ -443,7 +444,7 @@ func _wire_model(model: Node3D) -> void:
 static func lamp_mode(material_name: String) -> String:
 	if material_name.contains("Beacon emission"):
 		return "pulse"
-	if material_name.contains("Navigation emission") or material_name.contains("Dock navigation") 			or material_name.contains("Red beacons"):
+	if material_name.contains("Navigation emission") or material_name.contains("Dock navigation") 			or material_name.contains("Red beacons") or material_name.contains("AR2 navigation"):
 		return "blink"
 	if material_name.contains("Candle windows"):
 		return "candle"

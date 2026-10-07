@@ -77,7 +77,10 @@ static func forge(state: Dictionary, world: Dictionary) -> Dictionary:
 				"reason": ("%s has pieced together part of what {role:culprit} has been doing and needs the last proof collected before it disappears." % witness_name) + ((" " + heading) if not heading.is_empty() else ""),
 				"private_fact": "The witness is afraid of being the next thing {role:culprit} buries.",
 				"outcome_tags": ["proof_collected", "abandoned"],
-				"routes": {"proof_collected": "next", "abandoned": "resolution:hand_slips_away"}}],
+				# Losing the proof doesn't end the season: the culprit gets a
+				# head start (PremiseDirector.PROOF_LOST_HEAD_START) and the
+				# showdown at the Lodestar is harder (season sim, 2026-10-07).
+				"routes": {"proof_collected": "next", "abandoned": "next"}}],
 			 "player_choice": null},
 			{"n": 2, "function": "chase",
 			 "public_change": "{role:culprit} has hired guns to cover the trail.",

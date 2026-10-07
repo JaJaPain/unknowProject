@@ -68,7 +68,8 @@ func _test_forged_card_is_valid_and_playable() -> void:
 		"exposed": [["completed", ""], ["completed", "finish_kill"], ["completed", "finish_kill"], ["choice", "expose"]],
 		"quiet_deal": [["completed", ""], ["abandoned", ""], ["completed", "finish_kill"], ["choice", "quiet_deal"]],
 		"bought_off": [["completed", ""], ["completed", "finish_kill"], ["completed", "accept_bribe"]],
-		"hand_slips_away": [["abandoned", ""]],
+		# Losing the proof no longer ends it: the chase and showdown still come.
+		"exposed_after_lost_proof": [["abandoned", ""], ["completed", "finish_kill"], ["completed", "finish_kill"], ["choice", "expose"]],
 	}
 	for expected in outcomes.keys():
 		var started := Arcs.start_arc(Arcs.empty_state(), card, "system.v", forged["cast"], 0)
@@ -81,4 +82,4 @@ func _test_forged_card_is_valid_and_playable() -> void:
 			else:
 				st = Arcs.apply_mission_result(st, lib, arc_id, beat_n, 0, step[0], step[1], 1)
 				beat_n = int(Arcs.arc(st, arc_id)["beat"])
-		_check(Arcs.arc(st, arc_id)["resolution_id"] == expected, "route to %s ended at %s" % [expected, Arcs.arc(st, arc_id)["resolution_id"]])
+		_check(Arcs.arc(st, arc_id)["resolution_id"] == str(expected).trim_suffix("_after_lost_proof"), "route to %s ended at %s" % [expected, Arcs.arc(st, arc_id)["resolution_id"]])

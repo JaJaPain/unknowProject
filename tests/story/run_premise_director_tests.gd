@@ -172,6 +172,9 @@ func _test_main_story_season() -> void:
 	d.main_story_locked.connect(func(name, arc_id): locked_name.append(name))
 	d.season_closed.connect(func(season, res): closed.append(res))
 	var now := 0
+	# The player drops the confrontation's first job (the proof) once: the
+	# season goes on, with the culprit ahead.
+	var dropped_proof := {"done": false, "lead_before": -1, "lead_after": -1}
 	# The reveal needs evidence from 9 systems (tuned to reveal around hours
 	# 8-12, campaign spine plan); allow 25.
 	for system_n in range(1, 26):
@@ -196,6 +199,13 @@ func _test_main_story_season() -> void:
 				pick = postings[0]
 			var quest: Dictionary = pick["quest_data"].duplicate(true)
 			quest["objective"]["branch_id"] = "finish_kill"
+			var conf := str(d.state["main_story"].get("confrontation_arc_id", ""))
+			if not dropped_proof["done"] and not conf.is_empty() and str(pick.get("arc_id", "")) == conf:
+				dropped_proof["done"] = true
+				dropped_proof["lead_before"] = int(d.state["main_story"].get("race_steps", 0))
+				d.on_mission_terminal(quest, "abandoned", now)
+				dropped_proof["lead_after"] = int(d.state["main_story"].get("race_steps", 0))
+				continue
 			d.on_mission_terminal(quest, "completed", now)
 		if not locked_name.is_empty() and not d.state["main_story"].has("_locked_at_system"):
 			d.state["main_story"]["_locked_at_system"] = system_n
@@ -204,6 +214,10 @@ func _test_main_story_season() -> void:
 			break
 	_check(not locked_name.is_empty(), "the main story should lock within twenty-five systems")
 	_check(not closed.is_empty(), "the confrontation should resolve and close the season")
+	_check(bool(dropped_proof["done"]), "the test should have dropped the proof job once")
+	_check(int(dropped_proof["lead_after"]) == int(dropped_proof["lead_before"]) + d.PROOF_LOST_HEAD_START,
+		"dropping the proof gives the culprit a head start (%d -> %d)" % [dropped_proof["lead_before"], dropped_proof["lead_after"]])
+	_check(closed.is_empty() or str(closed[0]) != "hand_slips_away", "dropping the proof doesn't end the season (closed by %s)" % [closed[0] if not closed.is_empty() else ""])
 	if not locked_name.is_empty():
 		var lock: Dictionary = d.state["main_story"]["lock"]
 		_check(str(locked_name[0]) == str(lock["display_name"]), "the signal names the locked identity")

@@ -64,6 +64,10 @@ const MAX_LIVE_ARCS := 6
 ## Once the evidence is ready, the lock waits at most this many systems for
 ## the prime suspect's other stories to end.
 const LOCK_WAIT_VISITS := 2
+## Dropping or failing the confrontation's first job (collect the proof)
+## used to end the season on the spot; now the culprit just gets ahead: as
+## many race steps as this many systems, so the showdown brings more guns.
+const PROOF_LOST_HEAD_START := 2
 
 var enabled := true
 var library = null
@@ -848,6 +852,9 @@ func on_mission_terminal(quest_data: Dictionary, terminal_state: String, now_min
 			if not state.get("deeds") is Array:
 				state["deeds"] = []
 			(state["deeds"] as Array).append(deed)
+	if terminal_state != "completed" and int(ref["beat"]) == 1 			and str(ref["arc_id"]) == str(HandType.main_story(state).get("confrontation_arc_id", "")):
+		state["main_story"]["race_steps"] = int(HandType.main_story(state).get("race_steps", 0)) + PROOF_LOST_HEAD_START
+		state["main_story"]["proof_lost"] = true
 	state = ArcsType.apply_mission_result(state, library, ref["arc_id"], int(ref["beat"]), int(ref["mission_index"]),
 		terminal_state, branch, now_minute)
 	# Working a story turns up more of its odd details.
