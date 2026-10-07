@@ -1,0 +1,359 @@
+{
+  "id": "premise.the_fallow_communion",
+  "schema_version": 1,
+  "title": "The Fallow Communion",
+  "logline": "An agrarian monastic order's new abbot repeals an ancient seven-year soil sabbatical to boost famine shipments, sparking open revolt from traditionalist cellarers who believe forced cultivation will poison the sacred spores.",
+  "scale": "personal",
+  "tone": [
+    "bleak",
+    "melancholy"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "progress_vs_tradition"
+  ],
+  "roles": [
+    {
+      "id": "reformer_abbot",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Newly appointed head of the monastic agro-cathedral; pragmatic, burdened by external famine reports, determined to end the fallow period.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cellar_warden",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Elder cultivator of the subterranean fungal crypts; devout, stubborn, clutching centuries of mycorrhizal planting records.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "monastic_agronomy",
+      "kind": "faction",
+      "description": "The ascetic monastic community producing sacred protein yeast cakes for regional distribution.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "crypt_sanctuary",
+      "kind": "place",
+      "description": "Deep cold-storage cultivation vaults beneath the monastery where parent spore cultures hibernate.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "distribution_quarantine",
+      "kind": "place",
+      "description": "An orbital freight dock where humanitarian food shipments are inspected and weighed.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "leader_discredited"
+  ],
+  "public_situation": "Freight haulers dock at {role:distribution_quarantine} to receive emergency protein relief as {role:monastic_agronomy} erupts into open schism over lifting a seven-year farming sabbatical.",
+  "private_truth": "The new abbot signed advance famine relief contracts requiring forced nutrient cultivation that will permanently exhaust the monastery's irreplaceable parent mycelium strain.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "forced_cultivation_depletes_symbiotic_substrate_culture"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Notice boards across the monastery ring announce the immediate resumption of protein cake baking, overriding customary fallow banners.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "reformer_abbot",
+          "target": "crypt_sanctuary",
+          "reason": "He hires an independent pilot to scan humidity sensors across the fungal crypts and verify that forced nutrient feed won't trigger blight.",
+          "private_fact": "He promised the sector famine relief council twenty thousand metric tons of protein cakes before consulting the cellarers.",
+          "outcome_tags": [
+            "sensors_calibrated",
+            "spores_dormant"
+          ],
+          "routes": {
+            "sensors_calibrated": "next",
+            "spores_dormant": "resolution:fallow_enforced_famine_deepens"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Traditionalist cellarers barricade the lower airlocks with liturgical staves, threatening to vent heating pipes into space.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "cellar_warden",
+          "target": "crypt_sanctuary",
+          "reason": "Deliver pulverized silicate grit to seal the ventilation risers leading to the upper hot-houses, blocking the abbot's forced-heating pipes.",
+          "private_fact": "She knows the parent culture survived three stellar flares only because previous generations respected the seven-year freeze.",
+          "outcome_tags": [
+            "risers_sealed",
+            "crypts_overheated"
+          ],
+          "routes": {
+            "risers_sealed": "next",
+            "crypts_overheated": "resolution:spores_blighted_abbot_disgraced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Humanitarian cargo freighters arrive at {role:distribution_quarantine} with empty holds, issuing an ultimatum for immediate food transfer.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "reformer_abbot",
+          "target": "distribution_quarantine",
+          "reason": "Retrieve imported growth catalyst canisters from the orbital customs dock to inoculate the dormant beds by force.",
+          "private_fact": "The relief council offered to forgive forty thousand credits of monastery debt if the harvest ships on schedule.",
+          "outcome_tags": [
+            "catalyst_delivered",
+            "catalyst_intercepted"
+          ],
+          "routes": {
+            "catalyst_delivered": "next",
+            "catalyst_intercepted": "resolution:fallow_enforced_famine_deepens"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The catalyst canisters are on the dock. The cellarers bar the crypt doors with liturgical staves. The pilot holds the dispersal override.",
+        "options": [
+          {
+            "id": "inoculate_beds_break_fallow",
+            "label": "Inject the synthetic catalyst to break the fallow sabbatical, maximizing immediate famine relief food at the risk of the heirloom strain",
+            "leads_to": "resolution:fallow_broken_relief_shipped"
+          },
+          {
+            "id": "uphold_sabbatical_seal_crypts",
+            "label": "Hand the canisters to the cellar warden to lock the crypts in sabbatical rest, preserving the heirloom culture while relief ships go empty",
+            "leads_to": "resolution:fallow_enforced_famine_deepens"
+          },
+          {
+            "id": "broker_split_propagation_pact",
+            "label": "Inoculate only half the secondary beds while sequestering the parent mycelium in cold dormancy",
+            "leads_to": "resolution:compromise_harvest_culture_preserved"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fallow_broken_relief_shipped",
+      "reached_by": "The pilot injects the catalyst and breaks the holy sabbatical.",
+      "summary": "The forced harvest ships on schedule, averting famine across two stations. The ancient fungal parent culture collapses, ending centuries of monastic lineage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformer_abbot",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cellar_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "monastic_agronomy",
+          "delta": 2
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_holy_fallow",
+          "public_summary": "A pilot forced open an abbey's fungal crypts, saving starving dockers at the cost of a holy crop."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "fallow_enforced_famine_deepens",
+      "reached_by": "The pilot surrenders the catalyst to the traditionalist cellarers.",
+      "summary": "The sabbatical is upheld and the spore beds sleep. The heirloom strain is preserved, but regional food riots erupt when empty relief barges return.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cellar_warden",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reformer_abbot",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "monastic_agronomy",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "compromise_harvest_culture_preserved",
+      "reached_by": "The pilot brokers a split cultivation compromise.",
+      "summary": "Half-measures yield a modest harvest while the core spores sleep. Starvation is blunted and the holy strain survives, though neither faction is satisfied.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformer_abbot",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cellar_warden",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "monastic_agronomy",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "spores_blighted_abbot_disgraced",
+      "reached_by": "Heating conduits overheat the crypts without controls or intervention.",
+      "summary": "Heating pipes rupture into the unsealed crypts without controls. Thermal shock corrupts the fungal bed, destroying both the harvest and the holy lineage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformer_abbot",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cellar_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "monastic_agronomy",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "spores_blighted_abbot_disgraced",
+  "loose_threads": [
+    {
+      "id": "t_famine_council_rebate",
+      "surface": "price_board",
+      "detail": "Advance delivery bonuses for monastic protein wafers were posted on commodity bourses six weeks before the sabbatical vote.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_catalyst_import_manifest",
+      "surface": "cargo",
+      "detail": "The catalyst canister shipment was billed under commercial agrochemical codes rather than certified religious seals.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_crypt_access_slate",
+      "surface": "station_notice",
+      "detail": "A keycard authorization log for the inner crypt vault shows three midnight entries stamped with an unassigned novice ID.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "faith",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Monastic agro-cathedral debates suspension of sacred seven-year soil sabbatical.",
+    "Outer colonies report deepening protein shortages awaiting abbey shipment allocations.",
+    "Disputes over sacramental yeast cultures disrupt orbital freight terminal schedules."
+  ],
+  "voice_direction": {
+    "reformer_abbot": "Smooth, measured, and weary. Speaks in theological justifications but his voice tightens whenever famine mortality curves are mentioned.",
+    "cellar_warden": "Raspy, severe, and stubborn. Quotes foundational garden scriptures and treats commercial yields as vanity that invites blight."
+  },
+  "novelty_tags": [
+    "soil_sabbatical",
+    "fungal_monastery",
+    "heirloom_spores",
+    "fallow_rule_change",
+    "monastic_agronomy"
+  ]
+}

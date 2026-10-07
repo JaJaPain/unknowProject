@@ -1,0 +1,440 @@
+{
+  "id": "premise.the_magnetic_shear_convoys",
+  "schema_version": 1,
+  "title": "The Magnetic Shear Convoys",
+  "logline": "When a severe magnetic shear destabilizes jump gates across three systems, three stranded freight convoys must link behind a single hardened shield ship, sparking a bitter conflict over which ships' cargo must be jettisoned to survive the crossing.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "fleet_marshal",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Senior convoy navigator; exhausted, steady, trying to get three hundred stranded crew across the shear line.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "merchants_advocate",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Representative for the high-value commercial haulers; sharp, calculating, unwilling to dump precious industrial parts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relief_captain",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Master of an overcrowded relief and refugee transport; defiant, terrified of being abandoned in the dark.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shield_vessel",
+      "kind": "ship",
+      "description": "A massive ice-sheathed bulk tractor with polarized magnetic deflector plates.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "haulers_federation",
+      "kind": "faction",
+      "description": "The regional guild of independent freight pilots stranded across the three systems.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "commercial_conglomerate",
+      "kind": "faction",
+      "description": "The trading syndicate owning the bulk industrial cargo containers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "staging_depot",
+      "kind": "place",
+      "description": "A crowded orbital weigh-station in the departure system where the convoys form up.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "destination_nexus",
+      "kind": "place",
+      "description": "The safe orbital jump nexus on the far side of the storm.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "pulsar"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "market_disrupted",
+    "alliance_broken"
+  ],
+  "public_situation": "Regional jump gates shut down across three systems as a massive magnetic shear front sweeps through, leaving three merchant and refugee convoys stranded at {role:staging_depot}.",
+  "private_truth": "The magnetic wake cast by {role:shield_vessel} can only protect two-thirds of the combined convoy tonnage; the rest must jettison cargo or be left behind in the shear zone.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "shield_wake_cannot_cover_all_convoys"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Emergency warning beacons pulse amber across three star systems as jump gates lock down.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "fleet_marshal",
+          "target": "staging_depot",
+          "reason": "Mine and deliver dense cuprite ore to wind superconducting umbilical couplers linking the convoy ships to the shield vessel.",
+          "private_fact": "Three smaller haulers in the relief fleet already have cracked drive coils and cannot jump independently.",
+          "outcome_tags": [
+            "couplers_wound",
+            "grid_tripped"
+          ],
+          "routes": {
+            "couplers_wound": "next",
+            "grid_tripped": "resolution:convoy_splinters_and_scatters"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The linked convoy enters the intermediate shear zone as magnetic friction turns hull plating white-hot.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "fleet_marshal",
+          "target": "shield_vessel",
+          "reason": "Scan the lead ship's sensor array to plot magnetic field lines and map a stable transit channel through the turbulence.",
+          "private_fact": "The merchants' advocate secretly bribed the lead tug engineer to keep commercial container barges in the dead center of the magnetic wake.",
+          "outcome_tags": [
+            "channel_plotted",
+            "telemetry_lost"
+          ],
+          "routes": {
+            "channel_plotted": "next",
+            "telemetry_lost": "resolution:convoy_splinters_and_scatters"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Shear forces climb forty percent higher than projected, causing magnetic coupling cables to snap like violin strings.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "fleet_marshal",
+          "target": "shield_vessel",
+          "reason": "A rogue shear vortex broke loose an uncrewed ballast barge; destroy its adrift wreckage and recover its emergency tow tether.",
+          "private_fact": "The ballast barge was deliberately weighted down with smuggled luxury spirits belonging to the conglomerate.",
+          "outcome_tags": [
+            "tether_recovered",
+            "tether_lost"
+          ],
+          "routes": {
+            "tether_recovered": "next",
+            "tether_lost": "resolution:convoy_splinters_and_scatters"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The convoy approaches the final jump gate into {role:destination_nexus} as the shield ship's deflectors begin to overload.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "fleet_marshal",
+          "target": "commercial_conglomerate",
+          "reason": "Hostile salvage raiders trailing the convoy attack the rear guard; destroy the raider vanguard before they breach the convoy's trailing lifepods.",
+          "private_fact": "The raiders were hired by a competitor who wants the commercial cargo destroyed to corner destination markets.",
+          "outcome_tags": [
+            "raiders_destroyed",
+            "rearguard_abandoned"
+          ],
+          "routes": {
+            "raiders_destroyed": "next",
+            "rearguard_abandoned": "resolution:convoy_splinters_and_scatters"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "fleet_marshal",
+          "target": "destination_nexus",
+          "reason": "Carry the emergency transit registry through the gate to clear terminal docks for the surviving ships.",
+          "private_fact": "The marshal intends to step down as soon as the fleet docks.",
+          "outcome_tags": [
+            "registry_delivered",
+            "docks_sealed"
+          ],
+          "routes": {
+            "registry_delivered": "next",
+            "docks_sealed": "resolution:convoy_splinters_and_scatters"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The shield ship's deflectors are burning out on the final approach. Mass must be shed immediately to survive the transit.",
+        "options": [
+          {
+            "id": "jettison_commercial_cargo",
+            "label": "Force the merchants to jettison their industrial cargo containers, prioritizing human passengers and relief ships",
+            "leads_to": "resolution:human_lives_prioritized_cargo_lost"
+          },
+          {
+            "id": "cut_loose_refugee_transports",
+            "label": "Sever the tow lines to the trailing refugee transports to protect the commercial investment and industrial goods",
+            "leads_to": "resolution:commercial_cargo_saved_refugees_stranded"
+          },
+          {
+            "id": "burn_shield_engines_joint_risk",
+            "label": "Redline the shield ship's reactor to full overload, attempting to drag all ships through together",
+            "leads_to": "resolution:overload_crossing_mutual_survival"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "human_lives_prioritized_cargo_lost",
+      "reached_by": "The pilot orders the industrial cargo dumped to ensure all ships survive.",
+      "summary": "Every crew and refugee survives the transit. Millions in industrial cargo are lost to the shear, leaving {role:commercial_conglomerate} furious.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "fleet_marshal",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "merchants_advocate",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "haulers_federation",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "commercial_conglomerate",
+          "delta": -3
+        },
+        {
+          "type": "deed",
+          "tag": "dragged_the_refugees_home",
+          "public_summary": "A pilot forced corporate haulers to dump their precious cargo into a magnetic storm so stranded refugees could make the jump."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "commercial_cargo_saved_refugees_stranded",
+      "reached_by": "The pilot cuts the tow lines on the trailing refugee transports.",
+      "summary": "The valuable cargo reaches {role:destination_nexus} intact. The abandoned refugee transports drift into the shear zone, triggering immense sector outrage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "merchants_advocate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fleet_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "commercial_conglomerate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "haulers_federation",
+          "delta": -3
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "overload_crossing_mutual_survival",
+      "reached_by": "The pilot overloads the shield ship's reactor to pull the entire fleet across.",
+      "summary": "The fleet crosses the shear line together, but {role:shield_vessel} burns out its engines permanently on arrival, a glorious scarred wreck.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "fleet_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_captain",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "merchants_advocate",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "haulers_federation",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "wreck_left_behind"
+      ]
+    },
+    {
+      "id": "convoy_splinters_and_scatters",
+      "reached_by": "The couplers fail or the pilot never intervenes.",
+      "summary": "The convoy disintegrates in the intermediate shear zone. Scattered ships drift without deflection shielding, suffering devastating casualties across the sector.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "fleet_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "merchants_advocate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "haulers_federation",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "convoy_splinters_and_scatters",
+  "loose_threads": [
+    {
+      "id": "t_cargo_salvage_futures",
+      "surface": "price_board",
+      "detail": "Salvage futures for transit corridor wreckage were bought up by an anonymous syndicate hours before the convoys merged.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_lead_tug_override_seal",
+      "surface": "cargo",
+      "detail": "The magnetic deflector control console on {role:shield_vessel} carries an override chip registered to a private security firm.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_refugee_manifest_alteration",
+      "surface": "station_notice",
+      "detail": "Passenger rolls for the relief fleet show thirty family names stamped with forged transit permits from a border world.",
+      "can_carry_methods": [
+        "impersonation",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Transit commission declares regional jump lanes hazardous due to unprecedented magnetic shear front.",
+    "Independent freight convoys bottleneck at border checkpoints facing ruinous passage delays.",
+    "Logistics cartel defends private towing tariffs citing maintenance costs for polarized shield hulls."
+  ],
+  "voice_direction": {
+    "fleet_marshal": "Gravelly, calm, and bone-tired. Speaks with slow navigational authority, refusing to raise his voice even as alarms blare.",
+    "merchants_advocate": "Crisp, aggressive, and entitled. Rapidly fires contract clauses and property valuations, treating tonnage as more valuable than lives.",
+    "relief_captain": "Raw, fierce, and desperate. Speaks with a hoarse throat, pleading directly for her passengers and refusing all corporate jargon."
+  },
+  "novelty_tags": [
+    "magnetic_shear",
+    "tandem_convoy",
+    "shield_ship_wake",
+    "cargo_jettison_dilemma",
+    "regional_gate_blackout"
+  ]
+}

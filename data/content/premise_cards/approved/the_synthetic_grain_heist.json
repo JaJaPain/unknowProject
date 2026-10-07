@@ -1,0 +1,411 @@
+{
+  "id": "premise.the_synthetic_grain_heist",
+  "schema_version": 1,
+  "title": "The Synthetic Grain Heist",
+  "logline": "A disgraced logistics factor who once designed an automated grain silo to protect a station from starvation plans to raid it when the local syndicate corners the supply to drive up prices.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "disgraced_architect",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Former municipal silo designer; weathered, guilt-ridden, knowing every maintenance flaw in the fortress vault he built.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_factor",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Commercial grain monopolist; sharp, suave, hoarding sixty thousand tons of synthetic wheat behind armored blast doors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "silo_defense_skiff",
+      "kind": "ship",
+      "description": "A weaponized patrol cutter guarding the grain silo intake docks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dockworkers_union",
+      "kind": "faction",
+      "description": "Station dock laborers whose bread ration has been halved by artificial price spikes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "grain_consortium",
+      "kind": "faction",
+      "description": "The private agricultural holding firm controlling bulk carbohydrate distribution.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "grain_citadel",
+      "kind": "place",
+      "description": "A heavily fortified orbital grain silo anchored to a hollowed metallic asteroid.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "underdock_market",
+      "kind": "place",
+      "description": "A crowded black-market bazaar in the unpressurized lower station spine.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Ration riots flare along station docks as {role:grain_consortium} doubles the price of synthetic flour while keeping {role:grain_citadel} sealed under armed guard.",
+  "private_truth": "The architect built an emergency drainage valve into the silo's fire-suppression vents fifteen years ago, intending it as a municipal safety release that management never discovered.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "silo_locking_mechanism_was_architects_own_design"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Security barriers lock down the approach corridors to {role:grain_citadel} as bulk grain futures spike sixty percent on station boards.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "disgraced_architect",
+          "target": "grain_citadel",
+          "culprit": "syndicate_factor",
+          "reason": "Scan the orbital silo's automated vent exhaust to locate the structural service hatch he built into the blueprints fifteen years ago.",
+          "private_fact": "He took a fifty-thousand-credit bonus for designing the silo to be impregnable against civilian mobs.",
+          "outcome_tags": [
+            "service_hatch_located",
+            "scanners_jammed"
+          ],
+          "routes": {
+            "service_hatch_located": "next",
+            "scanners_jammed": "resolution:raid_foiled_syndicate_hoards"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Syndicate patrol vessels deploy active minelets along the intake pylons after detecting anomalous sensor probes on the silo hull.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "disgraced_architect",
+          "target": "silo_defense_skiff",
+          "reason": "Disable the automated defense skiff patrolling the exterior intake rail and recover its encrypted biometric docking transponder.",
+          "private_fact": "The syndicate factor is his former son-in-law, who used his family connection to gain control of the silo charter.",
+          "outcome_tags": [
+            "transponder_recovered",
+            "skiff_escaped"
+          ],
+          "routes": {
+            "transponder_recovered": "next",
+            "skiff_escaped": "resolution:raid_foiled_syndicate_hoards"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The architect taps the silo drainage controls, preparing to dump thousands of tons of pressurized flour into siphoning freight shuttles.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "disgraced_architect",
+          "target": "grain_consortium",
+          "reason": "Destroy the syndicate escort frigates guarding the grain transfer conduit so the siphon pipes can be coupled.",
+          "private_fact": "The architect poisoned his own career by admitting to the union that the silo's fire-suppression system can be reversed to dump grain.",
+          "outcome_tags": [
+            "escorts_destroyed",
+            "siphon_repelled"
+          ],
+          "routes": {
+            "escorts_destroyed": "next",
+            "siphon_repelled": "resolution:raid_foiled_syndicate_hoards"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "disgraced_architect",
+          "target": "underdock_market",
+          "reason": "Deliver thirty tons of siphoned grain concentrates directly to the union relief distribution bakery.",
+          "private_fact": "He knows this raid will make him a wanted felon across the system for the rest of his life.",
+          "outcome_tags": [
+            "grain_delivered",
+            "convoy_intercepted"
+          ],
+          "routes": {
+            "grain_delivered": "next",
+            "convoy_intercepted": "resolution:raid_foiled_syndicate_hoards"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The grain siphon is active and the silo holds sixty thousand tons. The pilot has broken the defense perimeter.",
+        "options": [
+          {
+            "id": "distribute_grain_to_dockworkers",
+            "label": "Blow the silo valves wide open to flood the underdock market with free bread, bankrupting the syndicate",
+            "leads_to": "resolution:silo_breached_bread_freed"
+          },
+          {
+            "id": "extort_syndicate_for_union_concession",
+            "label": "Use the siphon leverage to force the syndicate factor to sign a binding five-year price freeze for the union",
+            "leads_to": "resolution:price_ceiling_treaty_brokered"
+          },
+          {
+            "id": "sell_siphon_codes_to_syndicate",
+            "label": "Sell the blueprints and architectural backdoors back to the syndicate factor for a private fortune",
+            "leads_to": "resolution:backdoor_sold_monopoly_cemented"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "silo_breached_bread_freed",
+      "reached_by": "The pilot blows the drainage valves and floods the docks with grain.",
+      "summary": "The silo is emptied into station cargo barges. Bread prices collapse overnight, the syndicate faces insolvency, and {role:disgraced_architect} is vindicated.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_architect",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "dockworkers_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "grain_consortium",
+          "delta": -3
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "blew_the_grain_citadel",
+          "public_summary": "A pilot cracked open an impregnable corporate grain fortress to feed three starving decks of dockworkers."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "price_ceiling_treaty_brokered",
+      "reached_by": "The pilot brokers a compromise under threat of emptying the silo.",
+      "summary": "A binding price-ceiling accord is established. {role:dockworkers_union} secures affordable rations, while {role:grain_consortium} keeps ownership of the silo.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_architect",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_factor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "dockworkers_union",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "grain_consortium",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "backdoor_sold_monopoly_cemented",
+      "reached_by": "The pilot betrays the architect and sells the backdoor codes to management.",
+      "summary": "The architect's backdoors are sealed with fresh armor. {role:syndicate_factor} doubles bread prices, while {role:disgraced_architect} disappears into exile.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "syndicate_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "disgraced_architect",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "grain_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "dockworkers_union",
+          "delta": -3
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "raid_foiled_syndicate_hoards",
+      "reached_by": "The siphon assault fails or the pilot never intervenes.",
+      "summary": "The raid is repelled by automated defenses. The syndicate locks down distribution, starving the docks into submission and crushing labor resistance.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disgraced_architect",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "grain_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "dockworkers_union",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "raid_foiled_syndicate_hoards",
+  "loose_threads": [
+    {
+      "id": "t_architect_blueprint_cipher",
+      "surface": "scan",
+      "detail": "Architectural blueprints for {role:grain_citadel} carry an encrypted dedication line to a child who died of malnutrition.",
+      "can_carry_methods": [
+        "information_control",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_consortium_grain_embargo",
+      "surface": "price_board",
+      "detail": "Commercial shipping manifests show thirty grain barges diverted to deep cold-storage orbits the week bread subsidies ended.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_silo_fire_valve_tampering",
+      "surface": "cargo",
+      "detail": "A crate of high-pressure hydraulic override valves found in the underdock carries inspection tags signed by a dead inspector.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "guilt",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Station bread prices double overnight as commercial grain consortium restricts flour releases.",
+    "Labor pickets clash with private security around orbital agricultural storage fortresses.",
+    "Commodity brokers report unusual trading spikes in synthetic flour forward delivery vouchers."
+  ],
+  "voice_direction": {
+    "disgraced_architect": "Low, raspy, and self-loathing. Talks in precise structural tolerances but his knuckles crack with rage whenever corporate margins are mentioned.",
+    "syndicate_factor": "Smooth, condescending, and icy. Speaks of starvation as an efficient inventory clearing event and dismisses ethical appeals with cold amusement."
+  },
+  "novelty_tags": [
+    "grain_silo_heist",
+    "architects_backdoor",
+    "synthetic_wheat_hoarding",
+    "reversed_fire_suppression",
+    "food_monopoly"
+  ]
+}

@@ -1,0 +1,354 @@
+{
+  "id": "premise.the_coronal_ejection_refuge",
+  "schema_version": 1,
+  "title": "The Coronal Ejection Refuge",
+  "logline": "An unpreventable coronal mass ejection bears down on an unshielded mining belt, leaving an emergency bunker with scrubbers enough for only one crew: the injured drillers or the reactor technicians needed to restart the station.",
+  "scale": "personal",
+  "tone": [
+    "survival",
+    "bleak"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "quarry_medic",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Triage doctor at the belt drilling camp; exhausted, fiercely protective of her burn patients.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "reactor_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Chief turbine technician; pragmatic, terrified, arguing that the habitat dies if the reactor scrams cold.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_syndicate",
+      "kind": "faction",
+      "description": "The extraction firm operating both the deep quarries and the power station.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "deep_bunker",
+      "kind": "place",
+      "description": "A lead-lined subterranean survival vault dug into the dense asteroid core.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "surface_hospital",
+      "kind": "place",
+      "description": "A thin-walled pressurized clinic pod exposed on the quarry surface.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "power_vacuum",
+    "public_outrage"
+  ],
+  "public_situation": "Flare warning sirens echo across {system} as solar observatories confirm a massive coronal mass ejection will strike the asteroid belt within hours.",
+  "private_truth": "The air scrubber filters in {role:deep_bunker} have degraded, leaving sufficient life-support volume for only one shift before carbon dioxide toxicity sets in.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "bunker_scrubbers_lack_capacity_for_both_crews"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "High-energy proton counts spike across outer sensors as drilling crews scramble for evacuation locks.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "quarry_medic",
+          "target": "surface_hospital",
+          "reason": "Courier portable dialysis filters and burn medication from the surface clinic to the deep bunker before radiation breaches the pod.",
+          "private_fact": "Three of her patients are too unstable to walk and will require constant life-support power inside the shelter.",
+          "outcome_tags": [
+            "meds_transferred",
+            "pod_depressurized"
+          ],
+          "routes": {
+            "meds_transferred": "next",
+            "pod_depressurized": "resolution:bunker_overcrowded_scrubbers_fail"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Auroral curtains engulf the belt as the reactor station begins an emergency descent into standby mode.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "reactor_engineer",
+          "target": "deep_bunker",
+          "reason": "Mine and haul dense ferrite ore to pack the bunker air intake conduits against incoming ionized solar plasma.",
+          "private_fact": "If his engineering team does not maintain the manual coolant loop during the storm, the reactor core will freeze solid and never restart.",
+          "outcome_tags": [
+            "berm_packed",
+            "conduit_breached"
+          ],
+          "routes": {
+            "berm_packed": "next",
+            "conduit_breached": "resolution:bunker_overcrowded_scrubbers_fail"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The radiation front is forty minutes out as both crews assemble outside the bunker airlock demanding entry.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "quarry_medic",
+          "target": "deep_bunker",
+          "reason": "Scan the bunker scrubber manifold to confirm whether an auxiliary recycling loop can be jury-rigged in time.",
+          "private_fact": "The syndicate slashed maintenance budgets on replacement scrubber canisters six months ago.",
+          "outcome_tags": [
+            "auxiliary_loop_possible",
+            "scrubbers_unfixable"
+          ],
+          "routes": {
+            "auxiliary_loop_possible": "next",
+            "scrubbers_unfixable": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The radiation storm arrives in twenty minutes. The bunker cannot sustain both crews under normal operation. The pilot holds the hatch override.",
+        "options": [
+          {
+            "id": "shelter_the_injured_drillers",
+            "label": "Seal the bunker for the medic and her injured drillers, accepting that the uncrewed reactor will freeze",
+            "leads_to": "resolution:drillers_sheltered_grid_dies"
+          },
+          {
+            "id": "shelter_the_reactor_engineers",
+            "label": "Admit the reactor technicians to protect the habitat power grid, leaving the drillers in surface pods",
+            "leads_to": "resolution:engineers_sheltered_quarry_lost"
+          },
+          {
+            "id": "force_joint_shelter_jury_rig",
+            "label": "Force both crews inside on half-rations while rigging the dangerous uncertified auxiliary scrubber",
+            "leads_to": "resolution:risky_auxiliary_compromise"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "drillers_sheltered_grid_dies",
+      "reached_by": "The pilot admits the injured drillers into the bunker.",
+      "summary": "{role:quarry_medic} and her patients survive the coronal storm. The uncrewed reactor freezes permanently, abandoning the station to a cold winter.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "quarry_medic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reactor_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "mining_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_quarry_drillers",
+          "public_summary": "A pilot held the airlock against corporate engineers to ensure wounded belt drillers survived a lethal solar flare."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "engineers_sheltered_quarry_lost",
+      "reached_by": "The pilot admits the reactor technicians to secure the station grid.",
+      "summary": "{role:reactor_engineer} restarts the reactor grid after the storm. The unprotected surface drillers perish, securing power at a terrible human cost.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reactor_engineer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "quarry_medic",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "mining_syndicate",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "risky_auxiliary_compromise",
+      "reached_by": "The pilot forces both crews inside on emergency oxygen rationing.",
+      "summary": "Both crews survive with acute lung scarring from the smoking auxiliary scrubbers. The reactor is saved and the drillers live, bound by shared trauma.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "quarry_medic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reactor_engineer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "mining_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "bunker_overcrowded_scrubbers_fail",
+      "reached_by": "The bunker airlock is breached in panic or the pilot never intervenes.",
+      "summary": "Crowds storm {role:deep_bunker} without rationing controls. The scrubbers choke on carbon dioxide, suffocating everyone inside as the storm passes.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "quarry_medic",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reactor_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "mining_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "bunker_overcrowded_scrubbers_fail",
+  "loose_threads": [
+    {
+      "id": "t_scrubber_requisition_veto",
+      "surface": "station_notice",
+      "detail": "A supply voucher for twelve medical-grade CO2 scrubber cartridges was denied three weeks ago citing logistics costs.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_solar_storm_actuarial_index",
+      "surface": "price_board",
+      "detail": "Spot prices for unrefined ferrite jumped twenty percent twelve hours before the solar storm alert was broadcast.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_bunker_access_registry",
+      "surface": "cargo",
+      "detail": "The encrypted keycard registry for {role:deep_bunker} lists four executive priority slots with names that match nobody on station.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Heliophysics monitors detect major coronal mass ejection heading toward outer mining belt.",
+    "Asteroid drilling operations ordered to initiate emergency radiation sheltering protocols.",
+    "Station maintenance reports widespread electrical grid fluctuations ahead of coronal shockwave."
+  ],
+  "voice_direction": {
+    "quarry_medic": "Hoarse, fierce, and defiant. Uses plain diagnostic terms and refuses to debate economic priorities while people are bleeding.",
+    "reactor_engineer": "Controlled, desperate, and technical. Speaks in rapid operational checklists, trying to mask his panic behind infrastructure calculations."
+  },
+  "novelty_tags": [
+    "coronal_mass_ejection",
+    "triage_shelter",
+    "failing_scrubbers",
+    "reactor_vs_patients",
+    "solar_radiation_bunker"
+  ]
+}

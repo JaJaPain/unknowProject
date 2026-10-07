@@ -1,0 +1,365 @@
+{
+  "id": "premise.the_recluses_final_tow",
+  "schema_version": 1,
+  "title": "The Recluse's Final Tow",
+  "logline": "An aging prospector's contract to tow her decommissioned habitat to an outer-system retirement orbit is contested when belt miners discover its massive radiator is the only thing preventing a nearby frozen slag baffle from melting.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "progress_vs_tradition"
+  ],
+  "roles": [
+    {
+      "id": "solitary_recluse",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Former belt surveyor; sharp, proud, determined to spend her remaining years in the quiet aphelion orbit she paid for.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "miners_delegate",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Representative for local ore dredgers; exhausted, practical, terrified that melting slag will crush the refinery approach.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "tug_contractor",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Independent heavy tow captain; stubborn, legally bonded, refusing to cancel a contract without compensation.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dredgers_union",
+      "kind": "faction",
+      "description": "Independent asteroid miners operating in the unstable slag channel.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "radiator_hulk",
+      "kind": "place",
+      "description": "A decommissioned orbital radiator habitat casting a massive thermal freeze-shadow across the belt.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refinery_approach",
+      "kind": "place",
+      "description": "The narrow shipping corridor flanked by volatile ice-cemented slag boulders.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "debt_owed_to_player",
+    "route_closed"
+  ],
+  "public_situation": "Tug crews arrive at {role:radiator_hulk} to execute a paid towing contract while {role:dredgers_union} blocks the flight path with drilling barges.",
+  "private_truth": "The habitat's oversized thermal fin is the only heat sink preventing the frozen debris in {role:refinery_approach} from melting into an impassable boulder field.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "habitat_radiator_stabilizes_frozen_slag_baffle"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Tow cables latch onto {role:radiator_hulk} as ambient temperature sensors in the slag channel begin to climb.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "miners_delegate",
+          "target": "refinery_approach",
+          "reason": "She hires an outside pilot to scan the thermal boundary of the slag field and prove the habitat's shadow is keeping the boulders frozen.",
+          "private_fact": "The union knew the habitat cooled the rocks for ten years and never offered the recluse a credit for maintaining it.",
+          "outcome_tags": [
+            "freeze_confirmed",
+            "readings_inconclusive"
+          ],
+          "routes": {
+            "freeze_confirmed": "next",
+            "readings_inconclusive": "resolution:habitat_towed_channel_collapses"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Slag boulders shed vapor trails as the tow tug warms its main thrusters, threatening an immediate debris breach.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "solitary_recluse",
+          "target": "radiator_hulk",
+          "reason": "Deliver silicate ballast to reinforce the habitat's secondary reaction mounts so the tow can commence before the miners sabotage the coupling.",
+          "private_fact": "She spent forty years living without company and would rather drift into deep space with failing life support than die on a station dock.",
+          "outcome_tags": [
+            "ballast_secured",
+            "mounts_buckled"
+          ],
+          "routes": {
+            "ballast_secured": "next",
+            "mounts_buckled": "resolution:habitat_towed_channel_collapses"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Union mining barges surround the tow assembly as the tug contractor prepares to fire breakaway charges.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "miners_delegate",
+          "target": "refinery_approach",
+          "reason": "Recover an emergency coolant regulator pod from a cached drilling buoy to give both parties a technical alternative.",
+          "private_fact": "The tug contractor will forfeit his vessel's licensing bond if he fails to execute the departure on schedule.",
+          "outcome_tags": [
+            "regulator_delivered",
+            "charge_fired"
+          ],
+          "routes": {
+            "regulator_delivered": "next",
+            "charge_fired": "resolution:habitat_towed_channel_collapses"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The tow lines are taut and the slag field is beginning to drift. The pilot must choose how to resolve the competing claims.",
+        "options": [
+          {
+            "id": "enforce_towing_contract",
+            "label": "Sever the union interference and escort the recluse's habitat into her quiet aphelion retirement orbit",
+            "leads_to": "resolution:recluse_departs_peacefully"
+          },
+          {
+            "id": "negotiate_coolant_pact",
+            "label": "Install the coolant regulator to anchor a permanent automated heat sink, compensating the recluse while freeing her to leave",
+            "leads_to": "resolution:automated_baffle_chartered"
+          },
+          {
+            "id": "abort_tow_for_miners",
+            "label": "Disable the tow coupling to preserve the frozen shipping lane, trapping the recluse in the belt",
+            "leads_to": "resolution:tow_aborted_recluse_stranded"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "recluse_departs_peacefully",
+      "reached_by": "The pilot escorts the tow vessel out of the system.",
+      "summary": "{role:solitary_recluse} reaches her quiet retirement orbit. The slag baffle melts behind her, shutting down {role:refinery_approach} for weeks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "solitary_recluse",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "miners_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "dredgers_union",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "escorted_the_recluses_tow",
+          "public_summary": "A pilot cleared the way for an old surveyor's final tow, even as the melting slag channel collapsed behind her."
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "automated_baffle_chartered",
+      "reached_by": "The pilot brokers a compromise using the auxiliary coolant pod.",
+      "summary": "An automated cooling rig stabilizes the slag field. {role:solitary_recluse} departs on schedule, and {role:dredgers_union} preserves its ore lane.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "solitary_recluse",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "miners_delegate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tug_contractor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "dredgers_union",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "habitat_towed_channel_collapses",
+      "reached_by": "The tow proceeds without stabilization, or the pilot never intervenes.",
+      "summary": "{role:radiator_hulk} is dragged away without thermal shielding. The slag field melts and shatters, closing {role:refinery_approach} and crippling local mining.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "solitary_recluse",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "miners_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "dredgers_union",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "tow_aborted_recluse_stranded",
+      "reached_by": "The pilot severs the tow coupling to protect the shipping lane.",
+      "summary": "The tow is cancelled and {role:radiator_hulk} remains locked in place. The shipping route stays open, but {role:solitary_recluse} loses her life savings.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "solitary_recluse",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "miners_delegate",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tug_contractor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "dredgers_union",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "habitat_towed_channel_collapses",
+  "loose_threads": [
+    {
+      "id": "t_unlogged_heat_exchanger",
+      "surface": "scan",
+      "detail": "The thermal fin on {role:radiator_hulk} carries unlogged heat-pump junctions stamped by a defunct corporate navy yard.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_escrow_forfeit_bond",
+      "surface": "price_board",
+      "detail": "A forfeiture rider on the recluse's towing bond transfers fifty thousand credits to an unlisted shell syndicate if delayed.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_baffle_survey_signature",
+      "surface": "cargo",
+      "detail": "Survey manifests for the slag baffle show annual safety stamps signed by an inspector who retired two cycles earlier.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Belt dredgers dispute departure schedule of decommissioned radiator habitat.",
+    "Thermal scans indicate anomalous ice-melting along primary asteroid transit channels.",
+    "Towing authority issues advisory regarding unescorted heavy-mass orbital maneuvers."
+  ],
+  "voice_direction": {
+    "solitary_recluse": "Dry, deliberate, and weary. Speaks in complete, unhurried sentences and treats every request for delay as an insult to her contract.",
+    "miners_delegate": "Harried, breathless, and urgent. Uses practical mining idioms and repeatedly checks channel obstruction telemetry.",
+    "tug_contractor": "Blunt, litigious, and inflexible. Cites towing charter clauses by paragraph and refuses any course that risks his operating bond."
+  },
+  "novelty_tags": [
+    "thermal_shadow",
+    "frozen_slag_baffle",
+    "retirement_tow",
+    "asteroid_channel_collapse",
+    "heat_sink_dependency"
+  ]
+}
