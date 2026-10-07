@@ -30,6 +30,14 @@ var _last_fired_msec: int = -1
 var _last_base_line: Dictionary = {}
 var _in_flight: bool = false
 var _outcome_serial := 0
+## Every quiet-moment attempt, one JSON line each, for Claude to review the
+## small model's word-salad calls after a playtest (Abe, 2026-10-07):
+## tools/story_sim/quiet_moment_log.py prints it. "" turns it off (tests,
+## smoke tests). Kept under LOG_MAX_BYTES by dropping the older half.
+static var log_path := "user://quiet_moment_log.jsonl"
+const LOG_MAX_BYTES := 2000000
+## How the last sense check was decided: "model", "unavailable" or "override".
+var _last_check := ""
 
 
 ## Optional outcome speech shares the existing request slot, cooldown and screen.
@@ -218,6 +226,8 @@ func _on_response(beat_id: String, beat: Dictionary, built: Dictionary,
 		# garbled lines like "She was just my main shaft. She had her hands."
 		# kept getting through the pattern checks).
 		_sense_check(line, func(makes_sense: bool) -> void:
+			var outcome := "spoken" if makes_sense else ("retry" if attempt < MAX_ATTEMPTS else "silent")
+			_log_attempt(beat_id, built, attempt, line, [], "fine" if makes_sense else "word_salad", outcome)
 			if makes_sense:
 				_accept(beat_id, built, line)
 			elif attempt < MAX_ATTEMPTS:
@@ -226,10 +236,34 @@ func _on_response(beat_id: String, beat: Dictionary, built: Dictionary,
 				_give_up(beat_id, ["garbled"]))
 		return
 
+	_log_attempt(beat_id, built, attempt, line, failures, "", "retry" if attempt < MAX_ATTEMPTS else "silent")
 	if attempt < MAX_ATTEMPTS:
 		_request(beat_id, beat, attempt + 1)
 		return
 	_give_up(beat_id, failures)
+
+
+func _log_attempt(beat_id: String, built: Dictionary, attempt: int, line: String,
+		failures: Array, sense: String, outcome: String) -> void:
+	if log_path.is_empty():
+		return
+	var entry := {"time": Time.get_datetime_string_from_system(), "beat": beat_id,
+		"speaker": str(built.get("speaker", "")), "attempt": attempt, "line": line,
+		"pattern_failures": failures, "sense": sense,
+		"sense_by": _last_check if not sense.is_empty() else "", "outcome": outcome}
+	var file := FileAccess.open(log_path, FileAccess.READ_WRITE) if FileAccess.file_exists(log_path) 		else FileAccess.open(log_path, FileAccess.WRITE)
+	if file == null:
+		return
+	if file.get_length() > LOG_MAX_BYTES:
+		var lines := file.get_as_text().split("
+", false)
+		file.close()
+		file = FileAccess.open(log_path, FileAccess.WRITE)
+		for kept in lines.slice(lines.size() / 2):
+			file.store_line(kept)
+	file.seek_end()
+	file.store_line(JSON.stringify(entry))
+	file.close()
 
 
 ## Test seam: replaces the model's sense check (callback(makes_sense)).
@@ -242,16 +276,20 @@ const SENSE_CHECK_PROMPT := "N.O.V.A. is a ship's AI. Her style is clipped, dry 
 ## when the model is busy.
 func _sense_check(line: String, callback: Callable) -> void:
 	if sense_check_override.is_valid():
+		_last_check = "override"
 		sense_check_override.call(line, callback)
 		return
 	var llm := get_node_or_null("/root/LLMInterface")
 	if llm == null:
+		_last_check = "unavailable"
 		callback.call(true)
 		return
 	llm.call("request_quiet_moment", SENSE_CHECK_PROMPT % line, func(result: Dictionary) -> void:
 		if not bool(result.get("ok", false)):
+			_last_check = "unavailable"
 			callback.call(true)
 			return
+		_last_check = "model"
 		var verdict := _parse_line(str(result.get("inner_text", ""))).strip_edges().to_lower()
 		# The question is "is it word salad?": "yes" rejects.
 		var makes_sense := not verdict.begins_with("yes")

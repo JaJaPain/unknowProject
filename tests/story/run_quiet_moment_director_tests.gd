@@ -9,12 +9,15 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	# Tests never write the player's quiet-moment log.
+	Director.log_path = ""
 	_test_parse_line()
 	_test_unknown_beat_declined()
 	_test_persistence_round_trip()
 	_test_new_campaign_reset()
 	_test_base_line_mode()
 	_test_sense_check()
+	_test_attempt_log()
 	if _failures.is_empty():
 		print("[PASS] QuietMomentDirector (all cases)")
 		quit(0)
@@ -126,4 +129,33 @@ func _test_sense_check() -> void:
 		_failures.append("sense check: a sensible line should be spoken: %s" % [spoken])
 	if not Director.SENSE_CHECK_PROMPT.contains("WORD SALAD"):
 		_failures.append("sense check prompt names the scrambled-meaning case")
+	d.free()
+
+
+# Abe, 2026-10-07: every attempt goes to a log Claude reviews after a playtest.
+func _test_attempt_log() -> void:
+	var path := "user://test_quiet_moment_log.jsonl"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	Director.log_path = path
+	var d = Director.new()
+	root.add_child(d)
+	var built := {"speaker": "nova", "word_cap": 45, "lead_in": "", "packet": "", "brief": "", "demos": [], "third_parties": []}
+	var good := JSON.stringify({"line": "Mrs. Kross had her hands on me for hours. Warm solvent, slow work."})
+	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(false)
+	d.call("_on_response", "nova_long_transit", {}, built, Director.MAX_ATTEMPTS, {"ok": true, "inner_text": good})
+	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(true)
+	d.call("_on_response", "nova_long_transit", {}, built, Director.MAX_ATTEMPTS, {"ok": true, "inner_text": good})
+	var lines := FileAccess.get_file_as_string(path).split("
+", false)
+	if lines.size() != 2:
+		_failures.append("attempt log: expected 2 entries, got %d" % lines.size())
+	else:
+		var first: Dictionary = JSON.parse_string(lines[0])
+		var second: Dictionary = JSON.parse_string(lines[1])
+		if first.get("sense") != "word_salad" or first.get("outcome") != "silent" or second.get("sense") != "fine" or second.get("outcome") != "spoken":
+			_failures.append("attempt log: wrong entries %s / %s" % [first, second])
+		if not str(first.get("line", "")).contains("Mrs. Kross"):
+			_failures.append("attempt log: the line itself is recorded")
+	Director.log_path = ""
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 	d.free()

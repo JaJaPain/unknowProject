@@ -208,10 +208,12 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	RuntimeTraceType.begin_session()
-	# Smoke tests and snapshots never touch the player's Destination history.
+	# Smoke tests and snapshots never touch the player's Destination history
+	# or the quiet-moment log.
 	for arg in OS.get_cmdline_user_args():
 		if arg.ends_with("-smoke-test") or arg.ends_with("-snapshot"):
 			preload("res://scripts/domain/Lodestar.gd").history_path = ""
+			preload("res://scripts/story/QuietMomentDirector.gd").log_path = ""
 	RuntimeTraceType.event("game", "root_ready", {
 		"arguments": OS.get_cmdline_user_args(),
 	})
