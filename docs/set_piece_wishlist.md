@@ -8,16 +8,27 @@ material per section, small debris merged by material; aim under ~50 meshes and
 export, a short README with size and counts. Glowing parts as separate emissive
 materials so the game can light them.
 
-| # | Piece | Why | Used for |
+**Index (2026-10-07).** One row per request; the full brief for each is
+below, in order. Hand ChatGPT the first row that isn't done.
+
+| # | Piece | Used for | Status |
 |---|---|---|---|
-| 1 | **The Humming Gate** | Lodestar climax; today a torus | A perfect ancient gate ring, still humming, two factions circling |
-| 2 | **The Lighthouse** | Lodestar climax; today a cylinder and a ball | An ancient beacon station kept alive by a salvage clan |
-| 3 | **The Silent Fleet's settlement** | Lodestar climax | A hidden colony made of old convoy ships lashed together |
-| 4 | **The Cartographer's secret mine** | Lodestar climax | A covert mining rig dug into a big asteroid, in an erased system |
-| 5 | **The Garden keepers' station** | Lodestar climax (the green world is a planet shader) | A small botanists' habitat in orbit, greenhouses and solar wings |
-| 6 | **The Quiet War cache vault** | Lodestar climax (the battlefield is the twin wreck field) | An armoured pre-decline vault the wrecks died guarding |
-| 7 | **A lone derelict ship** (mid-size, ~300 m) | Reused many times: rumour-spawned finds, story wrecks | A dead ship with an open hull to scan and send drones into |
-| 8 | **A signal anomaly site** | Investigations, data cores | A strange object or structure emitting the signal |
+| 1 | **The Humming Gate** | Destination | Done |
+| 2 | **The Lighthouse** | Destination | Done |
+| 3 | **The Silent Fleet's settlement** | Destination | Done |
+| 4 | **The Cartographer's secret mine** | Destination; also reused as the Hollow Market | Done |
+| 5 | **The Garden keepers' station** | Destination | Done |
+| 6 | **The Quiet War cache vault** | Destination | Done |
+| 7 | **A lone derelict ship** (+ 7b detail revision) | Reused finds, drone dives; also reused as the Last Shipyard | Done |
+| 8 | **A signal anomaly site** | Investigations, data cores | Done |
+| 9 | **The Archive** | New Destination (`archive.glb`) | **Next** |
+| 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | Queued |
+| 11 | **The Halo** | New Destination (`halo.glb`) | Queued |
+| 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Queued |
+
+New Destinations 9-12 already run in the game on stand-in shapes; each
+model replaces its stand-in automatically when saved under
+`assets/landmarks/` with the file name above.
 
 ## Brief #1: The Humming Gate
 
