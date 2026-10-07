@@ -1,0 +1,339 @@
+{
+  "id": "premise.the_air_merchants_atonement",
+  "schema_version": 1,
+  "title": "The Air Merchant's Atonement",
+  "logline": "An aging merchant who once endowed a free life-support reserve for destitute miners must undo his own charitable trust after a tenement boss exploits the free air to run a deadly sweatshop.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "air_merchant",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "An aging environmental equipment dealer; weary, respected, appalled that his youth's philanthropy became an engine of abuse.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "block_overseer",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Tenement administrator running an illegal high-heat smelter in the living quarters; smug, ruthless, claiming an unalterable lease.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_enforcer",
+      "kind": "ship",
+      "description": "An armed security cutter patrolling the tenement perimeter to protect the illegal foundry operations.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "foundry_syndicate",
+      "kind": "faction",
+      "description": "An aggressive salvage and smelting syndicate extracting metal in residential sectors to avoid municipal fees.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "tenement_habitat",
+      "kind": "place",
+      "description": "A crowded orbital tenement block where hundreds of miners sleep beside sweltering unventilated workshops.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "foundry_depot",
+      "kind": "place",
+      "description": "An industrial parts depot stocking certified municipal metering valves and pressure restrictors.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "law_tightened",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "An aging oxygen dealer tries to install commercial restrictor valves on a free life-support manifold in {role:tenement_habitat}, prompting protests from the landlord.",
+  "private_truth": "{role:block_overseer} is using {role:air_merchant}'s thirty-year-old charitable air charter to run an unregistered smelting furnace inside the residential barracks.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "revoking_charitable_air_trust_exploited_by_landlord"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Notice boards at {role:foundry_depot} log a rush requisition for heavy industrial flow-limiting restrictor valves.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "air_merchant",
+          "target": "tenement_habitat",
+          "reason": "He hires an independent pilot to purchase certified flow restrictor valves at the depot and deliver them to the habitat maintenance hatch.",
+          "private_fact": "He endowed the free life-support trust thirty years ago to protect destitute miners, never imagining it would fuel a landlord's sweatshop.",
+          "outcome_tags": [
+            "valves_delivered",
+            "dock_refused"
+          ],
+          "routes": {
+            "valves_delivered": "next",
+            "dock_refused": "resolution:sweatshop_consumes_habitat"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Temperatures climb throughout {role:tenement_habitat} as toxic exhaust filters back into residential ventilation shafts.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "air_merchant",
+          "target": "tenement_habitat",
+          "culprit": "block_overseer",
+          "reason": "He asks the pilot to scan the habitat's heat exhaust vents to prove the charitable air allowance is feeding an illegal smelting forge.",
+          "private_fact": "The landlord pays nothing for life support and threatens to sue him for breach of contract if he cuts the flow.",
+          "outcome_tags": [
+            "diversion_proven",
+            "scans_scrambled"
+          ],
+          "routes": {
+            "diversion_proven": "next",
+            "scans_scrambled": "resolution:sweatshop_consumes_habitat"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "An armed syndicate vessel takes up an intercept vector near the habitat docking bay to block technicians from fitting the restrictors.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "air_merchant",
+          "target": "syndicate_enforcer",
+          "reason": "The merchant needs the armed cutter neutralized so technicians can reach the intake manifold with the restrictor hardware.",
+          "private_fact": "The cutter captain hails mid-fight offering a share of the foundry's illicit profits if the pilot smashes the restrictors.",
+          "outcome_tags": [
+            "enforcer_disabled",
+            "bribe_accepted"
+          ],
+          "routes": {
+            "enforcer_disabled": "next",
+            "bribe_accepted": "resolution:sweatshop_consumes_habitat"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the security cutter disabled and the proof documented, the pilot holds the deed revocation code and the hardware to decide the habitat's fate.",
+        "options": [
+          {
+            "id": "revoke_endowment_meter_air",
+            "label": "Revoke the endowment and install meters, shutting down the foundry but forcing miners to pay for air",
+            "leads_to": "resolution:endowment_revoked_air_metered"
+          },
+          {
+            "id": "turn_over_to_workers",
+            "label": "Transfer the air charter directly to an independent miners' council, cutting out both landlord and merchant",
+            "leads_to": "resolution:council_seizes_manifold"
+          },
+          {
+            "id": "allow_sweatshop_continue",
+            "label": "Leave the manifold untouched to preserve the free air for residents despite the sweltering foundry",
+            "leads_to": "resolution:sweatshop_consumes_habitat"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "endowment_revoked_air_metered",
+      "reached_by": "The pilot installs the restrictors and executes the revocation of the merchant's original charitable endowment.",
+      "summary": "{role:air_merchant} revokes his trust and meters the intake. The illegal smelter collapses, but impoverished miners must now pay for their breath.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "air_merchant",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "block_overseer",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "foundry_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "revoked_the_free_air",
+          "public_summary": "A pilot helped an old merchant dismantle his own charitable air trust to break up an illegal foundry."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "council_seizes_manifold",
+      "reached_by": "The pilot delivers the deed and codes to the resident miners' mutual aid committee.",
+      "summary": "Tenement drillers seize control of the intake manifold. {role:block_overseer} is expelled, while {role:air_merchant} loses all legal claim to his equipment.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "air_merchant",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "block_overseer",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "foundry_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "liberated_the_air_manifold",
+          "public_summary": "A pilot turned an old merchant's air trust over to tenement workers, who barricaded their own life support."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "sweatshop_consumes_habitat",
+      "reached_by": "The pilot accepts the enforcer's bribe or walks away without installing the restrictors.",
+      "summary": "The challenge collapses. {role:block_overseer} expands the unmetered foundry, choking {role:tenement_habitat} with fumes while {role:air_merchant} flees in shame.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "air_merchant",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "block_overseer",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "foundry_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "sweatshop_consumes_habitat",
+  "loose_threads": [
+    {
+      "id": "t_endowment_scroll_amendment",
+      "surface": "cargo",
+      "detail": "A handwritten codicil on the air trust deed bears an unfamiliar clerk seal stamped six months before the merchant retired.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_unmetered_exhaust_trace",
+      "surface": "scan",
+      "detail": "Thermal exhaust plumes from the habitat manifold show heavy smelting flux residues registered to a shell company in another sector.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_compressed_o2_futures",
+      "surface": "price_board",
+      "detail": "Station commodity boards show a single brokerage bought up all industrial cylinder buybacks hours before the metering dispute began.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "guilt",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Tenement residents complain of suffocating heat as unmetered foundry lines run overnight.",
+    "Municipal council reviews historic philanthropic air covenants dating back thirty cycles.",
+    "Hardware suppliers report sudden shortage of commercial life-support flow limiters."
+  ],
+  "voice_direction": {
+    "air_merchant": "Weary, precise, and burdened with remorse. Speaks in measured, formal sentences and avoids using colloquial slang or commercial jargon.",
+    "block_overseer": "Brisk, entitled, and aggressive. Speaks rapidly with transactional certainty and repeatedly quotes contractual clauses to shut down objections."
+  },
+  "novelty_tags": [
+    "charitable_endowment",
+    "sweatshop_air",
+    "deed_revocation",
+    "metering_retrofit",
+    "tenement_foundry"
+  ]
+}

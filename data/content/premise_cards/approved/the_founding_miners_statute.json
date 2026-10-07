@@ -1,0 +1,397 @@
+{
+  "id": "premise.the_founding_miners_statute",
+  "schema_version": 1,
+  "title": "The Founding Miners' Statute",
+  "logline": "Aging asteroid drillers invoke a fifty-year-old frontier charter to declare sovereignty over an asteroid basin just as a transit conglomerate arrives to build a regional jump gate.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "bleak"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "elder_chairperson",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Representative of the pioneer drilling generation; stooped, harsh-voiced, clutching an antique bronze sovereignty seal.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "conglomerate_envoy",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Inter-system transit executive; sharp, dismissive, authorized to buy out or bulldoze ancient frontier claims.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "transit_gunship",
+      "kind": "ship",
+      "description": "A heavy corporate picket cruiser blockading the mineral basin to enforce construction permits.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pioneer_league",
+      "kind": "faction",
+      "description": "The loose brotherhood of retired prospectors who settled the asteroid belts fifty cycles ago.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "transit_consortium",
+      "kind": "faction",
+      "description": "A mega-syndicate constructing regional jump gates across newly opened trade corridors.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pioneer_hollow",
+      "kind": "place",
+      "description": "An excavated asteroid habitat where hundreds of aging mining families live on dwindling ore veins.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "archival_depot",
+      "kind": "place",
+      "description": "A remote administrative repository in an adjacent system holding original sector colonization charters.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "regional_adjudication_dock",
+      "kind": "place",
+      "description": "A deep-space judicial concourse in an administrative capital system where territorial disputes are heard.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "alliance_broken",
+    "power_vacuum"
+  ],
+  "public_situation": "Tensions rise as {role:transit_consortium} survey ships are turned away from {role:pioneer_hollow} by elderly asteroid drillers wielding a historic charter.",
+  "private_truth": "The charter's fifty-year-old boundary survey used an obsolete stellar datum that inadvertently grants the miners legal ownership of the entire inter-system jump corridor.",
+  "core_why": {
+    "motive": "control",
+    "secret": "historic_charter_datum_grants_drillers_jump_corridor"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Construction beacons around {role:pioneer_hollow} are dismantled by miners as the pioneer council issues a formal notice of sovereignty.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "elder_chairperson",
+          "target": "pioneer_hollow",
+          "reason": "Mine and deliver high-grade thorium ore to sustain the aging habitat's backup reactor during the pending transit blockade.",
+          "private_fact": "The habitat life-support systems have less than forty days of reactor fuel remaining before life support fails.",
+          "outcome_tags": [
+            "reactor_fueled",
+            "power_collapsed"
+          ],
+          "routes": {
+            "reactor_fueled": "next",
+            "power_collapsed": "resolution:pioneers_dispossessed_gate_constructed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Corporate bailiffs obtain an injunction in a neighbouring system to freeze pioneer bank accounts and impound supply haulers.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "elder_chairperson",
+          "target": "archival_depot",
+          "reason": "Retrieve the signed brass territorial covenant cylinder from the regional archival vault before corporate attorneys seal the records.",
+          "private_fact": "The original charter granted miners sovereign status in exchange for dying of radiation while blasting the primary planetary access gates.",
+          "outcome_tags": [
+            "cylinder_secured",
+            "archive_sealed"
+          ],
+          "routes": {
+            "cylinder_secured": "next",
+            "archive_sealed": "resolution:pioneers_dispossessed_gate_constructed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Cartographers reading the charter cylinder discover its coordinate datum covers the exact jump gate singularity site.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "elder_chairperson",
+          "target": "archival_depot",
+          "culprit": "conglomerate_envoy",
+          "reason": "Scan the historic colonial triangulation beacons to verify that the pioneer boundary coordinates encompass the new jump lane.",
+          "private_fact": "The conglomerate envoy knew the charter covered the jump corridor and suppressed the survey to avoid paying transit royalties.",
+          "outcome_tags": [
+            "boundary_verified",
+            "survey_corrupted"
+          ],
+          "routes": {
+            "boundary_verified": "next",
+            "survey_corrupted": "resolution:pioneers_dispossessed_gate_constructed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The corporate gunship moves into firing position over {role:regional_adjudication_dock} to intercept the evidence.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "elder_chairperson",
+          "target": "transit_gunship",
+          "reason": "The corporate gunship intercepts the pilot in orbit; engage the vessel to force a passage to the arbitral dock.",
+          "private_fact": "The gunship captain hails mid-battle offering seventy-five thousand credits and a corporate freight license if the pilot drops the charter.",
+          "outcome_tags": [
+            "gunship_neutralized",
+            "accepted_consortium_bribe"
+          ],
+          "routes": {
+            "gunship_neutralized": "next",
+            "accepted_consortium_bribe": "resolution:pioneers_dispossessed_gate_constructed"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "elder_chairperson",
+          "target": "regional_adjudication_dock",
+          "reason": "Deliver the charter cylinder and triangulation data to the chief colonial magistrate before the building permit becomes irrevocable.",
+          "private_fact": "The chairperson knows this is the last legal campaign he will ever live to contest.",
+          "outcome_tags": [
+            "covenant_tabled",
+            "hearing_adjourned"
+          ],
+          "routes": {
+            "covenant_tabled": "next",
+            "hearing_adjourned": "resolution:pioneers_dispossessed_gate_constructed"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The charter is tabled before the magistrate. The pioneer miners have absolute legal title over the system's most lucrative future jump lane.",
+        "options": [
+          {
+            "id": "uphold_pioneer_sovereignty",
+            "label": "Demand full legal enforcement of pioneer sovereignty, granting miners the right to toll all inter-system gate traffic",
+            "leads_to": "resolution:pioneer_sovereignty_upheld"
+          },
+          {
+            "id": "negotiate_lifetime_annuity",
+            "label": "Broker a perpetual dividend compact granting every pioneer retiree guaranteed pensions and medical care in exchange for gate rights",
+            "leads_to": "resolution:annuity_compact_established"
+          },
+          {
+            "id": "sell_out_to_conglomerate",
+            "label": "Accept the conglomerate's buyout and suppress the ancient charter datum to accelerate trade expansion",
+            "leads_to": "resolution:pioneers_dispossessed_gate_constructed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pioneer_sovereignty_upheld",
+      "reached_by": "The magistrate validates the ancient charter, granting the miners sovereign territory over the jump route.",
+      "summary": "The court upholds the pioneer charter. {role:pioneer_league} claims sovereign ownership of the gate corridor, levying heavy tolls on {role:transit_consortium}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "pioneer_league",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "transit_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_chairperson",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "conglomerate_envoy",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "crowned_the_pioneer_drillers",
+          "public_summary": "A pilot carried a fifty-year brass charter to court, winning sovereign gate tolls for a generation of dying miners."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "annuity_compact_established",
+      "reached_by": "The pilot brokers a compromise treaty granting miners lifelong royalties in exchange for gate construction.",
+      "summary": "A perpetual royalty treaty is signed. {role:transit_consortium} builds the jump gate, funding lifelong medical care and dividends for {role:pioneer_league}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "pioneer_league",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "transit_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_chairperson",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "conglomerate_envoy",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "pioneers_dispossessed_gate_constructed",
+      "reached_by": "The charter is suppressed or the pilot accepts the corporate bribe.",
+      "summary": "The ancient charter is declared void. {role:transit_consortium} evicts {role:pioneer_hollow} without compensation to complete the commercial jump gate.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "pioneer_league",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_chairperson",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "conglomerate_envoy",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "boom"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "pioneers_dispossessed_gate_constructed",
+  "loose_threads": [
+    {
+      "id": "t_charter_astronomy_seal",
+      "surface": "cargo",
+      "detail": "The wax seal on the fifty-year charter cylinder matches a colonial cartography bureau abolished three decades ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_gate_concession_futures",
+      "surface": "price_board",
+      "detail": "Jump corridor tariff futures surged forty percent on capital exchanges prior to the pioneer eviction notice.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_triangulation_beacon_weld",
+      "surface": "wreck",
+      "detail": "A primary survey beacon in the asteroid basin shows fresh burn marks where someone tried to grind off coordinate stamps.",
+      "can_carry_methods": [
+        "sabotage",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Pioneer miners barricade asteroid basin claiming fifty-year colonial territorial sovereignty.",
+    "Transit consortium announces imminent ground-breaking for high-capacity jump gate corridor.",
+    "Colonial magistrate calls emergency arbitral hearing over conflicting sector charter coordinates."
+  ],
+  "voice_direction": {
+    "elder_chairperson": "Slow, defiant, and fierce. Uses antique maritime vernacular and pauses deliberately between sentences, refusing to repeat himself.",
+    "conglomerate_envoy": "Brisk, corporate, and condescending. Speaks in smooth public relations buzzwords while treating historical claims as quaint nuisances."
+  },
+  "novelty_tags": [
+    "pioneer_charter",
+    "jump_corridor_sovereignty",
+    "coordinate_datum",
+    "transit_gate",
+    "elderly_drillers"
+  ]
+}

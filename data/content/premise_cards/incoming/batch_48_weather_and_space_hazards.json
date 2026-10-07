@@ -1,0 +1,1454 @@
+[
+  {
+    "id": "premise.the_coronal_ejection_refuge",
+    "schema_version": 1,
+    "title": "The Coronal Ejection Refuge",
+    "logline": "A heliophysics researcher defects from an orbital observatory to warn an unprotected asteroid quarry that a suppressed solar storm will incinerate their barracks.",
+    "scale": "personal",
+    "tone": [
+      "survival",
+      "bleak"
+    ],
+    "themes": [
+      "truth_vs_comfort",
+      "loyalty_vs_survival"
+    ],
+    "roles": [
+      {
+        "id": "renegade_astronomer",
+        "kind": "person",
+        "archetype": "scientist",
+        "description": "Orbital solar physicist; panicked, exhausted, fleeing corporate security after stealing classified flare telemetry.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "quarry_foreman",
+        "kind": "person",
+        "archetype": "labourer",
+        "description": "Head of an unshielded surface mining crew; skeptical, stubborn, unwilling to halt production for unverified warnings.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "consortium_interceptor",
+        "kind": "ship",
+        "description": "A fast corporate security pursuit craft sent to silence the researcher before the warning leaks.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "solar_consortium",
+        "kind": "faction",
+        "description": "An energy corporation operating orbital solar collectors and private heliophysics stations.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "quarry_bunker",
+        "kind": "place",
+        "description": "A shallow hollow beneath an unshielded asteroid quarry where sixty drillers sleep.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "flare_observatory",
+        "kind": "place",
+        "description": "An automated observation platform in close solar orbit monitoring coronal mass ejections.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "ion_storm"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "market_disrupted",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "Solar observatories declare space weather stable while {role:renegade_astronomer} docks at {role:quarry_bunker} pleading with miners to evacuate.",
+    "private_truth": "{role:solar_consortium} concealed an imminent Class-X coronal mass ejection because an evacuation alert would trigger massive power grid insurance liabilities.",
+    "core_why": {
+      "motive": "fear",
+      "secret": "director_suppressed_flare_forecast_to_avoid_penalties"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Magnetometer warnings flicker red across outer station channels as solar wind density climbs unexpectedly.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "renegade_astronomer",
+            "target": "flare_observatory",
+            "culprit": "renegade_astronomer",
+            "reason": "He hires an independent pilot to tap the observatory relay and extract the unredacted coronal telemetry logs before security wipes them.",
+            "private_fact": "He signed the falsified stability report yesterday before his conscience forced him to steal the true data.",
+            "outcome_tags": [
+              "telemetry_extracted",
+              "relay_locked"
+            ],
+            "routes": {
+              "telemetry_extracted": "next",
+              "relay_locked": "resolution:bunker_scoured_consortium_cleared"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Auroral curtains engulf the asteroid belt as energetic proton flux begins frying unshielded comm relays.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "ferrite",
+            "requester": "renegade_astronomer",
+            "target": "quarry_bunker",
+            "reason": "Mine and deliver dense ferrite ore to encase the quarry bunker in magnetic shielding before the radiation shockwave hits.",
+            "private_fact": "The quarry foreman's corporate contract docks the crew three months' pay if they stop drilling without executive sign-off.",
+            "outcome_tags": [
+              "bunker_shielded",
+              "storm_breached"
+            ],
+            "routes": {
+              "bunker_shielded": "next",
+              "storm_breached": "resolution:bunker_scoured_consortium_cleared"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "A corporate pursuit vessel closes in on {role:quarry_bunker} with orders to confiscate the astronomer's telemetry drives.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "renegade_astronomer",
+            "target": "consortium_interceptor",
+            "reason": "Engage the corporate interceptor to keep the bunker docking hatch clear while miners shelter behind the ferrite berm.",
+            "private_fact": "The interceptor captain hails mid-fight offering fifty thousand credits to let the pursuit team seize the astronomer.",
+            "outcome_tags": [
+              "interceptor_neutralized",
+              "accepted_consortium_bounty"
+            ],
+            "routes": {
+              "interceptor_neutralized": "next",
+              "accepted_consortium_bounty": "resolution:bunker_scoured_consortium_cleared"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the interceptor disabled and the ferrite shield secured, the coronal front is ten minutes away. The pilot must choose how to deploy the proof.",
+          "options": [
+            {
+              "id": "broadcast_flare_telemetry",
+              "label": "Broadcast the unredacted flare telemetry across emergency system relays, saving regional crews and exposing the consortium",
+              "leads_to": "resolution:warning_broadcast_miners_survive"
+            },
+            {
+              "id": "trade_data_to_energy_cartel",
+              "label": "Sell the solar flare forecast to a rival plasma harvesting syndicate to fund permanent relocation for the miners",
+              "leads_to": "resolution:forecast_monetized_miners_relocated"
+            },
+            {
+              "id": "destroy_drives_for_consortium",
+              "label": "Surrender the drives to the consortium in exchange for private bunker berths and corporate immunity",
+              "leads_to": "resolution:bunker_scoured_consortium_cleared"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "warning_broadcast_miners_survive",
+        "reached_by": "The pilot broadcasts the flare data across all open system channels.",
+        "summary": "The emergency alert triggers a system-wide shutdown. The drillers survive behind the ferrite berm, while {role:solar_consortium} faces ruinous safety fines.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "renegade_astronomer",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "quarry_foreman",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "standing",
+            "target": "solar_consortium",
+            "delta": -3
+          },
+          {
+            "type": "deed",
+            "tag": "outran_the_solar_storm",
+            "public_summary": "A pilot broadcast a suppressed coronal forecast just ahead of the proton shockwave, saving an unshielded mining crew."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "forecast_monetized_miners_relocated",
+        "reached_by": "The telemetry is sold to private energy syndicates to fund worker evacuation.",
+        "summary": "Rival harvesters reap surplus solar plasma. The mining crew is bought out and relocated, while {role:solar_consortium} covers up its falsified logs.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "renegade_astronomer",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "quarry_foreman",
+            "fate": "promoted"
+          },
+          {
+            "type": "standing",
+            "target": "solar_consortium",
+            "delta": 1
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "bunker_scoured_consortium_cleared",
+        "reached_by": "The warning is suppressed or the pilot surrenders the drives.",
+        "summary": "The coronal mass ejection scours the unshielded quarry. The miners suffer severe radiation poisoning, and {role:solar_consortium} declares the storm an unforeseen anomaly.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "renegade_astronomer",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "quarry_foreman",
+            "fate": "ruined"
+          },
+          {
+            "type": "standing",
+            "target": "solar_consortium",
+            "delta": 2
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "quiet_cover_up"
+        ]
+      }
+    ],
+    "default_resolution": "bunker_scoured_consortium_cleared",
+    "loose_threads": [
+      {
+        "id": "t_solar_insuring_clause",
+        "surface": "station_notice",
+        "detail": "A private reinsurance rider covering solar power collector dropouts was executed two hours before the flare warning was suppressed.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_coronal_probe_calibration",
+        "surface": "cargo",
+        "detail": "The optical sensor package from the flare observatory had its threshold alarm values manually re-indexed by an administrator.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_ferrite_ballast_run",
+        "surface": "price_board",
+        "detail": "Spot prices for bulk magnetic shielding ferrite spiked forty percent across station exchanges this morning.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "manufactured_crisis"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "forged_records",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "fear",
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "curfew",
+      "cargo_inspection"
+    ],
+    "radio_hooks": [
+      "Heliophysics bureau issues routine reassurance regarding solar wind stability across inner belts.",
+      "Asteroid drilling syndicates report widespread high-energy static across communications bands.",
+      "Energy brokers note sudden surges in short-term orbital battery reserve futures."
+    ],
+    "voice_direction": {
+      "renegade_astronomer": "Frantic, breathy, and stammering. Speaks in rapid bursts of technical figures and constantly looks over his shoulder.",
+      "quarry_foreman": "Skeptical, gruff, and dismissive. Uses short, unyielding sentences and treats scientific warnings as management tricks to cut pay."
+    },
+    "novelty_tags": [
+      "coronal_mass_ejection",
+      "suppressed_weather_forecast",
+      "ferrite_radiation_berm",
+      "solar_whistleblower",
+      "unshielded_quarry"
+    ]
+  },
+  {
+    "id": "premise.the_ion_storm_communion",
+    "schema_version": 1,
+    "title": "The Ion Storm Communion",
+    "logline": "An orbital cathedral's annual pilgrimage fleet is trapped in an ion storm when the station's consecrated lightning spire is shattered, revealing its solid platinum core was secretly pawned.",
+    "scale": "local",
+    "tone": [
+      "absurd",
+      "tense"
+    ],
+    "themes": [
+      "faith_and_doubt",
+      "truth_vs_comfort"
+    ],
+    "roles": [
+      {
+        "id": "penitent_deacon",
+        "kind": "person",
+        "archetype": "preacher",
+        "description": "Presiding administrator of the orbital cathedral; pious, sweat-drenched, terrified his secret financial sins will kill his flock.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "pilgrim_marshal",
+        "kind": "person",
+        "archetype": "official",
+        "description": "Coordinator of the pilgrimage flotilla; devout, unbending, demanding the cathedral light its holy protective beacon.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "cathedral_warden_ship",
+        "kind": "ship",
+        "description": "An armed ceremonial picket vessel maintaining the sanctuary perimeter against outer belt raiders.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "church_syndicate",
+        "kind": "faction",
+        "description": "The monastic religious order managing the orbital shrine and its lucrative pilgrimage concessions.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "orbital_cathedral",
+        "kind": "place",
+        "description": "A magnificent spired orbital basilica with stained-glass solar baffles hanging in an ion cloud.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "foundry_bazaar",
+        "kind": "place",
+        "description": "A chaotic station marketplace where scrap metal and counterfeit religious tokens are hawked.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [
+        "ion_storm"
+      ],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "leader_discredited",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "Pilgrim transport vessels huddle near {role:orbital_cathedral} as ion storm bolts crack the holy sanctuary's decorative spires.",
+    "private_truth": "{role:penitent_deacon} pawned the cathedral's solid-platinum lightning arrestor to cover speculative bad debts, replacing it with gilded iron pipe.",
+    "core_why": {
+      "motive": "guilt",
+      "secret": "deacon_pawned_platinum_spire_for_cathedral_debts"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "The cathedral bell chimes out of sequence as electrical surges flicker through the stained-glass docking ring.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "cuprite",
+            "requester": "penitent_deacon",
+            "target": "orbital_cathedral",
+            "reason": "Mine and deliver high-grade cuprite ore to wind emergency grounding coils for the cathedral's overloaded electrical relays.",
+            "private_fact": "He needs the ore to replace the conductive capacity lost when he unscrewed the original platinum rod.",
+            "outcome_tags": [
+              "coils_wound",
+              "sanctuary_blackout"
+            ],
+            "routes": {
+              "coils_wound": "next",
+              "sanctuary_blackout": "resolution:cathedral_scorched_deacon_exposed"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "reversal",
+        "public_change": "St. Elmo's fire engulfs pilgrim transports moored along the sanctuary docks as electrostatic potential peaks.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "penitent_deacon",
+            "target": "orbital_cathedral",
+            "culprit": "penitent_deacon",
+            "reason": "Scan the shattered spire telemetry to determine whether the gilded replacement pipe can withstand another direct surge.",
+            "private_fact": "The scan proves the pipe is already melting and will flash into shrapnel upon the next lightning strike.",
+            "outcome_tags": [
+              "pipe_failure_confirmed",
+              "sensors_fused"
+            ],
+            "routes": {
+              "pipe_failure_confirmed": "next",
+              "sensors_fused": "resolution:cathedral_scorched_deacon_exposed"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Desperate raiders attempt to breach the cathedral's outer reliquary while the pilgrim marshal demands an explanation.",
+        "missions": [
+          {
+            "verb": "recover_combat_drop",
+            "requester": "penitent_deacon",
+            "target": "cathedral_warden_ship",
+            "reason": "Raiders shot down an automated service drone carrying a heavy inductive grounding transformer; recover the transformer pod.",
+            "private_fact": "He traded the original spire core to a scrap broker operating from the foundry bazaar three months ago.",
+            "outcome_tags": [
+              "transformer_recovered",
+              "pod_destroyed"
+            ],
+            "routes": {
+              "transformer_recovered": "next",
+              "pod_destroyed": "resolution:cathedral_scorched_deacon_exposed"
+            }
+          },
+          {
+            "verb": "delivery_courier",
+            "requester": "penitent_deacon",
+            "target": "orbital_cathedral",
+            "reason": "Deliver the recovered transformer directly to the main spire scaffolding before the storm's core arrives.",
+            "private_fact": "He wrote a full confession and locked it in the vestry desk in case the lightning strikes him dead.",
+            "outcome_tags": [
+              "transformer_installed",
+              "dock_shattered"
+            ],
+            "routes": {
+              "transformer_installed": "next",
+              "dock_shattered": "resolution:cathedral_scorched_deacon_exposed"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The transformer is operational and grounds the cathedral. The deacon's fraud is known to the pilot, but the pilgrims believe a miracle occurred.",
+          "options": [
+            {
+              "id": "expose_deacons_sacrilege",
+              "label": "Present proof of the pawned spire to the pilgrim marshal, demanding the deacon face trial and restitution",
+              "leads_to": "resolution:deacon_tried_for_sacrilege"
+            },
+            {
+              "id": "preserve_miraculous_façade",
+              "label": "Help the deacon consecrate the new transformer as a divine miracle to preserve the sanctuary's pilgrimage revenue",
+              "leads_to": "resolution:miracle_certified_communion_saved"
+            },
+            {
+              "id": "blackmail_church_for_pilgrim_fund",
+              "label": "Compel the deacon to surrender cathedral gold reserves to establish an independent pilgrim insurance fund",
+              "leads_to": "resolution:pilgrim_relief_fund_endowed"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "deacon_tried_for_sacrilege",
+        "reached_by": "The pilot presents proof of the pawned spire to the pilgrim assembly.",
+        "summary": "The truth is revealed. {role:penitent_deacon} is stripped of his robes and arrested for sacrilege, while {role:church_syndicate} faces immense public scandal.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "penitent_deacon",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_marshal",
+            "fate": "promoted"
+          },
+          {
+            "type": "standing",
+            "target": "church_syndicate",
+            "delta": -3
+          },
+          {
+            "type": "deed",
+            "tag": "unmasked_the_cathedral_spire",
+            "public_summary": "A pilot proved an orbital cathedral's lightning rod was fake, toppling a corrupt deacon before the storm struck."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "leader_discredited"
+        ]
+      },
+      {
+        "id": "miracle_certified_communion_saved",
+        "reached_by": "The replacement transformer is consecrated as a sign of divine favor.",
+        "summary": "The cathedral survives. {role:church_syndicate} declares a miracle, multiplying pilgrim tithes while {role:penitent_deacon} lives in terrified piety.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "penitent_deacon",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_marshal",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "standing",
+            "target": "church_syndicate",
+            "delta": 2
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "pilgrim_relief_fund_endowed",
+        "reached_by": "The pilot forces the deacon to endow a safety indemnity fund for the pilgrims.",
+        "summary": "A mutual relief endowment is established for the pilgrim flotilla. {role:penitent_deacon} remains in office under strict scrutiny, his bad debts liquidated.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "penitent_deacon",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_marshal",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "standing",
+            "target": "church_syndicate",
+            "delta": 1
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "law_tightened"
+        ]
+      },
+      {
+        "id": "cathedral_scorched_deacon_exposed",
+        "reached_by": "The transformer is destroyed or the grounding attempt fails.",
+        "summary": "A massive ion discharge incinerates the spire. {role:orbital_cathedral} suffers catastrophic electrical fires, leaving {role:penitent_deacon} disgraced and ruined.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "penitent_deacon",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_marshal",
+            "fate": "ruined"
+          },
+          {
+            "type": "standing",
+            "target": "church_syndicate",
+            "delta": -2
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "public_outrage"
+        ]
+      }
+    ],
+    "default_resolution": "cathedral_scorched_deacon_exposed",
+    "loose_threads": [
+      {
+        "id": "t_scrap_platinum_pawn_slip",
+        "surface": "cargo",
+        "detail": "A pawn receipt found in the foundry bazaar lists a four-hundred-kilo solid platinum lightning rod stamped with ecclesiastical seals.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_pilgrim_insurance_pool",
+        "surface": "price_board",
+        "detail": "Underwriters doubled premiums on passenger vessels docking at the orbital basilica three weeks before the festival.",
+        "can_carry_methods": [
+          "manufactured_crisis",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_gilded_pipe_invoice",
+        "surface": "station_notice",
+        "detail": "A customs clearance bill at the foundry lists twenty meters of hollow iron conduit electroplated in gold leaf.",
+        "can_carry_methods": [
+          "forged_records",
+          "impersonation"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "forged_records",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "faith",
+        "guilt",
+        "greed"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Orbital basilica invites faithful to annual celestial ion communion as solar winds rise.",
+      "Station scrap traders report mysterious influx of high-purity ceremonial platinum bullion.",
+      "Meteorological bureau warns pilgrim flotillas of severe electrical discharges around orbital shrines."
+    ],
+    "voice_direction": {
+      "penitent_deacon": "Pious, trembling, and breathy. Alternates between ornate religious benedictions and desperate, panicked pleas for secular assistance.",
+      "pilgrim_marshal": "Stern, solemn, and unbending. Speaks in measured liturgical cadences, utterly convinced of divine protection until sparks fly."
+    },
+    "novelty_tags": [
+      "orbital_cathedral",
+      "pawned_lightning_rod",
+      "ion_storm_communion",
+      "sacred_platinum",
+      "miracle_fraud"
+    ]
+  },
+  {
+    "id": "premise.the_micrometeorite_drift_accord",
+    "schema_version": 1,
+    "title": "The Micrometeorite Drift Accord",
+    "logline": "A dense micrometeorite stream threatens to shred a vital trading depot, but the station management consortium stalls deployment of deflection charges to void tenant leases.",
+    "scale": "local",
+    "tone": [
+      "political",
+      "survival"
+    ],
+    "themes": [
+      "price_of_profit",
+      "labour_and_exploitation"
+    ],
+    "roles": [
+      {
+        "id": "chief_mechanic",
+        "kind": "person",
+        "archetype": "mechanic",
+        "description": "Station maintenance head; grime-streaked, blunt, furious that management is ignoring structural warnings to clear tenants.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "consortium_director",
+        "kind": "person",
+        "archetype": "station_manager",
+        "description": "Depot leasing superintendent; icy, immaculate, calculating insurance payouts against contract termination clauses.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "station_consortium",
+        "kind": "faction",
+        "description": "The corporate conglomerate owning the trading depot and controlling dockside commercial leases.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "miners_union",
+        "kind": "faction",
+        "description": "The local union of independent shopkeepers, mechanics, and prospectors renting subsidized depot berths.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "drift_depot",
+        "kind": "place",
+        "description": "A bustling orbital trade station positioned directly in the path of a recurring micrometeorite debris stream.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "demolition_cache",
+        "kind": "place",
+        "description": "A secure orbital bunker housing high-yield shaped kinetic charges used for asteroid clearing.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "market_disrupted",
+      "law_tightened",
+      "power_vacuum"
+    ],
+    "public_situation": "Warning sirens wail at {role:drift_depot} as a high-density micrometeorite swarm approaches while deflection arrays sit inactive.",
+    "private_truth": "{role:consortium_director} intentionally withheld deployment authorization for the kinetic deflection charges to condemn the depot and void rent-controlled tenant leases.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "superintendent_stalled_deflection_to_void_depot_leases"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Notice boards announce mandatory evacuation alerts as {role:consortium_director} declares the oncoming debris stream unavoidable.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "chief_mechanic",
+            "target": "drift_depot",
+            "reason": "Courier high-resolution orbital radar telemetry probes to the mechanic's shop before the consortium shuts down private sensor channels.",
+            "private_fact": "The mechanic has maintained the station for thirty years and knows the automated charges can easily disperse the swarm.",
+            "outcome_tags": [
+              "probes_delivered",
+              "channels_cut"
+            ],
+            "routes": {
+              "probes_delivered": "next",
+              "channels_cut": "resolution:depot_shredded_leases_voided"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Pings from micrometeorite impacts ring through the hull as the leading edge of the gravel storm punches through exterior radiator panels.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "chief_mechanic",
+            "target": "drift_depot",
+            "culprit": "consortium_director",
+            "reason": "Scan the depot's central ordnance firing computer to prove the director deliberately disabled automated firing sequences.",
+            "private_fact": "The computer log contains a direct executive override command entered by the director forty-eight hours ago.",
+            "outcome_tags": [
+              "override_proven",
+              "console_purged"
+            ],
+            "routes": {
+              "override_proven": "next",
+              "console_purged": "resolution:depot_shredded_leases_voided"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "crisis",
+        "public_change": "Emergency pressure bulkheads seal off lower residential concourses as secondary rock fragments penetrate the docking ring.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "chief_mechanic",
+            "target": "demolition_cache",
+            "reason": "Retrieve manual firing keys and high-explosive trigger caps from the orbital demolition bunker to bypass the locked computer.",
+            "private_fact": "The bunker security locks were sabotaged with civilian resin, suggesting an insider helped the director seal the charges.",
+            "outcome_tags": [
+              "keys_acquired",
+              "bunker_sealed"
+            ],
+            "routes": {
+              "keys_acquired": "next",
+              "bunker_sealed": "resolution:depot_shredded_leases_voided"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "The main debris core is thirty minutes out as tenants scramble for escape shuttles and the director prepares to abandon station.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "ferrite",
+            "requester": "chief_mechanic",
+            "target": "drift_depot",
+            "reason": "Mine and deliver heavy ferrite ballast to anchor the manual kinetic charge mounts against outer hull gales.",
+            "private_fact": "The director offered the mechanic a five-percent equity partnership in the rebuilt executive hub if he walks away.",
+            "outcome_tags": [
+              "ballast_fitted",
+              "hull_shattered"
+            ],
+            "routes": {
+              "ballast_fitted": "next",
+              "hull_shattered": "resolution:depot_shredded_leases_voided"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The manual charges are mounted and primed. The pilot holds evidence of the director's sabotage and the detonation key to save the depot.",
+          "options": [
+            {
+              "id": "detonate_charges_and_expose",
+              "label": "Fire the kinetic charges to shatter the debris stream, saving the station and publicly exposing the director's fraud",
+              "leads_to": "resolution:charges_detonated_tenants_saved"
+            },
+            {
+              "id": "negotiate_tenant_compensation_settlement",
+              "label": "Leverage the evidence to force the consortium to grant full ownership shares of the rebuilt station to the tenant union",
+              "leads_to": "resolution:tenants_win_ownership_compact"
+            },
+            {
+              "id": "allow_impact_accept_consortium_bribe",
+              "label": "Withhold the detonator in exchange for a substantial private salvage grant from the consortium",
+              "leads_to": "resolution:depot_shredded_leases_voided"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "charges_detonated_tenants_saved",
+        "reached_by": "The pilot detonates the kinetic charges and exposes the director's sabotage.",
+        "summary": "The kinetic blast shatters the debris field. {role:drift_depot} is saved, {role:consortium_director} is ousted in disgrace, and tenant leases are preserved.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "chief_mechanic",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "consortium_director",
+            "fate": "ruined"
+          },
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "station_consortium",
+            "delta": -2
+          },
+          {
+            "type": "deed",
+            "tag": "shattered_the_gravel_storm",
+            "public_summary": "A pilot bypassed locked corporate computers to blow apart a debris swarm and save a working-class station."
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "tenants_win_ownership_compact",
+        "reached_by": "The pilot uses the incriminating override logs to negotiate a cooperative lease covenant.",
+        "summary": "The debris is deflected under a compromise treaty. {role:miners_union} wins permanent equity shares in {role:drift_depot}, curbing corporate authority.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": 2
+          },
+          {
+            "type": "standing",
+            "target": "station_consortium",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "chief_mechanic",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "consortium_director",
+            "fate": "owes_debt"
+          }
+        ],
+        "seeds": [
+          "alliance_formed",
+          "power_vacuum"
+        ]
+      },
+      {
+        "id": "depot_shredded_leases_voided",
+        "reached_by": "The charges fail to deploy or the pilot accepts the consortium payoff.",
+        "summary": "Micrometeorites scour {role:drift_depot}. The station is evacuated and condemned, allowing {role:station_consortium} to void all tenant leases and claim insurance.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "chief_mechanic",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "consortium_director",
+            "fate": "promoted"
+          },
+          {
+            "type": "standing",
+            "target": "station_consortium",
+            "delta": 2
+          },
+          {
+            "type": "standing",
+            "target": "miners_union",
+            "delta": -3
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "public_outrage"
+        ]
+      }
+    ],
+    "default_resolution": "depot_shredded_leases_voided",
+    "loose_threads": [
+      {
+        "id": "t_void_clause_lease_rider",
+        "surface": "station_notice",
+        "detail": "Recent tenant lease renewals included an expedited force majeure clause specifically referencing micrometeorite storm damage.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_demolition_cache_audit",
+        "surface": "cargo",
+        "detail": "Inspection tags on the demolition cache charges show maintenance signatures for next month already stamped and approved.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_depot_reconstruction_scrip",
+        "surface": "price_board",
+        "detail": "Advance bonds for a high-end corporate replacement station were floated on capital exchanges two weeks before the debris warning.",
+        "can_carry_methods": [
+          "manufactured_crisis",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration",
+        "forged_records"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Orbital traffic controllers track dense micrometeorite stream converging on commercial depot lanes.",
+      "Station tenants union lodges formal protest over delayed activation of automated deflection batteries.",
+      "Industrial salvage brokers prepare heavy wrecking hulls for post-impact clearance operations."
+    ],
+    "voice_direction": {
+      "chief_mechanic": "Gruff, abrasive, and relentless. Speaks in short, angry imperatives, refusing all commercial euphemisms.",
+      "consortium_director": "Silky, polite, and completely detached. Speaks in placid administrative jargon, treating catastrophic structural breach as a routine legal milestone."
+    },
+    "novelty_tags": [
+      "micrometeorite_swarm",
+      "delayed_deflection_charges",
+      "force_majeure_fraud",
+      "lease_condemnation",
+      "kinetic_demolition"
+    ]
+  },
+  {
+    "id": "premise.the_magnetic_shear_convoys",
+    "schema_version": 1,
+    "title": "The Magnetic Shear Convoys",
+    "logline": "A catastrophic magnetic shear shuts down three systems' public jump lanes, sparking a fierce clash when a private cartel fakes safety data to funnel all shipping into their toll corridor.",
+    "scale": "regional",
+    "tone": [
+      "political",
+      "tense"
+    ],
+    "themes": [
+      "price_of_profit",
+      "safety_vs_freedom"
+    ],
+    "roles": [
+      {
+        "id": "convoy_marshal",
+        "kind": "person",
+        "archetype": "pilot",
+        "description": "Leader of stranded civilian freight convoys; exhausted, unyielding, trying to keep dozens of independent haulers from starvation.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "cartel_syndic",
+        "kind": "person",
+        "archetype": "broker",
+        "description": "Chief negotiator for the private jump gate corridor; suave, predatory, demanding extortionate toll rates for safe transit.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "cartel_enforcer_frigate",
+        "kind": "ship",
+        "description": "A heavily armored patrol cruiser guarding the entrance to the cartel's shielded toll corridor.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "haulers_union",
+        "kind": "faction",
+        "description": "The independent interstellar freight haulers union whose members are stranded across the sector.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "toll_syndicate",
+        "kind": "faction",
+        "description": "A predatory logistics cartel holding monopoly rights over hardened, magnetic-shielded transit conduits.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "shear_zone_depot",
+        "kind": "place",
+        "description": "A crowded orbital weigh-station where hundreds of haulers wait out the magnetic shear front.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "magnetospheric_buoy",
+        "kind": "place",
+        "description": "A deep-space environmental sensor platform in an intermediate system monitoring field line turbulence.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "regional_transit_hub",
+        "kind": "place",
+        "description": "The sector's main commercial jump nexus in a destination system where transit disputes are regulated.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "ion_storm"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "route_opened",
+      "alliance_broken",
+      "market_disrupted"
+    ],
+    "public_situation": "Three star systems face gridlock as {role:toll_syndicate} declares public jump routes closed due to dangerous magnetic shear turbulence.",
+    "private_truth": "{role:cartel_syndic} altered calibration algorithms on {role:magnetospheric_buoy} to exaggerate shear levels and force all commercial freight through private pay-per-jump lanes.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "cartel_faked_shear_readings_to_monopolize_corridor"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Public navigation beacons turn crimson as navigation authorities issue a regional transit embargo across public gates.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "cuprite",
+            "requester": "convoy_marshal",
+            "target": "shear_zone_depot",
+            "reason": "Mine and deliver high-purity cuprite ore to wind emergency magnetic deflection coils for stranded life-support haulers.",
+            "private_fact": "His convoy has only twelve days of fuel left before reactor chill sets in, leaving seventy ships frozen in the belt.",
+            "outcome_tags": [
+              "coils_wound",
+              "reactors_drained"
+            ],
+            "routes": {
+              "coils_wound": "next",
+              "reactors_drained": "resolution:cartel_monopoly_enforced_haulers_broken"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "The toll syndicate posts armed security around the private shielded gate, demanding forty percent cargo tariffs.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "convoy_marshal",
+            "target": "magnetospheric_buoy",
+            "reason": "Retrieve raw environmental telemetry drives directly from the deep-space sensor buoy to verify if public lanes are truly impassable.",
+            "private_fact": "He suspects the cartel's automated warnings were issued six hours before the magnetic wave actually reached the sector.",
+            "outcome_tags": [
+              "drives_retrieved",
+              "buoy_jammed"
+            ],
+            "routes": {
+              "drives_retrieved": "next",
+              "buoy_jammed": "resolution:cartel_monopoly_enforced_haulers_broken"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "location": "neighbouring_system",
+        "public_change": "Telemetry scans reveal that the magnetic shear wave subsided forty-eight hours ago, leaving public lanes clear.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "convoy_marshal",
+            "target": "magnetospheric_buoy",
+            "culprit": "cartel_syndic",
+            "reason": "Scan the buoy's algorithmic processor to document that the cartel uploaded a persistent override loop faking turbulence.",
+            "private_fact": "The syndicate factor personally authorized the code upload from an encrypted brokerage terminal in the transit hub.",
+            "outcome_tags": [
+              "override_verified",
+              "telemetry_wiped"
+            ],
+            "routes": {
+              "override_verified": "next",
+              "telemetry_wiped": "resolution:cartel_monopoly_enforced_haulers_broken"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "location": "any_system",
+        "public_change": "The cartel's frigate establishes an interdiction perimeter around {role:regional_transit_hub} to prevent proof from reaching regulators.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "convoy_marshal",
+            "target": "cartel_enforcer_frigate",
+            "reason": "Neutralize the cartel frigate blocking the orbital arbitration approach to clear a path to the regulator's bench.",
+            "private_fact": "The frigate captain hails mid-combat offering eighty thousand credits and a lifetime toll exemption if the pilot surrenders the drives.",
+            "outcome_tags": [
+              "frigate_disabled",
+              "accepted_cartel_deal"
+            ],
+            "routes": {
+              "frigate_disabled": "next",
+              "accepted_cartel_deal": "resolution:cartel_monopoly_enforced_haulers_broken"
+            }
+          },
+          {
+            "verb": "delivery_courier",
+            "requester": "convoy_marshal",
+            "target": "regional_transit_hub",
+            "reason": "Deliver the raw buoy drives and the hacked algorithm proof directly to the sector transit commission.",
+            "private_fact": "The marshal knows that even if the lanes reopen, independent haulers will need months to recoup their lost contracts.",
+            "outcome_tags": [
+              "proof_tabled",
+              "hearing_blocked"
+            ],
+            "routes": {
+              "proof_tabled": "next",
+              "hearing_blocked": "resolution:cartel_monopoly_enforced_haulers_broken"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The proof is submitted and the cartel's armed picket is broken. The pilot faces three distinct proposals for settling the transit crisis.",
+          "options": [
+            {
+              "id": "open_public_lanes_punish_cartel",
+              "label": "Force immediate reopening of public jump routes and mandate heavy punitive reparations against the toll cartel",
+              "leads_to": "resolution:public_lanes_reopened_cartel_fined"
+            },
+            {
+              "id": "broker_union_toll_exemption",
+              "label": "Negotiate a permanent toll exemption and revenue-sharing compact exclusively for the independent haulers union",
+              "leads_to": "resolution:union_secures_toll_concession"
+            },
+            {
+              "id": "sell_out_to_cartel",
+              "label": "Accept the cartel's buyout, concealing the falsified shear data to preserve private gate revenues",
+              "leads_to": "resolution:cartel_monopoly_enforced_haulers_broken"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "public_lanes_reopened_cartel_fined",
+        "reached_by": "The pilot tables the buoy evidence, proving the shear was artificially fabricated.",
+        "summary": "Public jump routes are declared clear. {role:toll_syndicate} is hit with massive fines, and {role:convoy_marshal} leads his freighters safely home.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "haulers_union",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "toll_syndicate",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "convoy_marshal",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "cartel_syndic",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "broke_the_magnetic_monopoly",
+            "public_summary": "A pilot proved a predatory logistics cartel faked magnetic storm warnings to charge extortionate gate tolls."
+          }
+        ],
+        "seeds": [
+          "route_opened",
+          "alliance_broken"
+        ]
+      },
+      {
+        "id": "union_secures_toll_concession",
+        "reached_by": "The pilot brokers an exclusive settlement granting the union permanent toll-free access.",
+        "summary": "The union wins free access to private conduits. {role:toll_syndicate} maintains tolls on outside haulers, while {role:haulers_union} secures commercial dominance.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "haulers_union",
+            "delta": 2
+          },
+          {
+            "type": "standing",
+            "target": "toll_syndicate",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "convoy_marshal",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "cartel_syndic",
+            "fate": "owes_debt"
+          }
+        ],
+        "seeds": [
+          "alliance_formed",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "cartel_monopoly_enforced_haulers_broken",
+        "reached_by": "The buoy evidence is suppressed or the pilot accepts the cartel bribe.",
+        "summary": "The public gates remain shuttered. {role:toll_syndicate} extracts crushing tolls, forcing independent haulers into bankruptcy and cementing cartel control.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "toll_syndicate",
+            "delta": 2
+          },
+          {
+            "type": "standing",
+            "target": "haulers_union",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "cartel_syndic",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "convoy_marshal",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "power_vacuum",
+          "public_outrage"
+        ]
+      }
+    ],
+    "default_resolution": "cartel_monopoly_enforced_haulers_broken",
+    "loose_threads": [
+      {
+        "id": "t_cartel_buoy_firmware_key",
+        "surface": "cargo",
+        "detail": "A maintenance data cartridge recovered from the buoy carries encryption hashes registered to the cartel factor's private terminal.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_freight_toll_forward_scrip",
+        "surface": "price_board",
+        "detail": "Forward toll coupons for private conduit access were traded at eighty percent premiums by an unlisted brokerage two days prior to the alert.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_buoy_telemetry_lag",
+        "surface": "scan",
+        "detail": "Public telemetry beacons show an unexplained four-hour transmission delay between raw sensor reception and public broadcasting.",
+        "can_carry_methods": [
+          "information_control",
+          "manufactured_crisis"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration",
+        "forged_records"
+      ],
+      "motives": [
+        "greed",
+        "control",
+        "survival"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Transit commission declares regional jump lanes hazardous due to unprecedented magnetic shear front.",
+      "Independent freight convoys bottleneck at border checkpoints facing ruinous private passage tariffs.",
+      "Logistics cartel defends forty percent rate hikes, citing maintenance costs for hardened conduit loops."
+    ],
+    "voice_direction": {
+      "convoy_marshal": "Gravelly, exhausted, and stubborn. Speaks in blunt logistical terms and flatly refuses to indulge corporate double-talk.",
+      "cartel_syndic": "Silky, patient, and patronizing. Uses polite euphemisms for financial extortion and feigns deep personal sympathy for stranded haulers."
+    },
+    "novelty_tags": [
+      "magnetic_shear",
+      "faked_turbulence_data",
+      "toll_conduit_monopoly",
+      "freight_convoy_gridlock",
+      "sensor_buoy_tampering"
+    ]
+  }
+]

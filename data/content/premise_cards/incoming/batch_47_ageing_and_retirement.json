@@ -1,0 +1,635 @@
+[
+  {
+    "id": "premise.the_veterans_pension_scrip",
+    "schema_version": 1,
+    "title": "The Veteran's Pension Scrip",
+    "logline": "An aging auxiliary pilot faces eviction from her retirement habitat when the station board retroactively reclassifies her wartime service vouchers as expired scrip.",
+    "scale": "personal",
+    "tone": [
+      "bleak",
+      "noir"
+    ],
+    "themes": [
+      "debt_and_obligation",
+      "reinvention"
+    ],
+    "roles": [
+      {
+        "id": "veteran_pilot",
+        "kind": "person",
+        "archetype": "veteran",
+        "description": "Retired auxiliary transport pilot; arthritic, stubborn, clutching a stamped wartime pension indenture from thirty cycles ago.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "station_auditor",
+        "kind": "person",
+        "archetype": "bureaucrat",
+        "description": "Habitat lease administrator; polite, inflexible, tasked with clearing subsidized residential berths for executive suites.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "habitat_syndicate",
+        "kind": "faction",
+        "description": "The corporate housing consortium converting subsidized veteran berths into private executive housing.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "veteran_berth",
+        "kind": "place",
+        "description": "A cramped pressurized hab-pod in the lower station ring where retired service crews reside.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "naval_archive_dock",
+        "kind": "place",
+        "description": "A decommissioned orbital depot holding microfiche service rolls from the frontier conflicts.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "law_tightened",
+      "power_vacuum",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "Notice of eviction is posted across {role:veteran_berth} as {role:station_auditor} cancels historic auxiliary military lease vouchers.",
+    "private_truth": "{role:station_auditor} retroactively altered the service codes to manufacture vacancies for a high-margin corporate real estate contract.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "auditor_reclassified_service_scrip_for_executive_leases"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Security seals appear on maintenance elevators leading to subsidized retirement sectors in {role:veteran_berth}.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "veteran_pilot",
+            "target": "veteran_berth",
+            "culprit": "station_auditor",
+            "reason": "She hires an independent pilot to tap the administrative node and retrieve the timestamp of the rule change that invalidated her scrip.",
+            "private_fact": "She signed away her right to state legal representation when she accepted the discounted housing voucher thirty years ago.",
+            "outcome_tags": [
+              "reclassification_logged",
+              "node_locked"
+            ],
+            "routes": {
+              "reclassification_logged": "next",
+              "node_locked": "resolution:veteran_evicted_suites_built"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Bailiffs disconnect water and secondary power lines to {role:veteran_berth} to enforce the thirty-day eviction window.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "veteran_pilot",
+            "target": "naval_archive_dock",
+            "reason": "Purchase certified microfiche rolls of original enlistment covenants from the archive dock before historical records are recycled.",
+            "private_fact": "Her auxiliary wing took fifty percent casualties running fuel convoys that the regular navy refused to escort.",
+            "outcome_tags": [
+              "rolls_purchased",
+              "archive_purged"
+            ],
+            "routes": {
+              "rolls_purchased": "next",
+              "archive_purged": "resolution:veteran_evicted_suites_built"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Private security forces gather outside {role:veteran_berth} to seize the quarters by force before the arbitration deadline.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "veteran_pilot",
+            "target": "veteran_berth",
+            "reason": "Deliver the certified rolls through security cordons directly to the presiding station ombudsman before the eviction order executes.",
+            "private_fact": "The auditor offered her a private ten-thousand-credit relocation voucher on the condition that she burns the original rolls.",
+            "outcome_tags": [
+              "rolls_delivered",
+              "courier_intercepted"
+            ],
+            "routes": {
+              "rolls_delivered": "next",
+              "courier_intercepted": "resolution:veteran_evicted_suites_built"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The pilot holds certified proof of the veteran's protected military charter. The auditor and the housing syndicate await the presentation.",
+          "options": [
+            {
+              "id": "enforce_pension_charter",
+              "label": "Table the naval archive rolls to reinstate the veteran's lifetime tenancy and halt the redevelopment",
+              "leads_to": "resolution:pension_charter_upheld"
+            },
+            {
+              "id": "negotiate_resettlement_buyout",
+              "label": "Broker a cash buyout funding the veteran's relocation to an outer garden world in exchange for relinquishing the berth",
+              "leads_to": "resolution:veteran_relocated_peacefully"
+            },
+            {
+              "id": "withhold_records_for_syndicate",
+              "label": "Hand the rolls to the auditor in exchange for a syndicate contractor retainer",
+              "leads_to": "resolution:veteran_evicted_suites_built"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "pension_charter_upheld",
+        "reached_by": "The pilot tables the archival covenant, legally halting the eviction.",
+        "summary": "The naval covenant is validated. {role:veteran_pilot} retains her berth for life, while {role:station_auditor} faces administrative sanctions.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "veteran_pilot",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "station_auditor",
+            "fate": "ruined"
+          },
+          {
+            "type": "standing",
+            "target": "habitat_syndicate",
+            "delta": -2
+          },
+          {
+            "type": "deed",
+            "tag": "saved_the_veterans_berth",
+            "public_summary": "A pilot uncovered old naval muster rolls to stop an auditor from throwing a decorated veteran into the street."
+          }
+        ],
+        "seeds": [
+          "law_tightened",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "veteran_relocated_peacefully",
+        "reached_by": "The pilot negotiates an equitable cash settlement funding the veteran's quiet retirement.",
+        "summary": "{role:veteran_pilot} accepts a funded departure to an outer agricultural colony. {role:habitat_syndicate} secures the berth without scandal.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "veteran_pilot",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "station_auditor",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "standing",
+            "target": "habitat_syndicate",
+            "delta": 1
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "veteran_evicted_suites_built",
+        "reached_by": "The archive rolls are lost or surrendered to the syndicate.",
+        "summary": "The eviction executes. {role:veteran_pilot} is expelled into public shelters, and {role:habitat_syndicate} renovates the block into luxury suites.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "veteran_pilot",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "station_auditor",
+            "fate": "promoted"
+          },
+          {
+            "type": "standing",
+            "target": "habitat_syndicate",
+            "delta": 2
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "law_tightened"
+        ]
+      }
+    ],
+    "default_resolution": "veteran_evicted_suites_built",
+    "loose_threads": [
+      {
+        "id": "t_amended_tenant_clause",
+        "surface": "station_notice",
+        "detail": "The revised tenant occupancy regulations cite an administrative decree signed three hours before midnight on a holiday.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_luxury_suite_escrow",
+        "surface": "price_board",
+        "detail": "Advance lease deposits for renovated upper-ring berths were collected forty days before the eviction notices were issued.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_archive_registry_purge",
+        "surface": "cargo",
+        "detail": "The shipping manifest for the naval archive depot lists thirty pallets of service microfiche scheduled for unlogged incinerator disposal.",
+        "can_carry_methods": [
+          "sabotage",
+          "information_control"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration",
+        "forged_records"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Habitat housing board votes to accelerate commercial redevelopment of veteran residential wings.",
+      "Auxiliary veterans mount quiet picket line outside station municipal tenancy offices.",
+      "Real estate brokerages report surging investor demand for converted upper-deck pressurized berths."
+    ],
+    "voice_direction": {
+      "veteran_pilot": "Gruff, dry, and raspy. Speaks in clipped operational phrases and steadfastly refuses to plead or show physical pain.",
+      "station_auditor": "Smooth, hurried, and patronizing. Uses dense legal jargon and repeats procedural disclaimers whenever challenged."
+    },
+    "novelty_tags": [
+      "veteran_scrip",
+      "retroactive_eviction",
+      "naval_archive",
+      "hab_pod_redevelopment",
+      "service_covenant"
+    ]
+  },
+  {
+    "id": "premise.the_recluses_final_tow",
+    "schema_version": 1,
+    "title": "The Recluse's Final Tow",
+    "logline": "A solitary retired prospector living inside a condemned radiator habitat refuses mandatory evacuation, firing upon municipal tow tugs to guard a secret vacuum ecology.",
+    "scale": "personal",
+    "tone": [
+      "melancholy",
+      "survival"
+    ],
+    "themes": [
+      "safety_vs_freedom",
+      "who_owns_the_past"
+    ],
+    "roles": [
+      {
+        "id": "solitary_recluse",
+        "kind": "person",
+        "archetype": "retired_legend",
+        "description": "Fabled former belt surveyor; reclusive, sharp-tongued, living alone aboard a decaying orbital radiator station.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "clearance_bailiff",
+        "kind": "person",
+        "archetype": "official",
+        "description": "Municipal salvage coordinator; exasperated, impatient, under strict orders to tow the decaying hulk into the star.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "automated_defense_rig",
+        "kind": "ship",
+        "description": "An antique jury-rigged mining cutter fitted with heavy pulse lasers defending the habitat approach.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "salvage_commission",
+        "kind": "faction",
+        "description": "The system sanitation and clearance authority tasked with deorbiting hazardous space derelicts.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "radiator_hulk",
+        "kind": "place",
+        "description": "A sprawling, freezing radiator fin station adrift in an outer belt graveyard.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "chemical_depot",
+        "kind": "place",
+        "description": "A remote orbital supply post stocking cryo-stabilized nutrient fluid and sealing compounds.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "wreck_left_behind",
+      "quiet_cover_up",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "Municipal clearance crews issue warnings around {role:radiator_hulk} after an armed prospector drives off evacuation tugs.",
+    "private_truth": "{role:solitary_recluse} is protecting a rare colony of fragile vacuum-flowering lichens growing across the habitat's freezing external fins.",
+    "core_why": {
+      "motive": "protecting_someone",
+      "secret": "prospector_guarding_fragile_vacuum_ecology_on_radiator"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Clearance beacons around {role:radiator_hulk} flash orange, warning traffic that the derelict has been slated for solar disposal.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "clearance_bailiff",
+            "target": "automated_defense_rig",
+            "reason": "The bailiff hires a mercenary pilot to disable the recluse's armed sentry cutter so tow crews can attach magnetic grapples.",
+            "private_fact": "The recluse hails mid-combat offering high-grade uncut bismuth cores if the pilot repels the salvage tugs instead.",
+            "outcome_tags": [
+              "cutter_disabled",
+              "accepted_recluse_plea"
+            ],
+            "routes": {
+              "cutter_disabled": "resolution:habitat_towed_and_incinerated",
+              "accepted_recluse_plea": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "The recluse invites the pilot to dock in the freezing radiator wing, revealing blooming biological carpets spanning the vacuum panels.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "solitary_recluse",
+            "target": "chemical_depot",
+            "reason": "Retrieve industrial sealant compounds from the chemical depot to plug thermal fluid leaks threatening to freeze the lichen beds.",
+            "private_fact": "She spent forty years cataloging these lichens and knows the thermal shock of moving the station will render them extinct.",
+            "outcome_tags": [
+              "sealant_acquired",
+              "depot_seized"
+            ],
+            "routes": {
+              "sealant_acquired": "next",
+              "depot_seized": "resolution:habitat_towed_and_incinerated"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Municipal tow vessels reform in close formation with a heavy tractor tug to drag the station away by force.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "silicate",
+            "requester": "solitary_recluse",
+            "target": "radiator_hulk",
+            "reason": "Mine and deliver heavy silicate slag to encase the lichen habitat wing in a protective micrometeorite and radiation berm.",
+            "private_fact": "The bailiff has private instructions to clear the navigational lane before a corporate freight convoy arrives tomorrow.",
+            "outcome_tags": [
+              "ballast_delivered",
+              "tractor_locked"
+            ],
+            "routes": {
+              "ballast_delivered": "next",
+              "tractor_locked": "resolution:habitat_towed_and_incinerated"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The radiator wing is reinforced with silicate ballast. The bailiff hails with a final ultimatum before firing main tractor engines.",
+          "options": [
+            {
+              "id": "certify_ecological_sanctuary",
+              "label": "Register the lichen beds with colonial conservators to establish a permanent navigational exclusion sanctuary",
+              "leads_to": "resolution:sanctuary_chartered_recluse_remains"
+            },
+            {
+              "id": "assist_peaceful_transplant",
+              "label": "Persuade the recluse to harvest seed samples and accept relocation to an orbital research conservatory",
+              "leads_to": "resolution:lichen_harvested_recluse_relocated"
+            },
+            {
+              "id": "stand_down_allow_tow",
+              "label": "Stand aside and permit the municipal tugs to grapple the station and drag it toward the star",
+              "leads_to": "resolution:habitat_towed_and_incinerated"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "sanctuary_chartered_recluse_remains",
+        "reached_by": "The pilot files scientific telemetry of the vacuum lichens, establishing a permanent ecological exclusion zone.",
+        "summary": "The station is declared an ecological reserve. {role:solitary_recluse} remains aboard as legal custodian, and {role:salvage_commission} reroutes shipping lanes.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "solitary_recluse",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "clearance_bailiff",
+            "fate": "ruined"
+          },
+          {
+            "type": "standing",
+            "target": "salvage_commission",
+            "delta": -2
+          },
+          {
+            "type": "deed",
+            "tag": "saved_the_vacuum_garden",
+            "public_summary": "A pilot defended a freezing radiator station so a solitary prospector could protect her garden of void-blooming lichens."
+          }
+        ],
+        "seeds": [
+          "route_closed",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "lichen_harvested_recluse_relocated",
+        "reached_by": "The recluse agrees to harvest viable spore pods and relocate to an orbital botanical institution.",
+        "summary": "Lichen specimens are secured for cultivation. {role:solitary_recluse} is granted an orbital residency, and the derelict hull is scuttled peacefully.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "solitary_recluse",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "clearance_bailiff",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "standing",
+            "target": "salvage_commission",
+            "delta": 1
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "habitat_towed_and_incinerated",
+        "reached_by": "The bailiff's tugs lock tractors and drag the station into the system primary.",
+        "summary": "Tractor tugs haul {role:radiator_hulk} into solar incinerator disposal. The unique vacuum flora is vaporized, and {role:solitary_recluse} is placed in forced municipal hospice.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "solitary_recluse",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "clearance_bailiff",
+            "fate": "promoted"
+          },
+          {
+            "type": "standing",
+            "target": "salvage_commission",
+            "delta": 2
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "public_outrage"
+        ]
+      }
+    ],
+    "default_resolution": "habitat_towed_and_incinerated",
+    "loose_threads": [
+      {
+        "id": "t_towing_bounty_rider",
+        "surface": "station_notice",
+        "detail": "The municipal clearance contract carries an expedited bonus clause funded by an anonymous logistics cartel.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_botanical_archive_query",
+        "surface": "cargo",
+        "detail": "Data slates found in the chemical depot show repeated encrypted inquiries regarding vacuum lichen enzymes from an unlisted laboratory.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "impersonation"
+        ]
+      },
+      {
+        "id": "t_salvage_hull_speculation",
+        "surface": "price_board",
+        "detail": "Scrap futures for heavy radiator alloy jumped fifteen percent the afternoon the eviction decree was posted.",
+        "can_carry_methods": [
+          "manufactured_crisis",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration",
+        "manufactured_crisis"
+      ],
+      "motives": [
+        "greed",
+        "control",
+        "survival"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Salvage authorities warn civilian craft away from condemned outer belt orbital radiator arrays.",
+      "Surveyors report unusual photosynthetic bioluminescence signatures on outer station wreckage.",
+      "Clearance tugs requisition additional tractor beam capacitors for high-inertia salvage operations."
+    ],
+    "voice_direction": {
+      "solitary_recluse": "Sardonic, gravelly, and unhurried. Speaks with the quiet detachment of someone who has spent decades speaking only to herself.",
+      "clearance_bailiff": "Fretful, bureaucratic, and overworked. Speaks quickly in exasperated bursts, constantly checking countdown timers."
+    },
+    "novelty_tags": [
+      "vacuum_lichens",
+      "radiator_habitat",
+      "unwanted_rescue",
+      "solar_incineration",
+      "derelict_clearance"
+    ]
+  }
+]

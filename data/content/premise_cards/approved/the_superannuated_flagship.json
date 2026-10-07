@@ -1,0 +1,368 @@
+{
+  "id": "premise.the_superannuated_flagship",
+  "schema_version": 1,
+  "title": "The Superannuated Flagship",
+  "logline": "A dying naval commodore leaves his vintage armored gunboat to his squabbling heirs on the condition they navigate an active live-fire proving ground together.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "tense"
+  ],
+  "themes": [
+    "chosen_family",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "elder_sibling",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "High-strung station broker; anxious, resentful of military tradition, desperate to sell the gunboat to cover trading losses.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "younger_sibling",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Freelance hotshot pilot; reckless, sentimental, determined to keep the armored family heirloom flying.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "testament_notary",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Naval estate executor; austere, pedantic, holding the deceased commodore's encrypted launch codes in escrow.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrapper_interceptor",
+      "kind": "ship",
+      "description": "An aggressive salvage raider attempting to disable the gunboat during the proving trial to strip its armor plate.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shipwrights_guild",
+      "kind": "faction",
+      "description": "An independent shipbuilders' guild maintaining historical drydocks and armor refits.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "naval_breach_range",
+      "kind": "place",
+      "description": "An abandoned orbital ordnance range strewn with unexploded target drones and magnetic tether mines.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "heritage_shipyard",
+      "kind": "place",
+      "description": "A historic drydock where the gunboat must dock to formally ratify the testamentary transfer.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_broken",
+    "debt_owed_to_player",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "An antique armored naval gunboat is fueled at {role:heritage_shipyard} as the late commodore's estranged children prepare for a mandatory proving flight.",
+  "private_truth": "The commodore's testamentary trial was designed to force his estranged children to cooperate, but scrap pirates have learned the gunboat's weapons are unloaded.",
+  "core_why": {
+    "motive": "legacy",
+    "secret": "commodore_stipulated_proving_run_forcing_heir_reconciliation"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The naval notary unseals the testamentary protocol at {role:heritage_shipyard}, requiring an outside pilot to escort the heirloom craft.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "testament_notary",
+          "target": "heritage_shipyard",
+          "reason": "Collect the biometric testamentary seal and flight telemetry recorder from the estate office to monitor the siblings' compliance.",
+          "private_fact": "The commodore privately instructed the notary that if the siblings abandon the trial, the vessel passes entirely to naval scrap reserves.",
+          "outcome_tags": [
+            "recorder_installed",
+            "flight_canceled"
+          ],
+          "routes": {
+            "recorder_installed": "next",
+            "flight_canceled": "resolution:flagship_scrapped_heirs_disinherited"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The heirloom gunboat enters {role:naval_breach_range}, where scrap scavengers ambush the unarmed vessel.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "elder_sibling",
+          "target": "scrapper_interceptor",
+          "reason": "Scavengers blow off the gunboat's secondary coolant pod; destroy the lead raider and retrieve the ejected pod before reactor heat spikes.",
+          "private_fact": "He secretly tried to hire scavengers to fake an engine breakdown so he could collect the estate's insurance value early.",
+          "outcome_tags": [
+            "coolant_recovered",
+            "reactor_compromised"
+          ],
+          "routes": {
+            "coolant_recovered": "next",
+            "reactor_compromised": "resolution:flagship_scrapped_heirs_disinherited"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Rogue naval training drones activate inside the firing range, boxing the heirs against the outer minefield boundary.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "younger_sibling",
+          "target": "scrapper_interceptor",
+          "reason": "Destroy the remaining scavenger escorts attempting to corral the gunboat into the live mine perimeter.",
+          "private_fact": "She forged her late father's logbook entries to make it look like she completed her naval flight cadet exams.",
+          "outcome_tags": [
+            "perimeter_cleared",
+            "gunboat_crippled"
+          ],
+          "routes": {
+            "perimeter_cleared": "next",
+            "gunboat_crippled": "resolution:flagship_scrapped_heirs_disinherited"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "testament_notary",
+          "target": "heritage_shipyard",
+          "reason": "Deliver the telemetry recorder back to the notary's bench to certify that the proving run was completed under testamentary conditions.",
+          "private_fact": "The commodore left a hidden safe deposit slip aboard the gunboat containing ten thousand credits of unmarked bullion.",
+          "outcome_tags": [
+            "telemetry_filed",
+            "registry_rejected"
+          ],
+          "routes": {
+            "telemetry_filed": "next",
+            "registry_rejected": "resolution:flagship_scrapped_heirs_disinherited"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The trial is complete and the gunboat is safely berthed. The heirs disagree violently on what to do with the inherited warship.",
+        "options": [
+          {
+            "id": "broker_joint_ownership",
+            "label": "Persuade the siblings to form a joint charter company to operate the gunboat as an independent heavy escort",
+            "leads_to": "resolution:siblings_reconcile_and_charter"
+          },
+          {
+            "id": "back_elder_sibling_liquidation",
+            "label": "Help the elder sibling buy out the younger's share with private broker loans to scrap the hull for debt relief",
+            "leads_to": "resolution:gunboat_sold_for_salvage"
+          },
+          {
+            "id": "back_younger_sibling_solo",
+            "label": "Help the younger sibling secure independent bank credit to buy out the elder and keep the ship flying",
+            "leads_to": "resolution:younger_keeps_ship_flying"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "siblings_reconcile_and_charter",
+      "reached_by": "The pilot brokers a partnership between the siblings, fulfilling the commodore's intent.",
+      "summary": "The siblings reconcile and establish an armed freight escort line. {role:elder_sibling} manages contracts while {role:younger_sibling} flies the heirloom.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_sibling",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_sibling",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "testament_notary",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "united_the_commodores_heirs",
+          "public_summary": "A pilot escorted an antique gunboat through a live-fire proving ground to unite two estranged siblings."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "gunboat_sold_for_salvage",
+      "reached_by": "The elder sibling liquidates the vessel to satisfy pressing broker debts.",
+      "summary": "The gunboat is cut up for armor plate. {role:elder_sibling} clears his trading debts, while {role:younger_sibling} leaves the system in bitter estrangement.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_sibling",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_sibling",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "younger_keeps_ship_flying",
+      "reached_by": "The younger sibling secures independent finance and assumes sole command.",
+      "summary": "{role:younger_sibling} takes sole title of the armored warship, taking high-risk bounty contracts while {role:elder_sibling} faces bankruptcy.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "younger_sibling",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "shipwrights_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "flagship_scrapped_heirs_disinherited",
+      "reached_by": "The flight trial fails or the gunboat is crippled inside the range.",
+      "summary": "The proving trial fails. The commodore's gunboat reverts to naval scrap reserves, leaving both {role:elder_sibling} and {role:younger_sibling} disinherited.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_sibling",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "testament_notary",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "flagship_scrapped_heirs_disinherited",
+  "loose_threads": [
+    {
+      "id": "t_commodore_debt_rider",
+      "surface": "station_notice",
+      "detail": "A private lien against the gunboat's main drive core was registered by a loan syndicate forty-eight hours before the commodore passed away.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_proving_range_radar_blind",
+      "surface": "scan",
+      "detail": "Navigational radar arrays monitoring the ordnance range were quietly dialed down during the trial window.",
+      "can_carry_methods": [
+        "sabotage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_scrapper_salvage_order",
+      "surface": "cargo",
+      "detail": "The lead scrapper vessel carried a pre-signed bill of lading for thirty tons of heavy hull plate stamped by a municipal scrap broker.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "legacy",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Naval probate court oversees testing of late commodore's armored personal gunboat.",
+    "Civilian traffic warned away from perimeter of decommissioned live-fire proving ranges.",
+    "Shipyard mechanics marvel at pristine state of antique naval pulse cannon mountings."
+  ],
+  "voice_direction": {
+    "elder_sibling": "High-pitched, breathless, and resentful. Speaks rapidly about numbers and expenses, viewing every tradition as a personal financial attack.",
+    "younger_sibling": "Bravura, loud, and defensive. Uses military jargon incorrectly and overcompensates for feeling dismissed by her elder brother.",
+    "testament_notary": "Monotone, glacial, and formal. Delivers catastrophic legal news with identical unhurried inflection as weather forecasts."
+  },
+  "novelty_tags": [
+    "testamentary_proving_run",
+    "squabbling_heirs",
+    "armored_gunboat",
+    "live_fire_range",
+    "commodore_will"
+  ]
+}

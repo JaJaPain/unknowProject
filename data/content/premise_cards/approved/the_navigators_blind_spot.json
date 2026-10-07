@@ -1,0 +1,365 @@
+{
+  "id": "premise.the_navigators_blind_spot",
+  "schema_version": 1,
+  "title": "The Navigator's Blind Spot",
+  "logline": "A celebrated retired jump cartographer is accused of senile incompetence after recent gate calculations cause near-collisions, unaware that a nearby micro-pulsar is warping local spacetime.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "paranoid"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "faith_and_doubt"
+  ],
+  "roles": [
+    {
+      "id": "retired_navigator",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Legendary stellar cartographer; dignified, terrified of cognitive decline, defending fifty years of unblemished jump tables.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "guild_overseer",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Chief of the jump navigation guild; brisk, protective of corporate transit contracts, eager to retire the legend quietly.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "navigators_guild",
+      "kind": "faction",
+      "description": "The interstellar pilots' and cartographers' guild licensing jump route ephemerides.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "guild_sanctum",
+      "kind": "place",
+      "description": "The quiet orbital archive where brass stellar astrolabes and master navigation chronometers are calibrated.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "solar_observatory",
+      "kind": "place",
+      "description": "A deep-system radio telescope platform monitoring pulsar timing anomalies and gravitational shifts.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "pulsar"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "leader_discredited",
+    "market_disrupted",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Freighter convoys report near-miss navigational divergences as {role:navigators_guild} convenes a tribunal to decertify {role:retired_navigator}.",
+  "private_truth": "The navigator's calculations are mathematically flawless; an uncatalogued micro-pulsar's frame dragging is introducing microsecond temporal offsets into jump arrivals.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "pulsar_frame_dragging_offsetting_master_jump_timing"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Notice boards at {role:guild_sanctum} announce that all jump clearances calculated by {role:retired_navigator} are suspended pending psychological review.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_navigator",
+          "target": "solar_observatory",
+          "reason": "She hires an independent pilot to courier her handwritten celestial ephemeris logs to the deep-system radio observatory for peer verification.",
+          "private_fact": "She privately fears she is losing her mind and spent two sleepless nights re-checking manual logarithm scrolls by hand.",
+          "outcome_tags": [
+            "logs_delivered",
+            "tribunal_intervenes"
+          ],
+          "routes": {
+            "logs_delivered": "next",
+            "tribunal_intervenes": "resolution:navigator_disgraced_timing_unsolved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Deep radio arrays at {role:solar_observatory} detect rhythmic high-energy radio pulses sweeping across the jump gate corridor.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_navigator",
+          "target": "solar_observatory",
+          "reason": "Scan the pulsar's relativistic radio telemetry to compare arrival timestamps against the guild's atomic clock beacon.",
+          "private_fact": "The telemetry demonstrates that the clocks, not her math, are lagging due to gravitational frame dragging.",
+          "outcome_tags": [
+            "anomaly_confirmed",
+            "telemetry_garbled"
+          ],
+          "routes": {
+            "anomaly_confirmed": "next",
+            "telemetry_garbled": "resolution:navigator_disgraced_timing_unsolved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "A high-frequency freight convoy emerges from jump fifteen seconds off-target, nearly colliding with an orbital docking ring.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "retired_navigator",
+          "target": "solar_observatory",
+          "reason": "Mine and deliver high-purity cuprite ore to fabricate shielding for the observatory's atomic clock synchronizer array.",
+          "private_fact": "The guild overseer already knows about the pulsar's interference but suppressed it to avoid paying compensation for delayed convoys.",
+          "outcome_tags": [
+            "array_shielded",
+            "clock_offline"
+          ],
+          "routes": {
+            "array_shielded": "next",
+            "clock_offline": "resolution:navigator_disgraced_timing_unsolved"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The guild tribunal gathers at {role:guild_sanctum} to strip the navigator of her ceremonial sextant and pension.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_navigator",
+          "target": "guild_sanctum",
+          "reason": "Deliver the verified relativistic telemetry and cuprite clock readings directly to the tribunal podium before the vote concludes.",
+          "private_fact": "A corporate freight consortium offered the navigator an unpublicized pension if she accepts blame without releasing the data.",
+          "outcome_tags": [
+            "data_tabled",
+            "session_sealed"
+          ],
+          "routes": {
+            "data_tabled": "next",
+            "session_sealed": "resolution:navigator_disgraced_timing_unsolved"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds absolute proof that the navigational error is an uncatalogued astronomical phenomenon rather than human failure.",
+        "options": [
+          {
+            "id": "publish_relativistic_anomaly",
+            "label": "Present the data to the open tribunal, clearing the navigator and forcing the guild to adjust all gate timing intervals",
+            "leads_to": "resolution:navigator_vindicated_corridor_adjusted"
+          },
+          {
+            "id": "accept_guild_settlement",
+            "label": "Deliver the proof privately to the overseer in exchange for an honorary lifetime retirement package for the navigator",
+            "leads_to": "resolution:quiet_honorary_retirement"
+          },
+          {
+            "id": "sell_timing_offsets",
+            "label": "Sell the pulsar timing equations to private freight runners who can use the lag to front-run exchange rates",
+            "leads_to": "resolution:timing_data_privatized"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "navigator_vindicated_corridor_adjusted",
+      "reached_by": "The pilot presents the pulsar timing proof at the public tribunal.",
+      "summary": "The relativistic anomaly is confirmed. {role:retired_navigator}'s honour and pension are restored, while {role:navigators_guild} widens jump clearance windows.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_navigator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_overseer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "navigators_guild",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "vindicated_the_master_navigator",
+          "public_summary": "A pilot proved an old cartographer's jump math was right all along, forcing a proud guild to heed a pulsing star."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "quiet_honorary_retirement",
+      "reached_by": "The navigator accepts an opulent private pension in exchange for keeping the guild's timing delays confidential.",
+      "summary": "{role:retired_navigator} steps down with an honorary pension and full honors. {role:navigators_guild} avoids scandal, adjusting routes under the table.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_navigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_overseer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "navigators_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "timing_data_privatized",
+      "reached_by": "The pilot sells the micro-pulsar timing offsets to private high-frequency cargo syndicates.",
+      "summary": "Private haulers exploit the timing lag to front-run jump markets. {role:retired_navigator} retires in obscurity, while orbital exchanges suffer volatile spikes.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_navigator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_overseer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "data",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "navigator_disgraced_timing_unsolved",
+      "reached_by": "The proof is lost or the observatory arrays fail to synchronize.",
+      "summary": "The tribunal strips {role:retired_navigator} of her credentials. The timing lag remains unsolved, causing recurring freighter collisions across {role:guild_sanctum}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_navigator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_overseer",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "navigator_disgraced_timing_unsolved",
+  "loose_threads": [
+    {
+      "id": "t_guild_atomic_clock_offset",
+      "surface": "cargo",
+      "detail": "The replacement atomic clock module at the guild sanctum carries calibration slips stamped sixty days prior to delivery.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_pulsar_freight_hedging",
+      "surface": "price_board",
+      "detail": "Forward insurance contracts for high-speed jump freighters jumped twenty percent before the navigational tribunal was announced.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_sanctum_observatory_memo",
+      "surface": "dialogue",
+      "detail": "Guild clerks mention an unfiled astrophysical memo advising transit managers to widen gate safety intervals by two minutes.",
+      "can_carry_methods": [
+        "information_control",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Navigators guild reviews jump convergence timing tolerances following outer gate incident.",
+    "Astrophysicists track subtle relativistic pulsation shifts from nearby micro-pulsar.",
+    "Freight dispatchers report three-minute divergence in standardized transponder timestamps."
+  ],
+  "voice_direction": {
+    "retired_navigator": "Precise, fragile, and fiercely proud. Speaks in immaculate astronomical units and pauses to compose herself whenever memory lapses are implied.",
+    "guild_overseer": "Polished, hurried, and patronizing. Uses corporate reassurance to mask a ruthless determination to prevent cargo schedule delays."
+  },
+  "novelty_tags": [
+    "jump_cartography",
+    "pulsar_frame_dragging",
+    "relativity_offset",
+    "guild_tribunal",
+    "astronomical_error"
+  ]
+}

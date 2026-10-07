@@ -1,0 +1,402 @@
+{
+  "id": "premise.the_deep_aquifer_covenant",
+  "schema_version": 1,
+  "title": "The Deep Aquifer Compact",
+  "logline": "An inter-system water treaty obligating a capital world to share ice reserves with parched asteroid settlements comes due during a drought, but the capital refuses because its own subterranean lakes have secretly run dry.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "survival"
+  ],
+  "themes": [
+    "legacy",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "border_commissioner",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Envoys for drought-stricken outer mining outposts; gaunt, dignified, holding the original signed water treaty cylinder from forty years ago.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "capital_archon",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Governor of the core planetary system; guarded, aristocratic, terrified that revealing the capital's dry wells will collapse public order.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "archon_escort",
+      "kind": "ship",
+      "description": "A heavy private security frigate intercepting relief convoys along the inter-system jump corridor.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_settlement_league",
+      "kind": "faction",
+      "description": "The coalition of arid outer asteroid colonies facing critical water rationing.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "capital_garden_trust",
+      "kind": "faction",
+      "description": "The elite landholding syndicate controlling the water-rich core planetary systems.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "border_depot",
+      "kind": "place",
+      "description": "A dusty fuel station in the drought system where emergency cisterns stand empty.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "aquifer_glacier",
+      "kind": "place",
+      "description": "A subterranean ice shelf on a frozen outer moon in an intermediate system where water reserves are held in escrow.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "capital_palace",
+      "kind": "place",
+      "description": "The floating orbital citadel in the capital system where treaty disputes are arbitrated.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "power_vacuum",
+    "alliance_broken"
+  ],
+  "public_situation": "Outer asteroid belts face emergency water rationing while {role:capital_garden_trust} prepares to declare a historic water-sharing treaty void.",
+  "private_truth": "{role:capital_archon} is concealing that the capital world's deep aquifers collapsed last year, leaving the core world facing the same catastrophic drought.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "capital_planetary_aquifer_exhausted_leaving_core_dry"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Notice boards at {role:border_depot} announce that life-support water rations have been cut by half across the asteroid belt.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "border_commissioner",
+          "target": "border_depot",
+          "reason": "He hires an independent pilot to mine and deliver emergency water ice to replenish the station's failing condenser loops while treaty talks open.",
+          "private_fact": "His colonies only have twenty days of drinking water remaining before they are forced to abandon their mines.",
+          "outcome_tags": [
+            "condensers_refilled",
+            "water_exhausted"
+          ],
+          "routes": {
+            "condensers_refilled": "next",
+            "water_exhausted": "resolution:capital_drought_concealed_colonies_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Capital security forces land at {role:aquifer_glacier}, posting notices that the escrow glacier is reserved exclusively for capital replenishment.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "border_commissioner",
+          "target": "aquifer_glacier",
+          "reason": "He hires the pilot to retrieve the original brass covenant cylinder from the glacier archive vault before the archon's bailiffs seize the seals.",
+          "private_fact": "The covenant was signed forty years ago after outer asteroid miners saved the capital from an environmental crop collapse.",
+          "outcome_tags": [
+            "cylinder_secured",
+            "vault_sealed"
+          ],
+          "routes": {
+            "cylinder_secured": "next",
+            "vault_sealed": "resolution:capital_drought_concealed_colonies_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Engineers discover that the glacier's automated pumping lines have been altered to bypass outer belt delivery locks.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "border_commissioner",
+          "target": "aquifer_glacier",
+          "culprit": "capital_archon",
+          "reason": "He asks the pilot to scan the subterranean pump telemetry to determine why the escrow outflow lines were suddenly severed.",
+          "private_fact": "The telemetry proves the water is not flowing to capital luxury estates, but into emergency drinking tanks because the capital's aquifers ran dry.",
+          "outcome_tags": [
+            "capital_drought_discovered",
+            "telemetry_corrupted"
+          ],
+          "routes": {
+            "capital_drought_discovered": "next",
+            "telemetry_corrupted": "resolution:capital_drought_concealed_colonies_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The pilot's vessel enters orbit above {role:capital_palace} where the archon's heavy flagship blocks the arbitral concourse.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "border_commissioner",
+          "target": "archon_escort",
+          "reason": "The archon's frigate attempts to lock tractor beams on the pilot's ship to seize the covenant cylinder and silence the discovery.",
+          "private_fact": "The frigate captain hails offering sixty thousand credits and emergency core citizenship if the pilot deletes the telemetry.",
+          "outcome_tags": [
+            "frigate_disabled",
+            "accepted_escort_bribe"
+          ],
+          "routes": {
+            "frigate_disabled": "next",
+            "accepted_escort_bribe": "resolution:capital_drought_concealed_colonies_abandoned"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "border_commissioner",
+          "target": "capital_palace",
+          "reason": "Deliver the covenant cylinder and aquifer depletion telemetry directly to the arbitral bench before the assembly votes to dissolve the pact.",
+          "private_fact": "He realizes that if the core world is truly parched, demanding full treaty volume will trigger famine on the capital.",
+          "outcome_tags": [
+            "evidence_tabled",
+            "hearing_adjourned"
+          ],
+          "routes": {
+            "evidence_tabled": "next",
+            "hearing_adjourned": "resolution:capital_drought_concealed_colonies_abandoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The arbitral assembly learns that the capital's aquifers have failed. Both the core world and the mining colonies face catastrophic drought.",
+        "options": [
+          {
+            "id": "force_historic_quota",
+            "label": "Table the covenant to force full treaty deliveries to the colonies regardless of core hardship",
+            "leads_to": "resolution:treaty_enforced_water_flows"
+          },
+          {
+            "id": "conceal_for_settlement_buyout",
+            "label": "Conceal the capital's drought in exchange for a funded buyout and relocation of outer mining families",
+            "leads_to": "resolution:capital_drought_concealed_colonies_abandoned"
+          },
+          {
+            "id": "broker_joint_emergency_rationing",
+            "label": "Broker a joint emergency compact splitting the remaining glacial reserve between both civilizations",
+            "leads_to": "resolution:joint_emergency_rationing_accord"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "treaty_enforced_water_flows",
+      "reached_by": "The pilot tables the cylinder and proves the treaty obligation at the arbitral bench.",
+      "summary": "The arbitral bench enforces the treaty. {role:mining_settlement_league} gets its water, but agricultural collapses sweep across {role:capital_garden_trust}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_settlement_league",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "capital_garden_trust",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "border_commissioner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "capital_archon",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "enforced_the_water_compact",
+          "public_summary": "A pilot carried evidence of a dying capital to court, forcing rich core worlds to honour their frontier water pledge."
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "capital_drought_concealed_colonies_abandoned",
+      "reached_by": "The covenant is suppressed or the pilot accepts the archon's relocation bribe.",
+      "summary": "The capital's collapse is concealed. {role:capital_garden_trust} hoards the glacier, leaving outer outposts of {role:mining_settlement_league} abandoned to drought.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "capital_garden_trust",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "mining_settlement_league",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "capital_archon",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "border_commissioner",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "joint_emergency_rationing_accord",
+      "reached_by": "The pilot brokers an emergency compromise dividing the remaining escrow ice equally.",
+      "summary": "Both sides sign a shared-austerity compact. Water is rationed equally between {role:capital_garden_trust} and {role:mining_settlement_league}, preserving both at severe cost.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_settlement_league",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "capital_garden_trust",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "border_commissioner",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "capital_archon",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "capital_drought_concealed_colonies_abandoned",
+  "loose_threads": [
+    {
+      "id": "t_capital_water_table_sensor",
+      "surface": "scan",
+      "detail": "Hydrological telemetry beacons on the capital world were re-indexed to suppress falling water table readings six months ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_glacier_conduit_diversion",
+      "surface": "wreck",
+      "detail": "Deep conduit manifolds near the escrow glacier bear weld inspection seals registered to an unlisted orbital freight trust.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "sabotage"
+      ]
+    },
+    {
+      "id": "t_water_credit_inflation",
+      "surface": "price_board",
+      "detail": "Water rationing coupons traded on capital exchanges show heavy bulk purchases by an undisclosed government escrow account.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "survival",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Mining settlements plead for emergency water shipments as local reservoirs run dry.",
+    "Capital assembly debates motion to declare historic frontier treaties obsolete.",
+    "Security fleets establish inter-system picket lines along glacier jump corridors."
+  ],
+  "voice_direction": {
+    "border_commissioner": "Solemn, weary, and unyielding. Speaks in measured, formal cadences and refuses to raise his voice even under intense pressure.",
+    "capital_archon": "Guarded, patrician, and quietly desperate. Speaks with aristocratic polish but quickly turns defensive whenever planetary reserves are mentioned."
+  },
+  "novelty_tags": [
+    "aquifer_covenant",
+    "capital_water_exhaustion",
+    "shared_drought",
+    "glacier_escrow",
+    "inter_system_rationing"
+  ]
+}

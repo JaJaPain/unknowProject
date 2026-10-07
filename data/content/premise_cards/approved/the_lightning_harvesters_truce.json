@@ -1,0 +1,341 @@
+{
+  "id": "premise.the_lightning_harvesters_truce",
+  "schema_version": 1,
+  "title": "The Lightning Harvesters' Truce",
+  "logline": "Two estranged veteran gas-skimmers must unite to ground a floating refinery during a violent ion storm where their shared foster daughter is trapped.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "chosen_family",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "senior_skimmer",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Veteran atmospheric storm flyer; brooding, stubborn, refusing to speak to his former flight partner for a decade.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rival_skimmer",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Daring gas-cloud skimmer; sharp-witted, bitter, holding a ten-year grudge over a shattered ship partnership.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "harvesters_guild",
+      "kind": "faction",
+      "description": "The independent union of storm pilots harvesting energetic plasma and noble gases from upper atmospheres.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "floating_refinery",
+      "kind": "place",
+      "description": "A massive atmospheric processing platform suspended in the turbulent upper cloud layers of a gas giant.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cloud_depot",
+      "kind": "place",
+      "description": "A high-altitude tether station supplying specialized lightning arrestors and heavy ceramic couplings.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "ion_storm"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "debt_owed_to_player",
+    "quiet_cover_up"
+  ],
+  "public_situation": "Storm alarms wail across {role:floating_refinery} as severe ion turbulence threatens to ignite ungrounded gas collection bladders.",
+  "private_truth": "{role:senior_skimmer} and {role:rival_skimmer} severed their flight partnership ten years ago, but their shared foster child is the junior engineer trapped on the burning refinery deck.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "partners_reuniting_to_shield_foster_child_refinery"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Refinery sirens broadcast an emergency plea for outside heavy haulers as lightning strikes shatter primary grounding cables.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "senior_skimmer",
+          "target": "cloud_depot",
+          "reason": "Collect heavy dielectric ceramic grounding couplings from the supply depot before upper atmospheric downdrafts close the descent corridor.",
+          "private_fact": "He abandoned the refinery deck earlier today after a bitter shouting match with his former partner, unaware their foster child was on shift.",
+          "outcome_tags": [
+            "couplings_secured",
+            "depot_closed"
+          ],
+          "routes": {
+            "couplings_secured": "next",
+            "depot_closed": "resolution:refinery_scorched_partners_estranged"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Electrical discharges arc continuously across the refinery's helium condensers as the squall intensifies.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "rival_skimmer",
+          "target": "cloud_depot",
+          "reason": "Purchase reinforced tungsten-core grounding wire from the depot and deliver it to the platform's lower anchor pylon.",
+          "private_fact": "She mortgaged her skimmer ship to buy the wire because the refinery board refused to release emergency funds.",
+          "outcome_tags": [
+            "wire_delivered",
+            "pylon_struck"
+          ],
+          "routes": {
+            "wire_delivered": "next",
+            "pylon_struck": "resolution:refinery_scorched_partners_estranged"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "A superbolt strikes the upper gas dome, welding the main grounding clamp shut and threatening a total platform explosion.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "senior_skimmer",
+          "target": "floating_refinery",
+          "reason": "Deliver the manual emergency shunt breaker directly into the refinery maintenance hangar through gale-force shear winds.",
+          "private_fact": "The two pilots agreed over emergency comms to split the dangerous descent, each holding one stabilizer tether.",
+          "outcome_tags": [
+            "shunt_fitted",
+            "conduit_ruptured"
+          ],
+          "routes": {
+            "shunt_fitted": "next",
+            "conduit_ruptured": "resolution:refinery_scorched_partners_estranged"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The shunt breaker is docked and both pilots hold the refinery steady in the squall. They face the choice of how to settle their decade-long division.",
+        "options": [
+          {
+            "id": "reform_flight_partnership",
+            "label": "Persuade both veterans to formally reconcile and re-register their joint storm salvage charter",
+            "leads_to": "resolution:partners_reconciled_refinery_saved"
+          },
+          {
+            "id": "let_rival_take_salvage_bounty",
+            "label": "Allow the rival skimmer to claim sole credit for the salvage bounty to clear her heavy ship mortgage",
+            "leads_to": "resolution:rival_clears_debts_solo"
+          },
+          {
+            "id": "surrender_to_guild_receivership",
+            "label": "Turn the platform over to the guild salvage authority, leaving both pilots with modest safety stipends",
+            "leads_to": "resolution:guild_assumes_refinery_control"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "partners_reconciled_refinery_saved",
+      "reached_by": "The pilot delivers the shunt and facilitates the partners' joint grounding maneuver.",
+      "summary": "The refinery is saved. {role:senior_skimmer} and {role:rival_skimmer} reconcile their flight partnership, securing their foster daughter's future.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "senior_skimmer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_skimmer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "harvesters_guild",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "tamed_the_ion_squall",
+          "public_summary": "A pilot flew between two feuding storm flyers to ground a burning gas platform in the upper atmosphere."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "rival_clears_debts_solo",
+      "reached_by": "The rival claims sole credit and uses the award to pay off her ship lien.",
+      "summary": "{role:rival_skimmer} claims the municipal bounty, clearing her debts while {role:senior_skimmer} quietly retires from storm flying.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "rival_skimmer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_skimmer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "harvesters_guild",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "guild_assumes_refinery_control",
+      "reached_by": "The salvage claim is assigned to guild trustees.",
+      "summary": "{role:harvesters_guild} takes direct administrative control of the refinery. Both pilots receive modest pensions, but their partnership remains broken.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "senior_skimmer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_skimmer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "standing",
+          "target": "harvesters_guild",
+          "delta": 2
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "refinery_scorched_partners_estranged",
+      "reached_by": "The grounding cables fail or the descent is abandoned.",
+      "summary": "Lightning breaches the gas bladders. {role:floating_refinery} burns in the clouds, forcing an evacuation and leaving both {role:senior_skimmer} and {role:rival_skimmer} ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "senior_skimmer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_skimmer",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "refinery_scorched_partners_estranged",
+  "loose_threads": [
+    {
+      "id": "t_skimmer_mortgage_lien",
+      "surface": "station_notice",
+      "detail": "A high-interest ship mortgage registered by a cloud trading bank names both pilots on the original title deed.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_dielectric_wire_consignment",
+      "surface": "cargo",
+      "detail": "The tungsten grounding wire spools carry export seals from an unlisted deep-cloud industrial syndicate.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_atmospheric_condenser_hedging",
+      "surface": "price_board",
+      "detail": "Atmospheric gas futures dipped twelve percent before the storm hit, prompted by heavy short sales from a station factor.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "protecting_someone",
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Atmospheric monitoring stations issue emergency gale warnings across upper gas giant flight bands.",
+    "Harvesters guild alerts independent pilots to catastrophic lightning discharges near cloud refineries.",
+    "Specialized ceramic grounding components sell out across orbital supply depots."
+  ],
+  "voice_direction": {
+    "senior_skimmer": "Deep, taciturn, and defensive. Speaks in slow, reluctant monosyllables and refuses to discuss the past or show sentiment.",
+    "rival_skimmer": "Fast, cutting, and fiercely protective. Speaks with barbed sarcasm that slips whenever her foster daughter is mentioned."
+  },
+  "novelty_tags": [
+    "atmospheric_lightning",
+    "gas_giant_skimmer",
+    "floating_refinery",
+    "grounding_tether",
+    "foster_family_reconciliation"
+  ]
+}
