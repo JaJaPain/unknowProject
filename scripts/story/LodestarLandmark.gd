@@ -36,6 +36,8 @@ const SURFACE_DETAIL := {
 }
 ## Tests and before/after shots can turn the detail off.
 static var surface_detail_enabled := true
+## Before/after shots can swap a kind's model files (kind -> [paths]).
+static var model_overrides := {}
 
 ## How a reused set piece becomes another place: parts hidden (by name),
 ## materials re-coloured (by name), a scale, and extras the code adds.
@@ -59,6 +61,15 @@ const VARIANTS := {
 		"tint": {"Neutral hull": Color(0.84, 0.86, 0.88), "Muted accent": Color(0.72, 0.56, 0.3)},
 		"glow": {"Emergency emission": Color(0.75, 0.9, 1.0), "Beacon emission": Color(1.0, 0.8, 0.4)},
 		"extras": ["scaffold"],
+	},
+	# The Neutral Ground: its centre is inside the domed hall, so the shared
+	# gold light sits above it (inside, it blew the hull out), and its long
+	# window bands are dimmed and its glossy hulls made matte, both to sit
+	# with the other set pieces.
+	"treaty": {
+		"emission_scale": 0.45,
+		"min_roughness": 0.78,
+		"light_lift": 1.1,
 	},
 }
 ## The Garden's green world: its radius, and how far below the station its
@@ -117,6 +128,7 @@ func _ready() -> void:
 	_light.light_color = GOLD
 	_light.omni_range = maxf(2200.0, reach * 2.6)
 	_light.light_energy = 3.0
+	_light.position = Vector3(0, reach * float((VARIANTS.get(kind, {}) as Dictionary).get("light_lift", 0.0)), 0)
 	add_child(_light)
 	# The set pieces have their own colours: the gold only warms them.
 	_gold_base = 2.4 if not uses_model() else 0.6
@@ -162,7 +174,7 @@ func uses_model() -> bool:
 
 
 func _build_models() -> bool:
-	var paths: Array = MODELS.get(kind, [])
+	var paths: Array = model_overrides.get(kind, MODELS.get(kind, []))
 	var built := 0
 	for i in paths.size():
 		var path := str(paths[i])
@@ -216,6 +228,22 @@ func _apply_variant(model: Node3D, variant: Dictionary) -> void:
 					lit.emission = variant["glow"][key]
 					lit.albedo_color = variant["glow"][key]
 					mi.set_surface_override_material(i, lit)
+	if variant.has("emission_scale") or variant.has("min_roughness"):
+		for node in model.find_children("*", "MeshInstance3D", true, false):
+			var mi := node as MeshInstance3D
+			if mi.mesh == null:
+				continue
+			for i in mi.mesh.get_surface_count():
+				var current := mi.get_surface_override_material(i)
+				var m := (current if current != null else mi.mesh.surface_get_material(i)) as StandardMaterial3D
+				if m == null:
+					continue
+				var own := m.duplicate() as StandardMaterial3D
+				if m.emission_enabled:
+					own.emission_energy_multiplier *= float(variant.get("emission_scale", 1.0))
+				else:
+					own.roughness = maxf(own.roughness, float(variant.get("min_roughness", 0.0)))
+				mi.set_surface_override_material(i, own)
 	for extra in variant.get("extras", []):
 		match str(extra):
 			"comet_tail": _add_comet_tail(model)
@@ -368,6 +396,10 @@ func _wire_model(model: Node3D) -> void:
 		var pivot := model.find_child(wing, true, false) as Node3D
 		if pivot != null:
 			_swingers.append({"node": pivot, "axis": Vector3.BACK, "base": pivot.transform.basis, "amp": 0.22, "rate": 0.02})
+	# The Halo's bell hangs from its top pivot and sways a little.
+	var bell := model.find_child("Bell", true, false) as Node3D
+	if bell != null and kind == "halo":
+		_swingers.append({"node": bell, "axis": Vector3.RIGHT, "base": bell.transform.basis, "amp": 0.05, "rate": 0.05})
 	for plate in model.find_children("LoosePlate_*", "Node3D", true, false):
 		_turners.append({"node": plate, "axis": Vector3(0.3, 1.0, 0.2).normalized(), "speed": 0.02 + 0.01 * (_turners.size() % 3)})
 	for anim in model.find_children("*", "AnimationPlayer", true, false):
@@ -400,12 +432,15 @@ func _wire_model(model: Node3D) -> void:
 
 
 ## How each glowing material lives: "pulse" (the beacon), "blink" (navigation
-## lights), "breathe" (slow and faint) or "" (left alone).
+## lights), "breathe" (slow and faint), "candle" (the Halo's windows, a soft
+## uneven flicker) or "" (left alone).
 static func lamp_mode(material_name: String) -> String:
 	if material_name.contains("Beacon emission"):
 		return "pulse"
 	if material_name.contains("Navigation emission") or material_name.contains("Dock navigation"):
 		return "blink"
+	if material_name.contains("Candle windows"):
+		return "candle"
 	if material_name.contains("Faint core status") or material_name.contains("Sealed door seam") \
 			or material_name.contains("Segment point emission"):
 		return "breathe"
@@ -480,6 +515,8 @@ func _process(delta: float) -> void:
 				mat.emission_energy_multiplier = base * (1.6 if fmod(_t + phase, 2.2) < 0.35 else 0.15)
 			"breathe":
 				mat.emission_energy_multiplier = base * (0.6 + 0.4 * sin(_t * 0.5 + phase))
+			"candle":
+				mat.emission_energy_multiplier = base * (0.8 + 0.12 * sin(_t * 7.3 + phase) + 0.08 * sin(_t * 13.1 + phase * 2.7))
 	if _belt != null:
 		_belt.uv1_offset.y = fmod(_t * 0.08, 1.0)
 	for i in _sparks.size():

@@ -13782,10 +13782,14 @@ func _lodestar_snapshot(place: Node3D) -> void:
 	var kinds := ["beacon", "fleet", "ring", "survey", "garden", "wrecks"]
 	if "--no-surface-detail" in OS.get_cmdline_user_args():
 		load("res://scripts/story/LodestarLandmark.gd").surface_detail_enabled = false
-	# --lodestar-kinds=market,shipyard pictures just those.
+	# --lodestar-kinds=market,shipyard pictures just those;
+	# --lodestar-model=archive:res://assets/landmarks/x.glb swaps a model.
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--lodestar-kinds="):
 			kinds = Array(arg.substr(17).split(","))
+		elif arg.begins_with("--lodestar-model="):
+			var pair := arg.substr(17).split(":", true, 1)
+			load("res://scripts/story/LodestarLandmark.gd").model_overrides[pair[0]] = [pair[1]]
 	for kind in kinds:
 		var mark = load("res://scripts/story/LodestarLandmark.gd").new()
 		mark.kind = kind
@@ -13806,7 +13810,12 @@ func _lodestar_snapshot(place: Node3D) -> void:
 		print("[LodestarSmokeTest] snapshot ", path)
 		# --lodestar-closeup: a second, close shot (surface detail).
 		if "--lodestar-closeup" in OS.get_cmdline_user_args():
-			cam.global_position = mark.global_position + Vector3(0.7, 0.05, 0.71).normalized() * reach * 0.75
+			# --lodestar-close-factor=1.2 backs off for places with a solid centre.
+			var close_factor := 0.75
+			for arg in OS.get_cmdline_user_args():
+				if arg.begins_with("--lodestar-close-factor="):
+					close_factor = float(arg.substr(24))
+			cam.global_position = mark.global_position + Vector3(0.7, 0.05, 0.71).normalized() * reach * close_factor
 			cam.look_at(mark.global_position + Vector3(0, reach * 0.05, 0))
 			for i in 30:
 				await get_tree().process_frame

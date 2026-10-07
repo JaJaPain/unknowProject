@@ -22,9 +22,9 @@ below, in order. Hand ChatGPT the first row that isn't done.
 | 7 | **A lone derelict ship** (+ 7b detail revision) | Distress-beacon finds (drone-diveable), Competing Claims / Unstable Archive investigation sites; also reused as the Last Shipyard | Done, in play |
 | 8 | **A signal anomaly site** | Transmitter Lure investigation sites (seams pulse, centre glow swells) | Done, in play |
 | 9 | **The Archive** | New Destination (`archive.glb`) | Reviewed and in game (40 draw calls, game-side surface detail on). **9b in progress:** a textured second version; when it lands, compare and turn the detail pass off for the Archive if the textures win |
-| 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | **Next** |
-| 11 | **The Halo** | New Destination (`halo.glb`) | Queued |
-| 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Queued |
+| 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | Reviewed and in game (21 draw calls); game-side: gold light lifted above the hall, windows dimmed, hulls matte |
+| 11 | **The Halo** | New Destination (`halo.glb`) | Reviewed and in game (47 draw calls); game-side: candle flicker, bell sways on its pivot |
+| 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Delivered; awaiting visual review |
 
 New Destinations 9-12 already run in the game on stand-in shapes; each
 model replaces its stand-in automatically when saved under
@@ -372,6 +372,13 @@ ring. Reading windows, walkway lamps and dim red navigation use separate
 emissive materials. GLB and Godot import checks pass; no cameras or lights in
 the export. Source, renders, counts and notes in `art/archive/`.
 
+**#9 V2 (2026-10-07):** separate textured edition at
+`assets/landmarks/archive_v2.glb`, with source and close-up renders in
+`art/archive_v2/`. Seven PBR material sets, 24 embedded texture maps (4K main
+surfaces), preserved vertex positions/connectivity and transforms; 105 inward
+cloth/belt faces reoriented for correct shading. Same 23 meshes and 87,144
+triangles. V1 is preserved and remains the game's current lookup.
+
 ## Brief #10: The Neutral Ground (new Destination, after #9)
 
 The decommissioned treaty station where old enemies signed the peace that
@@ -394,6 +401,13 @@ meet unarmed.
 - **No:** writing, flags, symbols, faction marks, weapons of any kind
   (that's the point of the place), ships flying.
 - **Export:** batched as above; the central hall as its own mesh group.
+
+**#10 status (2026-10-07):** delivered for review as
+`assets/landmarks/neutral_ground.glb`, with Blender source and two preview renders
+in `art/neutral_ground/`. 801.2 m across; 10 meshes, 8 materials, 23,412
+triangles. Central hall is an independent group; four separate emissive
+materials cover hall windows, both wing window palettes, and docking guides.
+GLB structure and isolated Godot import checks passed; gameplay review remains.
 
 ## Brief #11: The Halo (new Destination, after #10)
 
@@ -421,6 +435,13 @@ the chapels.
 - **Export:** batched (pods, tethers, buoy, bell, lights as few meshes per
   material); under ~50 meshes and ~8 materials.
 
+**#11 status (2026-10-07):** delivered for review as `assets/landmarks/halo.glb`,
+with Blender source and overview/bell-detail renders in `art/halo/`. Sixteen
+chapel pods on paired tethers, approximately 780 m across; 36 meshes/surfaces,
+6 materials, 26,376 triangles. Separate candle and bell emission, pod parents,
+and a bell pivot at its top. GLB and isolated Godot import checks passed;
+gameplay review remains.
+
 ## Brief #12: The Wellhead (new Destination, after #11)
 
 A small ice moonlet whose vent geyser waters the whole frontier. One family
@@ -443,3 +464,11 @@ pride.
 - **Export:** batched (moonlet, rigs, pipes, tankers, habitat, lights as few
   meshes per material); under ~50 meshes and ~8 materials; the vent position
   noted in the README.
+
+**#12 status (2026-10-07):** delivered for review as
+`assets/landmarks/wellhead.glb`, with Blender source and overview/works-detail
+renders in `art/wellhead/`. Approximately 1.28 km tall; 24 meshes/surfaces,
+8 materials, 27,472 triangles. Three moored tankers, separate work/window/beacon
+emission, and an open vent marked by `VentEmitter` at Godot `(0, 447, 0)` m.
+GLB structure, isolated Godot import, and sampled plume-clearance checks passed;
+gameplay review remains.
