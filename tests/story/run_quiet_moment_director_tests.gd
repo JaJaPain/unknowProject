@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_test_persistence_round_trip()
 	_test_new_campaign_reset()
 	_test_base_line_mode()
+	_test_sense_check()
 	if _failures.is_empty():
 		print("[PASS] QuietMomentDirector (all cases)")
 		quit(0)
@@ -101,3 +102,28 @@ func _test_base_line_mode() -> void:
 	if back_to_back > 1:
 		_failures.append("base lines repeated back to back %d times" % back_to_back)
 	d.queue_free()
+
+
+# Abe, 2026-10-04: garbled lines got through. A line that passes the pattern
+# checks still gets a sense check; a "no" on the last attempt means silence,
+# never the garbled line.
+func _test_sense_check() -> void:
+	var d = Director.new()
+	root.add_child(d)
+	var silent: Array = []
+	var spoken: Array = []
+	d.quiet_moment_silent.connect(func(_b, reasons) -> void: silent.append(reasons))
+	d.quiet_moment_ready.connect(func(_s, _b, line) -> void: spoken.append(line))
+	var built := {"speaker": "nova", "word_cap": 45, "lead_in": "", "packet": "", "brief": "", "demos": [], "third_parties": []}
+	var good := JSON.stringify({"line": "Mrs. Kross had her hands on me for hours. Warm solvent, slow work."})
+	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(false)
+	d.call("_on_response", "nova_long_transit", {}, built, Director.MAX_ATTEMPTS, {"ok": true, "inner_text": good})
+	if silent.size() != 1 or not (silent[0] as Array).has("garbled") or not spoken.is_empty():
+		_failures.append("sense check: a garbled verdict on the last try should go silent: silent %s spoken %s" % [silent, spoken])
+	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(true)
+	d.call("_on_response", "nova_long_transit", {}, built, Director.MAX_ATTEMPTS, {"ok": true, "inner_text": good})
+	if spoken.size() != 1:
+		_failures.append("sense check: a sensible line should be spoken: %s" % [spoken])
+	if not Director.SENSE_CHECK_PROMPT.contains("WORD SALAD"):
+		_failures.append("sense check prompt names the scrambled-meaning case")
+	d.free()

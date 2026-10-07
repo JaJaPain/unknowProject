@@ -214,13 +214,52 @@ func _on_response(beat_id: String, beat: Dictionary, built: Dictionary,
 			failures = _screen(beat_id, built, line)
 
 	if failures.is_empty():
-		_accept(beat_id, built, line)
+		# A second opinion on sense before anyone hears it (Abe, 2026-10-04:
+		# garbled lines like "She was just my main shaft. She had her hands."
+		# kept getting through the pattern checks).
+		_sense_check(line, func(makes_sense: bool) -> void:
+			if makes_sense:
+				_accept(beat_id, built, line)
+			elif attempt < MAX_ATTEMPTS:
+				_request(beat_id, beat, attempt + 1)
+			else:
+				_give_up(beat_id, ["garbled"]))
 		return
 
 	if attempt < MAX_ATTEMPTS:
 		_request(beat_id, beat, attempt + 1)
 		return
 	_give_up(beat_id, failures)
+
+
+## Test seam: replaces the model's sense check (callback(makes_sense)).
+var sense_check_override: Callable = Callable()
+const SENSE_CHECK_PROMPT := "N.O.V.A. is a ship's AI. Her style is clipped, dry and playful: short fragments, teasing, double meanings and self-corrections are all NORMAL for her and fine.\n\nYour only job is to catch WORD SALAD: a line where words are thrown together so a sentence means nothing, like a person who IS a machine part, or a tool that IS a person.\nWord salad: \"She was just my main shaft. Pressure was his hands.\"\nFine: \"Mrs. Kross had her hands on me for hours. Warm solvent, slow work.\"\nFine: \"She's gone. You talk faster around her. Not that I'm timing it. I'm timing it.\"\n\nThe line:\n\"%s\"\n\nIs it word salad? Return ONLY this JSON object: {\"line\":\"no\"} if it is fine, or {\"line\":\"yes\"} if it is word salad."
+
+
+## Asks the small model whether `line` makes sense; calls back true or false.
+## A failed request counts as a pass: the check must never silence the cast
+## when the model is busy.
+func _sense_check(line: String, callback: Callable) -> void:
+	if sense_check_override.is_valid():
+		sense_check_override.call(line, callback)
+		return
+	var llm := get_node_or_null("/root/LLMInterface")
+	if llm == null:
+		callback.call(true)
+		return
+	llm.call("request_quiet_moment", SENSE_CHECK_PROMPT % line, func(result: Dictionary) -> void:
+		if not bool(result.get("ok", false)):
+			callback.call(true)
+			return
+		var verdict := _parse_line(str(result.get("inner_text", ""))).strip_edges().to_lower()
+		# The question is "is it word salad?": "yes" rejects.
+		var makes_sense := not verdict.begins_with("yes")
+		if not makes_sense:
+			var diagnostics := get_node_or_null("/root/GenerationDiagnostics")
+			if diagnostics != null:
+				diagnostics.call("record_event", "quiet_moment", "sense_check_rejected", "quiet_moment_director", {"line": line})
+		callback.call(makes_sense))
 
 
 func _screen(beat_id: String, built: Dictionary, line: String) -> Array:
