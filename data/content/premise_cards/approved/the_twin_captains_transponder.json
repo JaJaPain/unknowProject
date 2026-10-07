@@ -1,0 +1,401 @@
+{
+  "id": "premise.the_twin_captains_transponder",
+  "schema_version": 1,
+  "title": "The Twin Captains' Transponder",
+  "logline": "A merchant pilot running identical ships with his twin brother discovers their transponder swap has entangled him in an execution bounty placed on his sibling's debts.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "noir"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "hunted_twin",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Legitimate freight hauler; panic-stricken, desperate to prove he is not the brother who defaulted on syndicate loans.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bounty_factor",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Ruthless private enforcer authorized by municipal creditors to scuttle defaulted hulls on sight.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hunter_corvette",
+      "kind": "ship",
+      "description": "A heavy patrol gunboat carrying military tracking sensors and pulse disruptors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "merchants_exchange",
+      "kind": "faction",
+      "description": "The association of licensed freight traders attempting to maintain legal registration codes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "creditor_syndicate",
+      "kind": "faction",
+      "description": "The predatory financing syndicate holding default bounties across border shipping lines.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "customs_berth",
+      "kind": "place",
+      "description": "The primary inspection ring where commercial hull signatures and transponder arrays are certified.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_creek",
+      "kind": "place",
+      "description": "A lawless drift zone in the asteroid shadows where unregistered ships swap identification plates.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "arbitration_hall",
+      "kind": "place",
+      "description": "The station court where commercial identity disputes and bounty warrants are adjudicated.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "grudge_against_player",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "{role:creditor_syndicate} posts an execution bounty for a delinquent freighter transponder, sending {role:hunter_corvette} to patrol approach corridors.",
+  "private_truth": "{role:hunted_twin} swapped transponder crystals with his twin brother at {role:salvage_creek} to evade docking tariffs, unaware his brother had defaulted on syndicate debt.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "twin_swapped_transponders_inheriting_brother_bounty"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Bounty alerts flash across station customs boards while security cruisers scan arriving cargo hulls.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "hunted_twin",
+          "target": "customs_berth",
+          "reason": "He needs an independent pilot to retrieve his authentic encrypted transponder crystal from a maintenance locker before bounty hunters breach his hangar.",
+          "private_fact": "He has been hiding in his ship's cargo bilge for eighteen hours while hunter drones scan his hull.",
+          "outcome_tags": [
+            "crystal_retrieved",
+            "locker_raided"
+          ],
+          "routes": {
+            "crystal_retrieved": "next",
+            "locker_raided": "resolution:ship_scuttled_by_hunters"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:hunter_corvette} anchors across the primary departure channel, firing sensor probes into outer berths.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "hunted_twin",
+          "target": "salvage_creek",
+          "culprit": "creditor_syndicate",
+          "reason": "He needs a pilot to scan the swap shop terminal at the salvage drift to extract the encrypted logs of his brother's original debt note.",
+          "private_fact": "His twin deliberately arranged the identity swap knowing the syndicate's kill-order would fall on the first ship intercepted.",
+          "outcome_tags": [
+            "swap_verified",
+            "terminal_wiped"
+          ],
+          "routes": {
+            "swap_verified": "next",
+            "terminal_wiped": "resolution:ship_scuttled_by_hunters"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:hunter_corvette} locks weapon tethers onto the merchant hull, demanding immediate surrender.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hunted_twin",
+          "target": "hunter_corvette",
+          "reason": "He needs the bounty hunter's corvette disabled before its tactical weapons puncture his vessel's reactor shielding.",
+          "private_fact": "The bounty hunter hails offering forty thousand credits and clean identification papers if the pilot hands over the twin.",
+          "outcome_tags": [
+            "corvette_disabled",
+            "accepted_hunter_bounty"
+          ],
+          "routes": {
+            "corvette_disabled": "next",
+            "accepted_hunter_bounty": "resolution:twin_surrendered_to_creditors"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Magistrates convene an emergency admiralty session at {role:arbitration_hall} to determine title forfeiture.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "hunted_twin",
+          "target": "arbitration_hall",
+          "reason": "He asks the pilot to courier the authentic transponder crystal and identity telemetry to the magistrate's bench to cancel the bounty warrant.",
+          "private_fact": "If the magistrate clears him, the bounty will automatically transfer to his twin, who is hiding in the next system.",
+          "outcome_tags": [
+            "telemetry_filed",
+            "hearing_adjourned"
+          ],
+          "routes": {
+            "telemetry_filed": "next",
+            "hearing_adjourned": "resolution:ship_scuttled_by_hunters"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands before the magistrate as the bounty factor demands immediate hull forfeiture.",
+        "options": [
+          {
+            "id": "clear_innocent_twin",
+            "label": "Submit the authentic transponder proof to clear the merchant and redirect the bounty",
+            "leads_to": "resolution:innocent_twin_cleared"
+          },
+          {
+            "id": "broker_debt_split",
+            "label": "Propose an identity settlement splitting the debt between both brothers without violence",
+            "leads_to": "resolution:debt_renegotiated"
+          },
+          {
+            "id": "surrender_to_factor",
+            "label": "Sell the telemetry proof to the bounty factor to collect the syndicate reward",
+            "leads_to": "resolution:twin_surrendered_to_creditors"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "innocent_twin_cleared",
+      "reached_by": "The pilot presents the authentic transponder proof to the magistrate.",
+      "summary": "The magistrate verifies the original transponder. {role:hunted_twin} is cleared of all debts, and the syndicate bounty is redirected to his fugitive brother.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "merchants_exchange",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "creditor_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "hunted_twin",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "cleared_the_innocent_twin",
+          "public_summary": "A pilot untangled a swapped transponder core in court to save a panicked merchant from an execution bounty meant for his brother."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "debt_renegotiated",
+      "reached_by": "The pilot brokers a split repayment compromise between the brothers.",
+      "summary": "A settlement is reached. The magistrate mandates a repayment plan split between both vessels, lifting the kill-order and placing the twins under commercial supervision.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "merchants_exchange",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "creditor_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "hunted_twin",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_factor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "twin_surrendered_to_creditors",
+      "reached_by": "The pilot accepts the bounty hunter's deal and surrenders the twin.",
+      "summary": "The pilot takes the bounty hunter's deal. {role:creditor_syndicate} impounds {role:hunted_twin}'s ship, forcing him into penal freight service to pay his brother's debt.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "creditor_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "merchants_exchange",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hunted_twin",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_hunted_twin",
+          "public_summary": "Freight crews whisper about a pilot who collected a syndicate payout by handing an innocent trader over to bounty collectors."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "ship_scuttled_by_hunters",
+      "reached_by": "Telemetry delivery fails or the arbitration hearing expires.",
+      "summary": "The bounty corvette corners the freighter and disables its core. {role:hunted_twin} is captured, and his vessel is scrapped to satisfy default claims.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "creditor_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "hunted_twin",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_factor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "ship_scuttled_by_hunters",
+  "loose_threads": [
+    {
+      "id": "t_dual_transponder_record",
+      "surface": "station_notice",
+      "detail": "A customs bulletin notes two identical freighters checking through opposite jump gates within twelve minutes under one callsign.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_syndicate_bounty_note",
+      "surface": "price_board",
+      "detail": "A debt liquidation board posted an execution bounty on a hull transponder registered three hours before the promissory default.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_salvage_creek_relay",
+      "surface": "radio",
+      "detail": "An unmonitored beacon in the asteroid shadows transmits repeated transponder handshake protocols on encrypted syndicate channels.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "impersonation",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Station constabulary warns commercial shipping of armed enforcement patrols near perimeter berths.",
+    "Creditor syndicate reaffirms lawful authorization of vessel repossession bounties.",
+    "Merchants exchange reminds members that transponder tampering carries immediate charter cancellation."
+  ],
+  "voice_direction": {
+    "hunted_twin": "High-strung, stammering, and breathless with terror. Frequently repeats that he is the honest brother and pleads for someone to check his cargo manifests.",
+    "bounty_factor": "Flat, mechanical, and bored. Treats lethal bounty contracts like routine deliveries and refers to human targets strictly by their transponder hull codes."
+  },
+  "novelty_tags": [
+    "twin_captains",
+    "transponder_swap",
+    "execution_bounty",
+    "identity_mixup",
+    "bounty_hunter_pursuit"
+  ]
+}

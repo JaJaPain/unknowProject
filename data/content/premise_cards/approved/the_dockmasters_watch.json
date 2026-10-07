@@ -1,0 +1,352 @@
+{
+  "id": "premise.the_dockmasters_watch",
+  "schema_version": 1,
+  "title": "The Dockmaster's Watch",
+  "logline": "A retiring dockmaster hires a pilot to courier her handwritten black-berth ledger to a quiet buyer before station administration impounds her final severance package.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "reinvention",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "retiring_dockmaster",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Forty years managing orbital intake slips; arthritic, cynical, trying to secure enough retirement scrip to live off-station.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "station_comptroller",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "The financial administrator reviewing all executive retirements to claw back unbonded severance pay.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quiet_collector",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "A discreet archivist who buys private station memoirs and unlogged berth diaries for wealthy collectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dock_constabulary",
+      "kind": "faction",
+      "description": "The station security brigade monitoring outgoing baggage and executive departures.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dockmaster_office",
+      "kind": "place",
+      "description": "A dingy observation cubicle suspended over the primary freighter docking bay.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "transit_lounge",
+      "kind": "place",
+      "description": "The passenger concourse where retired station staff wait for outbound passenger lighters.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "debt_owed_to_player",
+    "quiet_cover_up"
+  ],
+  "public_situation": "{role:retiring_dockmaster} cleans out her locker above the main docking bay as {role:station_comptroller} conducts a mandatory pre-retirement asset review.",
+  "private_truth": "The dockmaster's personal pocket ledger records forty years of off-the-books docking fees she allowed old retired smugglers to pay directly to her personal emergency fund.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "dockmaster_selling_black_berth_diary_for_pension"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Notice boards post the dockmaster's ceremonial retirement banquet while constables begin auditing terminal archive logs.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "retiring_dockmaster",
+          "target": "dockmaster_office",
+          "reason": "She needs an outside pilot to purchase an unmonitored encrypted data slate from the exchange and deliver it to her office before security monitors her terminal.",
+          "private_fact": "She is transcribing forty years of off-ledger berth records onto the slate before her municipal console access is permanently revoked.",
+          "outcome_tags": [
+            "slate_delivered",
+            "terminal_locked"
+          ],
+          "routes": {
+            "slate_delivered": "next",
+            "terminal_locked": "resolution:severance_forfeited"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:dock_constabulary} establishes biometric scanning portals across {role:transit_lounge}, screening all departing senior personnel.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retiring_dockmaster",
+          "target": "transit_lounge",
+          "culprit": "station_comptroller",
+          "reason": "She needs a pilot to scan the transit lounge passenger scanner net to locate the quiet collector without alerting the constabulary checkpoint.",
+          "private_fact": "The comptroller has placed a covert trace on her biometric token to seize the notebook before she boards the passenger shuttle.",
+          "outcome_tags": [
+            "buyer_located",
+            "checkpoint_alerted"
+          ],
+          "routes": {
+            "buyer_located": "next",
+            "checkpoint_alerted": "resolution:severance_forfeited"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The final boarding siren echoes through {role:transit_lounge} as luggage conveyors load the outbound orbital shuttle.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retiring_dockmaster",
+          "target": "transit_lounge",
+          "reason": "She asks the pilot to courier the sealed data slate directly into the hands of the quiet collector before the final departure horn sounds.",
+          "private_fact": "The slate contains proof that several prominent retired merchants built their fortunes on uninspected contraband berths she approved.",
+          "outcome_tags": [
+            "ledger_delivered",
+            "courier_aborted"
+          ],
+          "routes": {
+            "ledger_delivered": "next",
+            "courier_aborted": "resolution:severance_forfeited"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands between the waiting collector and the approaching comptroller at the passenger gate.",
+        "options": [
+          {
+            "id": "deliver_to_collector",
+            "label": "Hand the slate to the quiet collector to fund the dockmaster's retirement",
+            "leads_to": "resolution:quiet_retirement_funded"
+          },
+          {
+            "id": "surrender_to_comptroller",
+            "label": "Surrender the ledger to the comptroller for a municipal recovery fee",
+            "leads_to": "resolution:ledger_confiscated"
+          },
+          {
+            "id": "erase_the_slate",
+            "label": "Wipe the data slate to protect the retired smugglers from exposure",
+            "leads_to": "resolution:records_wiped"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "quiet_retirement_funded",
+      "reached_by": "The pilot delivers the encrypted ledger to the collector.",
+      "summary": "The collector pays the agreed scrip. {role:retiring_dockmaster} boards the passenger lighter with a secure pension, leaving station management with empty files.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dock_constabulary",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retiring_dockmaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_comptroller",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "funded_the_old_dockmasters_exit",
+          "public_summary": "A pilot slipped forty years of handwritten docking secrets to an off-world collector so a tired dockmaster could retire."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "ledger_confiscated",
+      "reached_by": "The pilot surrenders the slate to the station comptroller.",
+      "summary": "The comptroller seizes the ledger. {role:retiring_dockmaster} is stripped of severance, while {role:dock_constabulary} begins blackmailing retired merchants across {system}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dock_constabulary",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_comptroller",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retiring_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_dockmasters_secrets",
+          "public_summary": "Dockworkers grumble that a hired courier turned over the retiring dockmaster's private records to station auditors for a payout."
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "records_wiped",
+      "reached_by": "The pilot wipes the memory core before handing over the casing.",
+      "summary": "The slate is erased. Old retired smugglers breathe easy, {role:retiring_dockmaster} departs on basic municipal relief scrip, and the comptroller finds no proof.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dock_constabulary",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retiring_dockmaster",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "quiet_collector",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "severance_forfeited",
+      "reached_by": "The courier is aborted or security checkpoints intercept the slate.",
+      "summary": "Constabulary monitors detect the transfer and impound the dockmaster's luggage. The ledger is confiscated, and {role:retiring_dockmaster} is evicted into station public housing.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dock_constabulary",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retiring_dockmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_comptroller",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "severance_forfeited",
+  "loose_threads": [
+    {
+      "id": "t_unlogged_bay_scrip",
+      "surface": "cargo",
+      "detail": "The slate case contains three paper docking receipts dated thirty years ago stamped with a decommissioned freight seal.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_severance_clawback_rider",
+      "surface": "station_notice",
+      "detail": "A personnel board bulletin lists a retroactive clawback policy applying to dock officials retiring within ninety days.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_collector_passage_chit",
+      "surface": "dialogue",
+      "detail": "The quiet buyer holds an open-ended first-class passage coupon issued by a shipping line that went bankrupt a decade ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Station administration announces retirement ceremony for forty-year veteran dockmaster.",
+    "Auditing commission introduces automated reconciliation procedures for historical berthing logs.",
+    "Passenger transit authority reminds departing residents to declare all proprietary data hardware."
+  ],
+  "voice_direction": {
+    "retiring_dockmaster": "Slow, raspy, and dismissive. Speaks of station directors as temporary annoyances and refers to docking rigs by forty-year-old decommissioned numbers.",
+    "station_comptroller": "Smug, articulate, and patronizing. Frames predatory pension clawbacks as routine accounting tidiness and never raises his voice."
+  },
+  "novelty_tags": [
+    "retiring_dockmaster",
+    "black_berth_ledger",
+    "severance_clawback",
+    "unlogged_docks",
+    "quiet_memoir"
+  ]
+}

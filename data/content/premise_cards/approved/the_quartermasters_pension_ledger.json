@@ -1,0 +1,305 @@
+{
+  "id": "premise.the_quartermasters_pension_ledger",
+  "schema_version": 1,
+  "title": "The Quartermaster's Pension Ledger",
+  "logline": "An aging hospice quartermaster hires a pilot to smuggle confiscated dialysis filters past a municipal auditor before the ward's life-support ration is repossessed.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "hospice_quartermaster",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Runs the supply room at a deteriorating orbital veterans' sanatorium; frail, stubborn, quietly skimming dead pilots' stipends to buy medical parts.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "municipal_auditor",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Station financial liquidator assigned to close the deficit in the veterans' hospice budget.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bailiff_skiff",
+      "kind": "ship",
+      "description": "An armed municipal cutter sent to clamp the hospice's external supply pods.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "veterans_sanatorium",
+      "kind": "faction",
+      "description": "The underfunded mutual aid society supporting retired cargo pilots and void-hand veterans.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "quartermaster_store",
+      "kind": "place",
+      "description": "A cold, cramped supply depot behind the hospice wards filled with salvaged life-support canisters.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pension_office",
+      "kind": "place",
+      "description": "The station administrative registry where veteran benefit allowances are approved and audited.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "{role:municipal_auditor} freezes the supply accounts of {role:veterans_sanatorium}, alleging systematic benefit fraud across the retired pilot wards.",
+  "private_truth": "{role:hospice_quartermaster} kept six deceased pilots logged as active patients to channel their pensions into black-market dialysis cartridges for the remaining twelve bedridden veterans.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "quartermaster_skimming_dead_retirees_for_hospice_filters"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Municipal bailiffs establish a checkpoint outside {role:quartermaster_store}, halting deliveries of uncertified medical equipment.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "hospice_quartermaster",
+          "target": "quartermaster_store",
+          "reason": "He needs an independent pilot to purchase synthetic renal dialyzers at the station exchange and deliver them to the hospice storeroom before accounts freeze.",
+          "private_fact": "He forged the deceased wing commander's signature on the purchase vouchers to release the funds.",
+          "outcome_tags": [
+            "filters_stocked",
+            "order_blocked"
+          ],
+          "routes": {
+            "filters_stocked": "next",
+            "order_blocked": "resolution:ward_evacuated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:municipal_auditor} requests outside forensic review after identifying duplicate patient pension numbers in hospital registers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "municipal_auditor",
+          "target": "pension_office",
+          "culprit": "hospice_quartermaster",
+          "reason": "She hires the pilot to scan the hospice auxiliary intake logs and identify discrepancies between registered patients and medical supply deliveries.",
+          "private_fact": "Her promotion to municipal comptroller depends on recovering eighty thousand credits in hospice overpayments.",
+          "outcome_tags": [
+            "fraud_certified",
+            "discrepancies_masked"
+          ],
+          "routes": {
+            "fraud_certified": "next",
+            "discrepancies_masked": "resolution:ward_evacuated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:bailiff_skiff} takes position over the sanatorium's external life-support pods, preparing to sever auxiliary oxygen conduits.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hospice_quartermaster",
+          "target": "bailiff_skiff",
+          "reason": "He needs the auditor's repo skiff disabled before bailiffs board the hospice storage pylon to seize the life-support filters.",
+          "private_fact": "The skiff skipper hails offering a municipal clearance bounty and immunity if the pilot surrenders the storeroom keys.",
+          "outcome_tags": [
+            "skiff_disabled",
+            "took_bailiff_settlement"
+          ],
+          "routes": {
+            "skiff_disabled": "resolution:hospice_endures",
+            "took_bailiff_settlement": "resolution:ward_foreclosed"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "hospice_endures",
+      "reached_by": "The pilot disables the bailiff skiff and protects the supply delivery.",
+      "summary": "The dialyzers keep the surviving veterans alive. {role:hospice_quartermaster} is placed under quiet municipal house arrest while {role:veterans_sanatorium} retains its beds.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_sanatorium",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_quartermaster",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "municipal_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_hospice_ward",
+          "public_summary": "A pilot disabled a municipal bailiff skiff in docking orbit to keep life-support dialyzers flowing to a dying veterans' ward."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "ward_foreclosed",
+      "reached_by": "The pilot accepts the bailiff settlement and hands over storeroom access.",
+      "summary": "Municipal bailiffs impound the storeroom. The pension fraud is halted, and the bedridden veterans of {role:veterans_sanatorium} are relocated to crowded municipal charity barracks.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_sanatorium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "municipal_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_quartermaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "closed_the_veteran_accounts",
+          "public_summary": "Hospice staff say an independent pilot collected a municipal finders fee while bailiffs emptied the sanatorium's medicine lockers."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "ward_evacuated",
+      "reached_by": "Deliveries fail or forensic scans expose the hospice without defensive intervention.",
+      "summary": "Municipal freezes halt life-support supplies. {role:veterans_sanatorium} shutters its hospice wing and disperses its bedridden patients into underfunded transit shelters.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_sanatorium",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_quartermaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "municipal_auditor",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "ward_evacuated",
+  "loose_threads": [
+    {
+      "id": "t_deceased_pilot_scrip",
+      "surface": "cargo",
+      "detail": "The seized medical cases are wrapped in cargo waybills billed to a freight captain who vanished twenty-two years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_auditor_margin_call",
+      "surface": "price_board",
+      "detail": "A municipal debt recovery board posted a bounty for hospice ledger assets matching the auditor's personal commission tier.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_skiff_transponder_match",
+      "surface": "ship_marking",
+      "detail": "The bailiff skiff hull displays registration stencils previously assigned to a private collection firm.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "protecting_someone",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Municipal comptroller announces comprehensive audit of long-term medical benefit subsidies.",
+    "Veterans sanatorium issues urgent appeal for voluntary synthetic life-support contributions.",
+    "Station administration reminds tenants that unlicensed pharmaceuticals are subject to confiscation."
+  ],
+  "voice_direction": {
+    "hospice_quartermaster": "Dry, raspy, and halting. Speaks with the defensive fatigue of someone who has argued with station clerks for thirty years and no longer expects courtesy.",
+    "municipal_auditor": "Crisp, fast, and relentlessly polite. Uses sterile administrative euphemisms to describe evicting bedridden hospice patients."
+  },
+  "novelty_tags": [
+    "veterans_hospice",
+    "pension_skimming",
+    "dialysis_cartridges",
+    "municipal_audit",
+    "hospice_quartermaster"
+  ]
+}

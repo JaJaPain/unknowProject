@@ -1,0 +1,421 @@
+{
+  "id": "premise.the_old_admirals_flagship",
+  "schema_version": 1,
+  "title": "The Old Admiral's Flagship",
+  "logline": "A dying retired naval captain powers up her decommissioned battleship to make one final journey to her lost squadron's grave across three star systems before repo cutters scuttle the hull.",
+  "scale": "regional",
+  "tone": [
+    "tragic",
+    "paranoid"
+  ],
+  "themes": [
+    "legacy",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "aging_captain",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Eighty years old, terminally ill with void-sickness; proud, defiant, refusing to die in a station hospital bed.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "demolition_bailiff",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Asset recovery factor representing the scrap yard that purchased the battleship's salvage title.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_interceptor",
+      "kind": "ship",
+      "description": "A heavy pursuit frigate armed with tractor clamps and demolition torpedoes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "naval_veterans",
+      "kind": "faction",
+      "description": "An informal fraternity of retired crew members who served aboard the battleship during the border wars.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_syndicate",
+      "kind": "faction",
+      "description": "The industrial corporate monopoly holding scrap warrants over decommissioned fleet vessels.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mothball_depot",
+      "kind": "place",
+      "description": "A dead orbital anchorage where decommissioned warships rust under low orbital vacuum.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_cemetery",
+      "kind": "place",
+      "description": "A distant asteroid field littered with the silent hulks of a forgotten fleet action.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "memorial_station",
+      "kind": "place",
+      "description": "An ancient frontier outpost overlooking the memorial battle site.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "martyr_made",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "A decommissioned battleship breaches moorings at {role:mothball_depot} and heads toward the border gate under sublight auxiliary thrusters.",
+  "private_truth": "{role:aging_captain} slipped aboard her old flagship with a skeleton crew of fellow retirees to fly it to {role:border_cemetery} where her original crew was lost forty years ago.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "aging_captain_piloting_flagship_to_battlefield_grave"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Mothball anchorage alarms sound across the system as the antique warship ignites auxiliary fusion boilers.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "aging_captain",
+          "target": "mothball_depot",
+          "reason": "She needs an outside pilot to deliver high-density thorium ore directly to the battleship's auxiliary reactor before yard security cuts the tether power.",
+          "private_fact": "She spent her entire naval pension purchasing the fuel chits through black-market exchange contacts.",
+          "outcome_tags": [
+            "reactor_ignited",
+            "depot_tether_cut"
+          ],
+          "routes": {
+            "reactor_ignited": "next",
+            "depot_tether_cut": "resolution:battleship_impounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "{role:salvage_syndicate} files emergency warrants with border gate magistrates, declaring the battleship stolen property.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "aging_captain",
+          "target": "memorial_station",
+          "reason": "She asks the pilot to purchase emergency maneuvering thruster coils from the junction exchange and deliver them to her escort flank.",
+          "private_fact": "Her steering thrusters are misfiring and she is guiding the five-kilometer warship using manual attitude verniers.",
+          "outcome_tags": [
+            "coils_installed",
+            "thrusters_failed"
+          ],
+          "routes": {
+            "coils_installed": "next",
+            "thrusters_failed": "resolution:battleship_impounded"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "demolition_bailiff",
+          "target": "mothball_depot",
+          "culprit": "salvage_syndicate",
+          "reason": "He hires the pilot to scan the battleship's mooring slip and extract the captain's medical logs to prove she is legally non compos mentis.",
+          "private_fact": "The syndicate purchased the battleship's salvage title for a fraction of its scrap value through insider bidding.",
+          "outcome_tags": [
+            "sanity_disputed",
+            "records_erased"
+          ],
+          "routes": {
+            "sanity_disputed": "next",
+            "records_erased": "resolution:battleship_impounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "{role:salvage_interceptor} intercepts the battleship along the deep-space transit lane, firing electromagnetic harpoons.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "aging_captain",
+          "target": "salvage_interceptor",
+          "reason": "She needs the pursuit interceptor disabled before its tractor beams lock her flagship's drive nozzles in the gate transit lane.",
+          "private_fact": "The interceptor skipper hails offering seventy thousand credits and salvage rights on auxiliary reactors if the pilot disables the flagship.",
+          "outcome_tags": [
+            "interceptor_crippled",
+            "took_salvage_bounty"
+          ],
+          "routes": {
+            "interceptor_crippled": "next",
+            "took_salvage_bounty": "resolution:battleship_scrapped"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The battleship enters the perimeter of {role:border_cemetery}, surrounded by hundreds of shattered warship hulls.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "aging_captain",
+          "target": "border_cemetery",
+          "reason": "She asks the pilot to carry the flagship's ceremonial battle pennant and final log recorder to the memorial station beacon before her reactor permanently shuts down.",
+          "private_fact": "She intends to vent her remaining atmosphere and remain in the command chair among the drifting wreckage of her fleet.",
+          "outcome_tags": [
+            "pennant_delivered",
+            "mission_aborted"
+          ],
+          "routes": {
+            "pennant_delivered": "next",
+            "mission_aborted": "resolution:battleship_impounded"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands at the memorial beacon as the ancient battleship approaches the perimeter of the battlefield graveyard.",
+        "options": [
+          {
+            "id": "honor_final_voyage",
+            "label": "Broadcast the captain's final naval log and let the flagship rest among the graves",
+            "leads_to": "resolution:flagship_reaches_grave"
+          },
+          {
+            "id": "call_militia_tug",
+            "label": "Signal municipal tugs to board the flagship and save the surviving crew",
+            "leads_to": "resolution:crew_rescued_involuntary"
+          },
+          {
+            "id": "sell_salvage_coordinates",
+            "label": "Sell the battleship's final resting coordinates to the scrap syndicate",
+            "leads_to": "resolution:battleship_scrapped"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "flagship_reaches_grave",
+      "reached_by": "The pilot disables the interceptor and delivers the captain's pennant.",
+      "summary": "The flagship drifts to rest in {role:border_cemetery}. {role:aging_captain} dies peacefully on her command bridge among her fallen squadron, and {role:naval_veterans} establish an enduring orbital monument.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "naval_veterans",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_captain",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_bailiff",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "escorted_the_last_flagship",
+          "public_summary": "A pilot defended a dying commander's rogue battleship across three systems so it could take its place in the war cemetery."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "wreck_left_behind"
+      ]
+    },
+    {
+      "id": "crew_rescued_involuntary",
+      "reached_by": "The pilot calls municipal tugs to seize the vessel.",
+      "summary": "Tugs board the flagship and remove the elderly crew to station medical bays. The battleship is towed to the scrap yard, and {role:aging_captain} spends her final days under court-mandated custody.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "naval_veterans",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_captain",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_bailiff",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "battleship_scrapped",
+      "reached_by": "The pilot sells the ship's coordinates to the salvage syndicate.",
+      "summary": "The pilot takes the syndicate bounty. {role:salvage_syndicate} boards the battleship with plasma torches, cutting the warship apart in deep space while {role:naval_veterans} mourn the desecration.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "naval_veterans",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_bailiff",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_the_flagship",
+          "public_summary": "Veterans tell bitter stories of a pilot who pocketed corporate gold to betray an eighty-year-old captain's final voyage."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "battleship_impounded",
+      "reached_by": "Fuel exhaustion strands the warship between jump gates.",
+      "summary": "Fuel exhaustion strands the warship between jump gates. Salvage tugs impound the drifting vessel, arresting the surviving veterans and towing the hull to industrial smelters.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "aging_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_bailiff",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "battleship_impounded",
+  "loose_threads": [
+    {
+      "id": "t_scrapped_flagship_manifest",
+      "surface": "cargo",
+      "detail": "The battleship auxiliary safe contains service badges and personal letters belonging to crew members lost four decades earlier.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_syndicate_salvage_debenture",
+      "surface": "price_board",
+      "detail": "A scrap exchange board listed an advance sale of five thousand tons of heavy rolled hull plate before the ship slipped its moorings.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_interceptor_code_override",
+      "surface": "ship_marking",
+      "detail": "The pursuit interceptor displays an old fleet serial number registered to a naval officer who signed the captain's original dismissal order.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "guilt",
+      "legacy",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Perimeter navigation monitoring alerts border traffic to unauthorized battleship engine flares.",
+    "Salvage syndicate registers immediate asset repossession claim with inter-system court.",
+    "Frontier veterans societies broadcast honorary salutes along historical convoy lanes."
+  ],
+  "voice_direction": {
+    "aging_captain": "Iron-hard, formal, and halting. Issues navigation commands with precise naval terminology as if addressing a full command bridge.",
+    "demolition_bailiff": "Tired, legalistic, and exasperated. Speaks of a five-kilometer warship as an oversized scrap liability that needs to be melted down."
+  },
+  "novelty_tags": [
+    "mothball_battleship",
+    "dying_admiral",
+    "final_voyage",
+    "warship_cemetery",
+    "salvage_interceptor"
+  ]
+}

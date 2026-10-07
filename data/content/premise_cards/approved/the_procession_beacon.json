@@ -1,0 +1,405 @@
+{
+  "id": "premise.the_procession_beacon",
+  "schema_version": 1,
+  "title": "The Procession Beacon",
+  "logline": "A religious cantor discovers the sacred parade lantern houses a century-old audio flight recorder exposing a suppressed colonial atrocity before the annual holy broadcast.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "political"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "procession_cantor",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Guides ceremonial shuttle flight paths; devout, burdened by conscience, terrified that holy ritual is built upon a massacre.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "station_archivist",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Municipal historical commissioner; smooth, dismissive, determined to keep colonial records sanitized.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "patrol_interceptor",
+      "kind": "ship",
+      "description": "A council gunboat tasked with jamming unauthorized broadcast signals along the parade route.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pilgrim_congregation",
+      "kind": "faction",
+      "description": "Independent mining families who pilot small shuttles in close formation for annual blessings.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "station_council",
+      "kind": "faction",
+      "description": "The ruling municipal authority, protective of its founding pedigree and security legacy.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "lantern_sanctuary",
+      "kind": "place",
+      "description": "An ancient domed temple station overlooking the primary mineral belt.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "broadcast_spire",
+      "kind": "place",
+      "description": "The high-gain transmitter mast atop the civic hub used for holiday feeds.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "archive_vault",
+      "kind": "place",
+      "description": "A sealed records depository in the station core housing sealed colonial registries.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "leader_discredited",
+    "alliance_formed"
+  ],
+  "public_situation": "Thousands gather at {role:lantern_sanctuary} for the lighting of the great relic lantern, which broadcasts founding hymns across {system}.",
+  "private_truth": "{role:procession_cantor} discovered the lantern's memory core holds raw black-box telemetry of station gunners firing on civilian shuttle pods during the Founding Riots.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "relic_lantern_conceals_founding_massacre_telemetry"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Pilgrim vessels power ceremonial amber running lights while {role:station_council} deploys monitoring probes along the approach corridor.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "procession_cantor",
+          "target": "archive_vault",
+          "reason": "He needs an unmonitored pilot to carry the relic lantern's unsealed memory prism to the archive vault for independent sensor verification before opening prayers.",
+          "private_fact": "He matched the prism's acoustic serial code to an old military gun-camera log that was supposedly destroyed forty years ago.",
+          "outcome_tags": [
+            "prism_delivered",
+            "handoff_refused"
+          ],
+          "routes": {
+            "prism_delivered": "next",
+            "handoff_refused": "resolution:hymns_broadcast_clean"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:station_council} announces unexpected data maintenance on the archive vault, barring civilian visitors from inspection terminals.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "procession_cantor",
+          "target": "archive_vault",
+          "culprit": "station_council",
+          "reason": "He needs an outside pilot to scan sealed registry backups and extract the voice encryption keys needed to verify the black-box recording.",
+          "private_fact": "The historical casualty register shows his own grandfather signed the execution order for the rebellious miners.",
+          "outcome_tags": [
+            "keys_verified",
+            "data_corrupted"
+          ],
+          "routes": {
+            "keys_verified": "next",
+            "data_corrupted": "resolution:hymns_broadcast_clean"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:patrol_interceptor} takes position over {role:broadcast_spire}, scanning incoming ships for encrypted audio payloads.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "procession_cantor",
+          "target": "patrol_interceptor",
+          "reason": "He needs the council interceptor disabled so the transmission array at the broadcast spire remains open to external feeds.",
+          "private_fact": "The interceptor captain hails offering a council commission and immune status if the pilot burns the telemetry prism.",
+          "outcome_tags": [
+            "interceptor_neutralized",
+            "took_council_pay"
+          ],
+          "routes": {
+            "interceptor_neutralized": "next",
+            "took_council_pay": "resolution:truth_buried"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The ceremonial procession moves into formation as opening choral fanfares echo across station frequencies.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "procession_cantor",
+          "target": "broadcast_spire",
+          "reason": "He asks the pilot to deliver the unlocked memory prism to the transmitter controls at the broadcast spire before the holiday service concludes.",
+          "private_fact": "He intends to override the master acoustic feed with the un-redacted gunner recording and announce his own immediate resignation.",
+          "outcome_tags": [
+            "prism_broadcast",
+            "carrier_diverted"
+          ],
+          "routes": {
+            "prism_broadcast": "next",
+            "carrier_diverted": "resolution:secret_consecrated"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the verified black-box telemetry at the broadcast spire controls while opening choral anthems ring across the system.",
+        "options": [
+          {
+            "id": "broadcast_to_system",
+            "label": "Transmit the massacre telemetry over live festival feeds",
+            "leads_to": "resolution:massacre_exposed"
+          },
+          {
+            "id": "consecrate_in_shrine",
+            "label": "Hand the prism to the cantor to seal within the high altar",
+            "leads_to": "resolution:secret_consecrated"
+          },
+          {
+            "id": "sell_to_archivist",
+            "label": "Sell the telemetry to the archivist for council hush money",
+            "leads_to": "resolution:truth_buried"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "massacre_exposed",
+      "reached_by": "The pilot disables the interceptor and transmits the black-box data.",
+      "summary": "The black-box telemetry airs over every festival feed. Outrage erupts across {system}, council leaders face widespread protests, and the holy celebration turns into a general strike.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_council",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "pilgrim_congregation",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "procession_cantor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_archivist",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "broadcast_the_founding_massacre",
+          "public_summary": "A pilot plugged fifty-year-old gun-camera logs into a holiday transmitter and broke the council's sacred myth."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "secret_consecrated",
+      "reached_by": "The pilot returns the prism to the cantor to be sealed in the shrine.",
+      "summary": "{role:procession_cantor} locks the memory core inside the sealed high altar. The founding hymns play on schedule, but the clergy quietly extracts political concessions from {role:station_council}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "pilgrim_congregation",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "station_council",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "procession_cantor",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "consecrated_the_black_box",
+          "public_summary": "Whispers say the temple elders bought their new tax exemptions with an unexploded piece of colonial history."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "truth_buried",
+      "reached_by": "The pilot sells the telemetry to municipal censors or takes the interceptor's bribe.",
+      "summary": "The telemetry core is surrendered to municipal censors. {role:station_council} destroys the evidence, pays off the participants, and broadcasts sanitized holiday anthems.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_council",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_archivist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "procession_cantor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_relic_telemetry",
+          "public_summary": "Dockside gossip claims an independent pilot took council gold to make sure an old colony scandal stayed dead."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "hymns_broadcast_clean",
+      "reached_by": "The archive verification fails or the pilot abandons the contract.",
+      "summary": "Security sweeps seize the ceremonial reliquary before the truth leaks. The holiday hymns play on schedule while {role:procession_cantor} is quietly reassigned to an unpopulated ice outpost.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_council",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "procession_cantor",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_archivist",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "hymns_broadcast_clean",
+  "loose_threads": [
+    {
+      "id": "t_gunner_frequency_code",
+      "surface": "radio",
+      "detail": "A decommissioned militia tactical channel briefly transmits handshake tones whenever the temple choir sings the fifth stanza.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_clerical_debt_debenture",
+      "surface": "price_board",
+      "detail": "The temple sanctuary auxiliary power budget is encumbered by an old debt bond held by a council member's holding trust.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_absent_auditor_seal",
+      "surface": "station_notice",
+      "detail": "The archive access certificate on the registry terminal bears the digital seal of an inspector who died twelve years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "forged_records",
+      "impersonation"
+    ],
+    "motives": [
+      "fear",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Pilgrim shuttle formations tune transmitter horns across {system} for evening blessing.",
+    "Station council announces enhanced telemetry monitoring along the procession axis.",
+    "Historical commission reminds citizens that founding archive maintenance is routine."
+  ],
+  "voice_direction": {
+    "procession_cantor": "Speaks with soft, lyrical cadences that hesitate whenever historical casualty dates are mentioned. Avoids administrative terms entirely.",
+    "station_archivist": "Smooth, clipped, and relentlessly cheerful. Dismisses questions about early colonial gunnery as unhelpful historical gossip."
+  },
+  "novelty_tags": [
+    "lantern_parade",
+    "audio_black_box",
+    "founding_massacre",
+    "sanctuary_archive",
+    "ceremonial_broadcast"
+  ]
+}

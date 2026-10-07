@@ -1,0 +1,377 @@
+{
+  "id": "premise.the_cryo_pension_transit",
+  "schema_version": 1,
+  "title": "The Cryo-Pension Transit",
+  "logline": "A technician discovers an orbital cold-sleep hospice is under-powering retired miners' cryogenic pods to siphon electrical coolant to private luxury berths.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "tragic"
+  ],
+  "themes": [
+    "price_of_profit",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "hospice_technician",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Works maintenance on seventy cryogenic sleeper pods; gentle, overworked, horrified by telemetry anomalies.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "vault_director",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Head of the long-term retiree preservation facility; smooth, pragmatic, rationalizing cold-sleep cuts as necessary austerity.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "miners_fellowship",
+      "kind": "faction",
+      "description": "The fraternal charity funding the cryogenic preservation of retired frontier miners.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "luxury_consortium",
+      "kind": "faction",
+      "description": "The private orbital yacht club purchasing diverted coolant to chill luxury observation salons.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cryo_mausoleum",
+      "kind": "place",
+      "description": "A refrigerated orbital spire housing two hundred retired labourers in suspended animation.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "yacht_basin",
+      "kind": "place",
+      "description": "The private pleasure dock where wealthy seasonal visitors moor their climate-controlled ships.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "charity_hall",
+      "kind": "place",
+      "description": "The miners' fraternal assembly hall where benefit accounts and memorial records are kept.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "{role:miners_fellowship} holds an annual vigil for sleeping retirees at {role:cryo_mausoleum} while the facility reports rising maintenance surcharges.",
+  "private_truth": "{role:vault_director} has been throttling the pod temperature regulators to seventy percent efficiency, selling the diverted fluorocarbon coolant to {role:luxury_consortium} to pocket the markup.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "director_siphoning_cryo_coolant_to_luxury_yachts"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Mausoleum staff post visitor restrictions around the lower preservation vaults, citing routine heat-pump maintenance.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "hospice_technician",
+          "target": "cryo_mausoleum",
+          "culprit": "vault_director",
+          "reason": "She needs an outside pilot to scan the exterior pod heat-exchange manifolds and document the unexplained temperature drift before the director resets the monitors.",
+          "private_fact": "Her own grandmother is sleeping in pod thirty-four and has shown fluctuating cellular telemetry for three weeks.",
+          "outcome_tags": [
+            "drift_documented",
+            "sensors_jammed"
+          ],
+          "routes": {
+            "drift_documented": "next",
+            "sensors_jammed": "resolution:vault_silenced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Temperature alarms ring quietly in the lower stacks while yacht berths across the station report abundant supercooled fluid deliveries.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "hospice_technician",
+          "target": "cryo_mausoleum",
+          "reason": "She asks the pilot to purchase medical-grade liquid nitrogen at the station exchange and deliver it directly to the auxiliary chiller loop.",
+          "private_fact": "She emptied her personal savings account to pay for the coolant without filing an official requisition.",
+          "outcome_tags": [
+            "coolant_injected",
+            "shipment_delayed"
+          ],
+          "routes": {
+            "coolant_injected": "next",
+            "shipment_delayed": "resolution:vault_silenced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "aftermath",
+      "public_change": "The fellowship executive board gathers at {role:charity_hall} to review the mausoleum's annual endowment renewal.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "hospice_technician",
+          "target": "charity_hall",
+          "reason": "She needs the exported temperature logs and coolant sales receipts delivered to the miners fellowship board before the director purges the local server.",
+          "private_fact": "The director offered to restore her grandmother's pod to full maximum power if she destroys the log drives.",
+          "outcome_tags": [
+            "evidence_tabled",
+            "drives_withheld"
+          ],
+          "routes": {
+            "evidence_tabled": "next",
+            "drives_withheld": "resolution:vault_silenced"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the telemetry evidence outside the fraternal boardroom while the director's lawyers wait.",
+        "options": [
+          {
+            "id": "expose_to_fellowship",
+            "label": "Deliver the telemetry to the miners fellowship to force municipal prosecution",
+            "leads_to": "resolution:scandal_forces_reform"
+          },
+          {
+            "id": "accept_director_hush_money",
+            "label": "Sell the log drives to the director to keep the luxury contracts quiet",
+            "leads_to": "resolution:coolant_cartel_intact"
+          },
+          {
+            "id": "broker_coolant_subsidy",
+            "label": "Force the luxury yacht club to subsidize the mausoleum in exchange for silence",
+            "leads_to": "resolution:yacht_subsidy_compromise"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "scandal_forces_reform",
+      "reached_by": "The pilot delivers the temperature evidence to the fellowship board.",
+      "summary": "The telemetry is tabled before the fellowship. {role:vault_director} is arrested for reckless endangerment, luxury contracts are cancelled, and full chilling power is restored.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "luxury_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_director",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_technician",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "uncovered_the_sleeper_scandal",
+          "public_summary": "Miners honor a pilot who exposed how station doctors siphoned coolant off sleeping retirees to chill champagne for yachts."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "coolant_cartel_intact",
+      "reached_by": "The pilot accepts the director's payoff and withholds the logs.",
+      "summary": "The logs are destroyed. {role:vault_director} expands coolant sales to luxury berths, and several sleeping retirees suffer irreversible cellular decay.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "luxury_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_technician",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_sleepers_telemetry",
+          "public_summary": "Dock rumors claim a pilot took luxury credits to bury evidence that old miners were slowly thawing in their pods."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "yacht_subsidy_compromise",
+      "reached_by": "The pilot forces a quiet corporate endowment settlement.",
+      "summary": "A settlement is signed. {role:luxury_consortium} pays a heavy annual surcharge directly to {role:miners_fellowship} to upgrade the chillers, keeping the scandal private.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "luxury_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_technician",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_director",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "vault_silenced",
+      "reached_by": "Telemetry scans fail or the courier run is abandoned.",
+      "summary": "The technician's complaints are dismissed as calibration drift. {role:vault_director} continues diverting coolant, and the sleeper pods slowly degrade unnoticed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_fellowship",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_technician",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_director",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "evidence_loose"
+      ]
+    }
+  ],
+  "default_resolution": "vault_silenced",
+  "loose_threads": [
+    {
+      "id": "t_coolant_drum_manifest",
+      "surface": "cargo",
+      "detail": "The sealed coolant drums at the yacht basin bear medical-grade sterilization stamps reserved for hospital suspension vats.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_unpaid_fellowship_scrip",
+      "surface": "price_board",
+      "detail": "The miners fraternal board posted a twenty percent dividend cut to cover unexplained cryogenic maintenance expenses.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_yacht_club_charter_clause",
+      "surface": "station_notice",
+      "detail": "A luxury yacht basin ordinance grants unmonitored utility priority to private berths during peak holiday seasons.",
+      "can_carry_methods": [
+        "impersonation",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "impersonation"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Miners fraternal association marks annual memorial day for pioneers preserved in deep sleep.",
+    "Luxury yacht basin managers announce complete upgrade of private climate-control loops.",
+    "Station utilities board reports peak seasonal power demand across residential and recreation sectors."
+  ],
+  "voice_direction": {
+    "hospice_technician": "Soft-spoken, hesitant, and visibly anxious. Speaks in careful technical figures and pauses nervously before mentioning hospital directors.",
+    "vault_director": "Warm, measured, and soothing. Frames life-threatening maintenance cuts as unavoidable thermodynamic realities and smiles through difficult questions."
+  },
+  "novelty_tags": [
+    "cryo_sleep_hospice",
+    "coolant_diversion",
+    "retired_miners",
+    "luxury_yacht_siphon",
+    "thermal_neglect"
+  ]
+}

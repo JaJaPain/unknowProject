@@ -1,0 +1,419 @@
+{
+  "id": "premise.the_foundry_brothers_feud",
+  "schema_version": 1,
+  "title": "The Foundry Brothers' Feud",
+  "logline": "Two estranged brothers operating rival smelting platforms engage in a cutthroat economic war over silicate flux ore, hiring private mercenaries to seize each other's supply convoys.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "elder_brother",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Manages the high-tier blast furnace; arrogant, methodical, determined to force his younger sibling into liquidation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "younger_brother",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Manages the cooperative re-smelting dock; passionate, protective of his foundry crew, refusing corporate buyout offers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "brother_escort",
+      "kind": "ship",
+      "description": "An armed heavy freighter guarding the elder brother's bulk silicate transports.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smelters_union",
+      "kind": "faction",
+      "description": "The association of independent orbital foundry workers caught between the brothers' feuding docks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "foundry_cartel",
+      "kind": "faction",
+      "description": "The industrial mineral processing trust seeking to absorb both family smelters into a regional monopoly.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "elder_furnace",
+      "kind": "place",
+      "description": "A massive industrial smelting platform dominating the system's primary ironworks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cooperative_dock",
+      "kind": "place",
+      "description": "A converted salvage habitat where the younger brother runs an independent recycled metal forge.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "silicate_claim",
+      "kind": "place",
+      "description": "An icy asteroid outcrop in the mineral belt yielding high-purity smelting flux.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "faction_weakened",
+    "alliance_formed"
+  ],
+  "public_situation": "Smelting prices fluctuate wildly across {system} as rival family foundries accuse each other of monopolizing silicate ore flux.",
+  "private_truth": "{role:elder_brother} entered a secret cartel agreement to drive his brother's cooperative into bankruptcy in exchange for a permanent board seat.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "brother_colluding_with_cartel_to_bankrupt_foundry"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The cooperative foundry lowers its production blast horns as raw flux reserves dwindle to emergency thresholds.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "younger_brother",
+          "target": "cooperative_dock",
+          "reason": "He needs an independent pilot to mine and deliver silicate flux from the outer belt to keep the cooperative's blast furnaces burning through the supply squeeze.",
+          "private_fact": "His foundry only has enough liquid fuel to maintain ladle temperatures for another twenty-four hours.",
+          "outcome_tags": [
+            "ore_delivered",
+            "furnace_cooled"
+          ],
+          "routes": {
+            "ore_delivered": "next",
+            "furnace_cooled": "resolution:cooperative_liquidated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:foundry_cartel} posts a public purchase offer for the cooperative's berths, backed by default foreclosure filings.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "younger_brother",
+          "target": "elder_furnace",
+          "culprit": "elder_brother",
+          "reason": "He needs a pilot to scan the elder brother's intake manifest beacon and uncover proof that the cartel is secretly subsidizing his brother's purchase orders.",
+          "private_fact": "Their late father left the original foundry patent to both brothers jointly, prohibiting corporate buyout agreements.",
+          "outcome_tags": [
+            "collusion_documented",
+            "telemetry_jammed"
+          ],
+          "routes": {
+            "collusion_documented": "next",
+            "telemetry_jammed": "resolution:cooperative_liquidated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:brother_escort} maneuvers into the cooperative approach lane, enforcing an armed perimeter against incoming freighters.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "younger_brother",
+          "target": "brother_escort",
+          "reason": "He needs his brother's armed escort cutter disabled before its gunners blockade the cooperative's docking approaches.",
+          "private_fact": "The escort captain hails offering fifty thousand credits and a guaranteed furnace maintenance contract if the pilot turns over the cartel files.",
+          "outcome_tags": [
+            "escort_neutralized",
+            "took_cartel_deal"
+          ],
+          "routes": {
+            "escort_neutralized": "next",
+            "took_cartel_deal": "resolution:cartel_absorbs_both"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Union delegates gather at {role:cooperative_dock} as arbiters prepare to hear the emergency patent violation petition.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "younger_brother",
+          "target": "cooperative_dock",
+          "reason": "He asks the pilot to courier the documented partnership violations directly to the smelters union tribunal before the elder brother files foreclosure papers.",
+          "private_fact": "He hopes the tribunal will force his brother back into the original family partnership rather than putting him in prison.",
+          "outcome_tags": [
+            "evidence_tabled",
+            "hearing_missed"
+          ],
+          "routes": {
+            "evidence_tabled": "next",
+            "hearing_missed": "resolution:cooperative_liquidated"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands before the union arbiters as both brothers present their operational balance sheets.",
+        "options": [
+          {
+            "id": "enforce_family_charter",
+            "label": "Present the collusion proof and restore the joint family charter under union oversight",
+            "leads_to": "resolution:family_charter_restored"
+          },
+          {
+            "id": "back_cooperative_independence",
+            "label": "Void the elder brother's title and award sole ownership of the furnaces to the cooperative",
+            "leads_to": "resolution:cooperative_triumphs"
+          },
+          {
+            "id": "sell_to_elder_brother",
+            "label": "Sell the collusion proof to the elder brother to let the corporate buyout proceed",
+            "leads_to": "resolution:cartel_absorbs_both"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "family_charter_restored",
+      "reached_by": "The pilot delivers the collusion proof and union arbiters enforce the family patent.",
+      "summary": "The union tribunal upholds the family charter. Both brothers are mandated into a supervised partnership, breaking the cartel's regional price stranglehold.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smelters_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "foundry_cartel",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_brother",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_brother",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "silicate",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_family_smelter",
+          "public_summary": "A pilot broke an armed blockade to expose corporate collusion and force two feuding foundry brothers to share the family blast furnace."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "cooperative_triumphs",
+      "reached_by": "The arbiters void the elder brother's title for anti-union collusion.",
+      "summary": "The elder brother is stripped of his charter for corporate collusion. {role:younger_brother} assumes control of both facilities, expanding worker-owned smelting operations.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smelters_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "foundry_cartel",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_brother",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_brother",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "nationalized_the_foundry",
+          "public_summary": "Smelter hands celebrate a pilot who proved a foundry director was colluding with cartels to break his brother's union."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "cartel_absorbs_both",
+      "reached_by": "The pilot accepts the cartel payout or sells the evidence to the elder brother.",
+      "summary": "The evidence is buried. {role:foundry_cartel} forecloses on both facilities, shutting down the independent cooperative and eliminating independent smelting in {system}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "foundry_cartel",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "smelters_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_brother",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_brother",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "silicate",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "cooperative_liquidated",
+      "reached_by": "Ore deliveries fail or the tribunal petition deadline expires.",
+      "summary": "Silicate shortages force the cooperative to drop its fires. {role:younger_brother} is forced out, and {role:elder_brother} consolidates power under cartel backing.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "foundry_cartel",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "smelters_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_brother",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_brother",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "faction_weakened"
+      ]
+    }
+  ],
+  "default_resolution": "cooperative_liquidated",
+  "loose_threads": [
+    {
+      "id": "t_flux_futures_contract",
+      "surface": "cargo",
+      "detail": "The silicate shipment containers bear pre-stamped export manifests consigned to a cartel holding corporation three jumps away.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_escort_registry_alias",
+      "surface": "ship_marking",
+      "detail": "The elder brother's escort gunboat displays an industrial registry number belonging to a cartel subsidiary.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_foundry_charter_lien",
+      "surface": "price_board",
+      "detail": "A commercial board lists a buyout option on the family blast furnace expiring on the first day of the fiscal quarter.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Smelters union warns of impending regional alloy shortages due to feuding furnace docks.",
+    "Foundry cartel announces strategic investment options across independent orbital steelworks.",
+    "Industrial commodities desk notes severe spot price volatility for certified silicate flux."
+  ],
+  "voice_direction": {
+    "elder_brother": "Cold, imperious, and patronizing. Frames cutthroat corporate maneuvers as natural economic Darwinism and speaks of his brother with clinical disappointment.",
+    "younger_brother": "Fiery, hoarse, and combative. Speaks in passionate union slogans and slams his hand on bulkheads when discussing corporate cartels."
+  },
+  "novelty_tags": [
+    "rival_brothers",
+    "foundry_feud",
+    "silicate_flux",
+    "smelting_cartel",
+    "union_arbitration"
+  ]
+}

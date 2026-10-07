@@ -1,0 +1,352 @@
+{
+  "id": "premise.the_salvage_pilots_last_haul",
+  "schema_version": 1,
+  "title": "The Salvage Pilot's Last Haul",
+  "logline": "An aging salvage pilot hires an armed outsider to protect her sixty-year-old tug from demolition contractors who want to scrap her hull and seize its rare thorium reactor core.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "bleak"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "veteran_scrapper",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "A sixty-year veteran of asteroid belt salvage; half-deaf, stubborn, clinging to the only ship she has ever owned.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "demolition_factor",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Represents the scrap yard consortium; impatient, eager to melt down obsolete private hulls to meet steel recycling quotas.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "demolition_cutter",
+      "kind": "ship",
+      "description": "A heavy scrapper vessel fitted with industrial cutting lasers and plasma torches.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrappers_union",
+      "kind": "faction",
+      "description": "The guild of orbital metal workers seeking to protect veteran members from forced vessel retirement.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_consortium",
+      "kind": "faction",
+      "description": "The industrial recycling trust holding sovereign scrapping charters over old hulls.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "scrappers_berth",
+      "kind": "place",
+      "description": "A crowded floating yard where decommissioned freighters are stripped for re-smelting.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "thorium_reef",
+      "kind": "place",
+      "description": "An abandoned deep-space reactor testing rig drifting in an asteroid shadow.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "assay_dock",
+      "kind": "place",
+      "description": "The certified intake station where extracted reactor elements are weighed and bought.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "market_disrupted",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "{role:salvage_consortium} issues a mandatory scuttle order for ships over fifty standard years old, targeting {role:veteran_scrapper}'s vintage tug.",
+  "private_truth": "{role:veteran_scrapper} secretly recovered an intact antique thorium fuel core from {role:thorium_reef} and welded it into her tug's engine cradle to power life-support without paying station utility tariffs.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "scrapper_concealed_thorium_core_in_tug"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Scrap yard inspectors attach repossession beacons to outer berths, citing structural fatigue violations on antique hulls.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "thorium",
+          "requester": "veteran_scrapper",
+          "target": "scrappers_berth",
+          "reason": "She needs an outside pilot to mine and deliver dense thorium ore to her berth to replenish coolant shielding around the vintage reactor before inspectors board.",
+          "private_fact": "Her ship's original lead baffle cracked three weeks ago and she has been cooling the reactor by hand.",
+          "outcome_tags": [
+            "ore_delivered",
+            "inspection_failed"
+          ],
+          "routes": {
+            "ore_delivered": "next",
+            "inspection_failed": "resolution:tug_cut_to_scrap"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:salvage_consortium} declares an administrative lien on the veteran tug, dispatching cutters to tow the ship to the breakers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "veteran_scrapper",
+          "target": "thorium_reef",
+          "culprit": "salvage_consortium",
+          "reason": "She needs a pilot to scan the old testing rig and retrieve the original de-licensing certificate proving her vintage tug was granted an indefinite operating waiver.",
+          "private_fact": "The consortium deleted the original waiver from the central registry to justify condemning her ship.",
+          "outcome_tags": [
+            "waiver_recovered",
+            "reef_collapsed"
+          ],
+          "routes": {
+            "waiver_recovered": "next",
+            "reef_collapsed": "resolution:tug_cut_to_scrap"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:demolition_cutter} powers up industrial cutting lasers and moves toward {role:scrappers_berth} with armed escorts.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "veteran_scrapper",
+          "target": "demolition_cutter",
+          "reason": "She needs the demolition cutter disabled before its cutting torches slice through her tug's mooring pylons.",
+          "private_fact": "The demolition factor hails mid-fight offering forty thousand credits and a modern shuttle if the pilot stands aside while they seize the thorium core.",
+          "outcome_tags": [
+            "cutter_driven_off",
+            "took_demolition_offer"
+          ],
+          "routes": {
+            "cutter_driven_off": "next",
+            "took_demolition_offer": "resolution:core_salvaged_by_consortium"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Breakers yard sirens sound as the magistrate's administrative tribunal convenes at {role:assay_dock}.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "veteran_scrapper",
+          "target": "assay_dock",
+          "reason": "She asks the pilot to courier the certified waiver and reactor stability assay to the magistrate's dock before the final scuttle hearing.",
+          "private_fact": "She intends to name the pilot in her ship's will as sole heir to the vessel once she can no longer fly.",
+          "outcome_tags": [
+            "waiver_filed",
+            "hearing_missed"
+          ],
+          "routes": {
+            "waiver_filed": "resolution:tug_granted_clemency",
+            "hearing_missed": "resolution:tug_cut_to_scrap"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "tug_granted_clemency",
+      "reached_by": "The pilot delivers the waiver and drives off the demolition cutter.",
+      "summary": "The magistrate grants {role:veteran_scrapper} a lifetime exemption for her tug. {role:scrappers_union} celebrates, and the consortium is forced to back down.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "scrappers_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "salvage_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_scrapper",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_vintage_keel",
+          "public_summary": "A pilot fought off scrap yard cutters and delivered ancient charter papers to save an old woman's sixty-year-old tug."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "core_salvaged_by_consortium",
+      "reached_by": "The pilot accepts the demolition factor's payout.",
+      "summary": "{role:salvage_consortium} extracts the rare thorium core and scraps the vintage tug. {role:veteran_scrapper} is relegated to a station bunkhouse, broken by the loss of her ship.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "scrappers_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_scrapper",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "thorium",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "tug_cut_to_scrap",
+      "reached_by": "Inspection fails or the hearing deadline expires without documentation.",
+      "summary": "Consortium plasma torches slice the vintage tug into furnace feedstock. {role:veteran_scrapper} is forcibly retired, and the rare thorium core is claimed by the scrap yard.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "salvage_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_scrapper",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "demolition_factor",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "tug_cut_to_scrap",
+  "loose_threads": [
+    {
+      "id": "t_thorium_intake_stamp",
+      "surface": "cargo",
+      "detail": "The vintage reactor housing bears an unlisted government testing serial matching an experimental division from forty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_scrappers_charter_lien",
+      "surface": "station_notice",
+      "detail": "The scrap yard posted an advance allocation for forty tons of vintage rolled armor plate a week before the condemnation order.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_cutter_transponder_alteration",
+      "surface": "ship_marking",
+      "detail": "The demolition cutter carries an altered hull registration covering the callsign of a bankrupt cargo line.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "survival",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Salvage consortium reaffirms commitment to retiring structurally obsolete spaceframes.",
+    "Scrappers union holds demonstration against compulsory scrapping of independent tugs.",
+    "Assay office reports volatile demand fluctuations for certified reactor-grade thorium."
+  ],
+  "voice_direction": {
+    "veteran_scrapper": "Gruff, loud, and gravel-voiced. Cuts through polite inquiries with blunt engineering obscenities and speaks of her ship like an aging sibling.",
+    "demolition_factor": "Smooth, impatient, and bureaucratic. Quotes scrap weight formulas and municipal liability codes to justify destroying independent livelihoods."
+  },
+  "novelty_tags": [
+    "vintage_tug",
+    "forced_vessel_retirement",
+    "thorium_core",
+    "salvage_demolition",
+    "scrapper_veteran"
+  ]
+}

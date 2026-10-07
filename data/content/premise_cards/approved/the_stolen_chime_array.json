@@ -1,0 +1,306 @@
+{
+  "id": "premise.the_stolen_chime_array",
+  "schema_version": 1,
+  "title": "The Stolen Chime Array",
+  "logline": "A museum curator secretly sneaks the station's founding bronze chimes out of her own vault to return them to the descendants of exiled miners before security intercepts the shipment.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "festival_curator",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "The station cultural preservationist; quietly ashamed of sanitizing history, determined to return the bells to the strike families.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "exile_corsair",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "A blockade-running freight skipper contracted by the exile colony to receive the founding bells.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "patrol_cutter",
+      "kind": "ship",
+      "description": "A swift militia interceptor enforcing the security cordon around the station's outer docks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "civic_guard",
+      "kind": "faction",
+      "description": "The station defense militia, tasked with recovering the founding bells for the official opening ceremonies.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "curator_vault",
+      "kind": "place",
+      "description": "A reinforced display pavilion on the concourse meant to showcase founding colonial heritage.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "exile_berth",
+      "kind": "place",
+      "description": "An unmonitored docking pylon in the outer debris ring where perimeter fuel lighters moor.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "evidence_loose",
+    "public_outrage"
+  ],
+  "public_situation": "The Centennial Founding Chimes have vanished from {role:curator_vault} on the eve of the festival, and {role:civic_guard} has sealed departure lanes.",
+  "private_truth": "{role:festival_curator} removed the bells herself to return them to the descendants of the strike-exiled foundry workers before the council rings them on broadcast.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "curator_repatriating_relic_to_exiled_miners"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "{role:civic_guard} posts an armed perimeter around the station concourse, offering bounties for reports on the missing bronze chimes.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "festival_curator",
+          "target": "exile_berth",
+          "reason": "She needs an outside pilot to haul the secured chime array crates from the museum freight airlock out to the perimeter berth before morning muster.",
+          "private_fact": "She packed the founding bells herself and is delivering them to the descendants of the strike-exiled foundry workers.",
+          "outcome_tags": [
+            "chimes_moved",
+            "dock_intercepted"
+          ],
+          "routes": {
+            "chimes_moved": "next",
+            "dock_intercepted": "resolution:guard_reclaims_bells"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:civic_guard} launches {role:patrol_cutter} to sweep outer berths, threatening to scuttle vessels attempting to depart.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "festival_curator",
+          "target": "patrol_cutter",
+          "reason": "She needs the perimeter patrol cutter disabled before boarding teams breach the transport container and seize the founding bells.",
+          "private_fact": "The cutter captain hails offering to split the station recovery bounty if the pilot surrenders the bronze cases without firing.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "took_guard_reward"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "took_guard_reward": "resolution:guard_reclaims_bells"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:exile_corsair} docks at {role:exile_berth} with an unshielded transport barge to receive the bells before jump gate transit.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "festival_curator",
+          "target": "exile_berth",
+          "reason": "She needs the chime container transferred directly to the exile freighter before station defense locks the outward jump gate.",
+          "private_fact": "The exile crew plans to tune sublight antenna horns to broadcast the chimes over system frequencies during official speeches.",
+          "outcome_tags": [
+            "handed_to_exiles",
+            "diverted_to_scrap"
+          ],
+          "routes": {
+            "handed_to_exiles": "resolution:exiles_reclaim_heritage",
+            "diverted_to_scrap": "resolution:chimes_melted_down"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "exiles_reclaim_heritage",
+      "reached_by": "The pilot disables the cutter and delivers the bells to the exile crew.",
+      "summary": "The exiled miners ring the founding chimes over system frequencies during opening ceremonies. {role:festival_curator} resigns quietly, and the station council faces historic unrest.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_guard",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_curator",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "exile_corsair",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "restored_the_founders_bells",
+          "public_summary": "A pilot ran the militia cordon so the descendants of exiled miners could ring their founding bells."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "guard_reclaims_bells",
+      "reached_by": "The pilot takes the guard's reward or fails the delivery.",
+      "summary": "{role:civic_guard} recovers the bronze chime array and imprisons {role:festival_curator}. The founding bells ring on schedule for council dignitaries under heavy armed watch.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_guard",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_curator",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "returned_the_curators_bells",
+          "public_summary": "Word is a pilot turned over the missing founding bells to station militia in exchange for a quiet payout."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "chimes_melted_down",
+      "reached_by": "The bells are diverted to black-market metal dealers.",
+      "summary": "The antique bronze bells are melted down into unmarked industrial ingots. {role:festival_curator} is ruined by the loss, and the festival opens in total silence across the concourse.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_guard",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_curator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "exile_corsair",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "scrapped_the_founding_bronze",
+          "public_summary": "Miners swear the station's founding bells ended up in a perimeter foundry crucible after an armed transfer went bad."
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "guard_reclaims_bells",
+  "loose_threads": [
+    {
+      "id": "t_foundry_stamp",
+      "surface": "cargo",
+      "detail": "The chime tubes bear foundry roll stamps matching the convict labour records of the first mining strike.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_dock_reservation",
+      "surface": "station_notice",
+      "detail": "A municipal dock notice lists an unbilled berthing reservation under the name of an exile elder who died twenty years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_bronze_futures_order",
+      "surface": "price_board",
+      "detail": "An exchange broker posted a high-tin bronze buying contract twelve hours before the vault alarm sounded.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "guilt",
+      "legacy",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Station security announces reward for information on missing founding chimes.",
+    "Centennial festival preparations continue under reinforced perimeter guard.",
+    "Exile radio frequencies across {system} play antique foundry marching songs."
+  ],
+  "voice_direction": {
+    "festival_curator": "Uses guarded, minimal phrasing and avoids legal terminology. Pauses defensively whenever station militia patrols are mentioned.",
+    "exile_corsair": "Brisk and impatient, cutting off pleasantries with technical docking jargon. Treats the hundred-year-old bronze bells like a family debt long past due."
+  },
+  "novelty_tags": [
+    "chime_array",
+    "repatriated_relic",
+    "founding_festival",
+    "exile_strike",
+    "heritage_theft"
+  ]
+}

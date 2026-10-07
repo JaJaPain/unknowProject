@@ -1,0 +1,305 @@
+{
+  "id": "premise.the_pedigree_embryo_vault",
+  "schema_version": 1,
+  "title": "The Pedigree Embryo Vault",
+  "logline": "An orbital cattle rancher hires a pilot to extract prize centrifugal dairy embryos before a predatory syndicate forecloses on her livestock ring to satisfy an off-books debt.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "orbital_herder",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "An independent orbital livestock rancher; practical, proud of her centrifugal dairy herd, fighting foreclosure.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "debt_enforcer",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "A ruthless repo agent enforcing off-ledger syndicate loan liens across agricultural habitats.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "enforcer_picket",
+      "kind": "ship",
+      "description": "A reinforced industrial tug fitted with heavy magnetic hull clamps and short-range pulse lasers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "livestock_syndicate",
+      "kind": "faction",
+      "description": "The dominant credit corporation controlling agricultural equipment leases across the system.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "herder_centrifuge",
+      "kind": "place",
+      "description": "A rotating habitat ring housing three hundred dairy cattle in simulated gravity stalls.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "auction_terminal",
+      "kind": "place",
+      "description": "The agricultural exchange dock where repossessed livestock lots are liquidated.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "evidence_loose",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Bidding opens at {role:auction_terminal} for liquidated agricultural assets as {role:livestock_syndicate} moves to foreclose on independent dairy habitats.",
+  "private_truth": "{role:debt_enforcer} is foreclosing on {role:orbital_herder}'s centrifuge using an unverified debt note signed by her deceased business partner with usurious compound interest.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "syndicate_foreclosing_ranch_on_predatory_partner_debt"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Syndicate factors cut auxiliary utility feeds to {role:herder_centrifuge}, threatening cryogenic life-support systems.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "orbital_herder",
+          "target": "herder_centrifuge",
+          "reason": "She needs an independent pilot to dock at her failing centrifuge ring and extract the frozen pedigree embryo canister before temperatures rise.",
+          "private_fact": "She mortgaged her personal ship to buy the liquid nitrogen cylinders keeping the vat core chilled.",
+          "outcome_tags": [
+            "canister_secured",
+            "vat_compromised"
+          ],
+          "routes": {
+            "canister_secured": "next",
+            "vat_compromised": "resolution:foreclosure_completed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:livestock_syndicate} posts an automated asset warrant on the station net, offering a recovery bounty for the extracted embryo canister.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "orbital_herder",
+          "target": "auction_terminal",
+          "culprit": "livestock_syndicate",
+          "reason": "She needs an outside pilot to scan the syndicate registry exchange and prove the partner's promissory note carried illegal compounding interest rates.",
+          "private_fact": "Her late partner took the loan to pay off clandestine wagering losses at the station dog track.",
+          "outcome_tags": [
+            "usury_documented",
+            "audit_blocked"
+          ],
+          "routes": {
+            "usury_documented": "next",
+            "audit_blocked": "resolution:foreclosure_completed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:enforcer_picket} moves to interdict the flight corridor leading from the centrifuge to the station exchange concourse.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "orbital_herder",
+          "target": "enforcer_picket",
+          "reason": "She needs the syndicate repo ship disabled before its grapples seize the transport shuttle carrying her breeding stock.",
+          "private_fact": "The repo captain hails offering thirty thousand credits and guaranteed grazing permits if the pilot hands over the cryo-canister.",
+          "outcome_tags": [
+            "picket_neutralized",
+            "accepted_syndicate_bounty"
+          ],
+          "routes": {
+            "picket_neutralized": "resolution:ranch_preserved",
+            "accepted_syndicate_bounty": "resolution:embryos_auctioned"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "ranch_preserved",
+      "reached_by": "The pilot disables the repo tug and tables the usury audit.",
+      "summary": "The pilot disables the repo tug and tables the usury audit. {role:orbital_herder} voids the debt contract, preserving her dairy centrifuge and certified breeding lines.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "livestock_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "orbital_herder",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "debt_enforcer",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_centrifugal_herd",
+          "public_summary": "A pilot disabled a syndicate repo tug in high orbit to stop an independent cattle rancher from losing her herd."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "embryos_auctioned",
+      "reached_by": "The pilot surrenders the embryo vault for the syndicate bounty.",
+      "summary": "The pilot surrenders the embryo vault for the syndicate bounty. {role:livestock_syndicate} sells the breeding straws to off-system corporations, and {role:orbital_herder} loses her ranch.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "livestock_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "debt_enforcer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "orbital_herder",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "turned_over_the_pedigree_vat",
+          "public_summary": "Station whispers claim a hired pilot took syndicate cash to hand over the last purebred dairy embryos on the station."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "foreclosure_completed",
+      "reached_by": "The audit fails or the pilot abandons the herder.",
+      "summary": "{role:livestock_syndicate} repossesses {role:herder_centrifuge} and evicts the dairy workers. The pedigree embryo straws thaw and spoil during transport, wiping out the genetic line.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "livestock_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "orbital_herder",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "debt_enforcer",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "foreclosure_completed",
+  "loose_threads": [
+    {
+      "id": "t_partner_promissory_stamp",
+      "surface": "cargo",
+      "detail": "The seized loan folder contains a promissory coupon stamped with the seal of a syndicate holding company dissolved nine years ago.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_auction_block_listing",
+      "surface": "price_board",
+      "detail": "An off-world biotech distributor posted a pre-order for thirty centrifugal heifer embryos three days before the foreclosure notice appeared.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_picket_salvage_hull",
+      "surface": "ship_marking",
+      "detail": "The repo picket displays welded hull patches over the obliterated insignia of an independent miners cooperative.",
+      "can_carry_methods": [
+        "impersonation",
+        "sabotage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "survival",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Agricultural exchange opens bidding on distressed orbital livestock assets.",
+    "Centrifuge herders protest utility cutoffs outside station administration offices.",
+    "Syndicate legal factors reaffirm lawful rights of asset recovery across outer rings."
+  ],
+  "voice_direction": {
+    "orbital_herder": "Blunt, weary, and protective. Uses practical livestock terminology and speaks with flat determination, never asking for pity.",
+    "debt_enforcer": "Brisk, cheerful, and unyielding. Treats devastating foreclosures like ordinary accounting adjustments and quotes contract clauses from memory."
+  },
+  "novelty_tags": [
+    "dairy_centrifuge",
+    "embryo_foreclosure",
+    "predatory_loan",
+    "partner_debt",
+    "repo_picket"
+  ]
+}

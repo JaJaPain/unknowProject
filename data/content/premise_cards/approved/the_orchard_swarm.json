@@ -1,0 +1,426 @@
+{
+  "id": "premise.the_orchard_swarm",
+  "schema_version": 1,
+  "title": "The Orchard Swarm",
+  "logline": "An orbital arborist fights to protect three generations of heirloom honeybee hives from a pharmaceutical company that holds a debt lien and plans to harvest the entire swarm for a lucrative drug patent.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "orchard_arborist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Tends thirty hectares of orbital citrus domes; scholarly, devoted, desperate to protect her living pollinators from corporate liquidation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pharma_factor",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Station corporate representative; slick, impatient, determined to execute the patent seizure order before local fruit crops blossom.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "repo_gunboat",
+      "kind": "ship",
+      "description": "A reinforced corporate cutter equipped with chemical fog projectors and heavy pulse weapons.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hydroponic_collective",
+      "kind": "faction",
+      "description": "The alliance of independent station farmers cultivating fresh produce in competition with corporate synthetic pastes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pharma_conglomerate",
+      "kind": "faction",
+      "description": "The biomedical enterprise holding patents on radiation-sickness therapies derived from insect venom compounds.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "orchard_dome",
+      "kind": "place",
+      "description": "A magnificent transparent agricultural bubble filled with blooming orange and lemon trees.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "apiary_vault",
+      "kind": "place",
+      "description": "A climate-controlled research module where seventy generations of certified disease-free honeybee colonies are maintained.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "exchange_concourse",
+      "kind": "place",
+      "description": "The central municipal concourse where agricultural commodity contracts and patent registries are filed.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "evidence_loose",
+    "alliance_formed"
+  ],
+  "public_situation": "Station farmers gather at {role:orchard_dome} as {role:pharma_conglomerate} arrives with an industrial repossession team to execute a biological patent lien.",
+  "private_truth": "{role:pharma_factor} plans to euthanize all thirty heirloom hives to extract a rare neuroprotective venom enzyme that was synthesized by the bees feeding on local orbital citrus blossoms.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "pharma_harvesting_orchard_bees_for_patent"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Corporate bailiffs set up inspection barriers outside {role:apiary_vault}, ordering all bee movement suspended.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "orchard_arborist",
+          "target": "apiary_vault",
+          "reason": "She needs an outside pilot to purchase specialized cryogenic sugar syrup at the exchange concourse and deliver it to the vault to induce hibernation in the queen hives.",
+          "private_fact": "She has kept two queen hives hidden inside her personal sleeping cabin to protect them from the corporate bailiffs.",
+          "outcome_tags": [
+            "syrup_delivered",
+            "supplies_seized"
+          ],
+          "routes": {
+            "syrup_delivered": "next",
+            "supplies_seized": "resolution:dome_desolated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:hydroponic_collective} convenes an emergency assembly, warning that liquidating the pollinators will cause total citrus crop failure.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "orchard_arborist",
+          "target": "exchange_concourse",
+          "culprit": "pharma_conglomerate",
+          "reason": "She needs a pilot to scan the patent registry archives and locate the founding colonial agricultural charter that gave the hives collective protected status.",
+          "private_fact": "Her grandfather helped draft the charter but traded away the venom extraction rights to settle an old refinery hospital bill.",
+          "outcome_tags": [
+            "charter_found",
+            "registry_locked"
+          ],
+          "routes": {
+            "charter_found": "next",
+            "registry_locked": "resolution:dome_desolated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:repo_gunboat} approaches {role:orchard_dome} with industrial gas canisters to harvest the hives by force.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "orchard_arborist",
+          "target": "repo_gunboat",
+          "reason": "She needs the corporate gunboat disabled before its chemical cannons vent fumigation gas into the apiary filtration ducts.",
+          "private_fact": "The gunboat captain hails offering sixty thousand credits and a share of the venom patent royalties if the pilot surrenders the dormant queen crates.",
+          "outcome_tags": [
+            "gunboat_disabled",
+            "took_pharma_cut"
+          ],
+          "routes": {
+            "gunboat_disabled": "next",
+            "took_pharma_cut": "resolution:hives_liquidated"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The arborist and collective representatives gather at {role:orchard_dome} as the blossom season reaches its peak.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "orchard_arborist",
+          "target": "orchard_dome",
+          "reason": "She needs the dormant queen hives delivered into the central canopy release pylon so the swarm can pollinate the trees before the flowers wither.",
+          "private_fact": "She plans to release the bees into the general dome atmosphere where corporate bailiffs cannot recapture them without destroying the trees.",
+          "outcome_tags": [
+            "queens_released",
+            "hives_impounded"
+          ],
+          "routes": {
+            "queens_released": "next",
+            "hives_impounded": "resolution:dome_desolated"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the final release controls at the canopy pylon while corporate lawyers and farm delegates debate.",
+        "options": [
+          {
+            "id": "release_swarm",
+            "label": "Release the queen hives into the canopy to save the orchard crop",
+            "leads_to": "resolution:orchards_pollinated"
+          },
+          {
+            "id": "license_compromise",
+            "label": "Broker a shared charter licensing venom milkings while keeping the hives alive",
+            "leads_to": "resolution:symbiotic_charter"
+          },
+          {
+            "id": "surrender_to_pharma",
+            "label": "Hand the queens over to the pharmaceutical factor for the full bounty",
+            "leads_to": "resolution:hives_liquidated"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "orchards_pollinated",
+      "reached_by": "The pilot disables the gunboat and releases the queens.",
+      "summary": "The honeybee swarm is released into {role:orchard_dome}. The citrus trees are pollinated on schedule, preserving the heirloom harvest and defying {role:pharma_conglomerate}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "hydroponic_collective",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "pharma_conglomerate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "orchard_arborist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pharma_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "freed_the_orbital_bees",
+          "public_summary": "A pilot disabled a corporate gunboat and freed thousands of heirloom honeybees into an orbital orange orchard."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "symbiotic_charter",
+      "reached_by": "The pilot brokers a compromise licensing seasonal venom extraction.",
+      "summary": "A compromise agreement is signed. The collective retains the live pollinators for dome agriculture while {role:pharma_conglomerate} licenses non-lethal seasonal venom collection.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "hydroponic_collective",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "pharma_conglomerate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "orchard_arborist",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pharma_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "hives_liquidated",
+      "reached_by": "The pilot accepts the pharma bounty and hands over the queens.",
+      "summary": "{role:pharma_conglomerate} extracts the venom and destroys the heirloom hives. Patent profits soar, but {role:orchard_dome} produces no fruit, forcing the station onto synthetic rations.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "pharma_conglomerate",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "hydroponic_collective",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "pharma_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "orchard_arborist",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_orchard_swarm",
+          "public_summary": "Miners tell of a pilot who pocketed pharma cash while the station's last natural honeybees were culled for medicine."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "dome_desolated",
+      "reached_by": "The charter search fails or the pilot abandons the contract.",
+      "summary": "Bailiffs seize {role:apiary_vault} and botch the cryogenic extraction. The heirloom honeybees suffocate, leaving {role:orchard_dome} barren and bankrupting the agricultural collective.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "hydroponic_collective",
+          "delta": -2
+        },
+        {
+          "type": "standing",
+          "target": "pharma_conglomerate",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "orchard_arborist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pharma_factor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "dome_desolated",
+  "loose_threads": [
+    {
+      "id": "t_venom_royalty_contract",
+      "surface": "cargo",
+      "detail": "The pharmaceutical patent folio contains a licensing contract signed with an anonymous offshore shell trust registered to a station magistrate.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_citrus_futures_spike",
+      "surface": "price_board",
+      "detail": "Synthetic protein paste futures jumped forty percent the day before the repossession team arrived at the orchard dome.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_gunboat_registry_alias",
+      "surface": "ship_marking",
+      "detail": "The repossession gunboat transponder transmits a hull serial code formerly assigned to an agricultural inspection cutter.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Agricultural concourse reports sharp spike in synthetic nutrient paste commodity contracts.",
+    "Orchard arborists warn of impending fruit crop failure if pollinator hives remain grounded.",
+    "Pharmaceutical holding corporation asserts validity of patented genetic extraction liens."
+  ],
+  "voice_direction": {
+    "orchard_arborist": "Measured, scholarly, and deeply attached to her work. Speaks of botanical and insect cycles with reverent affection and bristles at corporate terms.",
+    "pharma_factor": "Crisp, businesslike, and condescending. Frames the destruction of living hives as an inevitable biological yield optimization problem."
+  },
+  "novelty_tags": [
+    "orchard_bees",
+    "pollinator_extinction",
+    "pharma_patent_lien",
+    "venom_extraction",
+    "agricultural_collective"
+  ]
+}

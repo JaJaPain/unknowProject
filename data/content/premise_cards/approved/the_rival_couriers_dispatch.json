@@ -1,0 +1,352 @@
+{
+  "id": "premise.the_rival_couriers_dispatch",
+  "schema_version": 1,
+  "title": "The Rival Couriers' Dispatch",
+  "logline": "Two rival courier pilots competing for an exclusive postal franchise hire an outsider to audit dispatch logs and deliver the deciding municipal trial pouch before deadline.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "absurd"
+  ],
+  "themes": [
+    "price_of_profit",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "senior_courier",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Veteran dispatch runner; obsessive, competitive, convinced his rival has bribed station traffic controllers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rival_courier",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Younger rival runner flying an identical high-speed courier skiff; flamboyant, reckless, cutting corners on clearance fees.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "postal_commissioner",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Station transit officer judging the speed and reliability trials for the new five-year courier franchise.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "couriers_guild",
+      "kind": "faction",
+      "description": "The fraternal association of independent message skippers handling secure paper communications.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "dispatch_terminal",
+      "kind": "place",
+      "description": "The automated flight control pylon where priority message pouches are logged and stamped.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "registry_spire",
+      "kind": "place",
+      "description": "The municipal administrative tower where postal franchises are awarded.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "route_opened",
+    "rival_humiliated"
+  ],
+  "public_situation": "{role:couriers_guild} stages a public speed and reliability trial between two rival pilots to award the station's exclusive mail route.",
+  "private_truth": "{role:rival_courier} has been paying dispatch clerks to hold the senior courier's packets at the gate while his own skiff receives uninspected priority green lights.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "courier_bribing_dispatchers_to_rig_postal_trial"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Flight boards display trial countdowns as crowds gather along concourse windows to watch the rival skiffs warm up.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "senior_courier",
+          "target": "dispatch_terminal",
+          "reason": "He needs an independent pilot to purchase certified cryptographic transit seals from the exchange and deliver them to the dispatch terminal before the morning trial begins.",
+          "private_fact": "His own courier skiff is grounded for unpaid gate clearance fines he is hiding from the commissioner.",
+          "outcome_tags": [
+            "seals_delivered",
+            "trial_delayed"
+          ],
+          "routes": {
+            "seals_delivered": "next",
+            "trial_delayed": "resolution:route_awarded_to_rival"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The trial commences with both skiffs launching into traffic lanes while sensor buoys record departure splits.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "senior_courier",
+          "target": "dispatch_terminal",
+          "culprit": "rival_courier",
+          "reason": "He needs a pilot to scan traffic control approach logs and identify time gaps showing artificial delays inserted into his flight clearances.",
+          "private_fact": "He lost his previous delivery franchise five years ago for tampering with a competitor's fuel tanks.",
+          "outcome_tags": [
+            "bribery_exposed",
+            "logs_unremarkable"
+          ],
+          "routes": {
+            "bribery_exposed": "next",
+            "logs_unremarkable": "resolution:route_awarded_to_rival"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Siren flares illuminate {role:registry_spire} as the final transit leg closes and the commissioner prepares the registry ledger.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "senior_courier",
+          "target": "registry_spire",
+          "reason": "He asks the pilot to courier the audit evidence alongside the final trial pouch directly to the commissioner before the rival crosses the finish line.",
+          "private_fact": "The trial pouch contains an urgent warrant for his own brother's arrest for transit bond default.",
+          "outcome_tags": [
+            "pouch_delivered",
+            "courier_disqualified"
+          ],
+          "routes": {
+            "pouch_delivered": "next",
+            "courier_disqualified": "resolution:route_awarded_to_rival"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the registry spire as the postal commissioner prepares to sign the franchise charter.",
+        "options": [
+          {
+            "id": "table_audit_proof",
+            "label": "Present the bribery logs to award the franchise to the senior courier",
+            "leads_to": "resolution:senior_wins_franchise"
+          },
+          {
+            "id": "accept_rivals_bribe",
+            "label": "Suppress the audit in exchange for a twenty-percent cut of the rival's postal contract",
+            "leads_to": "resolution:rival_wins_franchise"
+          },
+          {
+            "id": "split_the_franchise",
+            "label": "Force the commissioner to divide the route equally between both competitors",
+            "leads_to": "resolution:joint_franchise_charter"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "senior_wins_franchise",
+      "reached_by": "The pilot tables the audit proof before the commissioner.",
+      "summary": "The audit proof is accepted. {role:rival_courier} is fined for dispatch tampering, and {role:senior_courier} wins the exclusive postal charter.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "couriers_guild",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_courier",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_courier",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "settled_the_courier_rivalry",
+          "public_summary": "A pilot proved station flight controllers were rigging timing beacons for a flashy dispatch runner."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "rival_wins_franchise",
+      "reached_by": "The pilot accepts the rival's bribe and buries the logs.",
+      "summary": "The audit is suppressed. {role:rival_courier} is awarded the five-year franchise, while {role:senior_courier} is relegated to low-margin bulk freight work.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "couriers_guild",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_courier",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_courier",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "took_the_courier_cut",
+          "public_summary": "Pilots gossip that an outside courier took a cash kickback to let a crooked dispatch racer win the station route."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "joint_franchise_charter",
+      "reached_by": "The pilot forces the commissioner to split the route charter.",
+      "summary": "The commissioner divides the route. Both couriers receive shared contracts under enhanced scrutiny, maintaining competitive delivery rates across {system}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "couriers_guild",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_courier",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_courier",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "route_awarded_to_rival",
+      "reached_by": "The audit fails or the trial pouch arrives past the deadline.",
+      "summary": "The audit fails and the trial pouch arrives late. {role:rival_courier} wins the franchise by default, locking out independent competitors.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "couriers_guild",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_courier",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_courier",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "route_awarded_to_rival",
+  "loose_threads": [
+    {
+      "id": "t_traffic_bribe_chit",
+      "surface": "station_notice",
+      "detail": "A dispatch terminal bulletin notes an anonymous gratuity credited to approach controllers during the speed trial.",
+      "can_carry_methods": [
+        "bribery",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_courier_bond_lien",
+      "surface": "price_board",
+      "detail": "An exchange board lists a pending default notice on the senior courier's craft matching his unpaid docking fines.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_twin_skiff_callsign",
+      "surface": "ship_marking",
+      "detail": "Both courier skiffs share an identical transponder manufacturer prefix registered to a defunct racing syndicate.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "debt_leverage",
+      "impersonation",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Postal commissioner confirms commencement of competitive trials for system mail franchise.",
+    "Couriers guild cautions private pilots against speeding through designated transit channels.",
+    "Station dispatch reports minor signal delays along outer approach corridors."
+  ],
+  "voice_direction": {
+    "senior_courier": "Fast-paced, irritable, and cynical. Quotes station flight regulation sub-clauses from memory and treats younger pilots with open contempt.",
+    "rival_courier": "Charming, loud, and breezy. Deflects questions about timing discrepancies with jokes about superior sublight thruster tuning."
+  },
+  "novelty_tags": [
+    "rival_couriers",
+    "postal_trial",
+    "dispatch_bribery",
+    "franchise_charter",
+    "speed_trial"
+  ]
+}

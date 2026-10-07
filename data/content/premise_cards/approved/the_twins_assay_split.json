@@ -1,0 +1,353 @@
+{
+  "id": "premise.the_twins_assay_split",
+  "schema_version": 1,
+  "title": "The Twins' Assay Split",
+  "logline": "Twin asteroid prospectors hire a neutral pilot to verify assay boundary markers across their contested family claim before the colonial probate board auctions the mineral rights.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "elder_twin",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Twin asteroid driller; careful, resentful, insisting on following the precise terms of their mother's hand-drawn claim map.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "younger_twin",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Twin prospector; impulsive, heavily indebted to station card tables, trying to liquidate the claim quickly for cash.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "probate_clerk",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Municipal estate officer tasked with auctioning contested inheritance titles if the heirs cannot agree.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "prospectors_union",
+      "kind": "faction",
+      "description": "The fraternal league of independent belt miners overseeing boundary dispute mediations.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "contested_vein",
+      "kind": "place",
+      "description": "A hollowed cuprite asteroid drifting on the outer ring edge where the family staked its claim.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "probate_office",
+      "kind": "place",
+      "description": "The station administrative dock where estate disputes and mining titles are certified.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "debt_owed_to_player",
+    "market_disrupted"
+  ],
+  "public_situation": "A probate auction notice is posted for {role:contested_vein} after twin siblings file contradictory boundary claims with {role:probate_office}.",
+  "private_truth": "{role:younger_twin} secretly forged their mother's codicil to assign the richest cuprite shaft exclusively to himself to pay off gambling debts.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "twin_forged_probate_codicil_for_asteroid_claim"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The probate board posts an eviction notice on the asteroid pylon, setting a thirty-six-hour deadline for assay certification.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "elder_twin",
+          "target": "probate_office",
+          "reason": "He needs an independent pilot to mine and deliver certified cuprite core samples from the contested vein to prove the claim is economically viable before the auction deadline.",
+          "private_fact": "He suspects his twin has been secretly selling unassayed ore off-station to settle personal card debts.",
+          "outcome_tags": [
+            "ore_certified",
+            "deadline_missed"
+          ],
+          "routes": {
+            "ore_certified": "next",
+            "deadline_missed": "resolution:claim_auctioned_to_consortium"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:prospectors_union} convenes a field arbitration hearing as surveyors discover conflicting beacon timestamps on the asteroid surface.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "elder_twin",
+          "target": "contested_vein",
+          "culprit": "younger_twin",
+          "reason": "He needs a pilot to scan the claim survey beacon memory banks and verify the digital timestamp of their mother's original claim stake.",
+          "private_fact": "The survey beacon holds his mother's deathbed voice recording asking the twins not to divide the claim.",
+          "outcome_tags": [
+            "forgery_detected",
+            "survey_corrupted"
+          ],
+          "routes": {
+            "forgery_detected": "next",
+            "survey_corrupted": "resolution:claim_auctioned_to_consortium"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "aftermath",
+      "public_change": "Bidding factors assemble outside {role:probate_office} while the clerk prepares the gavel for the final inheritance auction.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "elder_twin",
+          "target": "probate_office",
+          "reason": "He asks the pilot to deliver the true survey records and uncorrupted boundary deed to the probate clerk before the auctioneer calls the lot.",
+          "private_fact": "He is willing to forgive his brother's forgery if the younger twin agrees to work the shaft as equal partners.",
+          "outcome_tags": [
+            "deed_tabled",
+            "submission_abandoned"
+          ],
+          "routes": {
+            "deed_tabled": "next",
+            "submission_abandoned": "resolution:claim_auctioned_to_consortium"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot stands before the probate clerk as both twins wait in the concourse for the final ruling.",
+        "options": [
+          {
+            "id": "enforce_equal_partnership",
+            "label": "Submit the boundary proof and mandate an equal joint deed between the twins",
+            "leads_to": "resolution:joint_partnership_restored"
+          },
+          {
+            "id": "award_to_elder",
+            "label": "Expose the younger twin's forgery and award the entire claim to the elder sibling",
+            "leads_to": "resolution:elder_awarded_sole_title"
+          },
+          {
+            "id": "sell_to_creditor",
+            "label": "Allow the younger twin's debt collector to buy out the claim share for quick cash",
+            "leads_to": "resolution:claim_sold_to_creditors"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "joint_partnership_restored",
+      "reached_by": "The pilot tables the uncorrupted boundary surveys and enforces joint ownership.",
+      "summary": "The boundary proof establishes joint ownership. The twins agree to a mediated partnership under {role:prospectors_union}, preserving their family claim.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospectors_union",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_twin",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_twin",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "settled_the_prospector_feud",
+          "public_summary": "A pilot recovered ancient asteroid survey marks to keep feuding twin brothers from losing their mother's mine."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "elder_awarded_sole_title",
+      "reached_by": "The pilot exposes the forgery to the probate clerk.",
+      "summary": "The forgery is documented before the clerk. {role:elder_twin} receives full title, while {role:younger_twin} is disinherited and flees station creditors.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospectors_union",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_twin",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_twin",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_forged_codicil",
+          "public_summary": "Miners talk about a pilot who uncovered forged digital deeds to stop a reckless prospector from stealing his brother's claim."
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "claim_sold_to_creditors",
+      "reached_by": "The pilot lets creditors acquire the younger twin's share.",
+      "summary": "The younger twin's debt factor acquires half the claim. Commercial drillers move in, sidelining both siblings and driving family ties apart.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospectors_union",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_twin",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_twin",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "claim_auctioned_to_consortium",
+      "reached_by": "The survey proof is lost or the probate deadline expires.",
+      "summary": "The probate deadline passes without verified boundary surveys. {role:contested_vein} is auctioned off to corporate extractors, leaving both twins empty-handed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "prospectors_union",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_twin",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "younger_twin",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "claim_auctioned_to_consortium",
+  "loose_threads": [
+    {
+      "id": "t_forged_codicil_seal",
+      "surface": "station_notice",
+      "detail": "The probate bulletin contains a title registration stamped with an expired municipal notary certificate.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_gambling_marker_debenture",
+      "surface": "price_board",
+      "detail": "A station credit board posted an open debt lien matching the exact estimated value of the cuprite vein.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_survey_beacon_tag",
+      "surface": "scan",
+      "detail": "The claim beacon's telemetry transponder matches the serial number of a navigational buoy decommissioned thirty years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "survival",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Probate court lists multiple contested belt mineral claims for mandatory public auction.",
+    "Prospectors union issues stern advisory regarding fraudulent boundary beacon modifications.",
+    "Exchange commodities desk reports steady demand for verified high-purity cuprite core samples."
+  ],
+  "voice_direction": {
+    "elder_twin": "Stiff, weary, and pedantic. Speaks with meticulous attention to survey coordinates and shows bitter grief whenever mentioning his brother.",
+    "younger_twin": "Fast-talking, nervous, and defensive. Dismisses serious accusations with casual jokes and shifts blame to station bookmakers and equipment leases."
+  },
+  "novelty_tags": [
+    "twin_prospectors",
+    "probate_dispute",
+    "cuprite_claim",
+    "forged_codicil",
+    "boundary_survey"
+  ]
+}
