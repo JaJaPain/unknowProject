@@ -21,7 +21,7 @@ below, in order. Hand ChatGPT the first row that isn't done.
 | 6 | **The Quiet War cache vault** | Destination | Done |
 | 7 | **A lone derelict ship** (+ 7b detail revision) | Distress-beacon finds (drone-diveable), Competing Claims / Unstable Archive investigation sites; also reused as the Last Shipyard | Done, in play |
 | 8 | **A signal anomaly site** | Transmitter Lure investigation sites (seams pulse, centre glow swells) | Done, in play |
-| 9 | **The Archive** | New Destination (`archive.glb`) | Delivered; awaiting review |
+| 9 | **The Archive** | New Destination (`archive.glb`) | Reviewed and in game (40 draw calls, game-side surface detail on). **9b in progress:** a textured second version; when it lands, compare and turn the detail pass off for the Archive if the textures win |
 | 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | **Next** |
 | 11 | **The Halo** | New Destination (`halo.glb`) | Queued |
 | 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Queued |
