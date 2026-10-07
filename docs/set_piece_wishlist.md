@@ -24,7 +24,7 @@ below, in order. Hand ChatGPT the first row that isn't done.
 | 9 | **The Archive** | New Destination (`archive.glb`) | Reviewed and in game (40 draw calls, game-side surface detail on). **9b in progress:** a textured second version; when it lands, compare and turn the detail pass off for the Archive if the textures win |
 | 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | Reviewed and in game (21 draw calls); game-side: gold light lifted above the hall, windows dimmed, hulls matte |
 | 11 | **The Halo** | New Destination (`halo.glb`) | Reviewed and in game (47 draw calls); game-side: candle flicker, bell sways on its pivot |
-| 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Delivered; awaiting visual review |
+| 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Reviewed and in game (36 draw calls); game-side: plume rises from `VentEmitter`, beacons blink, frosted-ice surface detail, matte metal |
 
 New Destinations 9-12 already run in the game on stand-in shapes; each
 model replaces its stand-in automatically when saved under

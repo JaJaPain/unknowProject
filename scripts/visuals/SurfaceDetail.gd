@@ -7,7 +7,7 @@ extends RefCounted
 ## weathered stone, aged metal or woven cloth up close. No texture files.
 ##
 ## apply(model, {material name substring: preset}) duplicates each matching
-## material for this model only. Presets: "stone", "metal", "fabric".
+## material for this model only. Presets: "stone", "metal", "fabric", "ice".
 
 const PRESETS := {
 	# Pale cut stone: blotchy tone, vertical grime streaks, a little grain.
@@ -16,6 +16,10 @@ const PRESETS := {
 	# Aged bronze: patina patches, uneven shine.
 	"metal": {"tone": [0.62, 1.0], "tone_freq": 0.03, "tone_stretch": Vector3.ONE,
 		"bump_freq": 0.09, "bump": 0.35, "rough": [0.3, 0.75], "metal": 0.7},
+	# Frosted ice: broad drifts of brighter and duller frost, a coarse crust
+	# bump that breaks up a faceted low-poly surface.
+	"ice": {"tone": [0.72, 1.0], "tone_freq": 0.004, "tone_stretch": Vector3.ONE,
+		"bump_freq": 0.03, "bump": 0.45, "rough": [0.6, 0.9], "metal": 0.0},
 	# Woven envelope cloth: soft tone variation, a fine weave bump.
 	"fabric": {"tone": [0.86, 1.0], "tone_freq": 0.008, "tone_stretch": Vector3(1.0, 0.35, 1.0),
 		"bump_freq": 0.12, "bump": 0.12, "rough": [0.92, 1.0], "metal": 0.0},

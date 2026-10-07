@@ -33,6 +33,7 @@ const MODELS := {
 ## (SurfaceDetail): material name substring -> preset.
 const SURFACE_DETAIL := {
 	"archive": {"Warm limestone": "stone", "Aged bronze": "metal", "woven envelopes": "fabric"},
+	"wellhead": {"Frosted ice": "ice"},
 }
 ## Tests and before/after shots can turn the detail off.
 static var surface_detail_enabled := true
@@ -70,6 +71,11 @@ const VARIANTS := {
 		"emission_scale": 0.45,
 		"min_roughness": 0.78,
 		"light_lift": 1.1,
+	},
+	# The Wellhead: its tankers and steel were mirror-bright under the gold
+	# light; matte, like the working rig it is.
+	"wellhead": {
+		"min_roughness": 0.72,
 	},
 }
 ## The Garden's green world: its radius, and how far below the station its
@@ -437,7 +443,7 @@ func _wire_model(model: Node3D) -> void:
 static func lamp_mode(material_name: String) -> String:
 	if material_name.contains("Beacon emission"):
 		return "pulse"
-	if material_name.contains("Navigation emission") or material_name.contains("Dock navigation"):
+	if material_name.contains("Navigation emission") or material_name.contains("Dock navigation") 			or material_name.contains("Red beacons"):
 		return "blink"
 	if material_name.contains("Candle windows"):
 		return "candle"
@@ -833,4 +839,8 @@ func _add_vent_plume() -> void:
 	quad.material = mat
 	plume.draw_pass_1 = quad
 	add_child(plume)
+	# ChatGPT's Wellhead marks its vent opening (VentEmitter): rise from there.
+	var vent := find_child("VentEmitter", true, false) as Node3D
+	if vent != null:
+		plume.global_position = vent.global_position
 
