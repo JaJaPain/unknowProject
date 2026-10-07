@@ -29,6 +29,14 @@ const MODELS := {
 	"halo": ["res://assets/landmarks/halo.glb"],
 	"wellhead": ["res://assets/landmarks/wellhead.glb"],
 }
+## Surface detail laid over set pieces whose materials are flat colours
+## (SurfaceDetail): material name substring -> preset.
+const SURFACE_DETAIL := {
+	"archive": {"Warm limestone": "stone", "Aged bronze": "metal", "woven envelopes": "fabric"},
+}
+## Tests and before/after shots can turn the detail off.
+static var surface_detail_enabled := true
+
 ## How a reused set piece becomes another place: parts hidden (by name),
 ## materials re-coloured (by name), a scale, and extras the code adds.
 const VARIANTS := {
@@ -171,6 +179,8 @@ func _build_models() -> bool:
 		var variant: Dictionary = VARIANTS.get(kind, {})
 		if not variant.is_empty():
 			_apply_variant(model, variant)
+		if surface_detail_enabled and SURFACE_DETAIL.has(kind):
+			preload("res://scripts/visuals/SurfaceDetail.gd").apply(model, SURFACE_DETAIL[kind])
 		_wire_model(model)
 		built += 1
 	return built > 0

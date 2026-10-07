@@ -13780,6 +13780,8 @@ func _lodestar_snapshot(place: Node3D) -> void:
 	cam.far = 60000.0
 	get_active_system_root().add_child(cam)
 	var kinds := ["beacon", "fleet", "ring", "survey", "garden", "wrecks"]
+	if "--no-surface-detail" in OS.get_cmdline_user_args():
+		load("res://scripts/story/LodestarLandmark.gd").surface_detail_enabled = false
 	# --lodestar-kinds=market,shipyard pictures just those.
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--lodestar-kinds="):
@@ -13802,6 +13804,13 @@ func _lodestar_snapshot(place: Node3D) -> void:
 		var path := ProjectSettings.globalize_path("res://.tmp_godot_user/lodestar_%s.png" % kind)
 		await _hud_snapshot_save(path)
 		print("[LodestarSmokeTest] snapshot ", path)
+		# --lodestar-closeup: a second, close shot (surface detail).
+		if "--lodestar-closeup" in OS.get_cmdline_user_args():
+			cam.global_position = mark.global_position + Vector3(0.7, 0.05, 0.71).normalized() * reach * 0.75
+			cam.look_at(mark.global_position + Vector3(0, reach * 0.05, 0))
+			for i in 30:
+				await get_tree().process_frame
+			await _hud_snapshot_save(ProjectSettings.globalize_path("res://.tmp_godot_user/lodestar_%s_close.png" % kind))
 		mark.queue_free()
 	place.visible = true
 	cam.queue_free()
