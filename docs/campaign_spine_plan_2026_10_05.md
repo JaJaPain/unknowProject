@@ -319,3 +319,27 @@ Guardrails (fixed-cast canon): never says how or why they know each other;
 the full version once per campaign, a shorter cooler one in later seasons;
 hand-authored lines, reviewed by Abe against the canon, baked voice. Abe:
 "will have to experience it to know how it hits".
+
+## Season sim at 225 cards (2026-10-06)
+
+`run_season_sim.gd --campaigns=10 --hours=25`: one player, ten campaigns in a
+row, sharing the card history (log:
+`.tmp_godot_user/test_logs/season_sim_225.log`).
+
+- **Stories:** 12-23 cards per campaign by hour 10. Across the 45 campaign
+  pairs, stories shared at 10 h average **1%** (worst pair 17%), down from
+  4-10% at 152 cards. The deck now carries one player through about ten
+  campaigns to hour 10 with almost no repeats, and about eight full
+  campaigns.
+- **Main story:** locked in 10 of 10 and closed in 10 of 10. Lock at 9.0-20.5 h
+  (median 10.3), close at 10.4-23.9 h (median 20.2). Same Hidden Hand goal in
+  3 pairs.
+- **Destinations are now the weak spot:** with only 6, the same one came up in
+  6 pairs, and campaigns 7, 8 and 9 all drew the Humming Gate.
+  `Lodestar.state()` draws the first Destination from the campaign seed
+  alone, with no memory of the player's earlier campaigns (premise cards
+  have that memory).
+
+Conclusion: past ~225 cards, more cards barely move uniqueness. Better levers:
+(1) the first Destination avoids the player's recent ones, the same way cards
+do; (2) more Destinations over time (each needs a set piece and a card).
