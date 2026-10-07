@@ -946,3 +946,7 @@ through the marked gate and flies you in):
       scaffold with welding sparks). Their rumours, bearings and arrival
       scenes play like the others. A new campaign never repeats one of your
       last three Destinations.
+- [ ] **Two more Destinations:** the Archive (library stacks hanging under
+      float bladders in a gas giant's clouds) and the Neutral Ground (two
+      mismatched halves joined by a domed treaty hall), stand-in shapes until
+      the art lands. Ten Destinations in all now.

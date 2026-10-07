@@ -336,6 +336,90 @@
 				"nova": "Four generations, one ship, and they still can't agree what it's for. I love these people.",
 				"farewell": "If you find somewhere worth sailing to, come back and tell us. We'll finish her faster."
 			}
+		},
+		{
+			"id": "archive",
+			"title": "The Archive",
+			"first_hint": "A court on the frontier threw out a deed as forged, and the owner produced a certified copy no court had ever seen. 'From the Archive,' he said.",
+			"nova_first": "A copy nobody knew existed, of a paper everybody swore was fake. Somebody out there keeps everything.",
+			"director": "An order of record-keepers on a station drifting in a gas giant's upper clouds. For generations they have copied every registry, deed and court ruling filed in the region, including the ones that were destroyed. They take no sides and sell nothing: a copy costs only an honest answer to why you need it.",
+			"bearings": [
+				{
+					"text": "Court clerks in three systems describe the same visitor: a quiet copyist who asks for nothing but a look at the ledgers.",
+					"nova": "Someone's reading every court ledger in the region. Politely."
+				},
+				{
+					"text": "A family won back land they'd lost forty years ago, on the strength of a ruling everyone believed was burned.",
+					"nova": "Burned papers that turn up anyway. I'm starting to like these people."
+				},
+				{
+					"text": "Haulers past the Class III gates carry sealed crates of blank ledger film one way, and never bring anything back.",
+					"nova": "Blank film in, nothing out. Whatever they write, it stays there."
+				},
+				{
+					"text": "Gas-giant skimmers talk about lights in the high clouds that never drift with the wind.",
+					"nova": "Something floating in a gas giant on purpose. That's a lot of trouble for privacy."
+				},
+				{
+					"text": "The film shipments all end at one giant past the edge of the charts. The Archive is in its clouds.",
+					"nova": "There it is. Let's go and see who's been keeping score."
+				}
+			],
+			"arrival": "A record-keepers' station in a gas giant's clouds, holding every deed and verdict ever filed, burned ones included. The Captain is given their index of the old routes.",
+			"arrival_scene": {
+				"landmark": "archive",
+				"speaker": "THE ARCHIVE",
+				"approach": "Lights in the clouds. Those are reading lamps, Captain. Hundreds of them.",
+				"lines": [
+					"Welcome to the Archive. We keep the record. All of it, including the parts people paid to have forgotten.",
+					"We don't sell copies and we don't take sides. We only ask why you need a page, and we write your answer down too.",
+					"You've come a long way with nothing to ask for. That's rare. Take our index of the old routes; it's the least-read thing we hold."
+				],
+				"nova": "Every deed, every verdict, every lie anyone tried to burn, all in one place. I could read here for a hundred years.",
+				"farewell": "The oldest page we hold mentions a place beyond the charts. We've never had a visitor from there. You could be the first."
+			}
+		},
+		{
+			"id": "neutral_ground",
+			"title": "The Neutral Ground",
+			"first_hint": "Two factions at each other's throats both sent envoys out past the gates, unarmed, on the same day.",
+			"nova_first": "Enemies, unarmed, on the same day, going the same way. There's only one kind of place where that happens.",
+			"director": "The decommissioned treaty station where old enemies signed the peace that ended the last war. Each side built its own half, in its own style; the halves meet at one central hall. It is still the only place the factions meet unarmed. Its keepers, descended from both delegations, enforce one rule: no weapon past the hall door.",
+			"bearings": [
+				{
+					"text": "Old war records mention a peace signed 'at the halfway hall', but no station by that name is on any chart.",
+					"nova": "A peace signed somewhere nobody can find. Very careful, or very convenient."
+				},
+				{
+					"text": "Envoys from rival factions refuel at the same deep depot, a day apart, and never speak.",
+					"nova": "Two delegations, same road, same silence. They're going to the same table."
+				},
+				{
+					"text": "A gunsmith grumbles that every envoy's ship comes back to her to have its weapons refitted.",
+					"nova": "Everyone disarms to go there. Interesting kind of place."
+				},
+				{
+					"text": "Traders describe a station built in two styles that don't match, joined in the middle by one hall.",
+					"nova": "Two halves that don't match. Somebody built that from both ends and met in the middle."
+				},
+				{
+					"text": "The envoys' fuel stops all point to one system past the edge of the charts. The Neutral Ground is there.",
+					"nova": "Found it. Holster everything, Captain. I mean it."
+				}
+			],
+			"arrival": "The treaty station where enemies still meet unarmed. Its keepers hand the Captain their list of who has been talking to whom.",
+			"arrival_scene": {
+				"landmark": "treaty",
+				"speaker": "THE NEUTRAL GROUND",
+				"approach": "Two stations joined at the hip. One half's all angles, the other's all curves. That's the treaty hall in the middle.",
+				"lines": [
+					"Weapons cold before the hall door. That's the only rule here, and it has held for sixty years.",
+					"My grandmother sat on one side of that table and my grandfather on the other. They signed the peace, then married. Somebody has to keep the hall.",
+					"The factions still send envoys here when talking is cheaper than fighting. Take our list of who's been talking to whom. Out there it's worth more than guns."
+				],
+				"nova": "Sixty years of enemies at one table, held together by one rule. That's braver than any war.",
+				"farewell": "Before you go: the treaty names a third delegation that never arrived. Their road ran past the charts. Maybe you'll find out why."
+			}
 		}
 	]
 }

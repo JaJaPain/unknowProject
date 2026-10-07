@@ -23,6 +23,9 @@ const MODELS := {
 	# Set pieces reused as other places (docs/destinations_expansion_plan_2026_10_06.md).
 	"market": ["res://assets/landmarks/cartographer_mine.glb"],
 	"shipyard": ["res://assets/landmarks/lone_derelict.glb"],
+	# New set pieces from ChatGPT (briefs #9, #10); stand-ins until they land.
+	"archive": ["res://assets/landmarks/archive.glb"],
+	"treaty": ["res://assets/landmarks/neutral_ground.glb"],
 }
 ## How a reused set piece becomes another place: parts hidden (by name),
 ## materials re-coloured (by name), a scale, and extras the code adds.
@@ -86,10 +89,14 @@ func _ready() -> void:
 			"survey": _build_survey()
 			"garden": _build_garden()
 			"wrecks": _build_wrecks()
+			"archive": _build_archive()
+			"treaty": _build_treaty()
 			_: _build_beacon()
 	_radius = _measure()
 	if kind == "garden" and uses_model():
 		_add_garden_world()
+	if kind == "archive":
+		_add_archive_giant()
 	var reach := maxf(_radius, 300.0)
 	# A gold glow every kind shares, so it reads as the place from far off.
 	_light = OmniLight3D.new()
@@ -611,3 +618,74 @@ func _build_wrecks() -> void:
 		_part(_box(Vector3(rng.randf_range(6, 14), rng.randf_range(4, 8), rng.randf_range(14, 40))), hull, at, self, rot)
 		if rng.randf() < 0.25:
 			_part(_box(Vector3(2, 2, 2)), ember, at + Vector3(0, 4, 0))
+
+
+## The Archive (stand-in): library stacks hanging under float bladders.
+func _build_archive() -> void:
+	var hull := _mat(Color(0.62, 0.56, 0.46))
+	var bladder := _mat(Color(0.5, 0.48, 0.44))
+	var lamps := _mat(Color(1.0, 0.78, 0.45), 3.0)
+	for i in 5:
+		var a := TAU * float(i) / 5.0
+		var at := Vector3(cos(a) * 34.0, 0, sin(a) * 34.0)
+		var stack := CylinderMesh.new()
+		stack.top_radius = 9.0
+		stack.bottom_radius = 9.0
+		stack.height = 110.0
+		_part(stack, hull, at)
+		var lift := SphereMesh.new()
+		lift.radius = 22.0
+		lift.height = 30.0
+		_part(lift, bladder, at + Vector3(0, 78, 0))
+		_part(_box(Vector3(3, 90, 19)), lamps, at + Vector3(0, 0, 0), self, Vector3(0, -a, 0))
+	_part(_box(Vector3(70, 6, 70)), hull, Vector3(0, -58, 0))
+
+
+## The Neutral Ground (stand-in): two mismatched halves and a domed hall.
+func _build_treaty() -> void:
+	var angular := _mat(Color(0.5, 0.54, 0.6))
+	var curved := _mat(Color(0.72, 0.64, 0.5))
+	var hall := _mat(Color(0.82, 0.8, 0.76))
+	var windows := _mat(Color(1.0, 0.82, 0.55), 3.0)
+	_part(_box(Vector3(90, 34, 40)), angular, Vector3(-75, 0, 0))
+	_part(_box(Vector3(30, 50, 30)), angular, Vector3(-125, 0, 0))
+	var drum := CylinderMesh.new()
+	drum.top_radius = 22.0
+	drum.bottom_radius = 22.0
+	drum.height = 80.0
+	_part(drum, curved, Vector3(75, 0, 0), self, Vector3(0, 0, PI / 2.0))
+	var end := SphereMesh.new()
+	end.radius = 26.0
+	end.height = 52.0
+	_part(end, curved, Vector3(125, 0, 0))
+	var dome := SphereMesh.new()
+	dome.radius = 34.0
+	dome.height = 50.0
+	_part(dome, hall, Vector3.ZERO)
+	var band := TorusMesh.new()
+	band.inner_radius = 33.0
+	band.outer_radius = 36.0
+	_part(band, windows, Vector3.ZERO)
+
+
+## The gas giant in whose clouds the Archive drifts, below it (planet shader).
+func _add_archive_giant() -> void:
+	var world := Node3D.new()
+	world.name = "ArchiveGiant"
+	var radius := 9000.0
+	# The stand-in is built at 1/3 and shown at 3x: undo that for the world.
+	var s := maxf(scale.x, 0.001)
+	world.scale = Vector3.ONE / s
+	world.position = Vector3(0, -(radius + maxf(_radius, 300.0) * 1.6) / s, 0)
+	add_child(world)
+	var body := MeshInstance3D.new()
+	body.name = "MeshInstance3D"
+	var sphere := SphereMesh.new()
+	sphere.radius = radius
+	sphere.height = radius * 2.0
+	sphere.radial_segments = 128
+	sphere.rings = 64
+	body.mesh = sphere
+	world.add_child(body)
+	preload("res://scripts/generation/GasGiantLook.gd").apply(world, hash("archive_giant"))
+

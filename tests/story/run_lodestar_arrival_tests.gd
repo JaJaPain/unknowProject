@@ -42,7 +42,7 @@ func _initialize() -> void:
 		var id := str(card["id"])
 		var scene: Dictionary = card.get("arrival_scene", {})
 		_check(not scene.is_empty(), "%s has an arrival scene" % id)
-		_check(str(scene.get("landmark", "")) in ["beacon", "fleet", "ring", "survey", "garden", "wrecks", "market", "shipyard"], "%s: a landmark kind the builder knows" % id)
+		_check(str(scene.get("landmark", "")) in ["beacon", "fleet", "ring", "survey", "garden", "wrecks", "market", "shipyard", "archive", "treaty"], "%s: a landmark kind the builder knows" % id)
 		kinds[str(scene.get("landmark", ""))] = true
 		var lines: Array = scene.get("lines", [])
 		_check(lines.size() >= 3, "%s: the place says its piece (3+ lines)" % id)

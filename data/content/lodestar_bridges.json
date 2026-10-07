@@ -48,6 +48,18 @@
 			"prove_them_wrong": "Every guild and registry said the great ship could never fly. Launch it, and every one of them is wrong in front of the whole frontier.",
 			"keep_the_lights_on": "A ship that size could carry a failing colony away, or keep one alive on its reactors. Someone needs it, whatever it costs the family.",
 			"protect_a_secret_child": "Someone they love is hidden in the shipwright family under another name. Keep the yard closed, and they stay hidden."
+		},
+		"archive": {
+			"rewrite_a_verdict": "The Archive holds the full record of the trial that ruined their family, including what the court left out. One page from its stacks could overturn the verdict.",
+			"bury_old_crime": "Somewhere in the Archive's stacks is the one record that ties them to an old crime. While the Archive stands, the crime is never really buried.",
+			"prove_them_wrong": "The Archive's copies show the registry, the courts and the guild all lied about the same thing for decades. Publish them, and the institution falls.",
+			"take_the_chair": "The seat they want was promised to someone else, in a charter only the Archive still holds. Change that page, and the promise never existed."
+		},
+		"neutral_ground": {
+			"start_a_war": "One shot fired inside the hall, and each side will blame the other. A war that starts at the Neutral Ground pays whoever sells to both.",
+			"take_the_chair": "The hall's keeper speaks for the treaty, and the seat was promised to someone else's heir. Whoever holds it decides who gets to talk.",
+			"rewrite_a_verdict": "The treaty tribunal ruled against their family when the war ended. The original minutes are still in the hall, and they say something else.",
+			"break_a_rival": "Their rival is the envoy every faction trusts at the Neutral Ground. Disgrace them there, in front of everyone, and they're finished everywhere."
 		}
 	}
 }
