@@ -1,0 +1,394 @@
+{
+  "id": "premise.the_water_barons_embargo",
+  "schema_version": 1,
+  "title": "The Water Baron's Embargo",
+  "logline": "A neutral orbital water haulers guild enforces a complete transport freeze during a cartel war, unaware that their refusal to pick sides is dehydrating innocent civilian families on an isolated refinery outpost.",
+  "scale": "local",
+  "tone": [
+    "bleak",
+    "tense"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "water_guild_dispatcher",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Chief logistics dispatcher for the independent water haulers guild; principled, unbending, and clinging blindly to guild neutrality.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "refinery_station_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Chief medical officer at the trapped refinery platform; frantic, underslept, and watching child dehydration rates soar.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_blockade_captain",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Commander of the mining syndicate task force laying siege to the refinery; clinical, arrogant, and content to let thirst do his work.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_interceptor",
+      "kind": "ship",
+      "description": "A missile gunboat enforcing the corporate interdiction perimeter around the trapped refinery.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "deep_ice_quarry_belt",
+      "kind": "place",
+      "description": "A sub-zero asteroid belt where massive water-ice icebergs are quarried and melted.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "trapped_refinery_outpost",
+      "kind": "place",
+      "description": "An unaligned smelting platform housing four hundred civilian workers whose cisterns are running dry.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "water_haulers_guild",
+      "kind": "faction",
+      "description": "The non-partisan collective of ice-freighter pilots who refuse to deliver to active war zones.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_consortium_armada",
+      "kind": "faction",
+      "description": "The aggressive corporate syndicate attempting to starve the refinery into unconditional surrender.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "refugees_moving"
+  ],
+  "public_situation": "The water haulers guild declares total transit neutrality across {system}, halting all water-ice deliveries until rival mining syndicates sign a non-aggression pact.",
+  "private_truth": "Four hundred non-combatant families trapped inside {role:trapped_refinery_outpost} have less than forty-eight hours of breathable recycled moisture remaining while the guild refuses to deliver.",
+  "core_why": {
+    "motive": "ideology",
+    "secret": "neutral_embargo_trapped_civilian_refinery_without_water"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Water guild dispatchers padlocks the intake pipelines at {role:deep_ice_quarry_belt}, turning back all commercial water tankers.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "refinery_station_doctor",
+          "target": "trapped_refinery_outpost",
+          "reason": "She pays an outside pilot double rates to quarry emergency water-ice from outer belts and slip past guild monitors into the hospital tanks.",
+          "private_fact": "The refinery cisterns were sabotaged by cartel agents before the siege, reducing water reserves from weeks to hours.",
+          "outcome_tags": [
+            "water_ice_delivered"
+          ],
+          "routes": {
+            "water_ice_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:cartel_interceptor} deploys kinetic mines across the approach corridors to {role:trapped_refinery_outpost}.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "refinery_station_doctor",
+          "target": "mining_consortium_armada",
+          "reason": "She pays the pilot to destroy a cartel mine-laying skiff and recover emergency catalytic atmospheric condensing coils.",
+          "private_fact": "The cartel offered water to any refinery worker who surrenders, intending to press-gang the survivors into penal labor.",
+          "outcome_tags": [
+            "coils_recovered"
+          ],
+          "routes": {
+            "coils_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:water_guild_dispatcher} threatens to permanently revoke the pilot's guild docking rights for violating collective neutrality.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "water_guild_dispatcher",
+          "requester": "refinery_station_doctor",
+          "target": "deep_ice_quarry_belt",
+          "reason": "She begs the pilot to scan the guild's dispatch transponder to prove the dispatcher knows children are dying on the refinery.",
+          "private_fact": "The dispatcher received daily medical telemetry from the refinery and consciously chose institutional neutrality over human life.",
+          "outcome_tags": [
+            "callous_neutrality_documented",
+            "records_erased"
+          ],
+          "routes": {
+            "callous_neutrality_documented": "next",
+            "records_erased": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:cartel_interceptor} moves in to bombard the refinery's remaining water condensation domes.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "refinery_station_doctor",
+          "target": "cartel_interceptor",
+          "reason": "She pays the pilot to disable the cartel interceptor before its railguns rupture the final pressurized hospital dome.",
+          "private_fact": "The cartel captain hails offering a lifetime water-mining patent if the pilot stands down and lets the refinery surrender.",
+          "outcome_tags": [
+            "interceptor_disabled",
+            "cartel_bribe_taken"
+          ],
+          "routes": {
+            "interceptor_disabled": "next",
+            "cartel_bribe_taken": "resolution:refinery_falls_to_cartel"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the cartel gunboat neutralized and the evidence of the guild's lethal neutrality in hand, the pilot must decide whether to force the water guild to break its embargo, break the cartel siege, or let corporate terms dictate survival.",
+        "options": [
+          {
+            "id": "force_guild_water_convoy",
+            "label": "Broadcast the refinery's medical distress telemetry to shame the water guild into breaking its embargo",
+            "leads_to": "resolution:water_guild_forced_to_relieve_refinery"
+          },
+          {
+            "id": "broker_cartel_evacuation",
+            "label": "Broker an immediate civilian evacuation with the cartel in exchange for surrendering the refinery",
+            "leads_to": "resolution:civilians_evacuated_refinery_ceded"
+          },
+          {
+            "id": "sell_out_to_cartel",
+            "label": "Accept the cartel's mining patent and allow the refinery to fall to corporate shock troops",
+            "leads_to": "resolution:refinery_falls_to_cartel"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "water_guild_forced_to_relieve_refinery",
+      "reached_by": "The pilot broadcasts the medical distress telemetry.",
+      "summary": "Public fury forces {role:water_guild_dispatcher} to dispatch emergency water tankers. The refinery is saved, though the guild's neutral reputation is shattered.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "water_haulers_guild",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "refinery_station_doctor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "water_guild_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_lethal_water_neutrality",
+          "public_summary": "A pilot forced a neutral water guild to break its embargo and deliver life-saving ice to a dying station."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "civilians_evacuated_refinery_ceded",
+      "reached_by": "The pilot brokers a civilian evacuation with the cartel.",
+      "summary": "{role:refinery_station_doctor} evacuates the families on cargo shuttles. The cartel seizes the outpost, while the water guild claims its neutrality held firm.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_consortium_armada",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "refinery_station_doctor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "water_guild_dispatcher",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_thirst_evacuation",
+          "public_summary": "A pilot evacuated hundreds of parched refinery workers before a corporate siege starved them."
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "refinery_falls_to_cartel",
+      "reached_by": "The pilot accepts the cartel's mining patent bribe.",
+      "summary": "Cartel troops storm the dehydrated refinery. Survivors are indentured to corporation mines, while {role:water_guild_dispatcher} preserves her formal neutrality.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_consortium_armada",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_blockade_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "refinery_station_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "water_guild_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "permitted_refinery_starvation",
+          "public_summary": "A pilot allowed a mining cartel to starve out a civilian refinery platform for corporate bounty."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "refinery_strangled_by_thirst",
+      "reached_by": "The pilot never intervenes or abandons the cistern delivery.",
+      "summary": "The cisterns run dry. Four hundred workers evacuate in unpressurized freight pods while {role:cartel_blockade_captain} claims the abandoned station.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "refinery_station_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "water_guild_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "refinery_strangled_by_thirst",
+  "loose_threads": [
+    {
+      "id": "t_guild_ice_futures",
+      "surface": "price_board",
+      "detail": "A regional exchange registered massive speculative buy orders for unquarried water-ice timed an hour before the guild embargo was declared.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_condenser_sabotage_tool",
+      "surface": "cargo",
+      "detail": "The ruptured water condenser shows specialized cutting torch marks matching tools manufactured exclusively by a corporate armory.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "sabotage",
+      "forged_records"
+    ],
+    "motives": [
+      "ideology",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Water haulers guild declares blanket transport embargo across active mining zones.",
+    "Outpost hospitals report critical drops in municipal recycled hydration reserves.",
+    "Mining cartel fleets advance perimeter cordons around unaligned refining platforms."
+  ],
+  "voice_direction": {
+    "water_guild_dispatcher": "Cold, pedantic, and repeats official guild bylaws like holy scripture. Shows no emotional reaction to casualty figures.",
+    "refinery_station_doctor": "Frantic, breathless, and raspy from dry air. Trembles with rage when describing dehydrated children.",
+    "cartel_blockade_captain": "Smug, unhurried, and treats starvation siege as a polite administrative waiting game."
+  },
+  "novelty_tags": [
+    "water_embargo",
+    "neutrality_cruelty",
+    "refinery_siege",
+    "dehydration_crisis",
+    "water_ice_quarry"
+  ]
+}

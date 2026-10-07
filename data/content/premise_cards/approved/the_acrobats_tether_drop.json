@@ -1,0 +1,316 @@
+{
+  "id": "premise.the_acrobats_tether_drop",
+  "schema_version": 1,
+  "title": "The Acrobat's Tether Drop",
+  "logline": "A zero-g acrobatics instructor hires a pilot to recover her former partner's pneumatic harness from an impound dock, hiding that her partner was crippled in a fall caused by her own reckless leap.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "acrobat_instructor",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "A former circus aerialist running an orbital zero-g gymnastics studio; polished, graceful, and eaten alive by private shame.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "crippled_partner",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "A retired performer confined to a motorized zero-g couch; sharp-tongued, observant, and scraping by on station welfare.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "carnival_bailiff",
+      "kind": "person",
+      "archetype": "official",
+      "description": "A port authority lien officer who impounds theatrical and sports equipment for unpaid hangar rent.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "aerial_conservatory_ring",
+      "kind": "place",
+      "description": "A rotating high-ceiling recreational sphere where orbital performers train.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_impound_berth",
+      "kind": "place",
+      "description": "A cold storage bay where confiscated acrobatic rigging and props are held.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "quiet_cover_up",
+    "rival_humiliated"
+  ],
+  "public_situation": "A celebrated zero-g gymnastics studio at {role:aerial_conservatory_ring} faces closure after port bailiffs seize its main safety rigs for overdue back rent.",
+  "private_truth": "The instructor abandoned her partner after bungling a high-altitude aerial transfer that severed his spine, and needs the harness back to prevent forensic tests on the frayed tether.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "instructor_botched_aerial_catch_severing_partners_spine"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Bailiffs padlock the storage lockers at {role:salvage_impound_berth} as the conservatory suspends apprentice classes.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "acrobat_instructor",
+          "target": "salvage_impound_berth",
+          "reason": "She pays the pilot to purchase emergency municipal fee waivers to access the confiscated equipment lockers before the public auction.",
+          "private_fact": "She needs to recover the harness before the partner's insurance attorney demands an independent metallurgical test.",
+          "outcome_tags": [
+            "waivers_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "waivers_delivered": "next",
+            "abandoned": "resolution:harness_auctioned_instructor_ruined"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:crippled_partner} arrives at the impound office in his motorized couch, demanding to witness the inventory check.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "acrobat_instructor",
+          "target": "salvage_impound_berth",
+          "reason": "She hires the pilot to extract the locked harness trunk through a service conveyor before the partner inspects the tags.",
+          "private_fact": "The tether release pin was manually uncoupled from her side of the rig, proving she dropped him intentionally to save herself from slipping.",
+          "outcome_tags": [
+            "trunk_extracted"
+          ],
+          "routes": {
+            "trunk_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The partner's attorney files an emergency freeze order across {role:aerial_conservatory_ring} as former students gather.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "acrobat_instructor",
+          "target": "aerial_conservatory_ring",
+          "reason": "She begs the pilot to rush the harness to a private scrapper furnace on the habitat rim to destroy the damaged release pin.",
+          "private_fact": "She claims the partner's medical bills will be cut off if her school goes under, leaving him entirely destitute.",
+          "outcome_tags": [
+            "rig_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "rig_delivered": "next",
+            "abandoned": "resolution:harness_auctioned_instructor_ruined"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding the harness that proves the instructor dropped her partner to save her own skin, the pilot must decide whether to deliver the truth to the partner, destroy the evidence to keep the school open, or broker a settlement.",
+        "options": [
+          {
+            "id": "give_harness_to_partner",
+            "label": "Deliver the harness to the crippled partner so he can prove liability in court",
+            "leads_to": "resolution:partner_wins_restitution"
+          },
+          {
+            "id": "burn_the_harness",
+            "label": "Incinerate the harness in the furnace so the conservatory survives and continues paying the partner's stipend",
+            "leads_to": "resolution:conservatory_saved_guilt_buried"
+          },
+          {
+            "id": "force_private_annuity",
+            "label": "Confront the instructor with the pin to force her into deeding the studio revenues to her partner",
+            "leads_to": "resolution:forced_lifetime_annuity"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "partner_wins_restitution",
+      "reached_by": "The pilot delivers the harness to the crippled partner.",
+      "summary": "{role:crippled_partner} proves the drop was intentional. {role:acrobat_instructor} loses her license and school, but the partner secures full medical damages.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "crippled_partner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "acrobat_instructor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_acrobatic_betrayal",
+          "public_summary": "A pilot uncovered mechanical proof that a renowned gymnastics instructor deliberately dropped her partner."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "conservatory_saved_guilt_buried",
+      "reached_by": "The pilot burns the harness in the furnace.",
+      "summary": "The harness melts into scrap slag. {role:acrobat_instructor} reopens her school and pays her partner's bills, though neither ever speaks of the accident.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "acrobat_instructor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "crippled_partner",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "burned_aerial_evidence",
+          "public_summary": "A pilot destroyed the damaged rigging from a tragic high-wire accident to preserve a sports academy."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "forced_lifetime_annuity",
+      "reached_by": "The pilot forces the instructor to deed revenues to the partner.",
+      "summary": "{role:acrobat_instructor} deeds all studio profits to {role:crippled_partner} to avoid prison. The school survives as a front for his rehabilitation fund.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "crippled_partner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "acrobat_instructor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_performer_pension",
+          "public_summary": "A pilot used forensic rigging evidence to secure lifetime support for a crippled orbital performer."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "harness_auctioned_instructor_ruined",
+      "reached_by": "The pilot abandons the recovery or never intervenes.",
+      "summary": "Bailiffs sell the impounded gear at auction. {role:acrobat_instructor} flees her creditors while {role:crippled_partner} is evicted from the conservatory ward.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "acrobat_instructor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "crippled_partner",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "harness_auctioned_instructor_ruined",
+  "loose_threads": [
+    {
+      "id": "t_rigging_inspection_waiver",
+      "surface": "station_notice",
+      "detail": "The port safety registry contains three years of uncertified inspection exemptions signed by a commercial leisure syndicate.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_harness_latch_patent",
+      "surface": "cargo",
+      "detail": "The harness release buckle bears an unlisted serial mark matching high-altitude rigging discontinued for structural flaws.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "guilt",
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Recreational gymnastics conservatory suspends orbital classes following equipment repossession.",
+    "Station port authority warns commercial sports studios regarding delinquent hangar dues.",
+    "Former performers rally support for disabled veteran circus performers association."
+  ],
+  "voice_direction": {
+    "acrobat_instructor": "Breathless, lyrical, and habitually charming. Becomes evasive and tight-lipped whenever physical mechanics or tether tension are mentioned.",
+    "crippled_partner": "Caustic, rasping, and utterly devoid of nostalgia. Speaks with dry clinical precision about falls and gravity."
+  },
+  "novelty_tags": [
+    "zero_g_acrobatics",
+    "tether_failure",
+    "performer_guilt",
+    "conservatory_impound",
+    "partner_liability"
+  ]
+}

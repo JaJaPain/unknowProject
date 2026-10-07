@@ -1,0 +1,397 @@
+{
+  "id": "premise.the_gantry_limiters_override",
+  "schema_version": 1,
+  "title": "The Gantry Limiter's Override",
+  "logline": "A shipyard accident investigator examining a deadly orbital crane collapse discovers that the crane did not snap from wear, but was ripped from its moorings by a debtor freighter firing its engines to escape an illegal port repossession.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "noir"
+  ],
+  "themes": [
+    "debt_and_obligation",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "salvage_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "An uncompromising shipyard accident investigator; methodical, stubborn, and pressured by union bosses to find the truth.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "debtor_captain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Master of a heavily modified bulk freighter; desperate, hounded by creditors, and on the run after a botched escape.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "port_bailiff",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Chief repossession officer for the station port authority; ruthless, overzealous, and cutting legal corners to seize ships.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bailiff_interceptor",
+      "kind": "ship",
+      "description": "An armored port authority cutter fitted with magnetic boarding clamps and disruptor cannons.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "crane_wreckage_field",
+      "kind": "place",
+      "description": "A tangled debris drift of twisted gantry girders and sheared hydraulic rams floating beside the dock.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dockyard_gantry_ring",
+      "kind": "place",
+      "description": "The massive pressurized orbital ring where capital freighters and warships are overhauled.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shipwright_guild",
+      "kind": "faction",
+      "description": "The militant labor syndicate of orbital riggers, welders, and heavy equipment mechanics.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "faction_weakened",
+    "alliance_broken"
+  ],
+  "public_situation": "Shipyard riggers strike across {system} after an orbital crane sheared from its moorings, crushing four drydock berths and killing six workers.",
+  "private_truth": "The crane did not suffer mechanical failure; a berthed debtor ship engaged full thrusters while still hooked to the gantry grapple to escape an illegal predawn repossession.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "debtor_thrusters_ripped_drydock_gantry"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Work halts across {role:dockyard_gantry_ring} as the shipwright guild demands an independent accident inquest.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "debtor_captain",
+          "requester": "salvage_inspector",
+          "target": "crane_wreckage_field",
+          "reason": "She hires an outside pilot to scan the sheared winch grapple in the debris field to verify whether the structural break was metallurgical fatigue or sudden thrust shear.",
+          "private_fact": "She spotted plasma wash on the sheared grapple clamps suggesting main engine ignition before the break.",
+          "outcome_tags": [
+            "thruster_shear_proven",
+            "fatigue_inconclusive"
+          ],
+          "routes": {
+            "thruster_shear_proven": "next",
+            "fatigue_inconclusive": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:port_bailiff} orders a news blackout and dispatches armed security tugs to impound all drydock sensor logs.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "salvage_inspector",
+          "target": "shipwright_guild",
+          "reason": "She pays the pilot to intercept a rogue bailiff scrapper tug and recover the gantry's external telemetry array before it is wiped.",
+          "private_fact": "The bailiff launched an uncertified impound raid without clearance, prompting the debtor captain's panic burn.",
+          "outcome_tags": [
+            "telemetry_recovered"
+          ],
+          "routes": {
+            "telemetry_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "The fugitive debtor freighter is spotted limping into an outer asteroid belt with burned-out thrusters.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "salvage_inspector",
+          "target": "dockyard_gantry_ring",
+          "reason": "She hires the pilot to deliver the extracted thruster telemetry to the union hall under the bailiff's security cordon.",
+          "private_fact": "If the union learns the bailiff provoked the disaster, they will shut down the entire orbital transit network.",
+          "outcome_tags": [
+            "telemetry_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "telemetry_delivered": "next",
+            "abandoned": "resolution:bailiff_frames_dead_riggers"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:bailiff_interceptor} corners the crippled debtor freighter in deep space, powering weapons to destroy the witness ship.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "salvage_inspector",
+          "target": "bailiff_interceptor",
+          "reason": "She pays the pilot to disable the bailiff cutter before it silences the debtor captain and destroys the surviving ship logs.",
+          "private_fact": "The bailiff hails mid-fight offering a massive official bounty and debt clearance if the pilot lets the cutter incinerate the debtor ship.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "bailiff_bribe_taken"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "bailiff_bribe_taken": "resolution:bailiff_frames_dead_riggers"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the bailiff cutter neutralized and the debtor captain in custody, the pilot must decide who takes the blame for the crane disaster.",
+        "options": [
+          {
+            "id": "deliver_full_truth_to_union",
+            "label": "Deliver the flight telemetry to the shipwright guild to expose the bailiff's reckless impound raid",
+            "leads_to": "resolution:bailiff_prosecuted_union_vindicated"
+          },
+          {
+            "id": "help_debtor_captain_escape",
+            "label": "Help the debtor captain jump to safety while letting management settle the strike quietly",
+            "leads_to": "resolution:debtor_captain_escapes_quiet_settlement"
+          },
+          {
+            "id": "turn_over_to_port_authority",
+            "label": "Surrender the debtor captain to the port authority to claim the official fugitive bounty",
+            "leads_to": "resolution:debtor_jailed_bailiff_absolved"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bailiff_prosecuted_union_vindicated",
+      "reached_by": "The pilot delivers the telemetry to the shipwright guild.",
+      "summary": "The union proves {role:port_bailiff} provoked the crane disaster with an illegal impound raid. The bailiff is imprisoned, and the port authority pays massive restitution to the riggers' families.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "port_bailiff",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "debtor_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_reckless_bailiff_raid",
+          "public_summary": "A pilot proved an overzealous port bailiff provoked a fatal crane collapse during an illegal ship repossession."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "debtor_captain_escapes_quiet_settlement",
+      "reached_by": "The pilot helps the debtor captain jump to safety.",
+      "summary": "{role:debtor_captain} jumps clear of the system. The port authority pays off the union under a non-disclosure pact, while {role:salvage_inspector} resigns in frustration.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "debtor_captain",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "port_bailiff",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "aided_runaway_debtor_pilot",
+          "public_summary": "A pilot helped a desperate freighter captain escape after an accidental crane disaster."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "debtor_jailed_bailiff_absolved",
+      "reached_by": "The pilot surrenders the debtor captain to the bailiff.",
+      "summary": "{role:debtor_captain} takes the sole blame for six rigger deaths and receives lifetime hard labor. {role:port_bailiff} is promoted, while the union remains bitter and suspicious.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "debtor_captain",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "port_bailiff",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "surrendered_debtor_captain",
+          "public_summary": "A pilot captured a fugitive freighter captain who pulled down an orbital shipyard crane during a botched escape."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "bailiff_frames_dead_riggers",
+      "reached_by": "The pilot abandons the inquest or accepts the bailiff's bribe.",
+      "summary": "{role:port_bailiff} destroys the telemetry and blames the disaster on dead riggers. The shipwright guild launches an indefinite general strike, shutting down the orbital ring.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipwright_guild",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "port_bailiff",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "alliance_broken"
+      ]
+    }
+  ],
+  "default_resolution": "bailiff_frames_dead_riggers",
+  "loose_threads": [
+    {
+      "id": "t_bailiff_impound_warrant",
+      "surface": "station_notice",
+      "detail": "The repossession docket for the debtor ship was signed without magistrate authorization by a commercial debt registry clerk.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_grapple_burn_scour",
+      "surface": "cargo",
+      "detail": "The sheared grapple teeth carry titanium-hydride thruster slag matching an uncertified civilian fuel blend.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Orbital crane disaster halts repair operations at central drydock gantry.",
+    "Shipwright guild threatens wildcat walkouts over deadly drydock equipment failures.",
+    "Station port marshal launches emergency investigation into sheared gantry winches."
+  ],
+  "voice_direction": {
+    "salvage_inspector": "Clipped, precise, and rigorously cites mechanical shear tolerances. Refuses to make eye contact when angry.",
+    "debtor_captain": "Frantic, exhausted, and speaks in broken, stammering sentences. Clearly horrified by the rigger deaths but terrified of prison.",
+    "port_bailiff": "Loud, domineering, and treats the star system as his personal enforcement jurisdiction. Threats are delivered with a jovial smirk."
+  },
+  "novelty_tags": [
+    "crane_collapse",
+    "debt_repossession",
+    "botched_impound",
+    "thruster_shear",
+    "shipwright_strike"
+  ]
+}

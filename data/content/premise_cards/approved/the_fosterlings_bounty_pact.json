@@ -1,0 +1,320 @@
+{
+  "id": "premise.the_fosterlings_bounty_pact",
+  "schema_version": 1,
+  "title": "The Fosterling's Bounty Pact",
+  "logline": "A veteran bounty hunter hires a pilot to extract her estranged adopted child from an outlaw redoubt before a cartel hit squad arrives, hiding that the rescue breaks her guild's strict code of neutrality.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "melancholy"
+  ],
+  "themes": [
+    "chosen_family",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "guild_hunter",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "A legendary guild tracker with decades of recorded captures; stoic, aging, and desperate to save her only family.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "foster_pilot",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "An impetuous runaway courier who joined an outer-belt outlaw crew to escape her foster mother's strict shadow.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_enforcer_cutter",
+      "kind": "ship",
+      "description": "A heavily armored strike skiff sent by an asteroid syndicate to liquidate the outlaw hideout.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outlaw_waypoint_berth",
+      "kind": "place",
+      "description": "A hollowed-out asteroid redoubt used by unregistered freight runners.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "neutral_guild_lodge",
+      "kind": "place",
+      "description": "A fortified orbital station where bounty hunters register warrants and deposit bonds.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "alliance_broken",
+    "witness_at_large"
+  ],
+  "public_situation": "Bounty hunter gunboats gather around {role:neutral_guild_lodge} following reports that a syndicate strike team has cornered rogue couriers at an asteroid waypoint.",
+  "private_truth": "{role:guild_hunter} forged an extraction bounty on her estranged foster daughter to use guild legal cover, knowing guild rules mandate execution for harboring wanted targets.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "hunter_forged_bounty_to_extract_runaway_fosterling"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Guild dispatchers post emergency tracking queries as syndicate skiffs mobilize near the outer belt.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "foster_pilot",
+          "requester": "guild_hunter",
+          "target": "outlaw_waypoint_berth",
+          "reason": "She hires an outside pilot to trace the fosterling's transponder echo through asteroid interference before cartel probes locate the berth.",
+          "private_fact": "She knows the fosterling stole syndicate freight ledgers and is marked for immediate execution.",
+          "outcome_tags": [
+            "transponder_fixed",
+            "echo_lost"
+          ],
+          "routes": {
+            "transponder_fixed": "next",
+            "echo_lost": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:cartel_enforcer_cutter} deploys minefields across the approach lanes to {role:outlaw_waypoint_berth}.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "guild_hunter",
+          "target": "outlaw_waypoint_berth",
+          "reason": "She pays the pilot to rush an encrypted guild transponder spoofing package to the asteroid dock so the fosterling's ship can slip the blockade.",
+          "private_fact": "The transponder code belongs to the hunter's own registered hunting vessel, making her legally liable for all subsequent jumps.",
+          "outcome_tags": [
+            "transponder_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "transponder_delivered": "next",
+            "abandoned": "resolution:waypoint_purged_by_cartel"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:cartel_enforcer_cutter} ambushes the fleeing fosterling in open space, opening fire on her maneuvering jets.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "guild_hunter",
+          "target": "cartel_enforcer_cutter",
+          "reason": "She pays the pilot to disable the cartel cutter before it incinerates the fosterling's crippled freighter.",
+          "private_fact": "The cartel enforcer hails mid-engagement offering the bounty payout and immunity if the pilot disables the hunter instead.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "hunter_betrayed"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "hunter_betrayed": "resolution:hunter_imprisoned_fosterling_fined"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the cartel ship crippled and the fosterling safe, the pilot must decide whether to help the family flee, deliver the runaway to the guild lodge, or surrender both to the syndicate.",
+        "options": [
+          {
+            "id": "help_family_jump",
+            "label": "Help the hunter and fosterling jump beyond the gate network to start fresh",
+            "leads_to": "resolution:hunter_and_fosterling_escape"
+          },
+          {
+            "id": "deliver_to_guild",
+            "label": "Escort the fosterling to the guild lodge for lawful trial to preserve the hunter's license",
+            "leads_to": "resolution:fosterling_jailed_hunter_spared"
+          },
+          {
+            "id": "sell_out_to_cartel",
+            "label": "Surrender the stolen ledgers and coordinates to the cartel for a heavy reward",
+            "leads_to": "resolution:hunter_imprisoned_fosterling_fined"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "hunter_and_fosterling_escape",
+      "reached_by": "The pilot helps the hunter and fosterling jump beyond the gate network.",
+      "summary": "{role:guild_hunter} renounces her badge and flees with {role:foster_pilot}. The cartel loses the trail, but the guild marks both as outlaws.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guild_hunter",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foster_pilot",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_hunted_fosterling",
+          "public_summary": "A pilot helped a legendary bounty hunter sacrifice her guild status to save her runaway foster child."
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "fosterling_jailed_hunter_spared",
+      "reached_by": "The pilot escorts the fosterling to the guild lodge.",
+      "summary": "{role:foster_pilot} surrenders to guild custody, receiving five years in penal rehabilitation. {role:guild_hunter} retains her license, though their bond is severed.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "foster_pilot",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_hunter",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "delivered_fosterling_to_lodge",
+          "public_summary": "A pilot delivered an outlaw courier to guild holding cells, preserving her foster mother's standing."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "hunter_imprisoned_fosterling_fined",
+      "reached_by": "The pilot betrays the hunter to cartel authorities.",
+      "summary": "Guild marshals arrest {role:guild_hunter} for aiding outlaws. {role:foster_pilot} is released on heavy syndicate bail, indentured to debt service.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "guild_hunter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foster_pilot",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "betrayed_veteran_hunter",
+          "public_summary": "A pilot turned evidence against a decorated guild tracker who attempted to shield an outlaw relative."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "waypoint_purged_by_cartel",
+      "reached_by": "The pilot abandons the contract or never intervenes.",
+      "summary": "Cartel enforcers breach {role:outlaw_waypoint_berth} with assault torpedoes. {role:foster_pilot} is captured while {role:guild_hunter} vanishes into deep space.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "foster_pilot",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "guild_hunter",
+          "fate": "fled"
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "waypoint_purged_by_cartel",
+  "loose_threads": [
+    {
+      "id": "t_hunter_collateral_bond",
+      "surface": "station_notice",
+      "detail": "The bounty lodge registry records a substantial retirement guarantee pledged to a commercial banking cartel.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_cartel_transponder_override",
+      "surface": "cargo",
+      "detail": "The cartel interceptor carries targeting arrays factory-calibrated to match official guild patrol frequencies.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "protecting_someone",
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Bounty hunters mobilize across rim sectors as syndicate issues high-value recovery warrants.",
+    "Outer waypoint stations report increased cartel patrol sweeps along asteroid margins.",
+    "Guild administration reminds licensed trackers of strict neutrality clauses."
+  ],
+  "voice_direction": {
+    "guild_hunter": "Monosyllabic, stony, and avoids showing vulnerability. Sentences are clipped and strictly focused on logistics.",
+    "foster_pilot": "Defiant, rapid-fire, and full of wounded pride. Masks panic behind sarcastic swagger."
+  },
+  "novelty_tags": [
+    "bounty_guild",
+    "foster_daughter",
+    "cartel_blockade",
+    "transponder_spoof",
+    "custody_rescue"
+  ]
+}

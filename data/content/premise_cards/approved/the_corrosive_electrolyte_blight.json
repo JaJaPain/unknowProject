@@ -1,0 +1,430 @@
+{
+  "id": "premise.the_corrosive_electrolyte_blight",
+  "schema_version": 1,
+  "title": "The Corrosive Electrolyte Blight",
+  "logline": "An industrial fuel-cell corrosion epidemic paralyzes transit across regional gates, while the fuel cartel blames migrant convoys for the disaster to hide an acidic refinery leak.",
+  "scale": "regional",
+  "tone": [
+    "tense",
+    "political"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "regional_fuel_baron",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Chief logistics director for the inter-system fuel syndicate; polished, ruthless, and deflecting regulatory panic.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "migrant_convoy_marshal",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Elected leader of a displaced refugee flotilla stranded at border gates by fuel quarantine orders.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "port_chemical_analyst",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "An incorruptible fuel purity technician at a regional hub whose warnings were buried by management.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_interdiction_corvette",
+      "kind": "ship",
+      "description": "A heavily armed private patrol cutter enforcing the inter-system fuel blockade.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "central_refinery_hub",
+      "kind": "place",
+      "description": "The massive multi-system refinery station that produces eighty percent of regional jump fuel.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_gate_quarantine_dock",
+      "kind": "place",
+      "description": "A crowded frontier transfer station where hundreds of ships sit stranded with pitted reactor tanks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "fuel_refiners_cartel",
+      "kind": "faction",
+      "description": "The monopolistic regional energy syndicate controlling fuel synthesis across three gates.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "refugee_flotilla_council",
+      "kind": "faction",
+      "description": "The mutual-aid assembly representing thousands of displaced families migrating across systems.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "refugees_moving",
+    "public_outrage"
+  ],
+  "public_situation": "Ships suffer catastrophic fuel cell tank leaks across three star systems as port authorities enforce strict transit quarantines, blaming migrant fuel skiffs for spreading contaminated propellant.",
+  "private_truth": "The central refinery leaked three million liters of acidic catalyst into regional bulk tanks during a botched maintenance overhaul, and the fuel cartel framed the migrants to escape colossal liability.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "refinery_leaked_acidic_catalyst_and_blamed_refugees"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Fuel docks freeze civilian pump lines across {role:central_refinery_hub} as repair crews scramble over dissolved feeder valves.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "regional_fuel_baron",
+          "target": "central_refinery_hub",
+          "reason": "He pays an outside pilot top dollar to deliver pure cuprite to forge replacement catalytic filters before port regulators test the intake pipes.",
+          "private_fact": "He knows the cuprite will only slow down the corrosion and needs to delay the formal investigation until his insurers renew coverage.",
+          "outcome_tags": [
+            "cuprite_delivered"
+          ],
+          "routes": {
+            "cuprite_delivered": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "port_chemical_analyst",
+          "target": "central_refinery_hub",
+          "reason": "She hires the pilot to deliver sealed fuel samples from commercial berths to an independent testing lab before cartel guards seize them.",
+          "private_fact": "The samples show ninety times the legal acidity limit, proving the corrosion originated inside the main synthesis vats.",
+          "outcome_tags": [
+            "samples_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "samples_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Cartel patrol craft impound migrant convoys outside {role:border_gate_quarantine_dock}, accusing them of selling tainted bootleg fuel.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "migrant_convoy_marshal",
+          "target": "fuel_refiners_cartel",
+          "reason": "He pays the pilot to destroy a cartel impound drone and recover confiscated fuel bunkering receipts that prove migrants bought fuel from the cartel itself.",
+          "private_fact": "Three migrant hospital shuttles have already suffered engine failure due to the acidic propellant.",
+          "outcome_tags": [
+            "receipts_recovered"
+          ],
+          "routes": {
+            "receipts_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "The corrosion blight spreads to military and merchant convoys across the gate network, forcing a complete shutdown of regional traffic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "regional_fuel_baron",
+          "requester": "port_chemical_analyst",
+          "target": "central_refinery_hub",
+          "reason": "She pays the pilot to scan the refinery's deep outflow flues across systems to document the chemical discharge plumes poisoning the jump routes.",
+          "private_fact": "The baron ordered the disposal of twenty thousand tons of acidic sludge directly into the orbital lanes to destroy evidence.",
+          "outcome_tags": [
+            "leak_plume_documented",
+            "sensors_blinded"
+          ],
+          "routes": {
+            "leak_plume_documented": "next",
+            "sensors_blinded": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:cartel_interdiction_corvette} moves to blockade the refugee flotilla at the outer gate, preparing to scuttle their fuel barges.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "migrant_convoy_marshal",
+          "target": "cartel_interdiction_corvette",
+          "reason": "He begs the pilot to disable the cartel corvette before it breaches the refugee fuel tenders and incinerates the proof.",
+          "private_fact": "The corvette captain hails mid-fight offering exclusive cartel trading concessions and a fortune in pure fuel if the pilot lets the refugee barges burn.",
+          "outcome_tags": [
+            "corvette_disabled",
+            "cartel_bribe_accepted"
+          ],
+          "routes": {
+            "corvette_disabled": "next",
+            "cartel_bribe_accepted": "resolution:refugees_framed_cartel_untouchable"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding undeniable chemical proof that the fuel cartel poisoned three star systems and blamed dying refugees, the pilot must decide whether to expose the cartel, broker an evacuation settlement, or take the cartel's fortune.",
+        "options": [
+          {
+            "id": "deliver_evidence_to_regional_council",
+            "label": "Deliver the chemical analysis to the regional trade council to break the cartel and clear the refugees",
+            "leads_to": "resolution:cartel_prosecuted_refugees_cleared"
+          },
+          {
+            "id": "broker_fuel_evacuation_pact",
+            "label": "Force the cartel to release pure fuel reserves to the refugees in exchange for a quiet settlement",
+            "leads_to": "resolution:quiet_refueling_compromise"
+          },
+          {
+            "id": "take_cartel_payout",
+            "label": "Burn the evidence and accept the cartel's fuel monopoly shares to let the refugees take the blame",
+            "leads_to": "resolution:refugees_framed_cartel_untouchable"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cartel_prosecuted_refugees_cleared",
+      "reached_by": "The pilot delivers the chemical findings to the regional trade council.",
+      "summary": "The regional council seizes {role:central_refinery_hub}. {role:regional_fuel_baron} is arrested for ecological negligence, and the refugees receive free fuel and open gates.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "fuel_refiners_cartel",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "refugee_flotilla_council",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "regional_fuel_baron",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migrant_convoy_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_corrosive_fuel_monopoly",
+          "public_summary": "A pilot proved a fuel cartel poisoned regional reactor cells with acidic waste and framed refugee convoys."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "quiet_refueling_compromise",
+      "reached_by": "The pilot forces the cartel into an evacuation settlement.",
+      "summary": "{role:regional_fuel_baron} releases clean fuel to the refugees to bury the test results. The flotilla jumps to safety, though the public never learns the truth.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "regional_fuel_baron",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migrant_convoy_marshal",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "fuel_refiners_cartel",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "port_chemical_analyst",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_fuel_blight_settlement",
+          "public_summary": "A pilot forced a monopolistic fuel syndicate to refuel stranded refugee convoys under threat of exposure."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "refugees_framed_cartel_untouchable",
+      "reached_by": "The pilot accepts the cartel bribe and burns the evidence.",
+      "summary": "The refugee fuel tenders burn. {role:regional_fuel_baron} secures full state indemnity for the blight, while {role:migrant_convoy_marshal} and his people are permanently expelled.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "fuel_refiners_cartel",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "refugee_flotilla_council",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "regional_fuel_baron",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migrant_convoy_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "aided_fuel_cartel_frameup",
+          "public_summary": "A pilot took cartel blood money to let stranded refugee families take the blame for a regional refinery disaster."
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "quarantine_strands_all_convoys",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "Corroded fuel tanks breach across three systems. The regional gate authority closes all transit indefinitely, stranding thousands of ships in dark space.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "fuel_refiners_cartel",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "regional_fuel_baron",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migrant_convoy_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "quarantine_strands_all_convoys",
+  "loose_threads": [
+    {
+      "id": "t_refinery_maintenance_wire",
+      "surface": "price_board",
+      "detail": "A regional commodities index shows heavy short-selling on fuel refinery stock timed three hours before the first tank ruptured.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_acid_discharge_marker",
+      "surface": "cargo",
+      "detail": "The fuel filter residue contains isotopic catalyst tracer tags registered exclusively to an offshore chemical combine.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Regional transport authorities expand transit quarantines amid fuel cell corrosion epidemic.",
+    "Fuel refiners cartel attributes widespread reactant failures to uninspected refugee transport tanks.",
+    "Merchant guild files emergency protests over soaring jump gate fuel surcharges."
+  ],
+  "voice_direction": {
+    "regional_fuel_baron": "Silky, dismissive, and treats industrial poisonings as unfortunate market fluctuations easily managed by public relations.",
+    "migrant_convoy_marshal": "Tired, hoarse, and fiercely resolute. Speaks with the dignity of someone fighting for the survival of thousands.",
+    "port_chemical_analyst": "Staccato, urgent, and constantly cites chemical equations and corrosion rates. Clearly terrified of retaliation."
+  },
+  "novelty_tags": [
+    "fuel_corrosion_blight",
+    "refinery_acid_leak",
+    "scapegoated_migrants",
+    "inter_system_quarantine",
+    "catalyst_cover_up"
+  ]
+}

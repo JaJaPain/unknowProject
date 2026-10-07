@@ -1,0 +1,405 @@
+{
+  "id": "premise.the_chronometers_fissile_core",
+  "schema_version": 1,
+  "title": "The Chronometer's Fissile Core",
+  "logline": "An auction house factor hires a pilot to track a rogue courier across regional gates, discovering that the fugitive is an artisan's daughter reclaiming her late father's masterwork chronometer from a fraudulent foreclosure.",
+  "scale": "regional",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "auction_factor",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Chief appraisal factor for an elite regional auction syndicate; polished, litigious, and determined to recover seized collateral.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "clockmaker_heir",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "An independent courier and daughter of a legendary chronometer maker; defiant, hunted, and running low on fuel.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_bounty_cutter",
+      "kind": "ship",
+      "description": "A heavily armed recovery corvette sent by the auction syndicate to impound the stolen chronometer.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "clockmaker_estate_dock",
+      "kind": "place",
+      "description": "A shuttered orbital clockmaker's atelier where precision navigational gears were once crafted.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outer_gate_sanctuary",
+      "kind": "place",
+      "description": "A remote freeport station at the edge of the regional gate network offering unregulated berths.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "regional_auction_syndicate",
+      "kind": "faction",
+      "description": "A predatory consortium that buys up foreclosed artisan estates across the sector.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "independent_clockmakers_guild",
+      "kind": "faction",
+      "description": "A scattered fraternity of precision instrument makers trying to protect traditional craft patents.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "stolen_goods_circulating",
+    "faction_weakened"
+  ],
+  "public_situation": "The regional auction syndicate posts high-priority recovery bounties across three star systems for an apprentice courier who fled with a masterwork astronomical chronometer.",
+  "private_truth": "The courier is the deceased clockmaker's daughter who broke into the vault to reclaim her father's masterwork after the auction syndicate seized it under fraudulent debt claims.",
+  "core_why": {
+    "motive": "legacy",
+    "secret": "courier_reclaimed_deceased_parents_seized_masterwork"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Private bailiff details seal the docks around {role:clockmaker_estate_dock} while bounty notices hit regional comms.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "auction_factor",
+          "target": "clockmaker_estate_dock",
+          "reason": "He pays the pilot to scan the shuttered estate docks to extract the fugitive courier's jump coordinates before her trail grows cold.",
+          "private_fact": "He knows the bankruptcy lien against the workshop was legally dubious and wants the clock secured before a public audit.",
+          "outcome_tags": [
+            "trail_located",
+            "trail_obscured"
+          ],
+          "routes": {
+            "trail_located": "next",
+            "trail_obscured": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "auction_factor",
+          "target": "clockmaker_estate_dock",
+          "reason": "He asks the pilot to transport legal repossession dockets to the dockmaster to seal the family workshop permanently.",
+          "private_fact": "The dockets strip the clockmaker's surviving family of all remaining manufacturing patents and royalties.",
+          "outcome_tags": [
+            "dockets_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "dockets_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Auction recovery squads deploy interdiction probes along transit corridors in the neighboring system.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "auction_factor",
+          "target": "regional_auction_syndicate",
+          "reason": "He pays the pilot to destroy an unauthorized picket ship shielding the courier's escape and retrieve her navigation logs.",
+          "private_fact": "The picket ship was hired by sympathetic guild artisans trying to buy the courier enough time to reach outer sanctuary.",
+          "outcome_tags": [
+            "nav_logs_recovered"
+          ],
+          "routes": {
+            "nav_logs_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "{role:clockmaker_heir} hails the pilot from an asteroid shadow, transmitting proof of the auction syndicate's predatory foreclosures.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "auction_factor",
+          "requester": "clockmaker_heir",
+          "target": "outer_gate_sanctuary",
+          "reason": "She begs the pilot to scan the auction syndicate's transit clearance beacon to prove the estate's seizure was backdated after her father died.",
+          "private_fact": "Her father spent forty years perfecting the chronometer's balance wheel, only to have it seized two days before his heart failed.",
+          "outcome_tags": [
+            "fraudulent_lien_proven",
+            "lien_records_masked"
+          ],
+          "routes": {
+            "fraudulent_lien_proven": "next",
+            "lien_records_masked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:syndicate_bounty_cutter} corners the courier's crippled ship outside {role:outer_gate_sanctuary}, opening fire on her maneuvering thrusters.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "clockmaker_heir",
+          "target": "syndicate_bounty_cutter",
+          "reason": "She begs the pilot to disable the bounty cutter before it breaches her hull and seizes the masterwork chronometer.",
+          "private_fact": "The bounty cutter captain hails mid-fight offering a massive syndicate bonus if the pilot disables the courier's ship instead.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "courier_betrayed"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "courier_betrayed": "resolution:chronometer_claimed_by_syndicate"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the bounty cutter repelled and the family chronometer secure, the pilot must decide whether to return the heirloom to the heir, sell it to the guild, or deliver it to the syndicate for the bounty.",
+        "options": [
+          {
+            "id": "return_to_heir",
+            "label": "Escort the courier to outer sanctuary so her family keeps the masterwork",
+            "leads_to": "resolution:heir_escapes_with_legacy"
+          },
+          {
+            "id": "deliver_to_guild",
+            "label": "Deliver the chronometer to the independent artisans guild for public preservation",
+            "leads_to": "resolution:guild_preserves_chronometer"
+          },
+          {
+            "id": "turn_over_to_syndicate",
+            "label": "Deliver the clock to the auction factor to collect the corporate bounty",
+            "leads_to": "resolution:chronometer_claimed_by_syndicate"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heir_escapes_with_legacy",
+      "reached_by": "The pilot escorts the courier to sanctuary.",
+      "summary": "{role:clockmaker_heir} reaches safety beyond the gate network. Her father's masterwork is preserved, while {role:auction_factor}'s foreclosure fraud is exposed in court.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "clockmaker_heir",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "auction_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "regional_auction_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "independent_clockmakers_guild",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "saved_masterwork_chronometer",
+          "public_summary": "A pilot defended a master clockmaker's heir from corporate repo ships across three star systems."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "guild_preserves_chronometer",
+      "reached_by": "The pilot delivers the chronometer to the guild.",
+      "summary": "{role:independent_clockmakers_guild} puts the chronometer on permanent public display. The heir receives guild patronage, though the syndicate blacklists her family.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_clockmakers_guild",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "clockmaker_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "auction_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "regional_auction_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "placed_chronometer_in_guild",
+          "public_summary": "A pilot delivered an contested masterwork timepiece to the artisan guild, blocking a corporate auction."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "chronometer_claimed_by_syndicate",
+      "reached_by": "The pilot delivers the chronometer to the auction factor.",
+      "summary": "{role:regional_auction_syndicate} sells the chronometer to a billionaire collector. {role:clockmaker_heir} is arrested for theft, ending the family's horological lineage.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "regional_auction_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "auction_factor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "clockmaker_heir",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "independent_clockmakers_guild",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "surrendered_artisan_chronometer",
+          "public_summary": "A pilot hunted down a runaway artisan courier to deliver a disputed heirloom timepiece to auction."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "courier_lost_in_transit",
+      "reached_by": "The pilot never intervenes or abandons the chase.",
+      "summary": "Syndicate cutters intercept the courier in deep space. {role:clockmaker_heir} is arrested for theft while {role:auction_factor} files an insurance claim.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "clockmaker_heir",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "auction_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "regional_auction_syndicate",
+          "delta": -1
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "courier_lost_in_transit",
+  "loose_threads": [
+    {
+      "id": "t_auction_lien_escrow",
+      "surface": "price_board",
+      "detail": "The auction syndicate's holding account registered purchase options for the clockmaker's estate three months before the artisan fell ill.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_chronometer_serial_plate",
+      "surface": "cargo",
+      "detail": "The master chronometer's brass backing plate bears a private guild patent stamp filed under an unlisted corporate shell.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "legacy",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Historic naval timepiece theft sparks multi-system recovery effort by regional auctioneers.",
+    "Artisan guild delegates protest predatory estate foreclosures across border systems.",
+    "Customs patrols increase boarding frequency along regional transit corridors."
+  ],
+  "voice_direction": {
+    "auction_factor": "Smooth, patronizing, and speaks with cold legal detachment. Avoids emotion, referring to family heirlooms strictly as asset line items.",
+    "clockmaker_heir": "Fierce, breathless, and speaks with intense technical pride. Refuses to concede ownership to corporate paper-pushers."
+  },
+  "novelty_tags": [
+    "horological_heirloom",
+    "predatory_foreclosure",
+    "regional_courier_hunt",
+    "masterwork_chronometer",
+    "artisan_guild"
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "id": "premise.the_taxidermists_gilded_peacock",
+  "schema_version": 1,
+  "title": "The Taxidermist's Gilded Peacock",
+  "logline": "A painstaking artisan conservator commissioned to restore an eccentric baroness's mechanical peacock automaton discovers that the client funded the golden curiosity by embezzling station emergency clinic subsidies.",
+  "scale": "personal",
+  "tone": [
+    "political",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "master_taxidermist",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "A painstaking restorer of antique automaton curios; proud of his craft, financially fragile, and desperate to protect his studio.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "eccentric_baroness",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "An imperious station socialite who commissioned the gilded automaton to celebrate her family's centenary.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relief_auditor",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "An incorruptible investigator tracking missing disaster rations meant for lower-deck families.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "taxidermy_atelier_berth",
+      "kind": "place",
+      "description": "A quiet zero-g workshop filled with lacquered display cases and brass gear lathes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "noble_gala_rotunda",
+      "kind": "place",
+      "description": "An opulent rotating ballroom where station elites display antique curios during festive galas.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "rival_humiliated",
+    "public_outrage"
+  ],
+  "public_situation": "High society gathers at {role:noble_gala_rotunda} for the grand unveiling of a priceless mechanical peacock automaton commissioned for the centenary festival.",
+  "private_truth": "The patron funded the extravagant gold automaton by embezzling three years of municipal emergency medical and water subsidies from the lower steerage decks.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "patron_diverted_disaster_relief_for_monument"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Gilded banners announce the automaton unveiling as private security escorts high-society guests toward {role:noble_gala_rotunda}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "master_taxidermist",
+          "target": "taxidermy_atelier_berth",
+          "reason": "He hires an outside pilot to collect the final gold-leaf plumage casing from an orbital jeweler's vault before the gala opens.",
+          "private_fact": "While verifying the client's payment ledger, he discovered the deposit came from a municipal relief trust account.",
+          "outcome_tags": [
+            "plumage_delivered"
+          ],
+          "routes": {
+            "plumage_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:relief_auditor} arrives outside the atelier with station marshals, issuing a freeze order on all workshop assets.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "eccentric_baroness",
+          "requester": "relief_auditor",
+          "target": "taxidermy_atelier_berth",
+          "reason": "She pays the pilot to scan the workshop's financial transponder to trace the routing vouchers used to purchase the automaton's gold plating.",
+          "private_fact": "Six infant clinics in the lower decks were shuttered this year due to the very budget shortfall the baroness created.",
+          "outcome_tags": [
+            "embezzlement_trail_verified",
+            "records_unverified"
+          ],
+          "routes": {
+            "embezzlement_trail_verified": "next",
+            "records_unverified": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Guests assemble for the grand unveiling as {role:eccentric_baroness} threatens to sue the station if the peacock is not on stage within the hour.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "master_taxidermist",
+          "target": "noble_gala_rotunda",
+          "reason": "He begs the pilot to transport the finished peacock to the rotunda stage so he can demand payment before the audit locks his accounts.",
+          "private_fact": "The baroness privately warned him that if he mentions the relief fund, she will frame his atelier for forging the invoices.",
+          "outcome_tags": [
+            "peacock_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "peacock_delivered": "next",
+            "abandoned": "resolution:atelier_seized_peacock_confiscated"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding proof that the extravagant golden peacock was built with stolen emergency clinic funds, the pilot must decide whether to expose the baroness, protect the taxidermist's livelihood, or extort the patron.",
+        "options": [
+          {
+            "id": "deliver_evidence_to_auditor",
+            "label": "Deliver the transaction records to the relief auditor to seize the peacock and refund the clinics",
+            "leads_to": "resolution:peacock_melted_clinics_refunded"
+          },
+          {
+            "id": "unveil_peacock_for_artisan",
+            "label": "Allow the unveiling to proceed so the taxidermist receives payment and saves his workshop",
+            "leads_to": "resolution:artisan_paid_scandal_buried"
+          },
+          {
+            "id": "blackmail_the_baroness",
+            "label": "Extort the baroness for hush money before the unveiling begins",
+            "leads_to": "resolution:baroness_buys_pilot_silence"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "peacock_melted_clinics_refunded",
+      "reached_by": "The pilot delivers the records to the auditor.",
+      "summary": "{role:relief_auditor} impounds the peacock on stage. The gold is melted down to refund the clinics, while {role:eccentric_baroness} faces public disgrace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relief_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "eccentric_baroness",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "master_taxidermist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "melted_gilded_monument",
+          "public_summary": "A pilot proved a socialite's golden automaton was built with stolen clinic funds, returning the gold to the wards."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "artisan_paid_scandal_buried",
+      "reached_by": "The pilot allows the unveiling to proceed.",
+      "summary": "The peacock dazzles the gala audience. {role:master_taxidermist} receives his fee and saves his shop, but clinic funding remains gutted.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "master_taxidermist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "eccentric_baroness",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "unveiled_stolen_automaton",
+          "public_summary": "A pilot helped unveil a lavish mechanical peacock built with embezzled hospital subsidies."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "baroness_buys_pilot_silence",
+      "reached_by": "The pilot extorts the baroness.",
+      "summary": "{role:eccentric_baroness} pays an exorbitant silence fee to keep her name off the docket. The taxidermist receives a minor cut, living under her quiet threat.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "eccentric_baroness",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "master_taxidermist",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "extorted_automaton_socialite",
+          "public_summary": "A pilot blackmailed an orbital socialite who diverted clinic funds into a golden clockwork bird."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "atelier_seized_peacock_confiscated",
+      "reached_by": "The pilot abandons the contract or never intervenes.",
+      "summary": "Station marshals impound the workshop. The half-finished peacock is locked in evidence storage, bankrupting {role:master_taxidermist} while legal battles drag on.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "master_taxidermist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "eccentric_baroness",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_auditor",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    }
+  ],
+  "default_resolution": "atelier_seized_peacock_confiscated",
+  "loose_threads": [
+    {
+      "id": "t_relief_voucher_routing",
+      "surface": "price_board",
+      "detail": "A municipal health board ledger lists six hundred grams of fine gold wire charged to an emergency ward refurbishment code.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_baroness_trustee_proxy",
+      "surface": "station_notice",
+      "detail": "The baroness's family trust recently appointed an offshore bank director who previously chaired the public hospital audit committee.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "legacy",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "High society flock to noble gala for unveiling of fully restored mechanical peacock automaton.",
+    "Auditor general warns station wards face severe deficit in pediatric clinical reserves.",
+    "Artisans guild praises delicate restoration work of master zero-g conservator."
+  ],
+  "voice_direction": {
+    "master_taxidermist": "Soft-spoken, painstaking, and obsesses over mechanical tolerances. Speaks with the agonizing weariness of an artisan facing financial ruin.",
+    "eccentric_baroness": "Imperious, drawling, and speaks to working people as though they were slow children. Refuses to brook any delay.",
+    "relief_auditor": "Brisk, sharp, and peppers speech with budget code numbers. Shows quiet, cold fury toward administrative corruption."
+  },
+  "novelty_tags": [
+    "mechanical_peacock",
+    "embezzled_clinic_funds",
+    "artisan_conservator",
+    "centenary_gala",
+    "high_society_corruption"
+  ]
+}

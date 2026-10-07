@@ -1,0 +1,337 @@
+{
+  "id": "premise.the_parolees_shuttle_manifest",
+  "schema_version": 1,
+  "title": "The Parolee's Shuttle Manifest",
+  "logline": "A paroled transport pilot building a clean freight business is extorted by her former prison boss, who threatens to expose that she secured early release by turning informant on cartel finances.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "reinvention",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "paroled_freighter",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "A former cartel courier flying an honest freight shuttle; disciplined, watchful, and desperate to keep her parole clean.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "prison_extortionist",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Her former cellblock lieutenant; vicious, entitled, and eager to reestablish street leverage.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "parole_marshal",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A cynical penal probation officer waiting for any infraction to revoke her flight license.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "extortionist_gunboat",
+      "kind": "ship",
+      "description": "A converted scrapper cutter fitted with outlaw pulse cannons and grappling teeth.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "industrial_freight_dock",
+      "kind": "place",
+      "description": "The bustling municipal cargo deck where independent couriers bid on local supply runs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "quiet_cover_up",
+    "witness_at_large"
+  ],
+  "public_situation": "Port marshals conduct random baggage sweeps across {role:industrial_freight_dock} following reports that newly paroled convicts are operating unregistered cargo routes.",
+  "private_truth": "The paroled pilot bought her freedom by providing prosecutors with encrypted banking ledgers that sent her syndicate's treasurer to a penal asteroid for life.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "parolee_traded_cartel_treasurer_testimony_for_release"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Probation inspectors install automated tracking collars on commercial shuttles throughout {role:industrial_freight_dock}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "paroled_freighter",
+          "target": "industrial_freight_dock",
+          "reason": "She pays an outside pilot to collect certified municipal cargo seals before the probation marshal performs his morning gate inspection.",
+          "private_fact": "Her former prison boss sent her an ultimatum demanding she haul contraband batteries under her certified commercial seals.",
+          "outcome_tags": [
+            "seals_delivered"
+          ],
+          "routes": {
+            "seals_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:prison_extortionist} docks his gunboat in an adjacent berth, transmitting threats over unencrypted maintenance channels.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "paroled_freighter",
+          "target": "industrial_freight_dock",
+          "reason": "She hires the pilot to purchase emergency legal bail bonds from station bailiffs to shield her docking license from extortion liens.",
+          "private_fact": "She knows the extortionist has her confidential informant debriefing audio files stored in his ship's flight recorder.",
+          "outcome_tags": [
+            "bonds_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "bonds_delivered": "next",
+            "abandoned": "resolution:parole_revoked_pilot_jailed"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "{role:extortionist_gunboat} follows the paroled freighter into open space, locking targeting radars onto her fuel manifold.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "paroled_freighter",
+          "target": "extortionist_gunboat",
+          "reason": "She pays the pilot to disable the gunboat's engines before the extortionist transmits her informant files to cartel bounty nets.",
+          "private_fact": "The extortionist hails mid-fight offering half the syndicate's recovery pot if the pilot leaves the parolee stranded for cartel hit squads.",
+          "outcome_tags": [
+            "gunboat_disabled",
+            "extortionist_bribe_taken"
+          ],
+          "routes": {
+            "gunboat_disabled": "next",
+            "extortionist_bribe_taken": "resolution:parolee_executed_by_cartel"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the extortionist's gunboat disabled and the informant audio in hand, the pilot must decide whether to destroy the blackmail files, surrender the convict to the marshal, or sell the files back to the syndicate.",
+        "options": [
+          {
+            "id": "wipe_extortion_data",
+            "label": "Erase the informant records and escort the parolee to safety to let her build an honest living",
+            "leads_to": "resolution:parolee_cleans_slate"
+          },
+          {
+            "id": "deliver_both_to_marshal",
+            "label": "Turn both the extortionist and the parolee over to the marshal for lawful processing",
+            "leads_to": "resolution:both_returned_to_penal_system"
+          },
+          {
+            "id": "sell_files_to_syndicate",
+            "label": "Sell the informant confession to syndicate brokers for a massive outlaw bounty",
+            "leads_to": "resolution:parolee_executed_by_cartel"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "parolee_cleans_slate",
+      "reached_by": "The pilot wipes the blackmail files and secures the parolee's safety.",
+      "summary": "The blackmail files are wiped. {role:paroled_freighter} keeps her license and flies clean, while {role:prison_extortionist} is stranded in dock without leverage.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_freighter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "prison_extortionist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_marshal",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "protected_reformed_pilot",
+          "public_summary": "A pilot destroyed criminal blackmail records to let a reformed transport pilot fly clean."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "both_returned_to_penal_system",
+      "reached_by": "The pilot surrenders both convicts to the marshal.",
+      "summary": "{role:parole_marshal} revokes both flight permits. The parolee and extortionist return to the penal colony, closing the file in bureaucratic triumph.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "parole_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paroled_freighter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "prison_extortionist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "cleared_penal_dock_dispute",
+          "public_summary": "A pilot delivered two disputing ex-convicts to station marshals for immediate parole revocation."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "parolee_executed_by_cartel",
+      "reached_by": "The pilot sells the informant files to the syndicate.",
+      "summary": "Syndicate enforcers board the parolee's shuttle, executing her for treason. {role:prison_extortionist} collects the bounty while the pilot pockets a bloody fee.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "prison_extortionist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paroled_freighter",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_reformed_informant",
+          "public_summary": "A pilot sold confidential state informant recordings to cartel hit squads."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "parole_revoked_pilot_jailed",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "Marshals impound the shuttle during a dockside brawl. {role:paroled_freighter} is re-incarcerated without trial while {role:prison_extortionist} flees into deep space.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_freighter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "prison_extortionist",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "parole_marshal",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "parole_revoked_pilot_jailed",
+  "loose_threads": [
+    {
+      "id": "t_treasurer_wire_transfer",
+      "surface": "price_board",
+      "detail": "A regional commodities escrow logged three large offshore transfers signed by the imprisoned cartel treasurer two days ago.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_parole_board_kickback",
+      "surface": "station_notice",
+      "detail": "The penal probation roster lists expedited clemency approvals granted exclusively to clients represented by a single commercial law firm.",
+      "can_carry_methods": [
+        "forged_records",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "fear",
+      "revenge",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Penal administration tightens monitoring protocols for paroled cargo couriers.",
+    "Station port marshals step up random security sweeps across commercial berths.",
+    "Freight dispatch union protests automated tracking collars on independent haulers."
+  ],
+  "voice_direction": {
+    "paroled_freighter": "Controlled, guarded, and measures every syllable as though speaking directly to a sentencing judge. Avoids criminal dock slang.",
+    "prison_extortionist": "Loud, grating, and perpetually feigns wounded friendship. Drops into chilling vulgar threats without warning.",
+    "parole_marshal": "Tired, sarcastic, and speaks with bored bureaucratic fatalism. Treats all ex-convicts as recidivists waiting to slip."
+  },
+  "novelty_tags": [
+    "parole_extortion",
+    "informant_blackmail",
+    "shuttle_freight",
+    "penal_rehabilitation",
+    "criminal_reinvention"
+  ]
+}

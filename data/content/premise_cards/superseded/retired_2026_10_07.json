@@ -1,0 +1,688 @@
+[
+  {
+    "id": "premise.the_ascetics_detonator",
+    "schema_version": 1,
+    "title": "The Ascetic's Detonator",
+    "logline": "A palliative hospice chaplain preparing an ascetic hermit for his final rites discovers that the revered holy man was a wartime passenger ferry saboteur hiding behind monastic sanctuary.",
+    "scale": "personal",
+    "tone": [
+      "melancholy",
+      "tense"
+    ],
+    "themes": [
+      "truth_vs_comfort",
+      "justice_vs_mercy"
+    ],
+    "roles": [
+      {
+        "id": "hospice_chaplain",
+        "kind": "person",
+        "archetype": "preacher",
+        "description": "Spiritual director of the palliative hospice platform; gentle, worn thin, and guarding his patients' final peace.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "dying_ascetic",
+        "kind": "person",
+        "archetype": "retired_legend",
+        "description": "A revered silent hermit nearing death, celebrated for forty years of solitary contemplation.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "survivor_advocate",
+        "kind": "person",
+        "archetype": "refugee",
+        "description": "Representative of families who lost loved ones in a wartime transport bombing; bitter, unyielding, and seeking long-delayed justice.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "quarantine_hospice_dock",
+        "kind": "place",
+        "description": "A quiet palliative habitat module anchored in the calm shadow of an outer moon.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "relic_crypt_vault",
+        "kind": "place",
+        "description": "A small, lead-shielded reliquary bay where the hermit's few worldly possessions are kept.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "blockade"
+      ]
+    },
+    "accepts_seeds": [
+      "martyr_made",
+      "secret_half_exposed",
+      "quiet_cover_up"
+    ],
+    "public_situation": "Pilgrims gather at {role:quarantine_hospice_dock} to hold vigil for a celebrated ascetic hermit entering his final hours of silent contemplation.",
+    "private_truth": "The dying hermit is a wartime demolition saboteur who blew up a passenger ferry forty years ago and hid in monastic vows to evade justice.",
+    "core_why": {
+      "motive": "guilt",
+      "secret": "holy_hermit_was_fugitive_passenger_ferry_saboteur"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Hospice attendants prepare the hermit's deathbed vigil as pilgrim ships dock at the perimeter.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "hospice_chaplain",
+            "target": "relic_crypt_vault",
+            "reason": "He hires an outside pilot to retrieve the hermit's sealed cedar personal trunk from the vault before the public vigil opens.",
+            "private_fact": "The chaplain heard the hermit's delirious confessions and fears the trunk holds incriminating documents rather than prayer beads.",
+            "outcome_tags": [
+              "trunk_retrieved"
+            ],
+            "routes": {
+              "trunk_retrieved": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "public_change": "{role:survivor_advocate} docks an armed charter outside the hospice, presenting municipal warrants identifying the hermit as a mass murderer.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "dying_ascetic",
+            "requester": "survivor_advocate",
+            "target": "quarantine_hospice_dock",
+            "reason": "She pays the pilot to scan the trunk's biometric seal and radio frequency log to confirm it holds the electronic trigger used in the ferry massacre.",
+            "private_fact": "Her family spent two generations bankrupting themselves to trace the saboteur's transponder across the sector.",
+            "outcome_tags": [
+              "saboteur_identity_verified",
+              "records_inconclusive"
+            ],
+            "routes": {
+              "saboteur_identity_verified": "next",
+              "records_inconclusive": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Pilgrims surround the hospice airlocks to block the advocate's party while the ascetic slips into cardiac arrest.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "hospice_chaplain",
+            "target": "relic_crypt_vault",
+            "reason": "He begs the pilot to move the confession trunk to a neutral station archive before rioting pilgrims and victims clash in the wards.",
+            "private_fact": "He knows publishing the truth will shatter the peace of hundreds of dying patients who drew strength from the hermit's example.",
+            "outcome_tags": [
+              "trunk_secured",
+              "abandoned"
+            ],
+            "routes": {
+              "trunk_secured": "next",
+              "abandoned": "resolution:ward_stormed_in_violence"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "Holding the undeniable proof that the dying saint was a fugitive mass murderer, the pilot must decide whether to deliver justice to the victims, preserve comfort for the dying, or bury the scandal quietly.",
+          "options": [
+            {
+              "id": "deliver_proof_to_survivors",
+              "label": "Give the confession trunk to the survivor advocate to grant the families closure",
+              "leads_to": "resolution:ferry_victims_vindicated"
+            },
+            {
+              "id": "burn_the_records_for_chaplain",
+              "label": "Help the chaplain seal the records so the dying pilgrims keep their peaceful faith",
+              "leads_to": "resolution:saintly_myth_preserved"
+            },
+            {
+              "id": "sell_proof_to_archive",
+              "label": "Sell the wartime confession to an independent historical bureau for a quiet payout",
+              "leads_to": "resolution:historical_scandal_sold"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "ferry_victims_vindicated",
+        "reached_by": "The pilot delivers the confession trunk to the survivor advocate.",
+        "summary": "{role:survivor_advocate} proves the hermit's guilt before his death. The cult dissolves in shock, giving sixty grieving families long-sought closure.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "survivor_advocate",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "deed",
+            "tag": "unmasked_ferry_saboteur",
+            "public_summary": "A pilot delivered proof that an orbital saint was the fugitive saboteur behind a wartime ferry bombing."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "leader_discredited"
+        ]
+      },
+      {
+        "id": "saintly_myth_preserved",
+        "reached_by": "The pilot helps the chaplain seal the records away forever.",
+        "summary": "{role:hospice_chaplain} buries the trunk in space. The ascetic dies exalted, leaving terminal patients at peace while {role:survivor_advocate} leaves empty-handed.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "survivor_advocate",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "deed",
+            "tag": "buried_ascetic_dark_past",
+            "public_summary": "A pilot helped a hospice chaplain bury the private papers of a revered holy hermit."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "historical_scandal_sold",
+        "reached_by": "The pilot sells the confession to an independent historical bureau.",
+        "summary": "Historical registries publish the confession posthumously. The hospice endures years of litigation, while {role:hospice_chaplain} resigns in disgrace.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "survivor_advocate",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "deed",
+            "tag": "sold_monastic_massacre_proof",
+            "public_summary": "A pilot sold the deathbed confession of a fugitive bomber who hid forty years in a hospice."
+          }
+        ],
+        "seeds": [
+          "secret_half_exposed",
+          "evidence_loose"
+        ]
+      },
+      {
+        "id": "ward_stormed_in_violence",
+        "reached_by": "The pilot abandons the contract or never intervenes.",
+        "summary": "Survivor charters force the airlocks. Protesters clash with hospice security as the ascetic dies unconfessed, shuttering {role:quarantine_hospice_dock} indefinitely.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "survivor_advocate",
+            "fate": "ruined"
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "ward_stormed_in_violence",
+    "loose_threads": [
+      {
+        "id": "t_trunk_detonator_code",
+        "surface": "cargo",
+        "detail": "The hermit's personal trunk has an arming frequency label scratched in military stencil that matches no known naval corps.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_hospice_trust_routing",
+        "surface": "station_notice",
+        "detail": "An offshore relief fund has transferred monthly survivor stipends to the hermit's hospice account since the armistice.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "slow_infiltration",
+        "forged_records",
+        "debt_leverage"
+      ],
+      "motives": [
+        "guilt",
+        "fear",
+        "greed"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Pilgrims hold candlelit orbital vigil outside hospice platform as beloved hermit weakens.",
+      "Survivor coalitions petition magistrate to unseal wartime refugee transport casualties.",
+      "Station public health board urges restraint outside quarantine hospice wards."
+    ],
+    "voice_direction": {
+      "hospice_chaplain": "Hushed, weary, and speaks with measured pauses. Never raises his voice, even when speaking of unspeakable atrocities.",
+      "survivor_advocate": "Trembling with controlled rage, precise and legalistic. Emphasizes dates, casualty figures, and bureaucratic delay."
+    },
+    "novelty_tags": [
+      "ascetic_hermit",
+      "wartime_saboteur",
+      "palliative_hospice",
+      "deathbed_confession",
+      "ferry_bombing"
+    ]
+  },
+  {
+    "id": "premise.the_factors_eviction_escrow",
+    "schema_version": 1,
+    "title": "The Factor's Eviction Escrow",
+    "logline": "An impartial residential escrow administrator attempts to mediate an eviction dispute, discovering that the landlord manufactured tenant defaults to lease the habitat block as mercenary shock troop barracks.",
+    "scale": "personal",
+    "tone": [
+      "tense",
+      "noir"
+    ],
+    "themes": [
+      "labour_and_exploitation",
+      "debt_and_obligation"
+    ],
+    "roles": [
+      {
+        "id": "housing_factor",
+        "kind": "person",
+        "archetype": "broker",
+        "description": "An impartial residential escrow administrator; meticulous, formal, and strictly committed to contractual procedure.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "syndicate_landlord",
+        "kind": "person",
+        "archetype": "merchant",
+        "description": "Owner of the habitat's pressurized dorm pods; calculating, aggressive, and secretly contracting with private mercenary syndicates.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "tenant_spokeswoman",
+        "kind": "person",
+        "archetype": "labourer",
+        "description": "An outspoken hydroponics worker leading two hundred resident families defending their homes.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "habitat_management_office",
+        "kind": "place",
+        "description": "The station leasing registry where residential tenancy bonds are held.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "pod_habitation_block",
+        "kind": "place",
+        "description": "A crowded residential tier housing miner and laborer families.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "law_tightened",
+      "grudge_against_player"
+    ],
+    "public_situation": "Private bailiffs surround {role:pod_habitation_block} after the landlord files sudden default writs, while families barricade the pressurized corridor airlocks.",
+    "private_truth": "The landlord manufactured the default claim to clear the block before the arrival of off-system mercenary shock troops who leased the pods as private barracks.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "landlord_presold_habitat_pods_as_mercenary_barracks"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Eviction enforcers post physical repossession notices across {role:pod_habitation_block} as airlock seals are disabled.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "housing_factor",
+            "target": "habitat_management_office",
+            "reason": "He hires an outside pilot to purchase municipal court bond tokens to certify the tenants' escrow deposit before the magistrate closes filings.",
+            "private_fact": "The factor has all the tenants' rent held in escrow and cannot understand why the landlord is rushing eviction without mediation.",
+            "outcome_tags": [
+              "tokens_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "tokens_delivered": "next",
+              "abandoned": "resolution:families_expelled_by_mercenaries"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "public_change": "Tenants reinforce airlock bulkheads with industrial jacks as {role:tenant_spokeswoman} calls for an immediate dockside strike.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "syndicate_landlord",
+            "requester": "tenant_spokeswoman",
+            "target": "habitat_management_office",
+            "reason": "She pays the pilot to scan the leasing bureau's communication logs to verify why the landlord rejected their certified rent payments.",
+            "private_fact": "She intercepted docking manifests showing troop transport shuttles scheduled to arrive at the station within twenty-four hours.",
+            "outcome_tags": [
+              "mercenary_contract_exposed",
+              "logs_scrambled"
+            ],
+            "routes": {
+              "mercenary_contract_exposed": "next",
+              "logs_scrambled": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Armed security details move cutting rigs to the habitation hatches as the mercenary transport enters final docking approach.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "housing_factor",
+            "target": "pod_habitation_block",
+            "reason": "He begs the pilot to rush an emergency court injunction to the barricaded airlock to pause the eviction before gunfire starts.",
+            "private_fact": "He realizes that if the mercenary contract is executed, the entire residential ring will become an occupied military garrison.",
+            "outcome_tags": [
+              "injunction_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "injunction_delivered": "next",
+              "abandoned": "resolution:families_expelled_by_mercenaries"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "Holding proof of the landlord's secret mercenary lease and the factor's emergency injunction, the pilot must decide whether to stop the eviction, broker a relocation buyout, or sell out to the landlord.",
+          "options": [
+            {
+              "id": "enforce_court_injunction",
+              "label": "Deliver the injunction to the station magistrate to halt the eviction and expose the illegal barracks",
+              "leads_to": "resolution:mercenary_barracks_blocked"
+            },
+            {
+              "id": "broker_relocation_buyout",
+              "label": "Deliver a negotiated relocation settlement so tenants receive moving funds before the troops land",
+              "leads_to": "resolution:tenants_relocated_for_cash"
+            },
+            {
+              "id": "sell_proof_to_landlord",
+              "label": "Sell the leaked troop contracts back to the landlord to expedite immediate clearance",
+              "leads_to": "resolution:landlord_installs_barracks"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "mercenary_barracks_blocked",
+        "reached_by": "The pilot delivers the injunction to the magistrate.",
+        "summary": "The magistrate cancels the eviction and fines {role:syndicate_landlord} for illegal military staging. Families keep their homes in {role:pod_habitation_block}.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "halted_illegal_troop_barracks",
+            "public_summary": "A pilot exposed a predatory landlord attempting to evict two hundred families to house mercenary shock troops."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "law_tightened"
+        ]
+      },
+      {
+        "id": "tenants_relocated_for_cash",
+        "reached_by": "The pilot delivers the relocation settlement.",
+        "summary": "Families accept a relocation settlement, moving to outer freight pods. {role:syndicate_landlord} converts the blocks into barracks without bloodshed.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "deed",
+            "tag": "brokered_pod_relocation",
+            "public_summary": "A pilot brokered an evacuation settlement between miner families and a station landlord before mercenaries landed."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "refugees_moving"
+        ]
+      },
+      {
+        "id": "landlord_installs_barracks",
+        "reached_by": "The pilot sells the leaked records to the landlord.",
+        "summary": "{role:syndicate_landlord} uses private enforcers to breach the pods. Families are displaced into unheated berths while mercenaries occupy the sector.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "martial_law"
+            ],
+            "remove": []
+          },
+          {
+            "type": "deed",
+            "tag": "aided_mercenary_eviction",
+            "public_summary": "A pilot assisted a corrupt landlord in clearing civilian apartments for corporate shock troops."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "refugees_moving"
+        ]
+      },
+      {
+        "id": "families_expelled_by_mercenaries",
+        "reached_by": "The pilot never intervenes or abandons the courier mission.",
+        "summary": "Mercenary vanguard units breach the habitat hatches with breaching charges. Civilian residents flee into cargo bays while {role:housing_factor} shuts his office.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "promoted"
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "witness_at_large"
+        ]
+      }
+    ],
+    "default_resolution": "families_expelled_by_mercenaries",
+    "loose_threads": [
+      {
+        "id": "t_mercenary_berth_advance",
+        "surface": "station_notice",
+        "detail": "The station docking registry lists an anonymous corporate deposit reserving thirty heavy shuttle berths on commercial credit.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_pod_air_scrubber_requisition",
+        "surface": "cargo",
+        "detail": "The landlord's cargo bay holds palletized high-capacity industrial oxygen filters stamped with private security seals.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "forged_records"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "greed",
+        "control",
+        "fear"
+      ]
+    },
+    "law_hooks": [
+      "curfew",
+      "tariff_on_goods"
+    ],
+    "radio_hooks": [
+      "Standoff escalates at pod habitation ring as tenant barricades resist eviction bailiffs.",
+      "Station tenancy board reminds residents that lease terms are strictly enforced.",
+      "Docking authority alerts commercial berths to incoming private transport convoys."
+    ],
+    "voice_direction": {
+      "housing_factor": "Punctilious, dry, and recites municipal code with reflexive nervousness. Struggles to maintain administrative dignity when threatened.",
+      "syndicate_landlord": "Brusque, impatient, and treats tenants as delinquent equipment. Cuts off questions with sharp commercial ultimatums.",
+      "tenant_spokeswoman": "Hoarse, resolute, and speaks with fierce communal protectiveness. Directly challenges legal evasions."
+    },
+    "novelty_tags": [
+      "habitat_eviction",
+      "mercenary_barracks",
+      "escrow_mediator",
+      "civilian_barricade",
+      "predatory_landlord"
+    ]
+  }
+]

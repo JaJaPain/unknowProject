@@ -1,0 +1,402 @@
+{
+  "id": "premise.the_hydroponic_crop_charter",
+  "schema_version": 1,
+  "title": "The Hydroponic Crop Charter",
+  "logline": "A station food growers union strikes over unviable seedling batches, unaware that the station farm manager pledged exclusive crop patent rights to an off-system cartel to settle municipal bailout debt.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "bleak"
+  ],
+  "themes": [
+    "price_of_profit",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "farm_manager",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Superintendent of the station's orbital greenhouse rings; exhausted, numbers-driven, and cornered by corporate bondholders.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "union_grower",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Chief steward of the hydroponics labor syndicate; stubborn, dirt-under-the-fingernails, and protective of family allotments.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "agri_cartel_enforcer",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "A corporate collection auditor representing off-system food syndicates holding the station's agricultural debts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "greenhouse_dome_ring",
+      "kind": "place",
+      "description": "Massive rotating hydroponic tiers providing fresh greens and algae protein for the station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "central_grain_silo",
+      "kind": "place",
+      "description": "The pressurized seed vault and distribution terminal where harvest yields are weighed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "growers_syndicate",
+      "kind": "faction",
+      "description": "The tight-knit collective of orbital farmers, soil tenders, and algae vat workers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "faction_weakened"
+  ],
+  "public_situation": "Algae tenders and greenhouse mechanics stage shift walkouts across {role:greenhouse_dome_ring} after management cuts seed rations by forty percent.",
+  "private_truth": "The farm manager sold off the station's heirloom seed patents to an off-system agricultural cartel to cover defaulted habitat utility bonds, locking farmers into sterile annual leases.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "crop_patents_pledged_for_bailout"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Management shuts off irrigation pumps in protest tiers as the union gathers outside {role:central_grain_silo}.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "farm_manager",
+          "target": "greenhouse_dome_ring",
+          "reason": "He pays an outside pilot to haul pure silicate from the asteroid belt to reinforce algae tank filtration beds before the crop dies.",
+          "private_fact": "He knows the silicate won't fix the shortfall because the new corporate seed stock is engineered to fail without expensive proprietary nutrients.",
+          "outcome_tags": [
+            "silicate_delivered"
+          ],
+          "routes": {
+            "silicate_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:agri_cartel_enforcer} arrives with private bailiffs, demanding full control of the germination vaults.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "farm_manager",
+          "target": "central_grain_silo",
+          "reason": "He hires the pilot to purchase supplementary germination stimulants from freeport merchants before the cartel inspects output.",
+          "private_fact": "The stimulants are banned station substances that poison soil beds after two harvests but force short-term compliance.",
+          "outcome_tags": [
+            "stimulants_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "stimulants_delivered": "next",
+            "abandoned": "resolution:cartel_forecloses_food_supply"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Union workers breach the silo records office, discovering financial liens attached to every seedling tray.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "farm_manager",
+          "requester": "union_grower",
+          "target": "central_grain_silo",
+          "reason": "She pays the pilot to scan the silo's trade transponder to verify whether the seed patent dockets were transferred to an offshore corporate account.",
+          "private_fact": "She mortgaged her family's greenhouse pod to buy seed units that were secretly owned by the cartel the entire time.",
+          "outcome_tags": [
+            "patent_pledge_proven",
+            "records_masked"
+          ],
+          "routes": {
+            "patent_pledge_proven": "next",
+            "records_masked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Tensions boil over as union workers barricade the seed vaults and {role:agri_cartel_enforcer} orders ventilation shutdown.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "union_grower",
+          "target": "greenhouse_dome_ring",
+          "reason": "She begs the pilot to rush the uncovered patent contract to the station magistrate before the cartel seals the airlocks.",
+          "private_fact": "If the magistrate refuses the petition, the union will flood the vats with brine, destroying the entire system food supply.",
+          "outcome_tags": [
+            "contract_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "contract_delivered": "next",
+            "abandoned": "resolution:cartel_forecloses_food_supply"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding proof that the farm manager mortgaged the station's food security to settle municipal bonds, the pilot must decide whether to void the corporate lease, force a labor compromise, or enforce the cartel debt.",
+        "options": [
+          {
+            "id": "deliver_proof_to_magistrate",
+            "label": "Deliver the patent records to the magistrate to void the predatory seed seizure and back the union",
+            "leads_to": "resolution:union_wins_crop_autonomy"
+          },
+          {
+            "id": "broker_labor_compromise",
+            "label": "Broker a compromise allowing the cartel crop lease while guaranteeing grower wage floors",
+            "leads_to": "resolution:growers_indentured_for_peace"
+          },
+          {
+            "id": "sell_proof_to_cartel",
+            "label": "Sell the contract copies to the cartel enforcer to crush the strike and collect an enforcement fee",
+            "leads_to": "resolution:cartel_takes_total_control"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "union_wins_crop_autonomy",
+      "reached_by": "The pilot delivers the patent proof to the magistrate.",
+      "summary": "The magistrate annuls the seed lien as an illegal public hazard. {role:growers_syndicate} regains seed sovereignty, while {role:farm_manager} is dismissed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "growers_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_grower",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_manager",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "agri_cartel_enforcer",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_food_cartel_patent",
+          "public_summary": "A pilot delivered the contract proof that broke a corporate monopoly over a station's food crop."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "growers_indentured_for_peace",
+      "reached_by": "The pilot brokers a labor compromise.",
+      "summary": "The union signs a rolling tenant lease with the cartel. Work resumes, but {role:union_grower}'s members become indebted sharecroppers on their own rings.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "growers_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_manager",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "agri_cartel_enforcer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_grower",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_crop_indenture",
+          "public_summary": "A pilot mediated a bitter greenhouse strike that ended in farmers leasing sterile seeds from a corporate cartel."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "cartel_takes_total_control",
+      "reached_by": "The pilot sells the records to the cartel enforcer.",
+      "summary": "{role:agri_cartel_enforcer} floods the greenhouse with security enforcers. Strikers are blacklisted, and food prices double under direct cartel management.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "agri_cartel_enforcer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_grower",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_manager",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "spike"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "aided_agri_cartel_takeover",
+          "public_summary": "A pilot backed corporate food enforcers who crushed a greenhouse union and seized the station grain silos."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "cartel_forecloses_food_supply",
+      "reached_by": "The pilot never intervenes or abandons the petition.",
+      "summary": "The union poisons the algae tanks in protest. Cartel security evacuates the dome rings, leaving {system} dependent on expensive emergency rations.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "growers_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "farm_manager",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_grower",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "cartel_forecloses_food_supply",
+  "loose_threads": [
+    {
+      "id": "t_seed_patent_escrow",
+      "surface": "price_board",
+      "detail": "A regional commodities exchange registered futures contracts for sterile grain cultivars six months before the harvest failed.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_stimulant_freight_stamp",
+      "surface": "cargo",
+      "detail": "The fertilizer canisters carry chemical registry codes matching banned synthetic defoliants shipped from an offshore chemical plant.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Hydroponic tenders stage wildcat strike across orbital greenhouse sectors.",
+    "Station nutritional board warns emergency food paste rations may be instituted.",
+    "Off-system agricultural finance houses deny predatory lending allegations in local farming belts."
+  ],
+  "voice_direction": {
+    "farm_manager": "Exhausted, monotone, and habitually reaches for bureaucratic accounting spreadsheets. Speaks like someone drowning in red ink.",
+    "union_grower": "Loud, raw, and fiercely protective of her people. Refuses to brook accounting double-talk.",
+    "agri_cartel_enforcer": "Polished, emotionless, and regards food production strictly as an enforceable debt portfolio."
+  },
+  "novelty_tags": [
+    "hydroponics_strike",
+    "seed_patents",
+    "food_cartel",
+    "bailout_collateral",
+    "sterile_crops"
+  ]
+}

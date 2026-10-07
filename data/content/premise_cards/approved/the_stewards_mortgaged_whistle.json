@@ -1,0 +1,337 @@
+{
+  "id": "premise.the_stewards_mortgaged_whistle",
+  "schema_version": 1,
+  "title": "The Steward's Mortgaged Whistle",
+  "logline": "An orbital racing steward is pressured to certify a fatal high-speed ramming as an unavoidable crash, discovering that the broadcast network paid covert bounties for violent collisions to drive viewership.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "racing_referee",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Chief orbital racing steward; fastidious, cautious, and trapped between racing rules and corporate broadcast demands.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "aggrieved_pit_boss",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Chief engineer of the victim's racing crew; grieving, furious, and demanding an immediate disqualification.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "broadcast_sponsor",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Executive director of the orbital racing broadcast syndication; ruthless, calculating, and protecting television revenues.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "steward_flag_spire",
+      "kind": "place",
+      "description": "The observation pylon overlooking the orbital racecourse where telemetry is officially certified.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "racing_paddock_dock",
+      "kind": "place",
+      "description": "The pressurized pit bays where high-performance racing craft are overhauled between heats.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "rival_humiliated",
+    "debt_owed_to_player",
+    "public_outrage"
+  ],
+  "public_situation": "Protests paralyze {role:racing_paddock_dock} after the chief steward rules a fatal high-speed ramming as an unavoidable racing collision.",
+  "private_truth": "The broadcast network secretly paid competing skiffs substantial cash bounties for aggressive hull-to-hull collisions to boost viewer ratings, ordering the steward to bury the policy.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "league_incentivized_reckless_ramming_for_broadcast_ratings"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Angry pit crews stage a walkout outside {role:steward_flag_spire}, demanding access to the crashed craft's telemetry.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "racing_referee",
+          "target": "racing_paddock_dock",
+          "reason": "He hires an outside pilot to collect the crash beacon from the wreckage before enraged mechanics destroy the evidence.",
+          "private_fact": "The telemetry recorder contains comms chatter proving the winning skiff was explicitly hunting for a broadcast collision.",
+          "outcome_tags": [
+            "beacon_collected"
+          ],
+          "routes": {
+            "beacon_collected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "{role:broadcast_sponsor} threatens to pull all syndication revenue from the station if the race result is challenged.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "broadcast_sponsor",
+          "requester": "aggrieved_pit_boss",
+          "target": "steward_flag_spire",
+          "reason": "She pays the pilot to scan the broadcast spire's encrypted data links to prove the network transmitted collision bounties to the pilots' cockpits.",
+          "private_fact": "She knows her deceased pilot received a confidential bounty offer minutes before launch and refused to participate.",
+          "outcome_tags": [
+            "collision_bounties_uncovered",
+            "transmissions_purged"
+          ],
+          "routes": {
+            "collision_bounties_uncovered": "next",
+            "transmissions_purged": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Spectators and mechanics gather outside the broadcast rotunda as {role:broadcast_sponsor} prepares to award the championship cup.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "racing_referee",
+          "target": "steward_flag_spire",
+          "reason": "He begs the pilot to deliver the verified crash telemetry to the judicial review box before the award broadcast begins.",
+          "private_fact": "He knows that defying the broadcast network will destroy his career, but signing the false clearance makes him an accomplice to manslaughter.",
+          "outcome_tags": [
+            "telemetry_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "telemetry_delivered": "next",
+            "abandoned": "resolution:paddocks_erupt_in_mob_violence"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding proof of the network's reckless collision bounties and the official race certification, the pilot must decide whether to expose the network, let the ruling stand for cash, or hand the evidence to the league board.",
+        "options": [
+          {
+            "id": "broadcast_bounty_evidence",
+            "label": "Broadcast the collision bounty memo to force an immediate league inquiry and vindicate the pit crew",
+            "leads_to": "resolution:sponsor_exposed_racing_reformed"
+          },
+          {
+            "id": "certify_race_for_sponsor",
+            "label": "Deliver the clean certification to the broadcast sponsor to collect a handsome silence retainer",
+            "leads_to": "resolution:corrupt_verdict_stands"
+          },
+          {
+            "id": "hand_proof_to_steward",
+            "label": "Deliver the proof to the steward to let him announce a formal disqualification from the podium",
+            "leads_to": "resolution:steward_cancels_championship"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "sponsor_exposed_racing_reformed",
+      "reached_by": "The pilot broadcasts the bounty proof across the paddocks.",
+      "summary": "The collision bounties leak to news nets. {role:broadcast_sponsor} is sacked in disgrace, while {role:aggrieved_pit_boss} wins civil damages for her fallen pilot.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "broadcast_sponsor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "aggrieved_pit_boss",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "racing_referee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_racing_collision_bounties",
+          "public_summary": "A pilot proved a media network offered covert cash bonuses for dangerous ramming maneuvers in orbital racing."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "corrupt_verdict_stands",
+      "reached_by": "The pilot delivers the clean certification to the sponsor.",
+      "summary": "{role:broadcast_sponsor} airs a triumphant awards show. {role:aggrieved_pit_boss}'s team is banned from competition, while the referee keeps quiet.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "broadcast_sponsor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "racing_referee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "aggrieved_pit_boss",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "buried_racing_crash_bounty",
+          "public_summary": "A pilot helped a broadcast network cover up illegal collision bounties after a fatal racing crash."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "steward_cancels_championship",
+      "reached_by": "The pilot delivers the telemetry to the steward for disqualification.",
+      "summary": "{role:racing_referee} disqualifies the winner and cancels the season. The network pulls its broadcast deals, shuttering the league amid furious sponsor lawsuits.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "racing_referee",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "aggrieved_pit_boss",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "broadcast_sponsor",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "steward_annulled_race_series",
+          "public_summary": "A pilot helped a racing steward annul a corrupt championship season tainted by fatal crash bounties."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "paddocks_erupt_in_mob_violence",
+      "reached_by": "The pilot abandons the contract or never intervenes.",
+      "summary": "Furious mechanics storm the broadcast podium with heavy spanners. The ceremony collapses into a brawl while {role:racing_referee} flees under security escort.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "racing_referee",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "aggrieved_pit_boss",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "broadcast_sponsor",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "paddocks_erupt_in_mob_violence",
+  "loose_threads": [
+    {
+      "id": "t_broadcast_bounty_routing",
+      "surface": "station_notice",
+      "detail": "The racing network's promotional budget logs recurring performance transfers paid directly to offshore pilot escrow accounts.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_telemetry_sensor_override",
+      "surface": "cargo",
+      "detail": "The crashed skiff's telemetry beacon contains an encrypted override channel tuned to the broadcast control booth.",
+      "can_carry_methods": [
+        "sabotage",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Orbital racing championship marred by fatal crash during qualifying sprint.",
+    "Chief steward defends non-penalty ruling, calling incident within racing tolerance.",
+    "Betting syndicates freeze payouts as mechanic protests paralyze paddock docks."
+  ],
+  "voice_direction": {
+    "racing_referee": "Tired, pedantic, and clings to technical rule numbers to avoid addressing moral culpability. Becomes quiet and hollow when pressed.",
+    "aggrieved_pit_boss": "Gravelly, choked with fury, and blunt as iron. Refuses polite pleasantries and demands immediate action.",
+    "broadcast_sponsor": "Smooth, patronizing, and treats sport as commercial entertainment product. Dismisses fatalities as standard contractual risk."
+  },
+  "novelty_tags": [
+    "orbital_racing",
+    "collision_bounties",
+    "compromised_referee",
+    "broadcast_sponsor",
+    "paddock_riot"
+  ]
+}
