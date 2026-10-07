@@ -1,0 +1,402 @@
+{
+  "id": "premise.the_dynastic_heirs_regatta",
+  "schema_version": 1,
+  "title": "The Dynastic Heirs' Regatta",
+  "logline": "Twin heirs race across three systems for control of a shipping trust, unaware their father's will conditions the inheritance on redeeming the company's pawned founding deed from a border union.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "legacy",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "reformer_heir",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "The elder twin; reform-minded, determined to settle his family's historic debts and open gate lanes to working crews.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "traditionalist_heir",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "The younger twin; ruthless, proud, convinced speed and wealth entitle him to an unchecked family monopoly.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rival_enforcer",
+      "kind": "ship",
+      "description": "A heavy corporate cutter escorting the younger twin's racing yacht.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dynastic_freight_trust",
+      "kind": "faction",
+      "description": "The family-owned freight monopoly controlling jump corridors across three systems.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "independent_dockers_union",
+      "kind": "faction",
+      "description": "The border station stevedore league that financed the founder's first hauler thirty years ago.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "origin_station",
+      "kind": "place",
+      "description": "The ancestral shipyard station in the core system where the succession race begins.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "waypoint_depot",
+      "kind": "place",
+      "description": "The border system transfer hub where the founder's pawned charter pledge sits in escrow.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "terminus_citadel",
+      "kind": "place",
+      "description": "The corporate tribunal station in the destination system where the succession decree is registered.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "rival_humiliated",
+    "faction_weakened"
+  ],
+  "public_situation": "The twin heirs of {role:dynastic_freight_trust} race across three systems to claim sole inheritance under their late father's testamentary charter.",
+  "private_truth": "The race is a distraction; the succession charter requires presenting the founder's original founding pledge, pawned decades ago to a border union.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "founder_pawned_company_charter_to_independent_guild"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Regatta flags unfurl across {role:origin_station} as racing yachts power up twin drives for the inter-system dash.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "reformer_heir",
+          "target": "origin_station",
+          "reason": "He needs an independent pilot to mine and deliver dense structural ferrite to reinforce his yacht's bulkheads before the start.",
+          "private_fact": "He learned their father's will requires presenting an old pawn receipt from the border depot, and he needs heavy shielding for the detour.",
+          "outcome_tags": [
+            "plates_fitted",
+            "start_delayed"
+          ],
+          "routes": {
+            "plates_fitted": "next",
+            "start_delayed": "resolution:traditionalist_claims_trust"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Both yachts jump into the border system where dockers at {role:waypoint_depot} hold the founder's original charter pledge.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "reformer_heir",
+          "target": "waypoint_depot",
+          "reason": "He hires the pilot to collect the founder's original pawned charter receipt from the union vault before his twin's lawyers file a seizure.",
+          "private_fact": "His father pledged the founding charter thirty years ago for emergency bailout funds and hid the debt from the family for decades.",
+          "outcome_tags": [
+            "pledge_secured",
+            "escrow_missed"
+          ],
+          "routes": {
+            "pledge_secured": "next",
+            "escrow_missed": "resolution:traditionalist_claims_trust"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "requester": "reformer_heir",
+          "target": "waypoint_depot",
+          "culprit": "traditionalist_heir",
+          "reason": "He asks the pilot to scan depot comms relays to prove his twin hired forged lien cancellations to erase the union's legal claim.",
+          "private_fact": "He promised the union steward that if he wins the succession, he will surrender the family's monopoly gate patents to the workers.",
+          "outcome_tags": [
+            "forgery_proven",
+            "records_erased"
+          ],
+          "routes": {
+            "forgery_proven": "next",
+            "records_erased": "resolution:traditionalist_claims_trust"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "{role:rival_enforcer} takes position over the jump gate approach, targeting chasing vessels to secure the younger twin's lead.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "reformer_heir",
+          "target": "rival_enforcer",
+          "reason": "He needs the rival twin's armed escort disabled before its pulse cannons force his yacht out of the gate approach corridor.",
+          "private_fact": "The escort captain hails offering eighty thousand credits and a corporate patrol contract if the pilot hands over the pawn receipt.",
+          "outcome_tags": [
+            "escort_neutralized",
+            "took_dynasty_bribe"
+          ],
+          "routes": {
+            "escort_neutralized": "next",
+            "took_dynasty_bribe": "resolution:traditionalist_claims_trust"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The yachts break out of hyperspace into {role:terminus_citadel} where corporate judges gather to certify the succession.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "reformer_heir",
+          "target": "terminus_citadel",
+          "reason": "He asks the pilot to courier the founder's redeemed charter pledge and forgery logs directly to the tribunal dais.",
+          "private_fact": "He is terrified that honoring his father's debt will leave him with title to an impoverished and vulnerable fleet.",
+          "outcome_tags": [
+            "pledge_delivered",
+            "tribunal_missed"
+          ],
+          "routes": {
+            "pledge_delivered": "next",
+            "tribunal_missed": "resolution:traditionalist_claims_trust"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the corporate citadel holding the founder's thirty-year-old pawned founding pledge.",
+        "options": [
+          {
+            "id": "table_union_pledge",
+            "label": "Table the founder's pledge and inaugurate the reformer to dissolve the gate monopoly",
+            "leads_to": "resolution:reformer_dissolves_monopoly"
+          },
+          {
+            "id": "broker_shared_succession",
+            "label": "Broker a compromise granting both twins co-directorship under union board oversight",
+            "leads_to": "resolution:dynasty_divided_equally"
+          },
+          {
+            "id": "sell_pledge_to_traditionalist",
+            "label": "Sell the founder's pledge to the traditionalist heir to bury the debt forever",
+            "leads_to": "resolution:traditionalist_claims_trust"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "reformer_dissolves_monopoly",
+      "reached_by": "The pilot delivers the founder's pledge and tables it before the tribunal.",
+      "summary": "{role:reformer_heir} takes control of {role:dynastic_freight_trust} and honors the pledge, dissolving gate monopolies for {role:independent_dockers_union}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_dockers_union",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "dynastic_freight_trust",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "reformer_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "traditionalist_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_opened"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "honored_founders_debt",
+          "public_summary": "A pilot carried the founder's thirty-year-old pawn ticket to the tribunal, breaking the family gate monopoly."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "dynasty_divided_equally",
+      "reached_by": "The pilot brokers a shared settlement conditioning succession on union board seats.",
+      "summary": "A compromise divides the directorship. {role:independent_dockers_union} gains board oversight in exchange for retiring the founder's debt.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dynastic_freight_trust",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "independent_dockers_union",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "reformer_heir",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "traditionalist_heir",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "traditionalist_claims_trust",
+      "reached_by": "The pledge is sold or destroyed, or the traditionalist heir registers the winning run unopposed.",
+      "summary": "{role:traditionalist_heir} registers his arrival unopposed and burns the debt. {role:dynastic_freight_trust} doubles its freight tariffs across three systems.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dynastic_freight_trust",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "independent_dockers_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "traditionalist_heir",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reformer_heir",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "traditionalist_claims_trust",
+  "loose_threads": [
+    {
+      "id": "t_depot_escrow_ticket",
+      "surface": "station_notice",
+      "detail": "An escrow ticket in the depot vault records the founder's charter pawned thirty years ago to cover an unlisted private debt.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_escort_hull_indentures",
+      "surface": "ship_marking",
+      "detail": "The rival escort cutter's hull plates bear serial stencils matching a security firm that was liquidated eight months ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_gate_tariff_advance",
+      "surface": "price_board",
+      "detail": "A destination gate exchange posted new transit surcharges two hours before the founder's death was officially announced.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "control",
+      "legacy",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Corporate media feeds broadcast real-time telemetry from dynastic succession regatta.",
+    "Independent dockers union holds quiet vigil at border transit depot.",
+    "Tribunal registers heavy betting on upcoming family trust succession decree."
+  ],
+  "voice_direction": {
+    "reformer_heir": "Intense, articulate, and driven. Speaks with aristocratic polish but peppers his speech with egalitarian political theory and hatred of monopolies.",
+    "traditionalist_heir": "Arrogant, dismissive, and icy. Treats multi-system trade networks like private family property and views independent pilots as trespassers."
+  },
+  "novelty_tags": [
+    "dynastic_regatta",
+    "twin_heirs",
+    "pawned_charter",
+    "inheritance_condition",
+    "inter_system_race"
+  ]
+}

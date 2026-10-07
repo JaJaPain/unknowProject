@@ -1,0 +1,685 @@
+[
+  {
+    "id": "premise.the_air_merchants_atonement",
+    "schema_version": 1,
+    "title": "The Air Merchant's Atonement",
+    "logline": "A retired smuggler who once sold discounted life-support tanks to an asteroid mining crew discovers the cylinders were made with brittle valves and races to replace them before they fail.",
+    "scale": "personal",
+    "tone": [
+      "melancholy",
+      "survival"
+    ],
+    "themes": [
+      "helpers_corrupted",
+      "reinvention"
+    ],
+    "roles": [
+      {
+        "id": "penitent_smuggler",
+        "kind": "person",
+        "archetype": "smuggler",
+        "description": "Former gray-market hauler who sold cheap oxygen tanks to miners; sick with dread after learning the entire factory lot is cracking.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "shaft_foreman",
+        "kind": "person",
+        "archetype": "labourer",
+        "description": "Head of the asteroid drilling crew; suspicious, stubborn, refusing to halt mining shifts for unverified vendor warnings.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "mining_habitat",
+        "kind": "place",
+        "description": "A hollowed-out asteroid quarry where sixty miners depend on a central oxygen manifold.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "foundry_depot",
+        "kind": "place",
+        "description": "An industrial supply station carrying certified replacement brass regulator valves.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "quiet_cover_up",
+      "market_disrupted",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "An aging cargo hauler docks repeatedly at {role:mining_habitat}, offering free replacement life-support fittings to skeptical asteroid drillers.",
+    "private_truth": "{role:penitent_smuggler} made his retirement fortune selling counterfeit military oxygen tanks that have begun suffering catastrophic metal fatigue.",
+    "core_why": {
+      "motive": "guilt",
+      "secret": "smuggler_sold_cheap_tanks_with_embrittled_valves"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Notice boards at {role:foundry_depot} log an urgent private requisition for industrial brass pressure regulators.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "penitent_smuggler",
+            "target": "mining_habitat",
+            "reason": "He hires an independent pilot to purchase certified regulator assemblies from the foundry and deliver them to the habitat airlock.",
+            "private_fact": "He learned three days ago that a hauler in a neighbouring system died when one of his old tanks ruptured without warning.",
+            "outcome_tags": [
+              "valves_delivered",
+              "depot_empty"
+            ],
+            "routes": {
+              "valves_delivered": "next",
+              "depot_empty": "resolution:habitat_manifold_failure"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Pressure gauges on the asteroid manifold begin fluctuating as drill shifts increase air consumption.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "penitent_smuggler",
+            "target": "mining_habitat",
+            "culprit": "penitent_smuggler",
+            "reason": "He asks the pilot to scan the installed oxygen bank with an ultrasonic probe to determine which tanks are already developing micro-fractures.",
+            "private_fact": "He pocketed forty thousand credits on the original deal by buying condemned salvage cylinders from a scrap breaker.",
+            "outcome_tags": [
+              "fractures_detected",
+              "scans_inconclusive"
+            ],
+            "routes": {
+              "fractures_detected": "next",
+              "scans_inconclusive": "resolution:habitat_manifold_failure"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "A hairline fracture vents freezing gas inside the habitat's central airlock, prompting the foreman to sound the evacuation bell.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "silicate",
+            "requester": "penitent_smuggler",
+            "target": "mining_habitat",
+            "reason": "Mine and deliver heavy silicate packing ballast to encase the failing manifold while the replacement valves are fitted under pressure.",
+            "private_fact": "He is prepared to spend his entire life savings paying the miners restitution if they let him replace the tanks before someone suffocates.",
+            "outcome_tags": [
+              "manifold_stabilized",
+              "seal_failed"
+            ],
+            "routes": {
+              "manifold_stabilized": "next",
+              "seal_failed": "resolution:habitat_manifold_failure"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The replacement valves are ready for installation, but the foreman demands to know who supplied the dangerous cylinders in the first place.",
+          "options": [
+            {
+              "id": "confess_the_smugglers_fault",
+              "label": "Confess the smuggler's past fraud and hand over his savings to pay miner damages",
+              "leads_to": "resolution:valves_replaced_truth_confessed"
+            },
+            {
+              "id": "bury_the_origin_secret",
+              "label": "Fabricate a vendor recall notice to swap the valves quietly without admitting liability",
+              "leads_to": "resolution:quiet_replacement_buried"
+            },
+            {
+              "id": "abandon_habitat_to_consequences",
+              "label": "Withdraw without finishing the work when the foreman threatens violent retribution",
+              "leads_to": "resolution:habitat_manifold_failure"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "valves_replaced_truth_confessed",
+        "reached_by": "The pilot delivers the ballast, secures the manifold, and discloses the smuggler's culpability.",
+        "summary": "The tanks are replaced safely. {role:penitent_smuggler} surrenders his savings to {role:shaft_foreman} in restitution, ending his career broke but clear of blood.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "penitent_smuggler",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "shaft_foreman",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "repaired_the_lethal_tanks",
+            "public_summary": "A pilot helped an old smuggler face angry miners to replace the defective air tanks he sold them years before."
+          }
+        ],
+        "seeds": [
+          "debt_owed_to_player",
+          "quiet_cover_up"
+        ]
+      },
+      {
+        "id": "quiet_replacement_buried",
+        "reached_by": "The valves are fitted under a routine equipment recall pretext, concealing the smuggler's fraud.",
+        "summary": "The valves are replaced under a false recall notice. The miners breathe clean air, but {role:penitent_smuggler} lives in perpetual dread of exposure.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "penitent_smuggler",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "shaft_foreman",
+            "fate": "alive_grateful"
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "secret_half_exposed"
+        ]
+      },
+      {
+        "id": "habitat_manifold_failure",
+        "reached_by": "The replacement effort stalls or fails before the cracks can be secured.",
+        "summary": "The central manifold ruptures during shift pressurization. The habitat vents into space, forcing the evacuation of {role:mining_habitat} and ruining the mining season.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "shaft_foreman",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "penitent_smuggler",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "wreck_left_behind"
+        ]
+      }
+    ],
+    "default_resolution": "habitat_manifold_failure",
+    "loose_threads": [
+      {
+        "id": "t_scrap_stencil_remnant",
+        "surface": "cargo",
+        "detail": "The replacement valve crates bear secondary stencils matching an industrial liquidation sale held at an naval scrapper base.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_brass_fitting_markup",
+        "surface": "price_board",
+        "detail": "High-pressure brass valves surged three hundred percent on local parts boards the day before the emergency recall began.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "debt_leverage"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "forged_records"
+      ],
+      "motives": [
+        "guilt",
+        "fear",
+        "greed"
+      ]
+    },
+    "law_hooks": [
+      "cargo_inspection",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Quarry operators report intermittent air pressure drops across deep mining shafts.",
+      "Industrial hardware outlets log run on high-pressure brass gas couplings.",
+      "Habitat health monitors remind crews to verify tank hydro-test dates."
+    ],
+    "voice_direction": {
+      "penitent_smuggler": "Desperate, apologetic, and cautious. Speaks in hushed, careful tones and constantly steers conversation away from where his cargo originated.",
+      "shaft_foreman": "Suspicious, curt, and fatigued. Speaks in loud, blunt monosyllables and treats all outside cargo brokers as swindlers."
+    },
+    "novelty_tags": [
+      "penitent_smuggler",
+      "defective_tanks",
+      "manifold_blowout",
+      "embrittled_valves",
+      "mining_airlock"
+    ]
+  },
+  {
+    "id": "premise.the_deep_aquifer_covenant",
+    "schema_version": 1,
+    "title": "The Deep Aquifer Covenant",
+    "logline": "An inter-system water treaty obligating a lush capital world to share ice reserves with parched mining settlements comes due during a drought, sparking an armed blockade.",
+    "scale": "regional",
+    "tone": [
+      "political",
+      "survival"
+    ],
+    "themes": [
+      "legacy",
+      "cost_of_neutrality"
+    ],
+    "roles": [
+      {
+        "id": "border_commissioner",
+        "kind": "person",
+        "archetype": "negotiator",
+        "description": "Envoys for drought-stricken outer mining outposts; gaunt, dignified, holding the original signed water treaty cylinder from forty years ago.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "capital_archon",
+        "kind": "person",
+        "archetype": "official",
+        "description": "Ruler of the water-rich capital garden system; aristocratic, icy, determined to repudiate the water pact to preserve private planetary lakes.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "archon_escort",
+        "kind": "ship",
+        "description": "A heavy private security frigate intercepting relief convoys along the inter-system jump corridor.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "mining_settlement_league",
+        "kind": "faction",
+        "description": "The coalition of arid outer asteroid colonies facing critical water rationing.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "capital_garden_trust",
+        "kind": "faction",
+        "description": "The elite landholding syndicate controlling the water-rich core planetary systems.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "border_depot",
+        "kind": "place",
+        "description": "A dusty fuel station in the drought system where emergency cisterns stand empty.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "aquifer_glacier",
+        "kind": "place",
+        "description": "A subterranean ice shelf on a frozen outer moon in an intermediate system where water reserves are held in escrow.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "capital_palace",
+        "kind": "place",
+        "description": "The floating orbital citadel in the capital system where treaty disputes are arbitrated.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "quarantine"
+      ]
+    },
+    "accepts_seeds": [
+      "route_opened",
+      "power_vacuum",
+      "alliance_broken"
+    ],
+    "public_situation": "Outer asteroid belts face emergency water rationing while {role:capital_garden_trust} prepares to declare a historic water-sharing treaty void.",
+    "private_truth": "{role:capital_archon} secretly ordered pumps at {role:aquifer_glacier} modified to siphon common treaty water into private capital cisterns.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "archon_suppressed_aquifer_charter_monopolizing_water"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Notice boards at {role:border_depot} announce that life-support water rations have been cut by half across the asteroid belt.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "water_ice",
+            "requester": "border_commissioner",
+            "target": "border_depot",
+            "reason": "He hires an independent pilot to mine and deliver emergency water ice to replenish the station's failing condenser loops while treaty talks open.",
+            "private_fact": "His colonies only have twenty days of drinking water remaining before they are forced to abandon their mines.",
+            "outcome_tags": [
+              "condensers_refilled",
+              "water_exhausted"
+            ],
+            "routes": {
+              "condensers_refilled": "next",
+              "water_exhausted": "resolution:charter_repudiated_settlements_parched"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "Capital security forces land at {role:aquifer_glacier}, posting notices that the escrow glacier is reserved exclusively for capital replenishment.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "border_commissioner",
+            "target": "aquifer_glacier",
+            "reason": "He hires the pilot to retrieve the original brass covenant cylinder from the glacier archive vault before the archon's bailiffs seize the seals.",
+            "private_fact": "The covenant was signed forty years ago after outer asteroid miners saved the capital from an environmental crop collapse.",
+            "outcome_tags": [
+              "cylinder_secured",
+              "vault_sealed"
+            ],
+            "routes": {
+              "cylinder_secured": "next",
+              "vault_sealed": "resolution:charter_repudiated_settlements_parched"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "location": "neighbouring_system",
+        "public_change": "Engineers discover that the glacier's automated pumping lines have been altered to bypass outer belt delivery locks.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "border_commissioner",
+            "target": "aquifer_glacier",
+            "culprit": "capital_archon",
+            "reason": "He asks the pilot to scan the subterranean pump manifold to record evidence that capital engineers diverted the shared treaty water.",
+            "private_fact": "The archon's family estates on the capital world use more water each week for decorative fountains than three mining settlements consume in a year.",
+            "outcome_tags": [
+              "diversion_proven",
+              "pumps_scrambled"
+            ],
+            "routes": {
+              "diversion_proven": "next",
+              "pumps_scrambled": "resolution:charter_repudiated_settlements_parched"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "location": "any_system",
+        "public_change": "The pilot's vessel enters orbit above {role:capital_palace} where the archon's heavy flagship blocks the arbitral concourse.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "border_commissioner",
+            "target": "archon_escort",
+            "reason": "The archon's frigate attempts to lock tractor beams on the pilot's ship to seize the covenant cylinder before it reaches the court.",
+            "private_fact": "The frigate captain hails offering ninety thousand credits and an estate on the garden world if the pilot destroys the cylinder.",
+            "outcome_tags": [
+              "frigate_disabled",
+              "accepted_garden_estate"
+            ],
+            "routes": {
+              "frigate_disabled": "next",
+              "accepted_garden_estate": "resolution:charter_repudiated_settlements_parched"
+            }
+          },
+          {
+            "verb": "delivery_courier",
+            "requester": "border_commissioner",
+            "target": "capital_palace",
+            "reason": "Deliver the covenant cylinder and pump telemetry to the arbitral bench before the assembly votes to dissolve the treaty.",
+            "private_fact": "He fears that even if the treaty is enforced, the capital will seek revenge by raising freight tariffs on mining equipment.",
+            "outcome_tags": [
+              "covenant_tabled",
+              "session_adjourned"
+            ],
+            "routes": {
+              "covenant_tabled": "next",
+              "session_adjourned": "resolution:charter_repudiated_settlements_parched"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "The pilot arrives at the capital palace holding the forty-year-old water treaty cylinder and proof of the archon's secret diversions.",
+          "options": [
+            {
+              "id": "table_covenant_in_palace",
+              "label": "Table the covenant to force the capital to open water relief shipments to the miners",
+              "leads_to": "resolution:treaty_enforced_water_flows"
+            },
+            {
+              "id": "sell_covenant_to_archon",
+              "label": "Sell the treaty cylinder to the archon in exchange for personal wealth and citizenship",
+              "leads_to": "resolution:charter_repudiated_settlements_parched"
+            },
+            {
+              "id": "negotiate_mineral_water_swap",
+              "label": "Broker a revised agreement trading rare mining ores for guaranteed long-term water deliveries",
+              "leads_to": "resolution:ore_for_water_compact"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "treaty_enforced_water_flows",
+        "reached_by": "The pilot tables the cylinder and proves the illegal diversion at the arbitral bench.",
+        "summary": "Faced with documented proof, {role:capital_archon} yields. Water pumps at {role:aquifer_glacier} are restored, and {role:mining_settlement_league} receives its rightful flow.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "mining_settlement_league",
+            "delta": 3
+          },
+          {
+            "type": "standing",
+            "target": "capital_garden_trust",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "border_commissioner",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "capital_archon",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "deed",
+            "tag": "opened_the_ancient_aquifer",
+            "public_summary": "A pilot carried an ancient brass treaty cylinder across three systems to make a proud capital honor its water pledge."
+          }
+        ],
+        "seeds": [
+          "route_opened",
+          "alliance_formed"
+        ]
+      },
+      {
+        "id": "charter_repudiated_settlements_parched",
+        "reached_by": "The covenant cylinder is suppressed or destroyed, or the pilot accepts the bribe.",
+        "summary": "The treaty is dissolved. {role:capital_garden_trust} keeps the water for its private gardens, forcing {role:mining_settlement_league} to evacuate outer outposts.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "capital_garden_trust",
+            "delta": 2
+          },
+          {
+            "type": "standing",
+            "target": "mining_settlement_league",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "capital_archon",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "border_commissioner",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "shortage"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "alliance_broken",
+          "refugees_moving"
+        ]
+      },
+      {
+        "id": "ore_for_water_compact",
+        "reached_by": "The pilot brokers an economic compromise exchanging mining ores for guaranteed water.",
+        "summary": "A revised compact trades outer asteroid ore quotas for guaranteed water shipments. {role:mining_settlement_league} survives, but at heavy industrial cost.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "mining_settlement_league",
+            "delta": 1
+          },
+          {
+            "type": "standing",
+            "target": "capital_garden_trust",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "border_commissioner",
+            "fate": "owes_debt"
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "quiet_cover_up"
+        ]
+      }
+    ],
+    "default_resolution": "charter_repudiated_settlements_parched",
+    "loose_threads": [
+      {
+        "id": "t_bypass_pump_serial",
+        "surface": "wreck",
+        "detail": "A modified pump manifold on the glacier moon bears manufacturer serials linked to a private holding firm owned by the archon.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "cornering_a_market"
+        ]
+      },
+      {
+        "id": "t_treaty_cylinder_paraffin",
+        "surface": "cargo",
+        "detail": "The covenant cylinder's seal was patched with modern synthetic wax matching customs stamps from the capital palace.",
+        "can_carry_methods": [
+          "forged_records",
+          "impersonation"
+        ]
+      },
+      {
+        "id": "t_capital_water_futures",
+        "surface": "price_board",
+        "detail": "Inter-system water futures surged thirty percent on the capital exchange before the drought petition was officially filed.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "manufactured_crisis"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration",
+        "forged_records"
+      ],
+      "motives": [
+        "greed",
+        "control",
+        "legacy"
+      ]
+    },
+    "law_hooks": [
+      "mining_charter_required",
+      "tariff_on_goods"
+    ],
+    "radio_hooks": [
+      "Mining settlements plead for emergency water shipments as local reservoirs run dry.",
+      "Capital assembly debates motion to declare historic frontier treaties obsolete.",
+      "Security fleets establish inter-system picket lines along glacier jump corridors."
+    ],
+    "voice_direction": {
+      "border_commissioner": "Gaunt, measured, and dignified. Speaks in solemn, unhurried cadences, treating treaty words like holy scripture.",
+      "capital_archon": "Silky, dismissive, and patrician. Treats frontier miners as ungrateful dependents and insists resources belong to those who can afford them."
+    },
+    "novelty_tags": [
+      "aquifer_covenant",
+      "inter_system_water",
+      "treaty_repudiation",
+      "glacier_escrow",
+      "drought_crisis"
+    ]
+  }
+]

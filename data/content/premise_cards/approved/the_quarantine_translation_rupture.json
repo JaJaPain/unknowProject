@@ -1,0 +1,304 @@
+{
+  "id": "premise.the_quarantine_translation_rupture",
+  "schema_version": 1,
+  "title": "The Quarantine Translation Rupture",
+  "logline": "A quarantine marshal and an isolated monastic brewery interpret an anomalous spectral reading in opposite ways, threatening an accidental military bombardment of innocent monks.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "quarantine_marshal",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Port health officer enforcing the quarantine boundary; sleep-deprived, rigid, haunted by memories of an unchecked outbreak.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "station_abbot",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Head of an orbital monastery and brewery; defensive, austere, convinced health inspectors are agents sent to steal sacred fermenting yeast.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hermitage_station",
+      "kind": "place",
+      "description": "An ancient hollowed-asteroid monastery cultivating yeast for liturgical beer and medicine.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_outpost",
+      "kind": "place",
+      "description": "The fortified health inspection platform commanding the orbital cordon.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "quarantine"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "martyr_made",
+    "law_loosened"
+  ],
+  "public_situation": "A quarantine cordon surrounds {role:hermitage_station} while patrol vessels prepare sterilization batteries to cleanse an alleged viral outbreak.",
+  "private_truth": "The diagnostic spectrometer is misinterpreting volatile aromas from an exotic sacramental yeast batch as an airborne pathogen.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "monastery_fermenter_mimics_pathogen_spectral_signature"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Flashing quarantine buoys deploy along the outer approach vectors to {role:hermitage_station}, barring all uncertified civilian vessels.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "quarantine_marshal",
+          "target": "quarantine_outpost",
+          "reason": "She hires an uninfected pilot to mine and deliver pure water ice to replenish coolant tanks on the sterilization artillery platform.",
+          "private_fact": "She lost her entire family to a respiratory blight five years ago and refuses to allow even a single doubtful diagnostic reading to pass.",
+          "outcome_tags": [
+            "coolant_supplied",
+            "cordon_breached"
+          ],
+          "routes": {
+            "coolant_supplied": "next",
+            "cordon_breached": "resolution:hermitage_sterilized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The monastery abbot transmits encrypted scripture verses on medical frequencies, defying orders to vent his habitat's fermentation cellars.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "station_abbot",
+          "target": "hermitage_station",
+          "culprit": "quarantine_marshal",
+          "reason": "He asks the pilot to scan the habitat's exhaust vents to prove the chemical emissions match ancient fermentation steam rather than spores.",
+          "private_fact": "His monks secretly stole the foundational yeast strain from a corporate pharmaceutical laboratory four generations ago.",
+          "outcome_tags": [
+            "ferment_confirmed",
+            "sensor_scrambled"
+          ],
+          "routes": {
+            "ferment_confirmed": "next",
+            "sensor_scrambled": "resolution:hermitage_sterilized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Targeting lasers from {role:quarantine_outpost} lock onto the monastery's central airlocks as the sterilization countdown reaches its final hour.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "station_abbot",
+          "target": "quarantine_outpost",
+          "reason": "He asks the pilot to courier an uncorrupted physical vial of the brewing culture to the marshal's laboratory before the bombardment begins.",
+          "private_fact": "He would rather watch the asteroid monastery vaporized than let a secular inspector seize the monastic breeding notes.",
+          "outcome_tags": [
+            "culture_delivered",
+            "outpost_closed"
+          ],
+          "routes": {
+            "culture_delivered": "next",
+            "outpost_closed": "resolution:hermitage_sterilized"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the quarantine post holding the live monastery brewing yeast as targeting computers align for bombardment.",
+        "options": [
+          {
+            "id": "demonstrate_yeast_safety",
+            "label": "Run the biological assay to prove the culture is harmless yeast and abort the strike",
+            "leads_to": "resolution:quarantine_lifted_peacefully"
+          },
+          {
+            "id": "sell_culture_to_syndicate",
+            "label": "Flee the post and sell the priceless ancient yeast strain to an offshore luxury brewer",
+            "leads_to": "resolution:culture_privatized"
+          },
+          {
+            "id": "endorse_pathogen_verdict",
+            "label": "Confirm the pathogen report to allow the marshal to sterilize the contaminated site",
+            "leads_to": "resolution:hermitage_sterilized"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "quarantine_lifted_peacefully",
+      "reached_by": "The pilot delivers the culture vial and verifies its harmless organic nature.",
+      "summary": "The test proves the emission is benign brewing yeast. {role:quarantine_marshal} cancels the bombardment and lifts the cordon from {role:hermitage_station}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "quarantine_marshal",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_abbot",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [],
+          "remove": [
+            "quarantine"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_monastery_purge",
+          "public_summary": "A pilot showed health inspectors that an asteroid's deadly viral outbreak was just monks brewing sacred beer."
+        }
+      ],
+      "seeds": [
+        "law_loosened",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "culture_privatized",
+      "reached_by": "The pilot steals the sample vial and sells the heritage yeast to commercial interests.",
+      "summary": "The pilot vanishes with the yeast. Deprived of physical evidence, {role:quarantine_marshal} forces the evacuation of {role:hermitage_station}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_abbot",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "quarantine_marshal",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "hermitage_sterilized",
+      "reached_by": "The culture is condemned or the verification fails before the deadline strikes.",
+      "summary": "Targeting guns bombard {role:hermitage_station}. The monastery's heritage yeast is incinerated, and the surviving monks are dispersed as destitute vagrants.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_abbot",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "quarantine_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    }
+  ],
+  "default_resolution": "hermitage_sterilized",
+  "loose_threads": [
+    {
+      "id": "t_spectrometer_firmware_lot",
+      "surface": "station_notice",
+      "detail": "The quarantine station's sensor firmware was updated three weeks ago by a technician who was later discharged for forging calibration tags.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_yeast_patent_claim",
+      "surface": "cargo",
+      "detail": "The sacramental yeast culture flask bears an etched pharmaceutical patent symbol identical to a corporate patent held by an inner-system firm.",
+      "can_carry_methods": [
+        "impersonation",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "forged_records",
+      "impersonation",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "fear",
+      "control",
+      "faith"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Quarantine command warns approaching freighters that hermitage airspace is declared hot.",
+    "Station chaplains issue urgent radio appeals calling for calm across the quarantined sector.",
+    "Thermal sensor data from asteroid monastery leaks onto commercial trading feeds."
+  ],
+  "voice_direction": {
+    "quarantine_marshal": "Haggard, intense, and clipped. Speaks in dry clinical jargon and repeats decontamination procedures like nervous tics.",
+    "station_abbot": "Dignified, slow, and steeped in ritual cadence. Treats secular authority with mild, quiet pity and speaks of yeast like living martyrs."
+  },
+  "novelty_tags": [
+    "quarantine_misunderstanding",
+    "monastic_brewery",
+    "false_pathogen",
+    "sterilization_battery",
+    "ancient_yeast"
+  ]
+}

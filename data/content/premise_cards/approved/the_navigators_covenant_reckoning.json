@@ -1,0 +1,396 @@
+{
+  "id": "premise.the_navigators_covenant_reckoning",
+  "schema_version": 1,
+  "title": "The Navigator's Covenant Reckoning",
+  "logline": "A blind veteran navigator calls in an unwritten safe-conduct pledge from three system barons to grant asylum to the impoverished families of an expunged scout squadron.",
+  "scale": "regional",
+  "tone": [
+    "melancholy",
+    "survival"
+  ],
+  "themes": [
+    "legacy",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "veteran_navigator",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Blind veteran scout navigator holding original stamped brass safe-conduct tokens from a forgotten retreat thirty years ago.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "provincial_baron",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Ruler of a wealthy agricultural province; smooth, aristocratic, determined to erase all memory of his youthful tactical flight.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "baron_patrol",
+      "kind": "ship",
+      "description": "A heavy provincial picket cutter intercepting long-haul courier vessels entering the estate system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scout_veterans_cabal",
+      "kind": "faction",
+      "description": "The surviving crews and families of the reconnaissance wing whose official battle records were expunged.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "provincial_regency",
+      "kind": "faction",
+      "description": "The hereditary council ruling the fertile agricultural gate systems.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "waypoint_depot",
+      "kind": "place",
+      "description": "A bleak fuel station in the border system where long-haul couriers stage jumps.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refugee_haven",
+      "kind": "place",
+      "description": "A decaying deep-space orbital platform sheltering the destitute families of the forgotten squadron.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_palace",
+      "kind": "place",
+      "description": "The lavish orbital garden estate where the provincial assembly receives petitions.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "debt_owed_to_player",
+    "leader_discredited"
+  ],
+  "public_situation": "Destitute families from an unlisted scout squadron gather at {role:refugee_haven}, awaiting an answer to an asylum petition filed with {role:provincial_regency}.",
+  "private_truth": "{role:veteran_navigator} holds proof that the provincial baron fled his combat post thirty years ago and bought his survival by promising the squadron permanent refuge.",
+  "core_why": {
+    "motive": "legacy",
+    "secret": "navigator_concealed_squadron_mutiny_protecting_barons_escape"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Notice boards at {role:refugee_haven} request an outside pilot to transport an aging veteran's personal effects across the border gate.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "veteran_navigator",
+          "target": "refugee_haven",
+          "reason": "He needs a neutral pilot to retrieve a locked brass strongbox holding thirty-year-old safe-conduct chits from the station safe.",
+          "private_fact": "The box contains the personal signet ring the baron gave him as collateral when abandoning his command ship during the retreat.",
+          "outcome_tags": [
+            "strongbox_secured",
+            "vault_seized"
+          ],
+          "routes": {
+            "strongbox_secured": "next",
+            "vault_seized": "resolution:veterans_cabal_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Provincial security agents raid transit archives at {role:waypoint_depot}, searching commercial manifests for historic relics.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "veteran_navigator",
+          "target": "baron_patrol",
+          "reason": "The baron's advance scouts ambushed a veteran courier carrying the cipher key needed to authenticate the signet tokens.",
+          "private_fact": "He knows the baron has spent three decades executing other witnesses to the battle, and he is the last surviving officer who can testify.",
+          "outcome_tags": [
+            "cipher_recovered",
+            "scouts_escaped"
+          ],
+          "routes": {
+            "cipher_recovered": "next",
+            "scouts_escaped": "resolution:veterans_cabal_abandoned"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "veteran_navigator",
+          "target": "waypoint_depot",
+          "reason": "He needs the pilot to buy an unmonitored optical decrypt cradle from an off-shift technician to read the recovered cipher key.",
+          "private_fact": "He spent his last savings three days ago to secure the decrypt cradle's warehouse serial number.",
+          "outcome_tags": [
+            "cradle_delivered",
+            "technician_arrested"
+          ],
+          "routes": {
+            "cradle_delivered": "next",
+            "technician_arrested": "resolution:veterans_cabal_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Border stations flash advisories that all veterans carrying unverified frontier scrip will be detained at gate checkpoints.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "veteran_navigator",
+          "target": "waypoint_depot",
+          "culprit": "provincial_baron",
+          "reason": "He hires the pilot to scan the waypoint relay buffer to locate the baron's private communication logs and prove the detention orders are unlawful.",
+          "private_fact": "His old squadron didn't just retreat; they mutinied against their commanding admiral to cover the evacuation of the baron's unarmed convoy.",
+          "outcome_tags": [
+            "orders_exposed",
+            "relay_purged"
+          ],
+          "routes": {
+            "orders_exposed": "next",
+            "relay_purged": "resolution:veterans_cabal_abandoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The pilot's vessel breaks into orbital space above {role:provincial_palace} as the baron's heavy guard fleet prepares to deny entry.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "veteran_navigator",
+          "target": "baron_patrol",
+          "reason": "The baron's picket cruiser locks tractor beams onto approach vectors to prevent the pilot from docking at the petition court.",
+          "private_fact": "The cutter commander hails offering one hundred thousand credits and an agricultural estate if the pilot destroys the brass signet strongbox.",
+          "outcome_tags": [
+            "cutter_neutralized",
+            "accepted_estate_bribe"
+          ],
+          "routes": {
+            "cutter_neutralized": "next",
+            "accepted_estate_bribe": "resolution:veterans_cabal_abandoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot docks at the palace dais holding the brass covenant strongbox and evidence of the baron's historic cowardice.",
+        "options": [
+          {
+            "id": "table_covenant_in_court",
+            "label": "Table the brass tokens before the full regency council to compel asylum for the veterans",
+            "leads_to": "resolution:asylum_charter_granted"
+          },
+          {
+            "id": "sell_signet_to_baron",
+            "label": "Hand the signet privately to the baron in exchange for a massive payoff and trade license",
+            "leads_to": "resolution:veterans_cabal_abandoned"
+          },
+          {
+            "id": "publish_mutiny_truth",
+            "label": "Broadcast the full squadron mutiny telemetry to depose the baron and shame the council",
+            "leads_to": "resolution:baron_deposed_in_scandal"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "asylum_charter_granted",
+      "reached_by": "The pilot tables the tokens and proves the validity of the wartime pledge.",
+      "summary": "Faced with undeniable proof of his debt, {role:provincial_baron} yields. {role:provincial_regency} grants permanent agricultural land to {role:scout_veterans_cabal}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "scout_veterans_cabal",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "provincial_regency",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_navigator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_baron",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "redeemed_the_navigators_chit",
+          "public_summary": "A pilot hauled thirty-year-old brass tokens across three systems to make a proud baron keep a wartime promise."
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "veterans_cabal_abandoned",
+      "reached_by": "The strongbox is sold to the baron or destroyed, or the pilot accepts the bribe.",
+      "summary": "{role:provincial_baron} destroys the signet ring and expels the petitioner families. {role:scout_veterans_cabal} is left destitute and scattered across border rocks.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "provincial_regency",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "scout_veterans_cabal",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_baron",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_navigator",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "baron_deposed_in_scandal",
+      "reached_by": "The pilot broadcasts the complete battle and mutiny records to the public assembly.",
+      "summary": "The cowardice logs go public. {role:provincial_baron} is stripped of his title by {role:provincial_regency}, and modest humanitarian relief is distributed to the families.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "scout_veterans_cabal",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "provincial_regency",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_baron",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_navigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "veterans_cabal_abandoned",
+  "loose_threads": [
+    {
+      "id": "t_brass_token_alloy",
+      "surface": "cargo",
+      "detail": "The safe-conduct tokens contain a distinctive bismuth-gold alloy used exclusively by the admiralty's high command.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_provincial_deed_transfer",
+      "surface": "station_notice",
+      "detail": "A municipal title office logged three agricultural estates transferred to an unlisted private trustee forty-eight hours before the asylum filing.",
+      "can_carry_methods": [
+        "impersonation",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_expunged_flight_log",
+      "surface": "wreck",
+      "detail": "A drifting communications buoy in the border belt holds encoded telemetry recording an admiral's flagship withdrawing under escort.",
+      "can_carry_methods": [
+        "forged_records",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "slow_infiltration",
+      "impersonation",
+      "forged_records"
+    ],
+    "motives": [
+      "legacy",
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Provincial council hears emotional petitions from forgotten wartime veteran flotilla.",
+    "Border picket squadrons reinforce patrol perimeters around agricultural jump lanes.",
+    "Trading houses report volatile price swings in agrarian orbital leaseholds."
+  ],
+  "voice_direction": {
+    "veteran_navigator": "Blind, deliberate, and quiet. Pauses before speaking as if measuring distance by acoustic echo, keeping a flat and steady rhythm.",
+    "provincial_baron": "Refined, dismissive, and nervous beneath aristocratic charm. Brushes off border campaign claims as exaggerated frontier folktales."
+  },
+  "novelty_tags": [
+    "navigators_covenant",
+    "wartime_pledge",
+    "brass_tokens",
+    "provincial_asylum",
+    "mutinous_scouts"
+  ]
+}

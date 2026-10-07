@@ -1,0 +1,292 @@
+{
+  "id": "premise.the_unwanted_salvage_tow",
+  "schema_version": 1,
+  "title": "The Unwanted Salvage Tow",
+  "logline": "A disabled ore hauler drifting into a gravitational vortex refuses all salvage tows to protect an uninspected biogenetic seed bank hidden inside its cargo bays.",
+  "scale": "personal",
+  "tone": [
+    "survival",
+    "tragic"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "drifter_skipper",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Skipper of an uninsulated ore hauler drifting on battery power; stubborn, shivering, rejecting every commercial tow cable.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "salvage_master",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Intake supervisor at the orbital recovery dock; legalistic, calculating, anxious to claim maritime salvage lien percentages.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_dock",
+      "kind": "place",
+      "description": "The nearest licensed salvage station and scrap dismantling platform.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_depot",
+      "kind": "place",
+      "description": "An isolated biological research and seed-storage vault orbiting a distant outer moon.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "gravity_tides"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "stolen_goods_circulating",
+    "market_disrupted"
+  ],
+  "public_situation": "An unpowered ore hauler drifts toward the outer gravity shoals while commercial tugs hover at range, awaiting official abandonment.",
+  "private_truth": "The hauler skipper is refusing salvage because dock inspectors will seize and incinerate a colony seed bank cached in his hold.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "drifter_protecting_unregistered_seed_bank"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The salvage master broadcasts an open bounty notice for an independent scout to verify the drifting hauler's distress telemetry.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "salvage_master",
+          "target": "salvage_dock",
+          "reason": "The salvage master needs a hired pilot to scan the drifting ship's telemetry array to legally certify that its engines are dead.",
+          "private_fact": "He has already pre-sold the hauler's hull scrap rights to an orbital foundry before filing the court paperwork.",
+          "outcome_tags": [
+            "derelict_certified",
+            "signal_disputed"
+          ],
+          "routes": {
+            "derelict_certified": "next",
+            "signal_disputed": "resolution:forced_salvage_lien"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The drifter's skipper taps emergency tightbeam channels, desperately soliciting emergency reactor couplers rather than a tow.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "drifter_skipper",
+          "target": "salvage_dock",
+          "reason": "He hires the pilot to collect spare magnetic drive couplers from an off-shift mechanic so he can restore thrust without salvage aid.",
+          "private_fact": "His cargo bay holds viable grain seeds from an agricultural habitat that suffered environmental collapse eight months ago.",
+          "outcome_tags": [
+            "couplers_delivered",
+            "intercepted_by_tugs"
+          ],
+          "routes": {
+            "couplers_delivered": "next",
+            "intercepted_by_tugs": "resolution:forced_salvage_lien"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Gravitational shear reaches critical levels as salvage tugs move to attach grappling lines to the dying hauler.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "drifter_skipper",
+          "target": "quarantine_depot",
+          "reason": "He asks the pilot to courier the sealed seed canisters to the distant moon vault while his ship makes a desperate burn.",
+          "private_fact": "He knows burning his jury-rigged drive near the gravity vortex will likely tear his cooling manifolds apart.",
+          "outcome_tags": [
+            "canisters_evacuated",
+            "docked_under_lien"
+          ],
+          "routes": {
+            "canisters_evacuated": "next",
+            "docked_under_lien": "resolution:forced_salvage_lien"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the sealed canisters of viable agricultural seeds while tugs hook the dying ore hauler.",
+        "options": [
+          {
+            "id": "deliver_to_depot",
+            "label": "Deliver the seed canisters to the moon vault and let the skipper burn clear",
+            "leads_to": "resolution:drifter_burns_free"
+          },
+          {
+            "id": "surrender_to_salvage",
+            "label": "Surrender the canisters to the salvage master to claim the finder lien share",
+            "leads_to": "resolution:forced_salvage_lien"
+          },
+          {
+            "id": "broker_depot_custody",
+            "label": "Broker emergency botanical custody with the depot to exempt the hauler from scrap",
+            "leads_to": "resolution:sanctuary_deposit"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "drifter_burns_free",
+      "reached_by": "The pilot couriers the seed canisters to the quarantine depot and provides the couplers.",
+      "summary": "The canisters reach {role:quarantine_depot}. {role:drifter_skipper} fires his patched thrusters and clears the gravity shoals, preserving his independence.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "drifter_skipper",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_master",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_seed_scow",
+          "public_summary": "A pilot helped a stubborn old hauler cheat both a gravity vortex and a predatory salvage dock."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "forced_salvage_lien",
+      "reached_by": "The salvage master claims the hauler or the pilot surrenders the uninspected canisters.",
+      "summary": "{role:salvage_master} takes legal custody of the hauler. The seed canisters are incinerated as contraband, leaving {role:drifter_skipper} ruined.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "salvage_master",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "drifter_skipper",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "sanctuary_deposit",
+      "reached_by": "The pilot brokers emergency botanical custody with the quarantine depot.",
+      "summary": "{role:quarantine_depot} files a protective biological lien. The seeds are preserved for agricultural research, and {role:drifter_skipper} takes a safe tow.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "drifter_skipper",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_master",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "forced_salvage_lien",
+  "loose_threads": [
+    {
+      "id": "t_seed_canister_stamps",
+      "surface": "cargo",
+      "detail": "The seed canisters bear wax dispatch stamps from an agricultural orbital that went dark twelve years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_salvage_note_purchase",
+      "surface": "station_notice",
+      "detail": "A salvage lien broker bought the scow's mortgage note four hours before its distress beacon started pinging.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "protecting_someone",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Harbor patrol warns vessels away from uncontrolled drift in the gravity shoals.",
+    "Salvage auction houses report heavy speculative bidding on incoming bulk hulls.",
+    "Outer quarantine depot logs unverified biological cargo transfer."
+  ],
+  "voice_direction": {
+    "drifter_skipper": "Hoarse, defensive, and abrupt. Employs short, clipped phrases and snaps angrily at mentions of maritime salvage law.",
+    "salvage_master": "Brisk, cheerful, and unyielding. Cites maritime salvage registry paragraphs with the smooth cadence of an auctioneer."
+  },
+  "novelty_tags": [
+    "unwanted_salvage",
+    "drifting_hauler",
+    "seed_bank",
+    "gravity_shoal",
+    "lien_foreclosure"
+  ]
+}

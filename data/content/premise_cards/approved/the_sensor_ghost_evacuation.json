@@ -1,0 +1,353 @@
+{
+  "id": "premise.the_sensor_ghost_evacuation",
+  "schema_version": 1,
+  "title": "The Sensor Ghost Evacuation",
+  "logline": "An atmospheric observatory and an unbaffled ice hauler's exhaust create a phantom sensor anomaly that scientists and merchants misinterpret as an imminent coronal flare.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "chief_meteorologist",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Solar observatory director; terrified of missing a lethal radiation storm, preparing to order full station evacuation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "hauler_syndic",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Representative of independent atmospheric transport barges; desperate to prevent a shutdown that will ruin seasonal cargo runs.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "picket_sentry",
+      "kind": "ship",
+      "description": "An automated municipal defense skiff enforcing flight bans around the station solar shields.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "meteorological_bureau",
+      "kind": "faction",
+      "description": "The scientific observatory monitoring stellar flare telemetry and coronal mass ejections.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "freight_barge_guild",
+      "kind": "faction",
+      "description": "The guild of heavy bulk ice and air haulers operating long-range transfer routes.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "solar_observatory",
+      "kind": "place",
+      "description": "The inner Lagrange monitoring platform tracking stellar activity.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_station",
+      "kind": "place",
+      "description": "The civilian orbital habitat preparing to vent its outer rings ahead of the alleged flare.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [
+      "dying_star"
+    ],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "leader_discredited"
+  ],
+  "public_situation": "Solar observatories flash red radiation alerts across {system}, prompting authorities at {role:orbital_station} to order an emergency civilian evacuation.",
+  "private_truth": "The terrifying spectral spike is an artifact caused by unbaffled water vapor vented by an uninspected cargo barge crossing the telescope lens.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "thruster_exhaust_created_false_solar_flare_telemetry"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Evacuation sirens sound across {role:orbital_station} while emergency ferries prepare to seal docking portals.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "chief_meteorologist",
+          "target": "solar_observatory",
+          "reason": "She hires an outside pilot to deliver structural ferrite plates to reinforce the observatory's radiation shielding before the flare strikes.",
+          "private_fact": "Her predecessor was sacked for failing to predict a minor flare six years ago, and she is terrified of second-guessing her instruments.",
+          "outcome_tags": [
+            "plates_fitted",
+            "observatory_blinded"
+          ],
+          "routes": {
+            "plates_fitted": "next",
+            "observatory_blinded": "resolution:full_evacuation_enacted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Freight barge captains protest the total shutdown of shipping corridors, claiming their sensors register zero coronal magnetic buildup.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "hauler_syndic",
+          "target": "solar_observatory",
+          "culprit": "chief_meteorologist",
+          "reason": "He hires the pilot to scan the observatory's primary spectral sensor array and correlate the readings with recent freighter flight tracks.",
+          "private_fact": "His flagship hauler has an illegal unbaffled cooling exhaust that was venting directly across the telescope's focus twenty minutes before the alert.",
+          "outcome_tags": [
+            "sensor_ghost_found",
+            "readings_unresolved"
+          ],
+          "routes": {
+            "sensor_ghost_found": "next",
+            "readings_unresolved": "resolution:full_evacuation_enacted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:picket_sentry} begins firing warning bursts at idling commercial barges to force them out of the station approach lanes.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hauler_syndic",
+          "target": "picket_sentry",
+          "reason": "He needs the automated sentry's targeting array disabled so trapped freighters can clear the docking corridor without being destroyed.",
+          "private_fact": "The sentry hails offering twenty thousand credits and priority evacuation clearance if the pilot lets the lockdown continue.",
+          "outcome_tags": [
+            "sentry_disabled",
+            "accepted_priority_clearance"
+          ],
+          "routes": {
+            "sentry_disabled": "next",
+            "accepted_priority_clearance": "resolution:full_evacuation_enacted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Habitat directors at {role:orbital_station} initiate the final sequence to vent atmosphere from commercial berths.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "hauler_syndic",
+          "target": "orbital_station",
+          "reason": "He asks the pilot to courier the correlated telemetry dossier to the station command center before the airlock seals are blown.",
+          "private_fact": "If the truth comes out, his syndicate will be sued by the port authority for billions in emergency response costs.",
+          "outcome_tags": [
+            "dossier_delivered",
+            "command_sealed"
+          ],
+          "routes": {
+            "dossier_delivered": "next",
+            "command_sealed": "resolution:full_evacuation_enacted"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at station command holding mathematical proof that the apocalyptic solar flare is merely water vapor from an uninspected hauler.",
+        "options": [
+          {
+            "id": "expose_sensor_artifact",
+            "label": "Deliver the telemetry proof to abort the evacuation and reopen station berths",
+            "leads_to": "resolution:evacuation_halted_peacefully"
+          },
+          {
+            "id": "suppress_for_syndicate_profit",
+            "label": "Suppress the telemetry to let the panic inflate emergency fuel and oxygen spot prices",
+            "leads_to": "resolution:panic_profiteering_market"
+          },
+          {
+            "id": "confirm_evacuation_order",
+            "label": "Endorse the evacuation order to ensure government relief payouts for all parties",
+            "leads_to": "resolution:full_evacuation_enacted"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "evacuation_halted_peacefully",
+      "reached_by": "The pilot delivers the correlated telemetry, proving the flare reading was an exhaust artifact.",
+      "summary": "The flare alert is cancelled. {role:chief_meteorologist} stands down the sirens, and {role:freight_barge_guild} resumes commercial transit without loss of life.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_barge_guild",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "meteorological_bureau",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_meteorologist",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hauler_syndic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_the_false_evacuation",
+          "public_summary": "A pilot proved that an extinction-level solar flare was just water vapor from an uninspected cargo hauler."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "panic_profiteering_market",
+      "reached_by": "The telemetry is suppressed, allowing commodity speculators to exploit the false panic.",
+      "summary": "Panic spreads across the system. Life-support prices surge, enriching traders while {role:freight_barge_guild} absorbs catastrophic penalties.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_barge_guild",
+          "delta": -2
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "spike"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hauler_syndic",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "full_evacuation_enacted",
+      "reached_by": "The evacuation is carried through without verification, causing massive dislocation.",
+      "summary": "The station berths are evacuated and vented. The economic collapse strands hundreds of workers, devastating {role:orbital_station} for months.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "meteorological_bureau",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "freight_barge_guild",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_meteorologist",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "full_evacuation_enacted",
+  "loose_threads": [
+    {
+      "id": "t_spectrometer_patent_link",
+      "surface": "station_notice",
+      "detail": "The observatory's primary spectral sensors were manufactured by a firm owned by an inner-system disaster relief contractor.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_exhaust_additive_slip",
+      "surface": "cargo",
+      "detail": "The ice barge's cooling fluid manifest logs an unlisted aromatic compound that emits heavy ultraviolet fluorescent blooms when heated.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "manufactured_crisis",
+      "forged_records",
+      "impersonation"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Observatory sirens urge civilian ships to seek radiation bunkers immediately.",
+    "Freight guild spokesmen denounce emergency port shutdowns as unscientific panic.",
+    "Trading desks report record volume in short-term life-support derivative options."
+  ],
+  "voice_direction": {
+    "chief_meteorologist": "Rapid, high-strung, and clinical. Speaks in breathless paragraphs of astrophysical telemetry and refuses to entertain non-catastrophic hypotheses.",
+    "hauler_syndic": "Blunt, hard-headed, and skeptical. Believes academics create emergencies to justify research subsidies and swears by grease and dials."
+  },
+  "novelty_tags": [
+    "sensor_ghost",
+    "false_flare",
+    "exhaust_plume",
+    "observatory_evacuation",
+    "radiation_panic"
+  ]
+}

@@ -1,0 +1,295 @@
+{
+  "id": "premise.the_ice_miners_stipulation",
+  "schema_version": 1,
+  "title": "The Ice Miner's Stipulation",
+  "logline": "An ice harvester bequeaths his heavy core drill to his estranged daughter on the strict condition that she deliver an uninspected water load to a destitute off-grid squatters' rock.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "survival"
+  ],
+  "themes": [
+    "legacy",
+    "scarcity_breeds_cruelty"
+  ],
+  "roles": [
+    {
+      "id": "estranged_daughter",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "Inheritor of an ice-drilling skiff; debt-burdened, bitter about her father's lifelong absence, forced to execute his testamentary instructions.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "station_liquidator",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Probate officer enforcing creditor claims on the estate; impatient, legalistic, eager to forfeit the vessel to commercial lenders.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "squatters_crag",
+      "kind": "place",
+      "description": "An unmapped hollowed rock where off-grid outcasts ration stale air and recycled condensation.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ice_depot",
+      "kind": "place",
+      "description": "The licensed municipal bulk water intake berth where commercial barges unload.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "stolen_goods_circulating",
+    "market_disrupted"
+  ],
+  "public_situation": "An estate auction sign hangs over a veteran ice-drilling skiff at {role:ice_depot} while probate agents set a strict forty-eight hour claim deadline.",
+  "private_truth": "The deceased harvester's testament grants the drill rig to {role:estranged_daughter} only if she delivers an unbilled bulk water cistern to {role:squatters_crag}.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "ice_rig_bequest_conditioned_on_squatter_relief"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Notice boards at {role:ice_depot} announce that the harvester's estate must clear outstanding municipal dock fees before the will is read.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "estranged_daughter",
+          "target": "ice_depot",
+          "reason": "She hires an outside pilot to mine and deliver certified water ice to satisfy the probate court's filing fees before the vessel is auctioned.",
+          "private_fact": "She resentfully promised her dying father she would hear his will, despite not having spoken to him in eight years.",
+          "outcome_tags": [
+            "fees_cleared",
+            "probate_expired"
+          ],
+          "routes": {
+            "fees_cleared": "next",
+            "probate_expired": "resolution:rig_forfeited_to_bank"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The probate clerk unseals the codicil, demanding immediate transit certification before releasing the skiff's control codes.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "estranged_daughter",
+          "target": "ice_depot",
+          "reason": "She hires the pilot to collect her father's sealed core-drill telemetry key from an impound locker before the liquidator locks the hatch.",
+          "private_fact": "Her father spent his last four years secretly pumping water to the unregistered squatter habitat without logging the extraction.",
+          "outcome_tags": [
+            "key_retrieved",
+            "locker_seized"
+          ],
+          "routes": {
+            "key_retrieved": "next",
+            "locker_seized": "resolution:rig_forfeited_to_bank"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The liquidator starts an automated countdown timer on the skiff's docking clamps, threatening immediate repossession.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "estranged_daughter",
+          "target": "squatters_crag",
+          "reason": "She asks the pilot to courier the emergency bulk ice manifest and activation codes directly to the squatter elders to fulfill the condition.",
+          "private_fact": "She is torn between honoring her father's humanitarian debt and selling the vessel to pay off her own grinding debts.",
+          "outcome_tags": [
+            "ice_delivered",
+            "deadline_missed"
+          ],
+          "routes": {
+            "ice_delivered": "next",
+            "deadline_missed": "resolution:rig_forfeited_to_bank"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the squatter habitat as the probate timer counts down the final minutes on the drill rig's title.",
+        "options": [
+          {
+            "id": "confirm_squatter_delivery",
+            "label": "Confirm the water delivery to the squatters and secure the daughter's title",
+            "leads_to": "resolution:inheritance_secured_and_squatters_saved"
+          },
+          {
+            "id": "sell_water_to_commercial_depot",
+            "label": "Divert the water to the commercial market to clear the daughter's personal debts",
+            "leads_to": "resolution:water_sold_for_cash"
+          },
+          {
+            "id": "let_bank_repossess_rig",
+            "label": "Surrender the drill rig to the station liquidator to take a broker finder fee",
+            "leads_to": "resolution:rig_forfeited_to_bank"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "inheritance_secured_and_squatters_saved",
+      "reached_by": "The pilot confirms the delivery to the squatter crag and files the fulfillment certificate.",
+      "summary": "The squatters receive critical water reserves. {role:estranged_daughter} inherits her father's drill rig and assumes his quiet humanitarian trade.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "estranged_daughter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_liquidator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "fulfilled_the_ice_miners_will",
+          "public_summary": "A pilot helped an estranged daughter deliver water to forgotten squatters to claim her father's drill rig."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "water_sold_for_cash",
+      "reached_by": "The water is diverted and sold at commercial market rates to pay off personal liabilities.",
+      "summary": "The water is sold to commercial depots. The testamentary condition fails, but {role:estranged_daughter} clears her personal debt while {role:squatters_crag} goes dry.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "estranged_daughter",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_liquidator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "rig_forfeited_to_bank",
+      "reached_by": "The deadline lapses or the vessel is surrendered to satisfy commercial mortgages.",
+      "summary": "{role:station_liquidator} auctions the drill rig to corporate water cartels. {role:estranged_daughter} walks away penniless, and the squatters are left parched.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_liquidator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "estranged_daughter",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "rig_forfeited_to_bank",
+  "loose_threads": [
+    {
+      "id": "t_drill_mortgage_transfer",
+      "surface": "station_notice",
+      "detail": "The drill rig's mortgage deed was transferred to an unlisted private debt fund forty-eight hours before the father died.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_squatter_relief_stamps",
+      "surface": "cargo",
+      "detail": "The squatter cistern collars are stamped with emergency aid serial numbers assigned to an expedition that vanished a decade ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "guilt",
+      "greed",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Probate court sets expedited auction timetable for default mining hardware.",
+    "Outer rock settlements report critical water rationing as dry season begins.",
+    "Commercial water bulk prices climb steadily across orbital exchange boards."
+  ],
+  "voice_direction": {
+    "estranged_daughter": "Bitter, curt, and protective. Speaks with flat cadence and becomes guarded whenever family duty or charity is mentioned.",
+    "station_liquidator": "Crisp, bureaucratic, and condescending. Recites statutory repayment paragraphs with cheerful indifference to personal tragedy."
+  },
+  "novelty_tags": [
+    "ice_miners_will",
+    "conditioned_inheritance",
+    "squatter_water",
+    "probate_foreclosure",
+    "core_drill_rig"
+  ]
+}

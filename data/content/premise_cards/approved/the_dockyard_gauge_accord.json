@@ -1,0 +1,349 @@
+{
+  "id": "premise.the_dockyard_gauge_accord",
+  "schema_version": 1,
+  "title": "The Dockyard Gauge Accord",
+  "logline": "A mandatory new universal docking clamp standard threatens to ground independent cargo lighters overnight, enriching the shipyard that secretly patented the coupling.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "farce"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "harbor_commissioner",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Port authority regulator who authored the new coupling mandate; unctuous, polished, concealing personal patent royalties.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "lighter_spokesman",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Speaks for the independent freight lighter association; gravel-voiced, furious, facing bankruptcy for small-craft owners.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "yard_patrol",
+      "kind": "ship",
+      "description": "An armored shipyard enforcement cutter impounding non-compliant cargo lighters at station berths.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "lighter_flotilla",
+      "kind": "faction",
+      "description": "The loose union of independent lighter pilots handling cargo shuttles between deep-draft freighters and station docks.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "consortium_shipyard",
+      "kind": "faction",
+      "description": "The massive ship manufacturing trust holding exclusive production licenses for the mandated docking collars.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "central_dock",
+      "kind": "place",
+      "description": "The primary municipal transfer dock where the new coupling enforcement takes effect.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrap_anchorage",
+      "kind": "place",
+      "description": "An unserviced orbital mooring where grounded independent lighters await impound hearings.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "leader_discredited",
+    "law_tightened"
+  ],
+  "public_situation": "Station authorities announce that non-standard docking couplings will be barred from {role:central_dock}, leaving dozens of independent lighters facing impound.",
+  "private_truth": "{role:harbor_commissioner} owns thirty percent of the patent holding firm that licenses the mandatory replacement collar.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "commissioner_patented_new_docking_coupling_before_mandate"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Notice boards at {role:central_dock} flash red alerts ordering all vessels to certify compliance with the new docking gauge within seventy-two hours.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "lighter_spokesman",
+          "target": "central_dock",
+          "reason": "He hires the pilot to buy early prototype retrofit collars from an independent machine shop and deliver them to test fitment tolerances.",
+          "private_fact": "The prototype collars don't fit because the official standard was altered last week to lock out third-party fabricators.",
+          "outcome_tags": [
+            "collars_delivered",
+            "procurement_failed"
+          ],
+          "routes": {
+            "collars_delivered": "next",
+            "procurement_failed": "resolution:lighter_fleet_grounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Independent lighter pilots refuse to pay shipyard retrofit deposits, anchoring their hulls in protest across the approach corridor.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "lighter_spokesman",
+          "target": "central_dock",
+          "culprit": "harbor_commissioner",
+          "reason": "He hires the pilot to scan port registry servers and extract the patent assignment filings for the new docking collar specifications.",
+          "private_fact": "His own brother sold the original collar schematics to the shipyard consortium to settle family gambling debts.",
+          "outcome_tags": [
+            "patents_extracted",
+            "registry_scrubbed"
+          ],
+          "routes": {
+            "patents_extracted": "next",
+            "registry_scrubbed": "resolution:lighter_fleet_grounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:yard_patrol} deploys to the perimeter of {role:scrap_anchorage}, attaching boot clamps to idling independent shuttles.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "lighter_spokesman",
+          "target": "yard_patrol",
+          "reason": "He needs the shipyard cutter's clamp projectors disabled so the trapped lighter pilots can relocate before formal seizure.",
+          "private_fact": "The cutter captain hails offering free lifetime shipyard refits and ten thousand credits if the pilot destroys the patent file.",
+          "outcome_tags": [
+            "cutter_neutralized",
+            "accepted_refit_bribe"
+          ],
+          "routes": {
+            "cutter_neutralized": "next",
+            "accepted_refit_bribe": "resolution:lighter_fleet_grounded"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The municipal transport tribunal convenes at {role:central_dock} to finalize the mandatory clamp enactment.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "lighter_spokesman",
+          "target": "central_dock",
+          "reason": "He asks the pilot to courier the verified patent registry records to the hearing bench before the commissioner signs the decree.",
+          "private_fact": "He secretly hopes the scandal forces the port to nationalize all shipyard drydocks under union control.",
+          "outcome_tags": [
+            "dossier_delivered",
+            "hearing_missed"
+          ],
+          "routes": {
+            "dossier_delivered": "next",
+            "hearing_missed": "resolution:lighter_fleet_grounded"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds documented proof linking the harbor commissioner's shell firm to the patent royalties on the new docking collar.",
+        "options": [
+          {
+            "id": "table_patent_proof",
+            "label": "Table the patent dossier to void the collar mandate and disgrace the commissioner",
+            "leads_to": "resolution:mandate_suspended"
+          },
+          {
+            "id": "sell_proof_to_consortium",
+            "label": "Sell the evidence to the shipyard consortium to secure personal trade immunity",
+            "leads_to": "resolution:lighter_fleet_grounded"
+          },
+          {
+            "id": "broker_subsidized_refit",
+            "label": "Broker a settlement requiring the shipyard to supply free retrofits using commissioner profits",
+            "leads_to": "resolution:subsidized_standardization"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "mandate_suspended",
+      "reached_by": "The pilot delivers and tables the patent proof at the regulatory hearing.",
+      "summary": "The patent kickback is exposed. {role:harbor_commissioner} is removed from office and the docking mandate is voided, leaving {role:lighter_flotilla} in service.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "lighter_flotilla",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "consortium_shipyard",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_commissioner",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_the_coupling_monopoly",
+          "public_summary": "A pilot proved the port authority's new docking clamp mandate was a scheme to line a bureaucrat's pockets."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "law_loosened"
+      ]
+    },
+    {
+      "id": "lighter_fleet_grounded",
+      "reached_by": "The evidence is suppressed or the hearing is missed, allowing the decree to take effect.",
+      "summary": "The clamp mandate takes full effect. {role:lighter_flotilla} ships are barred from docking, forcing independent owners to surrender hulls to {role:consortium_shipyard}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "consortium_shipyard",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "lighter_flotilla",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_commissioner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "lighter_spokesman",
+          "fate": "ruined"
+        },
+        {
+          "type": "law_change",
+          "law": "docking_bribes",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "subsidized_standardization",
+      "reached_by": "The pilot brokers an equitable compromise requiring the shipyard to fund collar refits.",
+      "summary": "A compromise mandates the standard but compels {role:consortium_shipyard} to refit all lighters at cost, preserving {role:lighter_flotilla} livelihood.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "lighter_flotilla",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "consortium_shipyard",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_commissioner",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "lighter_fleet_grounded",
+  "loose_threads": [
+    {
+      "id": "t_coupling_patent_precedence",
+      "surface": "station_notice",
+      "detail": "The municipal technical specification cites tolerance formulas copied verbatim from a patent filed two weeks before the commission meeting.",
+      "can_carry_methods": [
+        "forged_records",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_collar_warehouse_lien",
+      "surface": "price_board",
+      "detail": "A parts warehouse on the third ring quietly took delivery of ten thousand retrofit collars under an offshore shell consignment.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Independent freight pilots sound klaxons in protest around central approach berths.",
+    "Port commission insists standard docking couplings will cut orbital collision risk.",
+    "Shipyard shares surge following announcement of mandatory fleet refit timetable."
+  ],
+  "voice_direction": {
+    "harbor_commissioner": "Smooth, patronizing, and bureaucratic. Uses passive voice incessantly to avoid admitting personal agency in regulations.",
+    "lighter_spokesman": "Rough, raspy, and sarcastic. Speaks like someone who has spent thirty years inhaling unburned thruster wash."
+  },
+  "novelty_tags": [
+    "docking_standard",
+    "patent_corruption",
+    "lighter_pilots",
+    "regulatory_lockout",
+    "bureaucratic_monopoly"
+  ]
+}

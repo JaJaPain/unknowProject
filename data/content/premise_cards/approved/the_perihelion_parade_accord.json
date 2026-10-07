@@ -1,0 +1,346 @@
+{
+  "id": "premise.the_perihelion_parade_accord",
+  "schema_version": 1,
+  "title": "The Perihelion Parade Accord",
+  "logline": "A station cultural board moves the annual jubilee procession route away from traditional dockside bazaars to an exclusive corporate promenade, threatening independent merchants with ruin.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "farce"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "festival_director",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Master of ceremonies for the annual perihelion jubilee; theatrical, evasive, quietly bound to retail performance guarantees.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bazaar_alderman",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Represents independent food vendors and craft stalls on the outer ring; loud, exhausted, facing bankruptcy if the parade bypasses his market.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "promenade_cutter",
+      "kind": "ship",
+      "description": "A private security escort clearing commercial shuttle traffic from the newly chartered inner viewing lane.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "independent_vendors_guild",
+      "kind": "faction",
+      "description": "The union of small dockside stalls and food cart operators who depend on the annual jubilee crowds.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "promenade_retail_trust",
+      "kind": "faction",
+      "description": "The corporate commercial consortium owning the new sunward viewing galleries and luxury boutiques.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "jubilee_concourse",
+      "kind": "place",
+      "description": "The grand ceremonial dock where festival floats and ceremonial barges assemble.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outer_bazaar",
+      "kind": "place",
+      "description": "The uninsulated outer docking circle where jubilee celebrations have been hosted for three generations.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "alliance_formed"
+  ],
+  "public_situation": "Festival flags deck the station as the cultural ministry announces that the perihelion parade will bypass {role:outer_bazaar} for safety reasons.",
+  "private_truth": "{role:festival_director} signed an exclusive contract guaranteeing foot traffic to {role:promenade_retail_trust} in exchange for luxury gallery construction bonds.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "director_routed_parade_to_fulfill_retail_guarantee"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Security buoys deploy along the outer bazaar approach, routing ceremonial traffic inward toward the corporate promenade.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "bazaar_alderman",
+          "target": "outer_bazaar",
+          "reason": "He hires an outside pilot to buy festive pyrotechnic display canisters from an industrial station and deliver them to illuminate the traditional docks.",
+          "private_fact": "His vendors pooled their emergency scrip reserves to pay for the fireworks, hoping to lure festivalgoers back to the outer ring.",
+          "outcome_tags": [
+            "fireworks_delivered",
+            "procurement_delayed"
+          ],
+          "routes": {
+            "fireworks_delivered": "next",
+            "procurement_delayed": "resolution:promenade_monopoly_enforced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Bazaar merchants block parade marshals from testing ceremonial lights while the director threatens to ban outer vendors from the concourse.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "bazaar_alderman",
+          "target": "jubilee_concourse",
+          "culprit": "festival_director",
+          "reason": "He asks the pilot to scan the parade committee's staging beacons to extract the route charter contract proving the route switch was sold.",
+          "private_fact": "His sister runs one of the high-end apparel boutiques in the new promenade and warned him about the secret foot-traffic clauses.",
+          "outcome_tags": [
+            "contract_extracted",
+            "terminal_encrypted"
+          ],
+          "routes": {
+            "contract_extracted": "next",
+            "terminal_encrypted": "resolution:promenade_monopoly_enforced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:promenade_cutter} begins impounding bazaar sound barges entering the central ceremonial canal.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "bazaar_alderman",
+          "target": "promenade_cutter",
+          "reason": "He needs the cutter's pulse cannons disabled so the outer merchants' music float can reach the main marshaling basin.",
+          "private_fact": "The cutter captain hails offering twenty-five thousand credits and a permanent prime boutique berth on the promenade if the pilot drops the contract.",
+          "outcome_tags": [
+            "cutter_neutralized",
+            "accepted_promenade_berth"
+          ],
+          "routes": {
+            "cutter_neutralized": "next",
+            "accepted_promenade_berth": "resolution:promenade_monopoly_enforced"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Dignitaries gather at {role:jubilee_concourse} as the herald prepares to ignite the jubilee torch and launch the parade run.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "bazaar_alderman",
+          "target": "jubilee_concourse",
+          "reason": "He asks the pilot to courier the documented retail guarantee contract directly to the presiding magistrate before the launch signal fires.",
+          "private_fact": "He fears that if the traditional route is lost this year, the outer bazaar will be permanently condemned for cargo staging.",
+          "outcome_tags": [
+            "contract_tabled",
+            "signal_fired"
+          ],
+          "routes": {
+            "contract_tabled": "next",
+            "signal_fired": "resolution:promenade_monopoly_enforced"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot arrives at the ceremonial dais holding the contract exposing the festival director's private commercial deal.",
+        "options": [
+          {
+            "id": "table_fraud_contract",
+            "label": "Table the contract to void the route diversion and return the jubilee to the outer bazaar",
+            "leads_to": "resolution:traditional_bazaar_route_restored"
+          },
+          {
+            "id": "sell_contract_to_retail_trust",
+            "label": "Sell the contract to the promenade retail trust in exchange for exclusive trading rights",
+            "leads_to": "resolution:promenade_monopoly_enforced"
+          },
+          {
+            "id": "broker_split_route_accord",
+            "label": "Broker a dual-route compromise having the parade pass through both the bazaar and the promenade",
+            "leads_to": "resolution:parade_divided_equally"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "traditional_bazaar_route_restored",
+      "reached_by": "The pilot tables the contract, exposing the commercial collusion.",
+      "summary": "The route contract is voided. {role:festival_director} is ousted from the committee, and the jubilee parade returns to {role:outer_bazaar} amid wild public cheering.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_vendors_guild",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "promenade_retail_trust",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_peoples_parade",
+          "public_summary": "A pilot proved the station's annual festival route had been sold out to corporate luxury malls."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "promenade_monopoly_enforced",
+      "reached_by": "The contract is suppressed or the deadline passes, letting the corporate route stand.",
+      "summary": "The parade circles the corporate promenade exclusively. {role:promenade_retail_trust} reaps record profits while {role:outer_bazaar} stalls collapse into ruin.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "promenade_retail_trust",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "independent_vendors_guild",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bazaar_alderman",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "parade_divided_equally",
+      "reached_by": "The pilot brokers a dual-route accord sharing parade stages between both markets.",
+      "summary": "A compromise creates a split procession. Both {role:outer_bazaar} and {role:promenade_retail_trust} share the festival crowds, sustaining small vendors and new shops alike.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_vendors_guild",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "promenade_retail_trust",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "owes_debt"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    }
+  ],
+  "default_resolution": "promenade_monopoly_enforced",
+  "loose_threads": [
+    {
+      "id": "t_parade_route_timestamp",
+      "surface": "station_notice",
+      "detail": "The municipal parade authorization cites corridor security clearances issued four months before the route alteration was drafted.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_boutique_lease_options",
+      "surface": "price_board",
+      "detail": "Promenade boutique concession leases jumped four hundred percent two weeks before the public announcement of the route switch.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Festival heralds announce record fireworks shipments for the upcoming perihelion jubilee.",
+    "Outer ring shopkeepers threaten general dock shutdown over disputed parade route coordinates.",
+    "Luxury promenade developers promise unprecedented retail spectacles during festival week."
+  ],
+  "voice_direction": {
+    "festival_director": "Flamboyant, grandiose, and slippery. Treats serious commercial disputes as petty artistic misunderstandings and speaks in breathless hyperbole.",
+    "bazaar_alderman": "Blunt, weary, and sarcastic. Counts coins between phrases and punctures high-flown ceremonial rhetoric with sharp working-class realism."
+  },
+  "novelty_tags": [
+    "perihelion_parade",
+    "festival_route_monopoly",
+    "bazaar_vendors",
+    "ceremonial_barge",
+    "concession_fraud"
+  ]
+}

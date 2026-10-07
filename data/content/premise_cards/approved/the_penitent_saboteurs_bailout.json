@@ -1,0 +1,370 @@
+{
+  "id": "premise.the_penitent_saboteurs_bailout",
+  "schema_version": 1,
+  "title": "The Penitent Saboteur's Bailout",
+  "logline": "A celebrated strike veteran hires a pilot to disarm dormant sabotage code he planted in a refinery's cooling systems decades ago before it triggers a catastrophic blowout.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "retired_saboteur",
+      "kind": "person",
+      "archetype": "retired_legend",
+      "description": "Legendary former union organizer who planted hidden logic traps in refinery reactors; aged, sick, horrified by their impending detonation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "chief_metallurgist",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Head of ore smelting at the refinery; arrogant, dismissive of union warnings, believing modern diagnostics catch every fault.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "security_drone_boat",
+      "kind": "ship",
+      "description": "An automated heavy patrol skiff guarding the refinery's private maintenance conduits.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smelting_combine",
+      "kind": "faction",
+      "description": "The corporate mining consortium operating the massive stellar smelter.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "smelter_complex",
+      "kind": "place",
+      "description": "The massive solar-grazing ore refinery processing cuprite and ferrite from local belts.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrap_foundry",
+      "kind": "place",
+      "description": "A decommissioned maintenance catwalk in the outer ring where strike equipment was buried.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dying_star"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "Thermal alarms flicker intermittently across the outer radiators of {role:smelter_complex}, but management insists the fluctuations are normal stellar weather.",
+  "private_truth": "{role:retired_saboteur} planted a dormant logic virus in the coolant valves thirty years ago during a wage strike, and its fail-safe counter is running out.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "union_legend_planted_dormant_refinery_bomb"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "A frail old man in worker overalls waits in a station lounge, begging independent pilots to retrieve an old personal data drive.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "retired_saboteur",
+          "target": "scrap_foundry",
+          "reason": "He needs an outside pilot to recover a sealed strike cache from an unpressurized locker before refinery scrappers weld the hatch shut.",
+          "private_fact": "The drive holds the cryptographic disarm keys for three dormant explosive override scripts embedded in the primary coolant manifold.",
+          "outcome_tags": [
+            "cache_retrieved",
+            "locker_scrapped"
+          ],
+          "routes": {
+            "cache_retrieved": "next",
+            "locker_scrapped": "resolution:refinery_reactor_meltdown"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Smelter radiators vent superheated gas across the approach lanes as coolant telemetry drifts outside safety tolerances.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "retired_saboteur",
+          "target": "smelter_complex",
+          "culprit": "retired_saboteur",
+          "reason": "He hires the pilot to scan the secondary coolant bypass relays to confirm which valves have already accepted the countdown script.",
+          "private_fact": "He intended the sabotage only as a temporary bargaining chip during negotiations, but his strike committee lost the strike before he could disarm it.",
+          "outcome_tags": [
+            "relays_mapped",
+            "diagnostic_blocked"
+          ],
+          "routes": {
+            "relays_mapped": "next",
+            "diagnostic_blocked": "resolution:refinery_reactor_meltdown"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Refinery automated defenses register the pilot's scan activity as an industrial espionage attack and scramble armed security units.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "retired_saboteur",
+          "target": "security_drone_boat",
+          "reason": "The automated security boat is jamming the disarm frequency and tracking the pilot's ship across the radiator exhaust plume.",
+          "private_fact": "The drone boat was programmed with patrol routes by the chief metallurgist to keep all independent inspectors away from the flare vents.",
+          "outcome_tags": [
+            "patrol_destroyed",
+            "jammer_active"
+          ],
+          "routes": {
+            "patrol_destroyed": "next",
+            "jammer_active": "resolution:refinery_reactor_meltdown"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The refinery's primary heat sink begins glowing dull orange as the countdown script prepares to purge thermal coolant reserves.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "retired_saboteur",
+          "target": "smelter_complex",
+          "reason": "Deliver raw high-conductivity cuprite directly to the injection hopper to short out the logic bomb's physical actuator before detonation.",
+          "private_fact": "If the combine learns he planted the code, they will sue the union retirement fund into bankruptcy to cover maintenance damages.",
+          "outcome_tags": [
+            "core_disarmed",
+            "hopper_sealed"
+          ],
+          "routes": {
+            "core_disarmed": "next",
+            "hopper_sealed": "resolution:refinery_reactor_meltdown"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The logic bomb is neutralized, but the pilot holds the master drive documenting the strike committee's deliberate sabotage.",
+        "options": [
+          {
+            "id": "bury_the_strike_evidence",
+            "label": "Wipe the drive and protect the old veteran's union legacy",
+            "leads_to": "resolution:quiet_disarmament"
+          },
+          {
+            "id": "sell_proof_to_combine",
+            "label": "Sell the sabotage dossier to the smelting combine for an corporate bounty",
+            "leads_to": "resolution:strike_legacy_discredited"
+          },
+          {
+            "id": "blackmail_for_worker_pensions",
+            "label": "Use the proof to force the combine into funding the worker retirement clinic",
+            "leads_to": "resolution:extorted_worker_endowment"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "quiet_disarmament",
+      "reached_by": "The pilot delivers the cuprite, neutralizes the logic bomb, and wipes the strike drive.",
+      "summary": "The refinery stabilizes. {role:retired_saboteur} burns his notes in private, leaving his reputation intact while {role:smelter_complex} hums smoothly.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "retired_saboteur",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "smelting_combine",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "disarmed_the_strike_trap",
+          "public_summary": "A pilot flew through radiator plumes to disarm a thirty-year-old bomb ticking inside the central ore refinery."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "strike_legacy_discredited",
+      "reached_by": "The pilot hands the sabotage drive over to the corporate combine.",
+      "summary": "{role:smelting_combine} reveals the historic sabotage. Historic union contracts are cancelled, worker pensions are seized, and {role:retired_saboteur} is imprisoned.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smelting_combine",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_saboteur",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_metallurgist",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "extorted_worker_endowment",
+      "reached_by": "The pilot leverages the disclosure risk to extract funding for worker medical pensions.",
+      "summary": "Fearing public disclosure of neglected safety overrides, {role:smelting_combine} secretly endows the worker clinic in exchange for destroying the cipher drive.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smelting_combine",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_saboteur",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "chief_metallurgist",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "secret_half_exposed"
+      ]
+    },
+    {
+      "id": "refinery_reactor_meltdown",
+      "reached_by": "The disarm attempt fails or the countdown runs out before cuprite injection.",
+      "summary": "The secondary coolant loops vent uncontrolled. The central smelter suffers structural warping, forcing months of production shutdowns across the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "smelting_combine",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_saboteur",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "ferrite",
+          "price": "spike"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "refinery_reactor_meltdown",
+  "loose_threads": [
+    {
+      "id": "t_strike_cipher_serial",
+      "surface": "cargo",
+      "detail": "The cipher card carries a strike fund engraving matching a catastrophic reactor flood from twenty-two years ago.",
+      "can_carry_methods": [
+        "sabotage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_smelter_metallurgy_shortage",
+      "surface": "price_board",
+      "detail": "Raw cuprite futures on local trading boards surged forty percent the afternoon before the refinery radiators began flickering.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "manufactured_crisis"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "sabotage",
+      "cornering_a_market",
+      "slow_infiltration",
+      "blackmail"
+    ],
+    "motives": [
+      "guilt",
+      "greed",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Smelter operators dismiss glowing radiator plumes as routine thermal exhaust balancing.",
+    "Union delegates demand full diagnostic audit of solar refinery safety manifolds.",
+    "Smelter combine posts bounty for independent craft interfering with flare buoys."
+  ],
+  "voice_direction": {
+    "retired_saboteur": "Strained, urgent, and haunted. Cuts sentences short when discussing his youth and repeatedly refers to industrial equipment as living creatures.",
+    "chief_metallurgist": "Aloof, precise, and condescending. Speaks with mathematical certainty and treats outside pilots as illiterate trespassers."
+  },
+  "novelty_tags": [
+    "penitent_saboteur",
+    "dormant_logic_bomb",
+    "refinery_meltdown",
+    "historic_strike",
+    "union_secret"
+  ]
+}
