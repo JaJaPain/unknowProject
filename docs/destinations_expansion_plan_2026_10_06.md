@@ -42,8 +42,8 @@ rewrite a verdict, prove them wrong (2 each).
 | 1 | **The Archive** | A record-keepers' station drifting in a gas giant's upper clouds. For generations they have copied every registry, deed and court ruling filed in the region, including the ones that were "lost". | rewrite a verdict, bury an old crime, prove them wrong, take the chair | Tiered cylindrical stacks hanging beneath float bladders, lit reading windows; the giant below is our gas-giant shader |
 | 2 | **The Hollow Market** | An ungoverned bazaar dug into the core of a comet, outside every jurisdiction. Anything is for sale; nothing is asked. | escape a debt, own the lanes, buy a station, break a rival | A long icy comet hull bored with ship-sized holes, docking rings and hanging lanterns; the tail from our comet shaders |
 | 3 | **The Last Shipyard** | A drydock where one family of shipwrights has spent four generations building a single enormous ship from their great-grandmother's plans. It still isn't finished. | take the chair, prove them wrong, keep the lights on, protect a secret child | An open scaffold cradle around a half-plated giant hull, cranes, sparks (emissive), living modules on the scaffold |
-| 4 | **The Halo** | A ring of small pilgrim chapels strung on cables around a dying red star. Anyone may claim sanctuary there, and no weapon may be fired. | protect a secret child, escape a debt, rewrite a verdict, keep the lights on | A loose chain of lantern-lit chapel pods on long tethers (not a solid ring, unlike the Humming Gate), around the star |
-| 5 | **The Wellhead** | The ice-moon geyser that waters the whole frontier, run by one dynasty. Every water contract in the region is signed there. | own the lanes, buy a station, keep the lights on, start a war | Tall rig towers over a frozen moon's geyser plume, pipes and tanker berths (the moon is our planet shader) |
+| 4 | **The Halo** | A ring of small pilgrim chapels strung on cables around a dying red star. Anyone may claim sanctuary there, and no weapon may be fired. | protect a secret child, escape a debt, rewrite a verdict, keep the lights on | A loose circle of candle-lit chapel pods on tethers round a central relic, ~800 m (not a ring round the star; see Sizes) |
+| 5 | **The Wellhead** | The ice-moon geyser that waters the whole frontier, run by one dynasty. Every water contract in the region is signed there. | own the lanes, buy a station, keep the lights on, start a war | Rig towers and pipes on a small ice moonlet over a vent, tanker berths, a particle plume, ~1-1.5 km (see Sizes) |
 | 6 | **The Neutral Ground** | The decommissioned treaty station where old enemies signed the peace. Still the only place the factions meet unarmed. | start a war, take the chair, rewrite a verdict, break a rival | A symmetrical station: two different halves (each side built its own) meeting at one central hall |
 
 Alternate if one doesn't land: **The Listening Post**, an astronomers' dish
@@ -52,6 +52,31 @@ share a look with the signal anomaly set piece).
 
 None of these touch the fixed-cast secret: no thinking machines, no
 returning dead, nothing about the Captain.
+
+## Sizes (Abe: the Halo and the Wellhead as first written were far too big)
+
+A Destination is a model placed a few kilometres out in its system, not
+something wrapped around a star or a moon. Existing pieces run from 0.5 km
+(the vault) to 2 km (the Silent Fleet); worlds are faked with the planet
+shader below (the Garden). Rescoped:
+
+- **The Halo:** a loose circle of 12-20 small candle-lit chapel pods on
+  tethers around a central bell-buoy or relic, ~800 m. It sits in a system
+  with a dying red star, whose glow fills the background; the piece itself
+  is local.
+- **The Wellhead:** a small ice moonlet (asteroid-sized, not a planet) with
+  rig towers and pipes over a vent and tanker berths, ~1-1.5 km with the
+  vapour plume (particles, added by the game). "Waters the frontier" is the
+  story, not the size.
+- **The Archive:** hanging stack cylinders under float bladders, ~600 m, the
+  gas giant below by shader.
+- **The Neutral Ground:** two mismatched halves meeting at a central hall,
+  ~800 m.
+- **Reuses:** the mine asteroid ~1.5 km (Hollow Market), the derelict scaled
+  to ~900 m (Last Shipyard).
+
+Same budget as the others: draw calls ~30-70, under ~50 meshes and ~8
+materials.
 
 ## Reusing set pieces (Abe's idea, same day)
 
