@@ -324,3 +324,54 @@ drift; 27-47 draw calls in game (19 without it). Very spare: in game it reads
 as black silhouettes with thin cyan lines. When it's wired to investigations,
 the game should pulse the seams brightly and grow the centre glow so it
 reads from a distance.
+
+## Brief #9: The Archive (new Destination)
+
+An order of record-keepers lives on a station that drifts in the upper clouds
+of a gas giant. For generations they have copied every deed, registry and
+court ruling in the region, including the ones that were destroyed. Quiet,
+scholarly, old, cared for. The gas giant itself is the game's planet shader,
+below the station; this is only the station.
+
+- **Size:** about 600 m across, taller than wide.
+- **Shape:** a cluster of **tall stack cylinders** (the archive towers: many
+  storeys, narrow, like shelved libraries turned on end) **hanging beneath a
+  few large float bladders** or lift envelopes that hold them up in the
+  clouds. A central spine joins the stacks; walkways and enclosed bridges link
+  them; a small docking ring at the bottom. It should read as *a library
+  hanging from balloons*.
+- **Surface:** warm pale stone-like hull on the stacks, darker bronze framing,
+  bladders in a soft matt fabric-like material, weathered but cared for.
+- **Light:** rows of small warm **reading-window lights** up every stack
+  (separate emissive material); a few soft lamps along the walkways (separate
+  emissive material); a dim red navigation light or two on the bladders.
+- **Optional:** the bladders as their own meshes (the game may sway them very
+  slowly).
+- **No:** writing, symbols, books or pages drawn on the outside, faction
+  marks, weapons, ships flying.
+- **Export:** batched (stacks, frames, bladders, walkways, lights as few
+  meshes per material); under ~50 meshes and ~8 materials; no lights or
+  cameras; README with size and counts.
+
+## Brief #10: The Neutral Ground (new Destination, after #9)
+
+The decommissioned treaty station where old enemies signed the peace that
+ended the last war. Each side built its own half in its own style; the two
+halves meet at one central hall. It is still the only place the factions
+meet unarmed.
+
+- **Size:** about 800 m across.
+- **Shape:** **two clearly different halves** joined in the middle by a
+  **round or domed central hall**: one half angular, plated and blocky; the
+  other curved, ribbed and smooth. Each half has its own docking arm on the
+  far end. Symmetrical in layout, mismatched in style: *two stations built
+  from both ends that met in the middle*.
+- **Surface:** each half in its own palette (for example cool grey plates
+  and warm sand-coloured curves), both old and well kept; the central hall in
+  a third neutral material, slightly grander than either half.
+- **Light:** a ring of warm windows around the central hall (separate
+  emissive material); each half's windows in its own colour temperature
+  (separate emissive materials); small docking lights at both arms.
+- **No:** writing, flags, symbols, faction marks, weapons of any kind
+  (that's the point of the place), ships flying.
+- **Export:** batched as above; the central hall as its own mesh group.
