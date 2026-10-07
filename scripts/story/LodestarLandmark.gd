@@ -20,6 +20,33 @@ const MODELS := {
 	"survey": ["res://assets/landmarks/cartographer_mine.glb"],
 	"garden": ["res://assets/landmarks/garden_keepers.glb"],
 	"wrecks": ["res://assets/landmarks/twin_wreck_field_v3_batched.glb", "res://assets/landmarks/quiet_war_vault.glb"],
+	# Set pieces reused as other places (docs/destinations_expansion_plan_2026_10_06.md).
+	"market": ["res://assets/landmarks/cartographer_mine.glb"],
+	"shipyard": ["res://assets/landmarks/lone_derelict.glb"],
+}
+## How a reused set piece becomes another place: parts hidden (by name),
+## materials re-coloured (by name), a scale, and extras the code adds.
+const VARIANTS := {
+	# The Hollow Market: the mine's asteroid as an icy comet, its structures
+	# gone, its worklights turned to warm lanterns, a tail behind it.
+	"market": {
+		"hide": ["Refinery", "Loading cranes", "Moored hauler", "Docking arm", "Storage tanks",
+			"Conveyor", "Ore buckets", "Pit machinery", "Utility network", "Worklight fixtures"],
+		"tint": {"Dark asteroid rock": Color(0.66, 0.74, 0.84), "Fresh cut rock": Color(0.86, 0.92, 1.0),
+			"Mineral flecks": Color(0.7, 0.9, 1.0)},
+		"glow": {"Cold worklights": Color(1.0, 0.7, 0.36), "Habitat amber": Color(1.0, 0.62, 0.3)},
+		"tint_replaces_vertex_colors": true,
+		"extras": ["comet_tail"],
+	},
+	# The Last Shipyard: the derelict hull, clean and three times the size,
+	# its open side read as unfinished plating, inside a scaffold with sparks.
+	"shipyard": {
+		"scale": 3.0,
+		"hide": ["DriftingCargo"],
+		"tint": {"Neutral hull": Color(0.84, 0.86, 0.88), "Muted accent": Color(0.72, 0.56, 0.3)},
+		"glow": {"Emergency emission": Color(0.75, 0.9, 1.0), "Beacon emission": Color(1.0, 0.8, 0.4)},
+		"extras": ["scaffold"],
+	},
 }
 ## The Garden's green world: its radius, and how far below the station its
 ## centre sits (the station orbits over it).
@@ -43,6 +70,8 @@ var _swingers: Array = []
 ## Lit materials that pulse, blink or breathe: [{mat, base, mode, phase}].
 var _lamps: Array = []
 var _belt: StandardMaterial3D = null
+## The Last Shipyard's welding sparks (flicker in _process).
+var _sparks: Array = []
 var _gold_base := 2.4
 var _gold_swing := 0.9
 
@@ -126,9 +155,183 @@ func _build_models() -> bool:
 		if path.contains("quiet_war_vault"):
 			model.position = VAULT_OFFSET
 		add_child(model)
+		var variant: Dictionary = VARIANTS.get(kind, {})
+		if not variant.is_empty():
+			_apply_variant(model, variant)
 		_wire_model(model)
 		built += 1
 	return built > 0
+
+
+## Re-dresses a reused set piece (VARIANTS): hides parts, re-colours
+## materials, scales it, and adds the extras.
+func _apply_variant(model: Node3D, variant: Dictionary) -> void:
+	model.scale = Vector3.ONE * float(variant.get("scale", 1.0))
+	for node in model.find_children("*", "Node3D", true, false):
+		for part in variant.get("hide", []):
+			if str(node.name).contains(str(part)):
+				(node as Node3D).visible = false
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
+			if m == null:
+				continue
+			for key in variant.get("tint", {}):
+				if m.resource_name.contains(str(key)):
+					var own := m.duplicate() as StandardMaterial3D
+					own.albedo_color = variant["tint"][key]
+					if bool(variant.get("tint_replaces_vertex_colors", false)):
+						own.vertex_color_use_as_albedo = false
+					mi.set_surface_override_material(i, own)
+			for key in variant.get("glow", {}):
+				if m.resource_name.contains(str(key)):
+					var lit := m.duplicate() as StandardMaterial3D
+					lit.emission_enabled = true
+					lit.emission = variant["glow"][key]
+					lit.albedo_color = variant["glow"][key]
+					mi.set_surface_override_material(i, lit)
+	for extra in variant.get("extras", []):
+		match str(extra):
+			"comet_tail": _add_comet_tail(model)
+			"scaffold": _add_scaffold(model)
+
+
+## A soft tail of drifting ice dust streaming off the comet (Hollow Market).
+func _add_comet_tail(model: Node3D) -> void:
+	var tail := GPUParticles3D.new()
+	tail.name = "CometTail"
+	tail.amount = 260
+	tail.lifetime = 26.0
+	tail.preprocess = 26.0
+	tail.visibility_aabb = AABB(Vector3(-9000, -2500, -2500), Vector3(18000, 5000, 5000))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	process.emission_sphere_radius = 520.0
+	process.direction = Vector3(-1, 0.05, 0)
+	process.spread = 6.0
+	process.initial_velocity_min = 220.0
+	process.initial_velocity_max = 380.0
+	process.gravity = Vector3.ZERO
+	process.scale_min = 0.6
+	process.scale_max = 1.6
+	var fade := Gradient.new()
+	fade.set_color(0, Color(0.75, 0.88, 1.0, 0.0))
+	fade.add_point(0.12, Color(0.75, 0.88, 1.0, 0.07))
+	fade.set_color(fade.get_point_count() - 1, Color(0.6, 0.75, 1.0, 0.0))
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = fade
+	process.color_ramp = ramp
+	tail.process_material = process
+	var quad := QuadMesh.new()
+	quad.size = Vector2(420, 420)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_color = Color(0.7, 0.85, 1.0)
+	# A soft round puff, not a square.
+	var puff := GradientTexture2D.new()
+	puff.fill = GradientTexture2D.FILL_RADIAL
+	puff.fill_from = Vector2(0.5, 0.5)
+	puff.fill_to = Vector2(1.0, 0.5)
+	var falloff := Gradient.new()
+	falloff.set_color(0, Color(1, 1, 1, 1))
+	falloff.set_color(1, Color(1, 1, 1, 0))
+	puff.gradient = falloff
+	mat.albedo_texture = puff
+	quad.material = mat
+	tail.draw_pass_1 = quad
+	model.add_child(tail)
+
+
+## An open scaffold cradle around the hull, with two cranes and welding
+## sparks that flicker (Last Shipyard).
+func _add_scaffold(model: Node3D) -> void:
+	var box := _model_bounds(model)
+	if box.size == Vector3.ZERO:
+		return
+	box = box.grow(box.size.length() * 0.06)
+	var beams := MultiMeshInstance3D.new()
+	beams.name = "Scaffold"
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	var beam := BoxMesh.new()
+	beam.size = Vector3(1, 1, 1)
+	var steel := StandardMaterial3D.new()
+	steel.albedo_color = Color(0.36, 0.34, 0.3)
+	steel.metallic = 0.7
+	steel.roughness = 0.5
+	beam.material = steel
+	mm.mesh = beam
+	var xforms: Array = []
+	var thick := box.size.length() * 0.011
+	var ribs := 13
+	for r in ribs + 1:
+		var x := box.position.x + box.size.x * float(r) / float(ribs)
+		var mid_y := box.get_center().y
+		var mid_z := box.get_center().z
+		xforms.append(_beam(Vector3(x, mid_y, box.position.z), Vector3(thick, box.size.y, thick)))
+		xforms.append(_beam(Vector3(x, mid_y, box.end.z), Vector3(thick, box.size.y, thick)))
+		xforms.append(_beam(Vector3(x, box.end.y, mid_z), Vector3(thick, thick, box.size.z)))
+		xforms.append(_beam(Vector3(x, box.position.y, mid_z), Vector3(thick, thick, box.size.z)))
+	# Long rails tying the ribs together.
+	for corner in [Vector2(box.position.y, box.position.z), Vector2(box.position.y, box.end.z),
+			Vector2(box.end.y, box.position.z), Vector2(box.end.y, box.end.z)]:
+		xforms.append(_beam(Vector3(box.get_center().x, corner.x, corner.y), Vector3(box.size.x, thick, thick)))
+	# Two crane towers rising over the top rail, each with a boom.
+	for f in [0.3, 0.72]:
+		var cx: float = box.position.x + box.size.x * float(f)
+		xforms.append(_beam(Vector3(cx, box.end.y + box.size.y * 0.35, box.position.z), Vector3(thick * 2.0, box.size.y * 0.7, thick * 2.0)))
+		xforms.append(_beam(Vector3(cx, box.end.y + box.size.y * 0.7, box.get_center().z), Vector3(thick * 1.5, thick * 1.5, box.size.z * 0.9)))
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+	beams.multimesh = mm
+	model.add_child(beams)
+	# Welding sparks: small bright points that flicker along the hull.
+	var spark_mat := StandardMaterial3D.new()
+	spark_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	spark_mat.albedo_color = Color(0.8, 0.92, 1.0)
+	spark_mat.emission_enabled = true
+	spark_mat.emission = Color(0.8, 0.92, 1.0)
+	spark_mat.emission_energy_multiplier = 6.0
+	var dot := SphereMesh.new()
+	dot.radius = thick * 0.9
+	dot.height = thick * 1.8
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 731
+	for i in 10:
+		var spark := MeshInstance3D.new()
+		spark.mesh = dot
+		spark.material_override = spark_mat
+		spark.position = Vector3(rng.randf_range(box.position.x, box.end.x), rng.randf_range(box.position.y, box.end.y),
+			box.end.z if i % 2 == 0 else box.position.z)
+		model.add_child(spark)
+		_sparks.append(spark)
+
+
+func _beam(center: Vector3, size: Vector3) -> Transform3D:
+	return Transform3D(Basis.from_scale(size), center)
+
+
+## The bounds of everything visible in `model`, in the model's own space.
+func _model_bounds(model: Node3D) -> AABB:
+	var out := AABB()
+	var first := true
+	var inverse := model.global_transform.affine_inverse()
+	for node in model.find_children("*", "MeshInstance3D", true, false):
+		var mi := node as MeshInstance3D
+		if not mi.is_visible_in_tree() or mi.mesh == null:
+			continue
+		var box: AABB = (inverse * mi.global_transform) * mi.get_aabb()
+		out = box if first else out.merge(box)
+		first = false
+	return out
 
 
 ## The few live things on each set piece (pivots and emissive materials named
@@ -256,6 +459,10 @@ func _process(delta: float) -> void:
 				mat.emission_energy_multiplier = base * (0.6 + 0.4 * sin(_t * 0.5 + phase))
 	if _belt != null:
 		_belt.uv1_offset.y = fmod(_t * 0.08, 1.0)
+	for i in _sparks.size():
+		var spark := _sparks[i] as Node3D
+		if is_instance_valid(spark):
+			spark.visible = fmod(_t * 3.1 + float(i) * 0.37, 1.0) < 0.22
 
 
 func _mat(color: Color, emission: float = 0.0, alpha: float = 1.0) -> StandardMaterial3D:

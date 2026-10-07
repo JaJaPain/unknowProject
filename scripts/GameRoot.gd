@@ -13707,6 +13707,10 @@ func _lodestar_snapshot(place: Node3D) -> void:
 	cam.far = 60000.0
 	get_active_system_root().add_child(cam)
 	var kinds := ["beacon", "fleet", "ring", "survey", "garden", "wrecks"]
+	# --lodestar-kinds=market,shipyard pictures just those.
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--lodestar-kinds="):
+			kinds = Array(arg.substr(17).split(","))
 	for kind in kinds:
 		var mark = load("res://scripts/story/LodestarLandmark.gd").new()
 		mark.kind = kind
