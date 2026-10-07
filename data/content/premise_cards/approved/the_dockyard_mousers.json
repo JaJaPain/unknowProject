@@ -1,0 +1,335 @@
+{
+  "id": "premise.the_dockyard_mousers",
+  "schema_version": 1,
+  "title": "The Dockyard Mousers",
+  "logline": "An imported breed of predatory martens eliminates cargo vermin in the docks but begins hunting the delicate pollinators in the habitat's heritage aviary.",
+  "scale": "personal",
+  "tone": [
+    "farce",
+    "melancholy"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "dock_bosun",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Head of the cargo gang; fiercely protective of the hunting martens that cleaned up the rat-infested holds.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sanctuary_warden",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Curator of the station's hydroponic bird sanctuary; horrified by the loss of irreplaceable pollinator stock.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "station_quartermaster",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "Responsible for commercial habitat balances; terrified of paying pest fines or losing agricultural yields.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hydroponic_aviary",
+      "kind": "place",
+      "description": "The domed botanical aviary housing the station's delicate seed-dispersing finches.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "marten_cages",
+      "kind": "object",
+      "description": "Padded atmospheric transport carriers designed for humane live trapping.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "evacuation"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "market_disrupted"
+  ],
+  "public_situation": "Dockworkers celebrate the extermination of hold-boring beetles by imported martens, while agricultural technicians report the predators have breached the botanical aviary.",
+  "private_truth": "The quartermaster approved the predator import without habitat quarantine clearance to avoid spending station maintenance reserves on chemical fumigation.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "unlicensed_predator_introduction_spares_fumigation_costs"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The botanical aviary seals its air vents after three rare seed-finches are found mauled near the ventilation shafts.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "sanctuary_warden",
+          "target": "hydroponic_aviary",
+          "reason": "The warden needs an outsider with sensor gear to scan the station air ducts to locate the martens' nesting den without alerting the defensive dockers.",
+          "private_fact": "She knows the pollinators were already struggling with genetic inbreeding and cannot survive even a week of active predation.",
+          "outcome_tags": [
+            "nest_located"
+          ],
+          "routes": {
+            "nest_located": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Dockers threaten an unscheduled shift slowdown if station administration attempts to cull or poison the martens.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "dock_bosun",
+          "target": "hydroponic_aviary",
+          "reason": "The bosun hires a neutral pilot to recover custom pheromone scent lures from a supply locker to draw the martens back down into the freight bays.",
+          "private_fact": "The dockers have been secretly feeding the martens prime ration meat to keep them docile and loyal to the maintenance crew.",
+          "outcome_tags": [
+            "lures_delivered"
+          ],
+          "routes": {
+            "lures_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The station quartermaster authorizes an emergency resolution before the agricultural yield drops below lease requirements.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "station_quartermaster",
+          "target": "hydroponic_aviary",
+          "reason": "The quartermaster contracts the pilot to transport live containment cages to the aviary to settle the dispute once and for all.",
+          "private_fact": "The quartermaster will quietly sell whichever species is removed to an exotic menagerie trader in the next system.",
+          "outcome_tags": [
+            "cages_delivered"
+          ],
+          "routes": {
+            "cages_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The trapped animals are caged at the dock. The pilot must decide where the carriers are dispatched.",
+        "options": [
+          {
+            "id": "evacuate_mousers",
+            "label": "Ship the predators off-station to preserve the aviary",
+            "leads_to": "resolution:predators_exiled"
+          },
+          {
+            "id": "protect_mousers",
+            "label": "Release the predators in the freight hold and relocate surviving birds",
+            "leads_to": "resolution:dockers_keep_predators"
+          },
+          {
+            "id": "deliver_to_exotic_buyer",
+            "label": "Hand both species to the quartermaster's quiet buyer",
+            "leads_to": "resolution:menagerie_liquidation"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "predators_exiled",
+      "reached_by": "The pilot evacuates the martens off-station, securing the aviary.",
+      "summary": "{role:sanctuary_warden} saves the seed-finch flock, but hold beetles return within a month, forcing {role:station_quartermaster} to fund costly fumigation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_warden",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dock_bosun",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_station_aviary",
+          "public_summary": "A hauler cleared out invasive predators, saving the station's rare pollinators."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "dockers_keep_predators",
+      "reached_by": "The pilot releases the martens back to the freight decks and shelters them from eradication.",
+      "summary": "{role:dock_bosun} keeps the freight bays vermin-free, but the wild aviary collapses, forcing the habitat to import artificial pollinators.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dock_bosun",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "backed_dockyard_mousers",
+          "public_summary": "A pilot backed the cargo gang, letting invasive mousers overrun a heritage bird sanctuary."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "menagerie_liquidation",
+      "reached_by": "The pilot hands over the animals to the quartermaster for commercial liquidation.",
+      "summary": "{role:station_quartermaster} sells both the rare finches and trained martens to an outside broker, leaving the station with pests and no birds.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_quartermaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dock_bosun",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "vermin_and_predator_chaos",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "Martens wipe out the aviary before dockers poison the water supply accidentally, leaving {role:sanctuary_warden} destitute.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sanctuary_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_quartermaster",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "vermin_and_predator_chaos",
+  "loose_threads": [
+    {
+      "id": "t_trust_quarantine_code",
+      "surface": "station_notice",
+      "detail": "The quarantine manifest for the marten transport lists the importer as an agricultural investment trust that was liquidated three years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_missing_canister_stamps",
+      "surface": "cargo",
+      "detail": "Each cage bears an inspection seal with a serial code matching a batch of chemical fumigant canisters that vanished from the orbital agricultural depot.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Dockworkers credit imported predators with record drop in hold grain spoilage.",
+    "Botanical society appeals for emergency intervention as rare finch numbers plummet in {system}.",
+    "Station administration declines to comment on unauthorized animal introductions."
+  ],
+  "voice_direction": {
+    "dock_bosun": "Rough, defensive, and fond of animal metaphors. Never admits that his crew failed to check the ventilation grates.",
+    "sanctuary_warden": "Precise, anxious, and uses Latin species designations when stressed. Never speaks directly to the dockworkers.",
+    "station_quartermaster": "Slick, hurried, and perpetually calculating maintenance ledger margins. Changes the subject whenever quarantine certification is mentioned."
+  },
+  "novelty_tags": [
+    "predator_introduction",
+    "botanical_aviary",
+    "dock_vermin",
+    "ecological_clash",
+    "station_wildlife"
+  ]
+}

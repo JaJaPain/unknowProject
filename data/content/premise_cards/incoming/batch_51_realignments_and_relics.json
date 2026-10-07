@@ -1,0 +1,363 @@
+[
+  {
+    "id": "premise.the_mayoral_tiebreaker",
+    "schema_version": 1,
+    "title": "The Mayoral Tiebreaker",
+    "logline": "A dead-heat municipal vote activates an obscure charter proviso granting office to whichever candidate deposits the station's heavy brass founding bell on the council dais first.",
+    "scale": "local",
+    "tone": [
+      "farce",
+      "political"
+    ],
+    "themes": [
+      "justice_vs_mercy",
+      "who_owns_the_past"
+    ],
+    "roles": [
+      {
+        "id": "reformist_candidate",
+        "kind": "person",
+        "archetype": "union_organiser",
+        "description": "A popular labour leader running on docking wage reforms; energetic, loud, and disorganized.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "incumbent_administrator",
+        "kind": "person",
+        "archetype": "official",
+        "description": "The cautious sitting habitat manager; obsessed with procedural propriety and determined to prevent a labour takeover.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "municipal_patrol",
+        "kind": "ship",
+        "description": "A port authority security cutter charged with keeping the ballot transit corridors peaceful.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "relic_vault",
+        "kind": "place",
+        "description": "An unpressurized storage depot in an abandoned industrial ring where obsolete civic artifacts are mothballed.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "council_dais",
+        "kind": "place",
+        "description": "The central civic chamber where municipal elections are certified and oaths administered.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [
+        "election"
+      ],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "new_leader_untested"
+    ],
+    "public_situation": "A municipal council election ends in a certified tie, prompting election arbiters to invoke an unamended 90-year-old charter rule requiring physical delivery of the founding bell.",
+    "private_truth": "The founding bell was quietly sold off as scrap brass decades ago by an embezzling clerk; the crate in the vault holds lead ballast stamped with fake ceremonial seals.",
+    "core_why": {
+      "motive": "fear",
+      "secret": "ceremonial_ballot_bell_swapped_for_scrap_lead"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Electoral sirens sound across the concourse as officials declare a tie and announce the relic race.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "reformist_candidate",
+            "target": "relic_vault",
+            "reason": "The reformist hires an independent pilot to fly to the unpressurized relic vault and recover the founding bell crate before the manager's team arrives.",
+            "private_fact": "Her campaign ran out of credit hours ago and she is paying the pilot using dockworker collection tin coins.",
+            "outcome_tags": [
+              "bell_crate_recovered"
+            ],
+            "routes": {
+              "bell_crate_recovered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "The incumbent administrator posts municipal guards outside the council airlocks to enforce luggage weight restrictions.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "incumbent_administrator",
+            "target": "relic_vault",
+            "reason": "The administrator hires an outside pilot to deliver emergency counter-weights to balance the dais scales, attempting to stall the bell's certification.",
+            "private_fact": "He knows the original bell was pawned by his own predecessor and fears the public scandal more than losing the election.",
+            "outcome_tags": [
+              "weights_delivered"
+            ],
+            "routes": {
+              "weights_delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "public_change": "Technicians uncrate the relic at the dock, discovering it is merely a crate of painted lead ingots with an old ledger.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "requester": "reformist_candidate",
+            "target": "council_dais",
+            "reason": "The reformist needs the pilot to scan the dais ceremonial podium to verify whether the acoustic sensors require the real bell or merely certified weight.",
+            "private_fact": "She considers displaying the fake publicly, even if it triggers riots that tear down the municipal charter entirely.",
+            "outcome_tags": [
+              "scan_completed"
+            ],
+            "routes": {
+              "scan_completed": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "The final midnight deadline approaches while the port patrol tightens a cordon around the council docking bay.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "reformist_candidate",
+            "target": "municipal_patrol",
+            "reason": "The reformist needs the pilot to run the security cordon so the delivery can reach the council dais before midnight.",
+            "private_fact": "The patrol commander hails mid-flight to offer the pilot a municipal immunity pardon if they dump the crate into the disposal chute instead.",
+            "outcome_tags": [
+              "patrol_broken",
+              "accepted_pardon"
+            ],
+            "routes": {
+              "patrol_broken": "resolution:reformist_takes_office",
+              "accepted_pardon": "resolution:incumbent_retains_power"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the cordon cleared and the fake bell exposed, the pilot must choose what to present to the council tribunal.",
+          "options": [
+            {
+              "id": "deliver_the_lead",
+              "label": "Deposit the weighted crate on the dais to seat the reformist",
+              "leads_to": "resolution:reformist_takes_office"
+            },
+            {
+              "id": "expose_the_scandal",
+              "label": "Present the old ledger proving the bell was pawned",
+              "leads_to": "resolution:charter_voided_in_scandal"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "reformist_takes_office",
+        "reached_by": "The pilot breaks the patrol and delivers the crate to the dais before midnight.",
+        "summary": "{role:reformist_candidate} is sworn into office on the weighted dais. {role:incumbent_administrator} yields, and dockworker wages increase across the station.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "reformist_candidate",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "incumbent_administrator",
+            "fate": "ruined"
+          },
+          {
+            "type": "law_change",
+            "law": "tariff_on_goods",
+            "change": "repealed"
+          },
+          {
+            "type": "deed",
+            "tag": "seated_the_reform_mayor",
+            "public_summary": "A pilot delivered the tiebreaker relic past security guards, seating the union candidate."
+          }
+        ],
+        "seeds": [
+          "new_leader_untested",
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "incumbent_retains_power",
+        "reached_by": "The pilot takes the patrol commander's pardon and dumps the crate.",
+        "summary": "The midnight deadline passes without delivery. {role:incumbent_administrator} declares the charter default and retains control under emergency bylaws.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "incumbent_administrator",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "reformist_candidate",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "crackdown"
+            ],
+            "remove": [
+              "election"
+            ]
+          },
+          {
+            "type": "deed",
+            "tag": "scuttled_mayoral_tiebreaker",
+            "public_summary": "A pilot took a port pardon, letting the old manager retain power after an electoral tie."
+          }
+        ],
+        "seeds": [
+          "grudge_against_player",
+          "law_tightened"
+        ]
+      },
+      {
+        "id": "charter_voided_in_scandal",
+        "reached_by": "The pilot presents the pawn ledger proving the bell was stolen decades ago.",
+        "summary": "The pawn scandal erupts on the council floor. Both campaigns are discredited, the municipal charter is suspended, and outer investors freeze funding.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "incumbent_administrator",
+            "fate": "exposed"
+          },
+          {
+            "type": "cast_fate",
+            "target": "reformist_candidate",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "power_vacuum"
+            ],
+            "remove": [
+              "election"
+            ]
+          },
+          {
+            "type": "deed",
+            "tag": "exposed_mayoral_relic_hoax",
+            "public_summary": "A pilot exposed that the station's founding bell had been pawned for scrap, collapsing the government."
+          }
+        ],
+        "seeds": [
+          "leader_discredited",
+          "power_vacuum"
+        ]
+      },
+      {
+        "id": "stalemate_cancels_election",
+        "reached_by": "The pilot never intervenes.",
+        "summary": "No bell arrives before the midnight chime. {role:incumbent_administrator} suspends the election and rules by municipal decree while strikes spread.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "incumbent_administrator",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "strike"
+            ],
+            "remove": [
+              "election"
+            ]
+          },
+          {
+            "type": "economy",
+            "good": "parts",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "power_vacuum"
+        ]
+      }
+    ],
+    "default_resolution": "stalemate_cancels_election",
+    "loose_threads": [
+      {
+        "id": "t_pawn_broker_lease",
+        "surface": "station_notice",
+        "detail": "The pawn receipt tucked in the relic ledger is countersigned by a liquidation brokerage that still holds commercial leases on the outer ring.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_lead_ballast_stamps",
+        "surface": "scan",
+        "detail": "The serial numbers on the lead ingots match ballast weights removed from a municipal dredge tender during the previous decade's refit.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "sabotage"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "bribery",
+        "forged_records",
+        "debt_leverage"
+      ],
+      "motives": [
+        "control",
+        "greed"
+      ]
+    },
+    "law_hooks": [
+      "tariff_on_goods",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Municipal electoral board deadlocked; 90-year-old bell race charter rule activated in {system}.",
+      "Supporters of rival candidates stage noisy vigils outside council chambers awaiting relic arrival.",
+      "Port authority denies claims that security patrols are blocking transit routes to the voting dais."
+    ],
+    "voice_direction": {
+      "reformist_candidate": "Boisterous, rapid-fire speech with frequent populist quips. Never admits she has not read the station municipal code.",
+      "incumbent_administrator": "Dry, punctilious, and pauses frequently to consult procedural notes. Becomes shrill whenever the station vault is mentioned."
+    },
+    "novelty_tags": [
+      "election_tiebreaker",
+      "ceremonial_relic",
+      "founding_bell",
+      "municipal_politics",
+      "pawned_artifact"
+    ]
+  }
+]

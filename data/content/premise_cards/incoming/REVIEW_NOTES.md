@@ -5,6 +5,15 @@ once it is done.
 
 ---
 
+## 0. premise.the_mayoral_tiebreaker (batch_51)
+
+The tiebreaker race is fun, but the secret is a rested engine: the founding
+bell was secretly sold and swapped for lead ballast with fake seals (a
+substitute swapped in to hide a theft). Keep the bell race; give it a
+different secret (for example the bell is real but nobody can lift it, both
+candidates are secretly the same faction's pick, or the proviso was a joke
+clause nobody thought would ever be used). Keep the id.
+
 ## 1. One suggested engine, used seven times
 
 Last notes suggested "two good causes competing for one scarce thing" as a
@@ -49,10 +58,8 @@ the same session.
 
 ---
 
-Last round: all 5 of batch_50 approved (the_sanatorium_retainer,
-the_forfeit_pinnace, the_charitable_calcification, the_probationary_pledge,
-the_swapped_toxicology_panels). No rested engines this time; the forfeit
-pinnace and the probationary pledge were highlights. Three theme tags were
-corrected by the reviewer (reinvention / faith_and_doubt / cost_of_neutrality
-removed where the story isn't about them). "Undoing your own past good deed"
-has now been used twice: rest it too.
+Last round: 9 of 10 approved (the_boundary_realignment, the_dockyard_mousers,
+the_dialect_deadlock, the_armistice_cipher, the_championship_dampener,
+the_centennial_pyrotechnics, the_demonetized_specie,
+the_beacon_keepers_repentance, the_nonaligned_hospice). Strong batches; the
+armistice cipher and the championship dampener were highlights.

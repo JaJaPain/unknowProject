@@ -1,0 +1,371 @@
+{
+  "id": "premise.the_armistice_cipher",
+  "schema_version": 1,
+  "title": "The Armistice Cipher",
+  "logline": "A drifting cluster of wartime proximity mines threatens a civilian gate lane, but the two retired enemy commanders who hold the disarm keys refuse to transmit their half first.",
+  "scale": "regional",
+  "tone": [
+    "tragic",
+    "tense"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "covenant_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "A retired squadron commodore from the northern league; proud, crippled by old radiation burns, and fiercely suspicious.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "loyalist_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Former gunnery chief for the southern coalition; lives in quiet exile tending a remote orbital hydroponic rig.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "gate_warden",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Harbor master of the central junction gate; desperate to clear the approaching minefield before civilian freighters arrive.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "drifting_minefield",
+      "kind": "object",
+      "description": "A dense cluster of magnetic antimatter mines drifting inexorably toward the transit gate threshold.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "unregistered_gunboat",
+      "kind": "ship",
+      "description": "An armed wartime patrol craft crewed by irreconcilable revanchists determined to keep the war alive.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "central_relay_dock",
+      "kind": "place",
+      "description": "The central traffic junction station where the gate corridor is monitored.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "route_closed",
+    "wreck_left_behind"
+  ],
+  "public_situation": "A cluster of dormant wartime area-denial mines has broken anchor in {system} and is drifting into the commercial gate corridor. Traffic is suspended.",
+  "private_truth": "The armistice treaty encoded the disarm sequence so that neither commander's cryptographic cipher can defuse the mines alone without revealing their wartime command frequency.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "split_cryptographic_keys_protect_wartime_identities"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The gate authority issues an all-ships navigation warning as the mine cluster approaches threshold clearance.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "gate_warden",
+          "target": "drifting_minefield",
+          "reason": "The gate warden needs an independent pilot with reinforced shielding to scan the minefield core to confirm the ordnance arming model.",
+          "private_fact": "She knows the station lacks kinetic batteries heavy enough to detonate the mines safely without shattering the gate framework.",
+          "outcome_tags": [
+            "telemetry_secured"
+          ],
+          "routes": {
+            "telemetry_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Civilian traffic halts in neighboring systems as transit insurance underwriters cancel gate policies.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "gate_warden",
+          "target": "central_relay_dock",
+          "reason": "The warden hires the pilot to jump to the northern sanctuary and deliver the minefield telemetry to the retired northern commodore.",
+          "private_fact": "The commodore has refused twelve previous military hails and will only receive couriers flying unflagged civilian ships.",
+          "outcome_tags": [
+            "telemetry_delivered"
+          ],
+          "routes": {
+            "telemetry_delivered": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "covenant_veteran",
+          "target": "central_relay_dock",
+          "reason": "The northern commodore entrusts the pilot with an encrypted hardware key, demanding it only be unlocked if the southern veteran provides proof of life.",
+          "private_fact": "He fears that transmitting his half of the cipher will expose his real coordinates to prosecution tribunals.",
+          "outcome_tags": [
+            "key_alpha_secured"
+          ],
+          "routes": {
+            "key_alpha_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Revanchist radio broadcasts denounce the armistice and vow to destroy any ship attempting to clear the minefield.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "gate_warden",
+          "target": "central_relay_dock",
+          "reason": "The pilot must travel to an outer farm rig in the southern system to collect the second matching cipher module from the southern veteran.",
+          "private_fact": "The southern veteran believes the northern commodore died ten years ago and thinks this mission is a police sting.",
+          "outcome_tags": [
+            "key_beta_secured"
+          ],
+          "routes": {
+            "key_beta_secured": "next"
+          }
+        },
+        {
+          "verb": "kill_ships",
+          "requester": "loyalist_veteran",
+          "target": "unregistered_gunboat",
+          "reason": "The southern veteran requires the pilot to destroy a revanchist gunboat that has stalked their farm rig before they will hand over the key.",
+          "private_fact": "The gunboat crew is led by his own nephew, who considers any cooperation with the old enemy treason.",
+          "outcome_tags": [
+            "gunboat_destroyed"
+          ],
+          "routes": {
+            "gunboat_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The minefield reaches critical distance from the jump gate ring. Proximity alarms sound across {system}.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "gate_warden",
+          "target": "central_relay_dock",
+          "reason": "The warden needs the pilot to deliver both cryptographic modules to the central gate transmitter before the magnetic detonators lock onto the station.",
+          "private_fact": "Entering both keys will permanently upload both commanders' wartime service records to the public naval registry.",
+          "outcome_tags": [
+            "keys_uploaded"
+          ],
+          "routes": {
+            "keys_uploaded": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The transmission console is ready. Activating the cipher defuses the minefield but exposes both veterans to war crimes prosecution.",
+        "options": [
+          {
+            "id": "broadcast_full_cipher",
+            "label": "Broadcast the full dual cipher and disarm the minefield",
+            "leads_to": "resolution:minefield_defused_veterans_exposed"
+          },
+          {
+            "id": "wipe_service_records",
+            "label": "Scramble the identity headers before transmission, risking partial detonation",
+            "leads_to": "resolution:mines_scrambled_partial_damage"
+          },
+          {
+            "id": "withhold_ciphers",
+            "label": "Refuse to broadcast and let the gate authority evacuate",
+            "leads_to": "resolution:gate_abandoned_to_mines"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "minefield_defused_veterans_exposed",
+      "reached_by": "The pilot broadcasts both keys in full, defusing the minefield completely.",
+      "summary": "The minefield stands down safely and the gate reopens, but military investigators immediately issue arrest warrants for both {role:covenant_veteran} and {role:loyalist_veteran}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "covenant_veteran",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyalist_veteran",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "gate_warden",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_opened"
+          ],
+          "remove": [
+            "lane_closed"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "defused_the_armistice_mines",
+          "public_summary": "A pilot disarmed a dormant border minefield, though it cost two retired commanders their freedom."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "mines_scrambled_partial_damage",
+      "reached_by": "The pilot scrubs the registry headers, protecting the veterans at the cost of imperfect disarmament.",
+      "summary": "Most mines deactivate, but a rogue pair detonates against the outer gate pylon. {role:gate_warden} faces repair delays, while both veterans escape into hiding.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "covenant_veteran",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "loyalist_veteran",
+          "fate": "fled"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "shielded_wartime_veterans",
+          "public_summary": "A pilot wiped identity records while disarming border mines, protecting old veterans from tribunal arrest."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "gate_abandoned_to_mines",
+      "reached_by": "The pilot refuses to broadcast or never intervenes.",
+      "summary": "The drifting minefield impacts the gate ring, shattering the focal mirrors. {role:gate_warden} evacuates the hub, and the junction lane closes indefinitely.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "gate_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "gate_abandoned_to_mines",
+  "loose_threads": [
+    {
+      "id": "t_ordnance_contract_anomaly",
+      "surface": "scan",
+      "detail": "The telemetry signature from the minefield matches a secret naval ordnance contract that was officially audited and declared cancelled thirty years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "manufactured_crisis"
+      ]
+    },
+    {
+      "id": "t_shared_charity_trust",
+      "surface": "dialogue",
+      "detail": "A clerk at the relay dock mentions that an anonymous charitable trust has been paying the port fees for both veterans' remote berths from the same account.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "forged_records",
+      "proxy_violence"
+    ],
+    "motives": [
+      "fear",
+      "revenge",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Drifting cluster of wartime area-denial mines threatens commercial gate corridor in {system}.",
+    "Gate authorities appeal for demobilization armistice records to clear dormant ordnance.",
+    "Unregistered gunboats sighted harassing outer orbital stations near old border sector."
+  ],
+  "voice_direction": {
+    "covenant_veteran": "Speaks in harsh, measured monosyllables and refuses to use pleasantries. Never mentions his former rank.",
+    "loyalist_veteran": "Soft-spoken, weary, and pauses as if expecting incoming fire. Changes the topic whenever his family is mentioned.",
+    "gate_warden": "Fast, stressed, and snaps at radio operators between sentences. Never admits that her emergency evacuation tugs are uncrewed."
+  },
+  "novelty_tags": [
+    "armistice_cipher",
+    "wartime_minefield",
+    "dual_key_cryptography",
+    "veteran_exile",
+    "gate_hazard"
+  ]
+}

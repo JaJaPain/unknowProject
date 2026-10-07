@@ -1,0 +1,410 @@
+{
+  "id": "premise.the_nonaligned_hospice",
+  "schema_version": 1,
+  "title": "The Nonaligned Hospice",
+  "logline": "A pacifist medical enclave in a demilitarized buffer system is besieged by both warring factions who demand exclusive control over its trauma facilities.",
+  "scale": "regional",
+  "tone": [
+    "bleak",
+    "tragic"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "hospice_director",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Chief physician of the sanctuary hospital; stubbornly devoted to treating all wounded regardless of uniform or creed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "blockade_commander",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "A ruthless coalition commander enforcing a medical supply embargo against the neutral hospital.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "buffer_hospice",
+      "kind": "place",
+      "description": "A sprawling orbital hospital complex moored in a demilitarized buffer sector.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "raiding_corvette",
+      "kind": "ship",
+      "description": "An unflagged strike vessel attempting to plunder pharmaceutical stores from the hospital.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "coalition_depot",
+      "kind": "place",
+      "description": "A fortified supply terminal in a neighboring system where medicines are tightly rationed.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "shortage"
+    ],
+    "states_forbidden": [
+      "boom"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "martyr_made"
+  ],
+  "public_situation": "An independent orbital hospice in the demilitarized buffer zone is cut off from medicine and food by competing military blockades.",
+  "private_truth": "Both warring coalitions fear that if the neutral hospital survives, it will testify before treaty tribunals regarding civilian gas bombardments.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "neutral_hospice_holds_chemical_warfare_casualty_logs"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Emergency distress beacons pulse red across the buffer system as hospital power switches to auxiliary batteries.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "hospice_director",
+          "target": "buffer_hospice",
+          "reason": "The director hires an independent hauler to collect blood plasma containers from an outer triage satellite before cooling systems fail.",
+          "private_fact": "She is treating high-ranking defectors from both armies in the same ward and cannot reveal their identities to the blockading fleet.",
+          "outcome_tags": [
+            "plasma_delivered"
+          ],
+          "routes": {
+            "plasma_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Both coalitions step up border interdictions, threatening to confiscate medical cargo designated for the buffer zone.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "hospice_director",
+          "target": "coalition_depot",
+          "reason": "The director funds an unflagged civilian runner to purchase synthetic antibiotics on the open market in a neutral system.",
+          "private_fact": "She has traded away the hospital's last reserve transport ship to raise the funds for the pharmaceutical purchase.",
+          "outcome_tags": [
+            "antibiotics_purchased"
+          ],
+          "routes": {
+            "antibiotics_purchased": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "blockade_commander",
+          "target": "coalition_depot",
+          "reason": "The commander contracts the pilot to deliver formal requisition warrants demanding the hospital turn over all coalition deserters.",
+          "private_fact": "His own field hospitals are out of antibiotics and his soldiers are dying from gangrene behind the lines.",
+          "outcome_tags": [
+            "warrants_served"
+          ],
+          "routes": {
+            "warrants_served": "next"
+          }
+        }
+      ],
+      "missions_mode": "all",
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "Unmarked raider corvettes begin shelling the hospital's outer hydroponic biodomes to force a surrender.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "hospice_director",
+          "target": "raiding_corvette",
+          "reason": "The director needs a pilot to destroy a privateer corvette that plundered the hospital's oxygen tanks and recover the stolen containers.",
+          "private_fact": "The raiders were secretly paid by coalition intelligence to loot the hospital without triggering official war crimes charges.",
+          "outcome_tags": [
+            "oxygen_recovered"
+          ],
+          "routes": {
+            "oxygen_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "same_system",
+      "public_change": "The blockade closes within point-blank kinetic range of the hospital's central trauma core.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hospice_director",
+          "target": "raiding_corvette",
+          "reason": "The director needs the pilot to escort the final civilian relief convoy through the blockade cordon.",
+          "private_fact": "The blockade captain hails mid-fight, offering safe transit if the pilot hands over the hospital's secret chemical warfare logs.",
+          "outcome_tags": [
+            "blockade_broken",
+            "logs_surrendered"
+          ],
+          "routes": {
+            "blockade_broken": "resolution:hospice_survives_neutral",
+            "logs_surrendered": "resolution:logs_sold_for_passage"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The blockade is broken, but both militaries vow to storm the station unless a political concession is granted.",
+        "options": [
+          {
+            "id": "pledge_to_coalition",
+            "label": "Surrender hospital neutrality and accept coalition takeover for protection",
+            "leads_to": "resolution:hospice_absorbed_by_coalition"
+          },
+          {
+            "id": "evacuate_into_diaspora",
+            "label": "Evacuate the patients and staff as refugees across the jump gate",
+            "leads_to": "resolution:hospice_evacuates_diaspora"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "hospice_survives_neutral",
+      "reached_by": "The pilot breaks the blockade and preserves the hospital's independence.",
+      "summary": "{role:hospice_director} maintains the sanctuary, treating all wounded equally. {role:blockade_commander} faces international reprimand for the siege.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hospice_director",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_commander",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "refugee_influx"
+          ],
+          "remove": [
+            "shortage"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "defended_the_neutral_hospice",
+          "public_summary": "A pilot broke a military blockade, saving an independent orbital hospital and its patients."
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "logs_sold_for_passage",
+      "reached_by": "The pilot surrenders the chemical logs to the blockade captain during combat.",
+      "summary": "The blockade lifts in exchange for the buried evidence. {role:hospice_director} saves the wards, but the atrocities go unpunished.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hospice_director",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_commander",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "traded_war_logs_for_passage",
+          "public_summary": "A pilot traded casualty files to a blockading commander to buy safe transit for medicine."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "hospice_absorbed_by_coalition",
+      "reached_by": "The hospital surrenders its neutrality, becoming a coalition military installation.",
+      "summary": "{role:blockade_commander} takes command of {role:buffer_hospice}. Enemy wounded are expelled as prisoners, and hospital neutrality is permanently extinguished.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "blockade_commander",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospice_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": [
+            "shortage"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "annexed_the_neutral_hospital",
+          "public_summary": "A military coalition annexed the buffer hospice, ending its century of impartial mercy."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "hospice_evacuates_diaspora",
+      "reached_by": "The hospital staff evacuates the patients into the refugee diaspora.",
+      "summary": "{role:buffer_hospice} is abandoned as refugees scatter across the gates. {role:hospice_director} goes into exile with the surviving patients.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hospice_director",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_commander",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "refugee_influx"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "hospice_starves_in_blockade",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "The blockade strangles the hospital. Power fails, life support collapses, and {role:buffer_hospice} is evacuated in ruins.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hospice_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "blockade_commander",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": [
+            "shortage"
+          ]
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "hospice_starves_in_blockade",
+  "loose_threads": [
+    {
+      "id": "t_diaspora_foundation_ampoules",
+      "surface": "cargo",
+      "detail": "The serial numbers on the synthetic antibiotic ampoules match a consignment paid for by a civilian diaspora foundation two jumps away.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_shared_mortgage_bonds",
+      "surface": "station_notice",
+      "detail": "A bank audit notice attached to the hospital intake manifest shows that both warring factions hold commercial mortgages on the hospice orbital ring.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "proxy_violence",
+      "debt_leverage",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "fear",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Buffer zone hospice appeals for emergency humanitarian corridors as supply blockades tighten.",
+    "Coalition naval command warns civilian freighters away from contested hospital perimeter.",
+    "Tribunal envoys demand inspection access to demilitarized buffer station casualties in {system}."
+  ],
+  "voice_direction": {
+    "hospice_director": "Tired, quiet, but speaks with unshakeable moral firmness. Never raises her voice even under incoming fire.",
+    "blockade_commander": "Clipped, abrasive, and treats medical treaties as administrative nuisances. Never mentions his own wounded soldiers."
+  },
+  "novelty_tags": [
+    "neutral_hospice",
+    "medical_blockade",
+    "demilitarized_buffer",
+    "wartime_triage",
+    "chemical_casualty_logs"
+  ]
+}

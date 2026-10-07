@@ -1,0 +1,357 @@
+{
+  "id": "premise.the_demonetized_specie",
+  "schema_version": 1,
+  "title": "The Demonetized Specie",
+  "logline": "A sudden central bank currency demonetization gives physical bullion holders 48 hours to redeem their specie before it becomes scrap, igniting a violent scramble across the system.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "price_of_profit",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "bullion_factor",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "An independent metal broker sitting on a mountain of stamped silver coins that will become worthless scrap at midnight.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bank_liquidator",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "An uncompromising recovery officer enforcing the central reserve bank's currency demonetization deadline.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "collection_frigate",
+      "kind": "ship",
+      "description": "A heavily armored repossession vessel enforcing debt settlements before the specie currency expires.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "vault_station",
+      "kind": "place",
+      "description": "The central banking repository where old coinage must be physically delivered for credit redemption.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "exchange_wharf",
+      "kind": "place",
+      "description": "A crowded commercial transfer terminal flooded with desperate merchants trying to dump expiring coins.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "price_crash"
+    ],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage"
+  ],
+  "public_situation": "The central monetary board declares all pre-treaty physical specie demonetized, triggering panic runs on exchange counters throughout {system}.",
+  "private_truth": "The reserve bank secretly orchestrated the rapid demonetization to bankrupt independent factors holding commodity-backed bullion notes.",
+  "core_why": {
+    "motive": "control",
+    "secret": "rapid_currency_demonetization_bankrupts_independent_factors"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Exchange rates on physical currency collapse by eighty percent on trading boards across the station.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "bullion_factor",
+          "target": "exchange_wharf",
+          "reason": "The factor contracts a pilot to buy discounted bullion coins from panicked retail shops before the exchange counter closes for the evening.",
+          "private_fact": "He is leveraged to the brink and will lose his home if he cannot redeem the minimum statutory quota at the central vault.",
+          "outcome_tags": [
+            "bullion_bought"
+          ],
+          "routes": {
+            "bullion_bought": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Armed recovery agents establish blockades around commercial docks to intercept unregistered cash movements.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "bank_liquidator",
+          "target": "vault_station",
+          "reason": "The liquidator hires an outside courier to transport sealed foreclosure ledgers to the vault before factor lawyers file an injunction.",
+          "private_fact": "She has been promised a five percent collection bonus on every independent factor asset confiscated before the deadline.",
+          "outcome_tags": [
+            "ledgers_delivered"
+          ],
+          "routes": {
+            "ledgers_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The central vault announces a surprise four-hour cutoff on intake slips, locking dozens of transports out of the harbor.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "bullion_factor",
+          "target": "vault_station",
+          "reason": "The factor needs an unflagged runner to rush the certified specie intake slips through the security perimeter before the vault doors seal.",
+          "private_fact": "He knows the liquidator ordered the early cutoff specifically to force his firm into default.",
+          "outcome_tags": [
+            "intake_slips_rushed"
+          ],
+          "routes": {
+            "intake_slips_rushed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The collection frigate moves into firing position over the vault intake approach, threatening any ship attempting late delivery.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "bullion_factor",
+          "target": "collection_frigate",
+          "reason": "The factor hires the pilot to punch through the repossession vessel's interdiction net to dock the bullion cargo at the vault.",
+          "private_fact": "The frigate commander offers to let the pilot pass in exchange for keeping half the unminted coin crates aboard.",
+          "outcome_tags": [
+            "frigate_crippled",
+            "accepted_split"
+          ],
+          "routes": {
+            "frigate_crippled": "resolution:factor_redeems_bullion",
+            "accepted_split": "resolution:split_spoils_at_cutoff"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the frigate neutralized, the pilot stands at the vault gates with the bullion shipment as the final cutoff sirens wail.",
+        "options": [
+          {
+            "id": "deliver_to_factor_account",
+            "label": "Deposit the coins to redeem the factor's full balance",
+            "leads_to": "resolution:factor_redeems_bullion"
+          },
+          {
+            "id": "surrender_to_liquidator",
+            "label": "Hand the bullion to the liquidator to claim the statutory bounty",
+            "leads_to": "resolution:bank_liquidates_factor"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "factor_redeems_bullion",
+      "reached_by": "The pilot disables the collection frigate and delivers the coins to the vault in time.",
+      "summary": "{role:bullion_factor} redeems the currency at face value, surviving solvency checks. {role:bank_liquidator} fails their quarterly foreclosure quota.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bullion_factor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bank_liquidator",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "beat_the_currency_demonetization",
+          "public_summary": "A runner punched through repossession ships to cash out a bullion factor before a deadline."
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "split_spoils_at_cutoff",
+      "reached_by": "The pilot takes the frigate commander's deal, splitting the bullion.",
+      "summary": "Half the bullion is diverted off-ledger while {role:bullion_factor} secures only partial redemption. {role:bank_liquidator} files a compromise audit.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bullion_factor",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bank_liquidator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "skimmed_the_demonetized_specie",
+          "public_summary": "A pilot took a cut from a bank enforcer, leaving a bullion factor with half their payout."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "bank_liquidates_factor",
+      "reached_by": "The pilot surrenders the coins to the liquidator for the bounty.",
+      "summary": "{role:bank_liquidator} seizes the bullion, bankrupting {role:bullion_factor}. The central bank consolidates its financial monopoly over the outer docks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bank_liquidator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bullion_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": [
+            "price_crash"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "enforced_bank_demonetization",
+          "public_summary": "A mercenary handed expiring specie to bank collectors, liquidating an independent factor."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "demonetization_default",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "The demonetization deadline passes without redemption. {role:bullion_factor} goes bankrupt, and panic sweeps {system}'s trade docks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "bullion_factor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bank_liquidator",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": [
+            "price_crash"
+          ]
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "demonetization_default",
+  "loose_threads": [
+    {
+      "id": "t_redemption_ratio_shift",
+      "surface": "price_board",
+      "detail": "The currency redemption ratios at the central vault shifted four times in the night under codes belonging to a single private trust.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_magistrate_forged_warrant",
+      "surface": "station_notice",
+      "detail": "The liquidation order posted outside the exchange bears the forged signature of a magistrate who resigned six months ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Central reserve bank demonetizes pre-treaty physical coinage; 48-hour sunset window enacted.",
+    "Crowds riot outside bullion exchange offices in {system} as physical currency values plummet.",
+    "Repossession vessels patrol commercial anchorages enforcing credit liquidation orders."
+  ],
+  "voice_direction": {
+    "bullion_factor": "Sweaty, frantic, and clutches account slates with trembling fingers. Never admits how heavily he borrowed against the currency.",
+    "bank_liquidator": "Chilled, precise, and checks a pocket chronometer every few sentences. Avoids discussing the bank's underlying reserve reserves."
+  },
+  "novelty_tags": [
+    "currency_demonetization",
+    "specie_redemption",
+    "debt_liquidation",
+    "bank_monopoly",
+    "bullion_panic"
+  ]
+}

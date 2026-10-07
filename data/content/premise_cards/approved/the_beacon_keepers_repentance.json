@@ -1,0 +1,340 @@
+{
+  "id": "premise.the_beacon_keepers_repentance",
+  "schema_version": 1,
+  "title": "The Beacon Keeper's Repentance",
+  "logline": "A notorious corsair tactician living under a quiet alias as a lighthouse engineer is blackmailed by their former syndicate to reveal patrol blind spots or face public exposure.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "reinvention",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "beacon_keeper",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "A solitary navigation beacon engineer living under an assumed name; formerly the chief navigator for an infamous pirate fleet.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_lieutenant",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "An ambitious raider officer who tracked down their former mentor to demand flight corridor ambush vectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "harbor_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A thorough sector safety inspector conducting routine audits of remote automated beacons.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "navigation_spire",
+      "kind": "place",
+      "description": "An isolated navigation lighthouse anchoring a hazardous asteroid shipping lane.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corsair_skiff",
+      "kind": "ship",
+      "description": "A fast strike ship dispatched by the raiders to force the keeper's compliance.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "curfew"
+    ]
+  },
+  "accepts_seeds": [
+    "quiet_cover_up",
+    "evidence_loose"
+  ],
+  "public_situation": "Shipping companies report intermittent telemetry dropouts from the outer navigation spire in {system}, prompting routine maintenance inquiries.",
+  "private_truth": "The keeper is a reformed corsair tactician whose old cartel is threatening to broadcast their true identity to prosecutors unless they reveal patrol blind spots.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "blackmailed_corsair_protects_reformed_civilian_identity"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The navigation spire's warning pulse flickers erratically, slowing commercial traffic through the debris field.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "harbor_inspector",
+          "target": "navigation_spire",
+          "reason": "The inspector hires a contracted courier to deliver replacement focal lenses to the solitary keeper before filing a formal service violation.",
+          "private_fact": "She has grown suspicious of the keeper's spotless forged papers and requested a background archive verification.",
+          "outcome_tags": [
+            "lenses_delivered"
+          ],
+          "routes": {
+            "lenses_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Unmarked raider reconnaissance probes are detected shadowing the navigation lane.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "beacon_keeper",
+          "target": "navigation_spire",
+          "reason": "The keeper hires the pilot to retrieve an old encrypted memory drive from a dead drop in a nearby hollow rock before the cartel extracts it.",
+          "private_fact": "The drive contains the cartel's internal extortion ledger, which the keeper kept as insurance when they abandoned piracy.",
+          "outcome_tags": [
+            "ledger_recovered"
+          ],
+          "routes": {
+            "ledger_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "A corsair skiff docks near the spire pylon, threatening to broadcast the keeper's warrant dossier.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "beacon_keeper",
+          "target": "corsair_skiff",
+          "reason": "The keeper hires the pilot to eliminate the cartel skiff before the lieutenant can transmit the blackmail broadcast to the inspector.",
+          "private_fact": "The keeper is willing to sacrifice their savings and liberty to prevent the cartel from staging another massacre in the lane.",
+          "outcome_tags": [
+            "skiff_destroyed"
+          ],
+          "routes": {
+            "skiff_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the cartel skiff neutralized, the pilot holds the keeper's extortion drive and true identity records.",
+        "options": [
+          {
+            "id": "burn_the_records",
+            "label": "Destroy the records, protecting the keeper's new life and the beacon",
+            "leads_to": "resolution:keeper_preserves_sanctuary"
+          },
+          {
+            "id": "hand_to_inspector",
+            "label": "Deliver the records to the inspector to arrest the keeper and clear the cartel bounty",
+            "leads_to": "resolution:keeper_arrested_for_past"
+          },
+          {
+            "id": "sell_back_to_cartel",
+            "label": "Sell the extortion ledger back to the cartel for a heavy ransom",
+            "leads_to": "resolution:blackmail_ledger_sold"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "keeper_preserves_sanctuary",
+      "reached_by": "The pilot eliminates the skiff and destroys the incriminating past records.",
+      "summary": "{role:beacon_keeper} continues their quiet watch over {role:navigation_spire}. The shipping lane remains safe, and the cartel loses track of the defector.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "beacon_keeper",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_inspector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "shielded_the_reformed_corsair",
+          "public_summary": "A pilot destroyed a pirate skiff, protecting a solitary beacon keeper's quiet retirement."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "route_opened"
+      ]
+    },
+    {
+      "id": "keeper_arrested_for_past",
+      "reached_by": "The pilot delivers the records to the inspector, bringing down the keeper.",
+      "summary": "{role:harbor_inspector} arrests {role:beacon_keeper} for decades of piracy. The spire falls dark until a relief crew arrives, disrupting transit.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "beacon_keeper",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_the_pirate_navigator",
+          "public_summary": "A pilot handed old corsair logs to inspectors, sending an honest beacon engineer to prison."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "blackmail_ledger_sold",
+      "reached_by": "The pilot sells the extortion ledger back to the cartel.",
+      "summary": "The cartel recovers their extortion archives and executes {role:beacon_keeper} off-screen. The spire is abandoned to pirate monitoring.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "beacon_keeper",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "sold_the_reformed_corsair",
+          "public_summary": "A pilot sold an extortion dossier back to raiders, leaving a lighthouse keeper to their fate."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "keeper_capitulates_to_cartel",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "{role:beacon_keeper} yields to cartel threats, sabotaging the spire beacon. Three freighters are ambushed, and {role:harbor_inspector} is demoted.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "beacon_keeper",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbor_inspector",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "faction_emboldened"
+      ]
+    }
+  ],
+  "default_resolution": "keeper_capitulates_to_cartel",
+  "loose_threads": [
+    {
+      "id": "t_welfare_society_remittance",
+      "surface": "dialogue",
+      "detail": "A supply clerk notes that the beacon keeper's retirement pension was quietly funded by a maritime welfare society in another sector.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_customs_firmware_match",
+      "surface": "scan",
+      "detail": "The corsair skiff's communications module uses an encryption algorithm identical to standard customs enforcement hardware.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "blackmail",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "revenge",
+      "survival",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Navigation warnings issued after outer spire telemetry flickers in {system}.",
+    "Harbor police announce increased patrols around remote automated navigational beacons.",
+    "Shipping guilds report isolated pirate skiff sightings near asteroid convergence corridors."
+  ],
+  "voice_direction": {
+    "beacon_keeper": "Soft, gravelly, and speaks with long silences as if unaccustomed to human conversation. Never mentions his former ship names.",
+    "cartel_lieutenant": "Sneering, familiar, and speaks with casual cruelty. Refuses to acknowledge that their fleet has been weakened by losses.",
+    "harbor_inspector": "Brisk, bureaucratic, and constantly types into a tablet. Becomes defensive when questioned about inspector staffing shortages."
+  },
+  "novelty_tags": [
+    "reformed_pirate",
+    "blackmailed_defector",
+    "lighthouse_keeper",
+    "navigation_spire",
+    "assumed_identity"
+  ]
+}

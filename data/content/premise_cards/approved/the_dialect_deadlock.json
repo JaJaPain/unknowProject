@@ -1,0 +1,337 @@
+{
+  "id": "premise.the_dialect_deadlock",
+  "schema_version": 1,
+  "title": "The Dialect Deadlock",
+  "logline": "An obsolete regional idiom in a century-old station treaty leaves two allied administrators convinced the other is legally responsible for an expensive gate relay overhaul.",
+  "scale": "personal",
+  "tone": [
+    "political",
+    "absurd"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "lexical_archivist",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "A philologist who uncovered the root grammatical ambiguity in the founding charter.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outpost_governor",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Administrator of the outer relay station; operating on a shoestring budget and convinced the inner habitat is cheating them.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "inner_bailiff",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Auditor for the prosperous inner ring station; convinced their translation of the charter is legally watertight.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "archaic_folio",
+      "kind": "object",
+      "description": "The original hand-illuminated parchment deed signed by the founding colonial captains.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relay_spire",
+      "kind": "place",
+      "description": "The decaying communication and navigation relay station stranded between the two habitats.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "quiet_cover_up",
+    "law_tightened"
+  ],
+  "public_situation": "Maintenance on the vital midpoint navigation relay has halted because two allied stations are locked in a diplomatic standoff over who must pay for replacement couplers.",
+  "private_truth": "The archaic charter phrase for 'shared upkeep' used a colonial term that meant 'whichever party is closest' in one dialect and 'whichever party has greater wealth' in the other.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "colonial_idiom_grammar_splits_treaty_liability"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The midpoint navigation relay switches to low-power standby as maintenance funding expires.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "lexical_archivist",
+          "target": "relay_spire",
+          "reason": "The archivist needs a neutral ship to scan the physical cornerstone at the relay station where the original treaty clause was engraved in copper.",
+          "private_fact": "She already suspects the original phrasing was a deliberately vague compromise penned by a colonial scribe trying to stop a brawl.",
+          "outcome_tags": [
+            "inscription_scanned"
+          ],
+          "routes": {
+            "inscription_scanned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Both station offices dispatch competing legal summonses claiming breach of contract.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "outpost_governor",
+          "target": "relay_spire",
+          "reason": "The governor hires an outside courier to deliver the certified colonial grammar lexicon to the relay tribunal before the bailiff files an eviction writ.",
+          "private_fact": "His station has already spent its maintenance contingency on an emergency solar array repair and cannot pay a single credit.",
+          "outcome_tags": [
+            "lexicon_delivered"
+          ],
+          "routes": {
+            "lexicon_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The relay transformer sparks out, cutting navigational telemetry across the sector channel.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "inner_bailiff",
+          "target": "relay_spire",
+          "reason": "The bailiff contracts a hauler to purchase replacement transformers on the open market, seeking to bill the cost to whichever party loses the charter tribunal.",
+          "private_fact": "The inner station's legal department advised him that losing the grammatical case would void twelve other trade agreements.",
+          "outcome_tags": [
+            "parts_delivered"
+          ],
+          "routes": {
+            "parts_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The archivist presents three interpretations of the treaty to the pilot, asking which version should be submitted as the binding arbitration record.",
+        "options": [
+          {
+            "id": "certify_split_cost",
+            "label": "Certify an equal fifty-fifty liability clause",
+            "leads_to": "resolution:compromise_split"
+          },
+          {
+            "id": "certify_inner_pays",
+            "label": "Certify the wealth-based clause binding the inner habitat",
+            "leads_to": "resolution:inner_bears_burden"
+          },
+          {
+            "id": "certify_void_charter",
+            "label": "Declare the archaic treaty hopelessly void",
+            "leads_to": "resolution:charter_dissolved"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "compromise_split",
+      "reached_by": "The pilot submits the equal-liability translation, forcing a joint compromise.",
+      "summary": "Both habitats sign an updated joint protocol. {role:relay_spire} resumes telemetry, and {role:lexical_archivist} is appointed treaty secretary.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lexical_archivist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "outpost_governor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "inner_bailiff",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "settled_treaty_dispute",
+          "public_summary": "A pilot helped archivists untangle an old dialect knot, saving an allied relay accord."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "inner_bears_burden",
+      "reached_by": "The pilot certifies the wealth-based colonial clause, forcing the inner station to pay.",
+      "summary": "{role:inner_bailiff} pays for the overhaul under protest. {role:outpost_governor} avoids bankruptcy, but inner-ring trade tariffs spike in retaliation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "inner_bailiff",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "outpost_governor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "taxed_the_inner_ring",
+          "public_summary": "An ancient dialect ruling forced the inner habitat to swallow the full bill for a border spire."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "charter_dissolved",
+      "reached_by": "The pilot declares the treaty void due to linguistic ambiguity.",
+      "summary": "The mutual-aid pact collapses. {role:relay_spire} is abandoned to private salvage, and navigation fees triple across the sector.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "lexical_archivist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "outpost_governor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "inner_bailiff",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "price_spike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "deadlock_strands_relay",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "Neither station yields before the deadline. {role:relay_spire} suffers catastrophic core burnout, cutting the transit corridor indefinitely.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "outpost_governor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "inner_bailiff",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "deadlock_strands_relay",
+  "loose_threads": [
+    {
+      "id": "t_lexicon_bank_watermark",
+      "surface": "dialogue",
+      "detail": "A junior clerk in the inner archives notes that five pages of the original charter lexicon were rebound in calfskin bearing a bank's watermark.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_shared_notary_retainer",
+      "surface": "station_notice",
+      "detail": "The relay tribunal register records that both stations have paid annual retainer fees to the same consulting notary for thirty years.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "slow_infiltration",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Navigation telemetry flickers as midpoint relay maintenance dispute reaches arbitration tribunal.",
+    "Outer habitat leaders accuse inner ring bailiffs of deliberate bad-faith grammar readings.",
+    "Antiquarian scholars summoned to decipher century-old settlement charter clauses in {system}."
+  ],
+  "voice_direction": {
+    "lexical_archivist": "Pedantic, quiet, and speaks with rhythmic pauses like reading an ancient manuscript. Avoids taking political sides.",
+    "outpost_governor": "Gruff, defensive, and talks fast to hide how desperate his finances are. Never mentions his station's broken solar banks.",
+    "inner_bailiff": "Smug, formal, and over-enunciates legal syllables. Never admits that his superiors want an excuse to dissolve the treaty."
+  },
+  "novelty_tags": [
+    "archaic_dialect",
+    "treaty_dispute",
+    "grammatical_ambiguity",
+    "relay_maintenance",
+    "colonial_charter"
+  ]
+}

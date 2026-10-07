@@ -1,0 +1,306 @@
+{
+  "id": "premise.the_boundary_realignment",
+  "schema_version": 1,
+  "title": "The Boundary Realignment",
+  "logline": "An administrative treaty redrawing sector borders places an independent mining cluster under a predatory customs charter overnight.",
+  "scale": "local",
+  "tone": [
+    "political",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "customs_prefect",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A rigid customs official tasked with enforcing the new territorial treaty before their jurisdiction review.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_steward",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Represents the cluster miners; desperate to clear their stockpiled ore before tariffs consume their operational margin.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "customs_cutter",
+      "kind": "ship",
+      "description": "A high-speed interceptor enforcing the newly established customs cordon.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_depot",
+      "kind": "place",
+      "description": "The newly annexed orbital transfer station collecting tariff levies under the revised sector treaty.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "free_smelter",
+      "kind": "place",
+      "description": "A smelter station in the adjacent system offering fair rates if miners can jump across the contested line.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "law_tightened",
+    "route_closed"
+  ],
+  "public_situation": "A revised border treaty between neighboring systems reclassified the outer asteroid belt under a monopoly customs tariff. Unlicensed ore runs face immediate seizure.",
+  "private_truth": "The boundary realignment was signed during peace accords without surveying the actual mining clusters, and the customs prefect must show immediate revenue to keep the cutter station funded.",
+  "core_why": {
+    "motive": "control",
+    "secret": "treaty_boundary_annexation_traps_free_miners"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Customs beacons deploy along the newly established sector perimeter, declaring all uncertified ore transfers subject to immediate impoundment.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "mining_steward",
+          "target": "consortium_depot",
+          "reason": "The steward needs a licensed contract pilot to run a test load through the new inspection gate to calculate actual tariff deductions before committing the fleet.",
+          "private_fact": "She has promised the miners the tariff is manageable, though the draft treaty rates will bankrupt half the independent dredgers.",
+          "outcome_tags": [
+            "delivered_with_levy"
+          ],
+          "routes": {
+            "delivered_with_levy": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The customs authority doubles the transit bond on outbound freight, trapping unrefined ore in the belt.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "mining_steward",
+          "target": "consortium_depot",
+          "reason": "The steward contracts an unflagged hauler to deliver certified transit seals from the customs depot to allow trapped mining rigs to jump clear.",
+          "private_fact": "The customs office is deliberately delaying transit seal approvals until the quarterly tax collection window closes.",
+          "outcome_tags": [
+            "seals_delivered"
+          ],
+          "routes": {
+            "seals_delivered": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "customs_prefect",
+          "target": "consortium_depot",
+          "reason": "The prefect hires an outsider to deliver formal impoundment writs to delinquent mining berths before the miners organize a collective departure.",
+          "private_fact": "The prefect lacks enough enforcement cutters to board the dredgers simultaneously and relies on intimidation to force early settlements.",
+          "outcome_tags": [
+            "writs_served"
+          ],
+          "routes": {
+            "writs_served": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "A convoy of independent miners attempts a mass transit run across the newly drawn customs line under threat of interception.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "mining_steward",
+          "target": "customs_cutter",
+          "reason": "The steward needs an armed escort to disable the interceptor cutter guarding the jump gate so the mining fleet can reach the free smelter.",
+          "private_fact": "The cutter captain offers to let the convoy pass in exchange for a private seizure cut paid from the lead cargo barge.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "took_bribe_corridor"
+          ],
+          "routes": {
+            "cutter_disabled": "resolution:convoy_escapes_boundary",
+            "took_bribe_corridor": "resolution:bribed_transit_corridor"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "convoy_escapes_boundary",
+      "reached_by": "The pilot disables the customs cutter, clearing the jump gate for the mining fleet.",
+      "summary": "The mining convoy punches through to {role:free_smelter}. {role:customs_prefect} faces an administrative audit, and the contested belt falls outside customs control.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "customs_prefect",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mining_steward",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "ferrite",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_customs_blockade",
+          "public_summary": "A mercenary crippled a customs cutter to let an entire mining fleet jump past an unlawful toll."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "bribed_transit_corridor",
+      "reached_by": "The pilot accepts the cutter captain's offer during combat, paying off the patrol.",
+      "summary": "The lead miners pay off {role:customs_cutter} and escape, while slower dredgers are seized to pay back-taxes under {role:customs_prefect}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "mining_steward",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_corrupt_transit",
+          "public_summary": "A pilot took a cutter captain's split, leaving poorer dredgers behind to pay the tariff."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "miners_surrender_to_tariff",
+      "reached_by": "The pilot never intervenes or fails the breakout.",
+      "summary": "The mining fleet capitulates to {role:consortium_depot}. Independent crews sign indentured repayment bonds, and {role:customs_prefect} secures the sector tariff.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "customs_prefect",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mining_steward",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "ferrite",
+          "price": "spike"
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "miners_surrender_to_tariff",
+  "loose_threads": [
+    {
+      "id": "t_maritime_bank_rider",
+      "surface": "station_notice",
+      "detail": "The treaty map posted on the customs board bears an amendment rider signed by a maritime bank that does not operate in this system.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_dissolved_registry_codes",
+      "surface": "price_board",
+      "detail": "The customs depot tariff schedule lists exemptions for three freighter registries that were dissolved five years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Customs patrols establish cordon around outer mining cluster under revised border protocol.",
+    "Miners in {system} claim new sector boundaries violate century-old prospecting deeds.",
+    "Consortium tariff depot reports record early collection revenues following treaty ratification."
+  ],
+  "voice_direction": {
+    "customs_prefect": "Speaks in rigid legal jargon and cites treaty sub-clauses when challenged. Never acknowledges the financial hardship of the miners.",
+    "mining_steward": "Blunt, exhausted, and speaks with rapid urgency. Avoids mentioning how close her union treasury is to total insolvency."
+  },
+  "novelty_tags": [
+    "border_realignment",
+    "customs_tariff",
+    "mining_convoy",
+    "treaty_dispute",
+    "administrative_annexation"
+  ]
+}

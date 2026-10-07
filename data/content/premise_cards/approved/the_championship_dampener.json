@@ -1,0 +1,329 @@
+{
+  "id": "premise.the_championship_dampener",
+  "schema_version": 1,
+  "title": "The Championship Dampener",
+  "logline": "An aging zero-g athlete refuses to implant a mandatory neural dampener required by a new league safety code, risking permanent neurological damage to play their farewell championship series.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "legacy"
+  ],
+  "roles": [
+    {
+      "id": "veteran_striker",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "A celebrated zero-g court athlete nearing the end of a legendary career; proud and terrified of playing with muted reflexes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "team_physician",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "The sports physician tasked with certifying players under the league's new safety protocol; genuinely protective of player health.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "franchise_owner",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Controls the team's arena lease; desperate to win the finals while avoiding catastrophic league liability penalties.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_velodrome",
+      "kind": "place",
+      "description": "The pressurized spherical sports arena where zero-g flight games are contested.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "evacuation"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "market_disrupted"
+  ],
+  "public_situation": "Ahead of the championship series at {system}'s orbital velodrome, the sports commission mandates neural dampeners to eliminate high-velocity concussion risks.",
+  "private_truth": "The veteran striker has already suffered micro-strokes that the dampener would stabilize, but the implant's reaction lag would guarantee they lose their final championship title.",
+  "core_why": {
+    "motive": "legacy",
+    "secret": "athlete_refuses_protective_neural_dampener"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "League marshals arrive at the arena to conduct mandatory cranial scans on all starting flight athletes.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "team_physician",
+          "target": "orbital_velodrome",
+          "reason": "The doctor hires an outside courier to transport certified biometric testing cassettes directly to the locker clinic before the official pre-match inspection.",
+          "private_fact": "She has already warned the striker twice that another unmitigated match collision could cause irreversible motor paralysis.",
+          "outcome_tags": [
+            "cassettes_delivered"
+          ],
+          "routes": {
+            "cassettes_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Rumors circulate that the striker's pre-match medical waiver was rejected by the safety board.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "veteran_striker",
+          "target": "orbital_velodrome",
+          "reason": "The striker contracts the pilot to retrieve their custom-tuned un-dampened flight harness from an off-station private locker before inspectors impound it.",
+          "private_fact": "He knows this is his last contract year and has wagered his entire retirement savings on the championship winner purse.",
+          "outcome_tags": [
+            "harness_retrieved"
+          ],
+          "routes": {
+            "harness_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The arena stands fill to capacity while the commissioner threatens to forfeit the match if the medical clearance is not finalized.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "franchise_owner",
+          "target": "orbital_velodrome",
+          "reason": "The owner contracts the pilot to deliver the final arbitration papers to the commissioner's box, demanding a decisive choice on player eligibility.",
+          "private_fact": "The owner holds a reinsurance bond that pays out twice as much if the match proceeds regardless of injury.",
+          "outcome_tags": [
+            "papers_filed"
+          ],
+          "routes": {
+            "papers_filed": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The final medical dossier rests with the pilot before delivery to the commissioner. The pilot must choose which certification to register.",
+        "options": [
+          {
+            "id": "enforce_safety_dampener",
+            "label": "Deliver the medical disqualification, forcing the athlete to install the dampener",
+            "leads_to": "resolution:athlete_dampened_loses_final"
+          },
+          {
+            "id": "grant_unrestricted_waiver",
+            "label": "Deliver the unrestricted emergency waiver, allowing the striker to play un-dampened",
+            "leads_to": "resolution:striker_triumphs_injured"
+          },
+          {
+            "id": "forfeit_the_franchise",
+            "label": "Submit the reinsurance fraud report, cancelling the match entirely",
+            "leads_to": "resolution:franchise_scandal_forfeit"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "athlete_dampened_loses_final",
+      "reached_by": "The pilot submits the mandatory safety ruling, forcing the dampener implant.",
+      "summary": "{role:veteran_striker} plays with the neural dampener and loses the match, but retains their health. {role:team_physician} validates the safety protocol.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "veteran_striker",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "team_physician",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "franchise_owner",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "enforced_athlete_safety",
+          "public_summary": "A courier delivered the medical ruling that benched an aging star's reflexes for their own protection."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "striker_triumphs_injured",
+      "reached_by": "The pilot submits the unrestricted waiver, letting the striker play without dampening.",
+      "summary": "{role:veteran_striker} secures the championship victory but collapses from severe motor trauma. {role:franchise_owner} collects the purse.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "veteran_striker",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "franchise_owner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "team_physician",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "cleared_the_championship_flyer",
+          "public_summary": "A pilot delivered the waiver that let a sports legend fly one last un-dampened match to ruin."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "martyr_made"
+      ]
+    },
+    {
+      "id": "franchise_scandal_forfeit",
+      "reached_by": "The pilot exposes the reinsurance fraud, voiding the final match.",
+      "summary": "The championship match is cancelled amidst scandal. {role:franchise_owner} faces regulatory prosecution, while {role:veteran_striker} retires in disgrace.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "franchise_owner",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_striker",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_velodrome_insurance",
+          "public_summary": "A courier exposed owner liability schemes, cancelling the velodrome championship final."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "striker_benched_by_default",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "The certification deadline expires without filing. {role:veteran_striker} is benched automatically, the arena riots, and {role:franchise_owner} incurs massive venue breach fines.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "veteran_striker",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "franchise_owner",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "curfew"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "striker_benched_by_default",
+  "loose_threads": [
+    {
+      "id": "t_betting_line_shift",
+      "surface": "station_notice",
+      "detail": "The velodrome betting syndicate shifted the championship underdog odds thirty minutes before the neural dampener mandate was announced.",
+      "can_carry_methods": [
+        "information_control",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_sanatorium_crate_imprint",
+      "surface": "cargo",
+      "detail": "The serial imprint on the neural dampener cases matches a shipment ordered by a private sanatorium in a neighboring system.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "information_control",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Zero-g flight commission imposes mandatory cranial dampener rule ahead of velodrome finals.",
+    "Fans stage demonstrations outside franchise offices demanding star striker be cleared to fly.",
+    "Sports arbiters debate player autonomy versus catastrophic league medical liability in {system}."
+  ],
+  "voice_direction": {
+    "veteran_striker": "Raspy, proud, and speaks with dismissive bravado to mask tremors. Never admits how much his vision is blurring.",
+    "team_physician": "Clinical, calm, but speaks with clipped urgency when ignored. Refuses to discuss the financial stakes of the match.",
+    "franchise_owner": "Fast-talking, theatrical, and constantly flatters listeners. Avoids looking directly at the medical monitors."
+  },
+  "novelty_tags": [
+    "neural_dampener",
+    "zero_g_athletics",
+    "sports_medicine",
+    "championship_final",
+    "concussion_protocol"
+  ]
+}

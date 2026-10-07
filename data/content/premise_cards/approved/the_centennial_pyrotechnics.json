@@ -1,0 +1,361 @@
+{
+  "id": "premise.the_centennial_pyrotechnics",
+  "schema_version": 1,
+  "title": "The Centennial Pyrotechnics",
+  "logline": "A habitat festival coordinator insists on launching antique ceremonial fireworks that have turned chemically unstable, defying the station safety marshal who orders them dumped into space.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "tense"
+  ],
+  "themes": [
+    "progress_vs_tradition",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "festival_director",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Promoter of the habitat's centennial jubilee; desperate to stage the historic fireworks to avoid forfeiting municipal performance bonds.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "safety_marshal",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Habitat life-support and fire safety officer; horrified by the blast potential of century-old perchlorate munitions.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "antique_collector",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "A wealthy private curio dealer offering to buy the volatile ordnance intact for a private vault.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pyrotechnic_magazine",
+      "kind": "place",
+      "description": "An unpressurized external munitions locker mounted on the habitat's outer hull.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "launch_pylon",
+      "kind": "place",
+      "description": "The ceremonial firing platform configured to launch the centennial salvo into the local nebula.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "nebula"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "market_disrupted"
+  ],
+  "public_situation": "Crowds gather across {system}'s concourses for the centennial jubilee fireworks display, while safety inspectors order an emergency lockdown of the outer launch pylon.",
+  "private_truth": "The antique ceremonial charges have suffered casing corrosion over ninety years of thermal cycling, making them liable to detonate inside the pylon rather than in orbit.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "corroded_centennial_munitions_risk_habitat_hull_breach"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Festival banners unfurl along the promenade while emergency Klaxons flash amber near the launch platform.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "safety_marshal",
+          "target": "pyrotechnic_magazine",
+          "reason": "The marshal needs a pilot equipped with thermal sensors to scan the exterior fireworks locker to assess chemical degradation before crowds mass.",
+          "private_fact": "She has already prepared a summary condemnation order but fears the festival director will sue her department for venue losses.",
+          "outcome_tags": [
+            "instability_confirmed"
+          ],
+          "routes": {
+            "instability_confirmed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The station council orders the jubilee celebration to proceed on schedule unless formal hazardous material warrants are served.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "festival_director",
+          "target": "launch_pylon",
+          "reason": "The director contracts the pilot to transport the ceremonial electronic firing triggers to the pylon before the safety marshal seals the access airlock.",
+          "private_fact": "He has spent eighty percent of the ticket proceeds on non-refundable musical acts and faces bankruptcy if the salvo is cancelled.",
+          "outcome_tags": [
+            "triggers_delivered"
+          ],
+          "routes": {
+            "triggers_delivered": "next"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "antique_collector",
+          "target": "pyrotechnic_magazine",
+          "reason": "The curio dealer hires the pilot to collect sample casings from the outer locker to authenticate the century-old manufacturer stamps.",
+          "private_fact": "He plans to display the unexploded ordinance in his penthouse suite regardless of station safety codes.",
+          "outcome_tags": [
+            "casings_sampled"
+          ],
+          "routes": {
+            "casings_sampled": "next"
+          }
+        }
+      ],
+      "missions_mode": "all",
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The festival countdown begins as hundreds of observation craft crowd the perimeter around the launch pylon.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "safety_marshal",
+          "target": "launch_pylon",
+          "reason": "The marshal hires the pilot to carry remote emergency jettison thrusters to the pylon to handle the volatile warheads.",
+          "private_fact": "The marshal is terrified that any jostling will trigger a catastrophic hull breach across the viewing decks.",
+          "outcome_tags": [
+            "jettison_gear_mounted"
+          ],
+          "routes": {
+            "jettison_gear_mounted": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The remote firing console is in the pilot's cockpit. The pilot must choose how to dispose of the volatile centennial pyrotechnics.",
+        "options": [
+          {
+            "id": "jettison_into_star",
+            "label": "Jettison the unstable fireworks into deep space to protect the habitat",
+            "leads_to": "resolution:fireworks_jettisoned_safe"
+          },
+          {
+            "id": "fire_the_salvo",
+            "label": "Fire the ceremonial salvo into orbit, risking casing blowback",
+            "leads_to": "resolution:salvo_fired_with_damage"
+          },
+          {
+            "id": "sell_to_collector",
+            "label": "Quietly offload the intact warheads to the private collector",
+            "leads_to": "resolution:munitions_sold_to_curio"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fireworks_jettisoned_safe",
+      "reached_by": "The pilot dumps the fireworks into deep space, preventing any habitat explosion.",
+      "summary": "The unstable ordnance detonates safely in the void. {role:safety_marshal} secures the habitat, but {role:festival_director} is bankrupted by refunds.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "safety_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": [
+            "festival"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "jettisoned_the_centennial_fireworks",
+          "public_summary": "A pilot jettisoned unstable holiday fireworks, saving a habitat viewing lounge from disaster."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "salvo_fired_with_damage",
+      "reached_by": "The pilot fires the display as scheduled, creating a spectacular but damaging blast.",
+      "summary": "The display dazzles the festival crowd, but a backfiring mortar cracks the outer pylon. {role:festival_director} celebrates while repairs mount.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "safety_marshal",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "fired_the_shaky_centennial_salvo",
+          "public_summary": "A pilot ignited century-old fireworks over {system}, blistering the hull for a holiday crowd."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "munitions_sold_to_curio",
+      "reached_by": "The pilot diverts the hazardous warheads to the antique collector's vault.",
+      "summary": "{role:antique_collector} spirits away the antique munitions. The jubilee goes dark without an explanation, and {role:festival_director} flees with the ticket receipts.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "safety_marshal",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "antique_collector",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": [
+            "festival"
+          ]
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "accidental_pylon_detonation",
+      "reached_by": "The pilot never intervenes.",
+      "summary": "The corroded charges cook off during pre-launch warmup, destroying {role:launch_pylon}. {role:safety_marshal} faces public inquiry.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "safety_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "festival_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": [
+            "festival"
+          ]
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "accidental_pylon_detonation",
+  "loose_threads": [
+    {
+      "id": "t_colonial_bill_lading",
+      "surface": "station_notice",
+      "detail": "The original colonial bill of lading for the fireworks displays an unfulfilled indemnity bond held by a central mining bank.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_border_foundry_stencil",
+      "surface": "cargo",
+      "detail": "The packing crates for the fireworks carry stencils matching an unrecorded munitions batch produced by a forgotten border foundry.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "bribery",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Jubilee organizers promise historic orbital pyrotechnics display to mark centennial charter day in {system}.",
+    "Habitat fire marshals urge caution as municipal inspectors review exterior launch pylon readiness.",
+    "Crowds flock to habitat observation cupolas as countdown begins for centennial fireworks."
+  ],
+  "voice_direction": {
+    "festival_director": "Flamboyant, loud, and uses dramatic showmanship to dodge technical questions. Never admits the display was not insured.",
+    "safety_marshal": "Tense, blunt, and repeatedly quotes industrial hazard thresholds. Avoids any discussion of public relations.",
+    "antique_collector": "Soft-spoken, elegant, and speaks with languid detachment. Never mentions where the collection is housed."
+  },
+  "novelty_tags": [
+    "ceremonial_pyrotechnics",
+    "centennial_jubilee",
+    "unstable_munitions",
+    "habitat_safety",
+    "antique_ordinance"
+  ]
+}
