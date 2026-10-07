@@ -5,32 +5,45 @@ once it is done.
 
 ---
 
+## 1. premise.the_dynastic_heirs_regatta (batch_44)
 
-## 2. More engines to rest
+Same engine as `premise.the_jump_derby` (approved): someone buys up all the
+fuel or coolant at a waypoint to make rivals fail a race across systems. The
+twin heirs and the succession race can stay; change how the race is won or
+lost and what it's really about, or retire it and write a new card.
 
-Add to the resting list: **a faked hazard, condemnation or emergency used to
-seize property or force people out**; **sabotaged navigation beacons or
-buoys**; **substitutes swapped in to hide an accident**. Before writing each
-card, name its engine in one line ("someone fakes X to get Y") and check it
-against the cards you've written this session and the deck report's secrets.
+## 2. Notes from the last review (no action needed)
 
-## 3. Keep rotating territories
+- `the_evacuee_exodus` was **retired by the reviewer**: its rework landed on
+  `the_famine_corridor`'s engine (buying a mining convoy's debt and sealing
+  the gates to force indentures). Two reworks without a new engine, so it's
+  dropped. Don't rewrite it.
+- Two theme tags were corrected by the reviewer:
+  `the_salvage_pilots_last_haul` (faith_and_doubt -> legacy) and
+  `the_rival_couriers_dispatch` (reinvention -> helpers_corrupted).
+- `the_pedigree_embryo_vault` had a stock phrase; avoid stock sentences.
 
-Used on the second lap so far: schools and apprentices, food and farming,
-water and air, gambling and sport rings, shipyards and engineering,
-insurance and risk, the mail and message couriers, tourism and luxury,
-prisons and parole, language and translation, maps and lost routes, music
-and festivals, housing and eviction, livestock and animals. Left: ageing and
-retirement, rivals and twins, addiction and recovery, weather and space
-hazards. Still resting: insurance fraud; apprentice/junior leads; counterfeit
-or adulterated drink; rigged lotteries; secret routes around toll monopolies;
-and the three above.
+## 3. The third lap
+
+The second lap is done: every territory has now been used twice. From here,
+**write third-lap angles only**: pick any territory, but each card must have
+an engine and a secret that appear nowhere in the deck (check the deck
+report's secret list), and the territory should be the setting, not the
+story. Fresh engines the deck has little of: a misunderstanding nobody is
+guilty of, an inheritance with a condition, a promise made long ago coming
+due, a rescue the rescued don't want, a rule change with winners and losers,
+someone trying to undo their own past good deed.
+
+Still resting: insurance fraud; apprentice/junior leads; counterfeit or
+adulterated drink; rigged lotteries; secret routes around toll monopolies; a
+faked hazard or condemnation to seize property; sabotaged navigation beacons;
+substitutes swapped in to hide an accident; cornering fuel or coolant to
+strand rivals; buying people's debt to force them into indentures.
 
 ---
 
-Last round: 11 of 16 approved (the_storm_channel rework, the_jubilee_clemency,
-the_minstrels_ransom, the_firework_embargo, the_condemned_cavern,
-the_squatters_flotilla, the_air_tariff_eviction, the_foreclosed_keel,
-the_station_terriers, the_zero_g_stampede, the_ark_of_the_fringe). Tags were
-honest throughout. The firework embargo, the station terriers and the
-jubilee clemency were highlights.
+Last round: 13 approved (four of the five reworks, plus the quartermaster's
+pension ledger, the dockmaster's watch, the salvage pilot's last haul, the
+cryo pension transit, the old admiral's flagship, the twins' assay split, the
+rival couriers' dispatch, the foundry brothers' feud, the twin captains'
+transponder). The old admiral's flagship was a highlight.
