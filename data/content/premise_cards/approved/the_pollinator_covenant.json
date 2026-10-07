@@ -1,0 +1,351 @@
+{
+  "id": "premise.the_pollinator_covenant",
+  "schema_version": 1,
+  "title": "The Pollinator Covenant",
+  "logline": "An itinerant circuit ship captain discovers their flight partner plans to sell their clan's proprietary crop cross-pollination cultures to a corporate habitat syndicate.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "melancholy"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "itinerant_captain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Master of an independent cross-pollination runner; weary, fiercely loyal to clan tradition and ancestral germplasm.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "renegade_partner",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "Chief botanist of the runner; exhausted by nomad poverty and negotiating a permanent corporate residency.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "agro_syndicate",
+      "kind": "faction",
+      "description": "The commercial agribusiness managing the system's industrial aeroponic towers.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_dome",
+      "kind": "place",
+      "description": "A high-yield aeroponic citadel where food contracts are signed and commercial harvests processed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "circuit_berth",
+      "kind": "place",
+      "description": "A low-rent exterior mooring where independent transit ships dock between agricultural runs.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "alliance_broken",
+    "evidence_loose"
+  ],
+  "public_situation": "The circuit runner docked at {role:circuit_berth} is locked down by corporate bailiffs over an alleged breach of an ancient intersystem pollination covenant.",
+  "private_truth": "The runner's botanist is secretly auctioning the clan's unpatented cross-pollination spore cultures to buy residency in {role:syndicate_dome}.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "botanist_selling_clan_pollination_spores_for_residency"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Bailiff cutters post mooring clamps around {role:circuit_berth} while aeroponic dome feeds log emergency spore shortages.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "itinerant_captain",
+          "target": "circuit_berth",
+          "reason": "He needs an outsider to scan the runner's airlock telemetry to determine who accessed the refrigerated germplasm vault before dawn.",
+          "private_fact": "He suspects his lifelong flight partner took the canister but refuses to confront her without data.",
+          "outcome_tags": [
+            "breach_verified",
+            "telemetry_lost"
+          ],
+          "routes": {
+            "breach_verified": "next",
+            "telemetry_lost": "resolution:spores_surrendered_runner_exiled"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Commercial tenders begin transferring nitrogen dewars to {role:syndicate_dome} as the botanist moves toward the executive suites.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "renegade_partner",
+          "target": "circuit_berth",
+          "reason": "She hires a neutral pilot to ferry the insulated spore canister to the commercial dome before her captain overrides the ship lock.",
+          "private_fact": "She suffers from degenerative vacuum osteopenia and cannot survive another five-year circuit run.",
+          "outcome_tags": [
+            "canister_moved",
+            "transfer_blocked"
+          ],
+          "routes": {
+            "canister_moved": "next",
+            "transfer_blocked": "resolution:spores_surrendered_runner_exiled"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Armed syndicate security details take positions at the airlocks of {role:syndicate_dome} to finalize the spore purchase.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "itinerant_captain",
+          "target": "syndicate_dome",
+          "reason": "He asks the pilot to courier an ancestral covenant notice directly to syndicate directors to assert prior clan ownership.",
+          "private_fact": "The clan covenant has no legal force under station commercial law without physical possession of the spores.",
+          "outcome_tags": [
+            "covenant_served",
+            "notice_intercepted"
+          ],
+          "routes": {
+            "covenant_served": "next",
+            "notice_intercepted": "resolution:spores_surrendered_runner_exiled"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the master spore canister. The captain demands its return to the clan runner; the botanist needs the sale to secure life-saving habitat residency.",
+        "options": [
+          {
+            "id": "return_spores_to_captain",
+            "label": "Return the canister to the captain to preserve the clan's nomadic pollination legacy",
+            "leads_to": "resolution:runner_escapes_legacy_intact"
+          },
+          {
+            "id": "hand_spores_to_syndicate",
+            "label": "Deliver the canister to the corporate syndicate to buy the botanist's medical residency",
+            "leads_to": "resolution:syndicate_secures_monopoly"
+          },
+          {
+            "id": "force_shared_propagation_license",
+            "label": "Compel both partners to license the spores for one harvest cycle, splitting the payout",
+            "leads_to": "resolution:licensed_harvest_compromise"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "runner_escapes_legacy_intact",
+      "reached_by": "The pilot returns the spore canister to the captain and helps the runner break mooring.",
+      "summary": "{role:itinerant_captain} recovers the ancestral cultures and clears the system. {role:renegade_partner} is left behind on the docks without medical care.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "itinerant_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_partner",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "agro_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "defended_clan_pollinators",
+          "public_summary": "A pilot defied corporate bailiffs to return stolen crop cultures to a wandering seed runner."
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "syndicate_secures_monopoly",
+      "reached_by": "The pilot delivers the spore canister to the corporate syndicate.",
+      "summary": "{role:agro_syndicate} patents the hardy pollination cultures. {role:renegade_partner} receives station residency, while {role:itinerant_captain} leaves impoverished.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "renegade_partner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "itinerant_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "agro_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "licensed_harvest_compromise",
+      "reached_by": "The pilot brokers a single-season propagation lease between the partners and the syndicate.",
+      "summary": "The syndicate pays for a single crop pollination. Both crewmates divide the proceeds, dissolving their partnership with bitter civility.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "itinerant_captain",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_partner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "agro_syndicate",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "spores_surrendered_runner_exiled",
+      "reached_by": "The telemetry is lost or the pilot abandons the contract.",
+      "summary": "Syndicate marshals confiscate the spore canister under civil impound warrants. The clan runner is expelled from the system without compensation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "itinerant_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_partner",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "agro_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "public_outrage"
+      ]
+    }
+  ],
+  "default_resolution": "spores_surrendered_runner_exiled",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_residency_voucher",
+      "surface": "station_notice",
+      "detail": "The residency permit promised to the runner botanist was pre-approved by syndicate HR three weeks before the ship arrived.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_cryo_canister_tamper_seal",
+      "surface": "cargo",
+      "detail": "The spore vault's digital latch log shows forty-two bypass attempts using an encryption key issued by a debt agency.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_pollen_futures_listing",
+      "surface": "price_board",
+      "detail": "Station commodity exchanges opened advance futures trading on clan-exclusive fruit strains before the vault was breached.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "cornering_a_market",
+      "bribery"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Mooring bailiffs impound itinerant agricultural transport over disputed pollination covenants.",
+    "{role:agro_syndicate} announces imminent yield breakthroughs in high-density aeroponic fruit towers.",
+    "Independent circuit runners protest outside customs against arbitrary biological impounds."
+  ],
+  "voice_direction": {
+    "itinerant_captain": "Tired, gravelly, and formal. Speaks of his crop cultures with genealogical reverence and avoids admitting his crew is splintering.",
+    "renegade_partner": "Hushed, clinical, and defensive. Speaks in rapid biological jargon to conceal her physical weakness and terror of dying in deep space."
+  },
+  "novelty_tags": [
+    "crop_cross_pollination",
+    "itinerant_seed_ship",
+    "germplasm_defection",
+    "aeroponic_covenant",
+    "residency_trade"
+  ]
+}

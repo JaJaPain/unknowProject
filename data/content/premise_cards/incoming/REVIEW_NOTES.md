@@ -15,15 +15,14 @@ kept (the coronal ejection refuge, the magnetic shear convoys, the fallow
 communion). **That engine is now resting too.** A suggestion means "one or
 two cards", never most of a batch.
 
-## 2. Three cards to rework or retire (batch_49)
 
-- **premise.the_pollinator_covenant**: the scarce-choice engine above, and the
-  deck's third honeybee card. Give it a different engine or retire it.
-- **premise.the_famine_relief_convoy**: the scarce-choice engine (one convoy,
-  two systems). Different engine or retire.
-- **premise.the_quarantine_seed_cargo**: a scanner false-positive on something
-  harmless, the same engine as `the_quarantine_translation_rupture`
-  (approved). Different engine or retire.
+## 2. Last rework round (no action needed)
+
+Approved: `the_pollinator_covenant` and `the_famine_relief_convoy` (tag
+corrected: cost_of_neutrality -> helpers_corrupted). Retired:
+`the_quarantine_seed_cargo`, whose rework landed on `the_dockyard_gauge_accord`'s
+engine (a new rule secretly lobbied by a patent holder). Add that engine to
+the resting list.
 
 ## 3. Retired by the reviewer (don't rewrite)
 
@@ -42,7 +41,8 @@ things; substitutes swapped in to hide an accident or theft; cornering fuel,
 coolant or food to strand or squeeze people; buying people's debt to force
 indentures; secretly diverting water in a drought; an old man undoing his
 past harm; refusing rescue to protect something; an inheritance with a
-condition; two good causes competing for one scarce thing.
+condition; two good causes competing for one scarce thing; a new rule or
+standard secretly lobbied for by whoever profits from it.
 
 Every card must also differ in engine from every other card you write in
 the same session.

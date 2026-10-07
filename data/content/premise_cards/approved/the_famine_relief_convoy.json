@@ -1,0 +1,422 @@
+{
+  "id": "premise.the_famine_relief_convoy",
+  "schema_version": 1,
+  "title": "The Famine Relief Convoy",
+  "logline": "A massive humanitarian grain convoy arrives in a recovered star system after an eight-month voyage, only to be denied docking because free grain will ruin local farmers.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "bleak"
+  ],
+  "themes": [
+    "price_of_profit",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "relief_commodore",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Master of the bulk humanitarian grain armada; exhausted, rigidly bound by delivery charter clauses.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "destination_bailiff",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Trade officer of the recovering agricultural system; desperate to prevent a catastrophic local grain market crash.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relief_director",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Regional commissioner who funded the convoy; determined to collect performance bonuses regardless of local impact.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relief_escort_vanguard",
+      "kind": "ship",
+      "description": "A heavy private security frigate escorting the humanitarian haulers through regional jump lanes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "growers_consortium",
+      "kind": "faction",
+      "description": "The league of local agricultural producers whose recovering harvest faces market annihilation.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "relief_armada_trust",
+      "kind": "faction",
+      "description": "The intersystem charitable logistics conglomerate operating subsidized food relief fleets.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "staging_outpost",
+      "kind": "place",
+      "description": "An intermediate depot where regional grain fleets muster before the final jump.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "quarantine_gate",
+      "kind": "place",
+      "description": "The fortified jump transit terminal where inbound commercial traffic is inspected and cleared.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "route_closed",
+    "alliance_broken"
+  ],
+  "public_situation": "A massive humanitarian grain convoy arrives in {system} after an eight-month voyage, only to find the local famine has ended and the system refuses docking clearance.",
+  "private_truth": "The relief trust deliberately stalled the fleet's departure for two months to collect higher emergency freight subsidies, arriving long after local crops recovered.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "relief_delayed_to_milk_freight_subsidies"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Customs authorities at {role:staging_outpost} freeze docking slots as the grain fleet arrives to find local silos already brimming.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "destination_bailiff",
+          "target": "staging_outpost",
+          "reason": "He needs an independent pilot to scan the lead hauler's original departure manifests to prove the fleet launched months after the famine peak.",
+          "private_fact": "If forty thousand tons of free grain are dumped on station docks, every independent farmer in the system will go bankrupt.",
+          "outcome_tags": [
+            "delay_proven",
+            "manifest_wiped"
+          ],
+          "routes": {
+            "delay_proven": "next",
+            "manifest_wiped": "resolution:convoy_turned_away_grain_jettisoned"
+          }
+        },
+        {
+          "verb": "deliver_ore",
+          "ore": "water_ice",
+          "requester": "relief_commodore",
+          "target": "staging_outpost",
+          "reason": "He needs immediate water ice deliveries to maintain cooling scrubbers on the packed grain holds while the fleet remains stalled in orbit.",
+          "private_fact": "His crews are on half-pay and will mutiny if the armada is turned back without collecting its delivery vouchers.",
+          "outcome_tags": [
+            "cooling_secured",
+            "holds_overheating"
+          ],
+          "routes": {
+            "cooling_secured": "next",
+            "holds_overheating": "resolution:convoy_turned_away_grain_jettisoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Armed picket vessels deployed by {role:growers_consortium} form an interdiction perimeter around the regional jump corridor.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "relief_director",
+          "target": "quarantine_gate",
+          "reason": "She hires a courier to serve an enforceable intersystem emergency covenant warrant to force the gate authority to open transit.",
+          "private_fact": "Her lucrative executive bonus requires successful cargo handover within seventy-two hours of the fiscal quarter's close.",
+          "outcome_tags": [
+            "warrant_served",
+            "warrant_rejected"
+          ],
+          "routes": {
+            "warrant_served": "next",
+            "warrant_rejected": "resolution:convoy_turned_away_grain_jettisoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "The convoy's escort frigate powers weapons, preparing to force transit past the local growers' picket craft.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "destination_bailiff",
+          "target": "relief_escort_vanguard",
+          "reason": "He pays the pilot to disable the escort frigate's drive arrays before it opens fire on civilian farm picket vessels.",
+          "private_fact": "The escort captain hails mid-fight offering fifty thousand credits to clear a path through the picket lines for the haulers.",
+          "outcome_tags": [
+            "frigate_disabled",
+            "accepted_escort_bribe"
+          ],
+          "routes": {
+            "frigate_disabled": "next",
+            "accepted_escort_bribe": "resolution:grain_dumped_local_economy_ruined"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "relief_commodore",
+          "target": "staging_outpost",
+          "reason": "He asks the pilot to recover the armada's charter deed from the disabled flagship to authorize an emergency cargo reroute.",
+          "private_fact": "He would rather divert the grain to a distant industrial reprocessing belt at a loss than ruin the farmers who welcomed him.",
+          "outcome_tags": [
+            "charter_secured",
+            "charter_lost"
+          ],
+          "routes": {
+            "charter_secured": "next",
+            "charter_lost": "resolution:convoy_turned_away_grain_jettisoned"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "Freight syndicates from adjacent industrial systems converge at {role:quarantine_gate} to bid on the stranded grain tonnage.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "destination_bailiff",
+          "target": "quarantine_gate",
+          "reason": "He needs the pilot to purchase emergency fuel canisters at a neighboring outpost to supply the haulers for a diverted jump.",
+          "private_fact": "Local growers chipped in their seasonal savings to pay for the fuel so the grain would leave their space.",
+          "outcome_tags": [
+            "fuel_delivered",
+            "jump_stranded"
+          ],
+          "routes": {
+            "fuel_delivered": "next",
+            "jump_stranded": "resolution:convoy_turned_away_grain_jettisoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The relief fleet is cleared for its final jump. Forcing delivery will bankrupt local growers; diverting it leaves the relief crews unpaid; offloading at an industrial belt preserves both sides at a steep financial loss.",
+        "options": [
+          {
+            "id": "force_delivery_to_fulfill_charter",
+            "label": "Enforce full dockside delivery to collect the relief subsidies, collapsing local grain prices",
+            "leads_to": "resolution:grain_dumped_local_economy_ruined"
+          },
+          {
+            "id": "turn_convoy_away_to_save_farmers",
+            "label": "Turn the armada away without payment, saving local growers while financially destroying the relief crews",
+            "leads_to": "resolution:convoy_turned_away_grain_jettisoned"
+          },
+          {
+            "id": "divert_cargo_to_industrial_reprocessors",
+            "label": "Divert the grain to industrial bio-fuel refineries, splitting losses evenly across both factions",
+            "leads_to": "resolution:grain_diverted_to_biofuel"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "grain_dumped_local_economy_ruined",
+      "reached_by": "The pilot enforces the relief charter and dumps the food on destination stations.",
+      "summary": "Forty thousand tons of free grain flood the markets. Food prices collapse to zero, bankrupting {role:growers_consortium} and triggering widespread farm foreclosures.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relief_director",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "destination_bailiff",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "relief_armada_trust",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "growers_consortium",
+          "delta": -3
+        },
+        {
+          "type": "economy",
+          "good": "food",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "dumped_unwanted_relief_grain",
+          "public_summary": "A pilot forced a delayed relief convoy through customs, collapsing a star system's farming economy."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "convoy_turned_away_grain_jettisoned",
+      "reached_by": "The pilot blocks the fleet from docking or the armada charter is voided.",
+      "summary": "The armada is turned away without compensation. {role:relief_commodore} declares bankruptcy and scuttles the spoiling cargo in deep space.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relief_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relief_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "destination_bailiff",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "growers_consortium",
+          "delta": 2
+        },
+        {
+          "type": "standing",
+          "target": "relief_armada_trust",
+          "delta": -3
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "grain_diverted_to_biofuel",
+      "reached_by": "The pilot negotiates a diversion to neighboring industrial fuel processors.",
+      "summary": "The surplus grain is processed into ship propellant. Both farmers and haulers absorb moderate financial losses, avoiding mutual ruin.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relief_commodore",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "destination_bailiff",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "growers_consortium",
+          "delta": 1
+        },
+        {
+          "type": "standing",
+          "target": "relief_armada_trust",
+          "delta": 1
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "debt_owed_to_player",
+        "alliance_formed"
+      ]
+    }
+  ],
+  "default_resolution": "convoy_turned_away_grain_jettisoned",
+  "loose_threads": [
+    {
+      "id": "t_freight_subsidy_audit_stamp",
+      "surface": "cargo",
+      "detail": "The grain containers bear freight escalation stamps dated six weeks after the destination declared its harvest safe.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_convoy_director_bonus_ledger",
+      "surface": "station_notice",
+      "detail": "An internal audit bulletin lists six-figure performance bonuses tied to landing the relief convoy before quarter end.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "bribery"
+      ]
+    },
+    {
+      "id": "t_short_grain_derivatives",
+      "surface": "price_board",
+      "detail": "Short positions against local agricultural cooperatives were bought through an offshore bank days before the fleet arrived.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "slow_infiltration",
+      "cornering_a_market"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Humanitarian grain armada arrives to find local famine resolved; docking privileges withheld.",
+    "Local agricultural consortium threatens armed resistance if foreign relief grain is unloaded.",
+    "Relief trust petitions sector governor to enforce emergency delivery treaties across disputed systems."
+  ],
+  "voice_direction": {
+    "relief_commodore": "Hoarse, stoic, and exasperated. Speaks with the fatigue of an honest freighter captain caught between predatory directors and hostile farmers.",
+    "destination_bailiff": "Shrill, panicky, and urgent. Pleads with economic figures and describes the bankruptcy of fifty farming settlements if the food lands.",
+    "relief_director": "Crisp, cold, and litigious. Treats starving populations and market crashes as administrative line items in a quarterly performance review."
+  },
+  "novelty_tags": [
+    "delayed_relief_convoy",
+    "surplus_grain_dumping",
+    "agricultural_market_collapse",
+    "intersystem_food_charter",
+    "biofuel_diversion"
+  ]
+}
