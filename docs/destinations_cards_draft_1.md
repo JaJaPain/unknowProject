@@ -5,6 +5,11 @@ that reuse existing set pieces. Each has the same parts as the six already in
 the game (see `data/content/lodestars.json`). Nothing goes into the game
 until Abe approves the lines.
 
+**Status 2026-10-06: approved by Abe and in the game** (`data/content/lodestars.json`,
+`lodestar_bridges.json`), with one change: the Market's first arrival line is
+now "You've found the Market. No flags, no names, no questions." (Abe: the
+original was too wordy).
+
 ---
 
 ## 1. The Hollow Market

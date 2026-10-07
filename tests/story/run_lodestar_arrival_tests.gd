@@ -42,7 +42,7 @@ func _initialize() -> void:
 		var id := str(card["id"])
 		var scene: Dictionary = card.get("arrival_scene", {})
 		_check(not scene.is_empty(), "%s has an arrival scene" % id)
-		_check(str(scene.get("landmark", "")) in ["beacon", "fleet", "ring", "survey", "garden", "wrecks"], "%s: a landmark kind the builder knows" % id)
+		_check(str(scene.get("landmark", "")) in ["beacon", "fleet", "ring", "survey", "garden", "wrecks", "market", "shipyard"], "%s: a landmark kind the builder knows" % id)
 		kinds[str(scene.get("landmark", ""))] = true
 		var lines: Array = scene.get("lines", [])
 		_check(lines.size() >= 3, "%s: the place says its piece (3+ lines)" % id)
@@ -53,7 +53,7 @@ func _initialize() -> void:
 			_check(ReservedTopics.is_clean(str(text)), "%s stays clear of the canon: %s" % [id, ReservedTopics.find_in(str(text))])
 			for motif in ["callsign", "ship id", "your ship's name", "kaelen"]:
 				_check(not str(text).to_lower().contains(motif), "%s's scene doesn't touch '%s'" % [id, motif])
-	_check(kinds.size() == 6, "six different landmarks (%d)" % kinds.size())
+	_check(kinds.size() == Lodestar.deck().size(), "every Destination has its own landmark (%d)" % kinds.size())
 	for kind in kinds:
 		var mark = LandmarkScript.new()
 		mark.kind = kind
@@ -84,12 +84,12 @@ func _initialize() -> void:
 	# Six seasons: every card once before any repeats, and none twice running.
 	var run := {Lodestar.STATE_KEY: {"id": "lighthouse", "known": true, "bearings": []}}
 	var seen := {"lighthouse": true}
-	for i in 5:
+	for i in Lodestar.deck().size() - 1:
 		var nxt := Lodestar.next_season(run, 9, 13 + 7 * i)
 		_check(not seen.has(str(nxt["id"])), "season %d: a card not yet reached (%s)" % [i + 2, nxt["id"]])
 		seen[str(nxt["id"])] = true
 	var seventh := Lodestar.next_season(run, 9, 60)
-	_check(not str(seventh["id"]).is_empty() and Lodestar.past(seventh).size() == 6 and str(seventh["id"]) != str(Lodestar.past(seventh)[-1]["id"]), "after all six, the deck starts over, never the same twice running")
+	_check(not str(seventh["id"]).is_empty() and Lodestar.past(seventh).size() == Lodestar.deck().size() and str(seventh["id"]) != str(Lodestar.past(seventh)[-1]["id"]), "after every Destination, the deck starts over, never the same twice running")
 	_check(Lodestar.reward_credits(second) == 2 * Lodestar.reward_credits(first), "later Lodestars pay more")
 
 	# --- Choosing the gate (pure) ---------------------------------------------------

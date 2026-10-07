@@ -941,3 +941,8 @@ through the marked gate and flies you in):
 - [ ] **N.O.V.A. on Kaelen:** after dealing with Kaelen at the second
       system's station, undocking: "Why is Kaelen at this station too?..."
       once (after the take is installed).
+- [ ] **New Destinations:** a campaign can now draw the Hollow Market (an icy
+      comet with a tail and lanterns) or the Last Shipyard (a huge hull in a
+      scaffold with welding sparks). Their rumours, bearings and arrival
+      scenes play like the others. A new campaign never repeats one of your
+      last three Destinations.

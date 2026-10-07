@@ -18,7 +18,9 @@ func _initialize() -> void:
 	await process_frame
 	# --- The deck ---------------------------------------------------------------
 	var cards: Array = Lodestar.deck()
-	_check(cards.size() == 6, "six Lodestars (%d)" % cards.size())
+	# Six originals plus the new Destinations (docs/destinations_expansion_plan_2026_10_06.md).
+	_check(cards.size() >= 8, "at least eight Destinations (%d)" % cards.size())
+	var deck_size := cards.size()
 	# Across campaigns (season sim 2026-10-06): a new campaign's first
 	# Destination is fresh until all have been used, never one of the last 3.
 	var hist_path := "user://test_destination_history.json"
@@ -30,7 +32,7 @@ func _initialize() -> void:
 	var first_six := {}
 	for i in 6:
 		first_six[picks[i]] = true
-	_check(first_six.size() == 6, "six campaigns, six different Destinations: %s" % str(picks.slice(0, 6)))
+	_check(first_six.size() == 6, "six campaigns in a row, six different Destinations: %s" % str(picks.slice(0, 6)))
 	for i in range(3, 12):
 		_check(not picks.slice(i - 3, i).has(picks[i]), "campaign %d's Destination isn't one of the last three: %s" % [i, str(picks)])
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(hist_path))
@@ -61,7 +63,7 @@ func _initialize() -> void:
 	var drawn := {}
 	for seed_value in 300:
 		drawn[str(Lodestar.draw(seed_value)["id"])] = true
-	_check(drawn.size() == 6, "every Lodestar comes up across campaigns (%d)" % drawn.size())
+	_check(drawn.size() == deck_size, "every Destination comes up across campaigns (%d of %d)" % [drawn.size(), deck_size])
 	var story := {}
 	var s: Dictionary = Lodestar.state(story, 99)
 	_check(str(s["id"]) == str(Lodestar.draw(99)["id"]) and not bool(s["known"]) and Lodestar.bearings_found(s) == 0, "a new campaign: drawn, unknown, no bearings")
