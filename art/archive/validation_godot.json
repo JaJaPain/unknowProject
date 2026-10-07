@@ -1,0 +1,27 @@
+{
+  "cameras": 0,
+  "emission_materials": [
+    "AR Dim red navigation",
+    "AR Reading windows",
+    "AR Walkway lamps"
+  ],
+  "envelope_pivots_valid": true,
+  "godot_dimensions_m": [
+    600.908203125,
+    792.005065917969,
+    421.581970214844
+  ],
+  "lights": 0,
+  "materials": [
+    "AR Warm limestone hull",
+    "AR Aged bronze framing",
+    "AR Recessed glazing",
+    "AR Dim red navigation",
+    "AR Matte woven envelopes",
+    "AR Reading windows",
+    "AR Walkway lamps"
+  ],
+  "meshes": 23,
+  "surfaces": 23,
+  "valid": true
+}

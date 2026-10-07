@@ -1,0 +1,26 @@
+{
+  "meshes": 23,
+  "materials": 7,
+  "material_surfaces": 23,
+  "vertices": 63408,
+  "triangles": 87144,
+  "blender_dimensions_m": [
+    600.908203125,
+    421.58197021484375,
+    792.0050659179688
+  ],
+  "blender_bounds_min": [
+    -300.4364318847656,
+    -147.0,
+    -332.5
+  ],
+  "blender_bounds_max": [
+    300.4717712402344,
+    274.58197021484375,
+    459.50506591796875
+  ],
+  "archive_towers": 7,
+  "independent_envelopes": 3,
+  "emissive_materials": 3,
+  "docking_berths": 2
+}

@@ -1,0 +1,17 @@
+{
+  "valid": true,
+  "bytes": 6371692,
+  "meshes": 23,
+  "surfaces": 23,
+  "triangles": 87144,
+  "materials": 7,
+  "emissive_materials": [
+    "AR Dim red navigation",
+    "AR Reading windows",
+    "AR Walkway lamps"
+  ],
+  "scenes": 1,
+  "cameras": 0,
+  "lights": 0,
+  "external_textures": 0
+}
