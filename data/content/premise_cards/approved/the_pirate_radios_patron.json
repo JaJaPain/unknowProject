@@ -1,0 +1,394 @@
+{
+  "id": "premise.the_pirate_radios_patron",
+  "schema_version": 1,
+  "title": "The Pirate Radio's Patron",
+  "logline": "A rogue broadcast disc jockey operating from a hidden orbital satellite hires a pilot to defend his antenna from corporate jammers, hiding that his scandalous anti-establishment leaks are secretly scripted by station internal affairs to bait dissidents.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "political"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "renegade_dj",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Celebrated underground radio icon; manic, charismatic, and secretly drawing a monthly retainer from station internal affairs.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "internal_affairs_chief",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Chief station surveillance director who uses the pirate broadcast to bait and identify political agitators.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dissident_courier",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "A naive student courier who delivers authentic whistleblowing files to the DJ, unaware the drops are monitored.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mercenary_jammer_skiff",
+      "kind": "ship",
+      "description": "A high-draw electronic warfare cutter fitted with phased-array transmission disruptors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pirate_broadcast_buoy",
+      "kind": "place",
+      "description": "A jury-rigged solar array and high-gain transmission mast anchored inside a derelict communications relay.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "underground_printing_berth",
+      "kind": "place",
+      "description": "A hidden maintenance crawlspace on the station lower deck where dissident pamphlets are printed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "civic_surveillance_bureau",
+      "kind": "faction",
+      "description": "The station's covert internal security apparatus tasked with suppressing labor agitation.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "witness_at_large",
+    "public_outrage"
+  ],
+  "public_situation": "An underground radio station broadcasting bootleg jazz and incendiary corporate leaks draws frantic station jammer interference across {system}.",
+  "private_truth": "{role:renegade_dj} is an asset of {role:civic_surveillance_bureau}. His show is an orchestrated honey-pot designed to lure idealistic whistleblowers into transmitting unencrypted leaks.",
+  "core_why": {
+    "motive": "control",
+    "secret": "pirate_radio_broadcaster_is_police_sting_operation"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "High-powered noise interference jams civilian comms channels as {role:renegade_dj} broadcasts a call for emergency security escort.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "renegade_dj",
+          "target": "pirate_broadcast_buoy",
+          "reason": "He hires an outside pilot to deliver high-output transmitter vacuum tubes to his broadcast buoy before commercial jammers overpower his signal.",
+          "private_fact": "His broadcast script for tonight was personally approved by the internal affairs chief to incite a predictable dock strike.",
+          "outcome_tags": [
+            "tubes_delivered"
+          ],
+          "routes": {
+            "tubes_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Station security agents stage a raid on {role:underground_printing_berth}, arresting three pamphlet printers within minutes of a broadcast hint.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "internal_affairs_chief",
+          "requester": "dissident_courier",
+          "target": "pirate_broadcast_buoy",
+          "reason": "She hires the pilot to scan the pirate buoy's encrypted telemetry feeds to verify whether the broadcast carries a hidden secondary surveillance carrier wave.",
+          "private_fact": "Her brother was arrested immediately after transmitting an anonymous corporate wage leak to the DJ's public dropbox.",
+          "outcome_tags": [
+            "police_telemetry_detected",
+            "broadcast_appears_clean"
+          ],
+          "routes": {
+            "police_telemetry_detected": "next",
+            "broadcast_appears_clean": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:mercenary_jammer_skiff} closes in on the buoy, deploying electronic warfare pods to wipe the transmitter's memory cores.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "renegade_dj",
+          "target": "mercenary_jammer_skiff",
+          "reason": "He begs the pilot to destroy the mercenary jammer vessel before it fries his primary broadcast array.",
+          "private_fact": "The jammer was actually hired by a rival station director who has no idea the DJ is an internal affairs asset.",
+          "outcome_tags": [
+            "jammer_destroyed",
+            "array_damaged"
+          ],
+          "routes": {
+            "jammer_destroyed": "next",
+            "array_damaged": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Internal affairs tactical squads take positions around the dissident safehouse as the DJ prepares his midnight broadcast.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "dissident_courier",
+          "target": "pirate_broadcast_buoy",
+          "reason": "She begs the pilot to rush an unedited recording proving the DJ is a police plant to the buoy's emergency override deck.",
+          "private_fact": "If the recording airs, the DJ's entire listener network will discover their hero sold them out to secret police.",
+          "outcome_tags": [
+            "override_docked",
+            "abandoned"
+          ],
+          "routes": {
+            "override_docked": "next",
+            "abandoned": "resolution:sting_operation_nets_dissident_cells"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the proof that the beloved pirate radio station is a police honeypot, the pilot must decide whether to air the betrayal, let the sting proceed, or extort the surveillance bureau.",
+        "options": [
+          {
+            "id": "broadcast_betrayal",
+            "label": "Broadcast the evidence of the police sting to warn the dissidents across the system",
+            "leads_to": "resolution:pirate_sting_exposed_broadcaster_ruined"
+          },
+          {
+            "id": "allow_sting",
+            "label": "Suppress the evidence so internal affairs can arrest the dissident leadership",
+            "leads_to": "resolution:sting_operation_nets_dissident_cells"
+          },
+          {
+            "id": "extort_internal_affairs",
+            "label": "Sell the proof back to the surveillance chief in exchange for clean criminal records",
+            "leads_to": "resolution:chief_buys_silence_honeypot_persists"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pirate_sting_exposed_broadcaster_ruined",
+      "reached_by": "The pilot broadcasts the proof of the police sting.",
+      "summary": "The truth airs across {system}. {role:renegade_dj} is disgraced as a police rat, and dissidents vanish into unmapped space before {role:internal_affairs_chief}'s squads arrive.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_surveillance_bureau",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_dj",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dissident_courier",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_chief",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_police_pirate_radio",
+          "public_summary": "A pilot hijacked an underground pirate radio buoy, revealing the beloved rebel DJ was a secret police informant."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "sting_operation_nets_dissident_cells",
+      "reached_by": "The pilot suppresses the evidence and lets the sting proceed.",
+      "summary": "Internal affairs arrests fifty underground activists. {role:internal_affairs_chief} secures promotion, while {role:renegade_dj} continues his scripted broadcast for a captive audience.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_surveillance_bureau",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_chief",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dissident_courier",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_dj",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "aided_police_radio_honeypot",
+          "public_summary": "A pilot defended a rogue radio satellite, unaware or indifferent that it was a trap capturing political dissidents."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "chief_buys_silence_honeypot_persists",
+      "reached_by": "The pilot sells the evidence back to internal affairs.",
+      "summary": "{role:internal_affairs_chief} pays off the pilot and quietly replaces the compromised DJ. The fake dissident radio station remains on the air, fishing for new victims.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_surveillance_bureau",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_chief",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_dj",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dissident_courier",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_radio_dissidents",
+          "public_summary": "A pilot sold proof of a police radio honeypot back to the surveillance bureau for a clean criminal slate."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "buoy_destroyed_in_crossfire",
+      "reached_by": "The pilot never intervenes or abandons the mission.",
+      "summary": "Mercenary jammers scorch the buoy's transmitter. The pirate radio goes dark forever, leaving the dissident network shattered and {role:renegade_dj} cutting ties with his handlers.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "civic_surveillance_bureau",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "renegade_dj",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dissident_courier",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "buoy_destroyed_in_crossfire",
+  "loose_threads": [
+    {
+      "id": "t_pirate_transmitter_serial",
+      "surface": "scan",
+      "detail": "The high-output broadcast buoy carries internal telemetry transponders registered to the municipal port marshal's communications inventory.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_dissident_bail_ledger",
+      "surface": "station_notice",
+      "detail": "Bail bonds for arrested dissident printers were funded through an offshore escrow agency owned by a senior station security magistrate.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "impersonation"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Station communications authority vows aggressive crackdown on illicit pirate radio broadcasts.",
+    "Unregistered audio stream plays vintage jazz intercut with inflammatory corporate leaked files.",
+    "Station internal security denies allegations of unlawful signal tracking on private comms bands."
+  ],
+  "voice_direction": {
+    "renegade_dj": "Manic, hyper-caffeinated, and speaks like a 1950s rock-and-roll radio host. Shifts into chillingly flat bureaucratic monotone when off the air.",
+    "internal_affairs_chief": "Crisp, cold, and speaks in measured intelligence terminology. Never raises her voice or expresses personal emotion.",
+    "dissident_courier": "Young, breathless, and intensely earnest. Speaks with passionate idealism that borders on dangerous naivety."
+  },
+  "novelty_tags": [
+    "pirate_radio",
+    "police_honeypot",
+    "dissident_leak",
+    "broadcasting_buoy",
+    "scripted_rebellion"
+  ]
+}

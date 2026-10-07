@@ -1,0 +1,400 @@
+[
+  {
+    "id": "premise.the_gantry_limiters_override",
+    "schema_version": 1,
+    "title": "The Gantry Limiter's Override",
+    "logline": "A drydock salvage inspector investigating a fatal orbital crane collapse discovers that the crane's load limiter was deliberately overridden by the dockmaster to speed up turnaround for a privateer fleet.",
+    "scale": "local",
+    "tone": [
+      "tense",
+      "noir"
+    ],
+    "themes": [
+      "price_of_profit",
+      "loyalty_vs_survival"
+    ],
+    "roles": [
+      {
+        "id": "salvage_inspector",
+        "kind": "person",
+        "archetype": "inspector",
+        "description": "An uncompromising shipyard accident investigator; methodical, stubborn, and pressured by union bosses to find the truth.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "dockmaster_contractor",
+        "kind": "person",
+        "archetype": "dockmaster",
+        "description": "Commercial superintendent of the orbital drydock; stressed, ambitious, and deeply in debt to outlaw warlords.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "corsair_captain",
+        "kind": "person",
+        "archetype": "veteran",
+        "description": "Commander of the privateer battle squadron whose urgent armor refit prompted the crane's fatal overload.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "corsair_gunboat",
+        "kind": "ship",
+        "description": "A bristling heavy assault cutter flying under privateer letters of marque.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "crane_wreckage_field",
+        "kind": "place",
+        "description": "A tangled debris drift of twisted gantry girders and sheared hydraulic rams floating beside the dock.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "dockyard_gantry_ring",
+        "kind": "place",
+        "description": "The massive pressurized orbital ring where capital freighters and warships are overhauled.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "shipwright_guild",
+        "kind": "faction",
+        "description": "The militant labor syndicate of orbital riggers, welders, and heavy equipment mechanics.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "faction_weakened",
+      "alliance_broken"
+    ],
+    "public_situation": "Shipyard workers stage wildcat walkouts across {system} after a colossal orbital crane snapped, crushing four berths and killing six riggers.",
+    "private_truth": "{role:dockmaster_contractor} installed physical override shunts on the crane's load limiters to hoist seventy-ton armor plates onto corsair gunboats twice as fast.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "crane_limiters_bypassed_to_expedite_corsair_refits"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Work halts across {role:dockyard_gantry_ring} as the shipwright guild demands an independent accident inquest.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "dockmaster_contractor",
+            "requester": "salvage_inspector",
+            "target": "crane_wreckage_field",
+            "reason": "She hires an outside pilot to scan the sheared winch gears inside the debris drift to verify if the failure was metallurgical fatigue or load override.",
+            "private_fact": "She knows dock management already attempted to scrub the gantry's maintenance logs before the union arrived.",
+            "outcome_tags": [
+              "limiter_override_proven",
+              "fatigue_inconclusive"
+            ],
+            "routes": {
+              "limiter_override_proven": "next",
+              "fatigue_inconclusive": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "{role:dockmaster_contractor} deploys private security tugs to impound the crane's physical flight data core before the union recovers it.",
+        "missions": [
+          {
+            "verb": "recover_combat_drop",
+            "requester": "salvage_inspector",
+            "target": "shipwright_guild",
+            "reason": "She pays the pilot to intercept a rogue management scrapper tug and recover the crane's black box before it is melted in the slag furnace.",
+            "private_fact": "The black box contains the dockmaster's personal biometric login authorizing the load limiter bypass twenty minutes before the collapse.",
+            "outcome_tags": [
+              "black_box_secured"
+            ],
+            "routes": {
+              "black_box_secured": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "crisis",
+        "public_change": "{role:corsair_captain} moves {role:corsair_gunboat} into position beside the dockyard gantry, threatening to open fire if the inquest delays the fleet's departure.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "salvage_inspector",
+            "target": "dockyard_gantry_ring",
+            "reason": "She hires the pilot to deliver the extracted telemetry core to the shipwright guild hall under the corsair guns.",
+            "private_fact": "The corsair captain has threatened to execute the dockmaster and torch the berths if his squadron's refit contract is canceled.",
+            "outcome_tags": [
+              "telemetry_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "telemetry_delivered": "next",
+              "abandoned": "resolution:dockmaster_frames_dead_riggers"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "Union mechanics arm themselves with heavy plasma cutters as {role:corsair_gunboat} prepares to break through the dockyard cordon.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "salvage_inspector",
+            "target": "corsair_gunboat",
+            "reason": "She pays the pilot to disable the corsair gunboat's engines before it can flee the system with the dockmaster aboard.",
+            "private_fact": "The corsair captain hails offering a massive bribe and stolen naval ordnance if the pilot blames the accident on rigger negligence and lets the ship jump.",
+            "outcome_tags": [
+              "gunboat_disabled",
+              "corsair_bribe_taken"
+            ],
+            "routes": {
+              "gunboat_disabled": "next",
+              "corsair_bribe_taken": "resolution:accident_falsified_for_corsair_bribe"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the black box secured and the corsair ship trapped, the pilot must decide whether to expose the dockmaster, take the corsair payout, or let management cover up the crime.",
+          "options": [
+            {
+              "id": "deliver_to_union",
+              "label": "Deliver the black box to the shipwright guild to prosecute the dockmaster and vindicate the fallen riggers",
+              "leads_to": "resolution:dockmaster_prosecuted_union_victorious"
+            },
+            {
+              "id": "accept_corsair_bribe",
+              "label": "Falsify the report as metal fatigue and take the corsair bribe",
+              "leads_to": "resolution:accident_falsified_for_corsair_bribe"
+            },
+            {
+              "id": "sell_to_dockmaster",
+              "label": "Sell the black box back to the dockmaster for an exorbitant silence fee",
+              "leads_to": "resolution:dockmaster_frames_dead_riggers"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "dockmaster_prosecuted_union_victorious",
+        "reached_by": "The pilot delivers the black box to the shipwright guild.",
+        "summary": "{role:dockmaster_contractor} is arrested for reckless endangerment. {role:shipwright_guild} seizes control of safety protocols across {role:dockyard_gantry_ring}.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "shipwright_guild",
+            "delta": 3
+          },
+          {
+            "type": "cast_fate",
+            "target": "dockmaster_contractor",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_inspector",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "corsair_captain",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "exposed_dockyard_crane_override",
+            "public_summary": "A pilot recovered the black box from a fatal shipyard crane disaster, proving management bypassed safety limiters."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "faction_weakened"
+        ]
+      },
+      {
+        "id": "accident_falsified_for_corsair_bribe",
+        "reached_by": "The pilot accepts the corsair captain's bribe and certifies metal fatigue.",
+        "summary": "The disaster is ruled an unavoidable structural failure. {role:corsair_captain} jumps away with refitted armor, while the victims' families receive zero compensation.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "shipwright_guild",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "corsair_captain",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dockmaster_contractor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_inspector",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "whitewashed_crane_disaster",
+            "public_summary": "A pilot took privateer blood money to cover up the fatal override of an orbital shipyard crane."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "dockmaster_frames_dead_riggers",
+        "reached_by": "The pilot sells the black box to the dockmaster.",
+        "summary": "{role:dockmaster_contractor} destroys the telemetry and blames the disaster on deceased rigger error. The union calls an indefinite general strike across the orbital ring.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "shipwright_guild",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "dockmaster_contractor",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_inspector",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "strike"
+            ],
+            "remove": []
+          },
+          {
+            "type": "deed",
+            "tag": "sold_out_shipyard_riggers",
+            "public_summary": "A pilot sold the black box of a fatal crane collapse to the dockmaster, letting dead riggers take the blame."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "alliance_broken"
+        ]
+      },
+      {
+        "id": "gantry_evacuated_in_paralysis",
+        "reached_by": "The pilot never intervenes or abandons the inquest.",
+        "summary": "Corsair gunboats open fire during the standoff, destroying two drydock gantries before fleeing. The station marshal orders {role:dockyard_gantry_ring} evacuated.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "shipwright_guild",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "dockmaster_contractor",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "salvage_inspector",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "evacuation"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "gantry_evacuated_in_paralysis",
+    "loose_threads": [
+      {
+        "id": "t_crane_winch_overclock",
+        "surface": "cargo",
+        "detail": "The crane's hydraulic valve shunts carry privateer armory part numbers stamped in uncalibrated tool steel.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_dockmaster_kickback_wire",
+        "surface": "price_board",
+        "detail": "An off-system maritime insurance pool registered heavy indemnity transfers to the dockmaster's private bank twenty-four hours after the crash.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "forged_records",
+        "slow_infiltration",
+        "debt_leverage"
+      ],
+      "motives": [
+        "greed",
+        "fear"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "docking_bribes"
+    ],
+    "radio_hooks": [
+      "Orbital crane disaster halts warship refits at central drydock gantry.",
+      "Shipwright guild threatens wildcat walkouts over uncertified heavy machinery overhauls.",
+      "Station port marshal launches emergency investigation into sheared gantry winches."
+    ],
+    "voice_direction": {
+      "salvage_inspector": "Clipped, precise, and rigorously cites mechanical shear tolerances. Refuses to make eye contact when angry.",
+      "dockmaster_contractor": "Fast, defensive, and perpetually wiping his brow. Dismisses safety protocols as academic nonsense holding back commerce.",
+      "corsair_captain": "Low, rumbling, and dangerously calm. Uses the flat, measured tone of someone accustomed to having his orders obeyed without question."
+    },
+    "novelty_tags": [
+      "crane_collapse",
+      "gantry_override",
+      "drydock_inquest",
+      "corsair_refits",
+      "shipwright_strike"
+    ]
+  }
+]

@@ -1,0 +1,316 @@
+{
+  "id": "premise.the_abbess_toxicology_roll",
+  "schema_version": 1,
+  "title": "The Abbess's Toxicology Roll",
+  "logline": "A cloistered monastic embalmer preparing a revered spiritual abbess for orbital burial discovers that the saintly leader died not in sacred meditation, but of an intentional overdose of forbidden pain suppressants she spent her life preaching against.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "monastic_embalmer",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "A quiet cloistered technician whose holy duty is to prepare departed elders for orbital burial; devout, gentle, and shaken to the core.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "senior_precentor",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Leader of the monastery's disciplinary council; zealous, rigid, and desperate to protect the late abbess's saintly reputation.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outpost_physician",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "The secular station doctor who secretly provided the dying abbess with palliative narcotics out of mercy, now facing execution for poisoning.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cloistered_charnel_spire",
+      "kind": "place",
+      "description": "An unpressurized stone spire anchored to an icy monastery asteroid where sacred embalming rites are conducted.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rim_infirmary_dock",
+      "kind": "place",
+      "description": "A battered modular medical clinic floating outside monastery jurisdiction in unaligned space.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "mourning"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "martyr_made",
+    "secret_half_exposed",
+    "quiet_cover_up"
+  ],
+  "public_situation": "Pilgrims hold silence throughout {system} as the beloved founder of an ascetic monastic order is prepared for ceremonial burial in deep space.",
+  "private_truth": "The order's faith teaches that physical agony purifies the soul before death. The abbess secretly obtained black-market synthetic anesthetics to escape terminal cancer.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "abbess_secret_painkiller_overdose"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Mourning bells ring across the monastery asteroid as pilgrims gather outside {role:cloistered_charnel_spire}.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "monastic_embalmer",
+          "target": "cloistered_charnel_spire",
+          "reason": "He hires an outside pilot to purchase sacred preserving salts from a station apothecary before the final shrouding ritual opens.",
+          "private_fact": "His initial tissue analysis showed massive concentrations of synthetic neuro-blockers that violate the order's cardinal vows.",
+          "outcome_tags": [
+            "salts_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "salts_delivered": "next",
+            "abandoned": "resolution:heresy_trials_convict_innocent_doctor"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:senior_precentor} orders monastery sentries to arrest {role:outpost_physician}, accusing her of poisoning the saintly leader.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "senior_precentor",
+          "requester": "outpost_physician",
+          "target": "rim_infirmary_dock",
+          "reason": "She hires the pilot to scan the clinic's encrypted pharmacy dispensary logs to verify that the abbess requested the palliative narcotics under her own signature.",
+          "private_fact": "The abbess wept and begged for relief in her clinic for three months, swearing her to secrecy to protect the novices' faith.",
+          "outcome_tags": [
+            "abbess_signature_verified",
+            "dispensary_wiped"
+          ],
+          "routes": {
+            "abbess_signature_verified": "next",
+            "dispensary_wiped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Monks prepare the ceremonial catapult on the spire as the precentor convenes a heresy tribunal to execute the physician.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "monastic_embalmer",
+          "target": "cloistered_charnel_spire",
+          "reason": "He begs the pilot to rush the decoded toxicology slate to the council dais before the doctor is thrown into the vacuum chute.",
+          "private_fact": "If the truth airs, the order's theological foundation will collapse, but staying silent allows an innocent woman to be executed for mercy.",
+          "outcome_tags": [
+            "slate_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "slate_delivered": "next",
+            "abandoned": "resolution:heresy_trials_convict_innocent_doctor"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the abbess's personal confession in hand, the pilot must decide whether to save the doctor by shattering the monastic faith, burn the evidence, or negotiate an exile.",
+        "options": [
+          {
+            "id": "exonerate_physician_openly",
+            "label": "Present the abbess's confession openly to save the physician and shatter the ascetic cult",
+            "leads_to": "resolution:faith_shattered_doctor_saved"
+          },
+          {
+            "id": "preserve_monastic_faith",
+            "label": "Burn the toxicology slate and let the precentor execute the physician to preserve the faith",
+            "leads_to": "resolution:heresy_trials_convict_innocent_doctor"
+          },
+          {
+            "id": "broker_quiet_exile",
+            "label": "Deliver the slate privately to the precentor to buy the doctor's quiet exile into deep space",
+            "leads_to": "resolution:quiet_exile_preserves_order"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "faith_shattered_doctor_saved",
+      "reached_by": "The pilot presents the abbess's confession publicly to the pilgrims.",
+      "summary": "The abbess's human frailty is exposed. {role:outpost_physician} is freed, but the ascetic order collapses into crisis as disillusioned novices abandon the spire.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "outpost_physician",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_precentor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "monastic_embalmer",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "shattered_ascetic_saint_myth",
+          "public_summary": "A pilot revealed an ascetic abbess died on black-market painkillers, saving a doctor but destroying a monastic order."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "heresy_trials_convict_innocent_doctor",
+      "reached_by": "The pilot destroys the records or never intervenes.",
+      "summary": "{role:outpost_physician} is executed for heretical murder. The abbess is canonized as an immaculate saint, while {role:monastic_embalmer} lives in silent torment.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "outpost_physician",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "senior_precentor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "monastic_embalmer",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "allowed_mercy_doctor_execution",
+          "public_summary": "A pilot stayed silent while a monastic council executed a station physician to cover up their saint's secret painkillers."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "quiet_exile_preserves_order",
+      "reached_by": "The pilot brokers an agreement with the precentor.",
+      "summary": "{role:senior_precentor} banishes the physician into deep space and buries the toxicology report. The abbess's holy cult survives, purchased with exile.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "senior_precentor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "outpost_physician",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "monastic_embalmer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_monastic_coverup",
+          "public_summary": "A pilot traded a dying abbess's drug dockets to a church council in exchange for a station doctor's exile."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    }
+  ],
+  "default_resolution": "heresy_trials_convict_innocent_doctor",
+  "loose_threads": [
+    {
+      "id": "t_abbess_narcotic_vial",
+      "surface": "cargo",
+      "detail": "The synthetic painkiller vials bear batch stamps from an offshore commercial pharmaceutical syndicate that went bankrupt years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_monastery_tithe_annuity",
+      "surface": "station_notice",
+      "detail": "The monastery council maintains secret endowment accounts in an unaligned system that pay annual allowances to the precentor's kin.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "faith",
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Ascetic monastic order declares forty days of station mourning following abbess's passing.",
+    "Outpost medical association protests detention of clinic physician by religious council.",
+    "Pilgrim flotillas gather around monastery comet for ceremonial orbital burial procession."
+  ],
+  "voice_direction": {
+    "monastic_embalmer": "Quiet, tremulous, and pauses frequently as if listening for sacred answers. Speaks with agonizing spiritual heartbreak.",
+    "senior_precentor": "Booming, formal, and intolerant of interruption. Uses liturgical formulas to shut down all medical facts.",
+    "outpost_physician": "Exhausted, defiant, and cynical about religious hypocrisy. Speaks of human pain with raw, unapologetic anger."
+  },
+  "novelty_tags": [
+    "ascetic_monastery",
+    "toxicology_scandal",
+    "palliative_hypocrisy",
+    "heresy_trial",
+    "crisis_of_faith"
+  ]
+}

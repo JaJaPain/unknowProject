@@ -1,0 +1,389 @@
+{
+  "id": "premise.the_neutral_relay_siege",
+  "schema_version": 1,
+  "title": "The Neutral Relay Siege",
+  "logline": "An orbital communications curator besieged by striking dockworkers and corporate security claims impartial neutrality, hiding that he was the anonymous leaker who provoked the strike in the first place.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "noir"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "relay_curator",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Keeper of the station's unencrypted historical comms buoy; stubborn, idealistic, and terrified of taking sides.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "strike_captain",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Leader of the freight handlers' union who insists the relay logs will prove management opened fire first.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "security_director",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Corporate station security chief determined to seize and sanitize the logs before they reach the system tribunal.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "union_gunboat",
+      "kind": "ship",
+      "description": "An armed tugboat outfitted with bolted-on armor plate and industrial cutting lasers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "comms_relay_outpost",
+      "kind": "place",
+      "description": "An isolated solar-powered antenna spar anchored three hundred kilometers off the main station ring.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freight_union",
+      "kind": "faction",
+      "description": "A militant coalition of dockworkers, loader pilots, and crane technicians.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "strike"
+    ],
+    "states_forbidden": []
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "alliance_broken",
+    "evidence_loose"
+  ],
+  "public_situation": "An armed standoff erupts around the neutral communications relay outpost off {system} after striking dockworkers and corporate security converge on the isolated antenna spar.",
+  "private_truth": "{role:relay_curator} anonymously leaked the corporate memo that sparked the strike to avenge his sister's firing. He is hiding behind his neutral charter to avoid execution as the instigator.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "curator_anonymously_ignited_strike_over_family_firing"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Both union picketers and corporate security gunboats scramble towards {role:comms_relay_outpost}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "relay_curator",
+          "target": "comms_relay_outpost",
+          "reason": "He needs an independent pilot to dock at the relay spar and retrieve the master transmission cryptographic token before either faction docks.",
+          "private_fact": "The token contains the private encryption key he used to beam the leaked corporate wage docket onto the union bulletin board.",
+          "outcome_tags": [
+            "token_secured"
+          ],
+          "routes": {
+            "token_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Corporate gunboats declare an exclusion zone around the relay spar, demanding the curator surrender transmission records.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "security_director",
+          "requester": "security_director",
+          "target": "comms_relay_outpost",
+          "reason": "She hires an outside pilot to scan the relay transmitter to identify which workstation terminal originated the unauthorized leak.",
+          "private_fact": "Her board authorized her to scuttle the entire spar if the leaker cannot be extradited for corporate tribunal.",
+          "outcome_tags": [
+            "terminal_isolated",
+            "signal_masked"
+          ],
+          "routes": {
+            "terminal_isolated": "next",
+            "signal_masked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "A union gunboat blocks the transit lane to the habitat concourse, demanding the curator release management's emergency deployment codes.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "relay_curator",
+          "target": "union_gunboat",
+          "reason": "He begs the pilot to disable the union vessel so he can purge the relay archives before union hackers breach his terminal.",
+          "private_fact": "He knows if the strikers learn he caused the violence that got three picketers killed, they will lynch him as a reckless saboteur.",
+          "outcome_tags": [
+            "gunboat_disabled",
+            "gunboat_escaped"
+          ],
+          "routes": {
+            "gunboat_disabled": "next",
+            "gunboat_escaped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Security patrols and armed union freighters prepare for a full-scale battle outside {role:comms_relay_outpost}.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "strike_captain",
+          "target": "union_gunboat",
+          "reason": "She hires the pilot to secure the relay airlock so the union can recruit the anonymous whistleblower to direct their defense.",
+          "private_fact": "{role:security_director} hails offering station immunity and a bounty if the pilot turns over the cryptographic token identifying the instigator.",
+          "outcome_tags": [
+            "escort_completed",
+            "security_deal_taken"
+          ],
+          "routes": {
+            "escort_completed": "next",
+            "security_deal_taken": "resolution:curator_unmasked_by_security"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the cryptographic token in hand and both factions surrounding the relay, the pilot must decide whether to protect the curator, sell him out, or expose his instigation.",
+        "options": [
+          {
+            "id": "purge_and_extract",
+            "label": "Purge the transmission archives and extract {role:relay_curator} to preserve his neutrality",
+            "leads_to": "resolution:curator_escapes_neutrality_intact"
+          },
+          {
+            "id": "sell_to_security",
+            "label": "Sell the cryptographic token to {role:security_director} to expose the curator",
+            "leads_to": "resolution:curator_unmasked_by_security"
+          },
+          {
+            "id": "confess_to_union",
+            "label": "Deliver the token and confession to {role:strike_captain} so the union knows the truth",
+            "leads_to": "resolution:union_learns_curator_instigated_riot"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "curator_escapes_neutrality_intact",
+      "reached_by": "The pilot purges the logs and extracts the curator.",
+      "summary": "{role:relay_curator} purges his workstation and slips away into unaligned space. Neither faction ever learns who leaked the memo, leaving the strike deadlocked.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relay_curator",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "freight_union",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_director",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "protected_guilty_curator",
+          "public_summary": "A pilot wiped communications archives at a contested relay, keeping the origins of a dock strike buried."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "curator_unmasked_by_security",
+      "reached_by": "The pilot sells the cryptographic token to the security director.",
+      "summary": "{role:security_director} uses the token to prove {role:relay_curator} instigated the dispute. The curator is imprisoned and the strike is crushed under martial law.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_director",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_curator",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": [
+            "strike"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_relay_curator",
+          "public_summary": "A pilot handed encrypted tokens to station security, exposing the curator who secretly started a dock strike."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "union_learns_curator_instigated_riot",
+      "reached_by": "The pilot delivers the token and confession to the strike captain.",
+      "summary": "{role:strike_captain} learns the curator sparked the strike over personal vengeance. The union expels {role:relay_curator} but uses the corporate leak to seize station docks.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_union",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "strike_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_curator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_strike_instigator",
+          "public_summary": "A pilot brought proof that a neutral comms curator secretly manufactured the dock strike for personal payback."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "relay_stormed_in_paralysis",
+      "reached_by": "The pilot never intervenes or abandons the relay.",
+      "summary": "Security forces storm the relay spar, destroying the antennas and arresting {role:relay_curator}. The true source of the leak remains an unresolved station mystery.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "relay_curator",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "standing",
+          "target": "freight_union",
+          "delta": -1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "relay_stormed_in_paralysis",
+  "loose_threads": [
+    {
+      "id": "t_relay_bandwidth_allocation",
+      "surface": "scan",
+      "detail": "The relay's telemetry transmission log shows an encrypted secondary stream directed towards an offshore intelligence vessel.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_union_weapon_manifest",
+      "surface": "cargo",
+      "detail": "The rifles carried by the union picket carry serial numbers traced to a corporate security depot inventory write-off.",
+      "can_carry_methods": [
+        "manufactured_crisis",
+        "false_flag"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "manufactured_crisis",
+      "false_flag",
+      "information_control"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Independent relay spar outside {system} surrounded by rival armed cutters following dock clash.",
+    "Station security issues ultimatum to communications curator demanding unedited incident logs.",
+    "Freight union leadership accuses management of manufacturing communications blackout."
+  ],
+  "voice_direction": {
+    "relay_curator": "Fastidious, tremulous, and constantly cites archival bylaws. Becomes shrill and desperate when pressured to take a side.",
+    "strike_captain": "Hoarse, passionate, and blunt. Uses rough dockyard vernacular and treats anyone who hesitates as an enemy.",
+    "security_director": "Crisp, measured, and patronizing. Uses polite corporate phrasing to deliver lethal threats."
+  },
+  "novelty_tags": [
+    "neutral_relay",
+    "whistleblower_guilt",
+    "dock_strike_origins",
+    "cryptographic_token",
+    "archivist_instigator"
+  ]
+}

@@ -1,0 +1,1100 @@
+[
+  {
+    "id": "premise.the_ascetics_detonator",
+    "schema_version": 1,
+    "title": "The Ascetic's Detonator",
+    "logline": "A palliative hospice chaplain preparing an ascetic hermit for his final rites discovers that the glowing holy relic worshipped by his followers is an unexploded military reactor detonator slowly poisoning the entire ward.",
+    "scale": "personal",
+    "tone": [
+      "melancholy",
+      "paranoid"
+    ],
+    "themes": [
+      "faith_and_doubt",
+      "truth_vs_comfort"
+    ],
+    "roles": [
+      {
+        "id": "hospice_chaplain",
+        "kind": "person",
+        "archetype": "preacher",
+        "description": "Spiritual director of the palliative hospice ward; gentle, exhausted, and struggling with a quiet crisis of faith.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "dying_ascetic",
+        "kind": "person",
+        "archetype": "retired_legend",
+        "description": "An elderly hermit who spent four decades living in silent prayer around a glowing relic he recovered from a derelict ship.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "relic_acolyte",
+        "kind": "person",
+        "archetype": "heir",
+        "description": "The hermit's devoted follower, desperate to preserve the relic's sacred reputation and build an orbital shrine.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "quarantine_hospice_dock",
+        "kind": "place",
+        "description": "An isolated palliative platform anchored on the cold perimeter of the star system.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "rad_waste_disposal_vault",
+        "kind": "place",
+        "description": "A reinforced lead-jacketed containment cylinder anchored inside a dense asteroid field.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "blockade"
+      ]
+    },
+    "accepts_seeds": [
+      "martyr_made",
+      "secret_half_exposed",
+      "quiet_cover_up"
+    ],
+    "public_situation": "Pilgrims gather outside {role:quarantine_hospice_dock} as a legendary hermit nears death, chanting blessings toward the glowing relic resting beside his hospice bed.",
+    "private_truth": "The holy relic is an unshielded naval reactor detonator. The ascetic's visions and saintly aura were the progressive symptoms of terminal radiation sickness.",
+    "core_why": {
+      "motive": "faith",
+      "secret": "holy_pilgrim_relic_is_unexploded_reactor_detonator"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Hospice attendants set up auxiliary lead shielding screens around the hermit's palliative suite as radiation alarms chirp.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "hospice_chaplain",
+            "target": "rad_waste_disposal_vault",
+            "reason": "She hires an outside pilot to collect heavy isotopic shielding casings from the disposal vault before the hermit's deathbed vigil opens.",
+            "private_fact": "She already tested the ward's air scrubbers and knows the background ionizing radiation has quadrupled since the relic arrived.",
+            "outcome_tags": [
+              "casing_delivered"
+            ],
+            "routes": {
+              "casing_delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Acolytes bar hospital inspectors from the palliative room, claiming secular sensors will desecrate the holy communion.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "relic_acolyte",
+            "requester": "relic_acolyte",
+            "target": "quarantine_hospice_dock",
+            "reason": "He asks the pilot to calibrate external telemetry sensors to certify the relic emits an unearthly spiritual resonance field.",
+            "private_fact": "He knows the military serial numbers on the core casing match an infamous warhead type but believes divine grace purified the metal.",
+            "outcome_tags": [
+              "detonator_telemetry_verified",
+              "readings_inconclusive"
+            ],
+            "routes": {
+              "detonator_telemetry_verified": "next",
+              "readings_inconclusive": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "The ascetic slips into a coma while hospice monitors begin failing under intense neutron bombardment from the relic.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "hospice_chaplain",
+            "target": "rad_waste_disposal_vault",
+            "reason": "She begs the pilot to rush the sealed detonator into the deep-space disposal vault before the entire ward suffers lethal exposure.",
+            "private_fact": "She fears that revealing the relic's true nature will destroy the faith of hundreds of terminal patients who found peace in its light.",
+            "outcome_tags": [
+              "detonator_sealed",
+              "abandoned"
+            ],
+            "routes": {
+              "detonator_sealed": "next",
+              "abandoned": "resolution:ward_irradiated_in_silence"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the live naval detonator secured in transport shielding, the pilot must decide whether to jettison it into the disposal vault, return it to the acolyte's shrine, or expose its origins.",
+          "options": [
+            {
+              "id": "jettison_in_vault",
+              "label": "Seal the detonator inside the disposal vault to save the hospice patients",
+              "leads_to": "resolution:detonator_buried_in_vault"
+            },
+            {
+              "id": "return_to_shrine",
+              "label": "Leave the relic in the acolyte's shrine so the dying preserve their comfort",
+              "leads_to": "resolution:faith_preserved_at_fatal_cost"
+            },
+            {
+              "id": "expose_military_hardware",
+              "label": "Deliver the detonator to naval inspectors to document the military ordnance leak",
+              "leads_to": "resolution:military_detonator_scandal"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "detonator_buried_in_vault",
+        "reached_by": "The pilot seals the ordnance inside the deep disposal vault.",
+        "summary": "{role:hospice_chaplain} tells pilgrims the relic was gathered back to heaven. The ward recovers, though {role:relic_acolyte} vows vengeance against the meddling pilot.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "relic_acolyte",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "deed",
+            "tag": "disposed_holy_detonator",
+            "public_summary": "A pilot carried an unexploded naval warhead away from a hospice where pilgrims were praying to its glow."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "faith_preserved_at_fatal_cost",
+        "reached_by": "The pilot delivers the relic to the acolyte for enshrinement.",
+        "summary": "{role:relic_acolyte} builds a golden reliquary around the unshielded detonator. The ascetic dies exalted, but the palliative ward is condemned for lethal radiation.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "relic_acolyte",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "quarantine"
+            ],
+            "remove": []
+          },
+          {
+            "type": "deed",
+            "tag": "enshrined_radioactive_relic",
+            "public_summary": "A pilot delivered a radiant holy relic to an asteroid shrine, unaware or unbothered by the radiation alarms."
+          }
+        ],
+        "seeds": [
+          "martyr_made",
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "military_detonator_scandal",
+        "reached_by": "The pilot presents the ordnance serial numbers to official regulators.",
+        "summary": "Naval ordnance officers impound the relic. The ascetic's miraculous cult collapses into public mockery, leaving {role:hospice_chaplain} to console heartbroken pilgrims.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "relic_acolyte",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "deed",
+            "tag": "exposed_miracle_detonator",
+            "public_summary": "A pilot proved a hermit's sacred miracle stone was an obsolete warhead core leaked from a naval arsenal."
+          }
+        ],
+        "seeds": [
+          "secret_half_exposed",
+          "evidence_loose"
+        ]
+      },
+      {
+        "id": "ward_irradiated_in_silence",
+        "reached_by": "The pilot never intervenes or abandons the contract.",
+        "summary": "The ascetic dies with the relic in his grip. Uncontained radiation leaks throughout {role:quarantine_hospice_dock}, forcing an emergency evacuation of all palliative patients.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "dying_ascetic",
+            "fate": "dead"
+          },
+          {
+            "type": "cast_fate",
+            "target": "hospice_chaplain",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "evacuation"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "martyr_made",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "ward_irradiated_in_silence",
+    "loose_threads": [
+      {
+        "id": "t_ascetic_salvage_stamp",
+        "surface": "cargo",
+        "detail": "The lead shielding sleeve bears a faded inventory stamp matching a commercial demolition company declared bankrupt thirty years ago.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_pilgrim_tithe_routing",
+        "surface": "station_notice",
+        "detail": "Donations collected for the hermit's canonization are routed directly to an offshore commercial loan brokerage's escrow account.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "slow_infiltration",
+        "forged_records",
+        "debt_leverage"
+      ],
+      "motives": [
+        "faith",
+        "guilt",
+        "greed"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders",
+      "salvage_registry"
+    ],
+    "radio_hooks": [
+      "Pilgrims hold candlelit orbital vigil outside hospice platform as beloved hermit weakens.",
+      "Station public health board investigates unverified radiation spikes near rim medical docks.",
+      "Theological council debates whether physical relics require mandatory ordnance screening."
+    ],
+    "voice_direction": {
+      "hospice_chaplain": "Soft, hesitant, and chooses words with agonizing care. Never mentions military weapons directly, substituting ecclesiastical euphemisms.",
+      "relic_acolyte": "Fervent, rapid, and speaks in rhythmic liturgical cadences. Dismisses all technical data as worldly spiritual testing."
+    },
+    "novelty_tags": [
+      "ascetic_hermit",
+      "reactor_detonator",
+      "palliative_hospice",
+      "radioactive_relic",
+      "crisis_of_faith"
+    ]
+  },
+  {
+    "id": "premise.the_factors_eviction_escrow",
+    "schema_version": 1,
+    "title": "The Factor's Eviction Escrow",
+    "logline": "An unaligned station habitation factor refuses to take sides between an aggressive landlord and striking tenant families, hiding that the eviction writs were triggered by his own failure to submit structural lease renewals.",
+    "scale": "personal",
+    "tone": [
+      "tense",
+      "noir"
+    ],
+    "themes": [
+      "cost_of_neutrality",
+      "debt_and_obligation"
+    ],
+    "roles": [
+      {
+        "id": "housing_factor",
+        "kind": "person",
+        "archetype": "broker",
+        "description": "An unaligned residential lease administrator who prides himself on strict impartiality; cowardly, fastidious, and cornered by his own mistakes.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "syndicate_landlord",
+        "kind": "person",
+        "archetype": "merchant",
+        "description": "Owner of the habitat's pressurized dorm pods; ruthless, legalistic, and eager to convert family units into high-margin luxury suites.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "tenant_spokeswoman",
+        "kind": "person",
+        "archetype": "labourer",
+        "description": "An outspoken hydroponics worker organizing resident resistance against sudden eviction notices.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "habitat_management_office",
+        "kind": "place",
+        "description": "The station leasing bureau where residential occupancy deeds are officially registered.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "pod_habitation_block",
+        "kind": "place",
+        "description": "A cramped four-tier residential cylinder housing two hundred miner families.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "law_tightened",
+      "grudge_against_player"
+    ],
+    "public_situation": "Tensions mount outside {role:pod_habitation_block} as private enforcers prepare to evict dozens of families following a sudden default on their long-term tenancy leases.",
+    "private_truth": "{role:housing_factor} forgot to file the tenants' collective renewal bond before the municipal deadline. He is pretending to be an impartial mediator to hide his legal liability.",
+    "core_why": {
+      "motive": "fear",
+      "secret": "factor_forgot_lease_renewal_filing_causing_evictions"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Private eviction enforcers post digital repossession notices along the corridors of {role:pod_habitation_block}.",
+        "missions": [
+          {
+            "verb": "purchase_delivery",
+            "requester": "housing_factor",
+            "target": "habitat_management_office",
+            "reason": "He hires an outside pilot to purchase emergency municipal stamp vouchers to validate overdue administrative documents before court opens.",
+            "private_fact": "He needs the vouchers to backdate the lease renewal docket and cover up that he sat on the tenants' rent money for two months.",
+            "outcome_tags": [
+              "vouchers_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "vouchers_delivered": "next",
+              "abandoned": "resolution:families_evicted_in_paralysis"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "public_change": "Angry tenants barricade the habitat airlocks, refusing to let {role:syndicate_landlord}'s bailiffs enter the pod sector.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "housing_factor",
+            "requester": "tenant_spokeswoman",
+            "target": "habitat_management_office",
+            "reason": "She hires the pilot to scan the leasing registry terminals to verify whether the eviction writ was issued due to unpaid rent or an administrative error.",
+            "private_fact": "She knows her neighbors paid every credit into the factor's escrow account on time and suspects the landlord bribed station officials.",
+            "outcome_tags": [
+              "clerical_lapse_exposed",
+              "records_scrambled"
+            ],
+            "routes": {
+              "clerical_lapse_exposed": "next",
+              "records_scrambled": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Enforcers bring heavy cutting torches to the habitat hatch as {role:syndicate_landlord} demands immediate possession.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "housing_factor",
+            "target": "pod_habitation_block",
+            "reason": "He begs the pilot to rush an emergency settlement bond to the barricaded airlock to prevent a violent breach.",
+            "private_fact": "The settlement requires the tenants to sign away their long-term occupancy rights in exchange for avoiding immediate physical expulsion.",
+            "outcome_tags": [
+              "settlement_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "settlement_delivered": "next",
+              "abandoned": "resolution:families_evicted_in_paralysis"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "Holding the evidence of the factor's fatal clerical blunder and the landlord's eviction order, the pilot must decide who bears the cost of the housing crisis.",
+          "options": [
+            {
+              "id": "expose_factor_openly",
+              "label": "Present proof of the factor's error to the magistrate to invalidate the eviction",
+              "leads_to": "resolution:factor_held_liable_tenants_saved"
+            },
+            {
+              "id": "deliver_landlord_settlement",
+              "label": "Deliver the compromise agreement forcing families into short-term sublets",
+              "leads_to": "resolution:tenants_surrender_tenure_for_peace"
+            },
+            {
+              "id": "sell_out_to_landlord",
+              "label": "Sell the backdated vouchers to the landlord to expedite immediate eviction",
+              "leads_to": "resolution:landlord_clears_hab_for_luxury"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "factor_held_liable_tenants_saved",
+        "reached_by": "The pilot proves the factor failed to submit the renewal in court.",
+        "summary": "Magistrates nullify the eviction notices. {role:housing_factor}'s escrow license is revoked to cover tenant damages, preserving homes in {role:pod_habitation_block}.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "deed",
+            "tag": "stopped_corrupt_pod_eviction",
+            "public_summary": "A pilot proved an unaligned housing factor hid his own paperwork blunders behind fraudulent eviction writs."
+          }
+        ],
+        "seeds": [
+          "law_tightened",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "tenants_surrender_tenure_for_peace",
+        "reached_by": "The pilot delivers the factor's compromise agreement.",
+        "summary": "Tenants accept rolling short-term sublets to avoid immediate eviction. {role:housing_factor} maintains his neutral facade, but families lose their lifetime tenure.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "deed",
+            "tag": "brokered_compromised_tenancy",
+            "public_summary": "A pilot delivered a harsh tenancy compromise that preserved shelter while stripping miner families of their tenure."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "landlord_clears_hab_for_luxury",
+        "reached_by": "The pilot sells the evidence to the landlord.",
+        "summary": "{role:syndicate_landlord} enforces the eviction with private security. Two hundred families are displaced to outer freight bays while luxury suites open.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "syndicate_landlord",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "refugee_influx"
+            ],
+            "remove": []
+          },
+          {
+            "type": "deed",
+            "tag": "aided_predatory_landlord",
+            "public_summary": "A pilot helped a predatory station landlord evict dozens of families to clear space for executive quarters."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "refugees_moving"
+        ]
+      },
+      {
+        "id": "families_evicted_in_paralysis",
+        "reached_by": "The pilot never intervenes or abandons the courier mission.",
+        "summary": "Enforcers breach the barricades with stun gas. Families are evicted into unpressurized corridors while {role:housing_factor} closes his office and flees the system.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "housing_factor",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "tenant_spokeswoman",
+            "fate": "ruined"
+          },
+          {
+            "type": "system_state",
+            "add": [
+              "strike"
+            ],
+            "remove": []
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "witness_at_large"
+        ]
+      }
+    ],
+    "default_resolution": "families_evicted_in_paralysis",
+    "loose_threads": [
+      {
+        "id": "t_factor_escrow_audit",
+        "surface": "station_notice",
+        "detail": "The municipal leasing registry lists the factor's bond account as delinquent despite monthly receipts stamped in full.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_sublet_contract_amendment",
+        "surface": "cargo",
+        "detail": "The new sublease documents contain standardized liability disclaimers drafted by a corporate banking cartel.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "slow_infiltration"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "forged_records",
+        "cornering_a_market"
+      ],
+      "motives": [
+        "greed",
+        "fear"
+      ]
+    },
+    "law_hooks": [
+      "curfew",
+      "tariff_on_goods"
+    ],
+    "radio_hooks": [
+      "Standoff escalates at pod habitation ring as tenant barricades resist eviction enforcers.",
+      "Station tenancy board reminds residents that lease renewal deadlines are strictly enforced.",
+      "Hydroponics worker delegates threaten wildcat shift walkouts over residential evictions."
+    ],
+    "voice_direction": {
+      "housing_factor": "Whiny, defensive, and constantly hides behind legal disclaimers. Speaks in a trembling monotone to disguise sheer panic.",
+      "syndicate_landlord": "Smooth, dismissive, and relentlessly pragmatic. Treats families as expired inventory line items.",
+      "tenant_spokeswoman": "Loud, raspy from dry station air, and intensely protective. Demands concrete answers and refuses bureaucratic evasion."
+    },
+    "novelty_tags": [
+      "station_tenancy",
+      "housing_eviction",
+      "clerical_malpractice",
+      "neutrality_cowardice",
+      "dorm_pod_barricade"
+    ]
+  },
+  {
+    "id": "premise.the_chronometers_fissile_core",
+    "schema_version": 1,
+    "title": "The Chronometer's Fissile Core",
+    "logline": "An unaligned courier hauling an antique commemorative naval chronometer across regional gates is hunted by rival privateers, hiding that the clock's heavy balance wheel is cast from unlicenced weapons-grade thorium.",
+    "scale": "regional",
+    "tone": [
+      "heist",
+      "survival"
+    ],
+    "themes": [
+      "price_of_profit",
+      "scarcity_breeds_cruelty"
+    ],
+    "roles": [
+      {
+        "id": "antiquities_dealer",
+        "kind": "person",
+        "archetype": "merchant",
+        "description": "An aristocratic dealer in naval memorabilia; polished, desperate, and hiding colossal gambling debts behind velvet cases.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "corsair_interceptor",
+        "kind": "person",
+        "archetype": "veteran",
+        "description": "A former naval reactor engineer turned privateer raider who recognizes the chronometer's isotopic weight signature.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "reactor_superintendent",
+        "kind": "person",
+        "archetype": "engineer",
+        "description": "Chief reactor manager at a starved frontier outpost who will pay anything to keep habitat turbines spinning.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "corsair_raider_frigate",
+        "kind": "ship",
+        "description": "A stripped-down hunter gunboat fitted with oversized interdiction arrays and pulse cannons.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "provincial_exchange_dock",
+        "kind": "place",
+        "description": "A grand regional trading hub connecting inner system trade corridors to the outer gate network.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "frontier_reactor_ring",
+        "kind": "place",
+        "description": "A freezing outer-rim habitat whose failing fission reactors operate on rationing rations.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "corsair_syndicate",
+        "kind": "faction",
+        "description": "A ruthless regional cartel of former naval crewmen preying on high-value gate freight.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 2,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "blockade"
+      ]
+    },
+    "accepts_seeds": [
+      "market_disrupted",
+      "stolen_goods_circulating",
+      "faction_weakened"
+    ],
+    "public_situation": "An antique maritime chronometer presented to a famous admiral is auctioned across regional gates, drawing armed interceptors who claim the clock is hazardous cargo.",
+    "private_truth": "The chronometer was crafted as a covert smuggling vessel during the postwar drawdown; its three-kilogram balance wheel is solid reactor-grade thorium worth a fortune in fuel-starved systems.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "antique_naval_chronometer_contains_solid_thorium_core"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "location": "same_system",
+        "public_change": "Private security details assemble outside {role:provincial_exchange_dock} as high-value antique crates are transferred between courier berths.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "antiquities_dealer",
+            "target": "provincial_exchange_dock",
+            "reason": "He hires an independent pilot to carry the chronometer's velvet presentation case past gate customs before tariff officers inspect its weight.",
+            "private_fact": "The clock weighs five times what a brass instrument should because the internal flywheel is enriched thorium.",
+            "outcome_tags": [
+              "chronometer_delivered"
+            ],
+            "routes": {
+              "chronometer_delivered": "next"
+            }
+          },
+          {
+            "verb": "purchase_delivery",
+            "requester": "antiquities_dealer",
+            "target": "provincial_exchange_dock",
+            "reason": "He hires the pilot to purchase specialized lead cooling sleeves from station chandlers before departure.",
+            "private_fact": "Without fresh cooling sleeves, the unshielded thorium core will trigger thermal radiation alarms during jump transit.",
+            "outcome_tags": [
+              "sleeves_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "sleeves_delivered": "next",
+              "abandoned": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "location": "neighbouring_system",
+        "public_change": "Privateer gunboats deploy sensor nets across the neighboring gate exit, scanning cargo hulls for thermal anomalies.",
+        "missions": [
+          {
+            "verb": "recover_combat_drop",
+            "requester": "antiquities_dealer",
+            "target": "corsair_syndicate",
+            "reason": "He pays the pilot to destroy an intercepting corsair picket and recover the clock's dropped inertial damping mount.",
+            "private_fact": "Without the magnetic damping mount, the thorium balance wheel will overheat and trigger station radiological alarms upon docking.",
+            "outcome_tags": [
+              "mount_recovered"
+            ],
+            "routes": {
+              "mount_recovered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "location": "any_system",
+        "public_change": "{role:reactor_superintendent} contacts the pilot over priority channels, pleading for the chronometer's core to be brought to the starving habitat.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "antiquities_dealer",
+            "requester": "reactor_superintendent",
+            "target": "frontier_reactor_ring",
+            "reason": "He asks the pilot to scan the habitat's failing reactor core to verify how many hours of life support remain before complete grid collapse.",
+            "private_fact": "His station had its official thorium allotment confiscated by debt collectors, leaving five thousand people facing freezing blackouts.",
+            "outcome_tags": [
+              "grid_failure_verified",
+              "reserve_power_detected"
+            ],
+            "routes": {
+              "grid_failure_verified": "next",
+              "reserve_power_detected": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "location": "any_system",
+        "public_change": "{role:corsair_raider_frigate} corners the courier in deep space outside {role:frontier_reactor_ring}, powering weapons for a boarding action.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "antiquities_dealer",
+            "target": "corsair_raider_frigate",
+            "reason": "He pays the pilot to destroy the corsair flagship so the chronometer can reach a luxury collector's private yacht.",
+            "private_fact": "The corsair captain hails mid-battle offering to split the proceeds from selling the thorium to black-market fuel dealers.",
+            "outcome_tags": [
+              "corsair_destroyed",
+              "allied_with_corsairs"
+            ],
+            "routes": {
+              "corsair_destroyed": "next",
+              "allied_with_corsairs": "resolution:thorium_sold_to_black_market"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the corsair threat resolved and the fissile chronometer in the hold, the pilot must decide whether to deliver the clock to the luxury collector, feed the thorium into the freezing habitat's turbines, or sell it to the outlaws.",
+          "options": [
+            {
+              "id": "deliver_to_collector",
+              "label": "Deliver the chronometer to the antiquities dealer for his private collector payout",
+              "leads_to": "resolution:collector_secures_fissile_relic"
+            },
+            {
+              "id": "save_freezing_habitat",
+              "label": "Dismantle the clock and feed the thorium flywheel into the frontier station reactor",
+              "leads_to": "resolution:thorium_saves_freezing_colony"
+            },
+            {
+              "id": "sell_to_fuel_black_market",
+              "label": "Sell the enriched thorium to corsair fuel dealers for maximum profit",
+              "leads_to": "resolution:thorium_sold_to_black_market"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "thorium_saves_freezing_colony",
+        "reached_by": "The pilot delivers the chronometer to the reactor superintendent.",
+        "summary": "{role:reactor_superintendent} feeds the thorium flywheel into the station core, restoring warmth to {role:frontier_reactor_ring}. The dealer is ruined by his unpaid debts.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "reactor_superintendent",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "antiquities_dealer",
+            "fate": "ruined"
+          },
+          {
+            "type": "standing",
+            "target": "corsair_syndicate",
+            "delta": -2
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "thorium",
+            "price": "crash"
+          },
+          {
+            "type": "deed",
+            "tag": "saved_colony_with_antique_thorium",
+            "public_summary": "A pilot broke apart an antique naval chronometer to feed its weapons-grade core to a freezing colony."
+          }
+        ],
+        "seeds": [
+          "market_disrupted",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "collector_secures_fissile_relic",
+        "reached_by": "The pilot delivers the chronometer to the antiquities dealer.",
+        "summary": "{role:antiquities_dealer} sells the intact chronometer to a billionaire collector, clearing his debts. The outer colony suffers rolling blackouts throughout the winter.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "antiquities_dealer",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "reactor_superintendent",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "thorium",
+            "price": "spike"
+          },
+          {
+            "type": "deed",
+            "tag": "delivered_fissile_antique",
+            "public_summary": "A pilot delivered a smuggled thorium chronometer to a private collector while a nearby colony froze."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "thorium_sold_to_black_market",
+        "reached_by": "The pilot allies with the corsairs and sells the core.",
+        "summary": "{role:corsair_interceptor} strips the thorium and distributes it to outlaw weapon fabricators. The antique dealer is left stranded while the cartel expands its reach.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "corsair_syndicate",
+            "delta": 3
+          },
+          {
+            "type": "cast_fate",
+            "target": "corsair_interceptor",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "antiquities_dealer",
+            "fate": "ruined"
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "thorium",
+            "price": "spike"
+          },
+          {
+            "type": "deed",
+            "tag": "fenced_thorium_flywheel",
+            "public_summary": "A pilot sold an enriched naval thorium flywheel to corsair weapon fabricators for an outlaw fortune."
+          }
+        ],
+        "seeds": [
+          "stolen_goods_circulating",
+          "faction_emboldened"
+        ]
+      },
+      {
+        "id": "chronometer_captured_by_corsairs",
+        "reached_by": "The pilot never intervenes or abandons the transit.",
+        "summary": "Corsair gunboats overwhelm the transport. The thorium core vanishes into the black market while the antique dealer is abandoned in an unpressurized escape pod.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "corsair_syndicate",
+            "delta": 2
+          },
+          {
+            "type": "cast_fate",
+            "target": "antiquities_dealer",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "reactor_superintendent",
+            "fate": "ruined"
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "chronometer_captured_by_corsairs",
+    "loose_threads": [
+      {
+        "id": "t_chronometer_customs_waiver",
+        "surface": "cargo",
+        "detail": "The antique export clearance bears an authentication seal signed by a commercial guild magistrate accused of laundering unrefined ores.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_corsair_escrow_brokerage",
+        "surface": "price_board",
+        "detail": "A private brokerage in an adjoining system posted buying orders for reactor-grade thorium hours before the courier took flight.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "debt_leverage"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "forged_records",
+        "cornering_a_market",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "greed",
+        "survival"
+      ]
+    },
+    "law_hooks": [
+      "contraband_list",
+      "cargo_inspection"
+    ],
+    "radio_hooks": [
+      "Historic naval timepiece auction draws international bidding wars across regional gates.",
+      "Outer rim habitat appeals for emergency reactor fuel as winter maintenance reserves run dry.",
+      "Customs patrols increase radiation sweep frequencies across inter-system transit points."
+    ],
+    "voice_direction": {
+      "antiquities_dealer": "Languid, patrician, and peppers speech with aristocratic pedigree. Speeds up into frantic bartering when his debts are mentioned.",
+      "corsair_interceptor": "Gruff, pragmatic, and speaks like an ex-military engineer measuring tolerances. Never raises his voice in combat.",
+      "reactor_superintendent": "Haggard, desperate, and shivering through his comms transmissions. Pleads with visceral urgency."
+    },
+    "novelty_tags": [
+      "naval_chronometer",
+      "thorium_flywheel",
+      "fissile_smuggling",
+      "freezing_habitat",
+      "regional_gate_chase"
+    ]
+  }
+]

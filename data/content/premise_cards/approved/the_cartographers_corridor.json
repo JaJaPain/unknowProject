@@ -1,0 +1,379 @@
+{
+  "id": "premise.the_cartographers_corridor",
+  "schema_version": 1,
+  "title": "The Cartographer's Corridor",
+  "logline": "A disgraced naval ballistics officer reinvented as a civilian orbital surveyor is blackmailed by former comrades into calculating an unmonitored firing vector through a crowded refugee transit corridor.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "political"
+  ],
+  "themes": [
+    "reinvention",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "civilian_cartographer",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "A quiet astronomical surveyor who spent a decade erasing his past identity as a naval fire-control tactician.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_artillerist",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "His former gunnery sergeant, now commanding an illegal long-range kinetic battery for a cartel assassination hit.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "migration_coordinator",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Manages inbound civilian transport routes; overworked, trusting, and unaware of ballistic blind spots.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "artillery_gunboat",
+      "kind": "ship",
+      "description": "A modified heavy industrial hauler concealing a surplus magnetic mass-driver in its central spine.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "stellar_survey_spire",
+      "kind": "place",
+      "description": "An automated deep-space navigational telemetry array anchored to a remote comet fragment.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refugee_receiving_dock",
+      "kind": "place",
+      "description": "A cavernous orbital staging terminal processing displaced families arriving from border systems.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_syndicate",
+      "kind": "faction",
+      "description": "A violent cross-system smuggling syndicate that executes political hits along commercial jump routes.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "witness_at_large",
+    "faction_weakened",
+    "route_closed"
+  ],
+  "public_situation": "Civilian migration transports face sudden approach lane detours outside {system} as the municipal survey office claims orbital debris threatens the approach beacon.",
+  "private_truth": "{role:civilian_cartographer} is being blackmailed by his former naval unit to reroute migration convoys, creating an unmonitored firing lane for a kinetic sniper ship to assassinate a dissident delegate.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "sniper_corridor_through_migrant_lane"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The stellar survey office uploads emergency navigational corrections to the system beacon network.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "civilian_cartographer",
+          "requester": "migration_coordinator",
+          "target": "stellar_survey_spire",
+          "reason": "She hires an outside pilot to scan the survey spire's sensor arrays to verify why the cartographer altered the safe transit vectors.",
+          "private_fact": "She suspects the sudden lane detour is designed to let unregistered private security cutters bypass station quarantine.",
+          "outcome_tags": [
+            "firing_vector_detected",
+            "vector_appears_benign"
+          ],
+          "routes": {
+            "firing_vector_detected": "next",
+            "vector_appears_benign": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "{role:syndicate_artillerist} positions an unmarked freighter along the newly cleared transit corridor, powering up high-draw capacitors.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "civilian_cartographer",
+          "target": "refugee_receiving_dock",
+          "reason": "He hires the pilot to rush an encrypted telemetry slate to the migration coordinator before the next convoy drops out of jump.",
+          "private_fact": "The slate contains a warning about the sniper ship, but delivering it under his civilian signature will expose his real naval identity to cartel hitmen.",
+          "outcome_tags": [
+            "warning_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "warning_delivered": "next",
+            "abandoned": "resolution:assassination_succeeds_in_blind_spot"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Migration authorities issue an all-ships alert as radar locks illuminate approaching passenger shuttles.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "civilian_cartographer",
+          "target": "refugee_receiving_dock",
+          "reason": "He hires the pilot to purchase emergency radar decoy beacons from the dockyard to blind the sniper ship's targeting arrays.",
+          "private_fact": "Deploying the decoys uses an obsolete military tactical frequency that will irrevocably confirm his former rank to his pursuers.",
+          "outcome_tags": [
+            "decoys_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "decoys_delivered": "next",
+            "abandoned": "resolution:assassination_succeeds_in_blind_spot"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:artillery_gunboat} deploys targeting vanes and locks firing telemetry onto an approaching refugee shuttle carrying the dissident.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "migration_coordinator",
+          "target": "artillery_gunboat",
+          "reason": "She hires the pilot to destroy or disable the kinetic sniper gunboat before it discharges its mass accelerator into the passenger convoy.",
+          "private_fact": "The gunboat captain warned her that if she interferes, the cartel will release proof the cartographer was a convicted war criminal.",
+          "outcome_tags": [
+            "gunboat_destroyed",
+            "drive_disabled"
+          ],
+          "routes": {
+            "gunboat_destroyed": "next",
+            "drive_disabled": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the sniper vessel broken and the firing lane exposed, the pilot must decide whether to protect the cartographer's reformed life, expose his wartime record, or hand him over to cartel bounty hunters.",
+        "options": [
+          {
+            "id": "protect_reformed_identity",
+            "label": "Certify the cartographer acted under duress to protect his reformed civilian life",
+            "leads_to": "resolution:cartographer_redeemed_in_secret"
+          },
+          {
+            "id": "expose_wartime_record",
+            "label": "Expose the cartographer's past crimes to the migration tribunal",
+            "leads_to": "resolution:cartographer_unmasked_and_imprisoned"
+          },
+          {
+            "id": "sell_coordinates_to_syndicate",
+            "label": "Sell the survivor's coordinates back to the border syndicate for a quiet bounty",
+            "leads_to": "resolution:cartel_silences_reformed_gunner"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "cartographer_redeemed_in_secret",
+      "reached_by": "The pilot defends the convoy and protects the cartographer's record.",
+      "summary": "The refugee convoy docks safely. {role:civilian_cartographer} keeps his quiet survey post, having severed his final ties to his military past at great personal peril.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "border_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "civilian_cartographer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migration_coordinator",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "foiled_orbital_kinetic_sniper",
+          "public_summary": "A pilot destroyed an illegal mass driver lurking in civilian flight corridors, shielding inbound refugee transports."
+        }
+      ],
+      "seeds": [
+        "faction_weakened",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "cartographer_unmasked_and_imprisoned",
+      "reached_by": "The pilot delivers the cartographer's naval records to the tribunal.",
+      "summary": "{role:civilian_cartographer} is arrested for historic war crimes. While the refugee convoy is saved, the surveyor's decade of peaceful redemption is erased by prison walls.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "civilian_cartographer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migration_coordinator",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "border_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_gunner_turned_surveyor",
+          "public_summary": "A pilot uncovered a quiet orbital cartographer's past life as a ruthless naval ballistics tactician."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "cartel_silences_reformed_gunner",
+      "reached_by": "The pilot sells the coordinates to the cartel.",
+      "summary": "{role:border_syndicate} enforcers abduct {role:civilian_cartographer} from his survey post. The assassination plot collapses into chaos, leaving the transit route closed indefinitely.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "border_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "civilian_cartographer",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migration_coordinator",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "assassination_succeeds_in_blind_spot",
+      "reached_by": "The pilot never intervenes or abandons the warning mission.",
+      "summary": "The kinetic projectile pulverizes the passenger transport inside the blind spot. {role:border_syndicate} eliminates their political target while the cartographer vanishes into the rim.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "civilian_cartographer",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "migration_coordinator",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "assassination_succeeds_in_blind_spot",
+  "loose_threads": [
+    {
+      "id": "t_ballistics_slate_serial",
+      "surface": "cargo",
+      "detail": "The cartographer's trajectory calculator carries a burned-in naval ordnance serial number matching an obsolete planetary bombardment wing.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "impersonation"
+      ]
+    },
+    {
+      "id": "t_migrant_bounty_notice",
+      "surface": "price_board",
+      "detail": "An anonymous escrow deposit matching the bounty on the dissident transport was funded through a private loan agency.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "proxy_violence"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "proxy_violence"
+    ],
+    "motives": [
+      "revenge",
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "scanning_banned"
+  ],
+  "radio_hooks": [
+    "Approach vector revisions cause docking delays for inbound migrant transports.",
+    "Station port marshal investigates reports of uncalibrated kinetic weaponry in unpoliced space.",
+    "Civilian migration board reassures public that approach corridor revisions are standard procedure."
+  ],
+  "voice_direction": {
+    "civilian_cartographer": "Dry, methodical, and speaks in measured astronomical units. Hesitates noticeably whenever military ballistic jargon threatens to slip into his sentences.",
+    "syndicate_artillerist": "Raspy, insolent, and punctuated by coarse naval slang. Uses old comradeship as a weapon to demand compliance.",
+    "migration_coordinator": "Breathless, brisk, and perpetually interrupted by dock clearance chimes. Treats orbital vectors as administrative numbers."
+  },
+  "novelty_tags": [
+    "reformed_gunner",
+    "ballistic_corridor",
+    "kinetic_sniper",
+    "migrant_convoy",
+    "forced_relapse"
+  ]
+}

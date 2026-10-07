@@ -1,0 +1,352 @@
+{
+  "id": "premise.the_mayoral_proxy_ballot",
+  "schema_version": 1,
+  "title": "The Mayoral Proxy Ballot",
+  "logline": "A municipal returning officer discovers that the decisive ballot in a razor-thin station mayoral election was cast by a legally dissolved philanthropic trust that secretly funds the docks' only free clinic.",
+  "scale": "personal",
+  "tone": [
+    "political",
+    "noir"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "returning_officer",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "The station's chief electoral registrar; punctilious, exhausted, and proud of his unblemished certification record.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "clinic_matron",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Directs the impoverished dockside free clinic; fierce, tired, and unapologetic about voting the dissolved trust's charter.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "developer_candidate",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "A wealthy orbital developer who lost the mayoral vote by a single ballot and demands a forensic audit.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "electoral_archive_hall",
+      "kind": "place",
+      "description": "The fortified station chamber where physical election ballots and voting seal cylinders are impounded.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "free_dock_clinic",
+      "kind": "place",
+      "description": "A crowded medical dispensary serving unchartered freight loaders and orbital vagrants.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "election"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "leader_discredited",
+    "public_outrage",
+    "quiet_cover_up"
+  ],
+  "public_situation": "Protests gather outside {role:electoral_archive_hall} as the municipal election deadlocks over a contested paper ballot from the dock worker precincts.",
+  "private_truth": "{role:clinic_matron} cast the deciding vote using an expired corporate philanthropy trust that dissolved three years ago, knowing the developer candidate will demolish her clinic if elected.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "deciding_mayoral_ballot_cast_by_dissolved_trust"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Station magistrates post armed bailiffs outside {role:electoral_archive_hall} to guard the uncertified ballot canisters.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "returning_officer",
+          "target": "electoral_archive_hall",
+          "reason": "He hires an unaligned pilot to collect the original foundation charter roll from the municipal vaults to verify the contested voter's signature.",
+          "private_fact": "He suspects the ballot was cast illegally but fears public riots if he tosses out the working-class precinct vote without proof.",
+          "outcome_tags": [
+            "charter_retrieved"
+          ],
+          "routes": {
+            "charter_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:developer_candidate} files an emergency court injunction freezing all municipal bank transfers until the ballot is disqualified.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "clinic_matron",
+          "requester": "developer_candidate",
+          "target": "free_dock_clinic",
+          "reason": "He hires the pilot to scan the clinic's administrative ledger terminals to prove the trust that funded their vote was dissolved years ago.",
+          "private_fact": "His construction consortium already signed secret contracts to convert the clinic's dock footprint into luxury casino berths.",
+          "outcome_tags": [
+            "charter_fraud_proven",
+            "trust_records_intact"
+          ],
+          "routes": {
+            "charter_fraud_proven": "next",
+            "trust_records_intact": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Dockworkers surround the municipal council chamber as the deadline to certify the election arrives.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "returning_officer",
+          "target": "electoral_archive_hall",
+          "reason": "He begs the pilot to rush the finalized verification report to the magistrate's dais before the statutory midnight deadline expires.",
+          "private_fact": "If the ballot is invalidated, the developer wins by default and the clinic will be evicted within seventy-two hours.",
+          "outcome_tags": [
+            "report_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "report_delivered": "next",
+            "abandoned": "resolution:election_paralyzed_by_riot"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the proof of the clinic's fraudulent proxy ballot in hand, the pilot must decide whether to uphold the letter of the election law, protect the clinic, or sell out the election.",
+        "options": [
+          {
+            "id": "invalidate_ballot",
+            "label": "Certify the trust is dissolved and hand the mayoralty to the developer",
+            "leads_to": "resolution:developer_wins_clinic_evicted"
+          },
+          {
+            "id": "validate_ballot",
+            "label": "Certify the ballot as legitimate to preserve the free clinic and defeat the developer",
+            "leads_to": "resolution:clinic_saved_by_fraudulent_vote"
+          },
+          {
+            "id": "expose_both_sides",
+            "label": "Release the developer's demolition contracts and the clinic's forged ballot to the press",
+            "leads_to": "resolution:election_annulled_in_scandal"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "developer_wins_clinic_evicted",
+      "reached_by": "The pilot certifies the trust's dissolution, invalidating the ballot.",
+      "summary": "{role:developer_candidate} is sworn in as mayor. The fraudulent ballot is struck, and {role:clinic_matron}'s free clinic is issued immediate eviction orders.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "developer_candidate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "clinic_matron",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "returning_officer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "certified_developer_mayoral_win",
+          "public_summary": "A pilot uncovered a fraudulent proxy vote from a dockside charity, handing the station mayoralty to a luxury developer."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "clinic_saved_by_fraudulent_vote",
+      "reached_by": "The pilot validates the ballot despite the expired trust charter.",
+      "summary": "The civic coalition candidate defeats {role:developer_candidate} by one vote. {role:free_dock_clinic} receives protected charter funding under a quiet municipal blind eye.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "clinic_matron",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "developer_candidate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "returning_officer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_dock_free_clinic",
+          "public_summary": "A pilot buried proof of an expired charity proxy, keeping a beloved dockside health clinic open."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "election_annulled_in_scandal",
+      "reached_by": "The pilot releases evidence exposing both candidates.",
+      "summary": "Magistrates annul the entire election after evidence exposes developer kickbacks and charity fraud. {role:returning_officer} resigns in disgrace amid public fury.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "returning_officer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "developer_candidate",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "clinic_matron",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": [
+            "election"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "shattered_corrupt_mayoral_race",
+          "public_summary": "A pilot leaked proof of fraud from both sides of a mayoral election, dissolving the municipal government."
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "election_paralyzed_by_riot",
+      "reached_by": "The pilot never intervenes or abandons the report.",
+      "summary": "The certification deadline expires without a report. Riots break out between dockworkers and private security, forcing station marshals to declare martial law.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "returning_officer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "developer_candidate",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "martial_law"
+          ],
+          "remove": [
+            "election"
+          ]
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "election_paralyzed_by_riot",
+  "loose_threads": [
+    {
+      "id": "t_trust_charter_escrow",
+      "surface": "station_notice",
+      "detail": "The dissolved charity trust's bank dockets show regular endowment top-offs paid from an anonymous off-system numbered account.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_developer_berth_deed",
+      "surface": "price_board",
+      "detail": "Options on dock berths surrounding the free clinic were acquired months ago by an offshore corporate holding firm.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "impersonation"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Mayoral election certification enters final hours as disputed dock precinct ballot remains unsealed.",
+    "Station commerce federation warns extended political deadlock threatens cross-system investments.",
+    "Crowds chant outside municipal archive hall demanding honest vote counting."
+  ],
+  "voice_direction": {
+    "returning_officer": "Dry, tremulous, and constantly cites statutory election bylaws. Becomes shrill and erratic when pressed to make a moral judgment.",
+    "clinic_matron": "Exhausted, raspy, and completely devoid of diplomatic pleasantries. Speaks of human lives with grim, urgent practicality.",
+    "developer_candidate": "Smooth, booming, and practiced in political rhetoric. Masks calculating ruthlessness behind paternalistic civic pride."
+  },
+  "novelty_tags": [
+    "mayoral_election",
+    "proxy_ballot",
+    "free_clinic",
+    "dissolved_trust",
+    "vote_recount"
+  ]
+}

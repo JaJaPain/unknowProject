@@ -1,0 +1,323 @@
+{
+  "id": "premise.the_interpreters_parley",
+  "schema_version": 1,
+  "title": "The Structural Accord",
+  "logline": "An unaligned interpreter mediating a mining rights parley between two insular asteroid clans discovers that the disputed ice ridge is the structural keel holding their hollowed habitat together.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "melancholy"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "clan_interpreter",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "A weary habitat mediator specializing in ancestral colony dockets; desperate to broker peace before drilling begins.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "elder_clansman",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Patriarch of the ice-mining clan; rigid, proud, and determined to secure exclusive drilling concessions for his family.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rival_matriarch",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Leader of the rock-hauler clan; suspicious of formal treaties and eager to power up industrial rock cutters along the ridge.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "neutral_parley_hub",
+      "kind": "place",
+      "description": "An unpressurized observation cupola mounted on a dead orbital buoy midway between clan territories.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "translation_archive_berth",
+      "kind": "place",
+      "description": "A dusty document locker at an old trade mission station holding founding habitat engineering blueprints.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_broken",
+    "quiet_cover_up",
+    "route_closed"
+  ],
+  "public_situation": "Two insular asteroid mining clans on {system} declare a temporary ceasefire to negotiate drilling rights along a disputed ice ridge dividing their shared habitat.",
+  "private_truth": "The ancestral dockets show the disputed ice ridge is the structural keel maintaining the habitat's rotational integrity. Drilling into it will fracture the entire asteroid.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "disputed_drilling_ridge_is_habitat_structural_keel"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Mining clan skiffs power down thrusters around {role:neutral_parley_hub} as armed sentries take position.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "clan_interpreter",
+          "target": "translation_archive_berth",
+          "reason": "She hires an unaligned pilot to retrieve the century-old colony engineering rolls from the trade mission locker before the first parley session convenes.",
+          "private_fact": "She found initial survey notes suggesting the disputed ridge was artificially seeded during habitat construction to reinforce structural fault lines.",
+          "outcome_tags": [
+            "blueprints_retrieved"
+          ],
+          "routes": {
+            "blueprints_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Heated arguments echo across parley frequencies as {role:rival_matriarch} moves mobile drilling rigs toward the boundary line.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "clan_interpreter",
+          "requester": "elder_clansman",
+          "target": "neutral_parley_hub",
+          "reason": "He hires the pilot to scan acoustic resonance sensors along the parley cupola to verify whether the rival clan's drills are already causing internal tremors.",
+          "private_fact": "He suspects the mediator is stalling the treaty to let the rock-haulers claim the ice through squatter rights.",
+          "outcome_tags": [
+            "fault_lines_confirmed",
+            "acoustic_data_ambiguous"
+          ],
+          "routes": {
+            "fault_lines_confirmed": "next",
+            "acoustic_data_ambiguous": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Both clan leaders prime thrusters on their industrial cutter rigs, preparing to stake physical claims on the ridge with or without a signed accord.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "clan_interpreter",
+          "target": "neutral_parley_hub",
+          "reason": "She begs the pilot to rush the decoded structural survey docket to the parley airlock before drilling commands are broadcast.",
+          "private_fact": "If the clans reject the engineering warning and drill anyway, she has already prepared an emergency evacuation shuttle for her own family.",
+          "outcome_tags": [
+            "survey_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "survey_delivered": "next",
+            "abandoned": "resolution:drilling_triggers_hull_fracture"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the engineering blueprints in hand and both clan leaders poised to drill, the pilot can endorse the structural danger, falsify the safety margin, or walk away.",
+        "options": [
+          {
+            "id": "warn_both_clans",
+            "label": "Present the engineering blueprints proving drilling will destroy the shared habitat",
+            "leads_to": "resolution:clans_preserve_structural_keel"
+          },
+          {
+            "id": "endorse_elder_claim",
+            "label": "Certify that only the elder's gentle extraction methods are structurally safe",
+            "leads_to": "resolution:elder_wins_compromised_ridge"
+          },
+          {
+            "id": "withhold_blueprints",
+            "label": "Withhold the blueprints and let the rival clans drill the disputed ridge",
+            "leads_to": "resolution:drilling_triggers_hull_fracture"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "clans_preserve_structural_keel",
+      "reached_by": "The pilot presents the engineering blueprints proving drilling threatens the habitat.",
+      "summary": "Faced with undeniable blueprints, {role:elder_clansman} and {role:rival_matriarch} declare the ridge off-limits. The clans establish a joint council to preserve their home.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "clan_interpreter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_clansman",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_matriarch",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_asteroid_habitat",
+          "public_summary": "A pilot proved a disputed mining ridge was the only thing holding an asteroid colony together."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "elder_wins_compromised_ridge",
+      "reached_by": "The pilot certifies only the elder's extraction methods are safe.",
+      "summary": "{role:elder_clansman} secures exclusive rights to the ridge, while {role:rival_matriarch} is forced to buy water from him. Low-level structural groaning begins in habitat bulkheads.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_clansman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_matriarch",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "clan_interpreter",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "handed_flawed_ridge_to_elder",
+          "public_summary": "A pilot certified an unstable ice vein for one clan patriarch, sowing distrust and hull groans."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "route_closed"
+      ]
+    },
+    {
+      "id": "drilling_triggers_hull_fracture",
+      "reached_by": "The pilot withholds the docket or never intervenes.",
+      "summary": "Both clans drill into the ridge simultaneously. A catastrophic fracture splits the hollowed asteroid, forcing an emergency evacuation of both settlements in {system}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "clan_interpreter",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_clansman",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_matriarch",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "water_ice",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "watched_habitat_fracture",
+          "public_summary": "A pilot stayed silent while rival asteroid clans drilled into the keel of their own spinning world."
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "drilling_triggers_hull_fracture",
+  "loose_threads": [
+    {
+      "id": "t_linguist_grant_ledger",
+      "surface": "cargo",
+      "detail": "The blueprint storage tubes bear customs seals from a regional philanthropic trust that went bankrupt twenty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_parley_relay_tap",
+      "surface": "scan",
+      "detail": "The communications relay at the parley station contains an active fiber tap linked directly to a commercial ore brokerage.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "slow_infiltration",
+      "information_control"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Mining clan negotiations at neutral observation buoy enter critical phase in {system}.",
+    "Ice ore spot prices fluctuate as rival extraction cartels debate parley terms.",
+    "Belt habitat engineers urge clan patriarchs to respect structural excavation limits."
+  ],
+  "voice_direction": {
+    "clan_interpreter": "Fast, analytical, and constantly parses technical engineering terminology. Becomes anxious and hesitant when explaining structural strain limits.",
+    "elder_clansman": "Slow, rumbling, and speaks with archaic formality. Pauses heavily between sentences to weigh every demand.",
+    "rival_matriarch": "Sharp, direct, and impatient with academic bureaucracy. Frequently cuts off pleasantries to demand concrete drill timestamps."
+  },
+  "novelty_tags": [
+    "clan_parley",
+    "structural_keel",
+    "hollowed_asteroid",
+    "water_ice_ridge",
+    "engineering_archive"
+  ]
+}

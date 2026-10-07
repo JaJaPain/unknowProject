@@ -1,0 +1,396 @@
+{
+  "id": "premise.the_dispatchers_overclocked_tugs",
+  "schema_version": 1,
+  "title": "The Dispatcher's Overclocked Tugs",
+  "logline": "An unaligned orbital tug dispatcher refuses to assist either side in a dockland gang war, hiding that both syndicates' assault skiffs were secretly retrofitted with illegal military thrusters inside his own family repair depot.",
+  "scale": "local",
+  "tone": [
+    "tense",
+    "noir"
+  ],
+  "themes": [
+    "cost_of_neutrality",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "tug_dispatcher",
+      "kind": "person",
+      "archetype": "dockmaster",
+      "description": "Chief scheduler of the station's commercial maneuvering tugs; tired, defensive, and protecting a compromised family shipyard.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "overboss_enforcer",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "Leader of the lower-berth protection racket demanding exclusive tug towing rights to stage a dock invasion.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "rival_syndicate_captain",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Commander of the rival freight hijackers determined to incinerate the dispatcher's depot for supplying their enemies.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "modified_assault_skiff",
+      "kind": "ship",
+      "description": "A reinforced industrial tug retrofitted with military burn-injectors and prow ramming spikes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "outlaw_gunboat",
+      "kind": "ship",
+      "description": "A high-speed raider skiff armed with repeating plasma cannons and tractor disruption nets.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "family_tug_depot",
+      "kind": "place",
+      "description": "A cluttered maintenance dock where heavy maneuvering tugs are refitted and fueled.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "crossroads_transit_channel",
+      "kind": "place",
+      "description": "The narrow orbital traffic lane connecting the container berths to the main station airlocks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dock_syndicate",
+      "kind": "faction",
+      "description": "A loose alliance of dock gangs and scrap pirates vying for territorial control of station freight lanes.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "alliance_broken",
+    "route_closed"
+  ],
+  "public_situation": "Armed tug skiffs trade missile fire outside {role:crossroads_transit_channel} as rival dock gangs wage a bloody territorial turf war over cargo handling rights.",
+  "private_truth": "{role:tug_dispatcher} sold black-market military fuel injectors to both gangs to pay off his brother's gambling debts, and now both crews are flying ships modified by his own wrenches.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "dispatcher_illegally_overclocked_both_warring_fleets"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Commercial tug traffic freezes across {role:family_tug_depot} as rival gangs establish blockades outside the transit channel.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "tug_dispatcher",
+          "target": "dock_syndicate",
+          "reason": "He pays the pilot to intercept an uncrewed drifting scrap barge and recover a dropped high-output injector manifold before port marshals scan it.",
+          "private_fact": "The manifold has his family depot's serial stamp etched into the titanium intake housing.",
+          "outcome_tags": [
+            "manifold_recovered"
+          ],
+          "routes": {
+            "manifold_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:modified_assault_skiff} powers into the transit channel, firing heavy cannons at rival cargo berths.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "tug_dispatcher",
+          "target": "modified_assault_skiff",
+          "reason": "He hires the pilot to disable the rampaging assault skiff before it rams the main fuel storage silos.",
+          "private_fact": "He knows that if the skiff explodes against the silos, port investigators will trace the ignition failure back to his tuning logs.",
+          "outcome_tags": [
+            "skiff_disabled",
+            "skiff_escaped"
+          ],
+          "routes": {
+            "skiff_disabled": "next",
+            "skiff_escaped": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:rival_syndicate_captain} surrounds the family repair depot with armed gunboats, demanding the dispatcher hand over master engine kill-codes.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "tug_dispatcher",
+          "target": "family_tug_depot",
+          "reason": "He begs the pilot to rush an emergency cryptographic bypass key to his family dock master terminal before the gang breaches the airlocks.",
+          "private_fact": "The bypass key will remotely freeze the engines on both gangs' ships, exposing that he had a backdoor switch installed all along.",
+          "outcome_tags": [
+            "key_docked",
+            "abandoned"
+          ],
+          "routes": {
+            "key_docked": "next",
+            "abandoned": "resolution:depot_torched_by_gangs"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:outlaw_gunboat} prepares to launch torpedoes into the depot as the overboss's squadron rallies for a final battle.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "tug_dispatcher",
+          "target": "outlaw_gunboat",
+          "reason": "He hires the pilot to disable the attacking gunboat so his family can evacuate their dock berths in an unpressurized cutter.",
+          "private_fact": "The rival captain hails mid-fight offering a massive slice of dock extortion profits if the pilot hands over the dispatcher's bypass codes.",
+          "outcome_tags": [
+            "gunboat_neutralized",
+            "syndicate_pact_taken"
+          ],
+          "routes": {
+            "gunboat_neutralized": "next",
+            "syndicate_pact_taken": "resolution:gang_seizes_killcodes_rules_docks"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the kill-codes ready and both fleets stalled, the pilot must decide whether to freeze both fleets, sell the codes to the mob, or protect the dispatcher's neutrality.",
+        "options": [
+          {
+            "id": "freeze_both_fleets",
+            "label": "Broadcast the kill-codes to shut down both gangs' thrusters and end the dock war",
+            "leads_to": "resolution:both_gangs_paralyzed_dispatcher_exposed"
+          },
+          {
+            "id": "sell_to_syndicate",
+            "label": "Sell the kill-codes to the rival captain to let them wipe out their enemies",
+            "leads_to": "resolution:gang_seizes_killcodes_rules_docks"
+          },
+          {
+            "id": "extract_family",
+            "label": "Destroy the codes and escort the dispatcher's family into unaligned space",
+            "leads_to": "resolution:dispatcher_flees_neutrality_shattered"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "both_gangs_paralyzed_dispatcher_exposed",
+      "reached_by": "The pilot broadcasts the kill-codes, shutting down all thrusters.",
+      "summary": "Port marshals board and arrest both gangs. {role:tug_dispatcher} is arrested alongside the gangsters for illegal arms trafficking, ending his family's century-old business.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dock_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "tug_dispatcher",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "overboss_enforcer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_syndicate_captain",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "shut_down_overclocked_gang_war",
+          "public_summary": "A pilot triggered remote engine kill-codes, paralyzing two warring dock gangs and exposing a corrupt tug dispatcher."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "gang_seizes_killcodes_rules_docks",
+      "reached_by": "The pilot sells the kill-codes to the rival captain.",
+      "summary": "{role:rival_syndicate_captain} shuts down the overboss's ships and massacres the crew. The victorious gang establishes total control over cargo traffic in {system}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dock_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_syndicate_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "overboss_enforcer",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "tug_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "handed_docks_to_syndicate",
+          "public_summary": "A pilot sold tug kill-codes to mob pirates, handing control of the station's commercial lanes to ruthless killers."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "dispatcher_flees_neutrality_shattered",
+      "reached_by": "The pilot escorts the dispatcher's family into deep space.",
+      "summary": "{role:tug_dispatcher} escapes into the rim, abandoning the depot. Both gangs tear the docks apart in an unresolved blood feud, closing transit lanes.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "tug_dispatcher",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rival_syndicate_captain",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "overboss_enforcer",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "lane_closed"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "extracted_guilty_dispatcher",
+          "public_summary": "A pilot helped a crooked dock dispatcher flee into deep space after his illegal engine mods ignited a station gang war."
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "depot_torched_by_gangs",
+      "reached_by": "The pilot never intervenes or abandons the depot.",
+      "summary": "Gang torpedoes breach the fuel tanks, incinerating {role:family_tug_depot} and gutting the dispatcher's livelihood. The cargo lanes remain closed under smoking debris as he is driven into exile.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "tug_dispatcher",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "dock_syndicate",
+          "delta": -1
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "depot_torched_by_gangs",
+  "loose_threads": [
+    {
+      "id": "t_overclocked_thruster_stamp",
+      "surface": "cargo",
+      "detail": "The assault tug's burn-injector manifolds bear serial numbers traced to a commercial tug manufacturer that filed bankruptcy two years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_dispatcher_gambling_chits",
+      "surface": "station_notice",
+      "detail": "Defaulted gambling markers registered in the dispatcher's brother's name were bought up by an off-system debt recovery trust.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Tugboat collision closes primary commercial approach lane outside cargo ring.",
+    "Station port marshal threatens total curfew following armed skirmishes between rival loader crews.",
+    "Freight shipping insurance premiums spike across {system} as harbor tug services halt."
+  ],
+  "voice_direction": {
+    "tug_dispatcher": "Tired, hoarse, and speaks in a strained, gravelly rumble. Sounds like a working man drowning in consequences he never planned for.",
+    "overboss_enforcer": "Loud, vulgar, and speaks with menacing theatrical bravado. Treats violence as an ordinary cost of business.",
+    "rival_syndicate_captain": "Hissing, intense, and speaks in clipped street threats. Consumed by visceral hatred for his rivals."
+  },
+  "novelty_tags": [
+    "overclocked_tugs",
+    "dock_gang_war",
+    "engine_kill_codes",
+    "family_repair_depot",
+    "compromised_neutrality"
+  ]
+}

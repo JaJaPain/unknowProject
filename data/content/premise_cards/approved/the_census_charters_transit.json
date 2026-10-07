@@ -1,0 +1,411 @@
+{
+  "id": "premise.the_census_charters_transit",
+  "schema_version": 1,
+  "title": "The Census Charter's Transit",
+  "logline": "A regional archivist transporting a colonial census microfilm ledger across three systems is hunted by corporate gunboats, hiding that the charter proves an independent settler collective owns exclusive mineral rights to the system's richest asteroid belt.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "heist"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "archive_curator",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Keeper of provincial historical registries; meticulous, stubborn, and determined to deliver original microfilm rolls to the regional court.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "consortium_captain",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "Commander of the mining conglomerate's private security detachment; professional, icy, and tasked with incinerating the dockets.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "settler_delegate",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Representative of five hundred pioneer mining families whose livelihoods depend on the ancestral colony charter.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_interceptor",
+      "kind": "ship",
+      "description": "A high-speed corporate assault cutter fitted with interdiction jammers and prow autocannons.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_court_hub",
+      "kind": "place",
+      "description": "A grand administrative station housing the regional appellate judiciary in an inner core system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "frontier_claim_outpost",
+      "kind": "place",
+      "description": "A dust-caked administrative waystation orbiting the disputed asteroid extraction belt.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "extraction_conglomerate",
+      "kind": "faction",
+      "description": "A multi-system mining conglomerate attempting to seize unpatrolled asteroid fields through predatory litigation.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "faction_weakened",
+    "market_disrupted",
+    "alliance_formed"
+  ],
+  "public_situation": "Armed corporate cutters blockade regional jump gates outside {system} as private legal couriers attempt to transport colonial land deeds to the appellate court.",
+  "private_truth": "The census rolls prove the asteroid belts were deeded perpetually to the original labor collective fifty years ago, which would instantly invalidate the conglomerate's multi-million-credit extraction monopoly.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "colonial_census_proves_settlers_own_asteroid_rights"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Security escorts assemble around {role:frontier_claim_outpost} as archival microfilm cases are transferred between couriers.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "archive_curator",
+          "target": "frontier_claim_outpost",
+          "reason": "He hires an independent pilot to haul the lead-lined census canisters past corporate picket lines before jump gate clearance closes.",
+          "private_fact": "The microfilms are deteriorating from age and must be chemically stabilized before they reach the regional appellate bench.",
+          "outcome_tags": [
+            "charter_docked"
+          ],
+          "routes": {
+            "charter_docked": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "archive_curator",
+          "target": "frontier_claim_outpost",
+          "reason": "He hires the pilot to purchase chemical microfilm fixing agents from station chemists to prevent the old film from degrading in transit.",
+          "private_fact": "If the emulsion decays, the hundred-year-old notarized boundary seals will become illegible in court.",
+          "outcome_tags": [
+            "fixer_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "fixer_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Corporate gunboats interdict civilian jump lanes in the neighboring system, scanning courier hulls for archival canisters.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "settler_delegate",
+          "target": "extraction_conglomerate",
+          "reason": "She pays the pilot to destroy an intercepting corporate picket and recover the courier's dropped secondary index canister.",
+          "private_fact": "Without the index canister, the court cannot verify which mining families hold claims to which asteroid coordinates.",
+          "outcome_tags": [
+            "index_recovered"
+          ],
+          "routes": {
+            "index_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "{role:consortium_captain} hails the courier, claiming the microfilm contains forged land grants produced by an outlaw separatist ring.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "extraction_conglomerate",
+          "requester": "archive_curator",
+          "target": "provincial_court_hub",
+          "reason": "He asks the pilot to scan the court's historical watermark registry to certify that the census film's notary stamps match official colonial seals.",
+          "private_fact": "He discovered that the conglomerate's lawyers filed false archival destruction certificates five years ago to claim the land grants were lost.",
+          "outcome_tags": [
+            "watermarks_authentic",
+            "seals_disputed"
+          ],
+          "routes": {
+            "watermarks_authentic": "next",
+            "seals_disputed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:consortium_interceptor} intercepts the courier outside {role:provincial_court_hub}, deploying magnetic disruption coils to block docking.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "archive_curator",
+          "target": "consortium_interceptor",
+          "reason": "He pays the pilot to clear the judicial approach corridor so the census rolls can be handed to the presiding magistrate.",
+          "private_fact": "The corporate captain hails offering an immense corporate retainer if the pilot hands over the film canister to be incinerated.",
+          "outcome_tags": [
+            "interceptor_destroyed",
+            "corporate_offer_taken"
+          ],
+          "routes": {
+            "interceptor_destroyed": "next",
+            "corporate_offer_taken": "resolution:conglomerate_destroys_charter"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the interceptor resolved and the census microfilm in hand, the pilot must decide whether to deliver the deeds to the settlers' advocates, sell out to the conglomerate, or surrender the rolls to provincial bureaucracy.",
+        "options": [
+          {
+            "id": "deliver_to_court",
+            "label": "Deliver the census rolls to the court to grant the asteroid belt to the pioneer families",
+            "leads_to": "resolution:settlers_win_perpetual_mineral_rights"
+          },
+          {
+            "id": "sell_to_conglomerate",
+            "label": "Sell the microfilm to the conglomerate to extinguish the settlers' claim forever",
+            "leads_to": "resolution:conglomerate_destroys_charter"
+          },
+          {
+            "id": "broker_shared_concession",
+            "label": "Deliver the rolls to corporate arbitrators for a joint lease split",
+            "leads_to": "resolution:uneasy_joint_concession_brokered"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "settlers_win_perpetual_mineral_rights",
+      "reached_by": "The pilot delivers the authenticated microfilm to the appellate court.",
+      "summary": "Magistrates confirm the ancestral land grants. {role:settler_delegate}'s families win perpetual mineral rights, breaking {role:extraction_conglomerate}'s monopoly in {system}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "extraction_conglomerate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "settler_delegate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "archive_curator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "consortium_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "ferrite",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_pioneer_asteroid_charter",
+          "public_summary": "A pilot carried ancestral census microfilms across regional gates, securing an asteroid belt for pioneer families."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "conglomerate_destroys_charter",
+      "reached_by": "The pilot takes the conglomerate's bounty and destroys the film.",
+      "summary": "{role:extraction_conglomerate} burns the census rolls, extinguishing the settlers' claims. Pioneer families are evicted into tenant mining labor under heavy corporate tariffs.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "extraction_conglomerate",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "consortium_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "settler_delegate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "archive_curator",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "ferrite",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "burned_ancestral_land_charter",
+          "public_summary": "A pilot accepted corporate money to incinerate historical census dockets, stripping miner families of their land."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "uneasy_joint_concession_brokered",
+      "reached_by": "The pilot delivers the rolls for a compromise lease division.",
+      "summary": "Arbitrators enforce a twenty-year royalty sharing accord. {role:settler_delegate} keeps partial revenue, while {role:extraction_conglomerate} retains commercial operating rights.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "extraction_conglomerate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "settler_delegate",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "archive_curator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_compromise_mineral_lease",
+          "public_summary": "A pilot forced a compromise land treaty between a mining conglomerate and pioneer asteroid miners."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "charter_intercepted_in_transit",
+      "reached_by": "The pilot never intervenes or abandons the transit.",
+      "summary": "Corporate interceptors ram the courier transport in open space. The census canisters are seized and destroyed, leaving the mining belt in the conglomerate's unchallenged grasp.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "extraction_conglomerate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "archive_curator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "settler_delegate",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "charter_intercepted_in_transit",
+  "loose_threads": [
+    {
+      "id": "t_census_film_emulsion_stamp",
+      "surface": "cargo",
+      "detail": "The microfilm canisters carry manufacturing stamps from an offshore optical laboratory that dissolved thirty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_conglomerate_court_retainer",
+      "surface": "price_board",
+      "detail": "Retainer payments from the mining conglomerate's legal account were wired to private accounts owned by appellate court clerks.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Appellate court convenes hearing on fifty-year-old colonial mining rights dispute.",
+    "Extraction conglomerate reports jump gate transit delays, citing security enforcement.",
+    "Independent miner delegates gather outside court platform holding ancestral land claims."
+  ],
+  "voice_direction": {
+    "archive_curator": "Fastidious, dry, and reverently protective of physical paper and microfilm. Treats historical documents as living sacred trusts.",
+    "consortium_captain": "Crisp, cold, and operates with chilling corporate professionalism. Never uses aggressive threats when contractual language will suffice.",
+    "settler_delegate": "Passionate, gravelly, and speaks with fierce working-class pride. Becomes fiercely emotional when recounting family sacrifices."
+  },
+  "novelty_tags": [
+    "colonial_census",
+    "microfilm_deeds",
+    "ancestral_mining_charter",
+    "appellate_court_transit",
+    "corporate_claim_jumping"
+  ]
+}

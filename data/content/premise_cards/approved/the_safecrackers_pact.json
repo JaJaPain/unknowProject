@@ -1,0 +1,383 @@
+{
+  "id": "premise.the_safecrackers_pact",
+  "schema_version": 1,
+  "title": "The Safecracker's Pact",
+  "logline": "A veteran safe-breacher hired to crack an impounded syndicate strongbox discovers that the vault does not hold credits, but the original severance contract proving the cartel boss was once an undercover station security officer.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "noir"
+  ],
+  "themes": [
+    "price_of_profit",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "veteran_safecracker",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "An aging lock-specialist who served twenty years in penal colonies; quiet, cynical, and meticulous.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cartel_kingpin",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "The ruthless ruler of the station's lower docks who spent thirty years burying his original identity as a police infiltrator.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "internal_affairs_agent",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A station security investigator tasked with recovering historical intelligence files before an independent commission convenes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_scout_skiff",
+      "kind": "ship",
+      "description": "A nimble reconnaissance skiff tracking the salvage vault's orbital coordinates.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cartel_flagship",
+      "kind": "ship",
+      "description": "A heavily armored command cruiser fitted with EMP torpedo tubes and heavy railguns.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_vault_spar",
+      "kind": "place",
+      "description": "A fortified orbital warehouse floating in the debris shadow of an abandoned drydock.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "waterfront_syndicate",
+      "kind": "faction",
+      "description": "The dominant organized crime family controlling cargo pilfering and fuel extortion across the lower docks.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "leader_discredited",
+    "evidence_loose"
+  ],
+  "public_situation": "Unmarked gunboats exchange fire outside {role:salvage_vault_spar} after private scavengers recover an armored syndicate security safe from a gutted cargo barge.",
+  "private_truth": "The safe contains {role:cartel_kingpin}'s sealed police severance docket from thirty years ago. He was originally an undercover officer who switched sides and murdered his handler.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "syndicate_boss_is_former_undercover_officer"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Scavengers haul the heavy biometric strongbox into {role:salvage_vault_spar}, posting lookout gunboats.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "veteran_safecracker",
+          "target": "salvage_vault_spar",
+          "reason": "He hires an outside pilot to deliver high-frequency sonic resonance drills to the vault before the syndicate's enforcers locate the safe.",
+          "private_fact": "He suspects the safe holds enough blackmail to buy him a quiet retirement out of syndicate territory.",
+          "outcome_tags": [
+            "drills_delivered"
+          ],
+          "routes": {
+            "drills_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:cartel_scout_skiff} blocks the transit approach to the vault spar, demanding the scavengers surrender the unopened safe.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "veteran_safecracker",
+          "target": "cartel_scout_skiff",
+          "reason": "He pays the pilot to destroy or disable the cartel scout skiff before its boarding clamps breach the vault airlock.",
+          "private_fact": "The safe's outer tumbler has already yielded, revealing encrypted station security badges alongside old personnel files.",
+          "outcome_tags": [
+            "scout_destroyed",
+            "scout_repelled"
+          ],
+          "routes": {
+            "scout_destroyed": "next",
+            "scout_repelled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:internal_affairs_agent} arrives aboard a police cutter, transmitting an emergency warrant for the safe's contents.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "cartel_kingpin",
+          "requester": "internal_affairs_agent",
+          "target": "salvage_vault_spar",
+          "reason": "She hires the pilot to scan the strongbox's biometric lock cylinder to verify whether the original police cryptographic seal remains unbroken.",
+          "private_fact": "She knows that if the safe opens publicly, the department's top brass will be exposed for shielding the kingpin for three decades.",
+          "outcome_tags": [
+            "police_seal_verified",
+            "tampering_detected"
+          ],
+          "routes": {
+            "police_seal_verified": "next",
+            "tampering_detected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:cartel_flagship} jumps into the sector, ordering all ships to clear the area or face total annihilation.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "veteran_safecracker",
+          "target": "cartel_flagship",
+          "reason": "He hires the pilot to escort his escape skiff away from the vault spar with the cracked docket in hand.",
+          "private_fact": "The cartel kingpin hails mid-engagement offering an immense cash fortune and station immunity if the pilot incinerates the contract on the spot.",
+          "outcome_tags": [
+            "flagship_routed",
+            "kingpins_bribe_taken"
+          ],
+          "routes": {
+            "flagship_routed": "next",
+            "kingpins_bribe_taken": "resolution:kingpin_buys_his_secret"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the safe cracked and the kingpin's secret police contract exposed, the pilot must decide who receives the explosive past.",
+        "options": [
+          {
+            "id": "deliver_to_police",
+            "label": "Deliver the contract to internal affairs to prosecute the kingpin and expose corrupt brass",
+            "leads_to": "resolution:kingpin_and_brass_toppled"
+          },
+          {
+            "id": "give_to_safecracker",
+            "label": "Give the contract to the safecracker so he can extort a lifetime pension from the cartel",
+            "leads_to": "resolution:safecracker_extorts_lifelong_pension"
+          },
+          {
+            "id": "burn_the_records",
+            "label": "Accept the kingpin's fortune and incinerate the contract",
+            "leads_to": "resolution:kingpin_buys_his_secret"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "kingpin_and_brass_toppled",
+      "reached_by": "The pilot delivers the undercover contract to internal affairs.",
+      "summary": "{role:cartel_kingpin} is arrested alongside three senior police commanders. The syndicate's grip on the docks shatters in a wave of public revulsion.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "waterfront_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_kingpin",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_agent",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_safecracker",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_undercover_kingpin",
+          "public_summary": "A pilot cracked open a mob safe, revealing the dockland kingpin was a rogue cop protected by police brass."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "power_vacuum"
+      ]
+    },
+    {
+      "id": "safecracker_extorts_lifelong_pension",
+      "reached_by": "The pilot hands the leverage to the safecracker.",
+      "summary": "{role:veteran_safecracker} secures an offshore monthly tribute from the cartel. {role:cartel_kingpin} keeps his criminal throne, nursing a lethal grudge against the pilot.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "veteran_safecracker",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_kingpin",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_agent",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_safecracker_blackmail",
+          "public_summary": "A pilot helped a retired lock-breacher blackmail a syndicate kingpin for a lifelong retirement pension."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "kingpin_buys_his_secret",
+      "reached_by": "The pilot accepts the kingpin's bribe and destroys the file.",
+      "summary": "The contract is incinerated in vacuum. {role:cartel_kingpin} eliminates all witnesses, executing {role:veteran_safecracker} and tightening his stranglehold on the station.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "waterfront_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_kingpin",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_safecracker",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_agent",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "burned_rogue_cop_docket",
+          "public_summary": "A pilot took cartel gold to burn ancient police dockets, leaving a criminal syndicate untouchable."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "safe_recaptured_in_ambush",
+      "reached_by": "The pilot never intervenes or abandons the vault.",
+      "summary": "Cartel enforcers storm the vault spar, butchering the scavengers and recovering the unopened safe. {role:veteran_safecracker} disappears into a penal hulk.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "waterfront_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_safecracker",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "internal_affairs_agent",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "safe_recaptured_in_ambush",
+  "loose_threads": [
+    {
+      "id": "t_safe_biometric_keyway",
+      "surface": "cargo",
+      "detail": "The strongbox's mechanical tumbler matches master keyway specifications used exclusively by municipal police armories thirty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_cartel_pension_ledger",
+      "surface": "price_board",
+      "detail": "A private commercial trust in an adjoining sector deposits monthly annuities into accounts owned by retired police inspectors.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "fear",
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "contraband_list",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Armed clash outside orbital vault spar leaves salvage haulers dead on lower docks.",
+    "Station marshal's office denies rumors of historical misconduct files recovered from derelict barge.",
+    "Waterfront syndicate imposes unannounced freight handling surcharges across all cargo bays."
+  ],
+  "voice_direction": {
+    "veteran_safecracker": "Low, rasping, and speaks in terse mechanical analogies. Sounds profoundly weary of criminals and cops alike.",
+    "cartel_kingpin": "Quiet, velvety, and menacingly polite. Speaks with the cultivated diction of a bureaucrat rather than a street enforcer.",
+    "internal_affairs_agent": "Sharp, aggressive, and impatient with procedure. Frequently cuts off explanations to demand immediate compliance."
+  },
+  "novelty_tags": [
+    "safecracker",
+    "rogue_undercover_cop",
+    "biometric_strongbox",
+    "police_blackmail",
+    "dockside_syndicate"
+  ]
+}

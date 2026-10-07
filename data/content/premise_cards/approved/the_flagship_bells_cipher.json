@@ -1,0 +1,418 @@
+{
+  "id": "premise.the_flagship_bells_cipher",
+  "schema_version": 1,
+  "title": "The Flagship Bell's Cipher",
+  "logline": "A regional transport courier hauling an antique bronze naval flagship bell across three star systems is ambushed by rival factions, hiding that the bell's casting core conceals the master cryptographic key to the province's dormant orbital defense grid.",
+  "scale": "regional",
+  "tone": [
+    "heist",
+    "political"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "relic_courier_clerk",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "A provincial antiques transport purser; nervous, meticulous, and desperate to deliver his cargo before privateers board his ship.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "veteran_quartermaster",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "An aging privateer engineer who cast the encryption key into the bell decades ago to keep it out of corporate hands.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_legate",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Chief administrative magistrate for the regional crossroads system; ambitious, cold, and desperate to control the automated guns.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corsair_flag_frigate",
+      "kind": "ship",
+      "description": "A heavily customized surplus gunboat with patched ablative plating and high-draw tractor projectors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ceremonial_flagship_berth",
+      "kind": "place",
+      "description": "A decommissioned memorial dock where the gutted hull of an ancient battle cruiser serves as an orbital museum.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_citadel_dock",
+      "kind": "place",
+      "description": "The fortified administrative starbase anchored at the junction of three regional jump gates.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "privateer_brotherhood",
+      "kind": "faction",
+      "description": "An alliance of independent corsair captains and veteran asteroid privateers resisting corporate annexation.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "power_vacuum",
+    "stolen_goods_circulating",
+    "faction_weakened"
+  ],
+  "public_situation": "An antique bronze naval bell recovered from a decommissioned flagship is transported across regional jump gates to an administrative museum, drawing attacks from privateer raiders.",
+  "private_truth": "The bell was cast around a solid platinum cryptographic wafer containing the master fire-control override codes for sixty automated orbital defense batteries along the border.",
+  "core_why": {
+    "motive": "control",
+    "secret": "ceremonial_bell_contains_orbital_defense_cipher"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Security guards board the transport at {role:ceremonial_flagship_berth} to secure the two-ton ceremonial bell for transit.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "relic_courier_clerk",
+          "target": "ceremonial_flagship_berth",
+          "reason": "He hires an independent pilot to carry sealed customs dockets to the museum harbormaster before the gate transfer window closes.",
+          "private_fact": "The bell's acoustic chime is dampened because its interior clapper is welded to an encrypted cryptographic wafer.",
+          "outcome_tags": [
+            "dockets_delivered"
+          ],
+          "routes": {
+            "dockets_delivered": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "relic_courier_clerk",
+          "target": "ceremonial_flagship_berth",
+          "reason": "He hires the pilot to purchase heavy inertial cradle dampeners from station riggers to secure the massive bell for jump travel.",
+          "private_fact": "If the bell shifts in transit, its bronze shell will crack and expose the internal platinum cipher to customs scanners.",
+          "outcome_tags": [
+            "dampeners_secured",
+            "abandoned"
+          ],
+          "routes": {
+            "dampeners_secured": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Corsair strike craft intercept the transport in the neighboring jump lane, locking tractor beams onto the cargo bay.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "relic_courier_clerk",
+          "target": "privateer_brotherhood",
+          "reason": "He pays the pilot to destroy the privateer interceptor picket before the raiders can board the freighter and seize the bell.",
+          "private_fact": "The corsair leader hailed claiming the bell was cast by his own grandfather and belongs to the veteran brotherhood.",
+          "outcome_tags": [
+            "picket_destroyed",
+            "picket_driven_off"
+          ],
+          "routes": {
+            "picket_destroyed": "next",
+            "picket_driven_off": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "{role:provincial_legate} contacts the courier, demanding the bell be diverted to the citadel under emergency military requisition.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "provincial_legate",
+          "requester": "veteran_quartermaster",
+          "target": "provincial_citadel_dock",
+          "reason": "He asks the pilot to scan the citadel's defense telemetry to verify whether the legate is already preparing to activate the dormant defense grid.",
+          "private_fact": "The legate intends to use the defense batteries to declare martial law and impose extortionate tariffs across three commercial jump gates.",
+          "outcome_tags": [
+            "citadel_guns_ready",
+            "grid_remains_dormant"
+          ],
+          "routes": {
+            "citadel_guns_ready": "next",
+            "grid_remains_dormant": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:corsair_flag_frigate} corners the transport outside {role:provincial_citadel_dock}, launching assault shuttles to claim the bell.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "provincial_legate",
+          "target": "corsair_flag_frigate",
+          "reason": "She pays the pilot to disable the corsair flagship so the bell can be docked safely in the citadel's command vault.",
+          "private_fact": "The corsair commander hails mid-fight offering a massive fortune in captured goods if the pilot helps them extract the platinum cipher.",
+          "outcome_tags": [
+            "frigate_disabled",
+            "brotherhood_deal_taken"
+          ],
+          "routes": {
+            "frigate_disabled": "next",
+            "brotherhood_deal_taken": "resolution:privateers_seize_defense_grid"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the corsair flagship beaten and the cryptographic bell in the hold, the pilot must decide whether to hand the defense cipher to the provincial legate, give it to the veteran corsairs, or smelt the key.",
+        "options": [
+          {
+            "id": "deliver_to_legate",
+            "label": "Deliver the bell to the provincial legate to activate the automated border defense grid",
+            "leads_to": "resolution:legate_activates_border_grid"
+          },
+          {
+            "id": "hand_to_brotherhood",
+            "label": "Turn the bell over to the privateer brotherhood to secure their independence",
+            "leads_to": "resolution:privateers_seize_defense_grid"
+          },
+          {
+            "id": "smelt_the_cipher",
+            "label": "Smelt the platinum cipher in an industrial furnace to ensure nobody commands the guns",
+            "leads_to": "resolution:defense_cipher_permanently_destroyed"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "legate_activates_border_grid",
+      "reached_by": "The pilot delivers the bell to the provincial legate.",
+      "summary": "{role:provincial_legate} extracts the platinum cipher and powers up sixty automated gun platforms, placing three regional gates under strict military control.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "privateer_brotherhood",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_legate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_quartermaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relic_courier_clerk",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "law_change",
+          "law": "weapons_cold_zone",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "armed_provincial_defense_grid",
+          "public_summary": "A pilot delivered an antique ship's bell containing the cipher that reactivated an entire regional orbital defense grid."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "privateers_seize_defense_grid",
+      "reached_by": "The pilot allies with the privateer brotherhood.",
+      "summary": "{role:veteran_quartermaster} extracts the cipher and uses the automated batteries to declare the border systems a free privateer sanctuary, expelling provincial officials.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "privateer_brotherhood",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_quartermaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_legate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relic_courier_clerk",
+          "fate": "fled"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "handed_defense_guns_to_privateers",
+          "public_summary": "A pilot cracked open a naval memorial bell, handing sixty orbital gun batteries to an outlaw privateer fleet."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "defense_cipher_permanently_destroyed",
+      "reached_by": "The pilot smelts the platinum cipher in a furnace.",
+      "summary": "The cipher melts into inert slag. The automated defense platforms remain permanently offline, preserving regional freedom from both warlords and tyrants.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "veteran_quartermaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_legate",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relic_courier_clerk",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "privateer_brotherhood",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "destroyed_orbital_defense_cipher",
+          "public_summary": "A pilot slagged an ancient naval cipher, ensuring neither corsairs nor bureaucrats could enslave the sector with automated guns."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "bell_lost_in_jump_crossfire",
+      "reached_by": "The pilot never intervenes or abandons the transit.",
+      "summary": "Corsair gunboats collide with the transport inside the gate vortex. The ceremonial bell is pulverized in open space, leaving the defense grid forever locked.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "privateer_brotherhood",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "relic_courier_clerk",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_legate",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "bell_lost_in_jump_crossfire",
+  "loose_threads": [
+    {
+      "id": "t_bell_foundry_casting",
+      "surface": "cargo",
+      "detail": "The bronze bell's inner rim displays foundry marks from a provincial heavy munitions foundry that was decommissioned forty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_provincial_requisition_bond",
+      "surface": "station_notice",
+      "detail": "Emergency requisition bonds authorizing the bell's seizure were backed by an off-system commercial banking cartel.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "weapons_cold_zone",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Historic naval bell transit draws privateer attacks across regional gate corridors.",
+    "Provincial magistrate demands emergency powers to reactivate dormant border defense batteries.",
+    "Veterans of border campaigns demand ceremonial relics remain within civilian museum trust."
+  ],
+  "voice_direction": {
+    "relic_courier_clerk": "Panicky, rapid-fire, and clutches manifests like a shield. Speaks with breathless anxiety whenever weapons are drawn.",
+    "veteran_quartermaster": "Gravelly, bitter, and speaks with the weary authority of someone who survived the wars the relics commemorate.",
+    "provincial_legate": "Arrogant, polished, and delivers haughty administrative ultimatums with icy detachment."
+  },
+  "novelty_tags": [
+    "flagship_bell",
+    "cryptographic_cipher",
+    "orbital_defense_grid",
+    "regional_gate_chase",
+    "bronze_casting"
+  ]
+}

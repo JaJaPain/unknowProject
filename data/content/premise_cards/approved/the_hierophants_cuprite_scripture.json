@@ -1,0 +1,315 @@
+{
+  "id": "premise.the_hierophants_cuprite_scripture",
+  "schema_version": 1,
+  "title": "The Hierophant's Cuprite Scripture",
+  "logline": "A comet-temple paleographer discovering that the order's sacred prophecy scrolls were written by an uneducated nineteenth-century mineral prospector is blackmailed by the head priest to authenticate the forgery.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "temple_scriptor",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "The order's quiet paleographer; gentle, devout, and devastated to learn the sacred revelations were copper prospecting logs.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "high_hierophant",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Leader of the celestial communion; charismatic, pragmatic, and determined to protect his flock's spiritual comfort at any cost.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "independent_assayist",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A cynical belt geologist who recognizes the archaic survey symbols and demands payment for her silence.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "comet_sanctuary_dome",
+      "kind": "place",
+      "description": "An ancient hollowed ice cavern on a dark comet where pilgrims pray before embossed copper inscription plates.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "prospector_archive_locker",
+      "kind": "place",
+      "description": "A rusted storage locker on a derelict prospecting platform floating in an unmined asteroid field.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "quiet_cover_up",
+    "secret_half_exposed",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Pilgrims flock to {role:comet_sanctuary_dome} as the high hierophant announces the decennial re-consecration of the order's foundational copper prophecy plates.",
+  "private_truth": "The sacred celestial scripture was copied verbatim from an old prospecting notebook documenting cuprite veins. The founder was a failed surveyor who invented a religion to avoid debt prison.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "sacred_scriptures_are_cuprite_prospecting_logs"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Temple acolytes solicit bulk cuprite ore donations from passing mining crews to repair the sanctuary's corroded copper prayer chimes.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "temple_scriptor",
+          "target": "comet_sanctuary_dome",
+          "reason": "He hires an independent pilot to mine and deliver refined cuprite ore to cast new ceremonial repair shunts for the holy inscription plates.",
+          "private_fact": "While preparing the casting moulds, he realized the symbols stamped into the holy plates match historical ore assay markings.",
+          "outcome_tags": [
+            "cuprite_delivered"
+          ],
+          "routes": {
+            "cuprite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:independent_assayist} arrives at the temple airlock with vintage survey rolls, threatening to release the original claim maps to the public.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "temple_scriptor",
+          "target": "prospector_archive_locker",
+          "reason": "He hires the pilot to retrieve the founder's original handwritten expedition diary from the derelict survey locker to verify the truth.",
+          "private_fact": "The diary explicitly describes how the founder fabricated religious metaphors to disguise the coordinates of rich copper deposits.",
+          "outcome_tags": [
+            "diary_retrieved"
+          ],
+          "routes": {
+            "diary_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Pilgrims fill the ice sanctuary with chanting as {role:high_hierophant} prepares to unveil the consecrated plates at midnight.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "temple_scriptor",
+          "target": "comet_sanctuary_dome",
+          "reason": "He begs the pilot to rush the finalized textual authentication report to the altar dais before the ceremony commences.",
+          "private_fact": "The hierophant ordered him to sign the authentication under threat of banishment, insisting a comforting lie is worth more than cold rock.",
+          "outcome_tags": [
+            "report_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "report_delivered": "next",
+            "abandoned": "resolution:pilgrims_worship_prospecting_logs_in_peace"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the founder's authentic prospecting diary in hand, the pilot must decide whether to shatter the pilgrims' faith, protect the comforting myth, or sell the cuprite coordinates.",
+        "options": [
+          {
+            "id": "reveal_prospector_truth",
+            "label": "Present the prospecting diary to the pilgrims to expose the religion as an ore fraud",
+            "leads_to": "resolution:temple_shattered_scriptures_debunked"
+          },
+          {
+            "id": "authenticate_for_hierophant",
+            "label": "Certify the scripture as holy to protect the congregation's spiritual peace",
+            "leads_to": "resolution:pilgrims_worship_prospecting_logs_in_peace"
+          },
+          {
+            "id": "sell_coordinates_to_assayist",
+            "label": "Sell the decoded copper coordinates to the assayist for a mining consortium buyout",
+            "leads_to": "resolution:ore_veins_staked_temple_evicted"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "temple_shattered_scriptures_debunked",
+      "reached_by": "The pilot presents the prospector's diary openly to the pilgrims.",
+      "summary": "The holy revelations are exposed as an antique geological survey. {role:high_hierophant} is discredited, and devastated pilgrims abandon {role:comet_sanctuary_dome}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "high_hierophant",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "temple_scriptor",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_assayist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "debunked_celestial_scriptures",
+          "public_summary": "A pilot proved a comet temple's sacred cosmic scriptures were just century-old copper prospecting dockets."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "pilgrims_worship_prospecting_logs_in_peace",
+      "reached_by": "The pilot authenticates the scriptures or abandons the report.",
+      "summary": "{role:high_hierophant} consecrates the plates to weeping pilgrims. The comforting lie endures, while {role:temple_scriptor} lives with quiet, agonizing doubt.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "high_hierophant",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "temple_scriptor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_assayist",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "preserved_celestial_prophecy_myth",
+          "public_summary": "A pilot certified ancient copper temple plates, keeping an entire congregation faithful to a prospector's lie."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "ore_veins_staked_temple_evicted",
+      "reached_by": "The pilot sells the decoded coordinates to the assayist.",
+      "summary": "{role:independent_assayist} stakes the rich copper veins mapped in the scriptures. Mining consortia move in, evicting the temple sanctuary to blast the comet for ore.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "independent_assayist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "high_hierophant",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "temple_scriptor",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_holy_scripture_coordinates",
+          "public_summary": "A pilot deciphered a holy scripture into mining coordinates, selling a sacred comet sanctuary to corporate dredgers."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "stolen_goods_circulating"
+      ]
+    }
+  ],
+  "default_resolution": "pilgrims_worship_prospecting_logs_in_peace",
+  "loose_threads": [
+    {
+      "id": "t_scripture_assay_marks",
+      "surface": "cargo",
+      "detail": "The copper inscription plates bear foundry assay marks identical to registered claim stakes held in the provincial mining registry.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_temple_cuprite_tribute",
+      "surface": "price_board",
+      "detail": "A private commodity broker in an adjoining system buys cuprite ore futures tied to the temple's decennial pilgrimage schedule.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "faith",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Comet sanctuary pilgrims celebrate decennial consecration of sacred copper prophecy plates.",
+    "Cuprite ore prices fluctuate as religious pilgrims purchase refined ingots for temple repair.",
+    "Mining delegates question historical property boundary lines surrounding celestial sanctuary comets."
+  ],
+  "voice_direction": {
+    "temple_scriptor": "Soft, scholarly, and speaks with delicate reverence for history. Sounds spiritually gutted and profoundly lonely.",
+    "high_hierophant": "Warm, pastoral, and possesses deep, hypnotic vocal cadence. Dismisses factual truth as cold and cruel compared to faith.",
+    "independent_assayist": "Cynical, sharp, and constantly quotes ore market spot prices. Treats religious veneration as a foolish waste of mineral wealth."
+  },
+  "novelty_tags": [
+    "celestial_temple",
+    "cuprite_scriptures",
+    "prospecting_hoax",
+    "comet_sanctuary",
+    "faith_vs_geology"
+  ]
+}

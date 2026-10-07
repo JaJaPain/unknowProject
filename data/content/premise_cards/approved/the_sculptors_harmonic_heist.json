@@ -1,0 +1,368 @@
+{
+  "id": "premise.the_sculptors_harmonic_heist",
+  "schema_version": 1,
+  "title": "The Sculptor's Harmonic Heist",
+  "logline": "An infamous retired smuggler reinvented as an avant-garde kinetic sculptor is commissioned by a museum curator, hiding that his monumental mobile is engineered to magnetically snag gold bullion from the station vault during its gala unveiling.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "heist"
+  ],
+  "themes": [
+    "reinvention",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "reformed_sculptor",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "A flamboyant ex-smuggler who rebranded himself as a visionary artist; vain, witty, and executing an audacious farewell score.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "museum_curator",
+      "kind": "person",
+      "archetype": "archivist",
+      "description": "Pretentious director of the high-orbit cultural pavilion; desperate for critical acclaim and utterly blind to engineering realities.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "vault_marshal",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Chief security director of the municipal bullion exchange located directly beneath the art pavilion floor.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sculptor_barge",
+      "kind": "ship",
+      "description": "A lavishly gilded flatbed cargo tug equipped with heavy crane gantries and concealed sub-space thrusters.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "cultural_pavilion",
+      "kind": "place",
+      "description": "A glass-domed zero-gravity art gallery orbiting the wealthy inner ring of the station.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bullion_exchange_dock",
+      "kind": "place",
+      "description": "The fortified subterranean vault deck where gold reserves and inter-system specie are weighed and stored.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "festival"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "stolen_goods_circulating",
+    "rival_humiliated",
+    "public_outrage"
+  ],
+  "public_situation": "Patrons and diplomats arrive at {role:cultural_pavilion} for the unveiling of a four-ton zero-g kinetic mobile celebrated as the pinnacle of modern space architecture.",
+  "private_truth": "The sculpture is an industrial electromagnetic crane calibrated to resonate through the gallery floor and haul twenty metric tons of bullion up through the ventilation shafts during the opening applause.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "kinetic_art_mobile_is_electromagnetic_vault_crane"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The gallery dome at {role:cultural_pavilion} is cleared for the installation of the sculptor's gigantic suspended mobile.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "reformed_sculptor",
+          "target": "cultural_pavilion",
+          "reason": "He hires an outside pilot to deliver high-tensile superconducting alloy struts to the pavilion before the gala opening.",
+          "private_fact": "The struts are wound with military-grade induction coils disguised as decorative brushed titanium flourishes.",
+          "outcome_tags": [
+            "struts_delivered"
+          ],
+          "routes": {
+            "struts_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "Station power grids experience rhythmic voltage dips as the sculpture conducts test calibrations.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "reformed_sculptor",
+          "requester": "vault_marshal",
+          "target": "cultural_pavilion",
+          "reason": "He hires the pilot to scan the pavilion's electromagnetic emissions to verify why the vault's magnetic containment alarms keep tripping.",
+          "private_fact": "His superiors dismissed his warnings as artistic paranoia, refusing to delay the high-society gala.",
+          "outcome_tags": [
+            "magnetic_snag_detected",
+            "harmonics_appear_aesthetic"
+          ],
+          "routes": {
+            "magnetic_snag_detected": "next",
+            "harmonics_appear_aesthetic": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "The gala commences with champagne toasts as {role:reformed_sculptor} powers up the mobile's harmonic drive.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "reformed_sculptor",
+          "target": "cultural_pavilion",
+          "reason": "He hires the pilot to purchase emergency liquid nitrogen cooling cylinders from station dockyards to prevent the induction coils from smoking during activation.",
+          "private_fact": "He needs the coolant delivered before the music reaches its crescendo, when the vault floor plates will shear open.",
+          "outcome_tags": [
+            "coolant_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "coolant_delivered": "next",
+            "abandoned": "resolution:coils_burn_out_in_spectacle"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Gold bars burst through the gallery floor grates into the mobile's rotating arms as alarms blare and patrons scream.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "vault_marshal",
+          "target": "sculptor_barge",
+          "reason": "He hires the pilot to intercept and disable the sculptor's getaway barge before it jumps through the gate with the loot.",
+          "private_fact": "The sculptor hails mid-flight offering half the bullion hoard if the pilot escorts him past station patrol cutters.",
+          "outcome_tags": [
+            "barge_disabled",
+            "allied_with_sculptor"
+          ],
+          "routes": {
+            "barge_disabled": "next",
+            "allied_with_sculptor": "resolution:artistic_heist_of_the_century"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the sculptor's barge cornered and the bullion hoard floating in zero-g, the pilot must decide whether to return the gold, take the smuggler's cut, or preserve the artwork's legacy.",
+        "options": [
+          {
+            "id": "recover_bullion",
+            "label": "Disable the barge and return the bullion to the municipal vault",
+            "leads_to": "resolution:bullion_returned_sculptor_jailed"
+          },
+          {
+            "id": "take_artists_cut",
+            "label": "Escort the sculptor to deep space and split the stolen fortune",
+            "leads_to": "resolution:artistic_heist_of_the_century"
+          },
+          {
+            "id": "consign_to_curator",
+            "label": "Declare the whole event an immersive performance art piece so the curator can cover it up",
+            "leads_to": "resolution:heist_declared_conceptual_masterpiece"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bullion_returned_sculptor_jailed",
+      "reached_by": "The pilot disables the barge and recovers the gold.",
+      "summary": "{role:vault_marshal} reclaims the gold. {role:reformed_sculptor}'s artistic career ends in handcuffs, while {role:museum_curator} becomes the laughingstock of the sector.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "vault_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reformed_sculptor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "museum_curator",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "stopped_kinetic_art_heist",
+          "public_summary": "A pilot caught an avant-garde sculptor who used a four-ton kinetic mobile to suck gold bars out of a bank vault."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "artistic_heist_of_the_century",
+      "reached_by": "The pilot escorts the sculptor into deep space.",
+      "summary": "{role:reformed_sculptor} escapes with twenty tons of gold, leaving a devastated vault behind. {role:vault_marshal} is dismissed while critics debate the bold theft.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformed_sculptor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "museum_curator",
+          "fate": "fled"
+        },
+        {
+          "type": "deed",
+          "tag": "pulled_off_kinetic_art_heist",
+          "public_summary": "A pilot escorted an audacious artist who robbed the station vault in front of two hundred applauding dignitaries."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "heist_declared_conceptual_masterpiece",
+      "reached_by": "The pilot helps the curator rebrand the heist as performance art.",
+      "summary": "{role:museum_curator} convinces trustees the theft was conceptual satire. The gold is quietly returned minus a massive artist fee, preserving the sculptor's glory.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformed_sculptor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "museum_curator",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_marshal",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "rebranded_heist_as_art",
+          "public_summary": "A pilot helped a crooked sculptor convince the station that robbing their vault was high-concept performance art."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "coils_burn_out_in_spectacle",
+      "reached_by": "The pilot never intervenes or abandons the coolant delivery.",
+      "summary": "The uncooled coils overheat, erupting in green sparks that melt the gallery ceiling. The gold stays in the vault while {role:reformed_sculptor} is dragged off in shame.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformed_sculptor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "museum_curator",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "vault_marshal",
+          "fate": "alive_grateful"
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "coils_burn_out_in_spectacle",
+  "loose_threads": [
+    {
+      "id": "t_sculpture_coil_spec",
+      "surface": "cargo",
+      "detail": "The copper induction coils carry shipping labels traced to an offshore commercial crane manufacturer that shut down last year.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_art_insurance_rider",
+      "surface": "price_board",
+      "detail": "An offshore private insurer took out an exorbitant loss policy on the museum exhibition ten days before the opening gala.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "slow_infiltration",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "High society flocks to cultural pavilion for unveiling of controversial four-ton mobile.",
+    "Station bullion exchange reports brief telemetry flickers, dismissing security rumors.",
+    "Art critics hail reformed smuggler's new installation as 'audacious and magnetically charged'."
+  ],
+  "voice_direction": {
+    "reformed_sculptor": "Grandiloquent, melodramatic, and speaks in poetic manifestos about mass and space. Dismisses with haughty amusement whenever anyone uses the word 'criminal'.",
+    "museum_curator": "Fussy, effete, and speaks in breathless academic jargon. Terrified of pedestrian technical questions.",
+    "vault_marshal": "Gruff, pragmatic, and entirely focused on floor load tolerances and capacitor drain rates. Hates modern art with a passion."
+  },
+  "novelty_tags": [
+    "kinetic_sculpture",
+    "bullion_heist",
+    "art_gallery_gala",
+    "electromagnetic_snag",
+    "performance_art"
+  ]
+}

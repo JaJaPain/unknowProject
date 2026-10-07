@@ -1,0 +1,372 @@
+{
+  "id": "premise.the_troupe_ballast_heist",
+  "schema_version": 1,
+  "title": "The Troupe Ballast Heist",
+  "logline": "A zero-g acrobatic troupe hires a pilot to intercept rival performers who stole their high-wire counterweight, hiding that the ballast core is stuffed with stolen municipal bribery ledgers.",
+  "scale": "local",
+  "tone": [
+    "heist",
+    "absurd"
+  ],
+  "themes": [
+    "price_of_profit",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "troupe_ringmaster",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Flamboyant director of the orbital trapeze ensemble; charming, melodramatic, and terrified of station magistrates.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rival_aerialist",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Lead performer for a competing carnival act who swiped the counterweight thinking it was pure platinum alloy.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "harbormaster_investigator",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A dogged municipal auditor tracing a decade of missing berthing kickbacks through station books.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "carnival_skiff",
+      "kind": "ship",
+      "description": "A gaudily painted transport cutter outfitted with oversized maneuvering thrusters and spotlight gantries.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "auditor_cutter",
+      "kind": "ship",
+      "description": "A grey municipal enforcement cutter with high-gain scanning dish arrays.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "amusement_spire",
+      "kind": "place",
+      "description": "A spinning leisure hub featuring cavernous microgravity performance domes and betting arcades.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "circus_consortium",
+      "kind": "faction",
+      "description": "An itinerant guild of orbital performers, stagehands, and microgravity riggers.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "rival_humiliated",
+    "evidence_loose",
+    "public_outrage"
+  ],
+  "public_situation": "Feuding microgravity performance troupes trade broadcast insults across {system} after an ornate high-wire ballast rig is stolen from the main carnival dome.",
+  "private_truth": "The ballast weight is hollowed out and packed with optical micro-slates recording ten years of port authority bribes paid to keep uncertified carnival rides operating.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "circus_trapeze_ballast_holds_municipal_bribe_ledgers"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The circus consortium cancels opening night at {role:amusement_spire}, offering a private bounty for the recovery of their balancing equipment.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "troupe_ringmaster",
+          "target": "carnival_skiff",
+          "reason": "He hires an armed pilot to intercept the rival getaway skiff and recover the dropped counterweight cylinder before opening night.",
+          "private_fact": "He hid the bribe slates inside the ballast cylinder because port inspectors never weigh theatrical acrobatics equipment.",
+          "outcome_tags": [
+            "ballast_recovered"
+          ],
+          "routes": {
+            "ballast_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Municipal port auditors deploy {role:auditor_cutter} to cordon off the carnival berths, citing safety code violations.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "troupe_ringmaster",
+          "target": "amusement_spire",
+          "reason": "He hires the pilot to deliver the recovered ballast rig through a maintenance airlock before the inspector docks at the circus hab.",
+          "private_fact": "The ledgers contain his own handwriting listing payments to the harbormaster's deputy for passing faulty safety harnesses.",
+          "outcome_tags": [
+            "ballast_docked",
+            "abandoned"
+          ],
+          "routes": {
+            "ballast_docked": "next",
+            "abandoned": "resolution:auditors_seize_carnival_ledgers"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "Auditors order the circus habitat sealed and begin scanning interior luggage berths.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "troupe_ringmaster",
+          "requester": "harbormaster_investigator",
+          "target": "amusement_spire",
+          "reason": "She hires an outside pilot to scan the carnival dome airlocks to verify whether uncertified metal counterweights were smuggled aboard.",
+          "private_fact": "Her supervisor ordered her to drop the inquiry, which convinced her the ringmaster is paying off station brass.",
+          "outcome_tags": [
+            "bribe_cache_scanned",
+            "airlock_clear"
+          ],
+          "routes": {
+            "bribe_cache_scanned": "next",
+            "airlock_clear": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:auditor_cutter} pursues the ringmaster's skiff toward open space as {role:rival_aerialist} hails offering a deal.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "troupe_ringmaster",
+          "target": "auditor_cutter",
+          "reason": "He pays the pilot to disable the chasing enforcement cutter before it can seize the ballast canister.",
+          "private_fact": "The auditor hails mid-engagement offering full immunity and a cash reward if the pilot turns over the hollowed ballast core intact.",
+          "outcome_tags": [
+            "cutter_neutralized",
+            "took_auditor_bargain"
+          ],
+          "routes": {
+            "cutter_neutralized": "next",
+            "took_auditor_bargain": "resolution:auditors_seize_carnival_ledgers"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the auditor cutter disabled and the hollowed ballast rig in the cargo hold, the pilot must decide whether to return the ledgers to the ringmaster, sell them to the rival troupe, or expose the bribery ring.",
+        "options": [
+          {
+            "id": "return_to_ringmaster",
+            "label": "Return the counterweight to the ringmaster so opening night can proceed",
+            "leads_to": "resolution:show_goes_on_corrupt"
+          },
+          {
+            "id": "sell_to_rival",
+            "label": "Sell the bribery ledgers to the rival aerialist to blackmail the consortium",
+            "leads_to": "resolution:rival_blackmails_consortium"
+          },
+          {
+            "id": "hand_to_auditors",
+            "label": "Deliver the hollowed ballast to station magistrates to shut down the corrupt circus",
+            "leads_to": "resolution:circus_bribery_ring_shattered"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "show_goes_on_corrupt",
+      "reached_by": "The pilot returns the ballast to the ringmaster.",
+      "summary": "The trapeze show opens to roaring applause. {role:troupe_ringmaster} keeps his lucrative payoffs intact while {role:harbormaster_investigator} is reassigned to outer buoys.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "circus_consortium",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "troupe_ringmaster",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbormaster_investigator",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_corrupt_circus",
+          "public_summary": "A pilot recovered a stolen trapeze counterweight just in time for opening night, keeping dock inspectors baffled."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "rival_blackmails_consortium",
+      "reached_by": "The pilot sells the ballast ledgers to the rival performer.",
+      "summary": "{role:rival_aerialist} uses the bribery ledgers to take over the circus consortium's main performance lease. The ringmaster is demoted to sweeping the stands.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "rival_aerialist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "troupe_ringmaster",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "circus_consortium",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_circus_extortion",
+          "public_summary": "A pilot sold a hollowed circus ballast weight to rival aerialists, flipping ownership of the orbital carnival."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "circus_bribery_ring_shattered",
+      "reached_by": "The pilot delivers the ledgers to municipal magistrates.",
+      "summary": "Magistrates impound the entire circus fleet. {role:troupe_ringmaster} is arrested alongside three corrupt dock officials, shuttering {role:amusement_spire}.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "circus_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "troupe_ringmaster",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbormaster_investigator",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_carnival_kickbacks",
+          "public_summary": "A pilot cracked open a theatrical counterweight, revealing decades of municipal kickbacks hidden inside circus props."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "auditors_seize_carnival_ledgers",
+      "reached_by": "The pilot takes the auditor's offer or abandons the chase.",
+      "summary": "Auditors intercept the ballast rig in transit. The ringmaster flees into deep space while the circus consortium's assets are auctioned off to pay fines.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "circus_consortium",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "troupe_ringmaster",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "harbormaster_investigator",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "auditors_seize_carnival_ledgers",
+  "loose_threads": [
+    {
+      "id": "t_ballast_foundry_stamp",
+      "surface": "cargo",
+      "detail": "The cast-iron ballast cylinder carries an inspection stamp from an offshore commercial shipyard that closed before the circus was founded.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_aerialist_promissory_note",
+      "surface": "price_board",
+      "detail": "A private betting syndicate placed maximum wagers against opening night attendance minutes before the theft occurred.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "Microgravity circus opening night in jeopardy after bizarre ballast theft at amusement spire.",
+    "Station port authority announces surprise audit of theatrical freight containers.",
+    "Betting pools open on whether the annual orbital trapeze festival will proceed on schedule."
+  ],
+  "voice_direction": {
+    "troupe_ringmaster": "Theatrical, operatic, and perpetually projects as if speaking to the back row of an arena. Drops into a terrified, gritty patter when cornered.",
+    "rival_aerialist": "Smug, athletic, and speaks with mocking levity. Treats high-stakes extortion as a playful game of acrobatics.",
+    "harbormaster_investigator": "Monotone, pedantic, and relentlessly recites administrative code sections while ignoring all theatrical drama."
+  },
+  "novelty_tags": [
+    "circus_troupe",
+    "trapeze_ballast",
+    "municipal_bribes",
+    "theatrical_extortion",
+    "opening_night"
+  ]
+}

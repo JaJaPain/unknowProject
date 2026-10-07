@@ -1,0 +1,358 @@
+{
+  "id": "premise.the_patented_scrubber_embargo",
+  "schema_version": 1,
+  "title": "The Patented Scrubber Embargo",
+  "logline": "A municipal patent examiner discovers that an independent engineer's life-saving permanent ceramic air filter was fraudulently assigned to a conglomerate that shelved it to protect recurring disposable cartridge revenues.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "paranoid"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "patent_examiner",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A weary municipal patent clerk; punctilious, timid, and horrified to discover a forged assignment deed in his archive.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "reclusive_inventor",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "An impoverished atmospheric rigger who designed a perpetual ceramic scrubber and spent a decade wondering why it was never produced.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_counsel",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Corporate attorney tasked with keeping the perpetual filter suppressed to safeguard the company's monopoly on disposable filter sales.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "patent_registry_vault",
+      "kind": "place",
+      "description": "The fortified station repository where historical technical blueprints and priority dockets are impounded.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrubber_fabrication_dock",
+      "kind": "place",
+      "description": "A cavernous industrial manufacturing deck churning out expensive disposable air scrubber cartridges for the mining belts.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "shortage"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "evidence_loose"
+  ],
+  "public_situation": "Habitation domes across {system} face crippling air rationing as disposable scrubber prices soar and replacement cartridges run dry.",
+  "private_truth": "{role:consortium_counsel} forged the inventor's signature ten years ago to buy and bury the perpetual ceramic filter, ensuring miners must buy disposable cartridges every sixty days.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "perpetual_scrubber_patent_fraudulently_assigned_and_shelved"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The municipal commerce board places armed sentries outside {role:patent_registry_vault} after rumors circulate of suppressed filter designs.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "patent_examiner",
+          "target": "patent_registry_vault",
+          "reason": "He hires an independent pilot to retrieve the original microfiche patent roll before corporate auditors purge the archive index.",
+          "private_fact": "He cross-referenced the notary seal and knows the inventor never received the hundred-thousand credit buyout recorded in the ledger.",
+          "outcome_tags": [
+            "microfiche_secured"
+          ],
+          "routes": {
+            "microfiche_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:consortium_counsel} dispatches private security cutters to cordon off the inventor's habitat hab, claiming industrial espionage.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "consortium_counsel",
+          "requester": "reclusive_inventor",
+          "target": "scrubber_fabrication_dock",
+          "reason": "He asks the pilot to scan the factory's production telemetry to certify that their manufacturing lines are physically capable of baking his ceramic cores.",
+          "private_fact": "He has been living on food charity while the corporation made millions off the artificial cartridge scarcity his invention was meant to prevent.",
+          "outcome_tags": [
+            "factory_capability_verified",
+            "lines_appear_incompatible"
+          ],
+          "routes": {
+            "factory_capability_verified": "next",
+            "lines_appear_incompatible": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Miners march on the municipal council plaza as air rationing limits are slashed by half across the lower habitat tiers.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "patent_examiner",
+          "target": "patent_registry_vault",
+          "reason": "He begs the pilot to rush the authenticated fraud docket to the magistrates' hearing before the corporate injunction seals the court.",
+          "private_fact": "The corporate counsel contacted him directly offering an offshore partnership if he misplaces the microfiche roll.",
+          "outcome_tags": [
+            "docket_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "docket_delivered": "next",
+            "abandoned": "resolution:cartridge_cartel_tightens_stranglehold"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the original patent roll proving corporate fraud in hand, the pilot must decide whether to invalidate the corporate monopoly, sell the patent back to the consortium, or give the designs to open-source fabricators.",
+        "options": [
+          {
+            "id": "present_to_magistrates",
+            "label": "Deliver the microfiche to the magistrates to strip the corporate patent and release the perpetual filter",
+            "leads_to": "resolution:filter_released_monopoly_broken"
+          },
+          {
+            "id": "sell_to_counsel",
+            "label": "Sell the patent evidence to corporate counsel to keep the disposable market intact",
+            "leads_to": "resolution:cartridge_cartel_tightens_stranglehold"
+          },
+          {
+            "id": "deliver_to_dockers",
+            "label": "Deliver the blueprint directly to the inventor and wildcat machine shops to leak the plans",
+            "leads_to": "resolution:wildcat_shops_flood_system_with_filters"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "filter_released_monopoly_broken",
+      "reached_by": "The pilot delivers the fraud evidence to municipal magistrates.",
+      "summary": "Magistrates nullify the fraudulent assignment. {role:reclusive_inventor} wins full royalties, and perpetual ceramic scrubbers enter production, ending the air shortage in {system}.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reclusive_inventor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "consortium_counsel",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "patent_examiner",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "remove": [
+            "shortage"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "broke_air_filter_monopoly",
+          "public_summary": "A pilot uncovered a suppressed perpetual air scrubber patent, breaking a corporate stranglehold on breathable station air."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "cartridge_cartel_tightens_stranglehold",
+      "reached_by": "The pilot sells the microfiche to the corporate counsel.",
+      "summary": "{role:consortium_counsel} burns the patent roll, burying the perpetual filter forever. Disposable cartridge prices double while {role:reclusive_inventor} is driven into exile.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "consortium_counsel",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reclusive_inventor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "patent_examiner",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "buried_perpetual_scrubber",
+          "public_summary": "A pilot took corporate credits to incinerate a life-saving air filter patent, leaving miners at the mercy of cartridge monopolies."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "wildcat_shops_flood_system_with_filters",
+      "reached_by": "The pilot delivers the blueprints directly to wildcat fabricators.",
+      "summary": "Independent machine shops pirate the ceramic filter design. Cheap bootleg scrubbers flood the stations, destroying corporate revenues while {role:reclusive_inventor} receives zero royalties.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "consortium_counsel",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "patent_examiner",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reclusive_inventor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "remove": [
+            "shortage"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "pirated_perpetual_scrubber",
+          "public_summary": "A pilot leaked suppressed air filter blueprints to dock machine shops, ending air rationing with open-source piracy."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "patent_purged_in_silence",
+      "reached_by": "The pilot never intervenes or abandons the docket.",
+      "summary": "Corporate auditors wipe the registry database under cover of night. The perpetual scrubber vanishes from station memory as air rationing sparks dockside bread riots.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "patent_examiner",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reclusive_inventor",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "patent_purged_in_silence",
+  "loose_threads": [
+    {
+      "id": "t_patent_assignment_stamp",
+      "surface": "cargo",
+      "detail": "The notarized buyout roll bears an embossed seal registered to a commercial shell corporation that dissolved eleven years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_filter_cartel_escrow",
+      "surface": "price_board",
+      "detail": "A private commodity broker placed short positions against disposable filter manufacturers days before the patent hearing was scheduled.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Station habitats introduce mandatory oxygen scrubber power cycling amid supply shortfalls.",
+    "Municipal patent office announces digital archive migration, triggering union audit concerns.",
+    "Atmospheric equipment manufacturers deny allegations of artificial filter cartridge obsolescence."
+  ],
+  "voice_direction": {
+    "patent_examiner": "Timid, precise, and continually adjusts imaginary papers. Speaks conspiratorially in low tones when referencing official register dockets.",
+    "reclusive_inventor": "Raspy, bewildered, and speaks with intense technical passion. Becomes bitter and hesitant when discussing money.",
+    "consortium_counsel": "Smooth, patronizing, and exudes unshakeable legal confidence. Treats station air supply requirements as contractual externalities."
+  },
+  "novelty_tags": [
+    "patent_suppression",
+    "perpetual_scrubber",
+    "air_rationing",
+    "corporate_forgery",
+    "open_source_piracy"
+  ]
+}

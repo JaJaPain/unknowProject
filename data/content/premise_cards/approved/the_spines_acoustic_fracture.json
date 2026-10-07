@@ -1,0 +1,416 @@
+{
+  "id": "premise.the_spines_acoustic_fracture",
+  "schema_version": 1,
+  "title": "The Spine's Acoustic Fracture",
+  "logline": "A station structural acoustic surveyor discovers that progressive micro-fractures in an overcrowded outer habitat ring were caused by unauthorized drilling from an executive luxury observation lounge built directly into the load-bearing spine.",
+  "scale": "local",
+  "tone": [
+    "paranoid",
+    "bleak"
+  ],
+  "themes": [
+    "scarcity_breeds_cruelty",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "acoustic_surveyor",
+      "kind": "person",
+      "archetype": "scientist",
+      "description": "An uncompromising station structural analyst; underslept, meticulous, and terrified of catastrophic habitat decompression.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "executive_developer",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Real-estate developer who drilled a panoramic viewing lounge into the station's core keel to sell penthouses to corporate directors.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "habitat_tenant_organizer",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "Loud advocate for the twelve thousand miner families living in the groaning outer dorm ring.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "developer_patrol_skiff",
+      "kind": "ship",
+      "description": "A light corporate security skiff enforcing local transit blockades around the residential perimeter.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "developer_security_cutter",
+      "kind": "ship",
+      "description": "A sleek corporate security gunboat armed with heavy pulse lasers and boarding clamps.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "acoustic_sensor_pylon",
+      "kind": "place",
+      "description": "An isolated sensor mast mounted on the exterior hull measuring structural harmonic vibrations.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dorm_habitat_ring",
+      "kind": "place",
+      "description": "The cramped, noisy residential cylinder where working-class station personnel live under artificial gravity.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "station_development_board",
+      "kind": "faction",
+      "description": "The private corporate board that leases habitat space and finances structural expansion.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "faction_weakened",
+    "witness_at_large"
+  ],
+  "public_situation": "Residents in the outer dorm ring report terrifying metallic groaning sounds as station management dismisses the noise as harmless thermal expansion.",
+  "private_truth": "{role:executive_developer} hollowed out three structural support ribs in the core spine to build an uncertified zero-g wine lounge, creating shearing stress that will tear the dorm ring loose.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "luxury_lounge_construction_fracturing_habitat_keel"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Tenants stage noise protests outside the municipal offices as structural groans reverberate through the ventilation ducts.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "executive_developer",
+          "requester": "acoustic_surveyor",
+          "target": "acoustic_sensor_pylon",
+          "reason": "He hires an outside pilot to scan the exterior hull sensor pylon to record acoustic strain frequencies before the developer wipes the buffer.",
+          "private_fact": "His initial telemetry shows micro-fractures propagating at seven millimeters an hour through the main rotational hub.",
+          "outcome_tags": [
+            "shearing_strain_verified",
+            "harmonics_appear_benign"
+          ],
+          "routes": {
+            "shearing_strain_verified": "next",
+            "harmonics_appear_benign": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "{role:executive_developer} posts armed security guards at the elevator shafts leading to the core spine, claiming private property rights.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "acoustic_surveyor",
+          "target": "dorm_habitat_ring",
+          "reason": "He hires the pilot to deliver the decoded acoustic fracture logs to the tenant union hall before corporate enforcers seize his office.",
+          "private_fact": "The developer offered him a luxury penthouse and lifetime dividend shares if he alters his report to blame miner overcrowding.",
+          "outcome_tags": [
+            "telemetry_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "telemetry_delivered": "next",
+            "abandoned": "resolution:developer_frames_tenant_overcrowding"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:developer_patrol_skiff} patrols the perimeter of the dorm ring, threatening to shoot down any shuttles broadcasting unauthorized telemetry.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "habitat_tenant_organizer",
+          "target": "developer_patrol_skiff",
+          "reason": "She hires the pilot to destroy or disable the corporate security skiff so tenant leaders can broadcast an emergency evacuation warning.",
+          "private_fact": "She knows that if the truth airs, the entire station will face mass panic, but staying silent guarantees thousands die when the keel snaps.",
+          "outcome_tags": [
+            "skiff_destroyed",
+            "skiff_repelled"
+          ],
+          "routes": {
+            "skiff_destroyed": "next",
+            "skiff_repelled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Deep metallic cracking sounds echo across the entire station as {role:developer_security_cutter} moves to jam external communications.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "acoustic_surveyor",
+          "target": "developer_security_cutter",
+          "reason": "He hires the pilot to intercept the developer's armored security cutter and broadcast the raw structural findings to the judicial tribunal.",
+          "private_fact": "The developer hails offering an immense offshore bribe if the pilot breaks off the assault and escorts his private yacht into deep space.",
+          "outcome_tags": [
+            "relay_secured",
+            "developer_bribe_taken"
+          ],
+          "routes": {
+            "relay_secured": "next",
+            "developer_bribe_taken": "resolution:developer_flees_leaving_ring_to_fracture"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the structural proof in hand and the station keel groaning toward collapse, the pilot must decide whether to expose the developer, take his fortune, or negotiate emergency repairs.",
+        "options": [
+          {
+            "id": "broadcast_fracture_truth",
+            "label": "Broadcast the fracture telemetry openly to force immediate evacuation and arrest the developer",
+            "leads_to": "resolution:developer_arrested_evacuation_ordered"
+          },
+          {
+            "id": "accept_developer_fortune",
+            "label": "Accept the developer's bribe and escort his private yacht into deep space",
+            "leads_to": "resolution:developer_flees_leaving_ring_to_fracture"
+          },
+          {
+            "id": "force_corporate_restitution",
+            "label": "Deliver the proof to the development board to force them to demolish the lounge and weld the keel",
+            "leads_to": "resolution:lounge_demolished_keel_braced"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "developer_arrested_evacuation_ordered",
+      "reached_by": "The pilot broadcasts the structural truth across the station.",
+      "summary": "Magistrates order {role:executive_developer} arrested. Ten thousand residents are safely evacuated from {role:dorm_habitat_ring} before the outer ring separates into vacuum.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_development_board",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "executive_developer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "acoustic_surveyor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_tenant_organizer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "evacuation"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "saved_tenants_from_keel_collapse",
+          "public_summary": "A pilot broadcast structural telemetry proving an executive luxury lounge had cracked the station's main keel."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "developer_flees_leaving_ring_to_fracture",
+      "reached_by": "The pilot accepts the developer's bribe and helps him flee.",
+      "summary": "{role:executive_developer} escapes with his fortune. Hours later, the keel shears, hurling {role:dorm_habitat_ring} into space and killing thousands in catastrophic decompression.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_development_board",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "executive_developer",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "acoustic_surveyor",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_tenant_organizer",
+          "fate": "dead"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "mourning"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "escorted_killer_developer",
+          "public_summary": "A pilot took blood money to escort a corrupt developer who drilled away the keel of a station habitat."
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "lounge_demolished_keel_braced",
+      "reached_by": "The pilot forces the development board to repair the damage.",
+      "summary": "The luxury lounge is gutted and welded with reinforced steel girders. {role:executive_developer} is stripped of his assets to pay for structural reinforcement.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "station_development_board",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "executive_developer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "acoustic_surveyor",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_tenant_organizer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "forced_habitat_keel_repairs",
+          "public_summary": "A pilot brought evidence that forced a corporate board to tear out an executive lounge to brace a failing station keel."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "developer_frames_tenant_overcrowding",
+      "reached_by": "The pilot never intervenes or abandons the report.",
+      "summary": "The developer blames the groaning on tenant vibration. Marshals evict five hundred families from {role:dorm_habitat_ring} while the structural crack continues to widen.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "executive_developer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "acoustic_surveyor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "habitat_tenant_organizer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "leader_discredited",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "developer_frames_tenant_overcrowding",
+  "loose_threads": [
+    {
+      "id": "t_acoustic_drill_permit",
+      "surface": "cargo",
+      "detail": "The core drilling permits carry municipal exemption stamps signed by a station housing commissioner who retired last month.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_lounge_construction_invoice",
+      "surface": "price_board",
+      "detail": "Structural reinforcement steel allocated for habitat maintenance was invoiced directly to an offshore luxury penthouse trust.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "cornering_a_market",
+      "debt_leverage"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Station maintenance department insists rotational hub acoustic groans are within safe tolerance.",
+    "Tenant union holds emergency rally protesting structural neglect in outer dorm ring.",
+    "Station development board unveils plans for new panoramic zero-gravity executive suites."
+  ],
+  "voice_direction": {
+    "acoustic_surveyor": "Rapid, breathless, and intensely focused on harmonic frequencies. Speaks like a man who knows the roof is about to collapse.",
+    "executive_developer": "Arrogant, condescending, and dismisses physical engineering limits as bureaucratic speed bumps. Speaks with slick salesmanship.",
+    "habitat_tenant_organizer": "Loud, furious, and speaks with fierce maternal protectiveness. Demands concrete safety answers and refuses corporate jargon."
+  },
+  "novelty_tags": [
+    "habitat_fracture",
+    "structural_keel",
+    "luxury_lounge",
+    "acoustic_strain",
+    "tenant_evacuation"
+  ]
+}

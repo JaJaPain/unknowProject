@@ -1,0 +1,403 @@
+{
+  "id": "premise.the_accountants_bonded_ledger",
+  "schema_version": 1,
+  "title": "The Accountant's Bonded Ledger",
+  "logline": "A regional bail enforcement purser hauling a syndicate accountant's encrypted ledger cylinder across three systems is hunted by rival cartels, hiding that the ledger tracks the kickbacks that established the sector's independent judicial court.",
+  "scale": "regional",
+  "tone": [
+    "heist",
+    "survival"
+  ],
+  "themes": [
+    "price_of_profit",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "bondsman_purser",
+      "kind": "person",
+      "archetype": "debt_collector",
+      "description": "A seasoned provincial bail enforcement officer; cynical, relentless, and desperate to collect his bounty before cartels kill his prisoner.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_accountant",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Chief financial bookkeeper for the regional crime syndicate; terrified, calculating, and clinging to his encrypted ledger cylinder.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "presiding_magistrate",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Senior judicial officer of the regional appellate bench whose immaculate reputation was financed by syndicate seed money.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_heavy_cutter",
+      "kind": "ship",
+      "description": "A customized strike warship fitted with military tractor projectors and reinforced prow armor.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_bail_vault",
+      "kind": "place",
+      "description": "A high-security orbital holding platform anchored at the entry gate of the provincial capital system.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "appellate_justice_pylon",
+      "kind": "place",
+      "description": "The monumental administrative space station where regional judiciary tribunals and appellate hearings are held.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "inter_system_cartel",
+      "kind": "faction",
+      "description": "A powerful multi-system criminal conglomerate that launders extortion profits through municipal bonds.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "leader_discredited",
+    "stolen_goods_circulating"
+  ],
+  "public_situation": "Gunfire erupts across regional jump gate channels as private bail agents escort an impounded syndicate accounting courier toward the appellate courthouse.",
+  "private_truth": "The accountant's encrypted ledger proves that {role:presiding_magistrate} accepted millions in cartel seed capital twenty years ago to build the very courthouse where he sits.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "appellate_courthouse_founded_on_cartel_seed_money"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Security alerts flash across {role:provincial_bail_vault} as private bail cutters prepare for high-priority gate transit.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "bondsman_purser",
+          "target": "provincial_bail_vault",
+          "reason": "He hires an independent pilot to carry sealed judicial transfer writs to the vault harbormaster before gate clearance expires.",
+          "private_fact": "The accountant warned him that three assassination contracts have already been posted on the courier ship across two systems.",
+          "outcome_tags": [
+            "writs_delivered"
+          ],
+          "routes": {
+            "writs_delivered": "next"
+          }
+        },
+        {
+          "verb": "purchase_delivery",
+          "requester": "bondsman_purser",
+          "target": "provincial_bail_vault",
+          "reason": "He hires the pilot to purchase hardened biometric encryption lockers from station armories to seal the ledger cylinder in transit.",
+          "private_fact": "The ledger has a self-destruct dead-man switch that will incinerate the memory wafers if magnetic seals fail.",
+          "outcome_tags": [
+            "lockers_secured",
+            "abandoned"
+          ],
+          "routes": {
+            "lockers_secured": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Cartel ambush craft lock tractor beams onto the courier vessel inside the neighboring jump system.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "bondsman_purser",
+          "target": "inter_system_cartel",
+          "reason": "He pays the pilot to destroy an intercepting cartel picket and recover the dropped cryptographic keycard cylinder.",
+          "private_fact": "Without the keycard, the accountant cannot unlock the ledger files to substantiate his plea agreement in court.",
+          "outcome_tags": [
+            "keycard_recovered"
+          ],
+          "routes": {
+            "keycard_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "{role:presiding_magistrate} issues an emergency gag order, directing station marshals to intercept and impound the ledger before it enters the jurisdiction.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "syndicate_accountant",
+          "target": "inter_system_cartel",
+          "reason": "He pays the pilot to eliminate a cartel hunter pack stalking the courier through the outer asteroid ring.",
+          "private_fact": "He knows the magistrate personally authorized the cartel hit squad to silence him before the tribunal can convene.",
+          "outcome_tags": [
+            "hunters_eliminated",
+            "hunters_driven_off"
+          ],
+          "routes": {
+            "hunters_eliminated": "next",
+            "hunters_driven_off": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:syndicate_heavy_cutter} corners the courier in orbit outside {role:appellate_justice_pylon}, opening fire with heavy pulse lasers.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "bondsman_purser",
+          "target": "syndicate_heavy_cutter",
+          "reason": "He pays the pilot to disable the cartel warship so the evidence can be safely escorted to the magistrate's bench.",
+          "private_fact": "The cartel commander hails mid-fight offering a massive fortune in unmarked bearer bonds if the pilot ejects the ledger into vacuum.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "cartel_payout_taken"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "cartel_payout_taken": "resolution:cartel_incinerates_ledger"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the warship beaten and the explosive ledger cylinder in hand, the pilot must decide whether to deliver the evidence to court, sell it to the cartel, or blackmail the magistrate.",
+        "options": [
+          {
+            "id": "deliver_to_court",
+            "label": "Deliver the ledger to public judicial clerks to topple the corrupt magistrate and cartel",
+            "leads_to": "resolution:magistrate_toppled_cartel_shattered"
+          },
+          {
+            "id": "sell_to_cartel",
+            "label": "Eject the ledger into vacuum and collect the cartel's fortune",
+            "leads_to": "resolution:cartel_incinerates_ledger"
+          },
+          {
+            "id": "blackmail_magistrate",
+            "label": "Deliver the ledger privately to the magistrate to secure permanent legal immunity",
+            "leads_to": "resolution:magistrate_buys_ledger_for_immunity"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "magistrate_toppled_cartel_shattered",
+      "reached_by": "The pilot delivers the ledger to public clerks.",
+      "summary": "{role:presiding_magistrate} is arrested alongside twelve cartel bosses. The regional judiciary faces sweeping independent reform, while {role:bondsman_purser} collects his historic bounty.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "inter_system_cartel",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "presiding_magistrate",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_accountant",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bondsman_purser",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "shattered_cartel_courthouse_pact",
+          "public_summary": "A pilot hauled a syndicate accountant's ledger across three systems, revealing the regional chief magistrate was founded on mob money."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "cartel_incinerates_ledger",
+      "reached_by": "The pilot takes the cartel payout and destroys the ledger.",
+      "summary": "The ledger is incinerated in vacuum. {role:inter_system_cartel} retains its clean legal facade, while {role:syndicate_accountant} disappears into an unmarked airlock.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "inter_system_cartel",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "presiding_magistrate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_accountant",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bondsman_purser",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "burned_bonded_cartel_ledger",
+          "public_summary": "A pilot accepted mob millions to destroy an accountant's ledger, leaving a corrupt judicial court untouchable."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "stolen_goods_circulating"
+      ]
+    },
+    {
+      "id": "magistrate_buys_ledger_for_immunity",
+      "reached_by": "The pilot delivers the ledger directly to the magistrate.",
+      "summary": "{role:presiding_magistrate} buries the ledger in his private vault. The magistrate grants blanket legal immunity to the pilot, while the accountant is placed in permanent protective custody.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "presiding_magistrate",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bondsman_purser",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_accountant",
+          "fate": "fled"
+        },
+        {
+          "type": "standing",
+          "target": "inter_system_cartel",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_corrupt_judicial_pardon",
+          "public_summary": "A pilot handed blackmail dockets to a crooked chief magistrate in exchange for lifetime legal immunity."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "courier_destroyed_in_gate_ambush",
+      "reached_by": "The pilot never intervenes or abandons the transit.",
+      "summary": "Cartel warships pulverize the courier vessel inside the gate approach. The accountant dies and the ledger is obliterated, preserving the corrupt status quo.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "inter_system_cartel",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "bondsman_purser",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_accountant",
+          "fate": "dead"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "courier_destroyed_in_gate_ambush",
+  "loose_threads": [
+    {
+      "id": "t_accountant_escrow_deposit",
+      "surface": "station_notice",
+      "detail": "Bail deposit ledgers list the accountant's security bond as guaranteed by a commercial banking trust registered in an adjoining sector.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_magistrate_court_endowment",
+      "surface": "price_board",
+      "detail": "Municipal bond dockets funding the regional appellate courthouse contain underwriting notes co-signed by an off-system shell corporation.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "docking_bribes"
+  ],
+  "radio_hooks": [
+    "High-profile syndicate accounting extradition sparks armed clashes across regional jump gates.",
+    "Chief appellate magistrate reminds media that ongoing judicial proceedings remain under gag order.",
+    "Provincial bail enforcement union demands naval escort for inter-system prisoner transports."
+  ],
+  "voice_direction": {
+    "bondsman_purser": "Gravelly, cynical, and speaks like an ex-cop who has seen every scam. Relentlessly focused on getting paid and surviving.",
+    "syndicate_accountant": "Nervous, fast-talking, and constantly clutches his paperwork. Spews financial balance figures when terrified.",
+    "presiding_magistrate": "Sonorous, dignified, and speaks with majestic judicial gravity. Becomes chillingly threatening when discussing his career."
+  },
+  "novelty_tags": [
+    "syndicate_accountant",
+    "bonded_ledger",
+    "corrupt_magistrate",
+    "bail_enforcement",
+    "regional_extradition"
+  ]
+}

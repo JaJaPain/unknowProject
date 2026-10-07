@@ -1,0 +1,339 @@
+[
+  {
+    "id": "premise.the_stewards_mortgaged_whistle",
+    "schema_version": 1,
+    "title": "The Steward's Mortgaged Whistle",
+    "logline": "An unaligned orbital racing referee refuses to penalize a reckless privateer team after a fatal crash, hiding that his own luxury yacht is mortgaged to the offending team's sponsor.",
+    "scale": "personal",
+    "tone": [
+      "tense",
+      "noir"
+    ],
+    "themes": [
+      "cost_of_neutrality",
+      "price_of_profit"
+    ],
+    "roles": [
+      {
+        "id": "racing_referee",
+        "kind": "person",
+        "archetype": "inspector",
+        "description": "Chief orbital racing steward; fastidious, compromised, and hiding a colossal private yacht mortgage behind his referee badge.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "aggrieved_pit_boss",
+        "kind": "person",
+        "archetype": "mechanic",
+        "description": "Chief engineer of the victim's racing crew; grieving, furious, and demanding an immediate disqualification.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "team_sponsor",
+        "kind": "person",
+        "archetype": "broker",
+        "description": "Wealthy financier behind the reckless winning skiff; arrogant, litigious, and holding the referee's promissory notes.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "steward_flag_spire",
+        "kind": "place",
+        "description": "The observation pylon overlooking the orbital racecourse where telemetry is officially certified.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "racing_paddock_dock",
+        "kind": "place",
+        "description": "The pressurized pit bays where high-performance racing craft are overhauled between heats.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "rival_humiliated",
+      "debt_owed_to_player",
+      "public_outrage"
+    ],
+    "public_situation": "Fury erupts across the racing paddocks at {role:racing_paddock_dock} after the chief steward rules a fatal high-speed ramming as an unavoidable racing collision.",
+    "private_truth": "{role:racing_referee} cannot disqualify the winning team because their owner holds the debt deed to his luxury yacht and threatened immediate foreclosure.",
+    "core_why": {
+      "motive": "fear",
+      "secret": "referee_mortgaged_to_offending_racing_sponsor"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Pit crews stage an angry sit-in outside {role:steward_flag_spire}, demanding access to the flight telemetry recorders.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "racing_referee",
+            "target": "racing_paddock_dock",
+            "reason": "He hires an outside pilot to collect the sealed telemetry beacon from the crashed racer's wreckage before rioting mechanics seize it.",
+            "private_fact": "The telemetry clearly proves the winning skiff overloaded its thrusters to deliberately side-swipe its rival into a pylon.",
+            "outcome_tags": [
+              "beacon_collected"
+            ],
+            "routes": {
+              "beacon_collected": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "reversal",
+        "public_change": "{role:team_sponsor} threatens legal action against anyone questioning the race result, waving the referee's official clearance.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "racing_referee",
+            "requester": "aggrieved_pit_boss",
+            "target": "steward_flag_spire",
+            "reason": "She hires the pilot to scan the flag spire's communication relays to verify whether the referee accepted financial transfers from the winning sponsor.",
+            "private_fact": "She found bank receipts showing the sponsor extended the referee's yacht mortgage forbearance two hours before the race began.",
+            "outcome_tags": [
+              "mortgage_collusion_found",
+              "signals_cleared"
+            ],
+            "routes": {
+              "mortgage_collusion_found": "next",
+              "signals_cleared": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Mechanics arm themselves with heavy cutting torches to storm the trophy podium as the awards ceremony opens.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "racing_referee",
+            "target": "steward_flag_spire",
+            "reason": "He begs the pilot to rush the finalized race certification docket to the broadcast suite before the paddock breaches his office.",
+            "private_fact": "His vow of impartial neutrality is a desperate sham to keep his boat from being repossessed by the sponsor's banking cartel.",
+            "outcome_tags": [
+              "certification_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "certification_delivered": "next",
+              "abandoned": "resolution:paddocks_erupt_in_mob_violence"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the telemetry proof of murder and the mortgage collusion in hand, the pilot must decide whether to uphold the corrupt ruling, expose the referee, or force a disqualification.",
+          "options": [
+            {
+              "id": "disqualify_winning_team",
+              "label": "Broadcast the crash telemetry to force an immediate disqualification and vindicate the pit crew",
+              "leads_to": "resolution:sponsor_disqualified_crew_avenged"
+            },
+            {
+              "id": "protect_referee_neutrality",
+              "label": "Deliver the certification so the referee keeps his yacht and the sponsor claims the cup",
+              "leads_to": "resolution:corrupt_verdict_stands"
+            },
+            {
+              "id": "blackmail_both_parties",
+              "label": "Sell the mortgage records to the racing league board to strip both the team and the referee",
+              "leads_to": "resolution:league_board_purges_both"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "sponsor_disqualified_crew_avenged",
+        "reached_by": "The pilot broadcasts the crash telemetry across the paddocks.",
+        "summary": "Outraged fans force the league to strip {role:team_sponsor}'s team. {role:aggrieved_pit_boss} wins justice, but the sponsor forecloses on {role:racing_referee}'s yacht.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "aggrieved_pit_boss",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "team_sponsor",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "racing_referee",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "overturned_rigged_race_crash",
+            "public_summary": "A pilot broadcast telemetry proving a deadly orbital racing collision was deliberate ramming covered up by a compromised steward."
+          }
+        ],
+        "seeds": [
+          "rival_humiliated",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "corrupt_verdict_stands",
+        "reached_by": "The pilot delivers the certification to uphold the ruling.",
+        "summary": "{role:team_sponsor} hovers the championship trophy. {role:racing_referee} keeps his luxury yacht, while {role:aggrieved_pit_boss}'s crew is banned from the league for protesting.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "team_sponsor",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "racing_referee",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "aggrieved_pit_boss",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "buried_racing_murder_evidence",
+            "public_summary": "A pilot delivered the certification papers that let a murderous racing sponsor take the championship cup."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "league_board_purges_both",
+        "reached_by": "The pilot hands the mortgage proof to the league board.",
+        "summary": "The league board expels both {role:team_sponsor} and {role:racing_referee}. The race is annulled, leaving {role:aggrieved_pit_boss} vindicated but bitter.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "racing_referee",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "team_sponsor",
+            "fate": "exposed"
+          },
+          {
+            "type": "cast_fate",
+            "target": "aggrieved_pit_boss",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "exposed_racing_steward_collusion",
+            "public_summary": "A pilot exposed how an orbital racing referee sold race decisions to pay off his luxury pleasure boat."
+          }
+        ],
+        "seeds": [
+          "leader_discredited",
+          "public_outrage"
+        ]
+      },
+      {
+        "id": "paddocks_erupt_in_mob_violence",
+        "reached_by": "The pilot never intervenes or abandons the delivery.",
+        "summary": "Furious mechanics breach the observation spire with industrial torches. {role:racing_referee} flees in his yacht while the paddocks are shut down by riot patrols.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "racing_referee",
+            "fate": "fled"
+          },
+          {
+            "type": "cast_fate",
+            "target": "aggrieved_pit_boss",
+            "fate": "imprisoned"
+          },
+          {
+            "type": "cast_fate",
+            "target": "team_sponsor",
+            "fate": "alive_grudge"
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "paddocks_erupt_in_mob_violence",
+    "loose_threads": [
+      {
+        "id": "t_referee_yacht_promissory",
+        "surface": "station_notice",
+        "detail": "The vessel registry lists the referee's pleasure yacht as pledged collateral to a commercial finance consortium.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_pit_boss_telemetry_dump",
+        "surface": "cargo",
+        "detail": "The flight recorder contains encrypted firmware patches authored by an uncertified offshore engine tuner.",
+        "can_carry_methods": [
+          "sabotage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "docking_bribes"
+    ],
+    "radio_hooks": [
+      "Orbital racing championship marred by fatal crash during qualifying sprint.",
+      "Chief steward defends non-penalty ruling, calling incident 'within racing tolerance'.",
+      "Betting syndicates freeze payouts as mechanic protests paralyze paddock docks."
+    ],
+    "voice_direction": {
+      "racing_referee": "Pompous, defensive, and hides behind sports rulebook jargon. Becomes nervous and evasive when personal finances are mentioned.",
+      "aggrieved_pit_boss": "Gravelly, choked with fury, and blunt as a torque wrench. Refuses polite pleasantries and demands immediate action.",
+      "team_sponsor": "Arrogant, patronizing, and treats sporting regulations as minor contractual technicalities easily settled with cash."
+    },
+    "novelty_tags": [
+      "orbital_racing",
+      "compromised_referee",
+      "yacht_mortgage",
+      "paddock_riot",
+      "telemetry_blackmail"
+    ]
+  }
+]
