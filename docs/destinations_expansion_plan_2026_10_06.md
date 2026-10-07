@@ -116,3 +116,11 @@ So: two reuses, four new set pieces (four ChatGPT windows instead of six).
 
 Cost: about three review rounds of lines for Abe, and six ChatGPT windows
 for the art.
+
+## Status 2026-10-07
+
+All six cards are live (Abe approved every line): **12 Destinations**. The
+Hollow Market and the Last Shipyard use reused set pieces (final look). The
+Archive, the Neutral Ground, the Halo and the Wellhead run on stand-ins until
+ChatGPT's briefs #9-#12 land; the models drop in automatically at
+`assets/landmarks/<archive|neutral_ground|halo|wellhead>.glb`.

@@ -420,6 +420,90 @@
 				"nova": "Sixty years of enemies at one table, held together by one rule. That's braver than any war.",
 				"farewell": "Before you go: the treaty names a third delegation that never arrived. Their road ran past the charts. Maybe you'll find out why."
 			}
+		},
+		{
+			"id": "halo",
+			"title": "The Halo",
+			"first_hint": "A bounty hunter came back empty-handed and furious: her mark had 'rung the bell', and couldn't be touched.",
+			"nova_first": "A bell that makes you untouchable. Either it's a very good story or a very strange law.",
+			"director": "A loose circle of small candle-lit pilgrim chapels on tethers round a central bell-buoy, in a system whose red star is dying. By an old covenant every faction still honours, anyone who rings the bell is under sanctuary: no one may be taken from the Halo against their will. Its keepers are a quiet order who tend the candles and keep the name of everyone who has ever rung.",
+			"bearings": [
+				{
+					"text": "Debt collectors keep a private list of names marked 'rang the bell', and never chase them again.",
+					"nova": "A list of people even collectors give up on. I want to know what's on the other end of that."
+				},
+				{
+					"text": "Pilgrims buy candles by the crate at the deep stations, and won't say what they're for.",
+					"nova": "Crates of candles, going somewhere dark. Romantic, or a fire hazard."
+				},
+				{
+					"text": "A fugitive turned herself in, then walked free when the court learned she'd spent a year at the Halo.",
+					"nova": "Even the courts respect it. That's a lot of power for a bell."
+				},
+				{
+					"text": "Navigators past the Class III gates mark one dying red star 'do not hunt here' in the margins of their charts.",
+					"nova": "Do not hunt here. Hand-written. I like these navigators."
+				},
+				{
+					"text": "The margin notes all point to one red star past the edge of the charts. The Halo circles it.",
+					"nova": "There it is. Let's go and hear that bell."
+				}
+			],
+			"arrival": "A sanctuary of candle-lit chapels where no one may be taken away. The keepers give the Captain their pilgrims' charts of the quiet roads.",
+			"arrival_scene": {
+				"landmark": "halo",
+				"speaker": "THE HALO",
+				"approach": "Candles. Hundreds of little lights on tethers, round that red star. It's a ring of chapels, Captain.",
+				"lines": [
+					"Peace, traveller. You've come to the Halo. Whoever rings the bell here can't be taken away against their will. That's the whole of our law.",
+					"Debtors, runaways, the sorry and the hunted have all rung it. We don't ask what they did. We only keep their names, so they're never forgotten.",
+					"You haven't come to ring it, so you've come to see. Take our pilgrims' charts; they know the quiet roads."
+				],
+				"nova": "A whole sanctuary built on one promise, and everyone still keeps it. I didn't think the frontier had anything this gentle.",
+				"farewell": "The keepers say the first bell came from somewhere beyond the charts. Nobody here remembers where. Maybe you'll find it."
+			}
+		},
+		{
+			"id": "wellhead",
+			"title": "The Wellhead",
+			"first_hint": "Every water contract in the frontier is stamped with the same small seal: a drop over a crack.",
+			"nova_first": "Everyone's water, signed in one place. Whoever holds that seal could make the whole frontier thirsty.",
+			"director": "A small ice moonlet whose vent geyser waters the whole frontier. One family runs the rig towers over the vent, and every water contract in the region is signed at its table. Not villains: they've kept the price fair for a century. They're tired, and the vent is slowing, and nobody outside knows.",
+			"bearings": [
+				{
+					"text": "Water haulers out past the gates all fill at the same depot, and all carry the same seal on their manifests.",
+					"nova": "One seal on every water manifest. That's not a market, that's a tap."
+				},
+				{
+					"text": "Old miners say the price of water hasn't changed in a hundred years, no matter how dry the year.",
+					"nova": "A fair price for a century. Somebody out there is either a saint or very careful."
+				},
+				{
+					"text": "Ice dust drifts down the deep lanes in a slow stream that always comes from the same direction.",
+					"nova": "Ice drifting downstream from one place. Follow the water."
+				},
+				{
+					"text": "A hauler swears the depot's tanks were half empty, for the first time in living memory.",
+					"nova": "Half empty. For the first time. And nobody's said a word about it."
+				},
+				{
+					"text": "The ice stream leads to one moonlet past the edge of the charts. The Wellhead is there.",
+					"nova": "There it is. The tap the whole frontier drinks from."
+				}
+			],
+			"arrival": "The ice moonlet that waters the frontier, and the tired family that runs it. They trust the Captain with their secret and their survey of the deep ice fields.",
+			"arrival_scene": {
+				"landmark": "wellhead",
+				"speaker": "THE WELLHEAD",
+				"approach": "A little ice moon with a plume coming off it, and towers all over it, Captain. That's the Wellhead.",
+				"lines": [
+					"Welcome to the Wellhead. Every drink of water on the frontier starts here, under our feet.",
+					"My family has signed every water contract for a hundred years and never raised the price. Not once. People forget that.",
+					"Here's something nobody else knows: the vent is slowing. Take our survey of the deep ice fields; someone will have to find the next well."
+				],
+				"nova": "The whole frontier's water rests on one tired family. I didn't expect to feel sorry for them.",
+				"farewell": "If the next well is out there, it's past the charts. Find it before the frontier finds out we're running dry."
+			}
 		}
 	]
 }

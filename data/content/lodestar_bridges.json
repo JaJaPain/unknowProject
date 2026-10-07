@@ -60,6 +60,18 @@
 			"take_the_chair": "The hall's keeper speaks for the treaty, and the seat was promised to someone else's heir. Whoever holds it decides who gets to talk.",
 			"rewrite_a_verdict": "The treaty tribunal ruled against their family when the war ended. The original minutes are still in the hall, and they say something else.",
 			"break_a_rival": "Their rival is the envoy every faction trusts at the Neutral Ground. Disgrace them there, in front of everyone, and they're finished everywhere."
+		},
+		"halo": {
+			"protect_a_secret_child": "Someone they love rang the Halo's bell and lives there under another name. As long as the covenant holds, nobody can take them.",
+			"escape_a_debt": "Ring the bell and no collector can touch you. A debt that would follow them to the grave stops at the Halo's tethers.",
+			"rewrite_a_verdict": "The Halo's keepers record every confession made under sanctuary. One of those confessions clears their family's name.",
+			"keep_the_lights_on": "A failing colony could ring the bell as one and claim sanctuary from its creditors. Someone needs the covenant to hold, whatever it costs."
+		},
+		"wellhead": {
+			"own_the_lanes": "Whoever controls the Wellhead's seal controls every water hauler in the region, and every lane they fly.",
+			"buy_a_station": "A station that can't get water is worth nothing. Stop its contracts at the Wellhead, then buy it for the price of a drink.",
+			"keep_the_lights_on": "A failing colony needs the Wellhead's water more than anyone, and the vent is slowing. Someone will take it, whatever it costs everyone else.",
+			"start_a_war": "Tell two factions the other is buying up the last of the Wellhead's water, and they'll fight over the tap. Someone profits from both."
 		}
 	}
 }

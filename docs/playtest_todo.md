@@ -950,3 +950,6 @@ through the marked gate and flies you in):
       float bladders in a gas giant's clouds) and the Neutral Ground (two
       mismatched halves joined by a domed treaty hall), stand-in shapes until
       the art lands. Ten Destinations in all now.
+- [ ] **All twelve Destinations:** the Halo (candle-lit chapel pods on tethers
+      round a bell) and the Wellhead (an ice moonlet with rigs and a vapour
+      plume) complete the set; stand-in shapes until the art lands.

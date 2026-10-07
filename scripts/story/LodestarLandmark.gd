@@ -26,6 +26,8 @@ const MODELS := {
 	# New set pieces from ChatGPT (briefs #9, #10); stand-ins until they land.
 	"archive": ["res://assets/landmarks/archive.glb"],
 	"treaty": ["res://assets/landmarks/neutral_ground.glb"],
+	"halo": ["res://assets/landmarks/halo.glb"],
+	"wellhead": ["res://assets/landmarks/wellhead.glb"],
 }
 ## How a reused set piece becomes another place: parts hidden (by name),
 ## materials re-coloured (by name), a scale, and extras the code adds.
@@ -91,12 +93,16 @@ func _ready() -> void:
 			"wrecks": _build_wrecks()
 			"archive": _build_archive()
 			"treaty": _build_treaty()
+			"halo": _build_halo()
+			"wellhead": _build_wellhead()
 			_: _build_beacon()
 	_radius = _measure()
 	if kind == "garden" and uses_model():
 		_add_garden_world()
 	if kind == "archive":
 		_add_archive_giant()
+	if kind == "wellhead":
+		_add_vent_plume()
 	var reach := maxf(_radius, 300.0)
 	# A gold glow every kind shares, so it reads as the place from far off.
 	_light = OmniLight3D.new()
@@ -688,4 +694,96 @@ func _add_archive_giant() -> void:
 	body.mesh = sphere
 	world.add_child(body)
 	preload("res://scripts/generation/GasGiantLook.gd").apply(world, hash("archive_giant"))
+
+
+## The Halo (stand-in): candle-lit chapel pods on tethers round a bell-buoy.
+func _build_halo() -> void:
+	var stone := _mat(Color(0.7, 0.66, 0.6))
+	var bronze := _mat(Color(0.45, 0.32, 0.18))
+	var candle := _mat(Color(1.0, 0.72, 0.4), 4.0)
+	var tether := _mat(Color(0.4, 0.38, 0.36))
+	var bell := SphereMesh.new()
+	bell.radius = 9.0
+	bell.height = 14.0
+	_part(bell, bronze, Vector3.ZERO)
+	var rng := _rng()
+	for i in 16:
+		var a := TAU * float(i) / 16.0 + rng.randf_range(-0.12, 0.12)
+		var r := rng.randf_range(90.0, 130.0)
+		var at := Vector3(cos(a) * r, rng.randf_range(-18.0, 18.0), sin(a) * r)
+		var pod := SphereMesh.new()
+		pod.radius = rng.randf_range(5.0, 8.0)
+		pod.height = pod.radius * 2.4
+		_part(pod, stone, at)
+		_part(_box(Vector3(2.2, 2.2, 2.2)), candle, at + Vector3(0, pod.radius * 0.6, 0))
+		var line := _box(Vector3(0.6, 0.6, at.length()))
+		_part(line, tether, at * 0.5, self, Vector3(0, -a + PI / 2.0, 0))
+
+
+## The Wellhead (stand-in): rig towers over a vent on a small ice moonlet.
+func _build_wellhead() -> void:
+	var ice := _mat(Color(0.78, 0.88, 0.96))
+	var rig := _mat(Color(0.5, 0.42, 0.34))
+	var work := _mat(Color(0.85, 0.92, 1.0), 3.0)
+	var moon := SphereMesh.new()
+	moon.radius = 120.0
+	moon.height = 200.0
+	_part(moon, ice, Vector3.ZERO)
+	for i in 4:
+		var a := TAU * float(i) / 4.0
+		var at := Vector3(cos(a) * 26.0, 112.0, sin(a) * 26.0)
+		_part(_box(Vector3(8, 60, 8)), rig, at + Vector3(0, 30, 0))
+		_part(_box(Vector3(3, 3, 3)), work, at + Vector3(0, 62, 0))
+	_part(_box(Vector3(70, 10, 70)), rig, Vector3(0, 108, 0))
+	_part(_box(Vector3(140, 6, 8)), rig, Vector3(70, 98, 0))
+
+
+## The vapour plume rising from the Wellhead's vent (particles).
+func _add_vent_plume() -> void:
+	var plume := GPUParticles3D.new()
+	plume.name = "VentPlume"
+	plume.amount = 200
+	plume.lifetime = 18.0
+	plume.preprocess = 18.0
+	plume.position = Vector3(0, maxf(_radius, 300.0) * 0.8, 0) / maxf(scale.x, 0.001)
+	plume.scale = Vector3.ONE / maxf(scale.x, 0.001)
+	plume.visibility_aabb = AABB(Vector3(-2500, -200, -2500), Vector3(5000, 6000, 5000))
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	process.emission_sphere_radius = 60.0
+	process.direction = Vector3(0, 1, 0)
+	process.spread = 10.0
+	process.initial_velocity_min = 90.0
+	process.initial_velocity_max = 160.0
+	process.gravity = Vector3.ZERO
+	process.scale_min = 0.7
+	process.scale_max = 1.8
+	var fade := Gradient.new()
+	fade.set_color(0, Color(0.85, 0.93, 1.0, 0.0))
+	fade.add_point(0.1, Color(0.85, 0.93, 1.0, 0.09))
+	fade.set_color(fade.get_point_count() - 1, Color(0.8, 0.9, 1.0, 0.0))
+	var ramp := GradientTexture1D.new()
+	ramp.gradient = fade
+	process.color_ramp = ramp
+	plume.process_material = process
+	var quad := QuadMesh.new()
+	quad.size = Vector2(260, 260)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	mat.vertex_color_use_as_albedo = true
+	var puff := GradientTexture2D.new()
+	puff.fill = GradientTexture2D.FILL_RADIAL
+	puff.fill_from = Vector2(0.5, 0.5)
+	puff.fill_to = Vector2(1.0, 0.5)
+	var falloff := Gradient.new()
+	falloff.set_color(0, Color(1, 1, 1, 1))
+	falloff.set_color(1, Color(1, 1, 1, 0))
+	puff.gradient = falloff
+	mat.albedo_texture = puff
+	quad.material = mat
+	plume.draw_pass_1 = quad
+	add_child(plume)
 

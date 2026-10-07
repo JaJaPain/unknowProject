@@ -2,7 +2,14 @@
 
 The last pair from `docs/destinations_expansion_plan_2026_10_06.md`. Same parts
 as every Destination card; nothing goes into the game until Abe approves the
-lines. Both need new set pieces (briefs #11 and #12 in
+lines.
+
+**Status 2026-10-07: all lines approved by Abe and in the game**, with stand-in
+shapes (tethered chapel pods round a bell; an ice moonlet with rigs and a
+vapour plume) until ChatGPT's models land at `assets/landmarks/halo.glb` and
+`wellhead.glb`.
+
+Both need new set pieces (briefs #11 and #12 in
 `docs/set_piece_wishlist.md`), stand-ins until then.
 
 One change from the plan: the Halo's covenant is "no one may be taken away
