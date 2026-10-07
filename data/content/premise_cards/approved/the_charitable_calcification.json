@@ -1,0 +1,346 @@
+{
+  "id": "premise.the_charitable_calcification",
+  "schema_version": 1,
+  "title": "The Charitable Calcification",
+  "logline": "A revered doctor discovers that the free miracle nerve-tonic they distributed across multiple systems years ago causes lethal neural calcification, and must fight their own grateful patients to recall the remaining stock.",
+  "scale": "regional",
+  "tone": [
+    "paranoid",
+    "political"
+  ],
+  "themes": [
+    "helpers_corrupted",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "penitent_doctor",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Synthesized the miracle sedative and gave the patent away for free; consumed by guilt over its delayed side effects.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "veteran_convoy_master",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Leads the regional haulers' mutual-aid network; fiercely protective of the tonic supply keeping his drivers functional.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sanitary_commissioner",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Regional health authority director; eager to cover up administrative negligence in certifying the tonic years ago.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relief_cache_runner",
+      "kind": "ship",
+      "description": "An armed converted freighter hauling bulk tonic carboys between outlying industrial systems.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "veterans_mutual_aid",
+      "kind": "faction",
+      "description": "A self-funded network of long-haul pilots and miners who rely on the tonic to suppress cockpit tremors.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "free_clinic_depot",
+      "kind": "place",
+      "description": "A volunteer dispensary in the core system where the tonic was first given to the public.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "calcification_biopsy",
+      "kind": "object",
+      "description": "A sealed biogel biopsy demonstrating terminal crystal growth in long-term tonic users.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "ion_storm",
+      "relay_dark_zone"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "market_disrupted",
+    "leader_discredited"
+  ],
+  "public_situation": "Haulers across three systems celebrate the fifth anniversary of the free nerve tonic that cured regional cockpit tremors, while shipments suddenly begin disappearing in transit.",
+  "private_truth": "The doctor who gave the formula away discovered it causes spinal crystallization after five years, and is hiring corsairs to hijack and incinerate her own charitable shipments.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "charitable_tonic_causes_long_term_neural_calcification"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "The clinic depot posts emergency listings for clinical data transit and chemical sample recovery.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "penitent_doctor",
+          "target": "free_clinic_depot",
+          "reason": "She needs her confidential clinical necropsy logs delivered to a neutral station lab before the regional health ministry impounds her research.",
+          "private_fact": "Her own sibling was the first long-term patient to suffer total motor paralysis from the formula.",
+          "outcome_tags": [
+            "logs_delivered",
+            "logs_diverted"
+          ],
+          "routes": {
+            "logs_delivered": "next",
+            "logs_diverted": "resolution:commission_buries_poison"
+          }
+        },
+        {
+          "verb": "pickup_special",
+          "requester": "penitent_doctor",
+          "target": "free_clinic_depot",
+          "reason": "She needs unadulterated chemical baseline canisters collected from a retired lab chemist before health inspectors seal the storage vault.",
+          "private_fact": "The baseline canisters prove the original synthesis was pure and the toxicity only emerges after prolonged metabolic storage.",
+          "outcome_tags": [
+            "canisters_secured",
+            "canisters_lost"
+          ],
+          "routes": {
+            "canisters_secured": "next",
+            "canisters_lost": "resolution:commission_buries_poison"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Mutual aid freighters report anomalous sensor jamming and intercepted cargo pods near the system jump lane.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "veteran_convoy_master",
+          "target": "relief_cache_runner",
+          "reason": "He wants an outside scout to scan a disabled relief transport in the neighboring system and determine why its tonic tanks were deliberately breached.",
+          "private_fact": "He suspects the corporate pharmaceutical cartel is sabotaging their free supply to force pilots back to commercial meds.",
+          "outcome_tags": [
+            "breach_scanned",
+            "signal_lost"
+          ],
+          "routes": {
+            "breach_scanned": "next",
+            "signal_lost": "resolution:commission_buries_poison"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "location": "neighbouring_system",
+      "public_change": "The mutual aid society mobilizes armed gunboats to escort the remaining tonic convoys.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "penitent_doctor",
+          "target": "veterans_mutual_aid",
+          "reason": "She needs the master distribution ledger recovered from an armed mutual-aid escort ship so she can track down every contaminated batch.",
+          "private_fact": "She knows revealing the truth will destroy the mutual aid union and likely trigger lynch mobs against her staff.",
+          "outcome_tags": [
+            "ledger_recovered",
+            "escort_escaped"
+          ],
+          "routes": {
+            "ledger_recovered": "next",
+            "escort_escaped": "resolution:mutual_aid_consumes_poison"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The last bulk runner makes a desperate dash across the regional gate network toward outlying mining settlements.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "penitent_doctor",
+          "target": "relief_cache_runner",
+          "reason": "She pays the pilot to intercept the runner and destroy its chemical tanks before the cargo is dispensed to thousands of miners.",
+          "private_fact": "The runner captain hails mid-fight offering their entire cargo manifest of refined thorium fuel rods if the pilot lets the medicine pass.",
+          "outcome_tags": [
+            "tanks_destroyed",
+            "took_thorium_offer"
+          ],
+          "routes": {
+            "tanks_destroyed": "resolution:truth_breaks_commune",
+            "took_thorium_offer": "resolution:mutual_aid_consumes_poison"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "truth_breaks_commune",
+      "reached_by": "The pilot destroys the tonic runner's tanks and secures the clinical proof.",
+      "summary": "{role:penitent_doctor} publicly confesses the toxicity. The tonic is purged across three systems, saving thousands from paralysis while destroying {role:veterans_mutual_aid}'s trust.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "penitent_doctor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_mutual_aid",
+          "delta": -3
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "purged_the_miracle_cure",
+          "public_summary": "A mercenary blew up the charity medicine fleet after doctors admitted the tonic was slowly turning spines to glass."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "mutual_aid_consumes_poison",
+      "reached_by": "The pilot takes the runner's offer, or the convoy escapes.",
+      "summary": "{role:veterans_mutual_aid} distributes the tonic across the outlying belt. Pilots fly symptom-free for another year before irreversible paralysis begins setting in.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "penitent_doctor",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_convoy_master",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "standing",
+          "target": "veterans_mutual_aid",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "guarded_the_tonic_run",
+          "public_summary": "A pilot took escort pay to push the workers' medicine through despite strange quarantine warnings."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "commission_buries_poison",
+      "reached_by": "The pilot diverts the logs, loses baseline canisters, or fails to engage.",
+      "summary": "{role:sanitary_commissioner} quietly seals the research files to avoid government liability, letting the toxic tonic circulate until patients drop.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sanitary_commissioner",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "penitent_doctor",
+          "fate": "disappeared"
+        },
+        {
+          "type": "law_change",
+          "law": "quarantine_orders",
+          "change": "enacted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "faction_weakened"
+      ]
+    }
+  ],
+  "default_resolution": "commission_buries_poison",
+  "loose_threads": [
+    {
+      "id": "t_unauthorized_patent_filing",
+      "surface": "cargo",
+      "detail": "A regional patent registry reveals that a shell corporation owned by the health commissioner filed a synthesized antidote claim two days before the recall.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_mismatched_batch_numbers",
+      "surface": "ship_marking",
+      "detail": "The confiscated chemical barrels carry batch numbers assigned to a decommissioned naval stimulant depot that burned twelve years ago.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "cornering_a_market",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "guilt",
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Hauler unions denounce unprovoked raids on {role:free_clinic_depot} supply convoys across {system}.",
+    "Regional health bureau denies rumors of emergency pharmaceutical recall, citing 'seasonal inventory auditing'.",
+    "Dispensary lines stretch around orbital rings as miners rush to stockpile free nerve tonic."
+  ],
+  "voice_direction": {
+    "penitent_doctor": "Trembling, haunted voice with rapid technical self-corrections. Avoids emotional appeals, clinging to clinical statistics like a shield.",
+    "veteran_convoy_master": "Grizzled, booming baritone thick with righteous defiance. Uses familial warmth when speaking of fellow pilots.",
+    "sanitary_commissioner": "Polished bureaucratic tone, speaking in passive-voice platitudes designed to diffuse institutional culpability."
+  },
+  "novelty_tags": [
+    "charity_backfire",
+    "neural_calcification",
+    "recalled_miracle",
+    "veteran_mutual_aid",
+    "unintended_poison"
+  ]
+}

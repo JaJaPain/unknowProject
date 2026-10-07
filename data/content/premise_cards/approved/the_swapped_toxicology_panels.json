@@ -1,0 +1,352 @@
+{
+  "id": "premise.the_swapped_toxicology_panels",
+  "schema_version": 1,
+  "title": "The Swapped Toxicology Panels",
+  "logline": "A testing clinic accidentally swaps two pilots' toxicology panels, giving each the exact diagnosis they secretly wanted, and both fight to prevent an auditor from correcting the files.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "absurd"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "disability_seeking_veteran",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "A battered freight hauler delighted that a false-positive chemical test qualifies him for an immediate pension payout.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "addicted_courier_ace",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "A reckless speed courier flying on military combat-stims whose dirty blood sample was mistakenly labeled clean.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "toxicology_auditor",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Station flight safety inspector desperate to recover physical sample tubes before an accreditation audit ruins her bureau.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "auditor_interceptor",
+      "kind": "ship",
+      "description": "An armed safety enforcement cutter dispatched to seize the courier ship and enforce mandatory retesting.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "flight_safety_board",
+      "kind": "faction",
+      "description": "Regulates commercial piloting licenses and manages disability pension trusts across the cluster.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "toxicology_annex",
+      "kind": "place",
+      "description": "A cramped orbital testing station adjoining the main commercial staging docks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "original_blood_rack",
+      "kind": "object",
+      "description": "A sealed centrifuge rack holding the mislabeled blood tubes with original handwritten barcode tags.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "leader_discredited",
+    "market_disrupted"
+  ],
+  "public_situation": "The licensing board in {system} publishes its quarterly flight fitness register, granting a clean bill of health to a notorious speeder and retiring an exhausted veteran.",
+  "private_truth": "A lab intern swapped the sample tubes. The veteran got the failing test he needed for early retirement, the addict got the clean pass he needed to fly, and neither wants the truth out.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "clerical_mixup_inverts_pilot_toxicology_diagnoses"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The flight board courier drone arrives at the toxicology annex to transport physical sample archives.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "toxicology_auditor",
+          "target": "toxicology_annex",
+          "reason": "She needs the day's physical centrifuge records delivered to the central archive before the regional licensing board pulls her facility's charter.",
+          "private_fact": "She realized the tube labels were swapped hours ago, but admitting it will trigger a full retrospective audit of her entire tenure.",
+          "outcome_tags": [
+            "records_delivered",
+            "records_stolen"
+          ],
+          "routes": {
+            "records_delivered": "next",
+            "records_stolen": "resolution:uncorrected_records_stand"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The veteran hauler and the courier ace post rival bounties regarding an automated transport pod drifting in the depot lanes.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "disability_seeking_veteran",
+          "target": "flight_safety_board",
+          "reason": "He pays the pilot to intercept an automated safety drone and retrieve the physical blood rack before technicians re-test the samples.",
+          "private_fact": "He has already signed the purchase deed on an asteroid hydroponics allotment using his promised pension advance.",
+          "outcome_tags": [
+            "blood_rack_secured",
+            "drone_escaped"
+          ],
+          "routes": {
+            "blood_rack_secured": "next",
+            "drone_escaped": "resolution:board_revokes_annex_charter"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "The licensing board scrambles an armed enforcement cutter to impound the unverified sample rack.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "addicted_courier_ace",
+          "target": "auditor_interceptor",
+          "reason": "He hires the pilot to disable the enforcement cutter before it can dock and impound the physical evidence.",
+          "private_fact": "The enforcement cutter captain hails mid-fight offering official immunity and a flight board bounty if the pilot delivers the blood rack to them.",
+          "outcome_tags": [
+            "cutter_disabled",
+            "accepted_board_bounty"
+          ],
+          "routes": {
+            "cutter_disabled": "next",
+            "accepted_board_bounty": "resolution:auditor_forces_retest"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The pilots meet at an unmonitored docking bay while the auditor pleads over open comms for the tubes.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "toxicology_auditor",
+          "target": "toxicology_annex",
+          "culprit": "toxicology_auditor",
+          "reason": "She needs a pilot to scan the annex's automated disposal chute and certify whether the backup digital calibration log has been erased.",
+          "private_fact": "If the digital log is wiped, the paper records become legally indisputable and the swapped diagnoses become permanent.",
+          "outcome_tags": [
+            "logs_wiped",
+            "logs_recovered"
+          ],
+          "routes": {
+            "logs_wiped": "resolution:uncorrected_records_stand",
+            "logs_recovered": "resolution:auditor_forces_retest"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds the physical sample rack and the final calibration key. Both pilots beg to destroy the evidence, while the auditor demands it.",
+        "options": [
+          {
+            "id": "destroy_evidence",
+            "label": "Incinerate the sample rack so both pilots keep their diagnoses",
+            "leads_to": "resolution:uncorrected_records_stand"
+          },
+          {
+            "id": "hand_to_auditor",
+            "label": "Deliver the true samples to the toxicology auditor",
+            "leads_to": "resolution:auditor_forces_retest"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "uncorrected_records_stand",
+      "reached_by": "The pilot destroys the evidence or wipes the calibration logs.",
+      "summary": "{role:disability_seeking_veteran} retires on a full pension, {role:addicted_courier_ace} keeps his license, and {role:toxicology_auditor} covers up the clerical mix-up.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disability_seeking_veteran",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "addicted_courier_ace",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "toxicology_auditor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "flight_safety_board",
+          "delta": -1
+        },
+        {
+          "type": "deed",
+          "tag": "sealed_the_swapped_assays",
+          "public_summary": "A mercenary helped two pilots bury lab results so an old timer could retire and a maniac could keep racing."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "evidence_loose"
+      ]
+    },
+    {
+      "id": "auditor_forces_retest",
+      "reached_by": "The pilot delivers the samples or takes the enforcement cutter's bounty.",
+      "summary": "{role:toxicology_auditor} corrects the registry. {role:disability_seeking_veteran} is forced back into cockpit work, while {role:addicted_courier_ace} loses his flight clearance.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "disability_seeking_veteran",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "addicted_courier_ace",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "toxicology_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "standing",
+          "target": "flight_safety_board",
+          "delta": 2
+        },
+        {
+          "type": "deed",
+          "tag": "enforced_toxicology_truth",
+          "public_summary": "A pilot turned in swapped clinic tests, putting a sick courier on the ground and an old vet back in harness."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "law_tightened"
+      ]
+    },
+    {
+      "id": "board_revokes_annex_charter",
+      "reached_by": "The safety drone escapes with the physical evidence before recovery.",
+      "summary": "{role:flight_safety_board} suspends {role:toxicology_annex}'s testing license and grounds all forty pilots certified that month pending re-examination.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "toxicology_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "addicted_courier_ace",
+          "fate": "fled"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "uncorrected_records_stand",
+  "loose_threads": [
+    {
+      "id": "t_uncalibrated_centrifuge_tag",
+      "surface": "dialogue",
+      "detail": "The lab technician confesses the centrifuge firmware has not received an official security patch since the prior operator's bankruptcy.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_counterfeit_pension_voucher",
+      "surface": "cargo",
+      "detail": "The veteran's pension claim form bears a pre-authorized approval stamp dated three days before his medical test was even scheduled.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "bribery",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "survival",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "scanning_banned",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Flight safety board investigates anomalous clerical errors at {role:toxicology_annex} in {system}.",
+    "Grounded couriers stage noisy sit-in outside licensing bureau over delayed medical certifications.",
+    "Veteran hauler union celebrates unprecedented approval rate for early disability retirement claims."
+  ],
+  "voice_direction": {
+    "disability_seeking_veteran": "Exuberant, conspiratorial gravel voice. Delighted by his own good fortune and treats the mix-up as divine intervention.",
+    "addicted_courier_ace": "Twitchy, fast-talking patter with erratic emotional spikes. Desperate to keep flying at all costs.",
+    "toxicology_auditor": "High-strung, frantic cadence of a bureaucrat staring into a career-ending administrative abyss."
+  },
+  "novelty_tags": [
+    "swapped_toxicology",
+    "false_positive_pension",
+    "illicit_clearance",
+    "clerical_absurdity",
+    "flight_fitness_audit"
+  ]
+}

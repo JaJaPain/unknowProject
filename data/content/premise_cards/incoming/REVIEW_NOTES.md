@@ -49,7 +49,10 @@ the same session.
 
 ---
 
-Last round: 5 approved (the_recluses_final_tow, the_coronal_ejection_refuge
-and the_magnetic_shear_convoys reworks, the_fallow_communion,
-the_synthetic_grain_heist). The recluse's new radiator twist and the grain
-heist's fifteen-year-old safety valve were highlights.
+Last round: all 5 of batch_50 approved (the_sanatorium_retainer,
+the_forfeit_pinnace, the_charitable_calcification, the_probationary_pledge,
+the_swapped_toxicology_panels). No rested engines this time; the forfeit
+pinnace and the probationary pledge were highlights. Three theme tags were
+corrected by the reviewer (reinvention / faith_and_doubt / cost_of_neutrality
+removed where the story isn't about them). "Undoing your own past good deed"
+has now been used twice: rest it too.

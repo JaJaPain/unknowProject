@@ -1,0 +1,297 @@
+{
+  "id": "premise.the_probationary_pledge",
+  "schema_version": 1,
+  "title": "The Probationary Pledge",
+  "logline": "Two estranged former crewmates each secretly hire an outsider to pay off the other's punitive sobriety bond, unknowingly liquidating their own livelihoods in a mutual attempt to free each other.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "chosen_family",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "probationary_pilot",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Grounded hauler pilot serving mandatory ore-quota detox on a smelter station; weary, ashamed, fiercely loyal.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "veteran_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "His former flight engineer running a failing repair slip; crippled hands, refuses to leave the station until the pilot is free.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "probation_bailiff",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Enforces debt-probation covenants for the smelter board; rigid, meticulous, pocketing statutory processing surcharges.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "smelter_probation_dock",
+      "kind": "place",
+      "description": "The industrial intake dock where grounded debtor pilots haul slag under armed monitoring.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "foundry_repair_slip",
+      "kind": "place",
+      "description": "A cramped, oil-soaked workshop in the lower station spine barely making rent.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pawned_chronometer",
+      "kind": "object",
+      "description": "A scratched naval-grade chronometer engraved with the crew's original freighter registry number.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "debt_owed_to_player",
+    "quiet_cover_up",
+    "alliance_formed"
+  ],
+  "public_situation": "Smelter administrators in {system} post the monthly clearance list for grounded pilots working off court-mandated sobriety covenants.",
+  "private_truth": "The grounded pilot and his mechanic are each secretly bankrupting themselves to pay off the other's indenture, unaware that paying both triggers a cancellation penalty.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "crewmates_liquidating_assets_to_free_each_other"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The smelter board opens mining intake scales for independent ore contributions credited against debtor bonds.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "veteran_mechanic",
+          "target": "smelter_probation_dock",
+          "reason": "She needs twenty tons of heavy ferrite mined and delivered to the intake scale to credit against the pilot's bond before the monthly auction.",
+          "private_fact": "She sold her last diagnostic machine to buy the mining rights, leaving her workshop unable to service ships.",
+          "outcome_tags": [
+            "ore_credited"
+          ],
+          "routes": {
+            "ore_credited": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The bailiff posts an eviction notice on the mechanic's repair slip for non-payment of dock utility surcharges.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "probationary_pilot",
+          "target": "foundry_repair_slip",
+          "reason": "He asks the pilot to recover his grandfather's flight chronometer from a loan shark's lockbox and deposit it to cover the mechanic's arrears.",
+          "private_fact": "The chronometer is his last heirloom, and selling it leaves him with nothing to show for thirty years in space.",
+          "outcome_tags": [
+            "chronometer_recovered",
+            "chronometer_lost"
+          ],
+          "routes": {
+            "chronometer_recovered": "next",
+            "chronometer_lost": "resolution:mutual_forfeiture_enacted"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The probation office opens its final docket before filing indenture extensions.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "probation_bailiff",
+          "target": "smelter_probation_dock",
+          "reason": "He requires sealed clearance scrip and receipt ledgers couriered from the registry vault to certify whose bond is officially discharged first.",
+          "private_fact": "The bailiff's regulations state that if both parties file cross-indemnity waivers simultaneously, the board confiscates both deposits as administrative fines.",
+          "outcome_tags": [
+            "scrip_delivered"
+          ],
+          "routes": {
+            "scrip_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds both clearance deposits. Filing both at once triggers the board's confiscation rule. The pilot must choose how to apply the funds.",
+        "options": [
+          {
+            "id": "discharge_pilot",
+            "label": "Apply the pooled funds entirely to clear the pilot's flight bond",
+            "leads_to": "resolution:pilot_cleared_to_fly"
+          },
+          {
+            "id": "save_workshop",
+            "label": "Apply the pooled funds to pay off the mechanic's workshop lease",
+            "leads_to": "resolution:workshop_saved_together"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pilot_cleared_to_fly",
+      "reached_by": "The pilot allocates the funds to clear the flight bond.",
+      "summary": "{role:probationary_pilot} receives full flight reinstatement, but {role:veteran_mechanic} loses her workshop lease and signs on as his co-pilot.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "probationary_pilot",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_mechanic",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "redeemed_the_grounded_flyer",
+          "public_summary": "A hauler helped two stubborn old grease monkeys pool their pennies to get one pilot back in the cockpit."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "workshop_saved_together",
+      "reached_by": "The pilot allocates the funds to clear the workshop debt.",
+      "summary": "{role:veteran_mechanic} retains her slip, and {role:probationary_pilot} agrees to serve his remaining six months of probation working as her shop hand.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "veteran_mechanic",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "probationary_pilot",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_the_foundry_slip",
+          "public_summary": "A pilot helped pay off a foundry dock lease so two veterans could work out their debts on their own terms."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "mutual_forfeiture_enacted",
+      "reached_by": "Both deposits are seized or the chronometer is lost.",
+      "summary": "{role:probation_bailiff} claims both deposits under the cross-indemnity clause, leaving {role:probationary_pilot} and {role:veteran_mechanic} trapped in extended indentures.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "probationary_pilot",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "veteran_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "probation_bailiff",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "faction_weakened"
+      ]
+    }
+  ],
+  "default_resolution": "mutual_forfeiture_enacted",
+  "loose_threads": [
+    {
+      "id": "t_repetitive_forfeiture_clause",
+      "surface": "dialogue",
+      "detail": "The bailiff's assistant admits forty percent of debtor crew releases are nullified each cycle by the exact same cross-indemnity small print.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_reassigned_smelter_stamps",
+      "surface": "cargo",
+      "detail": "The ore intake receipts carry property stamps matching an abandoned corporate freight consortium liquidated nine years ago.",
+      "can_carry_methods": [
+        "forged_records",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "mining_charter_required"
+  ],
+  "radio_hooks": [
+    "Smelter board reminds grounded pilots that unworked restitution quotas trigger automatic indenture renewals.",
+    "Foundry floor tenants protest rising utility surcharges in lower maintenance sectors of {system}.",
+    "Registry archives confirm lowest rate of debtor discharge in five quarters across local refining belts."
+  ],
+  "voice_direction": {
+    "probationary_pilot": "Tired, humble delivery with dry, self-deprecating phrasing. Becomes intensely defensive only when his engineer's well-being is questioned.",
+    "veteran_mechanic": "Rasping, stubborn cadence worn down by decades on the foundry floor. Refuses pity with sharp, dismissive profanity.",
+    "probation_bailiff": "Smug, sing-song administrative clerk drone. Quotes paragraph and subclause numbers from memory with evident relish."
+  },
+  "novelty_tags": [
+    "sobriety_probation",
+    "mutual_sacrifice",
+    "foundry_indenture",
+    "cross_indemnity_trap",
+    "smelter_debt"
+  ]
+}

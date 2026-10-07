@@ -1,0 +1,298 @@
+{
+  "id": "premise.the_sanatorium_retainer",
+  "schema_version": 1,
+  "title": "The Sanatorium Retainer",
+  "logline": "A patient at an elite recovery habitat hires a pilot to smuggle out unmedicated blood samples proving the clinic's celebrated treatment is a mild sedative designed to keep wealthy families paying lifelong board.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "helpers_corrupted"
+  ],
+  "roles": [
+    {
+      "id": "recovering_heir",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "An estranged freight scion attempting to finish a mandatory sobriety cure; lucid, cynical, desperate to leave.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "sanatorium_director",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Oversees the orbital convalescent suites; polite, calculating, terrified of losing paying long-term residents.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "estate_trustee",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Controls the heir's trust fund; efficient, unsentimental, prefers paying quiet institutional board over public scandals.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "convalescent_station",
+      "kind": "place",
+      "description": "A tranquil sunlit orbital habitat advertising peaceful recovery retreats to wealthy families.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sedative_cooler",
+      "kind": "object",
+      "description": "A chilled medical container holding three unadulterated patient blood samples drawn before the evening dose.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "nebula"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "market_disrupted",
+    "secret_half_exposed"
+  ],
+  "public_situation": "The convalescent habitat in {system} reports flawless patient contentment, though no resident has taken discharge in eighteen months.",
+  "private_truth": "The director blends low-dose neural dampeners into the habitat's mineral tea, keeping residents too placid to request release while their estates pay lifelong fees.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "retreat_administers_sedatives_to_prolong_retainers"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "A private courier listing appears on the station board requesting discreet transport of clinical research samples.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "recovering_heir",
+          "target": "convalescent_station",
+          "reason": "He managed to siphon his own unmedicated morning blood samples into a cooler and needs an outsider to take custody before the ward doctor inspects his locker.",
+          "private_fact": "He knows his family prefers paying the clinic's monthly fee over having him return home to claim his inheritance.",
+          "outcome_tags": [
+            "samples_secured"
+          ],
+          "routes": {
+            "samples_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The sanatorium director issues an urgent station-wide bulletin claiming a patient stole experimental sedatives.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "estate_trustee",
+          "target": "convalescent_station",
+          "reason": "She needs the heir's quarterly estate remittance voucher delivered directly to the clinic director, but wants the delivery verified by someone outside the family firm.",
+          "private_fact": "She suspects the heir is actually lucid, but her contract bonuses depend on keeping the estate's capital undivided.",
+          "outcome_tags": [
+            "voucher_delivered",
+            "voucher_withheld"
+          ],
+          "routes": {
+            "voucher_delivered": "next",
+            "voucher_withheld": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "An independent assay buoy at the station dock finishes comparing the blood samples against standard convalescent tea.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "recovering_heir",
+          "target": "convalescent_station",
+          "culprit": "sanatorium_director",
+          "reason": "He needs a pilot to scan the habitat's central dispensing manifold and certify whether the sedative additive matches his blood assay.",
+          "private_fact": "The director already offered the trustee a forty percent discount if the heir remains committed for life.",
+          "outcome_tags": [
+            "sedative_proven",
+            "records_sealed"
+          ],
+          "routes": {
+            "sedative_proven": "next",
+            "records_sealed": "resolution:sanatorium_preserves_monopoly"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "The pilot holds clear proof that the sanatorium is drugging its residents. The heir wants freedom, the trustee wants quiet, and the director offers silence.",
+        "options": [
+          {
+            "id": "deliver_to_trustee",
+            "label": "Deliver the chemical proof to the estate trustee",
+            "leads_to": "resolution:trustee_forces_discharge"
+          },
+          {
+            "id": "sell_to_director",
+            "label": "Sell the test records back to the sanatorium director",
+            "leads_to": "resolution:director_buys_coverup"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "trustee_forces_discharge",
+      "reached_by": "The pilot certifies the sedative and delivers the assay proof to the estate trustee.",
+      "summary": "{role:recovering_heir} secures an immediate discharge, while {role:estate_trustee} uses the fraud to seize the sanatorium's operational leases.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "recovering_heir",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "sanatorium_director",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_sanatorium_racket",
+          "public_summary": "A pilot proved the fancy orbital clinic was doping heirs to milk their trust funds."
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "evidence_loose",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "director_buys_coverup",
+      "reached_by": "The pilot certifies the sedative but sells the proof back to the sanatorium director.",
+      "summary": "{role:sanatorium_director} buries the analysis, while {role:recovering_heir} remains sedated in luxury under a doubled estate retainer.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "sanatorium_director",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "recovering_heir",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_convalescent",
+          "public_summary": "Whispers circulate that a courier took clinic credits to bury a patient's lab results."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "sanatorium_preserves_monopoly",
+      "reached_by": "The assay records are sealed or the pilot never intervenes.",
+      "summary": "{role:sanatorium_director} continues administering the placid regimen, keeping {role:recovering_heir} boarded and the estate accounts flowing.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "recovering_heir",
+          "fate": "disappeared"
+        },
+        {
+          "type": "cast_fate",
+          "target": "estate_trustee",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "sanatorium_preserves_monopoly",
+  "loose_threads": [
+    {
+      "id": "t_unbroken_retainer_ledger",
+      "surface": "station_notice",
+      "detail": "The habitat's patient roster lists thirty names whose boarding fees are all paid from the same anonymous offshore holding company.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_mismatched_ampoule_caps",
+      "surface": "cargo",
+      "detail": "Every medical sedative canister carries a recycled factory cap bearing the inventory seal of a commercial freight line.",
+      "can_carry_methods": [
+        "forged_records",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "{role:convalescent_station} boasts highest patient retention rate in {system}.",
+    "Family offices report steady returns as trust funds remain consolidated.",
+    "Dockworkers report strange herbal deliveries to orbital wellness suites."
+  ],
+  "voice_direction": {
+    "recovering_heir": "Speaks with trembling intensity, choosing words with defensive precision. Never raises his voice above a harsh murmur.",
+    "sanatorium_director": "Soothing clinical cadence with calculated pauses. Avoids clinical drug names in favor of wellness buzzwords.",
+    "estate_trustee": "Dry, brisk accounting rhythm. Treats human custody as a column of administrative debits and credits."
+  },
+  "novelty_tags": [
+    "convalescent_fraud",
+    "sedated_heir",
+    "trust_fund_exploitation",
+    "medical_blackmail",
+    "orbital_sanatorium"
+  ]
+}

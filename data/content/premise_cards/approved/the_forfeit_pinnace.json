@@ -1,0 +1,296 @@
+{
+  "id": "premise.the_forfeit_pinnace",
+  "schema_version": 1,
+  "title": "The Forfeit Pinnace",
+  "logline": "A compulsive gambler hires a mercenary to intercept and destroy their own championship racing yacht before a high-stakes rematch, desperate to remove the collateral feeding their relapse.",
+  "scale": "local",
+  "tone": [
+    "absurd",
+    "farce"
+  ],
+  "themes": [
+    "safety_vs_freedom",
+    "reinvention"
+  ],
+  "roles": [
+    {
+      "id": "compulsive_gambler",
+      "kind": "person",
+      "archetype": "gambler",
+      "description": "A former orbital racing champion swearing off the tables; sweating, superstitious, terrified of his own impulses.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_bookie",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Holds the betting book on the seasonal circuit; jovial, predatory, knows the gambler cannot resist one more wager.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "hired_skipper",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Flies the gambler's gilded racing pinnace; unpaid for six months and desperate to collect back wages.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "racing_yacht",
+      "kind": "ship",
+      "description": "A sleek, gold-leafed custom racing vessel stripped of shields to shave mass for the drag circuits.",
+      "reuse": "must_be_new"
+    },
+    {
+      "id": "grand_concourse",
+      "kind": "place",
+      "description": "The station's opulent betting promenade overlooking the racing lanes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "wager_syndicate",
+      "kind": "faction",
+      "description": "Finances local high-roller challenges and underwrites racing purse loans.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "gravity_tides"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "quarantine"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "rival_humiliated",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Promoters in {system} announce an unscheduled high-stakes exhibition duel between the veteran champion's gilded yacht and syndicate contenders.",
+  "private_truth": "The champion knows he will bet his last organ if the yacht enters the starting gate, and is paying an outsider to blow it up before he can step aboard.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "gambler_destroying_own_collateral_to_block_relapse"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Odds boards at the concourse light up with heavy wagers against the champion's uncrewed vessel.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "good": "parts",
+          "requester": "compulsive_gambler",
+          "target": "grand_concourse",
+          "reason": "He needs a military-spec transponder beacon purchased and delivered to his locker so he can broadcast the yacht's private slipway coordinates.",
+          "private_fact": "He already emptied his daughter's flight academy fund to place an opening bet on his own destruction.",
+          "outcome_tags": [
+            "beacon_delivered",
+            "purchase_failed"
+          ],
+          "routes": {
+            "beacon_delivered": "next",
+            "purchase_failed": "resolution:yacht_sold_at_auction"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "The racing yacht unmoors ahead of schedule and darts toward the inner planetary markers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "syndicate_bookie",
+          "target": "racing_yacht",
+          "reason": "The bookmaker detects erratic engine telemetry from the yacht and needs a pilot to scan its telemetry to confirm whether it is carrying illegal fuel additives.",
+          "private_fact": "The bookmaker lent the skipper money to hijack the ship if the champion tried to back out of the purse race.",
+          "outcome_tags": [
+            "yacht_scanned",
+            "yacht_lost"
+          ],
+          "routes": {
+            "yacht_scanned": "next",
+            "yacht_lost": "resolution:yacht_sold_at_auction"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The yacht cuts power near the outer asteroid ring, broadcasting an open challenge hail across commercial bands.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "compulsive_gambler",
+          "target": "racing_yacht",
+          "reason": "He is paying the pilot to engage and destroy the yacht in deep space before it reaches the official starting line at the concourse.",
+          "private_fact": "The hired skipper hails mid-fight offering to surrender the yacht's antique gold drive manifold if the pilot spares the hull.",
+          "outcome_tags": [
+            "yacht_destroyed",
+            "accepted_drive_offer"
+          ],
+          "routes": {
+            "yacht_destroyed": "resolution:gambler_cured_by_ruin",
+            "accepted_drive_offer": "resolution:skipper_steals_hull"
+          }
+        }
+      ],
+      "player_choice": null
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "gambler_cured_by_ruin",
+      "reached_by": "The pilot destroys the racing yacht before the race begins.",
+      "summary": "{role:racing_yacht} burns in deep space. With his collateral destroyed, {role:compulsive_gambler} forfeits the race and is forced into permanent retirement.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "compulsive_gambler",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hired_skipper",
+          "fate": "dead"
+        },
+        {
+          "type": "standing",
+          "target": "wager_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "deed",
+          "tag": "scuttled_the_pinnace",
+          "public_summary": "A mercenary blew a famous champion's gold-plated racer to scrap right before the betting closed."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "rival_humiliated"
+      ]
+    },
+    {
+      "id": "skipper_steals_hull",
+      "reached_by": "The pilot accepts the skipper's offer in the comms reversal.",
+      "summary": "{role:hired_skipper} escapes with the stripped racer into deep space, leaving {role:compulsive_gambler} on the hook for syndicate default penalties.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "hired_skipper",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "compulsive_gambler",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "wager_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "looted_the_champion",
+          "public_summary": "A pilot took a cut of a champion's custom drive core while his crew jumped ship."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "yacht_sold_at_auction",
+      "reached_by": "The pilot fails the initial purchase or never takes the contract.",
+      "summary": "{role:wager_syndicate} seizes {role:racing_yacht} when the entry fees lapse, auctioning the hull and leaving {role:compulsive_gambler} penniless on the concourse.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "compulsive_gambler",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "wager_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "leader_discredited"
+      ]
+    }
+  ],
+  "default_resolution": "yacht_sold_at_auction",
+  "loose_threads": [
+    {
+      "id": "t_syndicate_marker_slip",
+      "surface": "dialogue",
+      "detail": "The bookmaker casually reveals that eighty percent of the circuit's registered racers carry mortgages held by the exact same consortium.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_unfiled_transponder_swap",
+      "surface": "ship_marking",
+      "detail": "The racing yacht's engine casing has an older registration number hastily polished away beneath fresh gilt enamel.",
+      "can_carry_methods": [
+        "impersonation",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "manufactured_crisis"
+    ],
+    "motives": [
+      "greed",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "docking_bribes",
+    "salvage_registry"
+  ],
+  "radio_hooks": [
+    "Betting closed abruptly on {system} exhibition race following mysterious telemetry dropout.",
+    "Promoters offer finder's fee for {role:racing_yacht} after unscheduled burn toward the asteroid belt.",
+    "Pundits debate whether veteran champion will appear at the start line or forfeit by absence."
+  ],
+  "voice_direction": {
+    "compulsive_gambler": "Breathless, manic cadence with superstitious mutterings. Constantly shifts between bragging about past victories and begging for help.",
+    "syndicate_bookie": "Unctuous, hearty melodic delivery. Feigns total sympathy while rattling off compound interest figures.",
+    "hired_skipper": "Flat, exhausted gravel voice. Speaks like someone whose paycheck has bounced six consecutive times."
+  },
+  "novelty_tags": [
+    "gambling_relapse",
+    "collateral_destruction",
+    "racing_yacht",
+    "bookmaker_extortion",
+    "frenzied_forfeit"
+  ]
+}
