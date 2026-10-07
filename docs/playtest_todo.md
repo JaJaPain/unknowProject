@@ -960,3 +960,15 @@ through the marked gate and flies you in):
       shard ring (seams pulsing, glow in the centre: hold in the middle); a
       Competing Claims or Unstable Archive site is a derelict with the site
       at its breach.
+- [ ] **Destination models (2026-10-07):** the Archive (textured stone,
+      bronze and cloth), the Neutral Ground (no blown-out glare at the
+      hall), the Halo (candles flicker, the bell sways) and the Wellhead
+      (plume rises from the vent, red tower beacons blink, frosty ice) are
+      ChatGPT's models now. Check each looks right on arrival and the frame
+      rate holds near the Archive.
+- [ ] **Main story timing:** the reveal (N.O.V.A. names who's behind it)
+      should come around hours 8-12 even if you roam far and take few story
+      jobs.
+- [ ] **Losing the proof:** drop or fail the first job after the reveal
+      (collect the last proof). The season should carry on: the chase, then
+      a harder showdown at the Destination.
