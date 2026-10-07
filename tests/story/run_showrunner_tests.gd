@@ -27,8 +27,8 @@ func _check(condition: bool, message: String) -> void:
 		_failures.append(message)
 
 
-## A campaign that is ready to lock: four real cards, one person recurring in
-## three of them, every thread seen. Shared with the live test.
+## A campaign that is ready to lock: twelve real cards in twelve systems, one
+## person recurring in three of them, every thread seen. Shared with the live test.
 static func build_fixture() -> Dictionary:
 	var lib = LibraryType.new()
 	lib.load_from_dir()
@@ -41,7 +41,7 @@ static func build_fixture() -> Dictionary:
 		for t in card.get("loose_threads", []):
 			if method in t.get("can_carry_methods", []):
 				carries = true
-		if carries and picked.size() < 4:
+		if carries and picked.size() < 12:
 			picked.append(card)
 	var world := {"system_display": "Vessa", "main_station": {"id": "system.v", "display": "Vessa Main"},
 		"outposts": [{"id": "outpost.a", "display": "Iron Reach"}], "factions": [{"id": "faction.generated.g", "display_name": "The Tessin Guild", "spawn_key": "g"}],
@@ -89,16 +89,16 @@ func _answer(candidate: String, thread_ids: Array, truth: String = "") -> String
 func _test_parse(fixture: Dictionary) -> void:
 	var s: Dictionary = fixture["state"]
 	var seen := Hand.seen_threads(s).map(func(t): return str(t["id"]))
-	var good := Show.parse_response(_answer("npc.recurring", seen.slice(0, 3)), s)
+	var good := Show.parse_response(_answer("npc.recurring", seen.slice(0, Hand.LOCK_MIN_TRACES)), s)
 	_check(bool(good["ok"]), "a good answer should pass: %s" % good["reason"])
 	var locked := Hand.lock(s, good["choice"], 50)
 	_check(bool(locked["ok"]) and Hand.main_story(locked["state"])["lock"]["source"] == "showrunner", "a checked answer locks the story")
-	_check(Show.parse_response(_answer("npc.made_up", seen.slice(0, 3)), s)["reason"] == "unknown_candidate", "an invented person is refused")
+	_check(Show.parse_response(_answer("npc.made_up", seen.slice(0, Hand.LOCK_MIN_TRACES)), s)["reason"] == "unknown_candidate", "an invented person is refused")
 	_check(Show.parse_response(_answer("npc.recurring", seen.slice(0, 1)), s)["reason"] == "explains_too_little", "too few links are refused")
 	_check(Show.parse_response(_answer("npc.recurring", ["th.9999", "th.9998", "th.9997"]), s)["reason"] == "explains_too_little", "links to unseen threads don't count")
-	var reserved := _answer("npc.recurring", seen.slice(0, 3), "Oren Vask secretly came from another universe and has been steering everyone here for years now.")
+	var reserved := _answer("npc.recurring", seen.slice(0, Hand.LOCK_MIN_TRACES), "Oren Vask secretly came from another universe and has been steering everyone here for years now.")
 	_check(Show.parse_response(reserved, s)["reason"] == "reserved_topic", "a reserved topic in the answer is refused")
 	_check(Show.parse_response("not json at all", s)["reason"] == "not_json", "garbage is refused")
-	_check(bool(Show.parse_response(_answer("npc.recurring|Oren Vask", seen.slice(0, 3)), s)["ok"]), "an id with the name attached is accepted")
-	_check(Show.parse_response(_answer("Oren Vask", seen.slice(0, 3)), s)["choice"].get("entity_id") == "npc.recurring", "an exact display name maps to the id")
-	_check(Show.parse_response(_answer("npc.recurring_but_not", seen.slice(0, 3)), s)["reason"] == "unknown_candidate", "a near-miss id is still refused")
+	_check(bool(Show.parse_response(_answer("npc.recurring|Oren Vask", seen.slice(0, Hand.LOCK_MIN_TRACES)), s)["ok"]), "an id with the name attached is accepted")
+	_check(Show.parse_response(_answer("Oren Vask", seen.slice(0, Hand.LOCK_MIN_TRACES)), s)["choice"].get("entity_id") == "npc.recurring", "an exact display name maps to the id")
+	_check(Show.parse_response(_answer("npc.recurring_but_not", seen.slice(0, Hand.LOCK_MIN_TRACES)), s)["reason"] == "unknown_candidate", "a near-miss id is still refused")

@@ -192,6 +192,31 @@ const LOCK_MIN_CANDIDATES := 3
 ## Evidence must come from stories in at least this many systems, so the
 ## mystery spans the journey rather than one stop.
 const LOCK_MIN_SYSTEMS := 9
+## A player who roams far and takes few story jobs gathers evidence from fewer
+## systems; the season sim saw those reveals slip to ~20 h, when the Lodestar
+## forced them. So the bar eases with travel: past LOCK_EASE_FROM_VISITS
+## systems visited, each new system lowers the systems needed by one (down to
+## LOCK_EASED_MIN_SYSTEMS), and from LOCK_EASE_TRACES_AT_VISITS fewer traces
+## will do (fewer still from LOCK_LAST_EASE_AT_VISITS, for a player who has seen
+## few real traces).
+const LOCK_EASE_FROM_VISITS := 8
+const LOCK_EASED_MIN_SYSTEMS := 4
+const LOCK_EASE_TRACES_AT_VISITS := 12
+const LOCK_EASED_MIN_TRACES := 3
+const LOCK_LAST_EASE_AT_VISITS := 15
+const LOCK_LAST_MIN_TRACES := 2
+
+
+static func lock_min_systems(state: Dictionary) -> int:
+	var over := maxi(0, int(state.get("visits", 0)) - LOCK_EASE_FROM_VISITS)
+	return maxi(LOCK_EASED_MIN_SYSTEMS, LOCK_MIN_SYSTEMS - over)
+
+
+static func lock_min_traces(state: Dictionary) -> int:
+	var visits := int(state.get("visits", 0))
+	if visits >= LOCK_LAST_EASE_AT_VISITS:
+		return LOCK_LAST_MIN_TRACES
+	return LOCK_EASED_MIN_TRACES if visits >= LOCK_EASE_TRACES_AT_VISITS else LOCK_MIN_TRACES
 
 
 ## Every person cast in an arc whose threads the player has seen, scored by how
@@ -266,9 +291,9 @@ static func evidence_ready(state: Dictionary) -> bool:
 	var story := main_story(state)
 	return not story.is_empty() and str(story["stage"]) == "hidden" \
 		and seen_threads(state).size() >= LOCK_MIN_SEEN \
-		and seen_trace_count(state) >= LOCK_MIN_TRACES \
+		and seen_trace_count(state) >= lock_min_traces(state) \
 		and proposal(state).size() >= LOCK_MIN_CANDIDATES \
-		and evidence_systems(state) >= LOCK_MIN_SYSTEMS
+		and evidence_systems(state) >= lock_min_systems(state)
 
 
 ## Evidence ready, and the prime suspect free of other live stories, or the
@@ -324,7 +349,7 @@ static func lock(state: Dictionary, choice: Dictionary, now_minute: int) -> Dict
 			links[str(tid)] = str(choice["links"][tid])
 	# Forced at the Lodestar (the Captain got there before the evidence did):
 	# the climax can't be skipped, so whatever was seen has to do.
-	var min_links := 1 if bool(story.get("force_lock", false)) else LOCK_MIN_TRACES
+	var min_links := 1 if bool(story.get("force_lock", false)) else lock_min_traces(state)
 	if links.size() < min_links:
 		return {"ok": false, "reason": "explains_too_little", "state": state}
 	var next := state.duplicate(true)

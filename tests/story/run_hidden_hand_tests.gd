@@ -16,6 +16,7 @@ func _initialize() -> void:
 	_test_whole_deck_traces()
 	_test_candidates_draft_and_lock()
 	_test_lodestar_hosts_the_goal()
+	_test_lock_eases_with_travel()
 	if _failures.is_empty():
 		print("[PASS] Hidden hand tests")
 		quit(0)
@@ -147,6 +148,17 @@ func _test_candidates_draft_and_lock() -> void:
 
 ## The Hidden Hand wants what's at the Lodestar: its goal is one the Lodestar
 ## hosts, and the season carries the bridge line (campaign spine plan, 3).
+## A player who roams far gathers evidence from fewer systems: the bar eases
+## with systems visited, so the reveal still lands around hours 8-12.
+func _test_lock_eases_with_travel() -> void:
+	var at := func(visits: int) -> Dictionary: return {"visits": visits}
+	_check(Hand.lock_min_systems(at.call(0)) == Hand.LOCK_MIN_SYSTEMS and Hand.lock_min_traces(at.call(0)) == Hand.LOCK_MIN_TRACES, "early on, the full bar")
+	_check(Hand.lock_min_systems(at.call(Hand.LOCK_EASE_FROM_VISITS + 2)) == Hand.LOCK_MIN_SYSTEMS - 2, "each system past the ease point asks for one fewer")
+	_check(Hand.lock_min_systems(at.call(40)) == Hand.LOCK_EASED_MIN_SYSTEMS, "never below the eased floor")
+	_check(Hand.lock_min_traces(at.call(Hand.LOCK_EASE_TRACES_AT_VISITS)) == Hand.LOCK_EASED_MIN_TRACES, "fewer traces after a long trip")
+	_check(Hand.lock_min_traces(at.call(Hand.LOCK_LAST_EASE_AT_VISITS)) == Hand.LOCK_LAST_MIN_TRACES, "fewer still after a longer one")
+
+
 func _test_lodestar_hosts_the_goal() -> void:
 	var Bridges = load("res://scripts/story/premise/LodestarBridges.gd")
 	for lodestar in ["lighthouse", "silent_fleet", "humming_gate", "cartographer", "garden", "quiet_war"]:

@@ -343,3 +343,24 @@ row, sharing the card history (log:
 Conclusion: past ~225 cards, more cards barely move uniqueness. Better levers:
 (1) the first Destination avoids the player's recent ones, the same way cards
 do; (2) more Destinations over time (each needs a set piece and a card).
+
+## Reveal timing evened out (2026-10-07)
+
+At 239 cards and 12 Destinations the sim showed late reveals again: lock at
+9.1-22.9 h (median 18.6). New per-campaign diagnostics at 10 h and 12 h
+(`blocked_10h`, `blocked_12h`) named the cause: players who roam far and take
+few story jobs had evidence from only 5-8 of the 9 systems needed, and a few
+had seen only 2-4 real traces. The Lodestar then forced the lock at ~20 h.
+
+Fix (`HiddenHand.lock_min_systems` / `lock_min_traces`): the bar eases with
+systems visited. Past 8 visits each new system asks for one fewer evidence
+system (floor 4); from 12 visits 3 traces will do, from 15 visits 2. The
+Showrunner's link check uses the same eased number.
+
+Sim after (10 campaigns, 25 h): **lock at 8.4-14.9 h (median 11.1)**, 8 of 10
+in 8-12 h; stories shared at 10 h 0% (worst pair 8%); no repeat Destination.
+
+Open: in 2 of 10 campaigns the season closed 15-30 min after the reveal
+(`hand_slips_away`): the sim abandoned the confrontation's first job (the
+proof pickup), and abandoning it ends the season with no chase and no
+Lodestar. A real player failing or dropping that one job would get the same.

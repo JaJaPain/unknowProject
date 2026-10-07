@@ -100,7 +100,7 @@ static func parse_response(response_text: String, state: Dictionary) -> Dictiona
 			var text := str(link.get("explanation", "")).strip_edges()
 			if not text.is_empty():
 				links[str(link["thread_id"])] = text
-	if links.size() < HandType.LOCK_MIN_TRACES:
+	if links.size() < HandType.lock_min_traces(state):
 		return {"ok": false, "reason": "explains_too_little", "choice": {}}
 	var beats: Array = []
 	for b in data.get("next_beats", []):

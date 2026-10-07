@@ -137,6 +137,9 @@ func _campaign(index: int) -> Dictionary:
 			if real_min >= 600.0 and (out["at_10h"] as Dictionary).is_empty():
 				out["at_10h"] = _snapshot(d)
 				out["cards_10h"] = _cards(d)
+				out["blocked_10h"] = _lock_blockers(d)
+			if real_min >= 720.0 and not out.has("blocked_12h"):
+				out["blocked_12h"] = _lock_blockers(d)
 	if (out["at_10h"] as Dictionary).is_empty():
 		out["at_10h"] = _snapshot(d)
 		out["cards_10h"] = _cards(d)
@@ -186,15 +189,15 @@ func _lock_blockers(d) -> String:
 	var story := HandType.main_story(s)
 	if str(story.get("stage", "")) != "hidden":
 		return ""
-	var why: Array = []
+	var why: Array = ["visits %d" % int(s.get("visits", 0))]
 	if HandType.seen_threads(s).size() < HandType.LOCK_MIN_SEEN:
 		why.append("threads %d<%d" % [HandType.seen_threads(s).size(), HandType.LOCK_MIN_SEEN])
-	if HandType.seen_trace_count(s) < HandType.LOCK_MIN_TRACES:
-		why.append("traces %d<%d" % [HandType.seen_trace_count(s), HandType.LOCK_MIN_TRACES])
+	if HandType.seen_trace_count(s) < HandType.lock_min_traces(s):
+		why.append("traces %d<%d" % [HandType.seen_trace_count(s), HandType.lock_min_traces(s)])
 	if HandType.proposal(s).size() < HandType.LOCK_MIN_CANDIDATES:
 		why.append("candidates %d<%d" % [HandType.proposal(s).size(), HandType.LOCK_MIN_CANDIDATES])
-	if HandType.evidence_systems(s) < HandType.LOCK_MIN_SYSTEMS:
-		why.append("systems %d<%d" % [HandType.evidence_systems(s), HandType.LOCK_MIN_SYSTEMS])
+	if HandType.evidence_systems(s) < HandType.lock_min_systems(s):
+		why.append("systems %d<%d" % [HandType.evidence_systems(s), HandType.lock_min_systems(s)])
 	if HandType._prime_suspect_busy(s):
 		var top: Dictionary = HandType.candidates(s)[0]
 		why.append("prime suspect %s busy (in %d stories)" % [top["display_name"], (top["arcs"] as Array).size()])
@@ -225,6 +228,9 @@ func _report(results: Array) -> void:
 			print("      season closed by: %s" % r["closed_by"])
 			for l in r.get("conf_ledger", []):
 				print("        %s" % str(l).left(150))
+		for k in ["blocked_10h", "blocked_12h"]:
+			if not str(r.get(k, "")).is_empty():
+				print("      %s: %s" % [k, r[k]])
 		if not str(r.get("blocked", "")).is_empty():
 			print("      not locked because: %s" % r["blocked"])
 	# Uniqueness at 10 hours: how much two campaigns' stories overlap.
