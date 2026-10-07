@@ -375,3 +375,52 @@ meet unarmed.
 - **No:** writing, flags, symbols, faction marks, weapons of any kind
   (that's the point of the place), ships flying.
 - **Export:** batched as above; the central hall as its own mesh group.
+
+## Brief #11: The Halo (new Destination, after #10)
+
+A sanctuary of pilgrim chapels in a system whose red star is dying. By an old
+covenant, anyone who rings its bell can't be taken away against their will.
+Quiet, devotional, candle-lit, humble. The star is the game's; this is only
+the chapels.
+
+- **Size:** about 800 m across.
+- **Shape:** a **loose circle of 12-20 small chapel pods** (each a different
+  little shape: domes, lanterns, tiny spires; modest, hand-built) **on long
+  tethers** running to a **central bell-buoy**: a small structure holding one
+  large bell. Not a solid ring (the Humming Gate is a ring); a tethered
+  constellation, slightly irregular, some pods closer, some further.
+- **Surface:** pale weathered metal and warm stone-like plating, patched and
+  cared for; the bell in dark bronze.
+- **Light:** **candle light** in every pod's windows (warm, flickery-looking,
+  separate emissive material); a soft glow at the bell (separate emissive
+  material). Gentle, not bright.
+- **Optional:** the bell as its own mesh with its pivot at the top (the game
+  may swing it slowly); the pods as separate meshes so they can drift a
+  little on their tethers.
+- **No:** writing, symbols, holy signs or icons, faction marks, weapons,
+  ships flying.
+- **Export:** batched (pods, tethers, buoy, bell, lights as few meshes per
+  material); under ~50 meshes and ~8 materials.
+
+## Brief #12: The Wellhead (new Destination, after #11)
+
+A small ice moonlet whose vent geyser waters the whole frontier. One family
+runs the rig towers over the vent. Practical, old, industrial but kept with
+pride.
+
+- **Size:** the moonlet about 1 km across; rigs on top; ~1-1.5 km overall.
+- **Shape:** an **irregular icy moonlet** (lumpy, cracked, pale blue-white,
+  not a smooth sphere) with a **vent crater** on one side. Over the vent: a
+  cluster of **tall rig towers**, a capping structure, thick pipes running
+  across the ice to **tanker berths** with two or three moored water
+  tankers (static), and a small family habitat block. The game adds the
+  vapour plume rising from the vent (particles), so leave the vent open.
+- **Surface:** frosted ice with darker cracks; the rigs in sturdy painted
+  metal (one muted colour, faded), frost on the lower parts.
+- **Light:** work lights along the towers and pipes (separate emissive
+  material, cool white); warm windows in the habitat (separate emissive
+  material); red beacon lights on the tower tops.
+- **No:** writing, logos, symbols, faction marks, weapons, ships flying.
+- **Export:** batched (moonlet, rigs, pipes, tankers, habitat, lights as few
+  meshes per material); under ~50 meshes and ~8 materials; the vent position
+  noted in the README.
