@@ -1,0 +1,342 @@
+{
+  "id": "premise.the_ballast_squatters",
+  "schema_version": 1,
+  "title": "The Ballast Squatters",
+  "logline": "An informal family of scavengers living in a decommissioned ballast tank must reinforce their makeshift bulkhead before automated high-pressure testing crushes their shelter.",
+  "scale": "personal",
+  "tone": [
+    "melancholy",
+    "hopeful"
+  ],
+  "themes": [
+    "chosen_family",
+    "safety_vs_freedom"
+  ],
+  "roles": [
+    {
+      "id": "elder_squatter",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "A retired pipefitter who built an informal family shelter inside a dead water ballast tank; stubborn, loving, and coughing.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "adopted_foundling",
+      "kind": "person",
+      "archetype": "child_of_someone_important",
+      "description": "A sharp-witted young scrapper who runs errands through the air ducts; fiercely protective of their home.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "station_plumber",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A municipal utility supervisor under pressure to complete hydrostatic integrity tests before quarter-end.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ballast_void_four",
+      "kind": "place",
+      "description": "A hollow cavernous chamber inside the station's counterweight rim, strung with hammocks and illegal heating coils.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "plumbing_intake_depot",
+      "kind": "place",
+      "description": "The municipal water intake station where industrial regulators and valves are stored.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "quiet_cover_up",
+    "refugees_moving"
+  ],
+  "public_situation": "Municipal maintenance alerts on {system} warn that automated high-pressure testing of the outer ballast ring will commence at the end of the shift.",
+  "private_truth": "An informal family of dispossessed scrap workers lives inside Ballast Tank Four; if the automated pressure surge fires, their makeshift living quarters will be crushed.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "squatter_commune_occupies_critical_ballast_chamber"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Pumping sirens echo through the utility rings as engineers begin priming the water ballast circuits.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "ferrite",
+          "requester": "elder_squatter",
+          "target": "ballast_void_four",
+          "reason": "He needs an independent pilot to mine raw ferrite ore from the ring belts to patch an illegal structural seal before water pressure floods the chamber.",
+          "private_fact": "He cannot buy plates from the market without triggering an automated dock inspection of his expired transit visa.",
+          "outcome_tags": [
+            "ferrite_delivered"
+          ],
+          "routes": {
+            "ferrite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "The municipal plumbing supervisor begins calibrating acoustic leak sensors across the ballast quadrant.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "adopted_foundling",
+          "target": "plumbing_intake_depot",
+          "reason": "They hire the pilot to buy an industrial bypass valve from the intake depot to divert the incoming test water around Tank Four.",
+          "private_fact": "They are paying with stolen utility tokens swiped from the plumbing supervisor's maintenance locker.",
+          "outcome_tags": [
+            "valve_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "valve_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The final test sequence begins filling the outer ring manifold while municipal inspectors check sensor logs.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "elder_squatter",
+          "requester": "station_plumber",
+          "target": "ballast_void_four",
+          "reason": "He hires an outsider pilot to scan the exterior hull of Tank Four to verify why pressure readings are displaying anomalous thermal signatures.",
+          "private_fact": "He suspects squatters are inside, but his performance bonus depends on certifying the system as clear on time.",
+          "outcome_tags": [
+            "report_anomalies_present",
+            "certify_hull_clear"
+          ],
+          "routes": {
+            "report_anomalies_present": "resolution:squatters_evicted_by_security",
+            "certify_hull_clear": "resolution:bypass_installed_family_safe"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the scan complete and the pressure test roaring in the pipes, the pilot holds the fate of the family in their hands.",
+        "options": [
+          {
+            "id": "certify_clear",
+            "label": "Certify the tank as empty so the plumber ignores the readings",
+            "leads_to": "resolution:bypass_installed_family_safe"
+          },
+          {
+            "id": "bribe_supervisor",
+            "label": "Confront the plumber and negotiate an emergency evacuation before the surge",
+            "leads_to": "resolution:plumber_arranges_relocation"
+          },
+          {
+            "id": "report_squatters",
+            "label": "Report the illegal habitat to port bailiffs to stop the water test",
+            "leads_to": "resolution:squatters_evicted_by_security"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "bypass_installed_family_safe",
+      "reached_by": "The pilot certifies the hull as clear, allowing the bypass valve to divert the surge water.",
+      "summary": "The test water rushes harmlessly through the bypass. {role:elder_squatter} and {role:adopted_foundling} keep their hidden home safe in the ballast voids.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_squatter",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "adopted_foundling",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_plumber",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_ballast_squatters",
+          "public_summary": "A pilot helped a hidden family in the station ballast tanks bypass a catastrophic high-pressure flood."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "plumber_arranges_relocation",
+      "reached_by": "The pilot confronts the plumber and arranges a discreet evacuation.",
+      "summary": "{role:station_plumber} halts the test and quietly moves {role:elder_squatter} and the child into a vacant service dormitory before the surge fires.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "station_plumber",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "elder_squatter",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "adopted_foundling",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "rehomed_ballast_family",
+          "public_summary": "A pilot helped a plumbing supervisor safely relocate squatters before an automated water test."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "squatters_evicted_by_security",
+      "reached_by": "The pilot reports the squatters to port security.",
+      "summary": "Port bailiffs breach the tank and evict {role:elder_squatter} into station detention. The pressure test completes on schedule without incident.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_squatter",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "adopted_foundling",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "station_plumber",
+          "fate": "promoted"
+        },
+        {
+          "type": "law_change",
+          "law": "curfew",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "evicted_ballast_squat",
+          "public_summary": "A pilot reported an unauthorized habitat in a water tank, triggering a security sweep."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "ballast_flooded_in_silence",
+      "reached_by": "The pilot never gets involved or abandons the scan.",
+      "summary": "The automated pressure test fires at full power. The makeshift bulkhead collapses and the ballast chamber floods, forcing the squatters to flee into cold maintenance vents.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "elder_squatter",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "adopted_foundling",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "ballast_flooded_in_silence",
+  "loose_threads": [
+    {
+      "id": "t_scrapper_supply_chits",
+      "surface": "cargo",
+      "detail": "The bypass valve package is tied to an internal utility work requisition that was signed by a maintenance supervisor who died two years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_water_pressure_ledger",
+      "surface": "station_notice",
+      "detail": "The official plumbing schedule indicates water pressure testing was moved forward two weeks at the request of an offshore habitat developer.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "protecting_someone"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Automated hydrostatic testing scheduled for outer ballast ring of {system}; pressure surges expected.",
+    "Utility management warns unauthorized access to decommissioned ballast compartments is punishable by fine.",
+    "Outer ring water pressure restored following successful municipal pipe diagnostics."
+  ],
+  "voice_direction": {
+    "elder_squatter": "Weary, warm, and speaks in short, breathless bursts. Pauses frequently and insists on offering the pilot recycled station tea. Fiercely defensive of his child.",
+    "adopted_foundling": "Speaks at a rapid, defensive clip with fierce pride. Refuses to look at credentials and sizes up the pilot's ship with practical eye.",
+    "station_plumber": "Anxious, sweaty, and overly defensive. Constantly consults his tablet computer and complains about departmental quotas."
+  },
+  "novelty_tags": [
+    "ballast_tank",
+    "informal_family",
+    "hydrostatic_test",
+    "bulkhead_reinforcement",
+    "station_squatters"
+  ]
+}

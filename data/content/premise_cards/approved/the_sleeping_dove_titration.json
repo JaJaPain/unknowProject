@@ -1,0 +1,359 @@
+{
+  "id": "premise.the_sleeping_dove_titration",
+  "schema_version": 1,
+  "title": "The Sleeping Dove Titration",
+  "logline": "A pacifist monastic order discovers their venerated holy relic—a dormant orbital nuclear warhead—is leaking volatile coolant, forcing them to choose between defusing their god or abandoning their sanctuary.",
+  "scale": "local",
+  "tone": [
+    "melancholy",
+    "tense"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "cloistered_abbess",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Spiritual guardian of the silent order; deeply devout and terrified of shattering her congregation's faith.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "heretic_cantor",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "A former orbital technician turned monk who secretly tracks the relic's isotope decay.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "salvage_deacon",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "A lay brother handling station provisions who sees commercial value in the warhead's fissile core.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "sanctuary_abbey",
+      "kind": "place",
+      "description": "A cavernous pressurized monastery carved into a hollowed iron asteroid, lit by votive luminescent algae.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "reactor_coolant_dock",
+      "kind": "place",
+      "description": "An unaligned chemical transfer jetty in the outer belt specializing in heavy reactor solvents.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relic_shrine",
+      "kind": "object",
+      "description": "A twenty-meter nuclear warhead suspended on gantry cables above the monastery altar, worshipped as the dormant arbiter of peace.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "The monastic order of the Sleeping Dove on {system} suspends public vespers, citing a period of deep contemplative retreat inside their asteroid abbey.",
+  "private_truth": "The dormant nuclear warhead hanging above the abbey altar has begun leaking irradiated heavy coolant into the monks' air filtration ducts.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "monastic_warhead_relic_venting_volatile_tritium"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "The abbey's atmospheric exhaust vents begin glowing with an eerie turquoise ionization haze.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "heretic_cantor",
+          "target": "relic_shrine",
+          "reason": "He needs an outside pilot with shielded ship sensors to scan the shrine's gantry cradle to measure the warhead's core leakage rate without alarming the abbess.",
+          "private_fact": "He knows the warhead's containment matrix will breach within a week unless the core is chemically neutralized.",
+          "outcome_tags": [
+            "leakage_confirmed"
+          ],
+          "routes": {
+            "leakage_confirmed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Several novice monks are quietly moved to the medical annex with acute radiation sickness.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "cloistered_abbess",
+          "target": "sanctuary_abbey",
+          "reason": "She hires an unaligned pilot to purchase lead neutralizing slurry from the coolant dock and deliver it discreetly to the abbey airlocks.",
+          "private_fact": "She plans to coat the warhead's casing in sacred lead paint, pretending it is a devotional ceremony to conceal the contamination from pilgrims.",
+          "outcome_tags": [
+            "slurry_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "slurry_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The lay deacon approaches visiting freighters with offers to sell industrial isotopes, triggering rumors of an abbey liquidation.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "salvage_deacon",
+          "target": "sanctuary_abbey",
+          "reason": "He asks the pilot to transport an extraction drill to the abbey so the warhead's enriched core can be removed and sold before it cooks the habitat.",
+          "private_fact": "He has already accepted an advance deposit from an off-system munitions broker who intends to re-arm the warhead.",
+          "outcome_tags": [
+            "drill_delivered"
+          ],
+          "routes": {
+            "drill_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "Containment klaxons sound inside the monastery concourse as radiation spikes force the order to evacuate the main nave.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "heretic_cantor",
+          "target": "sanctuary_abbey",
+          "reason": "He hires the pilot to carry a coolant dampening canister directly into the shrine cradle to permanently defuse the warhead before it breaches.",
+          "private_fact": "Injecting the dampener will render the warhead's core completely inert, forever stripping the relic of its terrifying sacred aura.",
+          "outcome_tags": [
+            "dampener_installed",
+            "abandoned"
+          ],
+          "routes": {
+            "dampener_installed": "next",
+            "abandoned": "resolution:sanctuary_evacuated_in_crisis"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the warhead secured and the abbey on the brink of disaster, the pilot must choose how to resolve the crisis of the relic.",
+        "options": [
+          {
+            "id": "neutralize_the_core",
+            "label": "Inject the chemical dampener to render the relic inert and save the monastery",
+            "leads_to": "resolution:relic_defused_and_faith_tested"
+          },
+          {
+            "id": "help_deacon_extract",
+            "label": "Extract the enriched warhead core and hand it to the deacon to sell",
+            "leads_to": "resolution:core_sold_monastery_funded"
+          },
+          {
+            "id": "assist_abbess_coverup",
+            "label": "Seal the shrine in lead slurry to maintain the illusion of holy peace",
+            "leads_to": "resolution:sealed_in_toxic_silence"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "relic_defused_and_faith_tested",
+      "reached_by": "The pilot neutralizes the warhead core with the chemical dampener.",
+      "summary": "The warhead is made safe, but its sacred mystique is broken. {role:heretic_cantor} leads a schism among the monks while {role:cloistered_abbess} mourns their lost god.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cloistered_abbess",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "heretic_cantor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "salvage_deacon",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "defused_sleeping_dove",
+          "public_summary": "A pilot neutralized a live nuclear warhead that an asteroid cult had worshipped for three generations."
+        }
+      ],
+      "seeds": [
+        "secret_half_exposed",
+        "new_leader_untested"
+      ]
+    },
+    {
+      "id": "core_sold_monastery_funded",
+      "reached_by": "The pilot extracts the core and transfers it to the salvage deacon.",
+      "summary": "{role:salvage_deacon} sells the enriched fissile material to off-system buyers, funding modern filtration for the abbey. The empty missile shell remains a hollow monument.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "salvage_deacon",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cloistered_abbess",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_monastery_warhead",
+          "public_summary": "A pilot stripped the nuclear core from a monastic shrine and sold it into frontier trade."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "sealed_in_toxic_silence",
+      "reached_by": "The pilot seals the shrine with lead slurry, concealing the leakage.",
+      "summary": "{role:cloistered_abbess} preserves the monastery's sacred secret under layers of lead, though junior acolytes continue to suffer chronic sickness in secret.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cloistered_abbess",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "heretic_cantor",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "deed",
+          "tag": "sealed_leaking_relic",
+          "public_summary": "A pilot helped a monastic order entomb a leaking shrine behind lead shielding to hide their holy secret."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "sanctuary_evacuated_in_crisis",
+      "reached_by": "The pilot never intervenes or abandons the crisis.",
+      "summary": "Radiation breaches the abbey ventilation. The order evacuates into the refugee diaspora while the asteroid sanctuary is declared a permanently contaminated dead zone.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "cloistered_abbess",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "refugee_influx"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "medical",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "refugees_moving",
+        "wreck_left_behind"
+      ]
+    }
+  ],
+  "default_resolution": "sanctuary_evacuated_in_crisis",
+  "loose_threads": [
+    {
+      "id": "t_warhead_demolition_tag",
+      "surface": "cargo",
+      "detail": "The guidance chip on the warhead casing carries a brass inventory tag from a private planetary demolition contractor.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "information_control"
+      ]
+    },
+    {
+      "id": "t_slurry_procurement_contract",
+      "surface": "price_board",
+      "detail": "The lead slurry delivered to the abbey was billed to an offshore holding trust under a commercial mining concession.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "faith",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Asteroid monastery of the Sleeping Dove cancels annual pilgrimage amid unconfirmed coolant leaks.",
+    "Radiation monitors report anomalous isotope spikes in asteroid mining sector {system}.",
+    "Spiritual council of {system} denies schism rumors regarding ancient orbital armaments."
+  ],
+  "voice_direction": {
+    "cloistered_abbess": "Speaks in hushed, rhythmic cadences and uses elaborate religious metaphors for mechanical components. Refuses to use technical terms for radiation.",
+    "heretic_cantor": "Terse and exhausted, speaking in rapid diagnostic jargon. Mutters prayer verses between equipment readings.",
+    "salvage_deacon": "Jovial and transactional, speaking with the relaxed cadence of an experienced broker. Treats holy scripture as negotiable policy."
+  },
+  "novelty_tags": [
+    "monastic_warhead",
+    "tritium_leak",
+    "pacifist_relic",
+    "holy_ordnance",
+    "religious_schism"
+  ]
+}

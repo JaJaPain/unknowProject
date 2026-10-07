@@ -1,0 +1,371 @@
+{
+  "id": "premise.the_mayoral_tiebreaker",
+  "schema_version": 1,
+  "title": "The Mayoral Tiebreaker",
+  "logline": "A dead-heat municipal vote activates an obscure charter proviso awarding office to whichever candidate deposits the station's founding bell on the dais, unaware the clause was a satirical joke that dissolves the mayoralty.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "political"
+  ],
+  "themes": [
+    "who_owns_the_past",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "reformist_candidate",
+      "kind": "person",
+      "archetype": "union_organiser",
+      "description": "A popular dockside organiser running on port tariff relief; loud, optimistic, and prone to acting before checking the bylaws.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "incumbent_administrator",
+      "kind": "person",
+      "archetype": "official",
+      "description": "The sitting habitat manager who prides himself on unbroken protocol; secretly terrified of administrative scandal.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "municipal_patrol",
+      "kind": "ship",
+      "description": "A port authority security cutter charged with keeping transit corridors clear around the civic chamber.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relic_vault",
+      "kind": "place",
+      "description": "An unpressurized storage chamber in an abandoned industrial ring housing colonial artifacts and brass regalia.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "council_dais",
+      "kind": "place",
+      "description": "The central elevated platform where municipal elections are certified and charter oaths are sworn.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [
+      "election"
+    ],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "new_leader_untested"
+  ],
+  "public_situation": "A municipal election in {system} ends in an exact tie, prompting port arbiters to invoke an unamended century-old charter rule requiring physical delivery of the station's founding bell to the council dais.",
+  "private_truth": "The bell is genuine, but the tiebreaker proviso was drafted as a satirical joke clause by the station founders, legally dissolving the mayor's office and transferring all revenues to the dockworkers if ever triggered.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "tiebreaker_proviso_was_satirical_joke_clause"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Sirens sound across the concourse as officials confirm a tied ballot and announce the ceremonial bell race.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "reformist_candidate",
+          "target": "relic_vault",
+          "reason": "She needs an outside pilot to fly to the unpressurized relic vault and secure the heavy brass founding bell before port security seals the access hatch.",
+          "private_fact": "Her campaign spent its last credits on election posters, so she is paying the pilot out of pooled shift tokens.",
+          "outcome_tags": [
+            "bell_retrieved"
+          ],
+          "routes": {
+            "bell_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The incumbent administrator posts emergency legal injunctions across the concourse while archivists review the colonial charter.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "incumbent_administrator",
+          "target": "council_dais",
+          "reason": "He hires an independent pilot to rush the original unsealed charter scrolls to the dais so his legal clerks can lodge a formal procedural injunction.",
+          "private_fact": "His legal team just discovered the joke clause and he wants the document placed under judicial seal before anyone reads the dissolution penalty aloud.",
+          "outcome_tags": [
+            "charter_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "charter_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "Leaked excerpts of the charter scroll begin circulating among dock crews, who gather outside the council chamber to watch the dais.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "requester": "reformist_candidate",
+          "target": "council_dais",
+          "reason": "She needs the pilot to scan the dais acoustic resonance sensors to verify whether depositing the bell will automatically broadcast the founder's dissolution decree.",
+          "private_fact": "She now knows about the joke clause and is torn between taking executive power or triggering the total dissolution of the municipal seat.",
+          "outcome_tags": [
+            "decree_confirmed",
+            "readings_inconclusive"
+          ],
+          "routes": {
+            "decree_confirmed": "next",
+            "readings_inconclusive": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The midnight election deadline looms while armed port security cutters form an interception cordon around the central council bay.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "reformist_candidate",
+          "target": "municipal_patrol",
+          "reason": "She hires the pilot to push through the patrol cordon and reach the dais before the midnight deadline expires.",
+          "private_fact": "The patrol commander hails mid-fight offering municipal immunity and a heavy fuel voucher if the pilot jettisons the bell into the recycling slip instead.",
+          "outcome_tags": [
+            "patrol_broken",
+            "accepted_bribe"
+          ],
+          "routes": {
+            "patrol_broken": "next",
+            "accepted_bribe": "resolution:incumbent_retains_power"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the cordon cleared and the founding bell at the dais, the pilot must choose whether to strike the podium or hold back.",
+        "options": [
+          {
+            "id": "strike_the_bell",
+            "label": "Strike the bell on the dais to trigger the founder's joke dissolution clause",
+            "leads_to": "resolution:joke_clause_dissolves_council"
+          },
+          {
+            "id": "broker_compromise",
+            "label": "Withhold the bell until both candidates agree to form a joint emergency council",
+            "leads_to": "resolution:coalition_brokered"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "joke_clause_dissolves_council",
+      "reached_by": "The pilot breaks the patrol cordon and strikes the founding bell on the council dais.",
+      "summary": "The bell rings, triggering the founder's joke clause. The municipal office is formally dissolved, leaving station dockworkers in control of port revenues.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformist_candidate",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "incumbent_administrator",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": [
+            "election"
+          ]
+        },
+        {
+          "type": "law_change",
+          "law": "tariff_on_goods",
+          "change": "repealed"
+        },
+        {
+          "type": "deed",
+          "tag": "triggered_founding_joke_charter",
+          "public_summary": "A pilot rang an ancient tiebreaker bell, accidentally dissolving the station government under a century-old joke clause."
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "public_outrage"
+      ]
+    },
+    {
+      "id": "incumbent_retains_power",
+      "reached_by": "The pilot accepts the patrol commander's bribe and jettisons the bell before reaching the dais.",
+      "summary": "The deadline passes with no bell deposited. {role:incumbent_administrator} declares the charter lapsed and retains power by emergency municipal decree.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "incumbent_administrator",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "reformist_candidate",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": [
+            "election"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "buried_mayoral_tiebreaker",
+          "public_summary": "A pilot took a security payout to discard the founding bell, letting the old administration stay in power."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "coalition_brokered",
+      "reached_by": "The pilot confronts both candidates with the dissolution clause and forces a shared power agreement.",
+      "summary": "Confronted by mutual ruin under the joke clause, both candidates agree to lock the bell away and govern {system} through an uneasy joint coalition.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "reformist_candidate",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "incumbent_administrator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "remove": [
+            "election"
+          ]
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_mayoral_coalition",
+          "public_summary": "A pilot threatened to trigger an ancient municipal joke clause, forcing rival politicians to govern together."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "stalemate_cancels_election",
+      "reached_by": "The pilot never gets involved.",
+      "summary": "No bell reaches the dais before midnight. {role:incumbent_administrator} suspends the election indefinitely, prompting wildcat strikes across the freight docks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "incumbent_administrator",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "strike"
+          ],
+          "remove": [
+            "election"
+          ]
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "stalemate_cancels_election",
+  "loose_threads": [
+    {
+      "id": "t_founder_salvage_debt",
+      "surface": "station_notice",
+      "detail": "A handwritten appendix in the station's founding charter notes an unpaid debt to an unregistered salvage syndicate.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_clerk_archival_stamp",
+      "surface": "cargo",
+      "detail": "The parchment case holding the charter scroll bears an archival seal dated six months before the current election began.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "bribery"
+    ],
+    "motives": [
+      "control",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Municipal election in {system} deadlocked; century-old bell race charter clause invoked.",
+    "Dockworkers rally outside council dais as founding charter dissolution rumors spread.",
+    "Port administration denies security patrols were ordered to intercept election artifacts."
+  ],
+  "voice_direction": {
+    "reformist_candidate": "Boisterous and rapid-fire, frequently speaking in slogans. Stumbles into defensive stammering when asked about the charter fine print.",
+    "incumbent_administrator": "Dry, punctilious, and relies on formal legalistic euphemisms. Becomes shrill and overly deliberate when discussing the founding dais."
+  },
+  "novelty_tags": [
+    "election_tiebreaker",
+    "ceremonial_relic",
+    "founding_bell",
+    "municipal_politics",
+    "joke_clause"
+  ]
+}

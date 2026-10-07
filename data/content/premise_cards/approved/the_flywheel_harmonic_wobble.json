@@ -1,0 +1,341 @@
+{
+  "id": "premise.the_flywheel_harmonic_wobble",
+  "schema_version": 1,
+  "title": "The Flywheel Harmonic Wobble",
+  "logline": "A foundry station's kinetic flywheel develops a catastrophic harmonic wobble because the night-shift machinist used uncertified asteroid slag to cast replacement balance pins after supply delays.",
+  "scale": "personal",
+  "tone": [
+    "tense",
+    "survival"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "night_machinist",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "A tired lathe operator who improvised a repair to keep the foundry spinning and avoid docked wages.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "foundry_superintendent",
+      "kind": "person",
+      "archetype": "station_manager",
+      "description": "A ruthless operations chief who threatens to fire the entire shift if the station drops below spin-gravity.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "foundry_kinetic_spindle",
+      "kind": "object",
+      "description": "A fifty-meter spinning tungsten counterweight maintaining artificial gravity and power for the station core.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "foundry_casting_berth",
+      "kind": "place",
+      "description": "A scorching industrial slipway where magnetic molds shape structural station girders.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "deep_core_refinery",
+      "kind": "place",
+      "description": "A high-temperature processing plant at the station hub where raw ore is refined into pure structural alloys.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "quiet_cover_up",
+    "refugees_moving"
+  ],
+  "public_situation": "Vibration alarms rattle the residential decks of the foundry station in {system} as engineers announce urgent gyro-rotor balancing drills.",
+  "private_truth": "The main kinetic flywheel is shearing its housing because the night machinist cast replacement balance pins from uncertified asteroid slag to meet quota after parts failed to arrive.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "machinist_cast_flywheel_pins_from_uncertified_slag"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Low-frequency rumbles shake station deckplates while maintenance drones swarm the central spindle access sleeve.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "night_machinist",
+          "target": "deep_core_refinery",
+          "reason": "She needs an independent pilot to mine cuprite ore from the inner asteroid belt to cast genuine thermal damper bushings before the spindle shears off.",
+          "private_fact": "If she files an official requisition for materials, the automated ledger will log that she used scrap slag for the previous repair.",
+          "outcome_tags": [
+            "cuprite_delivered"
+          ],
+          "routes": {
+            "cuprite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Spin-gravity begins fluctuating erratically across the habitat rim, causing tools and furniture to slide across decks.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "foundry_superintendent",
+          "target": "foundry_casting_berth",
+          "reason": "He hires the pilot to collect an emergency magnetic clamp assembly from the casting berth to physically lock the vibrating spindle.",
+          "private_fact": "He knows the night shift cut corners, but reporting the structural flaw would void his quarterly productivity dividend.",
+          "outcome_tags": [
+            "clamp_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "clamp_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Structural warning beacons flash amber throughout the station hub as the flywheel's harmonic resonance peaks.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "night_machinist",
+          "requester": "foundry_superintendent",
+          "target": "foundry_kinetic_spindle",
+          "reason": "He hires an outside pilot to run an ultrasonic structural scan along the spindle collar to determine whether the shaft can survive another shift.",
+          "private_fact": "The scan will immediately detect the porous scrap slag pins, giving him legal cause to shift all financial liability onto the machinist.",
+          "outcome_tags": [
+            "microfractures_detected",
+            "spindle_certified_stable"
+          ],
+          "routes": {
+            "microfractures_detected": "resolution:machinist_blamed_and_ousted",
+            "spindle_certified_stable": "resolution:clandestine_repinning_succeeds"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the scan data in hand and the flywheel groaning under torque, the pilot must decide whether to save the machinist, protect the station, or force an evacuation.",
+        "options": [
+          {
+            "id": "help_repin_quietly",
+            "label": "Deliver the cuprite bushings and assist the machinist in quietly replacing the pins",
+            "leads_to": "resolution:clandestine_repinning_succeeds"
+          },
+          {
+            "id": "present_data_to_superintendent",
+            "label": "Hand the scan proof of slag pins to the superintendent and let him assign the blame",
+            "leads_to": "resolution:machinist_blamed_and_ousted"
+          },
+          {
+            "id": "sound_evacuation_alarm",
+            "label": "Broadcast the microfracture scan directly to station life support to trigger shutdown",
+            "leads_to": "resolution:emergency_shutdown_saves_lives"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "clandestine_repinning_succeeds",
+      "reached_by": "The pilot assists the machinist in installing the pure alloy bushings during a scheduled power dip.",
+      "summary": "The new bushings seat smoothly and the harmonic vibration fades. {role:night_machinist} keeps her job, while the station avoids a catastrophic structural spin collapse.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "night_machinist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foundry_superintendent",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "balanced_foundry_flywheel",
+          "public_summary": "A pilot delivered precision ore to repin a wobbling kinetic flywheel before the station broke apart."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "machinist_blamed_and_ousted",
+      "reached_by": "The pilot turns the microfracture scan over to the superintendent.",
+      "summary": "{role:foundry_superintendent} terminates {role:night_machinist} and seizes her wages to pay for repairs, preserving his own executive bonus intact.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "night_machinist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foundry_superintendent",
+          "fate": "promoted"
+        },
+        {
+          "type": "economy",
+          "good": "parts",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_flywheel_corner_cutting",
+          "public_summary": "A pilot uncovered illicit slag repairs on a foundry rotor, resulting in a machinist's dismissal."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "emergency_shutdown_saves_lives",
+      "reached_by": "The pilot broadcasts the scan, forcing an automated emergency scram.",
+      "summary": "Automated safety interlocks scram the flywheel. Spin-gravity is lost and the foundry is shuttered for a two-month overhaul, sparing lives but idling three hundred workers.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "foundry_superintendent",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "night_machinist",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        },
+        {
+          "type": "economy",
+          "good": "ore",
+          "ore": "cuprite",
+          "price": "spike"
+        },
+        {
+          "type": "deed",
+          "tag": "forced_foundry_safety_shutdown",
+          "public_summary": "A pilot broadcast rotor failure data, forcing a total emergency shutdown of a regional foundry."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "refugees_moving"
+      ]
+    },
+    {
+      "id": "flywheel_shears_in_neglect",
+      "reached_by": "The pilot never gets involved or abandons the scan.",
+      "summary": "The slag pins shear under centripetal strain. The flywheel tears through the magnetic collar, wrecking the station's primary power generation.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "night_machinist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "foundry_superintendent",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "shortage"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "refugees_moving"
+      ]
+    }
+  ],
+  "default_resolution": "flywheel_shears_in_neglect",
+  "loose_threads": [
+    {
+      "id": "t_machinist_supplier_invoice",
+      "surface": "cargo",
+      "detail": "The shipping docket for the delayed balance pins shows the order was canceled by an offshore logistics holding firm three weeks prior.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    },
+    {
+      "id": "t_spindle_ultrasonic_stamp",
+      "surface": "scan",
+      "detail": "The flywheel shaft casing bears an ultrasonic inspection stamp certifying it for twenty years past its designed operational lifespan.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "mining_charter_required",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Foundry station operators report minor rotational calibration adjustments in {system}.",
+    "Industrial cast girder deliveries delayed amid routine plant maintenance schedule.",
+    "Workers union demands independent inspection of outer ring artificial gravity turbines."
+  ],
+  "voice_direction": {
+    "night_machinist": "Raspy, underslept, and speaks in rapid defensive bursts. Constantly wipes machine oil from her hands and avoids eye contact.",
+    "foundry_superintendent": "Brisk, domineering, and relies on corporate productivity buzzwords. Becomes venomous whenever equipment maintenance costs are raised."
+  },
+  "novelty_tags": [
+    "kinetic_flywheel",
+    "harmonic_wobble",
+    "slag_casting",
+    "spin_gravity",
+    "foundry_machinist"
+  ]
+}

@@ -1,0 +1,315 @@
+[
+  {
+    "id": "premise.the_interpreters_parley",
+    "schema_version": 1,
+    "title": "The Interpreter's Parley",
+    "logline": "An unaligned dialect interpreter mediating a truce between two insular asteroid clans discovers their ancestral proverb accidentally insults the other clan if translated literally.",
+    "scale": "personal",
+    "tone": [
+      "tense",
+      "melancholy"
+    ],
+    "themes": [
+      "truth_vs_comfort",
+      "safety_vs_freedom"
+    ],
+    "roles": [
+      {
+        "id": "clan_interpreter",
+        "kind": "person",
+        "archetype": "negotiator",
+        "description": "A weary linguist specializing in archaic belt dialects; desperate to broker peace before fighting reaches their home station.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "elder_clansman",
+        "kind": "person",
+        "archetype": "official",
+        "description": "Patriarch of the ice-mining clan; rigid, proud, and listening for disrespect in every translated phrase.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "rival_matriarch",
+        "kind": "person",
+        "archetype": "merchant",
+        "description": "Leader of the rock-hauler clan; suspicious of formal treaties and nursing a decade-old family grudge.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "neutral_parley_hub",
+        "kind": "place",
+        "description": "An unpressurized observation cupola mounted on a dead orbital buoy midway between clan territories.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "translation_archive_berth",
+        "kind": "place",
+        "description": "A dusty document locker at an old trade mission station holding ancestral idiom ledgers.",
+        "reuse": "new_ok"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "alliance_broken",
+      "quiet_cover_up",
+      "route_closed"
+    ],
+    "public_situation": "Two insular asteroid mining clans on {system} declare a temporary ceasefire to negotiate water drilling rights inside a neutral observation cupola.",
+    "private_truth": "The ancestral treaty text hinges on an ancient shared idiom that means 'peaceful coexistence' in one dialect but 'subjugation of cattle' in the other if rendered verbatim.",
+    "core_why": {
+      "motive": "fear",
+      "secret": "clan_truce_proverb_mistranslated_as_blood_feud"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Mining clan skiffs power down thrusters around the neutral parley hub as armed sentries take position.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "clan_interpreter",
+            "target": "translation_archive_berth",
+            "reason": "She hires an unaligned pilot to retrieve the century-old dialect lexicons from the trade mission locker before the first round of parley opens.",
+            "private_fact": "She suspects the clans' mutual hatred is rooted in an accidental linguistic misunderstanding from the colony's founding voyage.",
+            "outcome_tags": [
+              "lexicons_retrieved"
+            ],
+            "routes": {
+              "lexicons_retrieved": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "Heated shouting breaks out over open parley frequencies as both clans interpret preliminary translations as hostile insults.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "clan_interpreter",
+            "requester": "elder_clansman",
+            "target": "neutral_parley_hub",
+            "reason": "He hires the pilot to scan the parley station's communication relays to verify whether the rival clan's acoustic transmissions match the translated text.",
+            "private_fact": "He is looking for any pretext to abandon the talks and launch a preemptive assault against the rock-haulers' main refinery.",
+            "outcome_tags": [
+              "transcripts_verified",
+              "discrepancies_flagged"
+            ],
+            "routes": {
+              "transcripts_verified": "next",
+              "discrepancies_flagged": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Both clan leaders withdraw to their shuttles and prime docking clamps, preparing to break off the parley and open fire.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "clan_interpreter",
+            "target": "neutral_parley_hub",
+            "reason": "She begs the pilot to rush an emergency amended treaty docket to the parley airlock before the clan shuttles disconnect.",
+            "private_fact": "She deliberately smoothed over the insulting idiom with a diplomatic euphemism; if either side discovers her alteration, she faces banishment.",
+            "outcome_tags": [
+              "treaty_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "treaty_delivered": "next",
+              "abandoned": "resolution:parley_collapses_into_skirmishes"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the parley hanging by a thread, the pilot can endorse the sanitized translation, expose the linguistic error openly, or allow the talks to fail.",
+          "options": [
+            {
+              "id": "deliver_sanitized",
+              "label": "Deliver the smoothed translation so both sides sign the fragile peace",
+              "leads_to": "resolution:fragile_truce_signed"
+            },
+            {
+              "id": "expose_etymology",
+              "label": "Present the historical lexicons proving the insult was a century-old linguistic error",
+              "leads_to": "resolution:shared_heritage_revealed"
+            },
+            {
+              "id": "withhold_docket",
+              "label": "Withhold the treaty and let the rival clans settle the dispute with weapons",
+              "leads_to": "resolution:parley_collapses_into_skirmishes"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "fragile_truce_signed",
+        "reached_by": "The pilot delivers the sanitized treaty docket, allowing both clans to sign.",
+        "summary": "Both clans sign the treaty under {role:clan_interpreter}'s smoothed phrasing. Mining resumes peacefully, though the fragile peace rests on a white lie.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "clan_interpreter",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_clansman",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "cast_fate",
+            "target": "rival_matriarch",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "brokered_asteroid_truce",
+            "public_summary": "A pilot carried an amended treaty that stopped a blood feud between rival asteroid clans."
+          }
+        ],
+        "seeds": [
+          "alliance_formed",
+          "quiet_cover_up"
+        ]
+      },
+      {
+        "id": "shared_heritage_revealed",
+        "reached_by": "The pilot presents the original lexicons proving the feud stemmed from an etymological misunderstanding.",
+        "summary": "Confronted by historical proof, {role:elder_clansman} and {role:rival_matriarch} realize their feud was born of a mistranslation. The clans agree to joint mining rights.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "clan_interpreter",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_clansman",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "rival_matriarch",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "water_ice",
+            "price": "crash"
+          },
+          {
+            "type": "deed",
+            "tag": "settled_linguistic_blood_feud",
+            "public_summary": "A pilot proved a decades-long clan feud was caused by a mistranslated proverb."
+          }
+        ],
+        "seeds": [
+          "alliance_formed",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "parley_collapses_into_skirmishes",
+        "reached_by": "The pilot withholds the docket or never gets involved.",
+        "summary": "The parley breaks down in bitter accusations. Both clans undock their gunboats and retreat behind reinforced defensive perimeters, severing all trade in {system}.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "clan_interpreter",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_clansman",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "economy",
+            "good": "ore",
+            "ore": "water_ice",
+            "price": "spike"
+          }
+        ],
+        "seeds": [
+          "route_closed",
+          "alliance_broken"
+        ]
+      }
+    ],
+    "default_resolution": "parley_collapses_into_skirmishes",
+    "loose_threads": [
+      {
+        "id": "t_linguist_grant_ledger",
+        "surface": "cargo",
+        "detail": "The lexicon shipping crates bear customs seals from a regional philanthropic trust that went bankrupt twenty years ago.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_parley_relay_tap",
+        "surface": "scan",
+        "detail": "The communications relay at the parley station contains an active fiber tap linked directly to a commercial ore brokerage.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "information_control"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "cornering_a_market",
+        "slow_infiltration",
+        "information_control"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "mining_charter_required",
+      "weapons_cold_zone"
+    ],
+    "radio_hooks": [
+      "Mining clan negotiations at neutral observation buoy enter critical phase in {system}.",
+      "Ice ore spot prices fluctuate as rival extraction cartels debate parley terms.",
+      "Belt trade delegates urge clan patriarchs to reach peaceful extraction accords."
+    ],
+    "voice_direction": {
+      "clan_interpreter": "Fast, analytical, and constantly parses grammar nuances. Becomes anxious and hesitant when explaining why certain words were omitted.",
+      "elder_clansman": "Slow, rumbling, and speaks with archaic grammatical formality. Pauses heavily between sentences to weigh every syllable.",
+      "rival_matriarch": "Sharp, direct, and impatient with academic terminology. Frequently cuts off pleasantries to demand concrete figures."
+    },
+    "novelty_tags": [
+      "clan_parley",
+      "dialect_translation",
+      "etymological_feud",
+      "water_drilling_truce",
+      "archaic_lexicon"
+    ]
+  }
+]

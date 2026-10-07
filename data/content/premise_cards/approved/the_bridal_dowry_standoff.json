@@ -1,0 +1,386 @@
+{
+  "id": "premise.the_bridal_dowry_standoff",
+  "schema_version": 1,
+  "title": "The Bridal Dowry Standoff",
+  "logline": "A lavish inter-clan wedding convoy is frozen at an orbital checkpoint when the bride's dowry freighter is found carrying unauthorized cargo that the groom secretly stashed to fund his own escape from family business.",
+  "scale": "local",
+  "tone": [
+    "farce",
+    "political"
+  ],
+  "themes": [
+    "loyalty_vs_survival",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "dynasty_matron",
+      "kind": "person",
+      "archetype": "merchant",
+      "description": "Matriarch of the groom's shipping line; obsessed with corporate etiquette and desperate to secure the marital trade merger.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "rebellious_groom",
+      "kind": "person",
+      "archetype": "heir",
+      "description": "A reluctant heir who secretly stashed untaxed fuel cells in the bridal barge to fund his own escape from family business.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "checkpoint_bailiff",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "A punctilious port officer who relishes impounding ceremonial shuttles for minor administrative infractions.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bailiff_interceptor",
+      "kind": "ship",
+      "description": "A stout port authority cutter with flashing searchlights and heavy tow grapples.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ceremonial_harbor",
+      "kind": "place",
+      "description": "A decorated private docking berth decked out for the reception with crystal lanterns and catering gantries.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shipping_dynasty",
+      "kind": "faction",
+      "description": "A proud regional transport firm built on ancestral gate charters and strict arranged marriages.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_broken",
+    "public_outrage",
+    "market_disrupted"
+  ],
+  "public_situation": "A lavish wedding convoy uniting two prominent merchant houses is halted at the station customs checkpoint, stranding the wedding party in orbit.",
+  "private_truth": "The groom secretly concealed hundreds of black-market thorium fuel cells inside the bridal dowry crates, intending to sell them and flee the marriage forever.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "groom_smuggled_escape_fuel_inside_bridal_dowry"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Festive streamers flutter around the customs airlocks as the bridal convoy is ordered to hold station.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "rebellious_groom",
+          "target": "ceremonial_harbor",
+          "reason": "He hires an outside pilot to pick up his personal luggage chest from the dowry hold before the customs inspection team reaches his barge.",
+          "private_fact": "The chest contains the forged transit visas and fuel transfer receipts he needs to disappear after the ceremony.",
+          "outcome_tags": [
+            "chest_recovered"
+          ],
+          "routes": {
+            "chest_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "Port bailiffs deploy radiation sensors around the dowry crates, threatening to impound the entire shipping line for tariff evasion.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "rebellious_groom",
+          "requester": "checkpoint_bailiff",
+          "target": "ceremonial_harbor",
+          "reason": "He hires an independent pilot to run a spectral density scan on the dowry containers to certify whether the declared fine crystal is masking contraband.",
+          "private_fact": "He wants a solid violation on record so he can force the wealthy dynasty to pay a massive administrative settlement.",
+          "outcome_tags": [
+            "fuel_detected",
+            "crates_certified_clear"
+          ],
+          "routes": {
+            "fuel_detected": "next",
+            "crates_certified_clear": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "The dynasty matron realizes her son is planning to abscond and sends private security to confiscate the dowry keys.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "dynasty_matron",
+          "target": "ceremonial_harbor",
+          "reason": "She hires the pilot to purchase official luxury import permits from the station exchange to retroactively legalize whatever is inside the containers.",
+          "private_fact": "She is willing to pay any bribe to prevent the wedding from collapsing, even if she has to drag her son to the altar in restraints.",
+          "outcome_tags": [
+            "permits_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "permits_delivered": "next",
+            "abandoned": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The bailiff attempts to tow the dowry freighter to the impound slip while the groom prepares to break for the jump gate.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "dynasty_matron",
+          "target": "bailiff_interceptor",
+          "reason": "She hires the pilot to disable the bailiff's tow cable array so the dowry can be brought to the ceremonial dock.",
+          "private_fact": "The bailiff hails mid-engagement offering the pilot a share of the seized contraband bounty if they escort the groom directly to customs detention.",
+          "outcome_tags": [
+            "tow_broken",
+            "accepted_bailiff_offer"
+          ],
+          "routes": {
+            "tow_broken": "next",
+            "accepted_bailiff_offer": "resolution:groom_arrested_merger_shattered"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the dowry secured and the secret out, the pilot must decide whether to save the wedding merger, help the groom escape, or hand the contraband to customs.",
+        "options": [
+          {
+            "id": "deliver_to_matron",
+            "label": "Deliver the permits and dowry to the matron to force the wedding ahead",
+            "leads_to": "resolution:arranged_marriage_enforced"
+          },
+          {
+            "id": "help_groom_escape",
+            "label": "Smuggle the groom and his fuel cells past the checkpoint into deep space",
+            "leads_to": "resolution:groom_flees_with_fortune"
+          },
+          {
+            "id": "surrender_to_bailiff",
+            "label": "Hand over the contraband fuel to the bailiff to uphold port law",
+            "leads_to": "resolution:groom_arrested_merger_shattered"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "arranged_marriage_enforced",
+      "reached_by": "The pilot delivers the legal permits and dowry to the matron.",
+      "summary": "{role:dynasty_matron} covers up the fuel scandal with emergency permits. The wedding proceeds smoothly, locking {role:rebellious_groom} into the family firm.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_dynasty",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "dynasty_matron",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rebellious_groom",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "checkpoint_bailiff",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_dynastic_wedding",
+          "public_summary": "A pilot broke a port impound to deliver dowry permits, keeping a multi-station corporate wedding on schedule."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "groom_flees_with_fortune",
+      "reached_by": "The pilot helps the groom smuggle his fuel cells away from the convoy.",
+      "summary": "{role:rebellious_groom} vanishes past the gate with his fuel hoard. The wedding collapses in public humiliation and {role:shipping_dynasty} loses its ancestral merger.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_dynasty",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "rebellious_groom",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dynasty_matron",
+          "fate": "ruined"
+        },
+        {
+          "type": "economy",
+          "good": "fuel",
+          "price": "crash"
+        },
+        {
+          "type": "deed",
+          "tag": "aided_runaway_groom",
+          "public_summary": "A pilot helped a wealthy heir steal contraband fuel from his own dowry and flee his wedding."
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "groom_arrested_merger_shattered",
+      "reached_by": "The pilot surrenders the fuel cells to the checkpoint bailiff.",
+      "summary": "{role:checkpoint_bailiff} impounds the bridal dowry and arrests {role:rebellious_groom} for fuel trafficking. The rival family cancels the contract in disgust.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_dynasty",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "checkpoint_bailiff",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rebellious_groom",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dynasty_matron",
+          "fate": "exposed"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_dowry_fuel_smuggling",
+          "public_summary": "A pilot turned contraband fuel found in a bridal dowry over to station customs."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "alliance_broken"
+      ]
+    },
+    {
+      "id": "dowry_impounded_in_stalemate",
+      "reached_by": "The pilot never gets involved.",
+      "summary": "Port bailiffs impound the bridal dowry for customs clearance failures. The wedding is canceled amid acrimonious lawsuits between both merchant families.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "shipping_dynasty",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "dynasty_matron",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "rebellious_groom",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "economy",
+          "good": "luxury",
+          "price": "crash"
+        }
+      ],
+      "seeds": [
+        "alliance_broken",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "dowry_impounded_in_stalemate",
+  "loose_threads": [
+    {
+      "id": "t_groom_broker_chits",
+      "surface": "cargo",
+      "detail": "The fuel cell manifests are signed by an unregistered brokerage operating from a casino yacht in the core worlds.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_bailiff_audit_quota",
+      "surface": "station_notice",
+      "detail": "The customs terminal displays an unfulfilled revenue quota notice highlighted in red for the current fiscal quarter.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "survival",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Celebrity wedding flotilla delayed at {system} customs inspection checkpoint.",
+    "Shipping line executives deny rumors of contraband discovery aboard bridal transports.",
+    "Catering and hospitality stocks tumble following unconfirmed marriage postponement."
+  ],
+  "voice_direction": {
+    "dynasty_matron": "Haughty, imperious, and speaks in crisp theatrical cadences. Never admits anything is wrong even while issuing desperate bribe requests.",
+    "rebellious_groom": "Nervous, petulant, and speaks in rapid breathless bursts. Constantly looks over his shoulder and curses his family.",
+    "checkpoint_bailiff": "Smug, deliberate, and relishes reciting customs regulation numbers. Pauses dramatically to let wealthy requesters stew."
+  },
+  "novelty_tags": [
+    "bridal_dowry",
+    "contraband_fuel",
+    "runaway_groom",
+    "arranged_merger",
+    "customs_checkpoint"
+  ]
+}

@@ -29,7 +29,6 @@ const KAELEN_LINES := [
 	"Cute, Shiny. The pay just went down. Want it or not?",
 	"You haggle like you fly, Shiny. Less money now. Take it or walk.",
 	"Nice try, Shiny. The new number's lower. Don't make me lower it again.",
-	"I don't haggle with my own pilots, Shiny. Pay's cut. Clock's ticking.",
 ]
 
 

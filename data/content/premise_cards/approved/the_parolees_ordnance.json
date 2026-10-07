@@ -1,0 +1,334 @@
+{
+  "id": "premise.the_parolees_ordnance",
+  "schema_version": 1,
+  "title": "The Parolee's Ordnance",
+  "logline": "An ex-convict trying to run an honest drive-tuning shop is framed when her former crew stashes stolen naval munitions in her shop exhaust flue before an unannounced compliance sweep.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "tense"
+  ],
+  "themes": [
+    "reinvention",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "paroled_machinist",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Former smuggler on strict conditional release; trying to run an honest drive-tuning shop in the outer ring.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "probation_inspector",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Suspicious habitat compliance officer who believes all repeat offenders eventually slip up.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "old_crew_fixer",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Slick former accomplice who views rehabilitation as an insult to old loyalty.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "drive_repair_bay",
+      "kind": "place",
+      "description": "A cramped, low-g repair berth with a sputtering plasma torch and stacks of reconditioned manifolds.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrap_containment_vault",
+      "kind": "place",
+      "description": "A shielded disposal depot in the station's deep keel where dangerous debris is dumped.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "grudge_against_player",
+    "evidence_loose",
+    "law_tightened"
+  ],
+  "public_situation": "A paroled starship mechanic on {system} faces an unannounced compliance sweep that could revoke their conditional release and shutter their repair bay.",
+  "private_truth": "The mechanic's former crew hid a stolen military torpedo casing in the shop's exhaust chimney to hide it from station patrols, leaving the mechanic to face the prison term.",
+  "core_why": {
+    "motive": "fear",
+    "secret": "ex_convict_framed_with_stolen_torpedo_casing"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Compliance drones begin cordoning off outer repair berths for mandatory unannounced safety inspections.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "paroled_machinist",
+          "target": "drive_repair_bay",
+          "reason": "She needs an unmonitored pilot to extract the heavy torpedo casing stashed in her exhaust flue before the compliance drones scan her bay.",
+          "private_fact": "She cannot report the ordnance without her parole being instantly revoked for possessing restricted military components.",
+          "outcome_tags": [
+            "casing_extracted"
+          ],
+          "routes": {
+            "casing_extracted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "The probation inspector arrives at the workshop perimeter with chemical sniffers and a squad of port bailiffs.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "old_crew_fixer",
+          "requester": "probation_inspector",
+          "target": "drive_repair_bay",
+          "reason": "He hires an outsider pilot to run an independent ion residue scan on the shop's outer vents to settle an equipment dispute.",
+          "private_fact": "He received an anonymous tip about the torpedo from the old crew, who want the machinist jailed before she talks.",
+          "outcome_tags": [
+            "residue_detected",
+            "vents_certified_clean"
+          ],
+          "routes": {
+            "residue_detected": "next",
+            "vents_certified_clean": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "The old crew's fixer surfaces near the containment docks, waiting to reclaim the stolen ordnance or ensure the machinist takes the blame.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "paroled_machinist",
+          "target": "scrap_containment_vault",
+          "reason": "She begs the pilot to dump the torpedo into the deep keel containment vault before either the inspector or her old crew can trace it to her.",
+          "private_fact": "If she dumps the torpedo, she loses all evidence that her former crew planted it to frame her.",
+          "outcome_tags": [
+            "ordnance_dumped",
+            "abandoned"
+          ],
+          "routes": {
+            "ordnance_dumped": "next",
+            "abandoned": "resolution:parolee_imprisoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the ordnance secured in cargo, the pilot can either dump it, turn it over to the inspector with proof of the frame-up, or return it to the fixer for a payout.",
+        "options": [
+          {
+            "id": "deliver_to_inspector",
+            "label": "Deliver the torpedo and fixer's com-logs to the inspector",
+            "leads_to": "resolution:fixer_exposed_parolee_freed"
+          },
+          {
+            "id": "sell_to_fixer",
+            "label": "Sell the stolen torpedo back to the old crew's fixer",
+            "leads_to": "resolution:ordnance_sold_to_crew"
+          },
+          {
+            "id": "dump_anonymously",
+            "label": "Jettison the torpedo into the scrap containment vault",
+            "leads_to": "resolution:parolee_cleared_anonymously"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "fixer_exposed_parolee_freed",
+      "reached_by": "The pilot turns over the ordnance and communication logs proving the frame-up.",
+      "summary": "{role:probation_inspector} arrests {role:old_crew_fixer} for the planting operation. {role:paroled_machinist} keeps her shop and her conditional freedom.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "old_crew_fixer",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "paroled_machinist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "probation_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_parole_frame_up",
+          "public_summary": "A pilot caught an old crime crew framing their reformed mechanic with stolen military warheads."
+        }
+      ],
+      "seeds": [
+        "grudge_against_player",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "parolee_cleared_anonymously",
+      "reached_by": "The pilot dumps the torpedo into the scrap containment vault, leaving no physical evidence.",
+      "summary": "The compliance sweep finds nothing. {role:paroled_machinist} avoids prison but remains under intense surveillance, while her old crew walks free.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_machinist",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "cast_fate",
+          "target": "old_crew_fixer",
+          "fate": "fled"
+        },
+        {
+          "type": "law_change",
+          "law": "cargo_inspection",
+          "change": "enacted"
+        },
+        {
+          "type": "deed",
+          "tag": "dumped_hot_torpedo",
+          "public_summary": "A pilot quietly disposed of unregistered naval munitions down a habitat's deep keel."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "ordnance_sold_to_crew",
+      "reached_by": "The pilot sells the torpedo back to the fixer.",
+      "summary": "{role:old_crew_fixer} pays off the pilot and smuggles the torpedo off-station. {role:paroled_machinist} is left terrified that her former crew will return.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_machinist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "old_crew_fixer",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_contraband_munitions",
+          "public_summary": "A pilot traded stolen naval munitions back to an outer-ring syndicate for private coin."
+        }
+      ],
+      "seeds": [
+        "stolen_goods_circulating",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "parolee_imprisoned",
+      "reached_by": "The pilot never intervenes or abandons the task.",
+      "summary": "The compliance inspection discovers the torpedo casing in the exhaust flue. {role:paroled_machinist} is sent back to the penal colony while the shop is seized.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "paroled_machinist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "probation_inspector",
+          "fate": "promoted"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "power_vacuum",
+        "law_tightened"
+      ]
+    }
+  ],
+  "default_resolution": "parolee_imprisoned",
+  "loose_threads": [
+    {
+      "id": "t_torpedo_customs_tag",
+      "surface": "cargo",
+      "detail": "The torpedo casing carries an impound seal from a commercial salvage firm operating in the outer ring.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_inspector_transfer_request",
+      "surface": "station_notice",
+      "detail": "The inspector's transfer application to the central administrative ring was approved the morning before the raid was ordered.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "bribery"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "fear",
+      "revenge"
+    ]
+  },
+  "law_hooks": [
+    "cargo_inspection",
+    "contraband_list"
+  ],
+  "radio_hooks": [
+    "Habitat compliance sweeps intensify across outer maintenance rings of {system}.",
+    "Independent mechanics protest unannounced shop inspections by port bailiffs.",
+    "Unregistered munitions rumors denied by station probation board."
+  ],
+  "voice_direction": {
+    "paroled_machinist": "Speaks in hurried, breathy sentences and constantly corrects her own phrasing to sound cooperative. Avoids using slang from prison.",
+    "probation_inspector": "Flat, methodical, and asks rhetorical questions without waiting for answers. Never raises his voice.",
+    "old_crew_fixer": "Overly familiar and relaxed, speaking in low murmurs. Treats legal trouble like a practical joke between friends."
+  },
+  "novelty_tags": [
+    "parole_compliance",
+    "torpedo_casing",
+    "framed_mechanic",
+    "penal_release",
+    "exhaust_flue"
+  ]
+}

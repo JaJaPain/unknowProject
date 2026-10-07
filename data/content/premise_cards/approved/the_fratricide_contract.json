@@ -1,0 +1,389 @@
+{
+  "id": "premise.the_fratricide_contract",
+  "schema_version": 1,
+  "title": "The Fratricide Contract",
+  "logline": "An underworld hitman bound by clan law to execute their sibling uncovers evidence that the syndicate underboss secretly authorized the prohibited smuggling run to purge rivals.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "tragic"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "loyalty_vs_survival"
+  ],
+  "roles": [
+    {
+      "id": "syndicate_enforcer",
+      "kind": "person",
+      "archetype": "soldier",
+      "description": "A loyal underworld executioner bound by an ancient blood oath; agonizing over the contract on their younger brother.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "errant_brother",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "A reckless courier who poached cargo from a prohibited lane; swears he was framed by the family leadership.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_underboss",
+      "kind": "person",
+      "archetype": "crime_boss",
+      "description": "An austere syndicate elder who insists that code infractions must be washed in family blood to prevent civil war.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_skiff",
+      "kind": "ship",
+      "description": "A nimble interceptor skiff sent by the underboss to locate the safehouse and burn down witnesses.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "enforcer_gunship",
+      "kind": "ship",
+      "description": "A matte-black heavy interdictor armed with concussion torpedo tubes and armored cockpit shields.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "clandestine_safehouse",
+      "kind": "place",
+      "description": "A hidden pressurized airlock hidden behind an abandoned ore processing hopper.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dockside_syndicate",
+      "kind": "faction",
+      "description": "A century-old criminal fraternity that governs station black markets through strict blood oaths.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "faction_weakened",
+    "grudge_against_player",
+    "witness_at_large"
+  ],
+  "public_situation": "Rumors of an impending underworld purge circulate through the lower docks of {system} as rival smugglers clear out of the outer ring.",
+  "private_truth": "The syndicate underboss secretly authorized the prohibited smuggling run using a forged seal, deliberately entrapping the younger brother to force a loyal enforcer to prove unconditional obedience.",
+  "core_why": {
+    "motive": "control",
+    "secret": "underboss_framed_brother_to_test_enforcer"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Syndicate lookouts take up surveillance positions along docking alleyways while fuel deliveries to the outer ring are curtailed.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "syndicate_enforcer",
+          "target": "clandestine_safehouse",
+          "reason": "He hires an outsider pilot to retrieve his brother's navigation datapad from the safehouse before syndicate cleaners sweep the berth.",
+          "private_fact": "He wants proof of who issued the flight orders before he is forced by clan law to carry out the death warrant.",
+          "outcome_tags": [
+            "datapad_secured"
+          ],
+          "routes": {
+            "datapad_secured": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Syndicate gunboats begin patrolling the station perimeter with orders to shoot down any craft leaving without an underboss transponder.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "syndicate_underboss",
+          "requester": "errant_brother",
+          "target": "clandestine_safehouse",
+          "reason": "He begs the pilot to scan the datapad's cryptographic header against the syndicate dispatch relay to verify the underboss's digital signet.",
+          "private_fact": "He knows that if the underboss's seal is verified, the entire family code will turn against the leadership for manufacturing a false contract.",
+          "outcome_tags": [
+            "underboss_seal_verified",
+            "orders_inconclusive"
+          ],
+          "routes": {
+            "underboss_seal_verified": "next",
+            "orders_inconclusive": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "The underboss deploys an interceptor to eliminate the safehouse airlock and incinerate all physical evidence.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "syndicate_enforcer",
+          "target": "syndicate_skiff",
+          "reason": "He hires the pilot to destroy the trailing syndicate hit-ship before it can breach the safehouse and kill his brother.",
+          "private_fact": "Taking arms against a syndicate ship technically marks him as a code-breaker, forfeiting his rank and protection.",
+          "outcome_tags": [
+            "skiff_destroyed",
+            "safehouse_breached"
+          ],
+          "routes": {
+            "skiff_destroyed": "next",
+            "safehouse_breached": "resolution:brother_executed_under_code"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "The syndicate underboss arrives in person at the central docking gantry, demanding the enforcer present his brother's corpse.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "errant_brother",
+          "target": "enforcer_gunship",
+          "reason": "He hires the pilot to escort his escape shuttle through the outer gate cordon before the underboss seals the jump perimeter.",
+          "private_fact": "The underboss hails mid-flight offering the pilot a lucrative syndicate smuggling franchise if they disable the brother's engines and stand down.",
+          "outcome_tags": [
+            "cordon_broken",
+            "accepted_syndicate_bribe"
+          ],
+          "routes": {
+            "cordon_broken": "next",
+            "accepted_syndicate_bribe": "resolution:brother_executed_under_code"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the brother alive and proof of the frame-up in hand, the pilot must decide how to resolve the family blood feud.",
+        "options": [
+          {
+            "id": "present_proof_to_syndicate",
+            "label": "Present the underboss's forged seal to the clan elders to trigger an internal coup",
+            "leads_to": "resolution:underboss_deposed_in_coup"
+          },
+          {
+            "id": "escort_brothers_to_gate",
+            "label": "Help both brothers escape the system together into deep space",
+            "leads_to": "resolution:brothers_flee_into_exile"
+          },
+          {
+            "id": "deliver_brother_to_underboss",
+            "label": "Deliver the brother to the underboss to uphold the criminal code",
+            "leads_to": "resolution:brother_executed_under_code"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "underboss_deposed_in_coup",
+      "reached_by": "The pilot presents the cryptographic evidence of the frame-up to syndicate elders.",
+      "summary": "The elders declare {role:syndicate_underboss} an oath-breaker for fabricating contracts. The underboss is deposed while {role:syndicate_enforcer} assumes command of the family.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dockside_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_enforcer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underboss",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "errant_brother",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "overthrew_corrupt_syndicate_boss",
+          "public_summary": "A pilot exposed an underworld boss who framed his own men, sparking a dockside gang coup."
+        }
+      ],
+      "seeds": [
+        "new_leader_untested",
+        "faction_emboldened"
+      ]
+    },
+    {
+      "id": "brothers_flee_into_exile",
+      "reached_by": "The pilot escorts both brothers past the outer gate cordon.",
+      "summary": "{role:syndicate_enforcer} and {role:errant_brother} escape together into outer space, severing their blood ties forever. {role:syndicate_underboss} tightens his grip on the station docks.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dockside_syndicate",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_enforcer",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "errant_brother",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underboss",
+          "fate": "alive_grudge"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_renegade_brothers",
+          "public_summary": "A pilot helped two underworld brothers break a syndicate hit cordon and flee into exile."
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "brother_executed_under_code",
+      "reached_by": "The pilot takes the underboss's bribe or delivers the brother to the dock.",
+      "summary": "{role:errant_brother} is executed on the docks to satisfy the syndicate code. {role:syndicate_enforcer} remains trapped in service, broken by grief and guilt.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "dockside_syndicate",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "errant_brother",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_enforcer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_underboss",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "enforced_syndicate_blood_code",
+          "public_summary": "A pilot delivered a renegade smuggler to gang executioners to satisfy an underworld debt."
+        }
+      ],
+      "seeds": [
+        "law_tightened",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "enforcer_flees_in_shame",
+      "reached_by": "The pilot never gets involved or abandons the brother.",
+      "summary": "{role:syndicate_enforcer} refuses to execute his brother but fails to save him, fleeing into outer darkness while {role:syndicate_underboss} cleanses the docks.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "syndicate_enforcer",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "errant_brother",
+          "fate": "ruined"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "crackdown"
+          ],
+          "remove": []
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "power_vacuum"
+      ]
+    }
+  ],
+  "default_resolution": "enforcer_flees_in_shame",
+  "loose_threads": [
+    {
+      "id": "t_underboss_vault_key",
+      "surface": "cargo",
+      "detail": "The datapad includes an encrypted access voucher for a private security deposit box rented under an assumed name.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_hit_ship_ordnance_lot",
+      "surface": "scan",
+      "detail": "The torpedoes loaded onto the interceptor carry lot numbers traced to an impounded cargo vessel auctioned by port customs.",
+      "can_carry_methods": [
+        "forged_records",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "impersonation",
+      "slow_infiltration",
+      "forged_records"
+    ],
+    "motives": [
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "curfew",
+    "weapons_cold_zone"
+  ],
+  "radio_hooks": [
+    "Underworld tensions flare across outer maintenance rings of {system}.",
+    "Dock security reports unconfirmed weapons fire in cargo transit corridor four.",
+    "Independent haulers advised to avoid unpatrolled berths following gang dispute."
+  ],
+  "voice_direction": {
+    "syndicate_enforcer": "Heavy, low, and speaks in terse deliberate sentences. Sounds profoundly weary and pauses as if physically carrying weight.",
+    "errant_brother": "Youthful, defiant, and speaks with frantic bravado that cracks under pressure. Desperately wants his brother's approval.",
+    "syndicate_underboss": "Smooth, grandfatherly, and chillingly affectionate. Uses terms of family endearment while giving ruthless execution orders."
+  },
+  "novelty_tags": [
+    "blood_feud",
+    "criminal_code",
+    "fratricidal_contract",
+    "forged_dispatch",
+    "dockside_syndicate"
+  ]
+}

@@ -1,0 +1,414 @@
+{
+  "id": "premise.the_muster_roll_audit",
+  "schema_version": 1,
+  "title": "The Muster Roll Audit",
+  "logline": "A retired military paymaster living under an assumed identity across three systems is tracked down by veteran survivors seeking back-pay from a battle the admiralty covered up as a routine training accident.",
+  "scale": "regional",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "debt_and_obligation"
+  ],
+  "roles": [
+    {
+      "id": "retired_paymaster",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "An aging clerical officer living in a quiet border system; plagued by nightmares and unpaid ledger debts.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "militia_tracker",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "A hardened veteran hired by a wounded veterans' lodge to collect twenty years of stolen disability pay.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_marshal",
+      "kind": "person",
+      "archetype": "official",
+      "description": "A regional magistrate tasked with suppressing wartime pension fraud lawsuits to protect government bond ratings.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "militia_skiff",
+      "kind": "ship",
+      "description": "A fast armed scout skiff screening the veteran flotilla and tracing hyperdrive wakes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "veteran_corvette",
+      "kind": "ship",
+      "description": "A battle-scarred heavy escort flown by disabled ex-soldiers demanding their back wages.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "border_archive_vault",
+      "kind": "place",
+      "description": "A cold data bunker situated in a deep space relay gap holding sealed postwar military audit dockets.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "veterans_lodge_station",
+      "kind": "place",
+      "description": "A rundown hospice station in an outer rim mining cluster where disabled combat veterans gather.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "veterans_coalition",
+      "kind": "faction",
+      "description": "An advocacy union of discharged infantry and gunners demanding their withheld wartime pensions.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "evidence_loose",
+    "faction_emboldened",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "An aging bookkeeper in {system} is pursued across regional jump gates by bounty hunters claiming he holds embezzled regimental funds from an old campaign.",
+  "private_truth": "The paymaster diverted millions in wartime disability pensions into private offshore trusts under orders from superiors who wanted a disastrous planetary siege erased from official history.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "paymaster_faked_casualty_records_to_divert_pensions"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "A bounty bulletin targeting a former administrative clerk is posted across all transit lounges in {system}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "retired_paymaster",
+          "target": "border_archive_vault",
+          "reason": "He hires an unaligned pilot to retrieve an encrypted ledger cylinder from a decommissioned archive vault before bounty hunters locate his safehouse.",
+          "private_fact": "The cylinder contains the authentic muster rolls of the wounded soldiers whose pensions were systematically falsified.",
+          "outcome_tags": [
+            "ledger_retrieved"
+          ],
+          "routes": {
+            "ledger_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "The paymaster flees through the jump gate as the veteran militia corvette tracks his hyperdrive wake.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_paymaster",
+          "target": "border_archive_vault",
+          "reason": "He hires the pilot to deliver decryption keys to the vault relay so the ledger data can be backed up before the militia intercepts them.",
+          "private_fact": "He wants the evidence saved because his own pension is tied to the fraudulent casualty write-off.",
+          "outcome_tags": [
+            "keys_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "keys_delivered": "next",
+            "abandoned": "next"
+          }
+        },
+        {
+          "verb": "investigate_signal",
+          "culprit": "retired_paymaster",
+          "requester": "militia_tracker",
+          "target": "border_archive_vault",
+          "reason": "She hires the pilot to scan the archive vault antenna array to verify whether the ledger contains the stolen muster dockets.",
+          "private_fact": "She represents fifty maimed survivors who have lived in squalor for twenty years while their commanding officers drew executive dividends.",
+          "outcome_tags": [
+            "muster_rolls_confirmed",
+            "archive_corrupted"
+          ],
+          "routes": {
+            "muster_rolls_confirmed": "next",
+            "archive_corrupted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "any_system",
+      "public_change": "The provincial marshal arrives with legal arrest warrants, demanding both the ledger and the paymaster be surrendered to the state.",
+      "missions": [
+        {
+          "verb": "kill_ships",
+          "requester": "provincial_marshal",
+          "target": "militia_skiff",
+          "reason": "He pays the pilot to intercept and destroy the veteran militia scout skiff before they can storm the paymaster's shuttle.",
+          "private_fact": "He has orders from the colonial governor to seize the ledger and incinerate it to prevent a multi-million credit class action lawsuit.",
+          "outcome_tags": [
+            "skiff_driven_off",
+            "skiff_destroyed"
+          ],
+          "routes": {
+            "skiff_driven_off": "next",
+            "skiff_destroyed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "The veteran corvette corners the paymaster's vessel outside the veterans' lodge station, broadcasting an open ultimatum.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "retired_paymaster",
+          "target": "veteran_corvette",
+          "reason": "He hires the pilot to escort his shuttle into deep space past the veterans' blockade so he can escape the region forever.",
+          "private_fact": "The tracker hails mid-flight offering to share the recovered pension bounty if the pilot delivers the paymaster and the ledger to the lodge.",
+          "outcome_tags": [
+            "escort_successful",
+            "allied_with_veterans"
+          ],
+          "routes": {
+            "escort_successful": "resolution:paymaster_escapes_into_exile",
+            "allied_with_veterans": "resolution:pensions_recovered_for_veterans"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the ledger secured and the old paymaster cornered, the pilot must decide whose hands receive the stolen records.",
+        "options": [
+          {
+            "id": "give_to_veterans",
+            "label": "Deliver the ledger and paymaster to the veterans' lodge for justice",
+            "leads_to": "resolution:pensions_recovered_for_veterans"
+          },
+          {
+            "id": "surrender_to_marshal",
+            "label": "Turn the ledger over to the marshal to bury the scandal and claim the bounty",
+            "leads_to": "resolution:ledger_buried_by_state"
+          },
+          {
+            "id": "broadcast_records",
+            "label": "Release the authentic casualty muster rolls across regional public relays",
+            "leads_to": "resolution:pension_scandal_exposed_regionwide"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "pensions_recovered_for_veterans",
+      "reached_by": "The pilot turns over the ledger and the paymaster to the veterans' coalition.",
+      "summary": "{role:veterans_coalition} uses the ledger to force the colonial treasury into settling back pensions. {role:retired_paymaster} is placed in civil custody.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_coalition",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_paymaster",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_tracker",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_marshal",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "reclaimed_veteran_pensions",
+          "public_summary": "A pilot recovered lost military muster ledgers, securing back pay for disabled war veterans."
+        }
+      ],
+      "seeds": [
+        "faction_emboldened",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "ledger_buried_by_state",
+      "reached_by": "The pilot turns the ledger over to the provincial marshal.",
+      "summary": "{role:provincial_marshal} destroys the muster rolls, permanently extinguishing the veterans' lawsuit. {role:retired_paymaster} receives a quiet government stipend in exile.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_coalition",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_marshal",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_paymaster",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_tracker",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "buried_military_pension_fraud",
+          "public_summary": "A pilot handed secret military casualty records to the state, ending a veteran lawsuit."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "pension_scandal_exposed_regionwide",
+      "reached_by": "The pilot broadcasts the authentic casualty muster rolls openly.",
+      "summary": "The public learns the admiralty stole veterans' pensions to balance wartime deficits. Protests erupt across three systems, collapsing the colonial cabinet.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_coalition",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_marshal",
+          "fate": "exposed"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_paymaster",
+          "fate": "exposed"
+        },
+        {
+          "type": "system_state",
+          "add": [
+            "power_vacuum"
+          ],
+          "remove": []
+        },
+        {
+          "type": "deed",
+          "tag": "broadcast_stolen_pension_rolls",
+          "public_summary": "A pilot leaked wartime muster records, exposing government theft of veteran pensions."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "paymaster_escapes_into_exile",
+      "reached_by": "The pilot escorts the paymaster out of the region, or never intervenes.",
+      "summary": "{role:retired_paymaster} disappears into uncharted space with the ledger. {role:veterans_coalition} remains penniless and forgotten in outer mining hospices.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_coalition",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_paymaster",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "militia_tracker",
+          "fate": "alive_grudge"
+        }
+      ],
+      "seeds": [
+        "witness_at_large",
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "paymaster_escapes_into_exile",
+  "loose_threads": [
+    {
+      "id": "t_paymaster_trust_bond",
+      "surface": "cargo",
+      "detail": "The ledger includes an irrevocable depository certificate issued by a private offshore commercial trust.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_militia_tracker_id",
+      "surface": "scan",
+      "detail": "The tracker's bounty license carries an emergency countersignature from an outer-ring miners' fraternal mutual society.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "information_control"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "information_control"
+    ],
+    "motives": [
+      "guilt",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "quarantine_orders"
+  ],
+  "radio_hooks": [
+    "Veteran advocacy coalition files regional injunction over withheld wartime service credits.",
+    "Provincial judicial authorities offer reward for former administrative clerk sought for questioning.",
+    "Discharged service personnel hold silent vigil outside colonial treasury offices in {system}."
+  ],
+  "voice_direction": {
+    "retired_paymaster": "Weary, pedantic, and frequently pauses while quoting fiscal regulations. Speaks in a low, trembling tone when asked about wartime casualties.",
+    "militia_tracker": "Brusque, raspy, and speaks with cold clipped efficiency. Treats moral debates as distractions from financial settlement.",
+    "provincial_marshal": "Smooth, authoritative, and speaks in measured legal euphemisms. Downplays historic atrocities as minor accounting oversights."
+  },
+  "novelty_tags": [
+    "pension_ledger",
+    "wartime_audit",
+    "disability_pay",
+    "bounty_tracker",
+    "regimental_casualty_fraud"
+  ]
+}
