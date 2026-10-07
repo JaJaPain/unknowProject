@@ -33,6 +33,8 @@ var destination_system_id := &""
 
 
 func _initialize() -> void:
+	# Never touch the player's Destination history (Lodestar.draw_for_new_campaign).
+	load("res://scripts/domain/Lodestar.gd").history_path = ""
 	await process_frame
 	# --- Every card's scene -------------------------------------------------------
 	var kinds := {}

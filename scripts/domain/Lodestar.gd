@@ -50,11 +50,43 @@ static func draw(campaign_seed: int) -> Dictionary:
 	return cards[rng.randi() % cards.size()]
 
 
+## Which Destinations this computer has already given a campaign, across
+## every campaign (season sim 2026-10-06: with a seed-only draw, campaigns 7, 8
+## and 9 all drew the Humming Gate). Same store and rules as premise cards
+## (fresh first, never one of the last few), in its own file outside the
+## campaign slots. "" turns it off (a pure seeded draw: tests, the sim).
+static var history_path := "user://destination_history.json"
+const HistoryStore := preload("res://scripts/story/premise/PremiseCardHistoryStore.gd")
+
+
+## A new campaign's first Destination: by the player's history when there is
+## one, else by the campaign seed. Records the pick.
+static func draw_for_new_campaign(campaign_seed: int) -> Dictionary:
+	if history_path.is_empty():
+		return draw(campaign_seed)
+	var ids: Array = deck().map(func(c): return str(c["id"]))
+	if ids.is_empty():
+		return {}
+	var history: Dictionary = HistoryStore.load_history(history_path).get("history", HistoryStore.empty_history())
+	history = HistoryStore.advance_cycle_if_due(history, ids)
+	# Never one of the last half of the deck's worth of campaigns (3 of 6).
+	var window := maxi(1, ids.size() / 2)
+	var ordered := HistoryStore.order_candidates(history, ids, hash("lodestar:%d" % campaign_seed), window)
+	# A new cycle makes every id "fresh" again; still skip the last few used.
+	var pick := ordered[0]
+	for id in ordered:
+		if not HistoryStore.is_recent(history, id, window):
+			pick = id
+			break
+	HistoryStore.save_history(HistoryStore.record_shown(history, pick), history_path)
+	return by_id(pick)
+
+
 ## The campaign's state, creating it (card drawn, nothing known) if missing.
 static func state(story_state: Dictionary, campaign_seed: int) -> Dictionary:
 	var s = story_state.get(STATE_KEY)
 	if not s is Dictionary or by_id(str(s.get("id", ""))).is_empty():
-		s = {"id": str(draw(campaign_seed).get("id", "")), "known": false, "bearings": []}
+		s = {"id": str(draw_for_new_campaign(campaign_seed).get("id", "")), "known": false, "bearings": []}
 		story_state[STATE_KEY] = s
 	return s
 

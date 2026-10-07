@@ -12,6 +12,8 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	# Never touch the player's Destination history (Lodestar.draw_for_new_campaign).
+	load("res://scripts/domain/Lodestar.gd").history_path = ""
 	_test_forged_card_is_valid_and_playable()
 	if _failures.is_empty():
 		print("[PASS] Hidden hand forge tests")

@@ -12,6 +12,8 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	# Never touch the player's Destination history (Lodestar.draw_for_new_campaign).
+	load("res://scripts/domain/Lodestar.gd").history_path = ""
 	_test_no_arcs_before_the_tutorial_ends()
 	_test_campaign_simulation()
 	_test_save_reload_keeps_arcs()

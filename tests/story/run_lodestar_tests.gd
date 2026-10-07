@@ -13,10 +13,28 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	# Never touch the player's Destination history (Lodestar.draw_for_new_campaign).
+	load("res://scripts/domain/Lodestar.gd").history_path = ""
 	await process_frame
 	# --- The deck ---------------------------------------------------------------
 	var cards: Array = Lodestar.deck()
 	_check(cards.size() == 6, "six Lodestars (%d)" % cards.size())
+	# Across campaigns (season sim 2026-10-06): a new campaign's first
+	# Destination is fresh until all have been used, never one of the last 3.
+	var hist_path := "user://test_destination_history.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(hist_path))
+	Lodestar.history_path = hist_path
+	var picks: Array = []
+	for i in 12:
+		picks.append(str(Lodestar.draw_for_new_campaign(1000 + i).get("id", "")))
+	var first_six := {}
+	for i in 6:
+		first_six[picks[i]] = true
+	_check(first_six.size() == 6, "six campaigns, six different Destinations: %s" % str(picks.slice(0, 6)))
+	for i in range(3, 12):
+		_check(not picks.slice(i - 3, i).has(picks[i]), "campaign %d's Destination isn't one of the last three: %s" % [i, str(picks)])
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(hist_path))
+	Lodestar.history_path = ""
 	var ids := {}
 	for card in cards:
 		var id := str(card.get("id", ""))

@@ -19,6 +19,7 @@ const DirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
 const LodestarType := preload("res://scripts/domain/Lodestar.gd")
 const HISTORY_PATH := "user://season_sim_history.json"
+const DESTINATION_HISTORY_PATH := "user://season_sim_destination_history.json"
 
 var campaigns := 6
 var hours := 30.0
@@ -34,6 +35,8 @@ func _initialize() -> void:
 		elif arg.begins_with("--story-share="):
 			story_share = float(arg.substr(14))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(HISTORY_PATH))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(DESTINATION_HISTORY_PATH))
+	LodestarType.history_path = DESTINATION_HISTORY_PATH
 	print("[SeasonSim] %d campaigns, up to %.0f h each, story jobs %.0f%% of activities" % [campaigns, hours, story_share * 100.0])
 	var results: Array = []
 	for c in campaigns:
@@ -69,8 +72,10 @@ func _campaign(index: int) -> Dictionary:
 	d.history_path = HISTORY_PATH
 	d.use_showrunner = false
 	d.reset_for_new_campaign(seed_value)
-	d.lodestar_id = str(LodestarType.draw(seed_value).get("id", ""))
-	var out := {"index": index, "seed": seed_value, "lodestar": str(LodestarType.draw(seed_value).get("id", "?")),
+	# One player's campaigns in a row: the first Destination avoids recent ones.
+	var first_destination := str(LodestarType.draw_for_new_campaign(seed_value).get("id", ""))
+	d.lodestar_id = first_destination
+	var out := {"index": index, "seed": seed_value, "lodestar": first_destination,
 		"first_thread_h": -1.0, "lock_h": -1.0, "close_h": -1.0, "systems": 0, "story_jobs": 0, "other": 0,
 		"cards_10h": [], "at_10h": {}, "locked_systems": -1}
 	var real_min := 0.0

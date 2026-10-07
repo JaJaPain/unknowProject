@@ -8,6 +8,8 @@ var _failures: Array[String] = []
 
 
 func _initialize() -> void:
+	# Never touch the player's Destination history (Lodestar.draw_for_new_campaign).
+	load("res://scripts/domain/Lodestar.gd").history_path = ""
 	_test_begin_season()
 	_test_seeding_traces_and_decoys()
 	_test_seen_and_pinned()
