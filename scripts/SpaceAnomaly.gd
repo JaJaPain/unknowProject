@@ -18,6 +18,12 @@ var _action_index: int = 0
 var _mesh: MeshInstance3D = null
 var _light: OmniLight3D = null
 var _pulse_time: float = 0.0
+const SetPieceDressingType := preload("res://scripts/world/SetPieceDressing.gd")
+## The derelict model, when this anomaly is a dead ship (else null), and how
+## far it reaches: activation and approach count from its hull.
+var _dressing: Node3D = null
+var _reach := 0.0
+const DERELICT_SIGHT_RANGE := 3000.0
 
 const ACTIVATION_RANGE := 50.0
 
@@ -65,6 +71,18 @@ func _build_visuals() -> void:
 	_light.omni_range = 80.0
 	add_child(_light)
 
+	# A distress beacon from a dead ship gets the ship (set piece #7): the
+	# lone derelict, which drones can dive into like any wreck.
+	if str(anomaly_data.get("name", "")).begins_with("Distress Beacon"):
+		_dressing = SetPieceDressingType.derelict(1.0)
+		if _dressing != null:
+			# The beacon sits at the breach's mouth; the hull lies behind it.
+			_dressing.position = Vector3(0, 0, -SetPieceDressingType.reach(_dressing) * 0.3)
+			add_child(_dressing)
+			_reach = SetPieceDressingType.reach(_dressing)
+			add_to_group("derelict_hull")
+			set_meta("dive_radius", _reach)
+
 
 func _pick_color() -> Color:
 	var flavor: String = str(anomaly_data.get("flavor_type", ""))
@@ -89,17 +107,24 @@ func _physics_process(delta: float) -> void:
 	# it can't be spotted by eye from across the system. A fired anomaly stays
 	# visible. Held until 1.3x the range so it doesn't flicker at the edge.
 	var reveal := RevealModelType.anomaly_reveal_range()
-	var seen := _activated or dist <= reveal or (_shown and dist <= reveal * 1.3)
+	# A derelict is a 300 m hull, not a small quiet object: it's seen from its
+	# side, and from much further off (no 300 m ship popping in at 200 m).
+	var near := dist - _reach
+	if _dressing != null:
+		reveal = maxf(reveal, DERELICT_SIGHT_RANGE)
+	var seen := _activated or near <= reveal or (_shown and near <= reveal * 1.3)
 	if seen != _shown:
 		_shown = seen
 		if _mesh:
 			_mesh.visible = seen
 		if _light:
 			_light.visible = seen
+		if _dressing:
+			_dressing.visible = seen
 
 	if _activated:
 		return
-	if dist <= ACTIVATION_RANGE:
+	if dist <= ACTIVATION_RANGE + _reach:
 		_activate()
 
 
@@ -298,3 +323,10 @@ func _record_persistent_state() -> void:
 	var game_root := get_tree().current_scene
 	if game_root and game_root.has_method("record_persistent_entity_state"):
 		game_root.record_persistent_entity_state(self)
+
+
+## The autopilot's APPROACH stops here (PlayerShip): outside a derelict's hull,
+## at the old 60 m for the small ones.
+func approach_stop_distance() -> float:
+	return _reach + 150.0 if _reach > 0.0 else 60.0
+

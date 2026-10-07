@@ -43,7 +43,8 @@ func reconcile(owner: Node) -> bool:
 				if site["role"] == "primary" and not primary_scanned and distance > range_limit:
 					continue
 				wanted[key] = {"mission_id": mission.runtime_id, "site_id": site["id"], "position": site["position"],
-					"label": "Verification site" if site["role"] == "verification" else "Investigation signal", "radius": 0.0}
+					"label": "Verification site" if site["role"] == "verification" else "Investigation signal", "radius": 0.0,
+					"recipe": str(data.get("recipe", "")), "role": str(site["role"])}
 	var changed := false
 	for key in markers.keys():
 		var node: Variant = markers[key]
@@ -106,6 +107,24 @@ func _create_marker(record: Dictionary) -> Node3D:
 		visual.mesh = sphere
 	visual.material_override = material
 	node.add_child(visual)
+	# The primary site gets what the job is about (set pieces #7 and #8): the
+	# signal anomaly for a transmitter lure, a derelict ship for a recorder or
+	# an archive. The small marker stays as the exact spot.
+	if str(record.get("role", "")) == "primary":
+		var Dressing := preload("res://scripts/world/SetPieceDressing.gd")
+		var model: Node3D = null
+		match str(record.get("recipe", "")):
+			"transmitter_lure":
+				# The player holds in the empty centre of the shard ring.
+				model = Dressing.anomaly(1.0)
+			"competing_claims", "unstable_archive":
+				model = Dressing.derelict(0.5)
+				if model != null:
+					# The site is at the breach's mouth; the hull lies behind it.
+					model.position = Vector3(0, 0, -Dressing.reach(model) * 0.55)
+		if model != null:
+			node.add_child(model)
+			visual.scale = Vector3.ONE * 0.4
 	return node
 
 static func _vector(p: Array) -> Vector3:

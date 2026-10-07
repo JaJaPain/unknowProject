@@ -237,7 +237,9 @@ func eligible_target() -> Node3D:
 		return null
 	if kind_of(target).is_empty() or _worked.has(_id_for(target)):
 		return null
-	if (player as Node3D).global_position.distance_to((target as Node3D).global_position) > LAUNCH_RANGE:
+	# A big hull counts from its side, not its centre.
+	var hull := float((target as Node).get_meta("dive_radius", 0.0))
+	if (player as Node3D).global_position.distance_to((target as Node3D).global_position) - hull > LAUNCH_RANGE:
 		return null
 	return target
 
@@ -250,6 +252,9 @@ static func kind_of(node: Node) -> String:
 		return "asteroid"
 	var script: Script = node.get_script()
 	if script != null and script.resource_path.ends_with("Wreckage.gd"):
+		return "wreck"
+	# A derelict ship found in the field (SetPieceDressing via SpaceAnomaly).
+	if node.is_in_group("derelict_hull"):
 		return "wreck"
 	return ""
 

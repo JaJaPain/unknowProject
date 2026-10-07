@@ -19,10 +19,10 @@ below, in order. Hand ChatGPT the first row that isn't done.
 | 4 | **The Cartographer's secret mine** | Destination; also reused as the Hollow Market | Done |
 | 5 | **The Garden keepers' station** | Destination | Done |
 | 6 | **The Quiet War cache vault** | Destination | Done |
-| 7 | **A lone derelict ship** (+ 7b detail revision) | Reused finds, drone dives; also reused as the Last Shipyard | Done |
-| 8 | **A signal anomaly site** | Investigations, data cores | Done |
-| 9 | **The Archive** | New Destination (`archive.glb`) | **Next** |
-| 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | Queued |
+| 7 | **A lone derelict ship** (+ 7b detail revision) | Distress-beacon finds (drone-diveable), Competing Claims / Unstable Archive investigation sites; also reused as the Last Shipyard | Done, in play |
+| 8 | **A signal anomaly site** | Transmitter Lure investigation sites (seams pulse, centre glow swells) | Done, in play |
+| 9 | **The Archive** | New Destination (`archive.glb`) | Delivered; awaiting review |
+| 10 | **The Neutral Ground** | New Destination (`neutral_ground.glb`) | **Next** |
 | 11 | **The Halo** | New Destination (`halo.glb`) | Queued |
 | 12 | **The Wellhead** | New Destination (`wellhead.glb`) | Queued |
 
@@ -363,6 +363,14 @@ below the station; this is only the station.
 - **Export:** batched (stacks, frames, bladders, walkways, lights as few
   meshes per material); under ~50 meshes and ~8 materials; no lights or
   cameras; README with size and counts.
+
+**#9 status (2026-10-07):** delivered for review. `assets/landmarks/archive.glb`:
+23 meshes/surfaces, 7 materials, 87,144 triangles; approximately 601 m wide,
+422 m deep and 792 m tall. Seven illuminated library stacks under three fabric
+envelopes with independent centred pivots, enclosed bridges and a lower docking
+ring. Reading windows, walkway lamps and dim red navigation use separate
+emissive materials. GLB and Godot import checks pass; no cameras or lights in
+the export. Source, renders, counts and notes in `art/archive/`.
 
 ## Brief #10: The Neutral Ground (new Destination, after #9)
 

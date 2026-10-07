@@ -393,6 +393,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_database_snapshot")
 	elif "--keepsake-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_keepsake_snapshot")
+	elif "--setpiece-placement-snapshot" in OS.get_cmdline_user_args():
+		call_deferred("_run_setpiece_placement_snapshot")
 	elif "--mission-remark-smoke-test" in OS.get_cmdline_user_args():
 		call_deferred("_run_mission_remark_smoke_test")
 	elif "--station-normal-snapshot" in OS.get_cmdline_user_args():
@@ -13024,6 +13026,77 @@ func _run_database_snapshot() -> void:
 		await _hud_snapshot_save(out.path_join("database_%s.png" % tab))
 		print("[DatabaseSnapshot] tab %s shown" % screen.call("current_tab"))
 	print("[DatabaseSnapshot] PASS")
+	get_tree().quit(0)
+
+
+## The reusable set pieces in ordinary play (windowed): a transmitter-lure
+## investigation site (the signal anomaly), an archive investigation site (a
+## derelict) and a distress-beacon find (the full derelict), each pictured;
+## the derelict counts as a drone-dive wreck from its hull, and Fly to stops
+## outside it. Exits 1 on a failure.
+##   -- --setpiece-placement-snapshot --baseline-offline --out=<dir>
+func _run_setpiece_placement_snapshot() -> void:
+	var out := "user://setpiece_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var fail := func(message: String) -> void:
+		push_error("[SetPieceSnapshot] FAIL: " + message)
+		get_tree().quit(1)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 40:
+		await get_tree().process_frame
+	var ui = GlobalState.get_ui_manager()
+	if ui != null:
+		ui.visible = false
+	var runtime = load("res://scripts/domain/InvestigationWorldRuntime.gd").new()
+	var base := player.global_position + Vector3(6000, 300, -6000)
+	var cam := Camera3D.new()
+	cam.far = 30000.0
+	get_active_system_root().add_child(cam)
+	cam.make_current()
+	var shots := [
+		["lure", runtime.call("_create_marker", {"mission_id": "m", "site_id": "a", "label": "Investigation signal", "radius": 0.0, "recipe": "transmitter_lure", "role": "primary"}), 300.0],
+		["archive", runtime.call("_create_marker", {"mission_id": "m", "site_id": "b", "label": "Investigation signal", "radius": 0.0, "recipe": "unstable_archive", "role": "primary"}), 300.0],
+	]
+	var wreck := StaticBody3D.new()
+	wreck.set_script(load("res://scripts/SpaceAnomaly.gd"))
+	wreck.set("anomaly_data", {"anomaly_id": "snapshot.distress", "name": "Distress Beacon — No Survivors", "flavor_type": "civilian", "actions": []})
+	wreck.set("persistent_id", "snapshot.distress")
+	shots.append(["distress", wreck, 700.0])
+	for i in shots.size():
+		var node: Node3D = shots[i][1]
+		get_active_system_root().add_child(node)
+		node.global_position = base + Vector3(i * 4000, 0, 0)
+		# Anomalies show only when the player is in sensor range.
+		player.global_position = node.global_position + Vector3(0, 0, 450)
+		cam.global_position = node.global_position + Vector3(0.55, 0.3, 0.78).normalized() * float(shots[i][2])
+		cam.look_at(node.global_position)
+		for f in 30:
+			await get_tree().process_frame
+		await _hud_snapshot_save(out.path_join("setpiece_%s.png" % shots[i][0]))
+		var dressing := node.find_child("Derelict", true, false) as Node3D
+		print("[SetPieceSnapshot] %s pictured (%d children); reveal %.0f m, dressing visible %s, player %.0f m" % [shots[i][0], node.get_child_count(),
+			load("res://scripts/domain/SiteRevealModel.gd").anomaly_reveal_range(), str(dressing.is_visible_in_tree()) if dressing else "-",
+			player.global_position.distance_to(node.global_position)])
+	if wreck.find_child("Derelict", true, false) == null:
+		fail.call("The distress beacon has no derelict.")
+		return
+	var Drone := load("res://scripts/story/activities/DroneMazeActivity.gd")
+	if Drone.kind_of(wreck) != "wreck":
+		fail.call("The derelict isn't a drone-dive wreck.")
+		return
+	if float(wreck.call("approach_stop_distance")) < 150.0:
+		fail.call("Fly to would stop inside the derelict (%.0f m)." % float(wreck.call("approach_stop_distance")))
+		return
+	if (shots[0][1] as Node).find_child("SignalAnomaly", true, false) == null:
+		fail.call("The transmitter lure site has no signal anomaly.")
+		return
+	print("[SetPieceSnapshot] PASS: lure = anomaly, archive = derelict, distress beacon = derelict (drone-diveable, approach stops at %.0f m)" % float(wreck.call("approach_stop_distance")))
 	get_tree().quit(0)
 
 

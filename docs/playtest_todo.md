@@ -953,3 +953,10 @@ through the marked gate and flies you in):
 - [ ] **All twelve Destinations:** the Halo (candle-lit chapel pods on tethers
       round a bell) and the Wellhead (an ice moonlet with rigs and a vapour
       plume) complete the set; stand-in shapes until the art lands.
+- [ ] **Derelicts and the signal anomaly in play:** a "Distress Beacon" find
+      is now a whole dead ship (seen from ~3 km, beacon blinking, emergency
+      lights flickering inside); Fly to stops outside its hull and drones can
+      dive into it. Board investigations: a Transmitter Lure site is the
+      shard ring (seams pulsing, glow in the centre: hold in the middle); a
+      Competing Claims or Unstable Archive site is a derelict with the site
+      at its breach.
