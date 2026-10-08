@@ -3038,13 +3038,9 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 	if player_credits < cost_cr:
 		return false
 		
-	# Check combined ore from cargo + storage
-	var total_ore = 0.0
-	if cargo_type == CargoType.ORE:
-		total_ore += cargo
-	total_ore += player_storage_ore
-	
-	if total_ore < cost_ore:
+	# Ore by type (finding 1), from the hold and the bank.
+	var ore_cost := split_upgrade_ore(int(cost_ore), next_tier)
+	if not has_upgrade_ore(ore_cost):
 		return false
 	if not has_upgrade_materials(sys, next_tier):
 		return false
@@ -3054,21 +3050,71 @@ func purchase_upgrade(sys: String, path: String) -> bool:
 	for item in materials:
 		inventory.remove(item, int(materials[item]))
 	player_credits -= cost_cr
-	var remaining_ore_cost = cost_ore
-	if cargo_type == CargoType.ORE:
-		var from_hold: float = minf(cargo, float(remaining_ore_cost))
-		cargo_ore_types = OreTypesScript.take(cargo_ore_types, cargo, from_hold)[0]
-		cargo -= from_hold
-		remaining_ore_cost -= from_hold
-		normalize_cargo_state()
-	
-	storage_ore_types = OreTypesScript.take(storage_ore_types, player_storage_ore, float(remaining_ore_cost))[0]
-	player_storage_ore -= remaining_ore_cost
+	pay_upgrade_ore(ore_cost)
 	
 	current_upgrades[sys] = {"tier": next_tier, "path": path}
 	apply_upgrade_stats()
 	GlobalState.trace("[GlobalState] Upgraded %s to tier %d path %s" % [sys, next_tier, path])
 	return true
+
+## Upgrades ask for ore by type, climbing with the tier (finding 1); the
+## ladder lives in OreTypes so tests can use it without the game running.
+static func split_upgrade_ore(cost_ore: int, tier: int) -> Dictionary:
+	return OreTypesScript.split_upgrade_ore(cost_ore, tier)
+
+
+## A tier's ore cost by type, for `sys` on its current path (or `path`).
+func upgrade_ore_cost(sys: String, tier: int, path: String = "") -> Dictionary:
+	var branches: Dictionary = UPGRADE_TREE.get(sys, {}).get("branches", {})
+	var p := path if not path.is_empty() else str(current_upgrades.get(sys, {}).get("path", ""))
+	if p.is_empty() or not branches.has(p):
+		p = str(branches.keys()[0]) if not branches.is_empty() else ""
+	if p.is_empty() or not (branches[p] as Dictionary).has(tier):
+		return {}
+	return split_upgrade_ore(int(branches[p][tier]["cost_ore"]), tier)
+
+
+## Ore of one type on hand for upgrades: banked plus in the hold.
+func ore_on_hand(ore_type: String) -> float:
+	var have := float(storage_ore_mix().get(ore_type, 0.0))
+	if cargo_type == CargoType.ORE:
+		have += float(cargo_ore_mix().get(ore_type, 0.0))
+	return have
+
+
+func has_upgrade_ore(cost: Dictionary) -> bool:
+	for ore in cost:
+		if ore_on_hand(str(ore)) + 0.001 < float(cost[ore]):
+			return false
+	return true
+
+
+## Takes each type from the hold first, then the bank.
+func pay_upgrade_ore(cost: Dictionary) -> void:
+	for ore in cost:
+		var left := float(cost[ore])
+		if cargo_type == CargoType.ORE and left > 0.0:
+			var took: Array = OreTypesScript.take(cargo_ore_mix(), cargo, left, str(ore))
+			cargo_ore_types = took[0]
+			cargo -= float(took[1])
+			left -= float(took[1])
+			normalize_cargo_state()
+		if left > 0.0:
+			var took2: Array = OreTypesScript.take(storage_ore_mix(), player_storage_ore, left, str(ore))
+			storage_ore_types = took2[0]
+			player_storage_ore -= float(took2[1])
+
+
+## Test and smoke helper: bank exactly `cost` (type -> m³).
+func bank_ore_for_test(cost: Dictionary) -> void:
+	var total := 0.0
+	var mix := {}
+	for ore in cost:
+		total += float(cost[ore])
+		mix[str(ore)] = float(cost[ore])
+	player_storage_ore = total
+	storage_ore_types = mix
+
 
 func refund_upgrade(sys: String):
 	var info = current_upgrades[sys]
@@ -3079,20 +3125,31 @@ func refund_upgrade(sys: String):
 	var tier = info["tier"]
 	
 	var total_cr_refund = 0
-	var total_ore_refund = 0
+	# Half of each tier's ore comes back, by type (finding 1).
+	var refund_ore := {}
 	
 	for t in range(2, tier + 1):
 		var data = UPGRADE_TREE[sys]["branches"][path][t]
 		total_cr_refund += int(data["cost_cr"] * 0.5)
-		total_ore_refund += int(data["cost_ore"] * 0.5)
+		var split := split_upgrade_ore(int(data["cost_ore"]), t)
+		for ore in split:
+			refund_ore[ore] = float(refund_ore.get(ore, 0.0)) + float(split[ore]) * 0.5
 		
 	player_credits += total_cr_refund
 	var refunded_mix := storage_ore_mix()
-	player_storage_ore += total_ore_refund
-	if player_storage_ore > player_storage_max:
-		player_storage_ore = player_storage_max
-	# Refunds come back as common ore.
-	storage_ore_types = OreTypesScript.reconcile(refunded_mix, player_storage_ore)
+	for ore in refund_ore:
+		refunded_mix[ore] = float(refunded_mix.get(ore, 0.0)) + float(refund_ore[ore])
+	var total := 0.0
+	for ore in refunded_mix:
+		total += float(refunded_mix[ore])
+	# The bank's size still caps it: anything over is trimmed evenly.
+	if total > player_storage_max and total > 0.0:
+		var keep := float(player_storage_max) / total
+		for ore in refunded_mix:
+			refunded_mix[ore] = float(refunded_mix[ore]) * keep
+		total = float(player_storage_max)
+	player_storage_ore = total
+	storage_ore_types = refunded_mix
 		
 	current_upgrades[sys] = {"tier": 1, "path": "base"}
 	apply_upgrade_stats()

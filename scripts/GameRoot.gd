@@ -11892,8 +11892,8 @@ func _run_goal_smoke_test() -> void:
 		fail.call("A stock ship's suggested goal should be Shields Mk II: %s" % str(goal))
 		return
 	var ids: Array = Goal.rows(GlobalState, goal).map(func(r): return str(r["id"]))
-	if not ids.has("credits") or not ids.has("ore") or not ids.has("rad_quartz"):
-		fail.call("Shields Mk II should show credits, ore and rad-quartz rows: %s" % str(ids))
+	if not ids.has("credits") or not ids.has("ore:silicate") or not ids.has("rad_quartz"):
+		fail.call("Shields Mk II should show credits, silicate (its tier's ore) and rad-quartz rows: %s" % str(ids))
 		return
 	if Goal.is_ready(GlobalState, goal):
 		fail.call("The goal is ready with nothing in the bank.")
@@ -11951,7 +11951,7 @@ func _run_goal_smoke_test() -> void:
 	if not is_equal_approx(GlobalState.player_storage_ore, 40.0) or GlobalState.cargo > 0.0:
 		fail.call("Banking didn't move the hold's ore into the bank (bank %.1f, hold %.1f)." % [GlobalState.player_storage_ore, GlobalState.cargo])
 		return
-	var ore_row: Array = Goal.rows(GlobalState, goal).filter(func(r): return str(r["id"]) == "ore")
+	var ore_row: Array = Goal.rows(GlobalState, goal).filter(func(r): return str(r["id"]).begins_with("ore:"))
 	if ore_row.is_empty() or int(ore_row[0]["have"]) != 40:
 		fail.call("The goal's ore bar didn't count the banked ore: %s" % str(ore_row))
 		return

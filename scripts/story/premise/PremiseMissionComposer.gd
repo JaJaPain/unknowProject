@@ -176,6 +176,9 @@ static func compose(offer_ref: Dictionary, card: Dictionary, cast: Dictionary, w
 	# they play (seeded per mission, so a reload never rerolls it).
 	var complication := ComplicationsType.roll(verb, world.get("quirks", []), "%d|%s" % [seed_value, beat_id])
 	offer = ComplicationsType.apply(offer, complication, str(requester.get("display_name", "")))
+	# A card's ore stays when the belts here carry it, else it's mined nearby
+	# or swapped for a local one (playtest 2026-10-08 finding 5). In game only.
+	offer = preload("res://scripts/economy/OreJobs.gd").assign(offer, "%d|%s" % [seed_value, beat_id])
 	return offer
 
 

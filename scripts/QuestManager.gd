@@ -1,5 +1,6 @@
 ﻿extends Node
 
+const OreJobsType := preload("res://scripts/economy/OreJobs.gd")
 const HISTORY_FILE_PATH = "user://quest_history.md"
 const MissionAdapterType := preload(
 	"res://scripts/domain/MissionAdapter.gd"
@@ -532,6 +533,14 @@ func request_new_quest(
 	callback: Callable,
 	agent_profile: Dictionary = {}
 ) -> void:
+	# Ore jobs name their ore, picked in code from this system's belts
+	# (playtest 2026-10-08 finding 5).
+	var raw_callback := callback
+	callback = func(quest, is_fallback) -> void:
+		var q = quest
+		if q is Dictionary and not (q as Dictionary).is_empty():
+			q = OreJobsType.assign(q, "%s|%s|%s" % [str(q.get("title", "")), str(agent_profile.get("name", agent_faction)), str(GlobalState.current_system_id)])
+		raw_callback.call(q, is_fallback)
 	if StoryAgentOfferBuilderType.can_build(agent_profile):
 		var story_offer := StoryAgentOfferBuilderType.build_offer(
 			agent_faction,

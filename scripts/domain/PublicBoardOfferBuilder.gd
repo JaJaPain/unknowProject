@@ -1,6 +1,7 @@
 class_name PublicBoardOfferBuilder
 extends RefCounted
 
+const OreJobsType := preload("res://scripts/economy/OreJobs.gd")
 const TEMPLATE_DELIVER_ORE := MissionTemplateRegistry.TEMPLATE_DELIVER_ORE_PUBLIC
 const TEMPLATE_PICKUP_SPECIAL := MissionTemplateRegistry.TEMPLATE_PICKUP_SPECIAL_PUBLIC
 const TEMPLATE_DELIVERY_COURIER := MissionTemplateRegistry.TEMPLATE_DELIVERY_COURIER_PUBLIC
@@ -157,8 +158,14 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 	var duration_minutes := 180
 	var urgent_multiplier := 1.5
 	var story_note := _story_board_context("ore")
-	var dialogue := "Bring %d m3 of ore to the main station. The posting says the coolant is not supposed to steam. Nobody asked you to verify that." % int(amount)
-	var board_body := "Bring ore before a supervisor learns thermodynamics."
+	# The ore, picked in code from this system's belts (playtest 2026-10-08
+	# finding 5); the posting's own text says which (the story note is left
+	# as written).
+	var gs_for_ore: Node = _global_state()
+	var local_mix: Dictionary = gs_for_ore.get("system_ore_mix") if gs_for_ore != null and gs_for_ore.get("system_ore_mix") is Dictionary else {"silicate": 1.0}
+	var ore := OreJobsType.pick_local(local_mix, "board_ore|%d" % int(current_time_minutes / 60))
+	var dialogue := OreJobsType.rewrite("Bring %d m3 of ore to the main station. The posting says the coolant is not supposed to steam. Nobody asked you to verify that." % int(amount), ore)
+	var board_body := OreJobsType.rewrite("Bring ore before a supervisor learns thermodynamics.", ore)
 	if not story_note.is_empty():
 		dialogue += " Local note: %s" % story_note
 		board_body += " Local note: %s" % story_note
@@ -166,6 +173,7 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 		"type": "DELIVER_ORE",
 		"amount_required": amount,
 		"reward_credits": base_reward,
+		"ore_type": ore,
 	}
 	var quest_data := _quest_data(
 		"Coolant Needed. Do Not Ask Why It Is Warm.",
@@ -188,7 +196,7 @@ static func _build_ore_offer(current_time_minutes: int) -> Dictionary:
 		"[URGENT] Coolant Needed. Do Not Ask Why It Is Warm.",
 		"Definitely Licensed Dockhand",
 		board_body,
-		"%d m3 Ore" % int(amount),
+		"%d m3 %s" % [int(amount), preload("res://scripts/economy/OreTypes.gd").display(ore)],
 		base_reward,
 		duration_minutes,
 		urgent_multiplier,

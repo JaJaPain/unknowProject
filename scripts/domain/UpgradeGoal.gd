@@ -105,9 +105,11 @@ static func rows(gs, goal: Dictionary) -> Array:
 	var out: Array = []
 	out.append({"id": "credits", "label": "Credits", "have": int(gs.player_credits), "need": int(data["cost_cr"]),
 		"hint": "Take a job from a station board, or sell ore."})
-	if int(data["cost_ore"]) > 0:
-		out.append({"id": "ore", "label": "Ore", "have": int(floor(ore_available(gs))), "need": int(data["cost_ore"]),
-			"hint": "Mine any rock, then bank it at a station (Bank for upgrades)."})
+	# Ore by type, climbing with the tier (playtest 2026-10-08 finding 1).
+	var ore_cost: Dictionary = gs.split_upgrade_ore(int(data["cost_ore"]), int(goal["tier"]))
+	for ore in ore_cost:
+		out.append({"id": "ore:%s" % ore, "label": OreTypesScript.display(str(ore)), "have": int(floor(float(gs.ore_on_hand(str(ore))))),
+			"need": int(ore_cost[ore]), "hint": ORE_WHERE.get(str(ore), "Mine it, then bank it at a station (Bank for upgrades).")})
 	var mats: Dictionary = gs.upgrade_material_cost(str(goal["sys"]), int(goal["tier"]))
 	for item in mats:
 		out.append({"id": str(item), "label": material_label(str(item)), "have": int(gs.inventory.get_quantity(str(item))),
@@ -117,6 +119,16 @@ static func rows(gs, goal: Dictionary) -> Array:
 		out.append({"id": "power", "label": "Power", "have": 0, "need": short,
 			"hint": "Needs %d MW more than the ship has: upgrade the Powerplant first." % short})
 	return out
+
+
+## Where each ore is found, for its row (scan rocks with C to see them).
+const ORE_WHERE := {
+	"silicate": "Silicate: the common grey rock, in every field. Scan with C to see what a field holds.",
+	"ferrite": "Ferrite: dark iron rock, from the first systems out. Scan with C to find it.",
+	"cuprite": "Cuprite: green-veined rock, rarer, more of it in deeper systems. Scan with C to find it.",
+	"thorium": "Thorium: glowing yellow rock, only three or more gates from home. Scan with C to find it.",
+}
+const OreTypesScript := preload("res://scripts/economy/OreTypes.gd")
 
 
 ## What each material is and where it comes from, for its row's tooltip.
@@ -141,9 +153,13 @@ static func row_tooltip(row: Dictionary) -> String:
 		"credits":
 			return "Credits: %d of %d.\nTake a job from a station board or from Kaelen, sell ore, or sell survey data from new systems." % [have, need]
 		"ore":
-			return "Ore: %d of %d banked.\nMine any rock (target it, fly close, Mine), then dock and press Bank for upgrades. Banked ore is kept for upgrades; ore in your hold can still be sold." % [have, need]
+			return "Ore: %d of %d banked." % [have, need]
 		"power":
 			return "Fitting this draws %d MW more than your powerplant gives.\nUpgrade the Powerplant first (you can set it as your goal on the upgrade screen)." % need
+	if id.begins_with("ore:"):
+		var ore_id := id.trim_prefix("ore:")
+		return "%s: %d of %d banked or in the hold.\n%s Banked ore is kept for upgrades; ore in your hold can still be sold." % [
+			OreTypesScript.display(ore_id), have, need, str(ORE_WHERE.get(ore_id, ""))]
 	var what := str(MATERIAL_HOW.get(id, "%s: a tech-grade material." % material_label(id)))
 	return "%s\n%d of %d.\n%s" % [what, have, need, DRONE_HOW]
 

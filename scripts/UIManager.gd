@@ -11193,10 +11193,11 @@ func _goal_ore_shortfall() -> int:
 	var goal: Dictionary = load("res://scripts/ui/UpgradeGoalCard.gd").current_goal()
 	if goal.is_empty():
 		return 0
+	var short := 0
 	for row in Goal.rows(GlobalState, goal):
-		if str(row["id"]) == "ore":
-			return maxi(0, int(row["need"]) - int(row["have"]))
-	return 0
+		if str(row["id"]).begins_with("ore:"):
+			short += maxi(0, int(row["need"]) - int(row["have"]))
+	return short
 
 
 ## Move the hold's ore into the ore bank (as much as fits).
@@ -18016,7 +18017,7 @@ func _on_su_slot_pressed(slot: String) -> void:
 			var pwr = data.get("power", 0)
 			var cost_c = data["cost_cr"]
 			var cost_o = data["cost_ore"]
-			btn.text = "Install %s Mk II\nCost: %d CR, %d Ore\nDraw: %d MW" % [path.capitalize(), cost_c, cost_o, pwr]
+			btn.text = "Install %s Mk II\nCost: %d CR, %s\nDraw: %d MW" % [path.capitalize(), cost_c, _ore_cost_text(GlobalState.split_upgrade_ore(int(cost_o), 2)), pwr]
 			var first_parts := _upgrade_materials_text(slot, 2)
 			if not first_parts.is_empty():
 				btn.text += "\nTech-grade: " + first_parts
@@ -18033,7 +18034,7 @@ func _on_su_slot_pressed(slot: String) -> void:
 			var btn = Button.new()
 			_style_action_button(btn)
 			var pwr = data.get("power", 0)
-			btn.text = "Upgrade to Mk %d\nCost: %d CR, %d Ore\nDraw: %d MW" % [next_tier, data["cost_cr"], data["cost_ore"], pwr]
+			btn.text = "Upgrade to Mk %d\nCost: %d CR, %s\nDraw: %d MW" % [next_tier, data["cost_cr"], _ore_cost_text(GlobalState.split_upgrade_ore(int(data["cost_ore"]), next_tier)), pwr]
 			var parts := _upgrade_materials_text(slot, next_tier)
 			if not parts.is_empty():
 				btn.text += "\nTech-grade: " + parts
@@ -18119,6 +18120,16 @@ var _credit_idx: int = 0
 var _ore_idx: int = 0
 var _power_idx: int = 0
 
+## "50 Silicate" or "30 Silicate, 20 Ferrite" (finding 1).
+func _ore_cost_text(cost: Dictionary) -> String:
+	if cost.is_empty():
+		return "no ore"
+	var parts: Array[String] = []
+	for ore in cost:
+		parts.append("%d %s" % [int(cost[ore]), OreTypesForPremium.display(str(ore))])
+	return ", ".join(parts)
+
+
 func _attempt_upgrade(slot: String, path: String):
 	# Calculate failure reason beforehand if any
 	var info = GlobalState.current_upgrades[slot]
@@ -18133,14 +18144,11 @@ func _attempt_upgrade(slot: String, path: String):
 	var power_diff = next_power - current_power
 	
 	var reason = ""
-	var available_ore := GlobalState.player_storage_ore
-	if GlobalState.cargo_type == GlobalState.CargoType.ORE:
-		available_ore += GlobalState.cargo
 	if slot != "power" and GlobalState.get_current_power_draw() + power_diff > GlobalState.power_capacity:
 		reason = "power"
 	elif GlobalState.player_credits < cost_cr:
 		reason = "credits"
-	elif available_ore < cost_ore:
+	elif not GlobalState.has_upgrade_ore(GlobalState.split_upgrade_ore(int(cost_ore), next_tier)):
 		reason = "ore"
 	elif not GlobalState.has_upgrade_materials(slot, next_tier):
 		reason = "materials"

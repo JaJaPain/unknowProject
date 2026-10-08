@@ -152,3 +152,31 @@ static func summary(mix: Dictionary) -> String:
 	if ids.size() == 1:
 		return display(str(ids[0]))
 	return "%s +%d" % [display(str(ids[0])), ids.size() - 1]
+
+
+## Upgrades ask for ore by type, climbing with the tier (Abe, playtest
+## 2026-10-08 finding 1): tier 2 silicate; 3 silicate and ferrite; 4 ferrite
+## and cuprite; 5 cuprite and thorium. Water ice stays for fuel. Each tier's
+## cost_ore total is split by these shares.
+const UPGRADE_ORE_LADDER := {
+	2: [["silicate", 1.0]],
+	3: [["silicate", 0.6], ["ferrite", 0.4]],
+	4: [["ferrite", 0.5], ["cuprite", 0.5]],
+	5: [["cuprite", 0.5], ["thorium", 0.5]],
+}
+
+
+## {ore type: m³} for a tier's `cost_ore`, whole numbers adding up to it.
+static func split_upgrade_ore(cost_ore: int, tier: int) -> Dictionary:
+	var out := {}
+	if cost_ore <= 0:
+		return out
+	var shares: Array = UPGRADE_ORE_LADDER.get(clampi(tier, 2, 5), UPGRADE_ORE_LADDER[2])
+	var given := 0
+	for i in shares.size():
+		var ore := str(shares[i][0])
+		var amount := cost_ore - given if i == shares.size() - 1 else int(round(float(cost_ore) * float(shares[i][1])))
+		if amount > 0:
+			out[ore] = amount
+			given += amount
+	return out
