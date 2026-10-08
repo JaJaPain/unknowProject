@@ -980,3 +980,5 @@ through the marked gate and flies you in):
       one for 3 s to scan it. Each tells part of what happened; the first two
       also pull a story thread from the logs. The fourth pays salvage or a
       Destination bearing. Drones can dive the hulls from the edge.
+- [ ] **Campaign titles:** start a few campaigns (deleting saves between is
+      fine): titles shouldn't repeat or keep reusing a word like "ledger".
