@@ -55,6 +55,7 @@ const ShipMovementEventsType := preload(
 const ShipBehaviorObserverType := preload(
 	"res://scripts/story/ShipBehaviorObserver.gd"
 )
+const CampaignTitleHistoryType := preload("res://scripts/story/CampaignTitleHistory.gd")
 const CampaignSlotRegistryType := preload(
 	"res://scripts/persistence/CampaignSlotRegistry.gd"
 )
@@ -209,12 +210,13 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	RuntimeTraceType.begin_session()
-	# Smoke tests and snapshots never touch the player's Destination history
-	# or the quiet-moment log.
+	# Smoke tests and snapshots never touch the player's Destination history,
+	# the quiet-moment log or the campaign title history.
 	for arg in OS.get_cmdline_user_args():
 		if arg.ends_with("-smoke-test") or arg.ends_with("-snapshot"):
 			preload("res://scripts/domain/Lodestar.gd").history_path = ""
 			preload("res://scripts/story/QuietMomentDirector.gd").log_path = ""
+			CampaignTitleHistoryType.path = ""
 	RuntimeTraceType.event("game", "root_ready", {
 		"arguments": OS.get_cmdline_user_args(),
 	})
@@ -3953,6 +3955,20 @@ func request_campaign_bible_generation() -> Dictionary:
 	# before it writes a new bible.
 	if not motif_history.has("titles"):
 		motif_history["titles"] = []
+	# Titles from every past campaign, deleted or not (CampaignTitleHistory):
+	# shown to the model up front and checked after.
+	var past_titles: Array = CampaignTitleHistoryType.recent("title")
+	baseline["_avoid_titles"] = past_titles
+	for past_title in past_titles:
+		if not motif_history["titles"].has(past_title):
+			motif_history["titles"].append(past_title)
+	if not motif_history.has("reveals"):
+		motif_history["reveals"] = []
+	for past_reveal in CampaignTitleHistoryType.recent("reveal"):
+		if not motif_history["reveals"].has(past_reveal):
+			motif_history["reveals"].append(past_reveal)
+	if (baseline.get("_recent_lanes", []) as Array).is_empty():
+		baseline["_recent_lanes"] = CampaignTitleHistoryType.recent("lane", 2)
 	for existing_title in _other_campaign_bible_titles():
 		if not motif_history["titles"].has(existing_title):
 			motif_history["titles"].append(existing_title)
@@ -4034,6 +4050,8 @@ func _on_campaign_bible_generation_result(result: Dictionary) -> void:
 		if bool(committed.get("ok", false)):
 			StoryManager.seed_story_state_from_bible(campaign_bible_store.data)
 			_apply_bible_title_to_slot(active_campaign_slot_id, campaign_bible_store.data)
+			CampaignTitleHistoryType.record(str(campaign_bible_store.data.get("campaign_title", "")),
+				str(campaign_bible_store.data.get("long_term_reveal", "")), str(campaign_bible_store.data.get("creative_lane", "")))
 	else:
 		var reason := str(result.get("reason", "campaign_bible_generation_failed"))
 		if reason == "model_unavailable":

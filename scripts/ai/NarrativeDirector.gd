@@ -169,6 +169,11 @@ static func build_campaign_bible_prompt(
 	var idea_block := "No prior idea memory yet."
 	if not idea_memory_context.strip_edges().is_empty():
 		idea_block = idea_memory_context.strip_edges()
+	# Titles of past campaigns, deleted saves included (CampaignTitleHistory).
+	var avoid: Array = baseline_bible.get("_avoid_titles", []) if baseline_bible.get("_avoid_titles", []) is Array else []
+	var avoid_text := preload("res://scripts/story/CampaignTitleHistory.gd").avoid_text(avoid)
+	if not avoid_text.is_empty():
+		idea_block += "\n" + avoid_text
 	# When a prior attempt failed validation, LLMInterface feeds the specific
 	# errors back so the retry can fix exactly what broke instead of rerolling
 	# blind. Empty on the first attempt.
@@ -366,6 +371,14 @@ static func motif_collision_note(
 				"campaign_title '%s' is too similar to a recent campaign's title. " % title
 				+ "Choose a clearly different, unrelated title."
 			)
+	# Abe, 2026-10-07: titles kept reusing one word ("ledger"). A main word
+	# shared with a recent title sends it back too.
+	var shared := preload("res://scripts/story/CampaignTitleHistory.gd").shared_word(title, recent_titles)
+	if not shared.is_empty():
+		return (
+			"campaign_title '%s' reuses the word '%s' from a recent campaign's title. " % [title, shared]
+			+ "Choose a title with no main word in common with recent ones."
+		)
 	var reveal := str(bible.get("long_term_reveal", "")).strip_edges()
 	for prior in recent_reveals:
 		if is_text_too_similar(reveal, str(prior)):
@@ -1032,6 +1045,7 @@ static func _normalized_campaign_bible(
 	var excluded_lanes: Array = baseline.get("_recent_lanes", []) if baseline.get("_recent_lanes", []) is Array else []
 	# Transient hint from GameRoot; never persist it into the stored bible.
 	bible.erase("_recent_lanes")
+	bible.erase("_avoid_titles")
 	var lane := _creative_lane_for_seed(seed_text, excluded_lanes)
 	if not lane.is_empty():
 		bible["creative_lane"] = str(lane.get("name", ""))
