@@ -6,6 +6,7 @@ extends SceneTree
 
 const DirectorType := preload("res://scripts/story/premise/PremiseDirector.gd")
 const Adapter := preload("res://scripts/domain/MissionAdapter.gd")
+const HandType := preload("res://scripts/story/premise/HiddenHand.gd")
 const HISTORY_PATH := "user://test_premise_director_history.json"
 
 var _failures: Array[String] = []
@@ -20,6 +21,7 @@ func _initialize() -> void:
 	_test_ignored_arcs_settle()
 	_test_main_story_season()
 	_test_written_lines()
+	_test_wreck_field_clue()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(HISTORY_PATH))
 	if _failures.is_empty():
 		print("[PASS] Premise director tests")
@@ -265,3 +267,25 @@ func _test_written_lines() -> void:
 	_check(e.written_line(str(postings[0]["arc_id"]), postings[0]["quest_data"]) == line, "written lines survive a save round trip")
 	d.free()
 	e.free()
+
+
+## The wreck field's logs hold a story thread from anywhere: an unseen one,
+## a real trace first; overhearing it makes it seen.
+func _test_wreck_field_clue() -> void:
+	var d = _director()
+	var now := 0
+	for system_n in range(1, 5):
+		d.ensure_arcs(_world(system_n), now)
+		now += 60
+	var unseen: Array = HandType.main_story(d.state).get("threads", []).filter(func(t): return not bool(t["seen"]))
+	var clue: Dictionary = d.wreck_field_clue()
+	_check(unseen.is_empty() == clue.is_empty(), "a clue whenever an unseen thread exists (%d unseen)" % unseen.size())
+	if not clue.is_empty():
+		_check(not str(clue["text"]).contains("{role:") and not str(clue["text"]).is_empty(), "the clue reads")
+		var any_trace := unseen.any(func(t): return bool(t.get("trace", false)))
+		var picked: Dictionary = unseen.filter(func(t): return str(t["id"]) == str(clue["thread_id"]))[0]
+		_check(not any_trace or bool(picked.get("trace", false)), "a real trace comes first")
+		d.overhear(clue, now)
+		var after: Array = HandType.main_story(d.state).get("threads", []).filter(func(t): return str(t["id"]) == str(clue["thread_id"]))
+		_check(bool(after[0]["seen"]), "overhearing the clue makes it seen")
+	d.free()

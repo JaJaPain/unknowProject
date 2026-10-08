@@ -22,6 +22,7 @@ const SOURCES := {
 	"investigation": "Among the investigation's findings",
 	"kaelen": "Kaelen mentioned, in passing",
 	"rumour": "Dockside rumour",
+	"wreck": "In the wreck's data",
 }
 ## Never missed for good: after this many new systems of the right class with
 ## the bearing still unfound, it arrives as a rumour.

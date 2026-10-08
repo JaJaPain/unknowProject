@@ -558,6 +558,35 @@ func recorder_thread(world: Dictionary) -> Dictionary:
 		"text": CastingType.fill_text(str(c["detail"]), c["cast"], {"system_display": display}), "subject_name": subject}
 
 
+## The twin wreck field (WreckFieldEvent): a story thread its logs can hold,
+## from any system: an unseen real trace first, one about the likely culprit
+## before others; then any unseen thread. {kind: "thread", thread_id, text}
+## or {}. Hand it to overhear() once the scan is done.
+func wreck_field_clue() -> Dictionary:
+	if not enabled:
+		return {}
+	var draft := str(HandType.main_story(state).get("draft_entity_id", ""))
+	var best: Dictionary = {}
+	var best_score := -1
+	for t in HandType.main_story(state).get("threads", []):
+		if bool(t.get("seen", false)):
+			continue
+		var a := ArcsType.arc(state, str(t.get("arc_id", "")))
+		if a.is_empty():
+			continue
+		var score := 2 if bool(t.get("trace", false)) else 0
+		for role_id in (a.get("cast", {}) as Dictionary).keys():
+			if not draft.is_empty() and str(a["cast"][role_id].get("entity_id", "")) == draft:
+				score += 1
+				break
+		if score > best_score:
+			best_score = score
+			var display := str(_system_names.get(str(a.get("system_id", "")), "a system nearby"))
+			best = {"id": "thread:%s" % t["id"], "kind": "thread", "thread_id": str(t["id"]),
+				"text": CastingType.fill_text(str(t.get("detail", "")), a.get("cast", {}), {"system_display": display})}
+	return best
+
+
 ## The captain pulled it in. A story thread is noticed (it joins the Loose
 ## ends board, however garbled it came through: N.O.V.A. keeps the
 ## recording); ambient chatter is marked heard so it does not come round again.

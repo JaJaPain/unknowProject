@@ -972,3 +972,11 @@ through the marked gate and flies you in):
 - [ ] **Losing the proof:** drop or fail the first job after the reveal
       (collect the last proof). The season should carry on: the chase, then
       a harder showdown at the Destination.
+- [ ] **The twin wreck field:** once per campaign, a few systems in (depth 2+,
+      before the reveal), N.O.V.A. reports two dead transponders and
+      "Twin wrecks" appears on the overview. A faint green bubble marks the
+      radiation zone: Fly to stops outside it, flying in hurts the hull and
+      N.O.V.A. warns. Four scan points sit round the edge: hold still near
+      one for 3 s to scan it. Each tells part of what happened; the first two
+      also pull a story thread from the logs. The fourth pays salvage or a
+      Destination bearing. Drones can dive the hulls from the edge.

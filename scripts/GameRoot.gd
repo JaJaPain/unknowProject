@@ -187,6 +187,7 @@ var signal_tuning_activity: Node = null
 var drone_maze_activity: Node = null
 var gate_rating_guide: Node = null
 var lodestar_guide: Node = null
+var wreck_field_event: Node = null
 var undercurrent_nudge: Node = null
 var now_horizon: Node = null
 var recurring_encounter_runner: Node = null
@@ -389,6 +390,8 @@ func _start_requested_runtime_mode() -> void:
 		call_deferred("_run_pickup_intercept_smoke_test")
 	elif "--wreck-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_wreck_snapshot")
+	elif "--wreck-event-smoke-test" in OS.get_cmdline_user_args():
+		call_deferred("_run_wreck_event_smoke_test")
 	elif "--dots-snapshot" in OS.get_cmdline_user_args():
 		call_deferred("_run_dots_snapshot")
 	elif "--database-snapshot" in OS.get_cmdline_user_args():
@@ -1539,6 +1542,10 @@ func _init_premise_director() -> void:
 	lodestar_guide = load("res://scripts/story/LodestarGuide.gd").new()
 	lodestar_guide.name = "LodestarGuide"
 	add_child(lodestar_guide)
+	# Once per campaign: the twin wreck field (docs/wreck_field_event_plan_2026_10_07.md).
+	wreck_field_event = load("res://scripts/story/WreckFieldEvent.gd").new()
+	wreck_field_event.name = "WreckFieldEvent"
+	add_child(wreck_field_event)
 	# N.O.V.A. and Kaelen nudge the captain deeper, never saying why (step 11b).
 	undercurrent_nudge = load("res://scripts/story/UndercurrentNudge.gd").new()
 	undercurrent_nudge.name = "UndercurrentNudge"
@@ -12801,6 +12808,91 @@ func _run_pickup_intercept_smoke_test() -> void:
 		return
 	print("[PickupInterceptSmokeTest] PASS: warned partway home, a hijacker came, went down and N.O.V.A. noticed")
 	delete_savegame()
+	get_tree().quit(0)
+
+
+## The wreck field event end to end (windowed): forced to start here, the
+## field placed with its zone and four scan points, radiation hurts inside,
+## Fly to and drones stop at the edge, holding still at each point scans it,
+## and the fourth pays out. Pictures in --out. Exits 1 on a failure.
+##   -- --wreck-event-smoke-test --baseline-offline [--out=<dir>]
+func _run_wreck_event_smoke_test() -> void:
+	var out := "user://wreck_event_snapshots"
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out = arg.substr(6)
+	DirAccess.make_dir_recursive_absolute(out)
+	var fail := func(message: String) -> void:
+		push_error("[WreckEventSmokeTest] FAIL: " + message)
+		get_tree().quit(1)
+	var landing := get_node_or_null("LandingLayer")
+	if landing != null:
+		landing.queue_free()
+	GlobalState.paused = false
+	for i in 60:
+		await get_tree().process_frame
+	var event := wreck_field_event
+	if not event.try_start(true):
+		fail.call("The event didn't start.")
+		return
+	var field: Node3D = event.field()
+	if not is_instance_valid(field):
+		fail.call("No field was placed.")
+		return
+	var zone := float(field.get("ZONE_RADIUS"))
+	print("[WreckEventSmokeTest] field at %s, zone %.0f m, kind %s" % [str(field.global_position), zone, str(event.current().get("kind", ""))])
+	if float(field.call("approach_stop_distance")) <= zone:
+		fail.call("Fly to would stop inside the radiation zone.")
+		return
+	if load("res://scripts/story/activities/DroneMazeActivity.gd").kind_of(field) != "wreck":
+		fail.call("The hulls aren't a drone-dive wreck.")
+		return
+	var ui = GlobalState.get_ui_manager()
+	var cam := Camera3D.new()
+	cam.far = 60000.0
+	get_active_system_root().add_child(cam)
+	cam.global_position = field.global_position + Vector3(0.62, 0.35, 0.7).normalized() * zone * 2.6
+	cam.look_at(field.global_position)
+	cam.make_current()
+	if ui != null:
+		ui.visible = false
+	await _settle_frames(60)
+	await _hud_snapshot_save(out.path_join("wreck_event_far.png"))
+	# Radiation: inside the zone the hull takes damage.
+	var before := float(player.get("health"))
+	player.global_position = field.global_position + Vector3(zone * 0.6, 0, 0)
+	player.velocity = Vector3.ZERO
+	for i in 150:
+		player.velocity = Vector3.ZERO
+		await get_tree().physics_frame
+	var after := float(player.get("health"))
+	if after >= before:
+		fail.call("No radiation damage inside the zone (%.0f -> %.0f)." % [before, after])
+		return
+	print("[WreckEventSmokeTest] radiation: hull %.0f -> %.0f" % [before, after])
+	player.set("health", before)
+	var credits_before := int(GlobalState.player_credits)
+	# Each scan point: hold close and still.
+	for id in field.call("scan_point_ids"):
+		var point: Node3D = field.call("scan_point", id)
+		for i in 300:
+			player.global_position = point.global_position + Vector3(0, 0, 60)
+			player.velocity = Vector3.ZERO
+			await get_tree().physics_frame
+			if (event.current().get("scanned", []) as Array).has(id):
+				break
+		if not (event.current().get("scanned", []) as Array).has(id):
+			fail.call("Holding at %s didn't scan it." % id)
+			return
+		print("[WreckEventSmokeTest] scanned %s" % id)
+	if not bool(event.current().get("done", false)):
+		fail.call("Four scans didn't finish the field.")
+		return
+	cam.global_position = field.global_position + Vector3(0.7, 0.2, 0.7).normalized() * zone * 1.25
+	cam.look_at(field.global_position)
+	await _settle_frames(60)
+	await _hud_snapshot_save(out.path_join("wreck_event_edge.png"))
+	print("[WreckEventSmokeTest] PASS: started, zone hurts, four scans, credits %d -> %d" % [credits_before, int(GlobalState.player_credits)])
 	get_tree().quit(0)
 
 

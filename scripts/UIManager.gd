@@ -4451,9 +4451,9 @@ func target_icon_for(node: Node) -> Dictionary:
 			"Hostile": tint = TARGET_TINT_HOSTILE
 			"Territorial": tint = TARGET_TINT_TERRITORIAL
 			"Friendly": tint = TARGET_TINT_FRIENDLY
-	elif node.is_in_group("wreckage"):
+	elif node.is_in_group("wreckage") or node.is_in_group("wreck_field"):
 		key = "wreckage"
-	elif node.is_in_group("anomaly") or node.is_in_group("mission_investigation_marker"):
+	elif node.is_in_group("anomaly") or node.is_in_group("mission_investigation_marker") or node.is_in_group("wreck_scan_point"):
 		key = "anomaly"
 	elif node.is_in_group("celestial"):
 		key = _planet_icon_key(node)
