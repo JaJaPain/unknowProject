@@ -35,6 +35,16 @@ const MODELS := {
 ## (SurfaceDetail): material name substring -> preset.
 const SURFACE_DETAIL := {
 	"wellhead": {"Frosted ice": "ice"},
+	# Older set pieces (2026-10-08). Left clean on purpose: the Humming Gate
+	# (pristine by brief), the Last Shipyard (a new hull), the twin wreck field.
+	"beacon": {"Weathered pale alloy": "stone", "Faded clan paint": "paint", "Oxidised salvage": "metal", "Dark structural steel": "metal"},
+	"fleet": {"Faded hull paint": "paint", "Reclaimed pale panels": "paint", "Muted green repairs": "paint", "Structural graphite": "metal"},
+	"survey": {"Dark asteroid rock": "rock", "Fresh cut rock": "rock", "Corporate alloy": "paint", "Structural graphite": "metal"},
+	"market": {"Dark asteroid rock": "rock", "Fresh cut rock": "rock"},
+	"garden": {"Warm ivory hull": "paint", "Sage frames": "paint"},
+	"wrecks": {"QW Dull bronze": "metal", "QW Gunmetal": "metal"},
+	"treaty": {"Neutral hall limestone": "stone", "Cool plated hull": "paint", "Warm curved hull": "paint"},
+	"halo": {"Warm stone plating": "stone", "Weathered pale metal": "paint"},
 }
 ## Tests and before/after shots can turn the detail off.
 static var surface_detail_enabled := true

@@ -20,6 +20,8 @@ static func derelict(model_scale: float = 1.0, hull_tint: Color = Color(0.62, 0.
 	model.name = "Derelict"
 	model.scale = Vector3.ONE * model_scale
 	_tint(model, "Neutral hull", hull_tint)
+	# Worn paint and metal up close (SurfaceDetail).
+	preload("res://scripts/visuals/SurfaceDetail.gd").apply(model, {"Neutral hull": "paint", "Interior steel": "metal"})
 	var life: Node = LifeScript.new()
 	life.lamps = {"Emergency emission": "flicker", "Beacon emission": "blink"}
 	model.add_child(life)

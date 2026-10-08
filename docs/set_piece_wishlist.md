@@ -472,3 +472,15 @@ renders in `art/wellhead/`. Approximately 1.28 km tall; 24 meshes/surfaces,
 emission, and an open vent marked by `VentEmitter` at Godot `(0, 447, 0)` m.
 GLB structure, isolated Godot import, and sampled plume-clearance checks passed;
 gameplay review remains.
+
+## Game-side surface detail (2026-10-08)
+
+`SurfaceDetail.gd` lays generated, seamless detail (tone, bump, uneven shine;
+no texture files) over flat materials: presets stone, metal, paint, rock,
+fabric and ice. On: the Lighthouse, Silent Fleet, Cartographer's Mine and
+Hollow Market (rock), Garden Keepers, Quiet War vault, Neutral Ground, Halo,
+Wellhead (ice) and the derelict in ordinary play. Left clean on purpose: the
+Humming Gate (pristine by brief), the Last Shipyard (a new hull), the twin
+wreck field, the signal anomaly. Mapping in `LodestarLandmark.SURFACE_DETAIL`;
+`--no-surface-detail` for before/after shots.
+
