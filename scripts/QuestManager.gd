@@ -417,6 +417,11 @@ func filter_history_for_agent(
 	return _agent_memory_context_for_id(agent_id)
 
 
+## The last few accepted job titles, from every agent (finding 9).
+const RECENT_AGENT_TITLES := 6
+var recent_agent_titles: Array = []
+
+
 func _generation_history_context(
 	agent_faction: String,
 	agent_profile: Dictionary = {}
@@ -547,6 +552,11 @@ func request_new_quest(
 			callback.call(story_offer, true)
 			return
 	var history_text := _generation_history_context(agent_faction, agent_profile)
+	# Agents' histories are kept apart, so two agents both wrote "Silicate Run"
+	# back to back (playtest 2026-10-08 finding 9): every agent sees the
+	# recent titles from all of them.
+	if not recent_agent_titles.is_empty():
+		history_text += "\nRecent jobs from any agent (give this one a new title and, if you can, a different kind of job): %s." % "; ".join(recent_agent_titles)
 	GenerationDiagnostics.record_lifecycle_timestamp(
 		"quest_generation",
 		"job_queued",
@@ -701,6 +711,11 @@ func accept_quest(
 	# Discretionary pacing is recorded once, here, in the acceptance transaction
 	# that just succeeded. Tutorial and required story jobs map to no family.
 	_record_discretionary_family(active_quest)
+	var accepted_title := str(active_quest.get("title", "")).strip_edges()
+	if not accepted_title.is_empty() and not recent_agent_titles.has(accepted_title):
+		recent_agent_titles.append(accepted_title)
+		if recent_agent_titles.size() > RECENT_AGENT_TITLES:
+			recent_agent_titles.pop_front()
 	print(
 		"[QuestManager] Quest accepted: ",
 		active_quest["title"],

@@ -5453,10 +5453,11 @@ func fetch_chatter_background(type: String, context: Dictionary = {}):
 				wreck_hint + \
 				"They are pragmatic, slightly world-weary, always thinking about credits. Avoid clichés."
 		"kaelen_ore_sale":
-			var ore_amount = str(ctx.get("cargo", 0))
-			var credits_earned = str(ctx.get("ore_sale_earnings", 0))
+			# No amounts: these lines are cached and played at a later sale, and
+			# one fetched with an empty hold said "Zero ore?" after a delivery
+			# (playtest 2026-10-08 finding 9).
 			description = "3 unique Broker Kaelen lines (under 25 words each) reacting to the player selling ore through her. " + \
-				"The player just sold " + ore_amount + " m³ of ore for " + credits_earned + " SC. " + \
+				"Never mention an amount, a number or a price: the lines are used for any sale, big or small. " + \
 				"Kaelen is a sharp, sarcastic broker who always takes her cut. She calls the player 'Shiny'. " + \
 				"She's amused, transactional, and never sentimental. " + \
 				"Example tone:\n" + \

@@ -8552,9 +8552,26 @@ func _clear_cached_agent_quest_if_stale() -> void:
 	if not cached_quest_data.is_empty() \
 			and not _is_agent_quest_context_current(cached_quest_context):
 		_clear_cached_agent_quest("station_or_system_changed")
+	# A story offer made before its beat was taken (accepted, done, failed or
+	# declined) is stale: shown later, it repeated the job just finished
+	# (playtest 2026-10-08 finding 9, two water filter runs in a row).
+	if not cached_quest_data.is_empty() and _story_beat_used(cached_quest_data):
+		_clear_cached_agent_quest("story_beat_already_used")
 	if not pending_quest_context.is_empty() \
 			and not _is_agent_quest_context_current(pending_quest_context):
 		pending_quest_context = {}
+
+
+func _story_beat_used(quest: Dictionary) -> bool:
+	var beat_id := str(quest.get("story_beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		var metadata: Dictionary = quest.get("narrative_metadata", {}) if quest.get("narrative_metadata", {}) is Dictionary else {}
+		beat_id = str(metadata.get("story_beat_id", "")).strip_edges()
+	if beat_id.is_empty():
+		return false
+	var beat_states: Dictionary = StoryManager.story_state.get("beat_states", {}) if StoryManager.story_state.get("beat_states", {}) is Dictionary else {}
+	var state: Dictionary = beat_states.get(beat_id, {}) if beat_states.get(beat_id, {}) is Dictionary else {}
+	return not ["", "available", "offered"].has(str(state.get("state", "available")).strip_edges())
 
 
 func _current_system_allows_major_agent_fallback() -> bool:
