@@ -982,3 +982,17 @@ through the marked gate and flies you in):
       Destination bearing. Drones can dive the hulls from the edge.
 - [ ] **Campaign titles:** start a few campaigns (deleting saves between is
       fine): titles shouldn't repeat or keep reusing a word like "ledger".
+- [ ] **Playtest 2026-10-08 fixes:**
+      undocking clicks once, as the beam lets go;
+      Scan Composition only with rocks within 400 m;
+      after turning in an ore job, Sell/Bank show what's really left;
+      no Kaelen (or faction agents) in an outpost's lounge;
+      no "[Soft Warning - Story]" rumours or "player" on the radio;
+      clicking Dock posts "Dock request submitted to X." then Dock
+      Control's text reply;
+      no repeat of a story courier job you just did;
+      upgrades ask for ore by type (Mk II silicate, Mk III silicate and
+      ferrite...);
+      ore jobs say which ore ("bring 35 m³ of ferrite"), and it's in this
+      system's belts; now and then a deep-system job names another system
+      to mine in, for double pay.
