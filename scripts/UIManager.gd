@@ -256,10 +256,6 @@ var mechanic_pickup_accept_btn: Button
 var mechanic_pickup_decline_btn: Button
 
 # Ore-trade confirm dialog
-var ore_trade_popup: PanelContainer
-var ore_trade_label: Label
-var ore_trade_accept_btn: Button
-var ore_trade_decline_btn: Button
 var ask_for_part_btn: Button
 var deliver_part_btn: Button
 const DEBUG_TESTS: bool = false
@@ -1763,55 +1759,6 @@ func _create_dock_menu():
 	station_contacts_list.set_anchors_preset(Control.PRESET_FULL_RECT)
 	station_contacts_list.mouse_filter = Control.MOUSE_FILTER_PASS
 	lounge_stage.add_child(station_contacts_list)
-
-	ore_trade_popup = PanelContainer.new()
-	ore_trade_popup.name = "OreTradePopup"
-	ore_trade_popup.visible = false
-	ore_trade_popup.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var otp_style := StyleBoxFlat.new()
-	otp_style.bg_color = Color(0.08, 0.06, 0.04, 0.95)
-	otp_style.border_width_left = 1
-	otp_style.border_width_top = 1
-	otp_style.border_width_right = 1
-	otp_style.border_width_bottom = 1
-	otp_style.border_color = Color(1.0, 0.7, 0.3, 0.7)
-	otp_style.corner_radius_top_left = 4
-	otp_style.corner_radius_top_right = 4
-	otp_style.corner_radius_bottom_right = 4
-	otp_style.corner_radius_bottom_left = 4
-	otp_style.content_margin_left = 10
-	otp_style.content_margin_right = 10
-	otp_style.content_margin_top = 8
-	otp_style.content_margin_bottom = 8
-	ore_trade_popup.add_theme_stylebox_override("panel", otp_style)
-	vbox.add_child(ore_trade_popup)
-
-	var otp_vbox := VBoxContainer.new()
-	otp_vbox.add_theme_constant_override("separation", 8)
-	ore_trade_popup.add_child(otp_vbox)
-
-	ore_trade_label = Label.new()
-	ore_trade_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	ore_trade_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	ore_trade_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ore_trade_label.add_theme_font_size_override("font_size", 14)
-	ore_trade_label.add_theme_color_override("font_shadow_color", Color.BLACK)
-	ore_trade_label.add_theme_constant_override("shadow_outline_size", 2)
-	otp_vbox.add_child(ore_trade_label)
-
-	var otp_btn_row := HBoxContainer.new()
-	otp_btn_row.add_theme_constant_override("separation", 8)
-	otp_vbox.add_child(otp_btn_row)
-
-	ore_trade_accept_btn = Button.new()
-	ore_trade_accept_btn.text = "Sell Ore, Take the Part"
-	ore_trade_accept_btn.pressed.connect(_on_ore_trade_accept_pressed)
-	otp_btn_row.add_child(ore_trade_accept_btn)
-
-	ore_trade_decline_btn = Button.new()
-	ore_trade_decline_btn.text = "No, Keep My Ore"
-	ore_trade_decline_btn.pressed.connect(_on_ore_trade_decline_pressed)
-	otp_btn_row.add_child(ore_trade_decline_btn)
 
 	repair_btn = Button.new()
 	repair_btn.text = "Repair Ship"
@@ -5185,8 +5132,6 @@ func _render_dock_submenu() -> void:
 	# Clear any active docked message so a flavor line from the
 	# previous submenu doesn't bleed into the new one.
 	clear_dock_message()
-	if ore_trade_popup and is_instance_valid(ore_trade_popup):
-		ore_trade_popup.visible = false
 	# Outposts are remote stations with no sell/agent/maintenance. Only the
 	# dock actions that make sense there (test pickup, hear gossip) plus
 	# undock should appear in the services submenu.
@@ -10951,9 +10896,6 @@ func undock_player(skip_repair_warning: bool = false) -> void:
 		mechanic_pickup_accept_btn.visible = false
 	if mechanic_pickup_decline_btn and is_instance_valid(mechanic_pickup_decline_btn):
 		mechanic_pickup_decline_btn.visible = false
-	# Hide the ore-trade confirm popup in case it was visible.
-	if ore_trade_popup and is_instance_valid(ore_trade_popup):
-		ore_trade_popup.visible = false
 	# Hide the live "Ask for the part" button in case it was visible.
 	if ask_for_part_btn and is_instance_valid(ask_for_part_btn):
 		ask_for_part_btn.visible = false
@@ -16630,44 +16572,6 @@ func _on_ask_for_part_pressed() -> void:
 	# Ore and the item ride together now (Abe, 2026-10-05): no selling the
 	# ore to clear the bay first.
 	_complete_pickup_with_handoff()
-
-func _show_ore_trade_popup() -> void:
-	if not ore_trade_popup or not is_instance_valid(ore_trade_popup):
-		return
-	var ore_amount: int = int(GlobalState.cargo)
-	var rate: float = GlobalState.buyback_price_per_m3()
-	var payout: int = GlobalState.cargo_ore_value(rate)
-	var picked_part: String = str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
-	var picked_npc: String = str(QuestManager.get_pickup_special_data().get("target_npc", "the contact"))
-	ore_trade_label.text = "Your hold's full of %d m³ of ore. %s will buy it at %s SC/m³ = %d SC to clear the bay for the part. Take the deal?" % [ore_amount, picked_npc, _format_rate(rate), payout]
-	if payout != int(round(GlobalState.cargo * rate)):
-		ore_trade_label.text = "Your hold's full of %d m³ of ore. %s will buy it at %s SC/m³, more for the rarer ore: %d SC to clear the bay for the part. Take the deal?" % [ore_amount, picked_npc, _format_rate(rate), payout]
-	ore_trade_popup.visible = true
-
-func _format_rate(rate: float) -> String:
-	if fposmod(rate, 1.0) == 0.0:
-		return str(int(rate))
-	return "%.1f" % rate
-
-func _on_ore_trade_accept_pressed() -> void:
-	if ore_trade_popup and is_instance_valid(ore_trade_popup):
-		ore_trade_popup.visible = false
-	if GlobalState.cargo_type != GlobalState.CargoType.ORE or GlobalState.cargo <= 0.0:
-		show_dock_message("Hold's empty now. Go ahead and ask for the part.", "", Color(0.85, 0.85, 0.85))
-		return
-	var ore_amount: int = int(GlobalState.cargo)
-	var paid: int = GlobalState.buyback_ore_at_outpost()
-	if paid <= 0:
-		push_warning("[UIManager] _on_ore_trade_accept_pressed: buyback returned 0")
-		return
-	AudioManager.play_sell_ore()
-	show_dock_message("Sold %d m³ of ore for %d SC. Hold cleared." % [ore_amount, paid], "", Color(0.7, 1.0, 0.5))
-	_complete_pickup_with_handoff()
-
-func _on_ore_trade_decline_pressed() -> void:
-	if ore_trade_popup and is_instance_valid(ore_trade_popup):
-		ore_trade_popup.visible = false
-	show_dock_message("Kept the ore. Come back when the hold's clear.", "", Color(0.85, 0.85, 0.85))
 
 func _complete_pickup_with_handoff() -> void:
 	if not QuestManager.is_quest_active():

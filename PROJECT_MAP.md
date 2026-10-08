@@ -3505,7 +3505,6 @@ Root: `spacegame`
       - `func clear_cargo() -> void`
       - `static func roll_pickup_offer() -> Dictionary`
       - `func buyback_price_per_m3() -> float`
-      - `func buyback_ore_at_outpost() -> int`
       - `func cargo_display_text() -> String`
       - `func environment_value(key: String, default_value: Variant) -> Variant`
       - `func clear_intro_tutorial_player_protection() -> void`
@@ -4566,10 +4565,6 @@ Root: `spacegame`
       - `func _on_mechanic_pickup_accept_pressed() -> void`
       - `func _on_mechanic_pickup_decline_pressed() -> void`
       - `func _on_ask_for_part_pressed() -> void`
-      - `func _show_ore_trade_popup() -> void`
-      - `func _format_rate(rate: float) -> String`
-      - `func _on_ore_trade_accept_pressed() -> void`
-      - `func _on_ore_trade_decline_pressed() -> void`
       - `func _complete_pickup_with_handoff() -> void`
       - `func _request_outpost_pickup_handoff_attempt(npc_name: String, part_name: String, outpost_display: String, client_name: String, critique_suffix: String, attempt: int) -> void`
       - `func _is_valid_outpost_handoff_line(line: String, part_name: String, client_name: String) -> bool`

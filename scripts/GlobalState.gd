@@ -1910,21 +1910,6 @@ func buyback_price_per_m3() -> float:
 			# sworn enemy, hostile, unfriendly, wary
 			return 2.0
 
-# Sell all ore currently in the hold at the buyback rate. Returns the
-# credits paid. Caller is responsible for showing the popup. Plays the
-# same sell-ore sfx as the main station for audio consistency.
-#
-# Returns 0 if the hold is empty or carrying a special item — by the
-# time this is called, the caller has already gated on cargo_type==ORE.
-func buyback_ore_at_outpost() -> int:
-	if cargo_type != CargoType.ORE or cargo <= 0.0:
-		return 0
-	var rate: float = buyback_price_per_m3()
-	var paid: int = cargo_ore_value(rate)
-	player_credits += paid
-	clear_ore()
-	return paid
-
 # Returns a short display string for the HUD: "EMPTY", "ORE: 15 / 30 m³",
 # or "SPECIAL: Replacement Plasma Coupler".
 func cargo_display_text() -> String:

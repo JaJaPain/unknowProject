@@ -107,7 +107,7 @@ func _may_start() -> bool:
 	var dock = _ui.get("dock_panel")
 	if dock == null or not dock.visible or bool(_ui.get("_docking_procedure_active")):
 		return false
-	for panel_name in ["agent_panel", "public_board_panel", "store_panel", "inventory_panel", "ship_upgrades_panel", "ore_trade_popup"]:
+	for panel_name in ["agent_panel", "public_board_panel", "store_panel", "inventory_panel", "ship_upgrades_panel"]:
 		var panel = _ui.get(panel_name)
 		if panel != null and is_instance_valid(panel) and panel.visible:
 			return false
