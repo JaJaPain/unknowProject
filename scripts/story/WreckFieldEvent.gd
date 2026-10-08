@@ -10,7 +10,7 @@ extends Node
 ##
 ## State: StoryManager.story_state["wreck_field"] =
 ##   {system, kind, scanned: [ids], done, arrived}.
-## N.O.V.A.'s lines are approved (Abe, 2026-10-08); the clue texts are drafts.
+## All lines approved by Abe (2026-10-08).
 
 const STATE_KEY := "wreck_field"
 const POLL_S := 0.25
@@ -40,7 +40,7 @@ const LINE_ARRIVAL := "Two of them. Broken clean in half. Give me a moment, Capt
 const LINE_RADIATION := "Radiation, Captain. Whatever broke them is still hot in there. Back out and scan from the edge."
 const LINE_FIRST_THREAD := "Whoever kept that log knew more than they should have. I'm keeping it."
 const LINE_DONE := "That's everything the wreck will tell us from out here. If anything's worth carrying home, the drones can dive for it."
-## What happened, by kind, one clue per scan point. DRAFTS until Abe approves.
+## What happened, by kind, one clue per scan point (approved by Abe, 2026-10-08).
 const CLUES := {
 	"battle": {
 		"bow": "Scorched entry holes along the bow, all from one side. They were fired on before they could turn.",

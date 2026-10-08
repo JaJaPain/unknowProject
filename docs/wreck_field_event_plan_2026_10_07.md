@@ -56,4 +56,4 @@ campaign needs.
   `run_wreck_field_tests.gd`, director clue test, `--wreck-event-smoke-test`
   (zone 1.55 km, a faint green rim marks it)
 - [x] N.O.V.A.'s five lines approved by Abe (2026-10-08)
-- [ ] The 16 clue texts approved by Abe
+- [x] The 16 clue texts approved by Abe (2026-10-08)
