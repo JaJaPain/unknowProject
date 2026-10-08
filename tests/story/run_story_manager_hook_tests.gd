@@ -399,27 +399,35 @@ func _test_mission_outcomes_record_visible_consequences() -> void:
 
 
 func _test_lounge_rumor_ranking_unaffected_by_dock_roll_wiring() -> void:
+	# Planning notes (hooks, the foreshadow, tensions) never become lounge
+	# rumours (playtest 2026-10-08: "Player finds a dead ship..." was read out).
 	var manager := _fresh_manager()
 	manager.story_state["pending_hooks"] = ["A hook."]
-	manager.story_state["current_foreshadow"] = "A foreshadow."
+	manager.story_state["current_foreshadow"] = "Player finds a dead ship."
 	manager.story_state["active_tensions"] = ["A tension."]
 	var rumor: Dictionary = manager.get_lounge_rumor({})
 	_expect(
-		str(rumor.get("id", "")).begins_with("hook:"),
-		"get_lounge_rumor() should still rank pending_hooks (weight 4) above foreshadow/tensions."
+		not str(rumor.get("id", "")).begins_with("hook:") and not str(rumor.get("id", "")).begins_with("foreshadow:") 			and not str(rumor.get("id", "")).begins_with("tension:"),
+		"get_lounge_rumor() must not quote planning notes (got %s)." % str(rumor.get("id", ""))
+	)
+	# A designer's word never reaches the radio, whatever the rumour.
+	manager.story_state["player_knows"] = ["the player's ledger"]
+	_expect(
+		not str(manager.get_lounge_rumor({}).get("line", "")).to_lower().contains("player"),
+		"a rumour containing 'player' must be dropped."
 	)
 	manager.queue_free()
 
 
 func _test_force_dock_rumor_fires_and_dedups() -> void:
 	var manager := _fresh_manager()
-	manager.story_state["pending_hooks"] = ["A dock rumor hook."]
+	manager.story_state["player_knows"] = ["the convoy that never arrived"]
 	var hinted_before: Array = manager.story_state.get("hinted_lounge_rumors", [])
 	manager._maybe_fire_dock_rumor(null, true)
 	var hinted_after: Array = manager.story_state.get("hinted_lounge_rumors", [])
 	_expect(
 		hinted_after.size() == hinted_before.size() + 1,
-		"_maybe_fire_dock_rumor(force=true) with a pending hook should record a heard rumor."
+		"_maybe_fire_dock_rumor(force=true) with a rumour waiting should record a heard rumor."
 	)
 	manager.queue_free()
 

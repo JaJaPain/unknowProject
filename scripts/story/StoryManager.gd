@@ -3236,50 +3236,10 @@ func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
 				next_kaelen_hint.trim_suffix(".") + ".",
 			],
 		})
-	var hooks: Array = story_state.get("pending_hooks", [])
-	for hook in hooks:
-		var text := str(hook).strip_edges()
-		if text.is_empty():
-			continue
-		candidates.append({
-			"id": "hook:%s" % text.sha256_text().substr(0, 12),
-			"title": "Open Thread",
-			"source": "Story",
-			"weight": 4,
-			"line": "%s lowers their voice. Something tied to %s is moving through %s, and the %s keep pretending it is routine." % [
-				npc_name,
-				text,
-				station_name,
-				source_hint,
-			],
-		})
-	var foreshadow := str(story_state.get("current_foreshadow", "")).strip_edges()
-	if not foreshadow.is_empty():
-		candidates.append({
-			"id": "foreshadow:%s" % foreshadow.sha256_text().substr(0, 12),
-			"title": "Soft Warning",
-			"source": "Story",
-			"weight": 3,
-			"line": "%s has been hearing the same warning from different crews: \"%s\"" % [
-				npc_name,
-				foreshadow.trim_suffix("."),
-			],
-		})
-	var tensions: Array = story_state.get("active_tensions", [])
-	for tension in tensions:
-		var text := str(tension).strip_edges()
-		if text.is_empty():
-			continue
-		candidates.append({
-			"id": "tension:%s" % text.sha256_text().substr(0, 12),
-			"title": "Local Pressure",
-			"source": "Story",
-			"weight": 2,
-			"line": "The public boards blame %s, but the dock crews in %s keep pointing at timing, not motive." % [
-				text,
-				station_name,
-			],
-		})
+	# No rumours quoted from planning notes (pending hooks, the foreshadow,
+	# active tensions): they're written for the game, not the player, and one
+	# read "Player finds a dead ship..." aloud (Abe, playtest 2026-10-08
+	# finding 7).
 	# Echo weight climbs with chapter: early on, dock talk chases open threads;
 	# by late campaign the things the player has already uncovered dominate the
 	# room — the world audibly catches up to the mystery as it unravels.
@@ -3296,6 +3256,8 @@ func get_lounge_rumor(context: Dictionary = {}) -> Dictionary:
 			"weight": echo_weight,
 			"line": "That thing you heard about %s? It is starting to show up in ordinary dock talk now." % text,
 		})
+	candidates = candidates.filter(func(c: Dictionary) -> bool:
+		return preload("res://scripts/story/GameWordGuard.gd").is_clean(str(c.get("line", ""))))
 	if candidates.is_empty():
 		return {}
 	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:

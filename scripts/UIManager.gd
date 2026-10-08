@@ -721,6 +721,7 @@ func _process(delta):
 		_reposition_story_quest_panel()
 
 	_watch_dock_state()
+	_update_scan_button(delta)
 	# Update overview list item distances
 	_update_overview_distances(delta)
 	_update_intro_handhold()
@@ -3884,7 +3885,7 @@ func _unhandled_input(event: InputEvent):
 			_on_inventory_pressed()
 			get_viewport().set_input_as_handled()
 			return
-		if event.physical_keycode == OreScanType.KEY and _can_scan_composition():
+		if event.physical_keycode == OreScanType.KEY and _can_scan_composition() and _rocks_in_scan_range():
 			scan_composition()
 			get_viewport().set_input_as_handled()
 			return
@@ -4490,7 +4491,7 @@ func _on_target_changed(new_target: Node3D):
 			target_icon.visible = true
 			
 		if target_scan_btn:
-			target_scan_btn.visible = new_target.is_in_group("asteroid")
+			target_scan_btn.visible = _rocks_in_scan_range()
 		if target_action_btn:
 			if new_target.is_in_group("asteroid"):
 				target_action_btn.text = "Mine Asteroid"
@@ -4675,6 +4676,29 @@ func _dock_call_sign() -> String:
 	if code.length() != 6:
 		code = "000000"
 	return "INDY SHIP OSCAR-%s-BRAVO" % code
+
+
+## When Dock is clicked: a SYSTEM line, then Dock Control's reply as text
+## only (Abe, playtest 2026-10-08 finding 8; lines approved by Abe).
+const DOCK_REQUEST_REPLIES: Array[String] = [
+	"Docking request received. Assume standard approach vector.",
+	"Request logged. Hold the standard approach.",
+	"Copy your request. Standard approach, berth assigned on arrival.",
+]
+const DOCK_REQUEST_REPLY_DELAY_S := 1.8
+var _dock_requested_of: Node3D = null
+
+
+func _post_dock_request(station: Node3D) -> void:
+	if station == null or not is_instance_valid(station) or station == _dock_requested_of:
+		return
+	_dock_requested_of = station
+	var station_name := str(station.get("display_name") if station.get("display_name") else station.name).strip_edges()
+	GlobalState.emit_chatter("SYSTEM", "Dock request submitted to %s." % station_name, Color(0.0, 0.9, 0.9))
+	var reply := DOCK_REQUEST_REPLIES[randi() % DOCK_REQUEST_REPLIES.size()]
+	get_tree().create_timer(DOCK_REQUEST_REPLY_DELAY_S).timeout.connect(func() -> void:
+		if _dock_requested_of == station:
+			GlobalState.emit_chatter("Dock Control", reply, Color(0.25, 0.82, 1.0)))
 
 
 func _play_dock_departure(station: Node3D) -> void:
@@ -5859,7 +5883,7 @@ func _lounge_station_agent_cards(station: Node3D = null) -> Array[Dictionary]:
 	var lounge_station := station if station != null else current_station
 	# The system's faction representatives live at the primary station. Other
 	# stations use their own persisted/local resident roster instead.
-	if lounge_station == null or lounge_station != GlobalState.get_primary_station():
+	if lounge_station == null or not GlobalState.is_major_station(lounge_station):
 		return result
 	var registry := GameContentRegistry.shared()
 	for faction_key in GlobalState.get_current_system_factions():
@@ -7794,7 +7818,9 @@ func _station_contact_has_intel(npc_name: String, npc_data: Dictionary) -> bool:
 func _kaelen_lounge_available() -> bool:
 	if current_station == null or not is_instance_valid(current_station):
 		return false
-	if current_station != GlobalState.get_primary_station():
+	# Kaelen is only ever at a system's major station, never an outpost (Abe,
+	# playtest 2026-10-08 finding 6).
+	if not GlobalState.is_major_station(current_station):
 		return false
 	if GlobalState.is_current_system_home():
 		return true
@@ -8126,16 +8152,12 @@ func _station_contact_story_rumor(
 
 
 func _format_station_intel_line(rumor: Dictionary) -> String:
-	var title := str(rumor.get("title", "Intel")).strip_edges()
-	var source := str(rumor.get("source", "Story")).strip_edges()
 	var line := str(rumor.get("line", "")).strip_edges()
 	if line.is_empty():
 		return ""
-	if title.is_empty():
-		title = "Intel"
-	if source.is_empty():
-		source = "Story"
-	return "[%s - %s]\n%s" % [title, source, line]
+	# Just the line: the "[Title - Source]" tag was a debug label (playtest
+	# 2026-10-08 finding 7).
+	return line
 
 
 func _system_story_pack_rumor(npc_name: String, npc_data: Dictionary) -> String:
@@ -8847,6 +8869,26 @@ func _place_upgrade_goal_card() -> void:
 
 
 ## Scan Composition is for flying: not docked, paused, dead, or in a cutscene.
+var _scan_button_poll := 0.0
+
+
+## Scan Composition only shows while a rock is within its range (Abe,
+## playtest 2026-10-08 finding 3), checked a few times a second.
+func _update_scan_button(delta: float) -> void:
+	_scan_button_poll += delta
+	if _scan_button_poll < 0.25 or target_scan_btn == null or not is_instance_valid(target_scan_btn):
+		return
+	_scan_button_poll = 0.0
+	target_scan_btn.visible = _can_scan_composition() and _rocks_in_scan_range()
+
+
+func _rocks_in_scan_range() -> bool:
+	var player = GlobalState.player
+	if player == null or not is_instance_valid(player):
+		return false
+	return OreScanType.rocks_in_range((player as Node3D).global_position, get_tree().get_nodes_in_group("asteroid"))
+
+
 func _can_scan_composition() -> bool:
 	var player = GlobalState.player
 	if player == null or not is_instance_valid(player):
@@ -10945,6 +10987,8 @@ func _push_out_of_berth(station: Node3D, ship: Node3D, on_clear: Callable = Call
 	ship.global_basis = Basis.looking_at(away.normalized(), Vector3.UP)
 	var push_seconds := maxf(UNDOCK_PUSH_SECONDS, ship.global_position.distance_to(out) / BIG_STATION_BEAM_SPEED)
 	var beam := DockingTractorBeamType.new()
+	# Undocking clicks once, when the beam lets go (playtest 2026-10-08).
+	beam.set("click_on_hold", false)
 	get_tree().current_scene.add_child(beam)
 	beam.call("configure", station.call("beam_origin"), ship)
 	ship.set("is_docked", true)
@@ -11316,7 +11360,10 @@ func _command_selected_target(mode: String) -> bool:
 			reason = "fly_to"
 		elif mode == "DOCK":
 			reason = "dock"
+			_post_dock_request(target)
 		_queue_station_target_prefetch(target, reason)
+	if mode != "DOCK":
+		_dock_requested_of = null
 	return true
 
 
@@ -15435,9 +15482,24 @@ var _had_quest: bool = false
 ## Five separate sites clear that flag, so watching the STATE is reliable where
 ## hooking any single call site is not. This is an edge trigger, so it costs one
 ## bool comparison per frame and only does work when the state flips.
+var _hold_seen := ""
+
+
 func _watch_dock_state() -> void:
 	var player = GlobalState.player
 	var docked: bool = player != null and is_instance_valid(player) and bool(player.get("is_docked"))
+	# The dock's Sell and Bank buttons follow the hold whatever moved the ore
+	# (a delivered job takes it without telling the UI: playtest 2026-10-08
+	# finding 4).
+	if docked:
+		# Docked: the next Dock click is a new request.
+		_dock_requested_of = null
+		var hold :="%d|%.2f|%.2f" % [int(GlobalState.cargo_type), float(GlobalState.cargo), float(GlobalState.player_storage_ore)]
+		if hold != _hold_seen:
+			_hold_seen = hold
+			_update_sell_button()
+	else:
+		_hold_seen = ""
 	# The same ordering trap exists on LOAD: refresh_restored_state() refreshes
 	# the tracker, but QuestManager may restore the active quest AFTER that, so
 	# the refresh correctly finds no quest and hides the card, and nothing runs

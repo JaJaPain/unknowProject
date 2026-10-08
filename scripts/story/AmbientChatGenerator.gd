@@ -257,6 +257,9 @@ static func parse_chat_lines(
 		text = _strip_speaker_prefix(text, own_name, speaker)
 		if text.length() < 4 or text.length() > 170:
 			continue
+		# Never a designer's word on the radio (playtest 2026-10-08 finding 7).
+		if not preload("res://scripts/story/GameWordGuard.gd").is_clean(text):
+			continue
 		if speaker == "a":
 			saw_a = true
 		else:

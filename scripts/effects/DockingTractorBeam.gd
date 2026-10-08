@@ -27,6 +27,11 @@ var hum: Node
 var _is_player := false
 
 
+## Whether the beam clicks as it takes hold. Undocking's push-out beam doesn't:
+## its one click is when it lets go (Abe, playtest 2026-10-08 finding 2).
+var click_on_hold := true
+
+
 func configure(station: Node3D, ship: Node3D) -> void:
 	_station = station
 	_ship = ship
@@ -56,7 +61,8 @@ func _start_hum() -> void:
 		var flat := AudioStreamPlayer.new()
 		flat.volume_db = HUM_PLAYER_DB
 		hum = flat
-		_click()
+		if click_on_hold:
+			_click()
 	else:
 		var spatial := AudioStreamPlayer3D.new()
 		spatial.unit_size = 15.0
@@ -75,6 +81,9 @@ func _start_hum() -> void:
 
 
 ## The latch: played on the scene root so the let-go click outlives the beam.
+## Added deferred and played on entering the tree (autoplay): freeing the beam
+## happens while the scene is busy, and a direct add_child failed there, so
+## the let-go click often never played (playtest 2026-10-08 finding 10).
 func _click() -> void:
 	var tree := get_tree() if is_inside_tree() else null
 	if tree == null or tree.current_scene == null:
@@ -83,9 +92,9 @@ func _click() -> void:
 	click.stream = CLICK_STREAM
 	click.bus = "SFX"
 	click.volume_db = CLICK_DB
-	tree.current_scene.add_child(click)
+	click.autoplay = true
 	click.finished.connect(click.queue_free)
-	click.play()
+	tree.current_scene.add_child.call_deferred(click)
 
 
 func _exit_tree() -> void:

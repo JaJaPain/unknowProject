@@ -2737,7 +2737,25 @@ func get_primary_station() -> Node3D:
 	for node in tree.get_nodes_in_group("primary_station"):
 		if node is Node3D and system_root.is_ancestor_of(node):
 			return node as Node3D
-	return system_root.get_node_or_null("Station") as Node3D
+	var named := system_root.get_node_or_null("Station") as Node3D
+	if named != null:
+		return named
+	# A system whose main station isn't tagged (the test system's full-service
+	# Lantern Freeport): the full-service station.
+	for node in tree.get_nodes_in_group("station"):
+		if node is Node3D and system_root.is_ancestor_of(node) and str(node.get("station_type")) == "full_service":
+			return node as Node3D
+	return null
+
+
+## The system's major station (Kaelen, the faction agents): the primary
+## station, and never anything marked an outpost (playtest 2026-10-08).
+func is_major_station(station: Node) -> bool:
+	if station == null or not is_instance_valid(station):
+		return false
+	if str(station.get("station_type")) == "outpost":
+		return false
+	return station == get_primary_station()
 
 # Called before reload_current_scene() to avoid dangling references into the freed scene.
 func reset_for_restart():

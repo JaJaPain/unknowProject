@@ -48,6 +48,19 @@ static func name_for(rock: Node) -> String:
 ## reach, "touched": the rocks it covers, "ores": {ore: count},
 ## "rocks": n read, "seams": n red rocks it couldn't read, "new": n not known
 ## before}.
+## Whether any ordinary rock (not a red tech seam) is within RANGE of `from`:
+## the scan button and the C key only work then (playtest 2026-10-08).
+static func rocks_in_range(from: Vector3, rocks: Array) -> bool:
+	for rock in rocks:
+		if rock == null or not is_instance_valid(rock) or not (rock is Node3D):
+			continue
+		if rock.is_in_group("tech_seam_asteroid") or bool(rock.get("tech_seam")):
+			continue
+		if (rock as Node3D).global_position.distance_to(from) <= RANGE:
+			return true
+	return false
+
+
 static func scan(from: Vector3, rocks: Array) -> Dictionary:
 	var ores := {}
 	var read := 0

@@ -10970,6 +10970,9 @@ func _run_services_smoke_test() -> void:
 			or not ui.back_to_services_btn.visible:
 		_fail_services_smoke_test("Station Lounge did not open outpost contacts.")
 		return
+	if bool(ui.call("_kaelen_lounge_available")) or not (ui.call("_lounge_station_agent_cards") as Array).is_empty():
+		_fail_services_smoke_test("Kaelen or a faction agent is in an outpost's lounge.")
+		return
 
 	var gossip_holder := {"flavor": {}}
 	var capture_gossip := func(flavor: Dictionary) -> void:
