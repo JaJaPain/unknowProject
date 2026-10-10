@@ -86,6 +86,99 @@ const HANDINS: Array = [
 	"My hero. Well, my courier. Close enough. His ship's out by tonight and so is he, which is the real gift here.",
 ]
 
+## Personalities for the generated mechanics (Abe, 2026-10-10: each one gets a
+## bit of personality, with male-only and female-only sets). A station's
+## mechanic keeps one for good, picked from its id and gender. Each has two
+## lines per hull band (worst first, same bounds as HULL_BANDS) and two for a
+## spotless hull. Only "approved" ones are used; until then a mechanic speaks
+## Jenna's lines.
+const PERSONALITIES := {
+	"old_hand": {
+		"gender": "m",
+		"approved": false,
+		"about": "a gruff old-timer: few words, has seen every kind of wreck, grumbles about young pilots, proud of his work, never hurries",
+		"bands": [
+			["Forty years on this deck, and I've seen worse exactly twice. Both times I said the same thing. Sit down, son. This'll take a while, and it won't be cheap.",
+			"My old man used to say a ship tells you how it was flown. Yours is screaming. I'll shut it up. You'll pay for the quiet."],
+			["Kids these days. Fly like the hull grows back on its own. It doesn't. I do it. For money.",
+			"Seen this before. Fellow tried to outrun a Reaver in a tub like yours, back when I had hair. He paid me double. You'll pay standard. Be grateful."],
+			["Dented. Not dead. I don't do sympathy, I do plating. Park it.",
+			"Hmph. Could be worse. Could be better. Bill sits right in the middle, same as always."],
+			["A few knocks. When I was your age I'd have flown on it. Then I'd have paid someone like me. So: pay someone like me.",
+			"That'll buff. Don't stand behind me while I work. Don't talk either. Talking's extra."],
+			["You came in for that? My wife's spoons have deeper scratches. Fine. Ten minutes, and you're buying.",
+			"One mark. In my day we'd call that a clean run and keep the money. You're not in my day. Pay up."],
+		],
+		"spotless": [
+			"Nothing wrong with that {ship}. Don't make me find something. I will.",
+			"Clean hull. Huh. Come back when you've earned a visit.",
+		],
+	},
+	"tinkerer": {
+		"gender": "m",
+		"approved": false,
+		"about": "an excitable tinkerer who loves machines more than people: talks to the ship like a pet, gets carried away, a bit awkward with pilots",
+		"bands": [
+			["Oh, you poor thing. Not you, the ship. Look what he did to you. Don't worry, girl, I've got you. You, Captain, have got the bill.",
+			"Oh, this is wonderful. I mean terrible! Terrible for you. For me it's a whole week of work. My kids are going to eat this month."],
+			["You know what I love about a hull this busted? You get to see how she's put together. You don't love it. That's fine. That's what the invoice is for.",
+			"Last month I rebuilt a hauler's whole spine with a spare from a mining rig. It still flies. Yours'll fly too, just with more of your money in it."],
+			["She's been through it, hasn't she? Hey there. Hey. We'll get those dents out. Captain, pay the nice man.",
+			"Ooh, a fresh scorch pattern. I keep a scrapbook, you know. My brother thinks it's weird. He's not wrong. That'll be the usual."],
+			["Couple of bumps. She's fine, she's just being dramatic. Ships are like that. So are pilots. Quick job.",
+			"A little scuffed. I'll have her purring before you finish your coffee. The purring costs, sadly."],
+			["That's barely a scratch! I'll fix it anyway. She deserves it. You can pay for it. You deserve that.",
+			"Hardly a mark. Honestly, I'm a bit disappointed. Bring me something broken next time, I get bored."],
+		],
+		"spotless": [
+			"Not a scratch on her! Can I just look at her for a bit? No charge. Well. Small charge.",
+			"That {ship} is gleaming. Whoever's flying her is either very good or very lucky. Either way, she likes you.",
+		],
+	},
+	"navy_engineer": {
+		"gender": "f",
+		"approved": false,
+		"about": "a calm ex-navy engineer: clinical, precise, deadpan, talks in damage reports, quietly proud",
+		"bands": [
+			["Structural integrity is a strong word for what you have. I'll replace what's missing. My invoice is itemised. It's long.",
+			"In the fleet we wrote ships like this off and kept the paint. I'm not in the fleet. Sit. I don't scrap things that still pay."],
+			["Four impacts, three fires, one decision I'd have court-martialled. I'll fix the first seven.",
+			"My mother flew haulers for thirty years and never came home like this. Don't tell her. Repair's standard."],
+			["Moderate damage. You'll live. The ship will live. Your credit balance will be wounded.",
+			"I once patched a corvette mid-burn with a cutting torch and a prayer. This is easier. I'll still charge like it isn't."],
+			["Cosmetic, mostly. I'll handle it. Don't touch anything on your way out.",
+			"Minor dents along the port side. Fixable in an hour. Billable in a minute."],
+			["A scratch. You docked to show me a scratch. All right. I respect thoroughness. And payment.",
+			"A few percent off spec. I'll round it up for my trouble. You'll round it up for me."],
+		],
+		"spotless": [
+			"Hull at full. Systems nominal. You're wasting my bay, but you're doing it politely.",
+			"That {ship} is clean. Go break something useful and come back.",
+		],
+	},
+	"big_heart": {
+		"gender": "f",
+		"approved": false,
+		"about": "a loud, big-hearted bruiser: laughs easily, calls the pilot flyboy or sugar, teases kindly, bills firmly",
+		"bands": [
+			["Oh, flyboy. Oh no. Come here, let me see. Mm-hm. Mm-hm. Yeah, you're paying me a lot today.",
+			"Ha! Last time a ship came in this bad, the pilot cried on my shoulder. Go ahead, I've got two. Then pay me."],
+			["Look at all those holes! You got into a fight and the fight won, didn't it? Aw. I'll fix you up, sugar. At full price, sugar.",
+			"My sister wrecked a skiff just like this once and I never let her forget it. Don't worry, I'll only tease you a little. Billing's a lot."],
+			["Bit banged up, huh? Happens to the best of us. Mostly happens to the rest of us. Park her, I'll sort it.",
+			"Ha, look at that dent! That's a good one. I'm keeping a picture. You're keeping the receipt."],
+			["Just a few dings, flyboy. I'll have you shining before you can say 'how much'. Don't say it.",
+			"Aw, a couple of bruises. Nothing a hammer and a hug can't fix. The hug's free."],
+			["That's what you came in for? Sweetheart, I've got lipstick marks worse than that. Fine, I'll buff it.",
+			"One little scuff! You're too careful. I like that in a pilot. Not in a customer. Pay up."],
+		],
+		"spotless": [
+			"Not a mark on that {ship}! Did you just come by to see me? I'm flattered. Buy something.",
+			"Clean as a whistle, flyboy. Go on, get out there and give me some work.",
+		],
+	},
+}
+
 ## Things a generated greeting may not bring up: none of them are in its
 ## fact packet, so the model would be making them up.
 const INVENTED := [
@@ -98,15 +191,47 @@ const INVENTED := [
 const DAMAGE := ["dent", "scorch", "scratch", "scuff", "hole", "damage", "busted", "broken", "limp", "smok", "leak"]
 
 
-static func hull_line(hull_share: float, rng: RandomNumberGenerator = null) -> String:
-	for band in HULL_BANDS:
-		if hull_share <= float(band[0]):
-			return _pick(band[1], rng)
+## A personality id for one station's mechanic, stable for that seed: only
+## approved ones, matching gender (female 1, male 0, unknown -1 takes any).
+## "" means Jenna's lines.
+static func personality_for(key: String, female: int, include_unapproved: bool = false) -> String:
+	var pool: Array = []
+	for id in PERSONALITIES.keys():
+		var p: Dictionary = PERSONALITIES[id]
+		if not include_unapproved and not bool(p.get("approved", false)):
+			continue
+		if female == 1 and str(p["gender"]) != "f":
+			continue
+		if female == 0 and str(p["gender"]) != "m":
+			continue
+		pool.append(id)
+	if pool.is_empty():
+		return ""
+	pool.sort()
+	return str(pool[absi(key.hash()) % pool.size()])
+
+
+static func about(personality: String) -> String:
+	return str(PERSONALITIES.get(personality, {}).get("about", ""))
+
+
+static func hull_line(hull_share: float, rng: RandomNumberGenerator = null, personality: String = "") -> String:
+	for i in HULL_BANDS.size():
+		if hull_share <= float(HULL_BANDS[i][0]):
+			if PERSONALITIES.has(personality):
+				return _pick(PERSONALITIES[personality]["bands"][i], rng)
+			return _pick(HULL_BANDS[i][1], rng)
 	return ""
 
 
-static func spotless_line(ship: String, rng: RandomNumberGenerator = null) -> String:
-	return _pick(SPOTLESS, rng).replace("{ship}", ship)
+static func spotless_pool(personality: String = "") -> Array:
+	if PERSONALITIES.has(personality):
+		return PERSONALITIES[personality]["spotless"]
+	return SPOTLESS
+
+
+static func spotless_line(ship: String, rng: RandomNumberGenerator = null, personality: String = "") -> String:
+	return _pick(spotless_pool(personality), rng).replace("{ship}", ship)
 
 
 static func offer_line(part: String, npc: String, outpost: String, rng: RandomNumberGenerator = null) -> String:

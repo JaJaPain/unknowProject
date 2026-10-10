@@ -32,6 +32,19 @@ func _initialize() -> void:
 	_check(Lines.OFFERS.size() == 7 and Lines.HANDINS.size() == 7, "seven offers and seven hand-ins")
 	_check(Lines.handin_line() != "", "a hand-in line")
 	_check(is_equal_approx(Lines.FAVOUR_DISCOUNT, 0.25), "the favour is a quarter off")
+	for id in Lines.PERSONALITIES.keys():
+		var p: Dictionary = Lines.PERSONALITIES[id]
+		_check((p["bands"] as Array).size() == Lines.HULL_BANDS.size(), "%s has a set for every band" % id)
+		_check(Lines.PERSONALITIES[id]["bands"][2].has(Lines.hull_line(0.6, null, id)), "%s speaks its own 51-75 line" % id)
+	var male := Lines.personality_for("station.a", 0, true)
+	var female := Lines.personality_for("station.a", 1, true)
+	_check(str(Lines.PERSONALITIES[male]["gender"]) == "m", "a male mechanic gets a male personality")
+	_check(str(Lines.PERSONALITIES[female]["gender"]) == "f", "a female mechanic gets a female personality")
+	_check(Lines.personality_for("station.a", 0, true) == male, "the same station keeps its personality")
+	var seen := {}
+	for i in 20:
+		seen[Lines.personality_for("station.%d" % i, -1, true)] = true
+	_check(seen.size() == Lines.PERSONALITIES.size(), "stations spread over every personality (%d)" % seen.size())
 	if _failures.is_empty():
 		print("[PASS] Mechanic lines")
 		quit(0)

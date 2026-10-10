@@ -8600,6 +8600,9 @@ func _current_mechanic_profile() -> Dictionary:
 				"flavor_color": npc_data.get("flavor_color", Color(1.0, 0.85, 0.4)),
 				"portrait": GlobalState.get_minor_npc_portrait(str(npc_name)),
 				"is_generated": true,
+				"personality": MechanicLines.personality_for(
+					station_id, _voice_gender(str(npc_data.get("voice_profile_id", "")))
+				),
 				"station_id": station_id,
 				"station_display_name": station_display,
 			}
@@ -10022,7 +10025,7 @@ func _cache_mechanic_intro() -> void:
 	# and offers still go through the model below.
 	var hull_share := _player_hull_share()
 	if hull_share < 0.995 and not _mechanic_pickup_offer.get("offer", false) and not active_quest.has("part_name"):
-		var band_line := MechanicLines.hull_line(hull_share)
+		var band_line := MechanicLines.hull_line(hull_share, null, str(_cached_mechanic_profile.get("personality", "")))
 		if band_line != "":
 			_cached_mechanic_line = band_line
 			_cached_mechanic_line_is_fallback = false
@@ -10111,7 +10114,10 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 	var is_generated := bool(mechanic_profile.get("is_generated", false))
 	# Greetings reach the model only for a spotless hull (damaged ships get a
 	# hull-band line) or a parts run (playtest 2026-10-10 findings 3 and 4).
-	var examples: Array = [MechanicLines.SPOTLESS[0], MechanicLines.SPOTLESS[3], MechanicLines.SPOTLESS[4]]
+	var personality := str(mechanic_profile.get("personality", ""))
+	var examples: Array = MechanicLines.spotless_pool(personality).duplicate()
+	if personality == "":
+		examples = [MechanicLines.SPOTLESS[0], MechanicLines.SPOTLESS[3], MechanicLines.SPOTLESS[4]]
 	for i in examples.size():
 		examples[i] = str(examples[i]).replace("{ship}", ship)
 	if offer.get("offer", false):
@@ -10129,7 +10135,9 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 	var prompt: String = (
 		"You ARE " + mechanic_name + ", a " + mechanic_role + " at this station dock. "
 		+ "You are NOT Broker Kaelen, NOT an agent, NOT a faction contact. You fix ships for a living.\n"
-		+ "If you are not Jenna Kross, do not claim to be Jenna or Grease Monkeys.\n\n"
+		+ "If you are not Jenna Kross, do not claim to be Jenna or Grease Monkeys.\n"
+		+ (("Your personality: " + MechanicLines.about(personality) + ".\n") if personality != "" else "")
+		+ "\n"
 		+ "FACT PACKET (use these exact strings):\n"
 		+ "- Mechanic name: \"" + mechanic_name + "\"\n"
 		+ "- Mechanic role: \"" + mechanic_role + "\"\n"
@@ -10371,10 +10379,21 @@ func _pick_fallback_mechanic_greeting(ship: String, _worst_tier: String, _best_t
 			str(offer.get("npc_name", "the contact")),
 			str(offer.get("outpost_display", "the outpost"))
 		)
-	var band_line := MechanicLines.hull_line(_player_hull_share())
+	var band_line := MechanicLines.hull_line(_player_hull_share(), null, str(_mechanic_profile.get("personality", "")))
 	if band_line != "":
 		return band_line
-	return MechanicLines.spotless_line(ship)
+	return MechanicLines.spotless_line(ship, null, str(_mechanic_profile.get("personality", "")))
+
+
+## 1 for a female voice, 0 for a male one, -1 if unknown (the portrait and
+## voice were paired by gender, so this is the mechanic's).
+func _voice_gender(voice_profile_id: String) -> int:
+	var v := str(GameContentRegistry.shared().provider_voice(voice_profile_id).get("provider_voice", ""))
+	if v.begins_with("af") or v.begins_with("bf"):
+		return 1
+	if v.begins_with("am") or v.begins_with("bm"):
+		return 0
+	return -1
 
 
 ## The player's hull as a share of its maximum (1.0 when there's no ship).
