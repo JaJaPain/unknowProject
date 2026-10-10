@@ -4608,9 +4608,8 @@ func _on_cargo_changed(new_cargo: float):
 		# text ("+ Audit-Proof Relay").
 		cargo_bar.value = new_cargo if GlobalState.cargo_type == GlobalState.CargoType.ORE else 0.0
 
-		# Play audio warning when ore cargo reaches max capacity
-		if GlobalState.cargo_type == GlobalState.CargoType.ORE and new_cargo >= GlobalState.cargo_max:
-			AudioManager.play_cargo_full()
+		# The old recorded "Cargo Full" no longer plays: N.O.V.A.'s own line
+		# covers it (Abe, playtest 2026-10-10 finding 7).
 
 		_update_quest_tracker()
 		_refresh_visible_npc_attention_buttons()

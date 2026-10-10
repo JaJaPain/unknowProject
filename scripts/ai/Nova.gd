@@ -598,29 +598,35 @@ func speak(text: String, severity: int = Severity.IDLE, expression: String = "ne
 	return true
 
 
-## Bored on a long mining stretch (Abe, 2026-10-05): after a couple of minutes
-## of steady mining she says one of the ore lines (MissionRemarks' ore pool,
-## the ones that need no job detail), at most once every few minutes. A pause
-## longer than MINING_GAP_S ends the stretch.
-const MINING_BORED_AFTER_S := 120.0
+## Her mining remark (Abe, 2026-10-05; trigger changed 2026-10-10 finding 7):
+## once the hold passes MINING_REMARK_SHARE of its capacity while mining she
+## says one of the ore lines (MissionRemarks' ore pool), at most once every
+## MINING_BORED_COOLDOWN_S. The old two-minute timer never fired in time: a
+## stock hold filled first.
+const MINING_REMARK_SHARE := 0.82
 const MINING_BORED_COOLDOWN_S := 420.0
-const MINING_GAP_S := 20.0
-var _mining_since := -1.0
-var _mining_last := -1.0
 var _mining_bored_at := -1000000.0
+var _mining_below_mark := true
 
 
 func on_player_mined() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
-	if _mining_last < 0.0 or now - _mining_last > MINING_GAP_S:
-		_mining_since = now
-	_mining_last = now
-	if _in_combat or now - _mining_since < MINING_BORED_AFTER_S 			or now - _mining_bored_at < MINING_BORED_COOLDOWN_S:
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null or float(gs.cargo_max) <= 0.0:
+		return
+	var share := float(gs.cargo) / float(gs.cargo_max)
+	if share < MINING_REMARK_SHARE:
+		_mining_below_mark = true
+		return
+	# Once per fill: only on crossing the mark.
+	if not _mining_below_mark:
+		return
+	_mining_below_mark = false
+	if _in_combat or now - _mining_bored_at < MINING_BORED_COOLDOWN_S:
 		return
 	var line: String = preload("res://scripts/story/MissionRemarks.gd")._draw("ore", {})
 	if not line.is_empty() and speak(line, Severity.IDLE, "thoughtful"):
 		_mining_bored_at = now
-		_mining_since = now
 
 
 ## A remark about the job you're on (MissionRemarks, playtest 2026-10-05
