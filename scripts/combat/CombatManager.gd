@@ -469,6 +469,10 @@ func _play_combat_taunt() -> void:
 	)
 
 func _play_npc_action_taunt(key: String) -> void:
+	# One taunt per fight (Abe, 2026-10-10): after the opening line the enemy
+	# only speaks when it runs.
+	if key != "npc_enemy_fled":
+		return
 	if not _combat_voice_on() or not is_instance_valid(enemy_node):
 		return
 	var line: String = taunts.get(key, "")
@@ -539,12 +543,9 @@ func _play_reaction(kind: String) -> void:
 
 
 func _play_desperate_taunt() -> void:
-	if not _combat_voice_on() or not is_instance_valid(enemy_node):
-		return
-	var line: String = DESPERATE_LINES[randi() % DESPERATE_LINES.size()]
-	var faction: String = enemy_node.get("faction") if enemy_node.get("faction") else "ENEMY"
-	GlobalState.emit_chatter(GlobalState.faction_display_name(faction).to_upper(), line, Color(1.0, 0.4, 0.3))
-	TTSInterface.play_dialogue_audio(line, _taunt_voice(), TAUNT_SPEED, TAUNT_STYLE)
+	# One taunt per fight (Abe, 2026-10-10): the enemy no longer cracks out
+	# loud. DESPERATE_LINES stay for now in case they come back as text.
+	pass
 
 
 func _play_npc_flee_taunt() -> void:
@@ -626,10 +627,14 @@ func start_combat(player: Node, enemy: Node, player_initiated: bool = true) -> v
 	_load_upgrade_stats()
 	_reset_fight_state()
 
-	# Fetch taunts async; _on_taunts_ready finishes setup when they arrive.
+	# The fight never waits on the model (playtest 2026-10-10 finding 5: up to
+	# ~19 s before the wheel when the model was busy). Planning starts at once
+	# on the written lines; fresher ones from the model are swapped in if they
+	# arrive (see _on_taunts_ready).
 	var faction:   String = enemy.get("faction") if enemy.get("faction") else "unknown"
 	var archetype: String = enemy.get("ship_role") if enemy.get("ship_role") else "Gunner"
-	LLMInterface.request_combat_taunts(faction, archetype, _on_taunts_ready, 0, _taunt_cause)
+	call_deferred("_on_taunts_ready", LLMInterface.COMBAT_TAUNT_FALLBACKS.duplicate(true))
+	LLMInterface.request_combat_taunts(faction, archetype, _on_live_taunts, 0, _taunt_cause)
 
 	emit_signal("combat_started", enemy)
 
@@ -739,6 +744,16 @@ func join_combat(enemy: Node) -> void:
 	var plan: Array = enemy.generate_action_plan() if enemy.has_method("generate_action_plan") else []
 	npc_action_plans.append(plan)
 	GlobalState.emit_chatter("SYSTEM", "Wingman joined the fight!", Color(1.0, 0.5, 0.2))
+
+## Fresher lines from the model, mid-fight: used for what's still to come
+## (the flee lines), never holding anything up.
+func _on_live_taunts(data: Dictionary) -> void:
+	if state == State.IDLE or data.is_empty():
+		return
+	for k in data:
+		if not str(data[k]).is_empty():
+			taunts[k] = data[k]
+
 
 func _on_taunts_ready(data: Dictionary) -> void:
 	# Guard against stale callbacks from duplicate requests (race with early state set)
@@ -1907,7 +1922,7 @@ func _after_npc_turn() -> void:
 func _remove_dead_enemies() -> void:
 	var dead_indices: Array = []
 	for i in enemy_nodes.size():
-		# Untyped on purpose: a typed Node variable can't even hold an enemy
+ 			# Untyped on purpose: a typed Node variable can't even hold an enemy
 		# that was freed mid-fight, and the turn died right here (Abe's crash,
 		# 2026-10-01).
 		var e = enemy_nodes[i]
