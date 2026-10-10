@@ -136,7 +136,7 @@ Claude adds new items here as work lands (newest section at the bottom).
 - [ ] **Nebula skies.** Behind the stars there is a faint coloured nebula
       (warm amber/rose at the start). Jump to another system: its nebula
       has a different shape and, often, a different colour.
-- [ ] **Weapon shots.** Shots are glowing bolts pointing where they fly (not
+- [x] **Weapon shots.** Shots are glowing bolts pointing where they fly (not
       dots), lighting nearby hulls, with a small flash at the gun.
 
 ## G. Music (added 2026-09-30, your stand-in tracks)
@@ -155,16 +155,16 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## H. Title screen (added 2026-09-30)
 
-- [ ] **Title screen.** Launch the game: the campaign list sits left of
+- [x] **Title screen.** Launch the game: the campaign list sits left of
       centre, your ship turns slowly on the right, Continue/Begin buttons are
       blue, Delete is red. Continue still loads your campaign.
-- [ ] **Getting hit.** Take a hull hit: the screen edges flash red (harder
+- [x] **Getting hit.** Take a hull hit: the screen edges flash red (harder
       hits, stronger). A hit your shields absorb gives a faint blue flash.
       Drop under 30% hull: a slow red pulse at the edges until repaired.
-- [ ] **Hurt ships spark.** Damage an enemy below about a third of its hull:
+- [x] **Hurt ships spark.** Damage an enemy below about a third of its hull:
       it throws small bursts of sparks, faster as it gets closer to dying.
       Same for your own ship when your hull is low.
-- [ ] **Target panel detail.** Target a ship: under its name a hull bar
+- [x] **Target panel detail.** Target a ship: under its name a hull bar
       (green, turning amber then red as it takes damage). The tag after the
       name says Hostile, Neutral or Friendly (a Zenith ship with ZEN 50
       reads Friendly), not "Hostile NPCShip" for everyone.
@@ -185,10 +185,10 @@ Claude adds new items here as work lands (newest section at the bottom).
       stations in different systems: the mechanics' voices differ (and match
       whether the portrait is a man or a woman). Jenna at the start is
       unchanged.
-- [ ] **Scorch marks.** In a fight, unshielded hits leave dark scorch marks
+- [x] **Scorch marks.** In a fight, unshielded hits leave dark scorch marks
       on the hull (yours and the enemy's) where they land. They clear when
       the fight ends. Note: do they sit on the hull, or float/smear?
-- [ ] **Enemies crack.** Get an enemy below about a third of its hull: after
+- [x] **Enemies crack.** Get an enemy below about a third of its hull: after
       the "Target hull failing" message, the enemy says a desperate line
       (e.g. "You got lucky. Say it.") in its taunt voice.
 - [ ] **Rumours point to an area.** Within ~20 s of arriving in a system,
@@ -196,7 +196,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       through two or three to catch one). It now ends with where to look,
       e.g. "Somewhere out past the gas giant." Fly there and search: the
       anomaly is in that area (not always right on top of the landmark).
-- [ ] **Enemies react.** Over a two- or three-turn fight you'll hear the enemy
+- [x] **Enemies react.** Over a two- or three-turn fight you'll hear the enemy
       react to what you do: gloating when its shield stops your shot, cursing
       a crit, yelling about your drone, panicking when you flank. At most one
       reaction a turn.
@@ -218,41 +218,41 @@ Claude adds new items here as work lands (newest section at the bottom).
 
 ## J. New-campaign load (added 2026-09-30)
 
-- [ ] **No stall at 92%.** Begin a new campaign with the voice server and story
+- [x] **No stall at 92%.** Begin a new campaign with the voice server and story
       model both running. The load should pass 92% without a long hold. Voice
       pre-caching now waits until the campaign outline is written, then runs.
-- [ ] **Begin animates into loading.** On the title screen press Begin
+- [x] **Begin animates into loading.** On the title screen press Begin
       Expedition (or Continue). The menu slides away, the stars stretch into
       warp streaks, your ship flies off into the middle of them, then a dark
       "Charting course..." screen holds until the loading screen fades in.
       Nothing should look frozen. The ship's engines light up and burn as it
       flies off.
-- [ ] **Begin animates into loading.** Press Begin Expedition (or Continue):
+- [x] **Begin animates into loading.** Press Begin Expedition (or Continue):
       the menu slides away, stars burst into warp streaks, the ship flies into
       them, then "Charting course..." holds until the loading screen fades in.
-- [ ] **N.O.V.A. talks again.** New campaign: she appears and speaks on the
+- [x] **N.O.V.A. talks again.** New campaign: she appears and speaks on the
       first dock, when you try to leave without repairs, and when she marks
       the enemy ship. (An empty title-screen layer left behind after launch
       made her hold every line.)
-- [ ] **Broken-gate opening.** New campaign: the cinematic is a torn energy
+- [x] **Broken-gate opening.** New campaign: the cinematic is a torn energy
       tunnel with the gate's shattered ring plates streaming past, lightning
       arcing between them, and violent lurches every few seconds (shake, roll,
       a glitch spike), then the white-out throw into the system. No grey slab,
       no full-screen rainbow noise, and no glimpse of the system through the walls.
-- [ ] **Faster 92%/96% stages.** New campaign: "Pre-caching N.O.V.A. cold-open
+- [x] **Faster 92%/96% stages.** New campaign: "Pre-caching N.O.V.A. cold-open
       voice lines" and "story banks" should pass in a few seconds, not wait on
       the whole voice queue. Her and Kaelen's lines should sound like the
       approved recordings (pre-baked clips are used instead of re-synthesized).
-- [ ] **Exit tumble.** At the end of the opening, as the white-out clears, the
+- [x] **Exit tumble.** At the end of the opening, as the white-out clears, the
       ship is thrown out tumbling (two turns of roll) and settles as the new
       system comes into view.
-- [ ] **N.O.V.A. portrait never lingers.** Undock a few times and fight once:
+- [x] **N.O.V.A. portrait never lingers.** Undock a few times and fight once:
       her portrait may appear while she talks, but if a line doesn't play it
       fades within about 2 seconds instead of staying up silent.
-- [ ] **Combat camera re-orbits each turn.** In a fight, each new planning
+- [x] **Combat camera re-orbits each turn.** In a fight, each new planning
       turn the camera settles back into its slow orbit around the enemy (a
       signal mismatch used to skip this with an error every turn).
-- [ ] **Receiver is taught.** New campaign, after the tutorial, fly undocked,
+- [x] **Receiver is taught.** New campaign, after the tutorial, fly undocked,
       out of combat and at least 1000 m from any station for 30 seconds: N.O.V.A. says a faint transmission is
       on your receiver and explains it once (T for the dials; frequency finds
       it, phase cleans it, hold it clear to lock). A pulsing "[T] TUNE
@@ -276,16 +276,16 @@ Claude adds new items here as work lands (newest section at the bottom).
       drone. (Black placeholders; real drone art later.) The flash is a
       glossy core in a soft see-through halo, like the ship's own drones,
       and it lights the drone and nearby hull.
-- [ ] **No receiver near stations.** Within 1000 m of a station the receiver
+- [x] **No receiver near stations.** Within 1000 m of a station the receiver
       prompt hides and T does nothing; fly clear and it comes back.
-- [ ] **Starter target line is instant.** Take Kaelen's starter job, repair,
+- [x] **Starter target line is instant.** Take Kaelen's starter job, repair,
       undock: N.O.V.A.'s "highlighted that ship in red" line starts right away
       (it's generated when you accept the job, not when it's needed).
-- [ ] **N.O.V.A. says what's true.** Win a fight without taking hull damage:
+- [x] **N.O.V.A. says what's true.** Win a fight without taking hull damage:
       a "no scratch" line. Win after taking some damage: a "dented but fine"
       line, never "my hull remains untouched". Let an enemy flee (beat it to
       low hull): she comments on THEM running, not on us retreating.
-- [ ] **Repair warning reads as a choice.** Dock damaged, decline repairs:
+- [x] **Repair warning reads as a choice.** Dock damaged, decline repairs:
       her warning talks about leaving ("you're about to..."), never as if
       we'd already launched ("turn back", "stop the thrusters").
 - [ ] **Drone bay is taught.** New campaign: target any asteroid and fly
@@ -297,7 +297,7 @@ Claude adds new items here as work lands (newest section at the bottom).
       (fuel, fuel blocks, O2) is there from the start, and "Fuel" now says an
       empty tank still flies, slower, but can't jump. The first time the job
       board shows a Loose ends button, a "Loose ends board" entry unlocks.
-- [ ] **Loading wait feels alive.** New campaign: while the story is being
+- [x] **Loading wait feels alive.** New campaign: while the story is being
       written, the status reads in plain English (no "status=..., source=..."
       debug text), the bar keeps creeping forward instead of sitting at 35%,
       and a TIP line under it changes every 7 seconds. Afterwards, godot.log
@@ -358,7 +358,7 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       Ship Rating 8 (ours 6)", "· open", or "· back the way we came, open".
       Star map: hover a system, and the line under its name says the same, in
       green (you can go) or red (not yet).
-- [ ] **Tutorial target line only.** New campaign, take Kaelen's job, undock
+- [x] **Tutorial target line only.** New campaign, take Kaelen's job, undock
       (repaired or not): N.O.V.A. says only the tutorial line ("I am not sure I
       am happy about being used to blow someone up..."), no pacifist hunt line
       before it. Her pacifist hunt lines start with the next hunt contract.
@@ -368,7 +368,7 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       one shows up. Kill the target / get clear and it comes back.
 - [ ] **Combat no longer freezes** when an enemy ship vanishes mid-fight (the
       crash from 2026-10-01).
-- [ ] **Receiver timer and difficulty.** Open the receiver (T): a bar and
+- [x] **Receiver timer and difficulty.** Open the receiver (T): a bar and
       seconds counter under the title drains green to yellow to red. Easy
       gives 40 s, medium 25 s, hard 15 s; when it runs out the transmission
       fades (partial if you were past half a lock). In the start system every
@@ -376,12 +376,12 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       naming it: easy ones are "close by and fairly steady", medium ones
       "drifting", hard ones "slipping already" / "won't last". Harder ambient
       intercepts pay more (x1.6 medium, x2.5 hard).
-- [ ] **SYSTEM prompt each offer.** Every receiver offer also puts a SYSTEM
+- [x] **SYSTEM prompt each offer.** Every receiver offer also puts a SYSTEM
       line in comms: "Press T to TUNE RECEIVER: faint transmission nearby."
 - [ ] **Loose ends feel like a reward.** When a new entry lands on the Loose
       ends board (a clean thread intercept, a drone flight recorder...), a gold
       REWARD banner says "NEW LEAD" with a sting.
-- [ ] **Intercept payout banner.** Finish an ambient intercept (clean or
+- [x] **Intercept payout banner.** Finish an ambient intercept (clean or
       partial, or let N.O.V.A. try): a gold REWARD banner shows
       "INTERCEPT SOLD · +N SC" with the sting, as well as the comms line.
 - [ ] **Step 3: the upgrade goal card (STOP AND SHOW).** Top right, under the
@@ -395,7 +395,7 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
       After fitting, the card suggests the next step on its own.
       Note: on a stock powerplant, the second upgrade needs the Powerplant
       first (the card says so with a red Power row).
-- [ ] **Step 4: Sell or Bank.** After the tutorial, dock with ore in the hold
+- [x] **Step 4: Sell or Bank.** After the tutorial, dock with ore in the hold
       and talk to Kaelen: "Sell Ore (N m³ → X SC)" sits beside "Bank N m³
       (bank X/Y)". While your goal still needs ore, Bank is gold with a ★, and
       the first time N.O.V.A. says to keep the ore for the mechanic (never
@@ -421,10 +421,10 @@ Use the dev panel (Numpad 7): "+1 Weapons/Engine/Shields/Mining/Cargo" and
 
 ## L. Screenshots (added 2026-10-01)
 
-- [ ] **F12 takes a screenshot.** While flying, press F12: a quick white flash
+- [x] **F12 takes a screenshot.** While flying, press F12: a quick white flash
       and a shutter click, and a SYSTEM line "Screenshot saved: Day001_<System>_0800.png
       (Esc > Gallery)". Shift+F12 takes one without the HUD.
-- [ ] **Gallery.** Esc > GALLERY: this campaign's shots, newest first, as
+- [x] **Gallery.** Esc > GALLERY: this campaign's shots, newest first, as
       thumbnails. Click one for full screen; PREV/NEXT (or Left/Right), DELETE
       (or the Delete key), BACK (or Esc). OPEN FOLDER opens the files.
 - [ ] **Per campaign.** Another campaign's gallery is its own. Deleting a
@@ -652,26 +652,26 @@ through the marked gate and flies you in):
 
 ## S. Never nothing to do (added 2026-10-02, core loop step 13)
 
-- [ ] **No job, N.O.V.A. helps.** After the tutorial, undock with no job and
+- [x] **No job, N.O.V.A. helps.** After the tutorial, undock with no job and
       just fly around for about 2.5 minutes: N.O.V.A. suggests something,
       e.g. "No job on the books, Captain. The station board always has
       something." Not again for about 10 minutes.
 - [ ] **She picks the best thing.** With your upgrade goal fully paid for
       (goal card says READY), the line is about docking to fit it instead.
-- [ ] **She leaves you alone when busy.** With a job active, or docked, she
+- [x] **She leaves you alone when busy.** With a job active, or docked, she
       never says these.
 
 ## T. Board pickups: the lounge hunt (added 2026-10-03, playtest finding 14)
 
-- [ ] **The job says where, not who.** Take a pickup from a station's public
+- [x] **The job says where, not who.** Take a pickup from a station's public
       board. The board text and the quest tracker name the outpost and say
       someone in its lounge has it ("ask around"), never the person.
-- [ ] **Hand-in names the real station.** The tracker after pickup says
+- [x] **Hand-in names the real station.** The tracker after pickup says
       "Bring the ... to <this system's main station>", never Grease Monkeys
       (outside the start system).
-- [ ] **No shortcut at the counter.** Dock at that outpost: a gold "Dock
+- [x] **No shortcut at the counter.** Dock at that outpost: a gold "Dock
       Notice" says someone in this lounge has it; no Ask button in services.
-- [ ] **The hunt.** In the outpost lounge every contact has a pulsing "Ask
+- [x] **The hunt.** In the outpost lounge every contact has a pulsing "Ask
       about it". The wrong people deflect, dryly; sooner or later one names
       who has it. The holder denies it, then hedges, then hands it over on
       the third ask. Buying the holder a drink counts as an ask.
@@ -738,7 +738,7 @@ through the marked gate and flies you in):
 
 ## V. Playtest 2026-10-04 fixes (added 2026-10-04)
 
-- [ ] **Scan Composition.** In a belt, press **C** (or the target window's
+- [x] **Scan Composition.** In a belt, press **C** (or the target window's
       "Scan Composition (C)" on a rock): a sonar ping sounds and a clear
       bubble grows steadily out of the ship (grid on its shell, a ring at
       ship level) just past the ten nearest rocks, each rock flashing as the
@@ -752,15 +752,15 @@ through the marked gate and flies you in):
       rock in range is counted as unreadable. A rock you mine names itself.
 - [ ] **Fuel Blocks job.** The board's Fuel Blocks job says ice is scarce and
       to scan (C); scanning a belt finds the water ice.
-- [ ] **Fly-to never U-turns.** Fly to something on the far side of a
+- [x] **Fly-to never U-turns.** Fly to something on the far side of a
       planet or a big station (long trip, cruising): the ship bends round
       smoothly and never swings 180 degrees and back.
-- [ ] **Mouse after docking.** Hold right mouse (camera drag) while the
+- [x] **Mouse after docking.** Hold right mouse (camera drag) while the
       tractor beam takes you in: the mouse works in the dock menu.
-- [ ] **Loading tips** change about every 14 seconds.
+- [x] **Loading tips** change about every 14 seconds.
 - [ ] **No early route offer.** New campaign: Kaelen's new-route offer
       waits until 3 contracts are done in this campaign.
-- [ ] **First agent job reads in-world.** No "fallback", "chapter" or
+- [x] **First agent job reads in-world.** No "fallback", "chapter" or
       "packet" in the job title or pitch; the contact never calls you by a
       bit of a faction name.
 - [ ] **Kaelen won't sell a route you can't fly.** Her first route (Class I)
@@ -776,45 +776,45 @@ through the marked gate and flies you in):
       Depot (grey/teal), Kova is Crown Haven (pearl/cobalt); the radar on top
       turns, the rest stays still. Small light drones, amber beacons beside
       the lane.
-- [ ] **Dock at both.** Kestrel's lane comes in from the side; Crown Haven's
+- [x] **Dock at both.** Kestrel's lane comes in from the side; Crown Haven's
       pads face up, so the beam pulls you straight down onto the pad. The
       ship never clips the structure; undocking lifts you clear first.
 - [ ] **New look every jump.** Jump to a new system: its main station and
       outposts wear different models/finishes from the system you left.
       Jump back: the same ones as before (they're saved with the system).
-- [ ] **No receiver during the tutorial.** New campaign: from launch to
+- [x] **No receiver during the tutorial.** New campaign: from launch to
       handing in Kaelen's first contract, N.O.V.A. never offers a signal and T
       does nothing. After the hand-in, her first receiver offer comes early
       as before.
-- [ ] **Music after stingers.** Win a fight or get paid: the music starts
+- [x] **Music after stingers.** Win a fight or get paid: the music starts
       coming back as the stinger's last note fades, with no silent gap. A
       kill that completes a contract (two stingers) doesn't keep it down long.
-- [ ] **New game loading at 35%.** The status shows "Loading the story
+- [x] **New game loading at 35%.** The status shows "Loading the story
       model... (0:xx)", then "Writing your campaign's story... (0:xx)". Usually
       done in about a minute. If it ever says "The story model got stuck.
       Restarting it...", it should carry on by itself.
 
 ## X. Playtest 2026-10-04 c fixes (added 2026-10-04)
 
-- [ ] **Intro: no controls till the look-around hint.** Right-drag, clicks,
+- [x] **Intro: no controls till the look-around hint.** Right-drag, clicks,
       Q/W/E, I, M do nothing during the opening; they work once "Hold RIGHT
       MOUSE and drag to look around" shows. Space still skips.
-- [ ] **Intro drones** start orbiting as soon as you're thrown out of the gate.
-- [ ] **No late tunnel lines:** N.O.V.A.'s tunnel lines never play after
+- [x] **Intro drones** start orbiting as soon as you're thrown out of the gate.
+- [x] **No late tunnel lines:** N.O.V.A.'s tunnel lines never play after
       you're out in open space, even on a slow machine.
-- [ ] **Undock (station and both outposts):** Dock Control speaks as the
+- [x] **Undock (station and both outposts):** Dock Control speaks as the
       beam carries you out; HUD orders (Approach, Orbit...) are refused with
       "Dock Control has the ship..."; control returns past the safety zone
       with "Clear of the safety zone. Controls are yours."; N.O.V.A.'s first
       undock tip comes after that.
-- [ ] **Beam sound:** docking, undocking and nearby traffic beams hum like
+- [x] **Beam sound:** docking, undocking and nearby traffic beams hum like
       the mining tractor.
 - [ ] **Kaelen in a new system** has work (or says why not), and her waiting
       line is in her own voice.
 - [ ] **Lounge hunt:** cards show the person's name and two buttons that
       stay on the card; "Ask about it" shows the reply in the message box
       with Press them / Ask someone else; pressing the holder hands it over.
-- [ ] **Tutorial station on top.** New campaign: Greywake sits at the top
+- [x] **Tutorial station on top.** New campaign: Greywake sits at the top
       of the overview (not red) while the tutorial points at it; the arrow
       finds it without scrolling.
 - [ ] **No crash docking** when a job falls back to the built-in one (the
@@ -825,7 +825,7 @@ through the marked gate and flies you in):
 - [x] **New planets.** (Abe, 2026-10-05: "they look great") Gas giants have moving clouds and storms; rocky
       planets are cratered rock or ocean worlds with changing clouds; all lit
       from the sun with a night side; nothing moves while paused.
-- [ ] **Overview during undock:** visible but not clickable while the beam
+- [x] **Overview during undock:** visible but not clickable while the beam
       carries you out; clickable again with "Controls are yours."
 - [ ] **Traffic on the beam** faces where it's going, never slides backwards.
 - [ ] **Kaelen's routes:** after buying a route, she won't offer the next
@@ -835,32 +835,32 @@ through the marked gate and flies you in):
 
 - [ ] **Your berth stays yours:** at a big station, freighters come down on
       their own beams to other piers around the ring, never yours.
-- [ ] **Freighters sit at the pier** a few seconds after docking, nose out,
+- [x] **Freighters sit at the pier** a few seconds after docking, nose out,
       then are gone; leaving ones lift off their pier straight up first.
-- [ ] **Outposts too:** freighters use the outpost's other berths, not yours.
+- [x] **Outposts too:** freighters use the outpost's other berths, not yours.
 - [ ] **Station hulls up close:** docking at a big station or outpost, the
       hull panels show their seams and the metal catches the sun with a little
       worn texture, with no sparkle or crawling as you move.
 
 ## Z. Playtest 2026-10-05 fixes (added 2026-10-05)
 
-- [ ] **Intro:** a soft dark vignette at the screen edges; no mouse cursor at
+- [x] **Intro:** a soft dark vignette at the screen edges; no mouse cursor at
       all until "Hold RIGHT MOUSE..." (Esc's systems menu still shows one).
-- [ ] **N.O.V.A. on the chat:** while she talks during docking/undocking, her
+- [x] **N.O.V.A. on the chat:** while she talks during docking/undocking, her
       portrait stays on the chat box as it moves, never over empty space or the
       overview.
 - [ ] **Tractor hum** a little louder.
-- [ ] **No overview on the beam:** it disappears when the beam takes you in,
+- [x] **No overview on the beam:** it disappears when the beam takes you in,
       stays gone while docked, and fades back in with "Controls are yours."
-- [ ] **Undock once:** opening the inventory while being pushed out doesn't
+- [x] **Undock once:** opening the inventory while being pushed out doesn't
       bring the dock screen back; no "Checkpoint could not be saved".
 - [ ] **Pickup item:** after the hand-over, the holder's line stays up with
       "X is in your hold. Deliver it to..."; the inventory shows the item as a
       MISSION card; turning in says "X handed over to ...".
-- [ ] **N.O.V.A. on your jobs:** about half the board jobs you take, she says
+- [x] **N.O.V.A. on your jobs:** about half the board jobs you take, she says
       something about it (the pay, the item, where it's going) partway there,
       never at the station. Lines vary.
-- [ ] **Idle station tour:** docked on the station menu, leave the mouse and
+- [x] **Idle station tour:** docked on the station menu, leave the mouse and
       keyboard alone for 1m30s: the screen fades, the HUD is gone, and the
       camera drifts slowly round the station, swinging over to watch a
       freighter come down onto its pier. Touch anything: the dock screen and
@@ -868,7 +868,7 @@ through the marked gate and flies you in):
 - [ ] **N.O.V.A. gets bored mining:** mine steadily for a couple of minutes:
       she makes a dry remark about the rocks. Not more than once every ~7
       minutes, and a different one each time.
-- [ ] **The comet:** about 5 minutes into a session a faint comet crosses
+- [x] **The comet:** about 5 minutes into a session a faint comet crosses
       high in the sky in front of you, over about a minute and a half, behind
       every planet and station and never close. Then roughly 10 minutes after
       each one ends. The idle station tour calls one in and leans the view
@@ -877,16 +877,16 @@ through the marked gate and flies you in):
       pickup jobs get jumped on the way back: partway home N.O.V.A. warns of a
       tail, ~25 s later a Reaver Hijacker comes at you with a hail. Dock first
       and it loses you. Shoot it down and she has a word about it.
-- [ ] **Ore and a pickup together:** with ore in the hold, take a pickup: the
+- [x] **Ore and a pickup together:** with ore in the hold, take a pickup: the
       holder hands it over without asking you to sell your ore. Keep mining
       with the item aboard; the HUD says "... m³ + <item>". Selling ore keeps
       the item; handing in the item keeps the ore.
 - [ ] **Kaelen while you're away:** leave the station tour running 5+ minutes:
       Kaelen's voice (over comms, no portrait or text) drops a line about you
       being idle, then roughly every 5 minutes, no repeats until all 7 played.
-- [ ] **Smooth tractor in the tour:** the first freighter the tour watches
+- [x] **Smooth tractor in the tour:** the first freighter the tour watches
       turns smoothly onto its pier, no sudden nose-down flip.
-- [ ] **N.O.V.A.'s database:** systems menu -> N.O.V.A. DATABASE. Everyone
+- [x] **N.O.V.A.'s database:** systems menu -> N.O.V.A. DATABASE. Everyone
       you've dealt with is there, newest first, with a portrait and a short
       line ("Sent you on 3 jobs for ore in ...", "Handed you the ...",
       "Talked with you in the lounge in ...", "Came up in a story at ...").
@@ -922,21 +922,21 @@ through the marked gate and flies you in):
       beacon pulses, the Garden's wings track, nav lights blink, the conveyor
       runs. Approach (Q) stops at the edge, never inside the model; the
       arrival scene still plays when you're close.
-- [ ] **Beam sound (2026-10-06 fixes 1-2):** the docking/undocking hum is
+- [x] **Beam sound (2026-10-06 fixes 1-2):** the docking/undocking hum is
       clearly audible wherever the camera is; a latch click when the beam
       grabs and when it lets go (four per visit).
-- [ ] **Fly to a station:** stops well outside the model and starts
+- [x] **Fly to a station:** stops well outside the model and starts
       orbiting it; Orbit around a station or gate circles outside it.
-- [ ] **Mining lasers off:** start mining, press Dock: the lasers stop.
+- [x] **Mining lasers off:** start mining, press Dock: the lasers stop.
 - [ ] **Kaelen in a new system:** her desk has jobs the first time you see
       it there, even right after a break at home.
-- [ ] **COMBAT tag:** kill/drop jobs on the board say COMBAT; pickups don't.
+- [x] **COMBAT tag:** kill/drop jobs on the board say COMBAT; pickups don't.
 - [ ] **Reserve drones:** a new campaign's inventory shows a locked RESERVE
       card (x2); the first red-rock dive uses them.
 - [ ] **Asteroid fields:** systems past the first have 2-3 fuller fields
       (or one big one), each with ice and every local ore; some systems are
       mostly ice. Watch the frame rate.
-- [ ] **Haggling:** pushing for more sometimes cuts the pay with a cocky
+- [x] **Haggling:** pushing for more sometimes cuts the pay with a cocky
       line; good standing helps.
 - [ ] **N.O.V.A. on Kaelen:** after dealing with Kaelen at the second
       system's station, undocking: "Why is Kaelen at this station too?..."
@@ -980,9 +980,9 @@ through the marked gate and flies you in):
       one for 3 s to scan it. Each tells part of what happened; the first two
       also pull a story thread from the logs. The fourth pays salvage or a
       Destination bearing. Drones can dive the hulls from the edge.
-- [ ] **Campaign titles:** start a few campaigns (deleting saves between is
+- [x] **Campaign titles:** start a few campaigns (deleting saves between is
       fine): titles shouldn't repeat or keep reusing a word like "ledger".
-- [ ] **Playtest 2026-10-08 fixes:**
+- [ ] **Playtest 2026-10-08 fixes** (2026-10-10: all passed except Kaelen at outposts, which is finding 10 of that test):
       undocking clicks once, as the beam lets go;
       Scan Composition only with rocks within 400 m;
       after turning in an ore job, Sell/Bank show what's really left;
