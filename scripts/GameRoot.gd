@@ -7107,6 +7107,7 @@ func _capture_global_state() -> Dictionary:
 		"inventory": GlobalState.inventory.to_dict(),
 		"store_stock": GlobalState.StoreRegistryScript.shared().save_stock_state(),
 		"kaelen_briefing_seen": GlobalState.kaelen_briefing_seen,
+		"repair_favours": GlobalState.repair_favours.duplicate(),
 		"kaelen_briefing_accepted": GlobalState.kaelen_briefing_accepted,
 		"intro_tutorial_player_protected": GlobalState.is_intro_tutorial_player_protection_active(),
 		"combat_tutorial_seen": GlobalState.combat_tutorial_seen,
@@ -7155,6 +7156,8 @@ func _apply_global_state(state: Dictionary) -> void:
 	if not stock_data.is_empty():
 		GlobalState.StoreRegistryScript.shared().restore_stock_state(stock_data)
 	GlobalState.kaelen_briefing_seen = bool(state.get("kaelen_briefing_seen", false))
+	var favours = state.get("repair_favours", {})
+	GlobalState.repair_favours = favours.duplicate() if favours is Dictionary else {}
 	GlobalState.kaelen_briefing_accepted = bool(state.get("kaelen_briefing_accepted", false))
 	GlobalState.intro_tutorial_player_protected = bool(state.get("intro_tutorial_player_protected", false))
 	GlobalState.is_intro_tutorial_player_protection_active()

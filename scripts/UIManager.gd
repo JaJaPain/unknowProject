@@ -1,5 +1,6 @@
 extends Control
 
+const MechanicLines := preload("res://scripts/story/MechanicLines.gd")
 const PublicBoardOfferBuilderType := preload(
 	"res://scripts/domain/PublicBoardOfferBuilder.gd"
 )
@@ -9795,31 +9796,7 @@ func _current_turn_in_station_id() -> String:
 const PLAYER_SHIP_NAME = "INDY Miner"
 const JENNA_FIRST_MEETING_LINE := "Name's Jenna. I can fix whatever you broke, but I can't fix whatever bad decision made you fly a bucket like this out to the edge of nowhere. So—what are we looking at?"
 
-# 10 canned lines. Each is a complete, in-character greeting Jenna would
-# give at the maintenance bay. References ship class and/or reputation
-# tier. Always a little too personal — implies she already knows things
-# about the pilot. Used:
-#   1. As offline fallback when the LLM is unreachable.
-#   2. As few-shot examples fed to the LLM (see request_mechanic_intro)
-#      so the generated line matches voice, length, and structure.
-# Picked deterministically by reputation tier + ship state so a returning
-# player gets a line that feels like "she remembers you" without a second
-# of LLM latency on cold start.
-const FALLBACK_MECHANIC_GREETINGS: Array = [
-	"INDY Miner, right? Heard your thruster's been screaming bloody murder for three sectors. Drop her on the rack — I'll work my magic.",
-	"Cute ship. Zenith's not going to be happy you scratched the paint, but don't worry, I don't snitch. What hurts first?",
-	"INDY Miner. Of course. You Aurelia contracts or Vanguard contracts? I can tell from the scorch marks. Sit down, I've got you.",
-	"Oh good, the pilot Vanguard put on a watchlist. Don't worry — Grease Monkeys is neutral ground. Mostly. What's broken?",
-	"You flew that thing here on three engine cycles? Respect. And stupidity. Park it, I'll patch the frame before I judge the rest of you.",
-	"INDY Miner hull, unlisted cargo, Zenith is friendly, Vanguard is pissed. Yeah, I read the registry. I read everything. What do you need?",
-	"Your ship's prettier than your file, and that's not a compliment. Cute INDY though. Bring her around, I'll fix what Aurelia's goons dented.",
-	"Heard you picked a fight with a Reaver in an INDY Miner and walked away. I'm calling bullshit, but I'm also curious. Pop the hood.",
-	"You know, when INDY Miner pilots start showing up at my bay, it's usually because they're one bad landing from exploding. Which one are you?",
-	"Yeah, yeah — famous pilot, dangerous name, pristine INDY Miner. Sit down before I charge you for standing in my workspace.",
-	"That {ship} looks like it could use some love. But first, I need a favor. Head to {outpost} and get {part} from {npc} for me.",
-	"Before we look at the {ship}, I'm short a {part}. Grab it from {npc} at {outpost} and I'll make it worth your while.",
-	"Nice {ship}. You want it fixed? Do me a solid. I left a {part} with {npc} over at {outpost}. Go get it."
-]
+# Mechanics' written lines live in scripts/story/MechanicLines.gd.
 
 # Returns the tier name for the player's WORST faction reputation.
 # Jenna greases palms across the sector, so she's heard about the player
@@ -10040,6 +10017,21 @@ func _cache_mechanic_intro() -> void:
 	
 	var active_quest: Dictionary = QuestManager.get_pickup_special_data()
 
+	# A damaged ship gets a written line for its hull band (playtest 2026-10-10
+	# finding 3: the model invented crashes and sputtering engines). Errands
+	# and offers still go through the model below.
+	var hull_share := _player_hull_share()
+	if hull_share < 0.995 and not _mechanic_pickup_offer.get("offer", false) and not active_quest.has("part_name"):
+		var band_line := MechanicLines.hull_line(hull_share)
+		if band_line != "":
+			_cached_mechanic_line = band_line
+			_cached_mechanic_line_is_fallback = false
+			_mechanic_precache_in_flight = false
+			SpeechService.cache(band_line, str(_cached_mechanic_profile.get("voice_profile_id", "voice.neutral.v1")))
+			if current_submenu == DockSubmenu.MAINTENANCE:
+				_render_mechanic_intro()
+			return
+
 	# If LLM is reachable, try the real call. LLMInterface is the same
 	# path used for Kaelen handoffs, so we know it works end-to-end.
 	# (request_mechanic_intro is added below as a thin wrapper so the
@@ -10117,30 +10109,13 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		mechanic_profile.get("role", "Grease Monkeys mechanic")
 	)
 	var is_generated := bool(mechanic_profile.get("is_generated", false))
-	var examples: Array = [
-		FALLBACK_MECHANIC_GREETINGS[0],
-		FALLBACK_MECHANIC_GREETINGS[4],
-		FALLBACK_MECHANIC_GREETINGS[7],
-	]
-	if is_generated:
-		examples = [
-			"Your ship is making a noise that costs money. Lucky for both of us, I like money.",
-			"That crate limped in like it owes the docking clamps an apology. What broke first?",
-			"I can keep your rig breathing, but I charge extra when the dents have politics.",
-		]
-	# If an offer is rolling, use the offer templates (indices 10-12) instead
+	# Greetings reach the model only for a spotless hull (damaged ships get a
+	# hull-band line) or a parts run (playtest 2026-10-10 findings 3 and 4).
+	var examples: Array = [MechanicLines.SPOTLESS[0], MechanicLines.SPOTLESS[3], MechanicLines.SPOTLESS[4]]
+	for i in examples.size():
+		examples[i] = str(examples[i]).replace("{ship}", ship)
 	if offer.get("offer", false):
-		examples = [
-			FALLBACK_MECHANIC_GREETINGS[10],
-			FALLBACK_MECHANIC_GREETINGS[11],
-			FALLBACK_MECHANIC_GREETINGS[12],
-		]
-		if is_generated:
-			examples = [
-				"I need {part} from {npc} over at {outpost}. Try not to make the invoice heroic.",
-				"Run to {outpost}, get {part} from {npc}, bring it back. Simple, which is how trouble hides.",
-				"I have a parts problem with your name on it. {npc} at {outpost} has {part}.",
-			]
+		examples = [MechanicLines.OFFERS[0], MechanicLines.OFFERS[2], MechanicLines.OFFERS[5]]
 	var examples_block: String = ""
 	for ex in examples:
 		var example_line := str(ex)
@@ -10198,22 +10173,27 @@ func _build_mechanic_intro_prompt(ship: String, worst_tier: String, best_tier: S
 		reqs = (
 			"1. 2-3 sentences, max 300 chars.\n"
 			+ "2. You MUST mention the ship name \"" + ship + "\" literally (or a short form like \"that crate\").\n"
-			+ "3. You MUST ask the player to go to \"" + target_outpost + "\" to pick up \"" + part_name + "\" from \"" + target_npc + "\".\n"
+			+ "3. Ask a FAVOUR: the part is for SOMEONE ELSE's ship on your stand, not the player's. Ask the player to go to \"" + target_outpost + "\" to pick up \"" + part_name + "\" from \"" + target_npc + "\"; the run pays, and their next repair here comes in cheaper.\n"
 		)
 	else:
-		prompt += "\n"
+		var goal: Dictionary = load("res://scripts/ui/UpgradeGoalCard.gd").current_goal()
+		prompt += (
+			"- Hull: 100%, not a mark on it\n"
+			+ "- Saving for: " + ("\"" + load("res://scripts/domain/UpgradeGoal.gd").title(goal) + "\"" if not goal.is_empty() else "nothing in particular") + "\n"
+			+ "- Current job: " + ("\"" + str(QuestManager.active_quest.get("title", "")) + "\"" if QuestManager.is_quest_active() else "none") + "\n\n"
+		)
 		reqs = (
 			"1. 1-2 sentences, max 200 chars.\n"
 			+ "2. You MUST mention the ship name \"" + ship + "\" literally (or a short form like \"that crate\").\n"
-			+ "3. Make one concrete observation about the ship, the pilot's recent trouble, or money.\n"
+			+ "3. Comment on ONE fact from the packet. Never mention an event, place, person, fight, crash or time that is not in the packet. The hull is spotless: no dents, scorch marks or damage.\n"
 		)
-		
+
 	prompt += (
 		"Here are 3 of YOUR OWN past greetings, in your exact voice:\n"
 		+ examples_block + "\n"
 		+ "Write ONE NEW greeting. HARD REQUIREMENTS:\n"
 		+ reqs
-		+ "4. Cocky mechanic voice — second person (\"you\"), observational, a little too personal.\n"
+		+ "4. Cocky, dry mechanic voice — second person (\"you\"), teasing about money and work.\n"
 		+ "5. NO phrases like \"your best friend\", \"stay put\", \"sit tight\", \"wait here\", \"I'll fetch\", \"hold on\", \"Shiny\". Those are KAELEN's phrases, not yours. Use \"you\" most of the time; \"Indy\" is allowed only rarely. NEVER \"Shiny\".\n"
 		+ "6. Faction status is private subtext only. NEVER say reputation, rep, standing, tier, rank, score, points, percentage, or game-like labels such as Wary, Neutral, Hostile, Friendly, Trusted, or Allied. Let it show only as natural gossip, distrust, or respect.\n"
 		+ "7. NO hashtags, NO emojis, NO quotes around the line.\n\n"
@@ -10338,6 +10318,10 @@ func _explain_mechanic_line_rejection(line: String, ship: String, worst_tier: St
 		var npc_words = target_npc.split(" ")
 		if not lower.contains(target_npc) and not lower.contains(npc_words[0]):
 			return "Failed to mention the contact ('" + target_npc + "')."
+	if not active_quest.has("part_name"):
+		var invented := MechanicLines.invented_detail(line, not offer.get("offer", false))
+		if invented != "":
+			return invented
 	var kaelen_tells: Array = ["best friend", "stay put", "sit tight", "wait here", "i'll fetch", "i'll grab", "hold on", "hold here", "stay here", "shiny"]
 	for tell in kaelen_tells:
 		if lower.contains(tell):
@@ -10371,9 +10355,7 @@ static func _mechanic_line_leaks_faction_standing(line: String) -> bool:
 	return faction_value.search(line) != null
 
 # Pick a canned line.
-func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tier: String, offer: Dictionary, active_quest: Dictionary, mechanic_profile: Dictionary = {}) -> String:
-	var mechanic_name := str(mechanic_profile.get("name", "Jenna Kross"))
-	var is_generated := bool(mechanic_profile.get("is_generated", false))
+func _pick_fallback_mechanic_greeting(ship: String, _worst_tier: String, _best_tier: String, offer: Dictionary, active_quest: Dictionary, _mechanic_profile: Dictionary = {}) -> String:
 	if active_quest.has("part_name"):
 		var part = active_quest.get("part_name", "the part")
 		var has_part = active_quest.get("picked_up", false)
@@ -10381,33 +10363,27 @@ func _pick_fallback_mechanic_greeting(ship: String, worst_tier: String, best_tie
 			return "Where's my %s? Don't tell me you got lost." % part
 		else:
 			return "You actually got the %s. Drop it on the bench before you break it." % part
-	if is_generated:
-		if offer.get("offer", false):
-			return "%s needs %s from %s at %s. Bring it back before the station invents a storage fee." % [
-				mechanic_name,
-				offer.get("part_name", "the part"),
-				offer.get("npc_name", "the contact"),
-				offer.get("outpost_display", "the outpost"),
-			]
-		var generated_lines := [
-			"%s says your %s is making the kind of noise that turns invoices religious.",
-			"%s can keep %s breathing, but miracles cost extra out here.",
-			"%s has seen prettier wrecks than %s. Lucky for you, pretty doesn't fly.",
-		]
-		var template := str(generated_lines[randi() % generated_lines.size()])
-		return template % [mechanic_name, ship]
-
-	var salt: int = randi() % 10
-	var idx: int = (worst_tier.length() + best_tier.length() + salt) % 10
-	var line: String = FALLBACK_MECHANIC_GREETINGS[idx]
+	# Every mechanic uses the written lines (playtest 2026-10-10 findings 3
+	# and 4): a favour for somebody else's ship, or a word on the hull.
 	if offer.get("offer", false):
-		# Indices 10-12 are the pickup offer fallbacks
-		idx = 10 + (salt % 3)
-		line = FALLBACK_MECHANIC_GREETINGS[idx]
-		line = line.replace("{part}", offer.get("part_name", "the part"))
-		line = line.replace("{npc}", offer.get("npc_name", "the contact"))
-		line = line.replace("{outpost}", offer.get("outpost_display", "the outpost"))
-	return line.replace("{ship}", ship)
+		return MechanicLines.offer_line(
+			str(offer.get("part_name", "the part")),
+			str(offer.get("npc_name", "the contact")),
+			str(offer.get("outpost_display", "the outpost"))
+		)
+	var band_line := MechanicLines.hull_line(_player_hull_share())
+	if band_line != "":
+		return band_line
+	return MechanicLines.spotless_line(ship)
+
+
+## The player's hull as a share of its maximum (1.0 when there's no ship).
+func _player_hull_share() -> float:
+	var p = GlobalState.player
+	if p == null or not is_instance_valid(p):
+		return 1.0
+	var max_hp := float(p.get("max_health"))
+	return clampf(float(p.get("health")) / max_hp, 0.0, 1.0) if max_hp > 0.0 else 1.0
 
 ## The maintenance bay in the same layout as Kaelen's screen (playtest
 ## 2026-10-02, consistency): large portrait, name and role, the greeting, the
@@ -10659,13 +10635,6 @@ func _on_test_deliver_pressed() -> void:
 	QuestManager.complete_quest()
 	show_hud_warning("Delivered '%s' to Grease Monkeys. +%d SC." % [part_name, TEST_PICKUP_REWARD])
 
-const FALLBACK_MECHANIC_THANKS: Array = [
-	"Thanks for the {part}. I'd say you're my favorite courier, but my dog brings me things faster. Here's your creds.",
-	"Got the {part}. It's a miracle you didn't explode on the way back. Take your money and get out of my bay.",
-	"Not bad. Next time try not to scuff the casing. Credits are in your account.",
-	"I'll take that {part}. You're almost useful when you're not getting shot at. Don't spend the payout all in one place.",
-]
-
 func _on_deliver_part_pressed() -> void:
 	if _has_anomaly_data_core_cargo():
 		_turn_in_anomaly_data_core()
@@ -10676,12 +10645,16 @@ func _on_deliver_part_pressed() -> void:
 	var reward: int = QuestManager.get_pickup_special_data().get("reward_credits", 0)
 	QuestManager.complete_quest()
 	
-	var salt: int = randi() % FALLBACK_MECHANIC_THANKS.size()
-	var line: String = FALLBACK_MECHANIC_THANKS[salt].replace("{part}", part_name)
-	
-	SpeechService.play(line, "voice.jenna_kross.v1")
-	var portrait_tex: Texture2D = GlobalState.get_minor_npc_portrait("Jenna Kross")
-	show_dock_message(line, "Jenna Kross", Color(1.0, 0.85, 0.4), portrait_tex)
+	# The run was a favour for somebody else's ship: relief, and a cheaper
+	# next repair at this shop (playtest 2026-10-10 finding 4).
+	var line: String = MechanicLines.handin_line()
+	GlobalState.repair_favours[_current_station_contact_id()] = true
+	var mechanic: Dictionary = _current_mechanic_profile()
+	var mechanic_name := str(mechanic.get("name", "Jenna Kross"))
+	SpeechService.play(line, str(mechanic.get("voice_profile_id", "voice.jenna_kross.v1")))
+	var portrait_tex: Texture2D = mechanic.get("portrait") if mechanic.get("portrait") is Texture2D else GlobalState.get_minor_npc_portrait(mechanic_name)
+	show_dock_message(line, mechanic_name, Color(1.0, 0.85, 0.4), portrait_tex)
+	_update_repair_button()
 
 	# Completing the pickup frees the STATION lane, which would otherwise unmask the
 	# next dock's already-rolled pickup offer (accept/decline buttons + its stale
@@ -13514,21 +13487,36 @@ func _update_repair_button():
 		repair_btn.text = "Repair Ship (Fully Repaired)"
 		repair_btn.disabled = true
 	else:
-		var cost_per_hp = 2.0
+		var cost_per_hp := _repair_cost_per_hp()
 		var total_cost = int(missing_hp * cost_per_hp)
-		
+
 		if GlobalState.player_credits >= total_cost:
-			repair_btn.text = "Repair Ship (Full Heal: %d HP) - %d SC" % [int(missing_hp), total_cost]
+			repair_btn.text = "Repair Ship (Full Heal: %d HP%s) - %d SC" % [int(missing_hp), _repair_favour_tag(), total_cost]
 			repair_btn.disabled = false
 		else:
 			# Player cannot afford full heal
 			var affordable_hp = int(GlobalState.player_credits / cost_per_hp)
 			if affordable_hp > 0:
-				repair_btn.text = "Repair Ship (Partial Heal: %d HP) - %d SC" % [affordable_hp, GlobalState.player_credits]
+				repair_btn.text = "Repair Ship (Partial Heal: %d HP%s) - %d SC" % [affordable_hp, _repair_favour_tag(), int(affordable_hp * cost_per_hp)]
 				repair_btn.disabled = false
 			else:
 				repair_btn.text = "Repair Ship (Insufficient Credits — %d SC needed)" % [total_cost]
 				repair_btn.disabled = true
+
+## 2 SC per hull point, a quarter off where a parts run is owed back
+## (playtest 2026-10-10 finding 4).
+func _repair_cost_per_hp() -> float:
+	var cost := 2.0
+	if GlobalState.repair_favours.has(_current_station_contact_id()):
+		cost *= 1.0 - MechanicLines.FAVOUR_DISCOUNT
+	return cost
+
+
+func _repair_favour_tag() -> String:
+	if GlobalState.repair_favours.has(_current_station_contact_id()):
+		return ", -%d%%, favour owed" % int(round(MechanicLines.FAVOUR_DISCOUNT * 100.0))
+	return ""
+
 
 func _repair_ship():
 	var p = GlobalState.player
@@ -13541,8 +13529,8 @@ func _repair_ship():
 	
 	if missing_hp <= 0.001:
 		return
-		
-	var cost_per_hp = 2.0
+
+	var cost_per_hp := _repair_cost_per_hp()
 	var total_cost = int(missing_hp * cost_per_hp)
 	
 	var repaired = false
@@ -13561,6 +13549,8 @@ func _repair_ship():
 			repaired = true
 			
 	if repaired:
+		# The favour from a parts run is spent on this repair.
+		GlobalState.repair_favours.erase(_current_station_contact_id())
 		AudioManager.play_repair()
 		_repaired_this_dock = true
 		_play_first_repair_nova_notice()

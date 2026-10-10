@@ -1977,6 +1977,9 @@ var has_max_deep_mining: bool = false
 var inventory_slots: int = 8
 
 var kaelen_briefing_seen: bool = false
+## Shops that owe the player a cheaper repair for a finished parts run
+## (station id -> true; playtest 2026-10-10 finding 4).
+var repair_favours: Dictionary = {}
 var kaelen_briefing_accepted: bool = false
 var kaelen_arrival_systems_seen: Array[String] = []
 
@@ -2828,6 +2831,7 @@ func reset_for_restart():
 	# Reset Kaelen briefing flags so new campaigns show the intro
 	kaelen_briefing_seen = false
 	kaelen_briefing_accepted = false
+	repair_favours = {}
 	kaelen_arrival_systems_seen.clear()
 	story_world_pressure = {}
 	story_quest_hint = {}
