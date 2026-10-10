@@ -16,31 +16,31 @@ step number.
 
 ## 0. Before you start (2 min)
 
-- [ ] 0.1 Delete the old saves (title screen, or the campaigns folder) so
+- [x] 0.1 Delete the old saves (title screen, or the campaigns folder) so
       this is a fresh campaign.
-- [ ] 0.2 Ollama and the voice server running as usual.
+- [x] 0.2 Ollama and the voice server running as usual.
 
 ## 1. Title screen and loading (5 min)
 
-- [ ] 1.1 **Title screen.** The campaign list sits left of centre; the
+- [x] 1.1 **Title screen.** The campaign list sits left of centre; the
       empty slots say NEW CAMPAIGN IN THIS SLOT.
-- [ ] 1.2 **Begin animates into loading.** Press Begin: it animates into the
+- [x] 1.2 **Begin animates into loading.** Press Begin: it animates into the
       loading screen, no jump cut.
-- [ ] 1.3 **Loading feels alive.** Tips change about every 14 seconds;
+- [x] 1.3 **Loading feels alive.** Tips change about every 14 seconds;
       the status moves through "Loading the story..." and doesn't stall at
       35% or 92%.
-- [ ] 1.4 **NEW Campaign title.** Note the campaign's title (on the loading
+- [x] 1.4 **NEW Campaign title.** Note the campaign's title (on the loading
       screen or later in SYSTEMS > CAMPAIGNS & SAVES). It should not reuse a
       word from your recent campaigns (no more "ledger").
 
 ## 2. The opening (3 min)
 
-- [ ] 2.1 **Broken-gate opening.** A torn energy tunnel with shattered ring
+- [x] 2.1 **Broken-gate opening.** A torn energy tunnel with shattered ring
       plates streaming past, lightning, violent lurches; no grey slab, no
       rainbow noise. A soft dark vignette at the edges, no mouse cursor.
-- [ ] 2.2 **No early controls.** Right-drag, clicks, Q/W/E, I, M do nothing
+- [x] 2.2 **No early controls.** Right-drag, clicks, Q/W/E, I, M do nothing
       until "Hold RIGHT MOUSE and drag to look around" shows.
-- [ ] 2.3 **Exit tumble.** Thrown out tumbling (two turns of roll), settling
+- [x] 2.3 **Exit tumble.** Thrown out tumbling (two turns of roll), settling
       as the system comes into view; the intro drones start orbiting right
       away; no tunnel lines play once you're out.
 
@@ -49,40 +49,40 @@ step number.
 Docking and undocking happen many times today: check these the first time,
 then just watch they stay right.
 
-- [ ] 3.1 **Tutorial station on top.** Greywake sits at the top of the
+- [x] 3.1 **Tutorial station on top.** Greywake sits at the top of the
       overview (not red); the arrow finds it without scrolling.
-- [ ] 3.2 **NEW Dock request.** Click Dock: a SYSTEM line "Dock request
+- [x] 3.2 **NEW Dock request.** Click Dock: a SYSTEM line "Dock request
       submitted to GREYWAKE..." and, a moment later, Dock Control's reply as
       text only (no voice). Clicking Dock again on the way in doesn't repeat it.
-- [ ] 3.3 **Docking.** The beam hum is clearly audible; a click when the beam
+- [x] 3.3 **Docking.** The beam hum is clearly audible; a click when the beam
       takes hold; the overview disappears on the beam; N.O.V.A.'s portrait
       sits on the chat box while she talks. Hold right mouse on the way in:
       the mouse still works in the dock menu.
-- [ ] 3.4 **N.O.V.A. talks.** She speaks on this first dock.
-- [ ] 3.5 **Kaelen's starter job** reads in-world (no "fallback", "chapter",
+- [x] 3.4 **N.O.V.A. talks.** She speaks on this first dock.
+- [x] 3.5 **Kaelen's starter job** reads in-world (no "fallback", "chapter",
       "packet"); she doesn't call you by part of a faction name.
-- [ ] 3.6 **Repair choice.** Try to leave damaged without repairing: her
+- [x] 3.6 **Repair choice.** Try to leave damaged without repairing: her
       warning talks about leaving ("you're about to..."), never as if you'd
       already launched. (Then repair or not, your call.)
-- [ ] 3.7 **NEW Undocking, one click.** Dock Control speaks as the beam
+- [x] 3.7 **NEW Undocking, one click.** Dock Control speaks as the beam
       carries you out; HUD orders are refused ("Dock Control has the
       ship..."); the overview is visible but not clickable; there is NO click
       as the push starts and ONE click when the beam lets go, with "Clear of
       the safety zone. Controls are yours." Opening the inventory during the
       push doesn't bring the dock screen back.
-- [ ] 3.8 **Starter target line.** Right after undocking, only the tutorial
+- [x] 3.8 **Starter target line.** Right after undocking, only the tutorial
       line ("I am not sure I am happy about being used to blow someone
       up...") and it starts straight away. No receiver offer during the
       tutorial (T does nothing).
-- [ ] 3.9 **The fight.** Shots are glowing bolts; your hull hits flash the
+- [x] 3.9 **The fight.** Shots are glowing bolts; your hull hits flash the
       screen edges red; unshielded hits leave scorch marks; target panel shows
       the enemy's hull bar; below a third of its hull it sparks and cracks;
       the enemy calls out over two or three turns; the camera re-orbits each
       turn; no freeze if it vanishes.
-- [ ] 3.10 **After the fight.** N.O.V.A.'s line matches what happened ("no
+- [x] 3.10 **After the fight.** N.O.V.A.'s line matches what happened ("no
       scratch" vs "dented but fine"); the victory sting ducks the music and
       the music comes back as it fades. Wiki gains Combat basics and Evasion.
-- [ ] 3.11 **Hand in at Kaelen.** Contract pays; music after the payment
+- [x] 3.11 **Hand in at Kaelen.** Contract pays; music after the payment
       sting comes back without a gap.
 
 ## 4. Three jobs in the start system (40 min)
@@ -92,19 +92,19 @@ Pick them so you get **one ore job, one pickup, and one of anything else**
 
 ### 4a. Between jobs, on the station
 
-- [ ] 4.1 **Goal card.** Top right: "SUGGESTED GOAL · Shields Mk II" with
+- [x] 4.1 **Goal card.** Top right: "SUGGESTED GOAL · Shields Mk II" with
       bars. **NEW** the ore row is named **Silicate** (not "Ore") and its
       tooltip says where to find it.
-- [ ] 4.2 **The board.** COMBAT tag on kill/drop jobs, not on pickups.
+- [x] 4.2 **The board.** COMBAT tag on kill/drop jobs, not on pickups.
       **NEW** ore jobs name their ore ("35 m3 Ferrite"/"Silicate"), and the
       job text says the same ore, never just "ore".
-- [ ] 4.3 **Kaelen's desk.** Ask for work: **NEW** no job identical to one
+- [x] 4.3 **Kaelen's desk.** Ask for work: **NEW** no job identical to one
       you just did (same item, same place, same pay). Push for more pay once:
       sometimes it works, sometimes a cocky line and lower pay.
-- [ ] 4.4 **NEW Rumours.** Visit the lounge a couple of times: no
+- [x] 4.4 **NEW Rumours.** Visit the lounge a couple of times: no
       "[Soft Warning - Story]" or other "[Title - Source]" tags, and nobody
       says "player", "NPC" or "quest".
-- [ ] 4.5 **Idle tour (once).** Docked, hands off for 1m30s: the screen
+- [x] 4.5 **Idle tour (once).** Docked, hands off for 1m30s: the screen
       fades into a slow tour round the station that swings to watch a
       freighter land (smoothly, no flip). Touch anything: straight back.
 
