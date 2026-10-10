@@ -7565,7 +7565,12 @@ func _lounge_card_context(card_data: Dictionary) -> Dictionary:
 	if kind == "kaelen":
 		extra = (
 			"Kaelen is a wry neutral broker. She calls the pilot Shiny. "
-			+ "She notices profitable trouble before anyone else."
+			+ "She notices profitable trouble before anyone else. "
+			# What's true now, so she never riffs on the finished tutorial
+			# (playtest 2026-10-10 finding 1).
+			+ "Right now: the pilot has %d credits%s. Only mention what's in these notes." % [
+				int(GlobalState.player_credits),
+				(", and is on a job: %s" % str(QuestManager.active_quest.get("title", ""))) if QuestManager.is_quest_active() else ", and no job on"]
 		)
 		var active_bounties: Array = BountyRegistryScript.shared().get_active_bounties_for_system(
 			GlobalState.current_system_id

@@ -1248,6 +1248,18 @@ func _ensure_nova_glitch_hints(attempt: int = 0) -> void:
 # this carries only what shifts tone — tone/pressure from the bible, the current
 # chapter's lead tension, the foreshadow whisper, and N.O.V.A.'s quirk when the
 # speaker is her. Never includes any director-only field.
+## The campaign's opening situation (the tutorial's planning note: a dead
+## ship, a Reaver) seeds the "whisper going around" until the next chapter.
+## Once the tutorial job is in, it's history: Kaelen kept warning about a
+## Reaver already dead (playtest 2026-10-10 finding 1).
+func _retire_opening_foreshadow() -> void:
+	if not _campaign_bible_store_ready():
+		return
+	var opening := str(_campaign_bible_store.data.get("opening_situation", "")).strip_edges()
+	if not opening.is_empty() and str(story_state.get("current_foreshadow", "")).strip_edges() == opening:
+		story_state["current_foreshadow"] = ""
+
+
 func get_ambient_flavor_block() -> String:
 	var lines: Array[String] = []
 	if _campaign_bible_store_ready():
@@ -1265,6 +1277,8 @@ func get_ambient_flavor_block() -> String:
 	if not tensions.is_empty():
 		lines.append("Current local tension: %s" % str(tensions[0]).strip_edges())
 	var foreshadow := str(story_state.get("current_foreshadow", "")).strip_edges()
+	if bool(story_state.get("first_contract_handed_in", false)) and _campaign_bible_store_ready() 			and foreshadow == str(_campaign_bible_store.data.get("opening_situation", "")).strip_edges():
+		foreshadow = ""
 	if not foreshadow.is_empty():
 		lines.append("Whisper going around: %s" % foreshadow)
 	var known: Array = story_state.get("player_knows", [])
@@ -2239,6 +2253,7 @@ func _stage_completion_bookkeeping(outcome: Dictionary, quest: Dictionary) -> Ar
 			deltas.append({"kind": "outcome_memory_recorded", "outcome_id": outcome_id})
 		if not bool(story_state.get("first_contract_handed_in", false)):
 			story_state["first_contract_handed_in"] = true
+			_retire_opening_foreshadow()
 			deltas.append({"kind": "first_contract_handed_in"})
 	if terminal in ["completed", "abandoned", "expired", "failed"]:
 		var recorded := record_mission_outcome_consequence(quest, terminal, false)
@@ -2771,6 +2786,7 @@ func on_quest_completed(quest: Dictionary) -> void:
 	# than on the UI side so it covers every hand-in path.
 	if not bool(story_state.get("first_contract_handed_in", false)):
 		story_state["first_contract_handed_in"] = true
+		_retire_opening_foreshadow()
 		_save_story_state()
 	record_mission_outcome_consequence(quest, "completed")
 	_resolve_hooks_for_quest(quest)
