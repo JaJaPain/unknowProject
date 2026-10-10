@@ -18,11 +18,35 @@ step number.
 
 ---
 
+## Fix checks (playtest 2026-10-10 findings, do as they come up)
+
+- [ ] F1 **Kaelen's lounge chat** after the tutorial job: nothing about the
+      dead ship or a Reaver; she can mention your credits and your current job.
+- [ ] F2 **N.O.V.A.'s tone** all through: teasing you, never leering about
+      her parts, after fights included. A body-word swap comes right after
+      the word ("my ribs, or at least my frame spars, ...").
+- [ ] F3 **Mechanics by hull damage:** dock damaged: the greeting fits how
+      bad the hull is (Jenna has her own lines; other stations' mechanics
+      have their own personality). At full hull nothing is made up.
+- [ ] F4 **Parts run as a favour:** the offer is for someone else's ship;
+      the hand-in is a relieved thank-you; the Repair button then reads
+      "-25%, favour owed" until you repair once there.
+- [ ] F5 **Combat wheel** comes up at once; one taunt per fight.
+- [ ] F6 **Board ore job** title, text and briefing name the ore.
+- [ ] F7 **Cargo:** no old recorded "Cargo Full"; N.O.V.A.'s mining remark
+      once as the hold passes ~82%.
+- [ ] F8 **Intercepts** have different voices.
+- [ ] F9 = 4.9 below.
+- [ ] F10 = 4.14 below; plus Talk on a lounge card opens the box with its
+      choices, no floating buttons.
+
 ### 4b. The ore job
 
 - [ ] 4.9 **Drone bay taught.** Target a rock and fly close: N.O.V.A.
       explains the drones once; "[G] LAUNCH SURVEY DRONE · N aboard". The
-      inventory shows a locked RESERVE card (x2).
+      inventory shows a locked RESERVE card (x2). **Fixed:** crash the first
+      dive on a red rock, then the spare can dive the same rock; a rock
+      that's been worked says so when you press G.
 
 ### 4c. The pickup
 

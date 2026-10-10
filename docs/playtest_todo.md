@@ -996,3 +996,26 @@ through the marked gate and flies you in):
       ore jobs say which ore ("bring 35 m³ of ferrite"), and it's in this
       system's belts; now and then a deep-system job names another system
       to mine in, for double pay.
+- [ ] **Playtest 2026-10-10 fixes** (re-check at the start of the next run):
+      Kaelen's lounge talk never mentions the tutorial's dead ship or Reaver
+      once that job is handed in;
+      N.O.V.A. teases the Captain (his flying, his habits) and never leers
+      about her parts, after fights included; when she swaps a body word for
+      the ship part it comes right after the word ("my ribs, or at least my
+      frame spars, ...");
+      every mechanic greets a damaged ship with a line for how bad the hull
+      is, and makes nothing up at full hull; generated mechanics each have a
+      personality that fits their gender;
+      a mechanic's parts run is a favour for someone else's ship; handing it
+      in plays a relieved thank-you, and the Repair button there then shows
+      "-25%, favour owed" until you repair once;
+      the combat wheel comes up at once, with one taunt per fight (and a line
+      only when someone flees);
+      a board ore job's title, text and briefing name the ore;
+      no old "Cargo Full" voice; N.O.V.A.'s mining remark comes once as the
+      hold passes about 82%;
+      receiver intercepts have different voices;
+      after a crashed dive the spare drone can dive the same rock; a worked
+      rock says so when you press G;
+      no Kaelen face in an empty lounge slot; no floating "Ask about it" /
+      "More" buttons: Talk opens the box with those choices.
