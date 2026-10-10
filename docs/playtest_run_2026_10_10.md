@@ -1,6 +1,10 @@
-# Playtest run, one sitting (2026-10-10)
+# Playtest run, part 2 (what's left of 2026-10-10)
 
-One route through a fresh campaign: the tutorial, three jobs in the start
+Sections 0-4 passed on 2026-10-10 (see `docs/playtest_2026_10_10.md`),
+except 4.9 and 4.14, which are fixed and need a re-check. Carry on from your
+2026-10-10 save, or start fresh and skip to step 4 once the tutorial is done.
+
+Originally one route through a fresh campaign: the tutorial, three jobs in the start
 system, an upgrade, the gate, a second system, (upgrade if needed) and a
 third system. Each check is placed where it happens on that route, so you
 can tick them in order. Newest changes are marked **NEW**.
@@ -14,149 +18,16 @@ step number.
 
 ---
 
-## 0. Before you start (2 min)
-
-- [x] 0.1 Delete the old saves (title screen, or the campaigns folder) so
-      this is a fresh campaign.
-- [x] 0.2 Ollama and the voice server running as usual.
-
-## 1. Title screen and loading (5 min)
-
-- [x] 1.1 **Title screen.** The campaign list sits left of centre; the
-      empty slots say NEW CAMPAIGN IN THIS SLOT.
-- [x] 1.2 **Begin animates into loading.** Press Begin: it animates into the
-      loading screen, no jump cut.
-- [x] 1.3 **Loading feels alive.** Tips change about every 14 seconds;
-      the status moves through "Loading the story..." and doesn't stall at
-      35% or 92%.
-- [x] 1.4 **NEW Campaign title.** Note the campaign's title (on the loading
-      screen or later in SYSTEMS > CAMPAIGNS & SAVES). It should not reuse a
-      word from your recent campaigns (no more "ledger").
-
-## 2. The opening (3 min)
-
-- [x] 2.1 **Broken-gate opening.** A torn energy tunnel with shattered ring
-      plates streaming past, lightning, violent lurches; no grey slab, no
-      rainbow noise. A soft dark vignette at the edges, no mouse cursor.
-- [x] 2.2 **No early controls.** Right-drag, clicks, Q/W/E, I, M do nothing
-      until "Hold RIGHT MOUSE and drag to look around" shows.
-- [x] 2.3 **Exit tumble.** Thrown out tumbling (two turns of roll), settling
-      as the system comes into view; the intro drones start orbiting right
-      away; no tunnel lines play once you're out.
-
-## 3. The tutorial at Greywake (15 min)
-
-Docking and undocking happen many times today: check these the first time,
-then just watch they stay right.
-
-- [x] 3.1 **Tutorial station on top.** Greywake sits at the top of the
-      overview (not red); the arrow finds it without scrolling.
-- [x] 3.2 **NEW Dock request.** Click Dock: a SYSTEM line "Dock request
-      submitted to GREYWAKE..." and, a moment later, Dock Control's reply as
-      text only (no voice). Clicking Dock again on the way in doesn't repeat it.
-- [x] 3.3 **Docking.** The beam hum is clearly audible; a click when the beam
-      takes hold; the overview disappears on the beam; N.O.V.A.'s portrait
-      sits on the chat box while she talks. Hold right mouse on the way in:
-      the mouse still works in the dock menu.
-- [x] 3.4 **N.O.V.A. talks.** She speaks on this first dock.
-- [x] 3.5 **Kaelen's starter job** reads in-world (no "fallback", "chapter",
-      "packet"); she doesn't call you by part of a faction name.
-- [x] 3.6 **Repair choice.** Try to leave damaged without repairing: her
-      warning talks about leaving ("you're about to..."), never as if you'd
-      already launched. (Then repair or not, your call.)
-- [x] 3.7 **NEW Undocking, one click.** Dock Control speaks as the beam
-      carries you out; HUD orders are refused ("Dock Control has the
-      ship..."); the overview is visible but not clickable; there is NO click
-      as the push starts and ONE click when the beam lets go, with "Clear of
-      the safety zone. Controls are yours." Opening the inventory during the
-      push doesn't bring the dock screen back.
-- [x] 3.8 **Starter target line.** Right after undocking, only the tutorial
-      line ("I am not sure I am happy about being used to blow someone
-      up...") and it starts straight away. No receiver offer during the
-      tutorial (T does nothing).
-- [x] 3.9 **The fight.** Shots are glowing bolts; your hull hits flash the
-      screen edges red; unshielded hits leave scorch marks; target panel shows
-      the enemy's hull bar; below a third of its hull it sparks and cracks;
-      the enemy calls out over two or three turns; the camera re-orbits each
-      turn; no freeze if it vanishes.
-- [x] 3.10 **After the fight.** N.O.V.A.'s line matches what happened ("no
-      scratch" vs "dented but fine"); the victory sting ducks the music and
-      the music comes back as it fades. Wiki gains Combat basics and Evasion.
-- [x] 3.11 **Hand in at Kaelen.** Contract pays; music after the payment
-      sting comes back without a gap.
-
-## 4. Three jobs in the start system (40 min)
-
-Pick them so you get **one ore job, one pickup, and one of anything else**
-(a kill job is fine). Kaelen's route out unlocks after 3 contracts.
-
-### 4a. Between jobs, on the station
-
-- [x] 4.1 **Goal card.** Top right: "SUGGESTED GOAL · Shields Mk II" with
-      bars. **NEW** the ore row is named **Silicate** (not "Ore") and its
-      tooltip says where to find it.
-- [x] 4.2 **The board.** COMBAT tag on kill/drop jobs, not on pickups.
-      **NEW** ore jobs name their ore ("35 m3 Ferrite"/"Silicate"), and the
-      job text says the same ore, never just "ore".
-- [x] 4.3 **Kaelen's desk.** Ask for work: **NEW** no job identical to one
-      you just did (same item, same place, same pay). Push for more pay once:
-      sometimes it works, sometimes a cocky line and lower pay.
-- [x] 4.4 **NEW Rumours.** Visit the lounge a couple of times: no
-      "[Soft Warning - Story]" or other "[Title - Source]" tags, and nobody
-      says "player", "NPC" or "quest".
-- [x] 4.5 **Idle tour (once).** Docked, hands off for 1m30s: the screen
-      fades into a slow tour round the station that swings to watch a
-      freighter land (smoothly, no flip). Touch anything: straight back.
-
 ### 4b. The ore job
 
-- [x] 4.6 **Fly to a belt.** Fly-to bends round planets and stations, no
-      U-turns; stops outside stations and orbits.
-- [x] 4.7 **NEW Scan Composition.** Far from any rock: no Scan button and C
-      does nothing. Within 400 m of a rock: the button appears, C pings, the
-      bubble grows, the feed lists the ores, the overview names scanned rocks.
-- [x] 4.8 **Mine the job's ore.** Scanning finds it in this system's belts.
-      Mine a couple of minutes: N.O.V.A. makes one dry remark about the rocks.
 - [ ] 4.9 **Drone bay taught.** Target a rock and fly close: N.O.V.A.
       explains the drones once; "[G] LAUNCH SURVEY DRONE · N aboard". The
       inventory shows a locked RESERVE card (x2).
-- [x] 4.10 **Lasers off.** While mining, press Dock: the lasers stop.
-- [x] 4.11 **NEW Turn it in, then look at the buttons.** Hand in the ore
-      job, then go to Sell/Bank: "Sell Ore (N m³...)" and "Bank N m³" show
-      what's really left in the hold, not the amount before the hand-in.
-      Kaelen never says "Zero ore?".
-- [x] 4.12 **Sell or Bank.** With ore left: Bank is gold with a ★ while the
-      goal needs ore; bank it and the goal card's Silicate bar fills.
 
 ### 4c. The pickup
 
-- [x] 4.13 **Where, not who.** The board and tracker name the outpost and
-      say someone in its lounge has it.
 - [ ] 4.14 **NEW No Kaelen at outposts.** In the outpost's lounge: no Broker
       Kaelen card and no faction agents, only locals.
-- [x] 4.15 **The hunt.** Ask around: wrong people deflect, one names who has
-      it, the holder hands it over on the third ask (a drink counts). With
-      ore still in the hold, nobody asks you to sell it first.
-- [x] 4.16 **On the way back.** The HUD shows "... m³ + <item>"; N.O.V.A.
-      may say something about the job partway home (never at the station).
-- [x] 4.17 **Outposts.** Docking at both outposts (Iron Reach and Kova)
-      never clips the structure; freighters use other berths, not yours.
-
-### 4d. Out flying, any time in this section
-
-- [x] 4.18 **Receiver.** After the tutorial, 30 s of calm flight 1 km+ from
-      any station: N.O.V.A. explains the receiver once, a pulsing "[T] TUNE
-      RECEIVER" prompt and a SYSTEM line. It hides near stations and with
-      hostiles around. Try one: the timer bar drains; a payout banner at the
-      end.
-- [x] 4.19 **No job, she helps.** Between jobs, fly ~2.5 min with no job:
-      N.O.V.A. suggests something (not again for ~10 min).
-- [x] 4.20 **The comet.** About 5 minutes into the session, a faint comet
-      crosses high in the sky.
-- [x] 4.21 **F12.** Take a screenshot (flash + click + SYSTEM line); Esc >
-      GALLERY shows it.
-- [x] 4.22 **N.O.V.A. DATABASE** (systems menu): Kaelen, the job givers and
-      the pickup holder are there with a line each.
 
 ## 5. The first upgrade: Shields Mk II (20 min)
 

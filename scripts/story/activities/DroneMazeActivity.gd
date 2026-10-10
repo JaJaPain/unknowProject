@@ -87,6 +87,10 @@ const RESULT_LINES := {
 var director: Node = null
 var world_provider: Callable = Callable()
 var _worked: Dictionary = {}
+## The rock or wreck the drone is in now. It only counts as worked once a
+## dive brings something home: a crashed or empty dive leaves it diveable, so
+## N.O.V.A.'s spare can go straight back in (playtest 2026-10-10 finding 9).
+var _diving_id := ""
 var _hinted: Dictionary = {}
 var _view: Node = null
 ## Taught like the receiver (Abe, 2026-09-30: players never knew it existed).
@@ -200,12 +204,30 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _view != null or not event is InputEventKey:
 		return
 	var key := event as InputEventKey
+	if key.pressed and not key.echo and key.physical_keycode == LAUNCH_KEY and eligible_target() == null and _worked_target_in_reach():
+		get_viewport().set_input_as_handled()
+		var gs_worked := get_node_or_null("/root/GlobalState")
+		if gs_worked != null:
+			gs_worked.emit_chatter("DRONE BAY", "That one's been worked already: nothing left worth a drone.", Color(1.0, 0.6, 0.4))
+		return
 	if key.pressed and not key.echo and key.physical_keycode == LAUNCH_KEY and eligible_target() != null:
 		get_viewport().set_input_as_handled()
 		if not launch(eligible_target()):
 			var gs := get_node_or_null("/root/GlobalState")
 			if gs != null:
 				gs.emit_chatter("DRONE BAY", "No survey drones aboard.", Color(1.0, 0.6, 0.4))
+
+
+## The targeted rock or wreck is in reach but already worked (why G is refused).
+func _worked_target_in_reach() -> bool:
+	var gs := get_node_or_null("/root/GlobalState")
+	if gs == null or not is_instance_valid(gs.active_target) or not is_instance_valid(gs.player):
+		return false
+	var target = gs.active_target
+	if kind_of(target).is_empty() or not _worked.has(_id_for(target)):
+		return false
+	var hull := float((target as Node).get_meta("dive_radius", 0.0))
+	return (gs.player as Node3D).global_position.distance_to((target as Node3D).global_position) - hull <= LAUNCH_RANGE
 
 
 func drones_aboard() -> int:
@@ -299,7 +321,7 @@ func launch(target: Node3D) -> bool:
 	elif gs == null or gs.inventory == null or not gs.inventory.remove(DRONE_ITEM, 1):
 		return false
 	var kind := kind_of(target)
-	_worked[_id_for(target)] = true
+	_diving_id = _id_for(target)
 	_material = rock_material(target) if kind == "asteroid" else ""
 	_recorder_item = {}
 	if kind == "wreck" and director != null and is_instance_valid(director) and world_provider.is_valid():
@@ -353,6 +375,7 @@ func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenera
 	if not _material.is_empty():
 		_set_story_flag(FIRST_DIVE_FLAG)
 	if str(state.get("end", "")) in ["wrecked", "timed_out"]:
+		_diving_id = ""
 		if gs != null:
 			gs.emit_chatter("DRONE BAY", "Drone lost with its load.", Color(1.0, 0.5, 0.4))
 		if not (first_rock_dive and _give_spare()):
@@ -366,6 +389,12 @@ func _on_finished(outcome_id: String, state: Dictionary, rng: RandomNumberGenera
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	var result := haul(outcome_id, state, _material, rng)
+	# Worked only when the dive brought its material (or, from a wreck,
+	# anything) home.
+	var brought: Array = result["materials"]
+	if not _diving_id.is_empty() and ((not _material.is_empty() and brought.has(_material)) or (_material.is_empty() and Maze.extracted_count(state) > 0)):
+		_worked[_diving_id] = true
+	_diving_id = ""
 	if first_rock_dive and not (result["materials"] as Array).has(_material) and _give_spare():
 		# She speaks for this one; the haul below still pays out quietly.
 		_pay_out(result, state, gs)

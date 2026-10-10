@@ -123,7 +123,9 @@ func _initialize() -> void:
 	view.state = Maze.recall(view.state)
 	view._process(0.1)
 	_check(not paused and _results.size() == 1 and _results[0][0] == "failed", "recalling empty-handed ends it and unpauses: %s" % str(_results))
-	_check(activity.eligible_target() == null, "each asteroid is worked once")
+	# An empty dive leaves the rock diveable, so the spare can go straight back
+	# in (playtest 2026-10-10 finding 9).
+	_check(activity.eligible_target() == rock, "an empty dive leaves the rock diveable")
 	# That first rock dive came home without its rad-quartz: N.O.V.A. hands
 	# over the spare she nicked, once per campaign.
 	_check(gs.inventory.get_quantity("survey_drone") == 2 and bool(story.story_state.get(ActivityType.SPARE_FLAG, false)), "an empty first rock dive gets N.O.V.A.'s spare")
@@ -166,6 +168,15 @@ func _initialize() -> void:
 	activity._material = "cryo_ferrite"
 	activity._on_finished("clean", clean, rng)
 	_check(gs.player_credits == credits + 460 and gs.inventory.get_quantity("cryo_ferrite") >= 1, "the run pays out and the material is aboard")
+	# A dive that brings the rock's material home works that rock out.
+	activity._diving_id = "rock.worked_test"
+	activity._on_finished("clean", clean, rng)
+	_check(activity._worked.has("rock.worked_test"), "a dive that brings the material home works the rock out")
+	activity._diving_id = "rock.crashed_test"
+	var crashed := clean.duplicate(true)
+	crashed["end"] = "wrecked"
+	activity._on_finished("failed", crashed)
+	_check(not activity._worked.has("rock.crashed_test"), "a crashed dive doesn't")
 
 	# A free drone from an enemy's debris, now and then.
 	var drones_before: int = gs.inventory.get_quantity("survey_drone")
@@ -194,7 +205,9 @@ func _initialize() -> void:
 	var saved_ore: float = gs.player_storage_ore
 	gs.current_upgrades["weapons"] = {"tier": 2, "path": "rapid"}
 	gs.player_credits = 100000
-	gs.player_storage_ore = 10000.0
+	var saved_ore_types: Dictionary = gs.storage_ore_types.duplicate(true)
+	# Upgrades ask for ore by type (Mk III: silicate and ferrite).
+	gs.bank_ore_for_test({"silicate": 5000.0, "ferrite": 5000.0})
 	gs.power_capacity = 100000
 	gs.inventory.remove("thermal_lattice", gs.inventory.get_quantity("thermal_lattice"))
 	gs.inventory.add("thermal_lattice", 1, 10)
@@ -204,6 +217,7 @@ func _initialize() -> void:
 	gs.current_upgrades = saved_upgrades
 	gs.player_credits = saved_credits
 	gs.player_storage_ore = saved_ore
+	gs.storage_ore_types = saved_ore_types
 	gs.apply_upgrade_stats()
 	gs.player = ship
 

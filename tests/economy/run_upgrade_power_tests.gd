@@ -29,7 +29,8 @@ func _expect(condition: bool, message: String) -> void:
 func _reset_with_resources() -> void:
 	_state.reset_for_restart()
 	_state.player_credits = 10000
-	_state.player_storage_ore = 10000.0
+	# Upgrades ask for ore by type (OreTypes.UPGRADE_ORE_LADDER): bank every kind.
+	_state.bank_ore_for_test({"silicate": 2500.0, "ferrite": 2500.0, "cuprite": 2500.0, "thorium": 2500.0})
 	# Tier 3+ also needs tech-grade material (tier 5 a resonant crystal).
 	for item in ["thermal_lattice", "rad_quartz", "cryo_ferrite", "resonant_crystal"]:
 		_state.inventory.add(item, 60, 99)
