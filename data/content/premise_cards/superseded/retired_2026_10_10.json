@@ -1,0 +1,1443 @@
+[
+  {
+    "id": "premise.the_quarantined_ballot_canister",
+    "schema_version": 1,
+    "title": "The Quarantined Ballot Canister",
+    "logline": "An election recount in a mining system hinges on uncounted paper ballots from an outer habitat, which the incumbent magistrate placed under indefinite bio-quarantine to conceal the challenger's decisive victory.",
+    "scale": "local",
+    "tone": [
+      "political",
+      "noir"
+    ],
+    "themes": [
+      "truth_vs_comfort",
+      "price_of_profit"
+    ],
+    "roles": [
+      {
+        "id": "electoral_registrar",
+        "kind": "person",
+        "archetype": "bureaucrat",
+        "description": "Chief counting officer of the system election board; fastidious, nervous, and terrified of political retribution.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "reform_challenger",
+        "kind": "person",
+        "archetype": "union_organiser",
+        "description": "Leader of the independent belt workers' ticket; exhausted, blunt, and demanding an honest tally.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "incumbent_magistrate",
+        "kind": "person",
+        "archetype": "official",
+        "description": "The system's reigning municipal governor; polished, autocratic, and heavily indebted to private station utilities.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "outer_mining_spire",
+        "kind": "place",
+        "description": "An isolated habitat tier where four thousand deep-belt drillers cast their physical ballots.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "central_council_hall",
+        "kind": "place",
+        "description": "The administrative rotunda where municipal ballots are verified and certification stamps applied.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "miners_electoral_bloc",
+        "kind": "faction",
+        "description": "The voting coalition of habitat drillers whose collective ballots remain sealed in transit.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "public_outrage",
+      "leader_discredited",
+      "quiet_cover_up"
+    ],
+    "public_situation": "Election boards in {system} announce an indefinite certification delay while health inspectors investigate quarantine alerts on ballot pods from {role:outer_mining_spire}.",
+    "private_truth": "The sealed ballot canister contains an overwhelming tally for {role:reform_challenger}; the incumbent magistrate ordered the bio-quarantine flag to stall certification until challenge deadlines expire.",
+    "core_why": {
+      "motive": "control",
+      "secret": "quarantined_ballot_canister_flips_magistrate_election"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Security cordons lock the transit docks of {role:central_council_hall} as recount deadlines tick down.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "reform_challenger",
+            "target": "outer_mining_spire",
+            "reason": "She hires an outside pilot with independent cargo clearance to retrieve the impounded ballot canister from the quarantined habitat gantry before bailiffs confiscate it.",
+            "private_fact": "She knows the habitat air scrubbers tested clean hours before the magistrate issued the emergency biological curfew.",
+            "outcome_tags": [
+              "canister_retrieved"
+            ],
+            "routes": {
+              "canister_retrieved": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "{role:incumbent_magistrate} declares emergency health powers, ordering all uncertified voting pods diverted to decontamination incinerators.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "incumbent_magistrate",
+            "requester": "electoral_registrar",
+            "target": "central_council_hall",
+            "reason": "He asks the pilot to scan the municipal health department's automated dispatch server to confirm whether any bio-hazard readings were actually recorded at the habitat.",
+            "private_fact": "He received a private message from the magistrate promising a lifetime judiciary pension if he certifies the incumbent without opening the outer canisters.",
+            "outcome_tags": [
+              "fraud_confirmed",
+              "data_encrypted"
+            ],
+            "routes": {
+              "fraud_confirmed": "next",
+              "data_encrypted": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Protesting drillers crowd the concourse of {role:central_council_hall}, demanding inspectors unseal the outer votes.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "reform_challenger",
+            "target": "central_council_hall",
+            "reason": "She begs the pilot to courier the physical canister directly to the public recount chamber before the magistrate's armed bailiffs seal the doors.",
+            "private_fact": "If the ballots are disqualified on technical grounds, the miners intend to sever station power feeds in open rebellion.",
+            "outcome_tags": [
+              "canister_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "canister_delivered": "next",
+              "abandoned": "resolution:canister_incinerated_incumbent_wins"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "Holding the unsealed ballot canister and proof that the quarantine was fabricated, the pilot must decide whether to deliver the votes to the public rostrum, hand them to the registrar for private audit, or take the magistrate's bribe.",
+          "options": [
+            {
+              "id": "unseal_ballots_on_rostrum",
+              "label": "Deliver the canister directly to the public rostrum to force an open count and seat the challenger",
+              "leads_to": "resolution:challenger_elected_magistrate_ousted"
+            },
+            {
+              "id": "surrender_to_registrar_audit",
+              "label": "Hand the canister to the registrar for quiet administrative recertification",
+              "leads_to": "resolution:compromise_recount_certified"
+            },
+            {
+              "id": "take_magistrate_bribe",
+              "label": "Deliver the canister to the magistrate's bailiffs for disposal in exchange for municipal bonds",
+              "leads_to": "resolution:canister_incinerated_incumbent_wins"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "challenger_elected_magistrate_ousted",
+        "reached_by": "The pilot delivers the ballots to the public rostrum.",
+        "summary": "The uncounted ballots are tallied before the public. {role:reform_challenger} wins the magistracy, while {role:incumbent_magistrate} faces prosecution for election tampering.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "miners_electoral_bloc",
+            "delta": 3
+          },
+          {
+            "type": "cast_fate",
+            "target": "reform_challenger",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "incumbent_magistrate",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "electoral_registrar",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "unsealed_stolen_ballots",
+            "public_summary": "A pilot delivered quarantined paper ballots into an election hall, overturning a rigged municipal vote."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "leader_discredited"
+        ]
+      },
+      {
+        "id": "compromise_recount_certified",
+        "reached_by": "The pilot hands the canister to the registrar for closed audit.",
+        "summary": "{role:electoral_registrar} certifies a narrow runoff election without publicizing the false quarantine. Both candidates agree to power-sharing, preserving station stability.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "electoral_registrar",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "reform_challenger",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "incumbent_magistrate",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "deed",
+            "tag": "brokered_peaceful_runoff",
+            "public_summary": "A pilot helped election registrars quietly verify disputed ballots to avert habitat strikes."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "canister_incinerated_incumbent_wins",
+        "reached_by": "The pilot sells the ballots to the magistrate or abandons the delivery.",
+        "summary": "Bailiffs incinerate the voting canister under decontamination protocols. {role:incumbent_magistrate} retains power, while {role:reform_challenger} is barred from municipal office.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "miners_electoral_bloc",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "incumbent_magistrate",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "reform_challenger",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "electoral_registrar",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "aided_election_theft",
+            "public_summary": "A pilot delivered disputed miner ballot pods to municipal enforcers for disposal in refinery furnaces."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      }
+    ],
+    "default_resolution": "canister_incinerated_incumbent_wins",
+    "loose_threads": [
+      {
+        "id": "t_incinerator_run_sheet",
+        "surface": "station_notice",
+        "detail": "The central sanitation schedule lists a priority thermal burn booked for the voting archive bay three days before polls opened.",
+        "can_carry_methods": [
+          "forged_records",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_campaign_promissory_note",
+        "surface": "cargo",
+        "detail": "The magistrate's election expenditure ledger contains bearer promissory notes signed over to an unlisted off-station utility cartel.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "forged_records",
+        "debt_leverage",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "control",
+        "greed",
+        "fear"
+      ]
+    },
+    "law_hooks": [
+      "quarantine_orders",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Municipal election commission extends recount deadline citing bio-hazard warnings.",
+      "Outer habitat drillers stage sit-ins across transfer gantries over delayed ballot returns.",
+      "Station magistracy appeals for civic patience during certified vote verification."
+    ],
+    "voice_direction": {
+      "electoral_registrar": "Meticulous, nervous, and speaks in clipped legal citations. Pauses repeatedly to polish his spectacles or re-check docket numbers.",
+      "reform_challenger": "Gravelly, direct, and speaks with fierce working-class anger. Cuts through bureaucratic pretexts with blunt common sense.",
+      "incumbent_magistrate": "Silky, resonant, and radiates paternalistic calm. Treats democratic processes as vulgar administrative inconveniences."
+    },
+    "novelty_tags": [
+      "election_fraud",
+      "quarantined_ballots",
+      "municipal_recount",
+      "paper_ballot_canister",
+      "civic_strike"
+    ]
+  },
+  {
+    "id": "premise.the_drydock_kinships_auction",
+    "schema_version": 1,
+    "title": "The Drydock Kinship's Auction",
+    "logline": "Two squabbling salvage tug crews who share a communal repair slipway are lured into a cutthroat bidding duel over a derelict carrier, discovering the contract was rigged by a predatory broker to bankrupt both crews and seize their home.",
+    "scale": "local",
+    "tone": [
+      "hopeful",
+      "absurd"
+    ],
+    "themes": [
+      "chosen_family",
+      "loyalty_vs_survival"
+    ],
+    "roles": [
+      {
+        "id": "elder_scrapper_matron",
+        "kind": "person",
+        "archetype": "pilot",
+        "description": "Skipper of the battered cutter Iron Gull; loud, stubborn, and maternal toward every mechanic in the slipway.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "rival_tug_skipper",
+        "kind": "person",
+        "archetype": "mechanic",
+        "description": "Skipper of the competing tug Rust Finch; prickly, proud, and has feuded with the matron over wrench sets for thirty years.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "predatory_salvage_broker",
+        "kind": "person",
+        "archetype": "broker",
+        "description": "Smooth-talking commercial liquidation agent; dressed in immaculate synthetic silks and holding foreclosure warrants.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "broker_collection_frigate",
+        "kind": "ship",
+        "description": "A heavy private repossession frigate fitted with industrial towing clamps.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "communal_slipway_berth",
+        "kind": "place",
+        "description": "A chaotic, grease-stained drydock where two scrapper crews have shared tools and bunkrooms for decades.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "derelict_carrier_hulk",
+        "kind": "place",
+        "description": "A massive decommissioned ore carrier floating in a scrap field, packed with valuable titanium girders.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "scrapper_kinship_guild",
+        "kind": "faction",
+        "description": "The informal mutual-aid cooperative formed by the two tug crews and their extended apprentices.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "alliance_formed",
+      "market_disrupted",
+      "debt_owed_to_player"
+    ],
+    "public_situation": "Salvage brokers advertise an open-bidding recovery contract for a derelict ore carrier, sparking loud public squabbling between rival slipway tug crews.",
+    "private_truth": "The auction contract contains cross-default liability bonds designed by {role:predatory_salvage_broker} to seize {role:communal_slipway_berth} when the winning bidder inevitably falls short on deposit fees.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "broker_staged_auction_for_dock_foreclosure"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Bidding notices post across the slipway boards as the two crews trade insults over dockside radio channels.",
+        "missions": [
+          {
+            "verb": "recover_combat_drop",
+            "requester": "elder_scrapper_matron",
+            "target": "scrapper_kinship_guild",
+            "reason": "She pays an outside pilot to destroy rogue scraper drones infesting the derelict's flight deck and recover its primary gyroscope serial plate before the rival crew arrives.",
+            "private_fact": "She secretly mortgaged her tug's spare fusion coils to raise the auction deposit, intending to surprise the slipway with a grand celebration feast.",
+            "outcome_tags": [
+              "gyro_plate_recovered"
+            ],
+            "routes": {
+              "gyro_plate_recovered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "reversal",
+        "public_change": "{role:rival_tug_skipper} deploys cutting charges around {role:derelict_carrier_hulk}, shouting challenges over station speakers.",
+        "missions": [
+          {
+            "verb": "kill_ships",
+            "requester": "rival_tug_skipper",
+            "target": "scrapper_kinship_guild",
+            "reason": "He hires the pilot to eliminate a swarm of automated salvage defense sentries surrounding the carrier's main engineering hatch before the matron's tug docks.",
+            "private_fact": "He actually respects the matron more than his own siblings, but would rather swallow space slag than admit it in front of his apprentices.",
+            "outcome_tags": [
+              "sentries_destroyed"
+            ],
+            "routes": {
+              "sentries_destroyed": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "crisis",
+        "public_change": "{role:predatory_salvage_broker} arrives at {role:communal_slipway_berth} with armed repossession agents, serving default notices on both crews.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "predatory_salvage_broker",
+            "requester": "elder_scrapper_matron",
+            "target": "communal_slipway_berth",
+            "reason": "She hires the pilot to scan the broker's repossession dockets to find the cross-default clause that links both crews' debts to the communal slipway lease.",
+            "private_fact": "The two crews realize they have been played against each other for six months while the broker quietly bought up the slipway's utility arrears.",
+            "outcome_tags": [
+              "cross_default_proven",
+              "records_scrambled"
+            ],
+            "routes": {
+              "cross_default_proven": "next",
+              "records_scrambled": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "{role:broker_collection_frigate} powers tractor beams outside {role:communal_slipway_berth}, preparing to haul away both tugs.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "rival_tug_skipper",
+            "target": "broker_collection_frigate",
+            "reason": "He pays the pilot to disable the repossession frigate's tractor emitters while both crews combine tow cables to secure the derelict carrier together.",
+            "private_fact": "The broker hails mid-fight offering fifty thousand credits and a clear title to the derelict if the pilot cuts the matron's tow lines and lets her tug be impounded.",
+            "outcome_tags": [
+              "frigate_disabled",
+              "broker_deal_taken"
+            ],
+            "routes": {
+              "frigate_disabled": "next",
+              "broker_deal_taken": "resolution:slipway_evicted_broker_triumphs"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the broker's frigate disabled and both crews pulling the derelict carrier into slipway berth, the pilot must decide whether to help them register a joint salvage claim, force an auction split, or take the broker's cash buyout.",
+          "options": [
+            {
+              "id": "register_joint_salvage",
+              "label": "File a joint salvage partnership with the station registry to clear both debts and secure their communal home forever",
+              "leads_to": "resolution:crews_unite_drydock_saved"
+            },
+            {
+              "id": "award_derelict_to_matron",
+              "label": "Deliver the carrier claim solely to the matron, forcing the rival skipper to accept apprentice status",
+              "leads_to": "resolution:matron_claims_carrier_rival_humiliated"
+            },
+            {
+              "id": "sell_claim_to_broker",
+              "label": "Cut the tow cables and hand the derelict title to the broker for the private cash payout",
+              "leads_to": "resolution:slipway_evicted_broker_triumphs"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "crews_unite_drydock_saved",
+        "reached_by": "The pilot registers a joint salvage partnership for both crews.",
+        "summary": "Both crews combine their tow lines. The derelict's salvage clears their debts, secures permanent lease of {role:communal_slipway_berth}, and ends their feud in a roaring feast.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "scrapper_kinship_guild",
+            "delta": 3
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_scrapper_matron",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "rival_tug_skipper",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "predatory_salvage_broker",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "saved_scrapper_family_slipway",
+            "public_summary": "A pilot united two bickering tug crews to outwit a predatory broker and save their communal drydock."
+          }
+        ],
+        "seeds": [
+          "alliance_formed",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "matron_claims_carrier_rival_humiliated",
+        "reached_by": "The pilot awards the salvage claim solely to the matron.",
+        "summary": "{role:elder_scrapper_matron} buys out the slipway lease. {role:rival_tug_skipper} is forced to work under her command, nursing a loud grudge across the docks.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "scrapper_kinship_guild",
+            "delta": 1
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_scrapper_matron",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "rival_tug_skipper",
+            "fate": "alive_grudge"
+          },
+          {
+            "type": "cast_fate",
+            "target": "predatory_salvage_broker",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "decided_scrapper_feud",
+            "public_summary": "A pilot awarded a disputed salvage carrier to an elder scrapper matron, humbling her lifelong slipway rival."
+          }
+        ],
+        "seeds": [
+          "rival_humiliated",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "slipway_evicted_broker_triumphs",
+        "reached_by": "The pilot accepts the broker's cash buyout or cuts the tow lines.",
+        "summary": "{role:predatory_salvage_broker} forecloses on {role:communal_slipway_berth}. Both tugs are impounded, scattering the scrapper family across rim work camps.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "scrapper_kinship_guild",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "predatory_salvage_broker",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_scrapper_matron",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "rival_tug_skipper",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "sold_out_communal_drydock",
+            "public_summary": "A pilot accepted a broker's bribe to help foreclose on a beloved communal scrapper drydock."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "carrier_lost_to_belt_drift",
+        "reached_by": "The pilot never intervenes or abandons the salvage.",
+        "summary": "Both tugs burn out their thrusters in mutual stubbornness. The derelict carrier drifts into deep solar orbit while the broker forecloses on the empty slipway.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "scrapper_kinship_guild",
+            "delta": -1
+          },
+          {
+            "type": "cast_fate",
+            "target": "elder_scrapper_matron",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "rival_tug_skipper",
+            "fate": "ruined"
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "carrier_lost_to_belt_drift",
+    "loose_threads": [
+      {
+        "id": "t_cross_default_bond_clause",
+        "surface": "station_notice",
+        "detail": "The commercial slipway lease renewal contains a tiny cross-indemnity rider drafted by a municipal bankruptcy clearinghouse.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "slow_infiltration"
+        ]
+      },
+      {
+        "id": "t_salvage_deposit_token",
+        "surface": "cargo",
+        "detail": "The auction deposit token bears an unlisted asset management crest registered to a private speculation fund in the inner system.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "forged_records"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "cornering_a_market",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "tariff_on_goods"
+    ],
+    "radio_hooks": [
+      "Rival scrapper crews trade radio insults across outer asteroid salvage channels.",
+      "Commercial liquidators announce impending auction of derelict ore carrier hulk.",
+      "Communal slipway associations report surge in utility lease renegotiation notices."
+    ],
+    "voice_direction": {
+      "elder_scrapper_matron": "Boisterous, warm, and speaks in rapid maternal scolding. Drops technical jargon effortlessly into folksy belt idioms.",
+      "rival_tug_skipper": "Bristly, sarcastic, and speaks with exaggerated theatrical exasperation. Masks genuine fondness behind loud complaints.",
+      "predatory_salvage_broker": "Silky, patient, and speaks in soothing customer-service platitudes while executing aggressive legal foreclosure maneuvers."
+    },
+    "novelty_tags": [
+      "communal_drydock",
+      "scrapper_feud",
+      "derelict_carrier_salvage",
+      "predatory_cross_default",
+      "chosen_family_alliance"
+    ]
+  },
+  {
+    "id": "premise.the_solitary_beacons_liturgy",
+    "schema_version": 1,
+    "title": "The Solitary Beacon's Liturgy",
+    "logline": "A deep-space radio hermit maintaining an orbital monastery's sacred broadcast discovers that the holy litany revered by thousands of pilgrims is actually an automated telemetry pulse mapping cuprite veins for a commercial mining bank.",
+    "scale": "personal",
+    "tone": [
+      "tragic",
+      "melancholy"
+    ],
+    "themes": [
+      "faith_and_doubt",
+      "truth_vs_comfort"
+    ],
+    "roles": [
+      {
+        "id": "solitary_beacon_tender",
+        "kind": "person",
+        "archetype": "preacher",
+        "description": "Hermit acolyte living aboard a remote broadcast buoy; gentle, contemplative, and devastated by a crisis of faith.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "consortium_telemetry_agent",
+        "kind": "person",
+        "archetype": "inspector",
+        "description": "Technical auditor for a planetary mining bank; crisp, pragmatic, and managing covert geological surveying assets.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "pilgrim_flotilla_elder",
+        "kind": "person",
+        "archetype": "refugee",
+        "description": "Elder representative of migrant believers who tune their ship radios to the beacon for religious solace.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "solitary_reliquary_buoy",
+        "kind": "place",
+        "description": "An isolated antenna spindle floating in deep vacuum, transmitting continuous low-frequency radio chimes.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "sacred_chime_cathedral",
+        "kind": "place",
+        "description": "The high monastic sanctuary on the inner station where church elders receive pilgrim tithes.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "monastic_telemetry_trust",
+        "kind": "faction",
+        "description": "The wealthy ecclesiastical foundation that leases deep-space broadcast frequencies to commercial banks.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [],
+      "quirks_preferred": [
+        "dense_debris"
+      ],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "blockade"
+      ]
+    },
+    "accepts_seeds": [
+      "secret_half_exposed",
+      "quiet_cover_up",
+      "leader_discredited"
+    ],
+    "public_situation": "Pilgrim freighters gather outside {role:sacred_chime_cathedral} to celebrate the centennial broadcast of the Sacred Chimes from {role:solitary_reliquary_buoy}.",
+    "private_truth": "The sacred audio chimes conceal modulated spectrographic data pulses mapping rich cuprite veins for a corporate mining bank that secretly funds the monastery's hierarchy.",
+    "core_why": {
+      "motive": "faith",
+      "secret": "sacred_broadcast_is_automated_ore_telemetry"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Pilgrim ships light ceremonial running beacons as the broadcast signal wavers and drops in signal strength.",
+        "missions": [
+          {
+            "verb": "pickup_special",
+            "requester": "solitary_beacon_tender",
+            "target": "solitary_reliquary_buoy",
+            "reason": "He hires an outside pilot to collect an encrypted demodulator chip from an inner station communication relay to fix the buoy's transmitter.",
+            "private_fact": "While testing the chip he accidentally decoded the liturgical chime audio into geological assay maps.",
+            "outcome_tags": [
+              "demodulator_installed"
+            ],
+            "routes": {
+              "demodulator_installed": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "pressure",
+        "public_change": "{role:consortium_telemetry_agent} docks at the buoy with armed technical bailiffs, ordering all diagnostic logs impounded.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "consortium_telemetry_agent",
+            "requester": "pilgrim_flotilla_elder",
+            "target": "solitary_reliquary_buoy",
+            "reason": "She pays the pilot to scan the buoy's outbound signal beam to verify whether the broadcast contains church blessings or corporate transmissions.",
+            "private_fact": "Her impoverished pilgrim convoy donated their life savings to the church under the promise that the chimes blessed their navigation routes.",
+            "outcome_tags": [
+              "corporate_data_verified",
+              "signal_encrypted"
+            ],
+            "routes": {
+              "corporate_data_verified": "next",
+              "signal_encrypted": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "climax",
+        "public_change": "Choral bells sound across the system as the centennial prayer broadcast approaches its final invocation.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "solitary_beacon_tender",
+            "target": "sacred_chime_cathedral",
+            "reason": "He asks the pilot to courier the raw demodulation recordings to the cathedral council before bank technicians overwrite the transmission archive.",
+            "private_fact": "He fears that shattering the flock's belief will plunge thousands of lonely stationers into despair and extinguish their charitable clinics.",
+            "outcome_tags": [
+              "recordings_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "recordings_delivered": "next",
+              "abandoned": "resolution:telemetry_wiped_orthodoxy_preserved"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "Holding the demodulated ore maps and the proof of the church's commercial collusion, the pilot must decide whether to broadcast the truth to the pilgrims, preserve the holy illusion, or force the bank into funding pilgrim relief.",
+          "options": [
+            {
+              "id": "broadcast_decoding_key",
+              "label": "Broadcast the decoding key across open pilgrim channels to expose the mining fraud",
+              "leads_to": "resolution:fraud_exposed_monastery_reformed"
+            },
+            {
+              "id": "preserve_sacred_illusion",
+              "label": "Deliver the records to the cathedral abbot to bury the secret and preserve pilgrim solace",
+              "leads_to": "resolution:telemetry_wiped_orthodoxy_preserved"
+            },
+            {
+              "id": "blackmail_bank_for_pilgrim_relief",
+              "label": "Force the corporate agent to endow the pilgrim flotilla's fuel reserves in exchange for silence",
+              "leads_to": "resolution:bank_endows_pilgrim_flotilla"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "fraud_exposed_monastery_reformed",
+        "reached_by": "The pilot broadcasts the decoding key to the pilgrims.",
+        "summary": "The corporate mining scheme breaks publicly. The commercial trust collapses, and {role:pilgrim_flotilla_elder} leads a doctrinal reform of the outer chapels.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "monastic_telemetry_trust",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "consortium_telemetry_agent",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "solitary_beacon_tender",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_flotilla_elder",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "unmasked_monastic_ore_beacon",
+            "public_summary": "A pilot revealed that a sacred monastic prayer beacon was an automated corporate prospecting probe."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "leader_discredited"
+        ]
+      },
+      {
+        "id": "bank_endows_pilgrim_flotilla",
+        "reached_by": "The pilot forces the bank agent into an endowment agreement.",
+        "summary": "{role:consortium_telemetry_agent} endows the pilgrim convoy with lifetime fuel shares. The secret is kept, while {role:solitary_beacon_tender} tends his chimes in quiet penitence.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_flotilla_elder",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "solitary_beacon_tender",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "cast_fate",
+            "target": "consortium_telemetry_agent",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "standing",
+            "target": "monastic_telemetry_trust",
+            "delta": 1
+          },
+          {
+            "type": "deed",
+            "tag": "brokered_pilgrim_endowment",
+            "public_summary": "A pilot forced a mining corporation to quietly fund refugee pilgrim fleets under threat of exposure."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "telemetry_wiped_orthodoxy_preserved",
+        "reached_by": "The pilot delivers the records to the cathedral abbot or abandons the delivery.",
+        "summary": "Church censors erase the demodulation logs. Pilgrims continue their devotion in peaceful ignorance, while {role:solitary_beacon_tender} is reassigned to an uncrewed monitoring post.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "monastic_telemetry_trust",
+            "delta": 2
+          },
+          {
+            "type": "cast_fate",
+            "target": "consortium_telemetry_agent",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "solitary_beacon_tender",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "pilgrim_flotilla_elder",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "buried_sacred_telemetry_scandal",
+            "public_summary": "A pilot helped church authorities bury evidence that a holy broadcast was commercial mining telemetry."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      }
+    ],
+    "default_resolution": "telemetry_wiped_orthodoxy_preserved",
+    "loose_threads": [
+      {
+        "id": "t_assay_frequency_lease",
+        "surface": "station_notice",
+        "detail": "The planetary spectrum authority lists a commercial geological frequency lease registered to a private trust under the cathedral's address.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_chime_oscillator_housing",
+        "surface": "cargo",
+        "detail": "The broadcast transmitter chassis carries serial numbers matched to an industrial core-sampling probe sold by an off-system prospecting firm.",
+        "can_carry_methods": [
+          "cornering_a_market",
+          "debt_leverage"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "slow_infiltration",
+        "forged_records",
+        "debt_leverage"
+      ],
+      "motives": [
+        "faith",
+        "greed",
+        "control"
+      ]
+    },
+    "law_hooks": [
+      "salvage_registry",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Sacred Chime Cathedral announces centennial prayer broadcast across outer pilgrim lanes.",
+      "Mining bank records surge in exploratory cuprite claims across unmapped belt sectors.",
+      "Pilgrim hostels report capacity crowds for annual radio litany vigils."
+    ],
+    "voice_direction": {
+      "solitary_beacon_tender": "Hushed, solemn, and pauses as if accustomed to long years of silence. Speaks with tremulous, heartbreaking devotion.",
+      "consortium_telemetry_agent": "Crisp, businesslike, and speaks in rapid commercial asset terms. Treats religious reverence with polite amusement.",
+      "pilgrim_flotilla_elder": "Weathered, sincere, and speaks with unshakeable pastoral warmth. Refuses to believe church authorities could act in bad faith."
+    },
+    "novelty_tags": [
+      "sacred_radio_beacon",
+      "covert_ore_telemetry",
+      "crisis_of_faith",
+      "pilgrim_flotilla",
+      "commercial_clergy_trust"
+    ]
+  },
+  {
+    "id": "premise.the_solar_collectors_strike",
+    "schema_version": 1,
+    "title": "The Solar Collector's Strike",
+    "logline": "A solar observatory crew orbiting a dying star threatens to vent its collected helium capacitors into the solar wind unless their employer pays hazard compensation for deliberately disabling radiation baffles to increase output.",
+    "scale": "local",
+    "tone": [
+      "tense",
+      "noir"
+    ],
+    "themes": [
+      "labour_and_exploitation",
+      "price_of_profit"
+    ],
+    "roles": [
+      {
+        "id": "lead_solar_rigger",
+        "kind": "person",
+        "archetype": "labourer",
+        "description": "Chief technician aboard the solar collector skimmer; radiation-scarred, defiant, and fighting for his dying crew.",
+        "reuse": "prefer_existing"
+      },
+      {
+        "id": "power_syndicate_director",
+        "kind": "person",
+        "archetype": "official",
+        "description": "Executive administrator of the orbital energy grid; smooth, litigious, and rushing to secure quarterly power dividends.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "station_grid_engineer",
+        "kind": "person",
+        "archetype": "engineer",
+        "description": "Senior technician at the central distribution hub; anxious, conflicted, and watching capacitor reserves deplete.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "syndicate_enforcer_cutter",
+        "kind": "ship",
+        "description": "A heavily shielded security corvette sent to breach the solar observatory and override manual venting valves.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "solar_skimmer_platform",
+        "kind": "place",
+        "description": "A blistered collection station dipping into the intense radiation corona of a dying star.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "central_distribution_spire",
+        "kind": "place",
+        "description": "The orbital power distribution hub that transmits solar power to station residential rings.",
+        "reuse": "new_ok"
+      },
+      {
+        "id": "solar_energy_consortium",
+        "kind": "faction",
+        "description": "The private corporate utility that owns the solar skimming platforms and holds monopoly power over the system.",
+        "reuse": "prefer_existing"
+      }
+    ],
+    "requirements": {
+      "min_factions": 1,
+      "quirks_required": [
+        "dying_star"
+      ],
+      "quirks_preferred": [],
+      "quirks_forbidden": [
+        "dead_system"
+      ],
+      "states_required": [],
+      "states_forbidden": [
+        "martial_law"
+      ]
+    },
+    "accepts_seeds": [
+      "market_disrupted",
+      "public_outrage",
+      "alliance_formed"
+    ],
+    "public_situation": "Rolling power brownouts hit habitat residential rings as the solar skimming crew at {role:solar_skimmer_platform} cuts capacitor feeds during contract negotiations.",
+    "private_truth": "The syndicate intentionally deactivated the collector platform's magnetic radiation baffles six months ago to boost harvest yield, fatally irradiating the night-shift crew.",
+    "core_why": {
+      "motive": "greed",
+      "secret": "syndicate_disabled_radiation_baffles_for_capacitor_yield"
+    },
+    "beats": [
+      {
+        "n": 1,
+        "function": "setup",
+        "public_change": "Corona warning beacons flash as {role:lead_solar_rigger} broadcasts an ultimatum threatening to vent capacitor banks within twenty-four hours.",
+        "missions": [
+          {
+            "verb": "deliver_ore",
+            "ore": "silicate",
+            "requester": "station_grid_engineer",
+            "target": "solar_skimmer_platform",
+            "reason": "She pays an outside pilot to haul dense silicate shielding plates to the solar skimmer so technicians can reinforce failing emergency airlocks.",
+            "private_fact": "She reviewed the plant maintenance logs and knows the director bypassed thermal safety relays to boost corporate efficiency scores.",
+            "outcome_tags": [
+              "silicate_delivered"
+            ],
+            "routes": {
+              "silicate_delivered": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 2,
+        "function": "crisis",
+        "public_change": "{role:power_syndicate_director} declares the striking riggers terrorists, ordering {role:syndicate_enforcer_cutter} to breach the platform.",
+        "missions": [
+          {
+            "verb": "investigate_signal",
+            "culprit": "power_syndicate_director",
+            "requester": "lead_solar_rigger",
+            "target": "central_distribution_spire",
+            "reason": "He hires the pilot to scan the central syndicate grid hub to extract executive command logs authorizing the baffle deactivation.",
+            "private_fact": "His personal dosimeter reads three times the fatal lifetime limit, and his only goal is securing medical trusts for his crew's families.",
+            "outcome_tags": [
+              "override_command_verified",
+              "firewalls_engaged"
+            ],
+            "routes": {
+              "override_command_verified": "next",
+              "firewalls_engaged": "next"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 3,
+        "function": "reversal",
+        "public_change": "Solar flares erupt from the dying star, threatening to incinerate unshielded collector hulls across the inner corona.",
+        "missions": [
+          {
+            "verb": "delivery_courier",
+            "requester": "station_grid_engineer",
+            "target": "solar_skimmer_platform",
+            "reason": "She asks the pilot to deliver magnetic stabilization solenoids to the platform before solar wind pressure blows out the venting seals.",
+            "private_fact": "If the capacitors vent into the flare, station hospitals will lose secondary life-support power within three hours.",
+            "outcome_tags": [
+              "solenoids_delivered",
+              "abandoned"
+            ],
+            "routes": {
+              "solenoids_delivered": "next",
+              "abandoned": "resolution:platform_scuttled_system_blackout"
+            }
+          }
+        ],
+        "player_choice": null
+      },
+      {
+        "n": 4,
+        "function": "climax",
+        "public_change": "{role:syndicate_enforcer_cutter} assumes attack posture off {role:solar_skimmer_platform}, powering particle cannons to breach the control dome.",
+        "missions": [
+          {
+            "verb": "comms_reversal",
+            "requester": "lead_solar_rigger",
+            "target": "syndicate_enforcer_cutter",
+            "reason": "He pays the pilot to disable the corporate cutter's weapons array before it breaches the pressurized hull and vents the remaining atmosphere.",
+            "private_fact": "The corporate cutter captain hails mid-combat offering a massive dividend payout if the pilot helps storm the platform and execute the strike leaders.",
+            "outcome_tags": [
+              "cutter_disabled",
+              "director_bribe_taken"
+            ],
+            "routes": {
+              "cutter_disabled": "next",
+              "director_bribe_taken": "resolution:strike_crushed_riggers_liquidated"
+            }
+          }
+        ],
+        "player_choice": {
+          "when": "after_missions",
+          "prompt": "With the security cutter disabled and the executive baffle orders verified, the pilot must decide whether to force the syndicate into a medical compensation settlement, publish the crime, or take the director's payoff.",
+          "options": [
+            {
+              "id": "publish_baffle_orders",
+              "label": "Broadcast the syndicate's baffle deactivation orders to force criminal indictments against the board",
+              "leads_to": "resolution:syndicate_prosecuted_riggers_compensated"
+            },
+            {
+              "id": "broker_quiet_pension_treaty",
+              "label": "Use the evidence to force the director into an irrevocable family medical trust for the dying crew",
+              "leads_to": "resolution:confidential_settlement_brokered"
+            },
+            {
+              "id": "sell_out_to_director",
+              "label": "Deliver the command records to the director and allow security troops to retake the platform",
+              "leads_to": "resolution:strike_crushed_riggers_liquidated"
+            }
+          ]
+        }
+      }
+    ],
+    "resolutions": [
+      {
+        "id": "syndicate_prosecuted_riggers_compensated",
+        "reached_by": "The pilot broadcasts the baffle deactivation orders.",
+        "summary": "The corporate scandal breaks publicly. {role:power_syndicate_director} is arrested for reckless endangerment, and the dying riggers win massive municipal relief.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "solar_energy_consortium",
+            "delta": -3
+          },
+          {
+            "type": "cast_fate",
+            "target": "power_syndicate_director",
+            "fate": "ruined"
+          },
+          {
+            "type": "cast_fate",
+            "target": "lead_solar_rigger",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "station_grid_engineer",
+            "fate": "alive_grateful"
+          },
+          {
+            "type": "deed",
+            "tag": "unmasked_solar_baffle_tampering",
+            "public_summary": "A pilot exposed a power syndicate that disabled radiation shields to harvest extra solar energy at the cost of worker lives."
+          }
+        ],
+        "seeds": [
+          "public_outrage",
+          "market_disrupted"
+        ]
+      },
+      {
+        "id": "confidential_settlement_brokered",
+        "reached_by": "The pilot brokers a confidential pension treaty.",
+        "summary": "{role:power_syndicate_director} signs a perpetual family medical trust. Power feeds resume across the station, while {role:lead_solar_rigger} secures dignity for his crew.",
+        "consequences": [
+          {
+            "type": "cast_fate",
+            "target": "lead_solar_rigger",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "station_grid_engineer",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "power_syndicate_director",
+            "fate": "owes_debt"
+          },
+          {
+            "type": "standing",
+            "target": "solar_energy_consortium",
+            "delta": 1
+          },
+          {
+            "type": "deed",
+            "tag": "brokered_solar_strike_settlement",
+            "public_summary": "A pilot negotiated a confidential medical endowment to end a dangerous solar collector standoff."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "debt_owed_to_player"
+        ]
+      },
+      {
+        "id": "strike_crushed_riggers_liquidated",
+        "reached_by": "The pilot takes the director's payoff or helps security breach the dome.",
+        "summary": "Security troops storm the platform and execute the striking riggers. Corporate dividends rise, while {role:power_syndicate_director} rewards the pilot with utility stock.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "solar_energy_consortium",
+            "delta": 3
+          },
+          {
+            "type": "cast_fate",
+            "target": "power_syndicate_director",
+            "fate": "promoted"
+          },
+          {
+            "type": "cast_fate",
+            "target": "lead_solar_rigger",
+            "fate": "dead"
+          },
+          {
+            "type": "cast_fate",
+            "target": "station_grid_engineer",
+            "fate": "ruined"
+          },
+          {
+            "type": "deed",
+            "tag": "crushed_solar_riggers_strike",
+            "public_summary": "A pilot assisted a utility corporation in breaking a strike aboard a radiation-soaked solar skimming station."
+          }
+        ],
+        "seeds": [
+          "quiet_cover_up",
+          "grudge_against_player"
+        ]
+      },
+      {
+        "id": "platform_scuttled_system_blackout",
+        "reached_by": "The pilot never intervenes or abandons the defense.",
+        "summary": "The riggers vent the capacitor banks into the corona before their station burns up. A total power blackout cripples the system for months.",
+        "consequences": [
+          {
+            "type": "standing",
+            "target": "solar_energy_consortium",
+            "delta": -2
+          },
+          {
+            "type": "cast_fate",
+            "target": "lead_solar_rigger",
+            "fate": "dead"
+          },
+          {
+            "type": "cast_fate",
+            "target": "power_syndicate_director",
+            "fate": "ruined"
+          }
+        ],
+        "seeds": [
+          "wreck_left_behind",
+          "route_closed"
+        ]
+      }
+    ],
+    "default_resolution": "platform_scuttled_system_blackout",
+    "loose_threads": [
+      {
+        "id": "t_baffle_override_firmware",
+        "surface": "station_notice",
+        "detail": "The central power station firmware register logs an emergency security patch authorizing continuous baffle overrides during high-radiation solar flares.",
+        "can_carry_methods": [
+          "slow_infiltration",
+          "forged_records"
+        ]
+      },
+      {
+        "id": "t_capacitor_dividend_escrow",
+        "surface": "price_board",
+        "detail": "A private offshore energy fund recorded quarterly performance bonuses for platform managers that scaled directly with unshielded solar flux intake.",
+        "can_carry_methods": [
+          "debt_leverage",
+          "cornering_a_market"
+        ]
+      }
+    ],
+    "hidden_hand_compat": {
+      "methods": [
+        "debt_leverage",
+        "forged_records",
+        "slow_infiltration"
+      ],
+      "motives": [
+        "greed",
+        "control",
+        "survival"
+      ]
+    },
+    "law_hooks": [
+      "mining_charter_required",
+      "curfew"
+    ],
+    "radio_hooks": [
+      "Solar skimming workers threaten capacitor venting amidst escalating hazard pay disputes.",
+      "Station magistracy implements emergency power rationing across residential sectors.",
+      "Dying star coronal activity surges, prompting radiation advisories for inner orbital berths."
+    ],
+    "voice_direction": {
+      "lead_solar_rigger": "Hoarse, blunt, and speaks with the desperate ferocity of a doomed man. Dismisses legal threats with bitter, dark irony.",
+      "power_syndicate_director": "Polished, brisk, and speaks in measured corporate crisis management terms. Never uses words like poison, dosage, or death.",
+      "station_grid_engineer": "Frazzled, breathless, and speaks with frantic technical urgency. Desperately tries to prevent disaster without losing her job."
+    },
+    "novelty_tags": [
+      "solar_skimmer",
+      "dying_star_radiation",
+      "disabled_radiation_baffles",
+      "power_grid_blackout",
+      "utility_consortium"
+    ]
+  }
+]

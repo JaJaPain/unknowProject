@@ -1,0 +1,322 @@
+{
+  "id": "premise.the_newsroom_kill_order",
+  "schema_version": 1,
+  "title": "The Newsroom Kill Order",
+  "logline": "An investigative journalist writing for an independent station broadsheet discovers that their publisher took secret debt forgiveness from a shipping cartel to suppress an expose on migrant dock worker casualties.",
+  "scale": "personal",
+  "tone": [
+    "noir",
+    "melancholy"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "labour_and_exploitation"
+  ],
+  "roles": [
+    {
+      "id": "investigative_reporter",
+      "kind": "person",
+      "archetype": "journalist",
+      "description": "Tenacious station reporter working out of a crowded print shop; underslept, proud, and determined to publish.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "broadsheet_publisher",
+      "kind": "person",
+      "archetype": "broker",
+      "description": "Owner of the independent station gazette; weary, deeply indebted, and protecting the press from bankruptcy.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "dock_labour_witness",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Former shift boss at the freight intake berths; crippled by an unlogged crane collapse and seeking justice.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "press_office_dock",
+      "kind": "place",
+      "description": "A clattering newsroom and printing press module wedged between freight concourses.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freight_consortium",
+      "kind": "faction",
+      "description": "The private cargo logistics syndicate that operates the station's heavy unloading slips.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "public_outrage",
+    "quiet_cover_up",
+    "leader_discredited"
+  ],
+  "public_situation": "The independent station gazette delays its scheduled morning edition, posting a brief notice citing printing press mechanical overhauls.",
+  "private_truth": "The publisher accepted complete debt cancellation from {role:freight_consortium} in exchange for shredding a front-page investigation into forty unrecorded dockworker fatalities.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "publisher_spiked_casualty_expose_for_debt_relief"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Freight security personnel linger outside {role:press_office_dock} observing visitors entering the newspaper offices.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "investigative_reporter",
+          "target": "press_office_dock",
+          "reason": "She pays an outside pilot to collect an encrypted memory plate from an industrial clinic dock containing corroborated medical morgue manifests.",
+          "private_fact": "Her publisher ordered her off the freight story two hours before the press run and locked the composition room terminal.",
+          "outcome_tags": [
+            "manifest_plate_retrieved"
+          ],
+          "routes": {
+            "manifest_plate_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:broadsheet_publisher} announces a new sponsor agreement with the cargo syndicate, replacing the lead edition with an advertorial feature.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "broadsheet_publisher",
+          "requester": "dock_labour_witness",
+          "target": "press_office_dock",
+          "reason": "He pays the pilot to scan the publisher's escrow terminal to verify that the newsroom's commercial loan mortgages were stamped paid by the freight syndicate's bank.",
+          "private_fact": "His younger brother's fatal gantry crushing was logged in corporate records as an off-duty respiratory accident.",
+          "outcome_tags": [
+            "payoff_proven",
+            "records_shielded"
+          ],
+          "routes": {
+            "payoff_proven": "next",
+            "records_shielded": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Night crews assemble at {role:press_office_dock} as the publisher prepares to load the sterilized edition onto distribution rollers.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "investigative_reporter",
+          "target": "press_office_dock",
+          "reason": "She asks the pilot to courier manual metal printing plates of the true investigation to the press floor before corporate enforcers confiscate them.",
+          "private_fact": "If the publisher burns the plates, she intends to resign and smuggle hand-printed pamphlets through the residential rings.",
+          "outcome_tags": [
+            "plates_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "plates_delivered": "next",
+            "abandoned": "resolution:investigation_spiked_publisher_enriched"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding the corroborated fatality records and the proof of the publisher's secret debt relief, the pilot must decide whether to force the true edition onto the press, broker a quiet medical settlement, or accept the publisher's buyout.",
+        "options": [
+          {
+            "id": "print_true_edition",
+            "label": "Force the original casualty expose onto the press rollers to trigger a public station reckoning",
+            "leads_to": "resolution:expose_printed_consortium_exposed"
+          },
+          {
+            "id": "broker_quiet_settlement",
+            "label": "Use the plates to force the publisher and consortium into an anonymous compensation trust for the victims' families",
+            "leads_to": "resolution:secret_endowment_brokered"
+          },
+          {
+            "id": "sell_plates_to_publisher",
+            "label": "Surrender the plates to the publisher to collect a quiet cut of the cartel's payoff",
+            "leads_to": "resolution:investigation_spiked_publisher_enriched"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "expose_printed_consortium_exposed",
+      "reached_by": "The pilot forces the casualty expose onto the printing press.",
+      "summary": "The newspaper hits the stands. Outraged dockers strike, {role:freight_consortium} faces municipal manslaughter charges, and {role:broadsheet_publisher} resigns.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "investigative_reporter",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "broadsheet_publisher",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dock_labour_witness",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "printed_dock_fatalities_expose",
+          "public_summary": "A pilot forced an independent newspaper to publish evidence of corporate dockworker deaths."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "secret_endowment_brokered",
+      "reached_by": "The pilot brokers a quiet private endowment for the families.",
+      "summary": "{role:freight_consortium} establishes a private disability trust. The expose is suppressed, but {role:dock_labour_witness} secures lifetime support for surviving families.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "dock_labour_witness",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "investigative_reporter",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "broadsheet_publisher",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_silent_dock_restitution",
+          "public_summary": "A pilot forced a freight cartel to quietly pay lifetime settlements to injured dockworkers."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "investigation_spiked_publisher_enriched",
+      "reached_by": "The pilot sells the plates to the publisher or abandons the print run.",
+      "summary": "The sanitized edition prints smoothly. {role:broadsheet_publisher} pockets full debt cancellation, while {role:investigative_reporter} is blacklisted across the sector.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "freight_consortium",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "broadsheet_publisher",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "investigative_reporter",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "dock_labour_witness",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "buried_newsroom_expose",
+          "public_summary": "A pilot assisted a compromised publisher in destroying an investigative report into dock fatalities."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    }
+  ],
+  "default_resolution": "investigation_spiked_publisher_enriched",
+  "loose_threads": [
+    {
+      "id": "t_mortgage_discharge_voucher",
+      "surface": "price_board",
+      "detail": "A commercial newsprint supplier registered an unlisted third-party debt cancellation voucher for the newspaper's rolling press machinery.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_crane_maintenance_waiver",
+      "surface": "cargo",
+      "detail": "The cargo crane maintenance certificate bears an illegible inspector stamp dating from three weeks before the structural failure.",
+      "can_carry_methods": [
+        "forged_records",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Station broadsheet delays morning print run citing technical recalibration.",
+    "Cargo logistics guild commends dock safety records during annual municipal review.",
+    "Warehouse workers voice frustration over unexplained loading bay slowdowns."
+  ],
+  "voice_direction": {
+    "investigative_reporter": "Fast-paced, razor-sharp, and speaks with relentless journalistic intensity. Never uses corporate or bureaucratic euphemisms.",
+    "broadsheet_publisher": "Weary, defensive, and speaks in long, rationalizing sentences. Constantly justifies moral compromises as business necessities.",
+    "dock_labour_witness": "Slow, raspy, and pauses frequently as if struggling with physical discomfort. Speaks with heavy, unyielding moral conviction."
+  },
+  "novelty_tags": [
+    "investigative_journalism",
+    "spiked_story",
+    "dockworker_fatalities",
+    "printing_press_sabotage",
+    "debt_forgiveness_bribe"
+  ]
+}

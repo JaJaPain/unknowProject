@@ -1,0 +1,387 @@
+{
+  "id": "premise.the_dark_flotillas_beacon",
+  "schema_version": 1,
+  "title": "The Dark Flotilla's Beacon",
+  "logline": "A deep-belt scrapper recovers the flight beacon of an ore freighter lost twenty years ago, discovering that the crew scuttled their own ship after refusing corporate orders to dump lethal reactor waste into the mining belt.",
+  "scale": "local",
+  "tone": [
+    "noir",
+    "survival"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "scrapper_captain",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Skipper of a rust-eaten asteroid salvage tug; weathered, broke, and desperate for one honest payout.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "mining_auditor",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Enforcement auditor for the extraction consortium; crisp, unyielding, and dispatched to bury historical liabilities.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "union_survivor",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Retired belt drifter whose family suffered unexplained radiation sickness in the outer belt twenty years ago.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_cleaner_frigate",
+      "kind": "ship",
+      "description": "A heavy private security frigate sent to sanitize unlogged salvage sites and silence scavengers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "toxic_scuttle_graveyard",
+      "kind": "place",
+      "description": "A high-interference ion trench where the scuttled ore hulk lies surrounded by leaking reactor waste casks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "scrapper_depot_dock",
+      "kind": "place",
+      "description": "A ramshackle outer outpost where independent salvage crews sell recovered hull scrap.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_consortium",
+      "kind": "faction",
+      "description": "The extraction giant that commissioned the illegal waste dumping twenty years ago.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [
+      "ion_storm"
+    ],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "wreck_left_behind",
+    "secret_half_exposed",
+    "market_disrupted"
+  ],
+  "public_situation": "Scrappers celebrating a salvage find in the ion belt report recovering the black-box beacon of an ore freighter lost twenty years ago.",
+  "private_truth": "The freighter was scuttled by its own mutinous crew after they refused consortium orders to dump radioactive core waste into the inhabited belt.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "freighter_scuttled_to_prevent_reactor_waste_dumping"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Corporate claims adjusters arrive at {role:scrapper_depot_dock} demanding all sensor logs associated with the recovered beacon.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "mining_consortium",
+          "requester": "scrapper_captain",
+          "target": "toxic_scuttle_graveyard",
+          "reason": "He hires an outside pilot with shielded sensors to scan the wreckage coordinates stored on the beacon to confirm what the freighter was hauling.",
+          "private_fact": "He suspects the hull was blown open from the inside because the emergency blast charges were wired to the bridge console.",
+          "outcome_tags": [
+            "scuttle_verified",
+            "telemetry_corrupted"
+          ],
+          "routes": {
+            "scuttle_verified": "next",
+            "telemetry_corrupted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:corporate_cleaner_frigate} deploys sensor jammer buoys across the ion trench entrance.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "scrapper_captain",
+          "target": "mining_consortium",
+          "reason": "He pays the pilot to destroy a corporate patrol drone and retrieve its recorded telemetry before {role:mining_auditor} purges the wreck registry.",
+          "private_fact": "He knows that if the corporation retrieves the wreck's flight recorder first, the scrapper depot will be evicted without compensation.",
+          "outcome_tags": [
+            "flight_recorder_recovered"
+          ],
+          "routes": {
+            "flight_recorder_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:union_survivor} rallies retired belters outside the depot, claiming the freighter's cargo caused twenty years of infant sickness.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "union_survivor",
+          "target": "scrapper_depot_dock",
+          "reason": "She begs the pilot to courier a sealed lead vial of coolant runoff from the wreck to the depot clinic to prove ongoing isotope leakage.",
+          "private_fact": "Her late husband was on the mutinous crew and was executed by corporate security after sending the coordinates to her family.",
+          "outcome_tags": [
+            "sample_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "sample_delivered": "next",
+            "abandoned": "resolution:depot_shelled_by_cleaners"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:corporate_cleaner_frigate} assumes firing position off {role:scrapper_depot_dock}, threatening to bombard the docks for harbor violations.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "scrapper_captain",
+          "target": "corporate_cleaner_frigate",
+          "reason": "He pays the pilot to disable the cleaner frigate's targeting arrays before it opens fire on the crowded civilian salvage berths.",
+          "private_fact": "The cleaner captain hails mid-engagement offering an immense cash indemnity voucher if the pilot turns over the coolant samples for incineration.",
+          "outcome_tags": [
+            "frigate_disabled",
+            "bribe_accepted"
+          ],
+          "routes": {
+            "frigate_disabled": "next",
+            "bribe_accepted": "resolution:hush_money_accepted"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the cleaner frigate repelled and the proof of corporate waste dumping verified, the pilot must decide whether to publish the toxic scandal, accept corporate hush money, or secure quiet salvage rights.",
+        "options": [
+          {
+            "id": "publish_toxic_dump_records",
+            "label": "Broadcast the toxic flight records to the system health board to force a full environmental inquiry",
+            "leads_to": "resolution:consortium_exposed_and_fined"
+          },
+          {
+            "id": "register_exclusive_salvage",
+            "label": "File a sealed salvage claim with the depot master to harvest the scrap without triggering mass evacuation",
+            "leads_to": "resolution:clean_salvage_registered"
+          },
+          {
+            "id": "surrender_samples_to_auditor",
+            "label": "Hand the isotope vials to the corporate auditor for a private corporate payoff",
+            "leads_to": "resolution:hush_money_accepted"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "consortium_exposed_and_fined",
+      "reached_by": "The pilot broadcasts the flight records and toxic runoff tests to the health board.",
+      "summary": "The waste scandal breaks publicly. {role:mining_consortium} faces massive cleanup fines, while {role:union_survivor} wins medical relief for affected belters.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_consortium",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "mining_auditor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_survivor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapper_captain",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_consortium_dumping",
+          "public_summary": "A pilot uncovered proof that a lost freighter was scuttled to prevent illegal nuclear dumping in the belt."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "clean_salvage_registered",
+      "reached_by": "The pilot files a quiet salvage claim while sealing the environmental records.",
+      "summary": "{role:scrapper_captain} secures exclusive recovery rights to the hulk. The scrap funds depot repairs, while the toxic leak is quietly encased in slag.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "scrapper_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "mining_auditor",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "mining_consortium",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_silent_salvage",
+          "public_summary": "A pilot helped scrap merchants claim an old wreck without revealing the contaminated cargo inside."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "hush_money_accepted",
+      "reached_by": "The pilot hands the toxic runoff samples to the corporate auditor for a payoff.",
+      "summary": "{role:mining_auditor} incinerates the black box and runoff vials. {role:mining_consortium} retains clean records, while {role:union_survivor} is discredited.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_consortium",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "mining_auditor",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_survivor",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "scrapper_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_toxic_dump_proof",
+          "public_summary": "A pilot sold evidence of illegal radioactive dumping back to the mining corporation that caused it."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "depot_shelled_by_cleaners",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "Corporate cleaners bombard the depot's outer storage bays, vaporizing the beacon. {role:scrapper_captain} flees into the inner asteroid lanes.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "scrapper_captain",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "union_survivor",
+          "fate": "ruined"
+        },
+        {
+          "type": "standing",
+          "target": "mining_consortium",
+          "delta": 1
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "depot_shelled_by_cleaners",
+  "loose_threads": [
+    {
+      "id": "t_consortium_manifest_stamp",
+      "surface": "cargo",
+      "detail": "Every waste barrel docket carries an emergency waiver signed by a naval logistics commodore two days before the armistice.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_scuttle_detonator_wire",
+      "surface": "wreck",
+      "detail": "The scuttled hulk's explosive charges were wired with commercial mining cord sold exclusively by a single station trade depot.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "forged_records",
+      "debt_leverage",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "guilt",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Scrappers unearth flight beacon from missing ore freighter in outer ion belt.",
+    "Mining consortium legal teams issue blanket repossession claims across asteroid belts.",
+    "Health syndicates investigate recurring water filtration complaints in outer habitats."
+  ],
+  "voice_direction": {
+    "scrapper_captain": "Raspy, fast-talking, and chronically anxious about docking fees. Shortens his sentences and shifts topics whenever corporate security is mentioned.",
+    "mining_auditor": "Crisp, unhurried, and speaks in sterile legal jargon. Never uses emotional terms like hazard, poison, or guilt.",
+    "union_survivor": "Weary, fierce, and pauses to catch her breath between phrases. Speaks with the stubborn conviction of someone who has buried her family."
+  },
+  "novelty_tags": [
+    "scuttled_freighter",
+    "toxic_waste_dumping",
+    "ion_storm_graveyard",
+    "mutinous_crew",
+    "corporate_sanitization"
+  ]
+}

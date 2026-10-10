@@ -1,0 +1,384 @@
+{
+  "id": "premise.the_refinery_surgeons_incognito",
+  "schema_version": 1,
+  "title": "The Refinery Surgeon's Incognito",
+  "logline": "A disgraced core-world surgeon living under an assumed name as an ore refinery hygienist must risk exposing their identity to bounty hunters when a boiler explosion leaves dozens of laborers needing complex emergency surgery.",
+  "scale": "local",
+  "tone": [
+    "tragic",
+    "melancholy"
+  ],
+  "themes": [
+    "reinvention",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "incognito_hygienist",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Plant sanitation hygienist at an ore refinery; quiet, methodical, and hiding an elite medical pedigree.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "bounty_hunter_captain",
+      "kind": "person",
+      "archetype": "bounty_hunter",
+      "description": "Core-world extraction agent tracking high-value fugitives; polite, relentless, and calculating legal rewards.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "shift_foreman",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Veteran refinery floor supervisor; protective of his crew and fiercely loyal to the quiet hygienist.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "bounty_hunter_interceptor",
+      "kind": "ship",
+      "description": "A sleek long-range pursuit craft fitted with high-gain civilian biometrics scanners.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "ore_smelting_slipway",
+      "kind": "place",
+      "description": "A massive industrial refinery module choked with slag vapors and molten silicate pipes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "auxiliary_clinic_annex",
+      "kind": "place",
+      "description": "A cramped station dispensary stocked only with basic burn salves and generic painkillers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "refinery_shift_fraternity",
+      "kind": "faction",
+      "description": "The tight-knit collective of smelter workers who treat each other as family.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "witness_at_large",
+    "debt_owed_to_player",
+    "quiet_cover_up"
+  ],
+  "public_situation": "An industrial boiler failure at {role:ore_smelting_slipway} leaves dozens of refinery crew severely burned, overwhelming local clinics.",
+  "private_truth": "The plant hygienist is actually a renowned neurosurgeon who fled the core systems after taking the blame for a corrupt hospital trustee's fatal surgical blunder.",
+  "core_why": {
+    "motive": "guilt",
+    "secret": "refinery_hygienist_is_disgraced_core_world_surgeon"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Emergency sirens wail across the smelter bays as medical triage distress beacons blink outside {role:auxiliary_clinic_annex}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "incognito_hygienist",
+          "target": "auxiliary_clinic_annex",
+          "reason": "She pays an outside pilot to collect an impounded kit of micro-surgical vascular clamps from a quarantined salvage depot before critically wounded workers succumb to shock.",
+          "private_fact": "The surgical kit is registered under her real name and will flag core warrant registries if logged into municipal station customs.",
+          "outcome_tags": [
+            "clamps_delivered"
+          ],
+          "routes": {
+            "clamps_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:bounty_hunter_interceptor} docks at the station perimeter, downloading medical licensing queries into station port computers.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "cuprite",
+          "requester": "shift_foreman",
+          "target": "ore_smelting_slipway",
+          "reason": "He hires the pilot to deliver pure cuprite ore to the refinery power plant to restore emergency cooling coils before secondary boilers detonate.",
+          "private_fact": "He noticed the hygienist stitching complex arterial tears with master-class precision and realized she has been hiding her past for years.",
+          "outcome_tags": [
+            "cuprite_delivered"
+          ],
+          "routes": {
+            "cuprite_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:bounty_hunter_captain} files an extraction bond with station marshals, posting armed pickets outside the clinic doors.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "bounty_hunter_captain",
+          "requester": "incognito_hygienist",
+          "target": "auxiliary_clinic_annex",
+          "reason": "She hires the pilot to scan the bounty hunter's extradition warrant transmission to verify who funded the contract and whether it permits lethal force.",
+          "private_fact": "The warrant was funded by the core medical trustee whose career would be destroyed if she ever testified in open court.",
+          "outcome_tags": [
+            "trustee_contract_verified",
+            "signal_blocked"
+          ],
+          "routes": {
+            "trustee_contract_verified": "next",
+            "signal_blocked": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:bounty_hunter_interceptor} uncouples from the station dock, locking weapons onto the clinic module to enforce the prisoner extraction.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "shift_foreman",
+          "target": "bounty_hunter_interceptor",
+          "reason": "He pays the pilot to disable the bounty interceptor's tractor arrays before it tears open the clinic hull to abduct the surgeon mid-operation.",
+          "private_fact": "The bounty hunter hails mid-battle offering half of the multi-million core extradition bounty if the pilot stands down and delivers the surgeon.",
+          "outcome_tags": [
+            "interceptor_disabled",
+            "bounty_accepted"
+          ],
+          "routes": {
+            "interceptor_disabled": "next",
+            "bounty_accepted": "resolution:surgeon_extradited_workers_perish"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the bounty interceptor disabled and the surgery successfully concluded, the pilot must decide whether to shield the surgeon's new life, help her file counter-charges against the core trustee, or take the hunter's bounty payout.",
+        "options": [
+          {
+            "id": "shield_new_identity",
+            "label": "Wipe customs records to let the surgeon remain as the refinery's beloved plant doctor under her assumed name",
+            "leads_to": "resolution:surgeon_embraced_by_refinery_family"
+          },
+          {
+            "id": "file_counter_charges",
+            "label": "Transmit the trustee's illegal contract to municipal magistrates to clear her original medical record",
+            "leads_to": "resolution:core_trustee_discredited_surgeon_cleared"
+          },
+          {
+            "id": "surrender_surgeon_for_bounty",
+            "label": "Hand the surgeon over to the bounty hunter to collect the immense core extradition fee",
+            "leads_to": "resolution:surgeon_extradited_workers_perish"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "surgeon_embraced_by_refinery_family",
+      "reached_by": "The pilot wipes customs records and shields her identity.",
+      "summary": "The burned drillers recover. {role:refinery_shift_fraternity} protects {role:incognito_hygienist} with forged employee records, giving her a true home.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_shift_fraternity",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "incognito_hygienist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "shift_foreman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_hunter_captain",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "shielded_incognito_doctor",
+          "public_summary": "A pilot defended a disgraced core surgeon who saved thirty refinery workers during a boiler disaster."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "core_trustee_discredited_surgeon_cleared",
+      "reached_by": "The pilot transmits the trustee's contract to magistrates.",
+      "summary": "The extortion warrant leaks to regional news boards. The corrupt core trustee is ousted, while {role:incognito_hygienist} regains her full medical license.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "incognito_hygienist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "shift_foreman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_hunter_captain",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "cleared_disgraced_surgeon",
+          "public_summary": "A pilot uncovered evidence that cleared an exiled surgeon of fabricated medical malpractice charges."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "surgeon_extradited_workers_perish",
+      "reached_by": "The pilot hands the surgeon to the bounty hunter for the fee.",
+      "summary": "{role:bounty_hunter_captain} hauls the surgeon away in stasis. Unattended workers succumb to burn shock, leaving {role:refinery_shift_fraternity} decimated.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_shift_fraternity",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "bounty_hunter_captain",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "incognito_hygienist",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "shift_foreman",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_refinery_doctor",
+          "public_summary": "A pilot sold an incognito factory doctor to bounty hunters during a fatal boiler explosion."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "clinic_collapses_in_fire",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "Smelter fires breach the auxiliary dispensary. The surgeon and wounded workers perish in the blaze, closing the refinery floor indefinitely.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "refinery_shift_fraternity",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "incognito_hygienist",
+          "fate": "dead"
+        },
+        {
+          "type": "cast_fate",
+          "target": "shift_foreman",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "clinic_collapses_in_fire",
+  "loose_threads": [
+    {
+      "id": "t_surgical_kit_engraving",
+      "surface": "cargo",
+      "detail": "The titanium clamp case bears micro-engraved graduation honors from an elite core-world academy, partly ground away with steel wool.",
+      "can_carry_methods": [
+        "impersonation",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_extradition_escrow_deposit",
+      "surface": "price_board",
+      "detail": "An off-world private banking cartel posted a high-value recovery bounty whose escrow conditions require the target to remain permanently sedated.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "impersonation",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "guilt",
+      "fear",
+      "survival"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Industrial boiler rupture triggers mass casualty triage alarms at outer smelter docks.",
+    "Station marshals note influx of licensed bounty agents pursuing core fugitives.",
+    "Refinery union lodges formal protests over inadequate municipal medical provisions."
+  ],
+  "voice_direction": {
+    "incognito_hygienist": "Soft, clipped, and speaks with aristocratic precision that slips through her rough station vocabulary. Becomes completely calm under extreme medical pressure.",
+    "bounty_hunter_captain": "Polite, methodical, and speaks in legalistic contractual clauses. Never raises his voice, even when issuing fatal ultimatums.",
+    "shift_foreman": "Hoarse, protective, and speaks with fierce parental loyalty toward his crew. Curses loudly whenever station authorities are mentioned."
+  },
+  "novelty_tags": [
+    "disgraced_surgeon",
+    "refinery_boiler_explosion",
+    "assumed_identity",
+    "bounty_hunter_pursuit",
+    "smelter_fraternity"
+  ]
+}

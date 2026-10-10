@@ -1,0 +1,408 @@
+{
+  "id": "premise.the_provincial_indemnity_audit",
+  "schema_version": 1,
+  "title": "The Provincial Indemnity Audit",
+  "logline": "An independent auditor escorts a diplomatic disaster envoy across three star systems, discovering that provincial governors are systematically pocketing reconstruction indemnities owed to merchant families displaced by a naval munitions explosion.",
+  "scale": "regional",
+  "tone": [
+    "political",
+    "noir"
+  ],
+  "themes": [
+    "justice_vs_mercy",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "diplomatic_envoy",
+      "kind": "person",
+      "archetype": "negotiator",
+      "description": "Appointed arbitrator for the regional armistice claims commission; proud, weary, and determined to see relief delivered.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "provincial_governor_archon",
+      "kind": "person",
+      "archetype": "official",
+      "description": "High archon of the regional treaty league; patrician, arrogant, and diverting public indemnities into private fleets.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "displaced_merchants_trustee",
+      "kind": "person",
+      "archetype": "refugee",
+      "description": "Elected spokesperson for three hundred bankrupt trading families living in transit hulks.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "governor_flagship_frigate",
+      "kind": "ship",
+      "description": "A lavishly appointed private security frigate sent to interdict regional audit missions.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "armistice_claims_rotunda",
+      "kind": "place",
+      "description": "The administrative treaty hub where regional war reparations and disaster funds are managed.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "blasted_market_derelict",
+      "kind": "place",
+      "description": "The shattered orbital market station in a neighbouring system where hundreds died during the munitions accident.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "provincial_treaty_league",
+      "kind": "faction",
+      "description": "The confederation of system governors who control the regional transit gates and indemnity funds.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "leader_discredited",
+    "refugees_moving",
+    "market_disrupted"
+  ],
+  "public_situation": "Regional treaty governors announce procedural delays in disbursing multi-million reconstruction funds to merchants displaced by an orbital munitions disaster.",
+  "private_truth": "The provincial governors have been diverting the indemnity gold into their own private security accounts while falsely blaming customs gridlock.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "provincial_governors_pocketed_disaster_indemnity_funds"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Displaced merchants picket outside {role:armistice_claims_rotunda} as regional governors cite administrative audit discrepancies.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "diplomatic_envoy",
+          "target": "armistice_claims_rotunda",
+          "reason": "He hires an outside pilot to collect an unredacted financial dispatch ledger from a secure municipal vault before provincial auditors overwrite the records.",
+          "private_fact": "The ledger shows seventy percent of the emergency disaster allocation was converted into private bearer bonds six months ago.",
+          "outcome_tags": [
+            "ledger_retrieved"
+          ],
+          "routes": {
+            "ledger_retrieved": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "displaced_merchants_trustee",
+          "target": "armistice_claims_rotunda",
+          "reason": "She pays the pilot to courier certified refugee family survivor petitions to the central registry to legally block the fund closure.",
+          "private_fact": "Her elderly parents are currently stranded in unheated transit barracks because the promised housing stipend was never paid.",
+          "outcome_tags": [
+            "petitions_filed",
+            "filing_rejected"
+          ],
+          "routes": {
+            "petitions_filed": "next",
+            "filing_rejected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Provincial security pickets shadow the audit envoy across the border gateway, citing travel pass irregularities.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "diplomatic_envoy",
+          "target": "provincial_treaty_league",
+          "reason": "He pays the pilot to destroy an unregistered private corsair and recover its encrypted encrypted orders proving the ambush was commissioned by {role:provincial_governor_archon}.",
+          "private_fact": "He realizes the archon will execute anyone carrying physical audit proofs beyond the system boundary.",
+          "outcome_tags": [
+            "ambush_orders_recovered"
+          ],
+          "routes": {
+            "ambush_orders_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Emergency aid warehouses at {role:blasted_market_derelict} are sealed by private bailiffs citing structural contamination.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "provincial_governor_archon",
+          "requester": "displaced_merchants_trustee",
+          "target": "blasted_market_derelict",
+          "reason": "She hires the pilot to scan the disaster site's automated intake docks to verify that reconstruction materials were never delivered despite being logged as paid.",
+          "private_fact": "The archon's cousin owns the salvage company that collected millions to clear debris that still clogs the docks.",
+          "outcome_tags": [
+            "phantom_deliveries_proven",
+            "sensors_jammed"
+          ],
+          "routes": {
+            "phantom_deliveries_proven": "next",
+            "sensors_jammed": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:governor_flagship_frigate} blocks the jump gate approach to the regional supreme court, training laser batteries on the envoy's ship.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "diplomatic_envoy",
+          "target": "governor_flagship_frigate",
+          "reason": "He begs the pilot to disable the archon's flagship frigate before it destroys the audit transport and purges all financial records.",
+          "private_fact": "The archon hails mid-combat offering a fortune in bearer securities if the pilot vents the financial ledgers into the gate vortex.",
+          "outcome_tags": [
+            "frigate_disabled",
+            "archon_bribe_taken"
+          ],
+          "routes": {
+            "frigate_disabled": "next",
+            "archon_bribe_taken": "resolution:indemnity_looted_refugees_abandoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the archon's frigate disabled and the financial audit verified across three systems, the pilot must decide whether to deliver the charges to the regional supreme court, broker a quiet political restitution pact, or pocket the archon's immense bribe.",
+        "options": [
+          {
+            "id": "deliver_charges_to_court",
+            "label": "Deliver the unredacted audit to the supreme court to force the arrest of the corrupt provincial governors",
+            "leads_to": "resolution:governors_ousted_relief_released"
+          },
+          {
+            "id": "broker_quiet_restitution",
+            "label": "Force the archon to secretly release the relief funds directly to the merchant trust in exchange for dropping charges",
+            "leads_to": "resolution:quiet_restitution_secured"
+          },
+          {
+            "id": "pocket_archon_bribe",
+            "label": "Vent the audit ledgers and claim the archon's multi-million bearer securities",
+            "leads_to": "resolution:indemnity_looted_refugees_abandoned"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "governors_ousted_relief_released",
+      "reached_by": "The pilot delivers the audit to the regional supreme court.",
+      "summary": "The court orders the immediate arrest of {role:provincial_governor_archon}. Stolen funds are returned, and hundreds of merchant families rebuild their livelihoods.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "provincial_treaty_league",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_governor_archon",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "diplomatic_envoy",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "displaced_merchants_trustee",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_provincial_disaster_theft",
+          "public_summary": "A pilot exposed corrupt system governors who looted disaster indemnities meant for displaced merchants."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "quiet_restitution_secured",
+      "reached_by": "The pilot brokers a quiet restitution agreement with the archon.",
+      "summary": "{role:provincial_governor_archon} quietly disburses the funds to avoid prosecution. The families are housed, while political stability across the league is preserved.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "displaced_merchants_trustee",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "diplomatic_envoy",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_governor_archon",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "provincial_treaty_league",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_disaster_restitution",
+          "public_summary": "A pilot forced an aristocratic governor to quietly release disaster relief funds to displaced merchant families."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "indemnity_looted_refugees_abandoned",
+      "reached_by": "The pilot accepts the archon's bribe and vents the records.",
+      "summary": "{role:provincial_governor_archon} purges the claims docket. Displaced merchants are evicted from barracks into debtor camps, while the pilot secures vast wealth.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "provincial_treaty_league",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "provincial_governor_archon",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "diplomatic_envoy",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "displaced_merchants_trustee",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_displaced_merchants",
+          "public_summary": "A pilot took a bribe to destroy evidence of corrupt governors stealing regional disaster relief."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "envoy_assassinated_audit_lost",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "Private security ships destroy the audit vessel in deep transit. The claims are dismissed, leaving the displaced merchants scattered into servitude.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "provincial_treaty_league",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "diplomatic_envoy",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "displaced_merchants_trustee",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "envoy_assassinated_audit_lost",
+  "loose_threads": [
+    {
+      "id": "t_bearer_bond_liquidation_docket",
+      "surface": "price_board",
+      "detail": "A regional commodities bank records private bearer bond liquidations issued against disaster relief accounts two days before the explosion inquiry closed.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_reconstruction_barge_manifest",
+      "surface": "cargo",
+      "detail": "The rebuilding convoy bills of lading describe automated cargo barges that were scrapped in a drydock five years prior to the contract date.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "fear"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Regional armistice commission delays disaster restitution payouts citing cross-border audit reviews.",
+    "Displaced merchant families stage demonstrations outside provincial gate clearance hubs.",
+    "Provincial treaty governors assure public that emergency rebuilding funds remain fully secured."
+  ],
+  "voice_direction": {
+    "diplomatic_envoy": "Formal, measured, and speaks with weary bureaucratic dignity. Pauses to suppress rising indignation when confronting provincial arrogance.",
+    "provincial_governor_archon": "Languid, patrician, and speaks with icy condescension. Treats displaced merchants purely as an aesthetic nuisance.",
+    "displaced_merchants_trustee": "Strained, urgent, and speaks with fierce maternal protection. Refuses to be intimidated by aristocratic titles."
+  },
+  "novelty_tags": [
+    "disaster_indemnity_fraud",
+    "provincial_governor_corruption",
+    "displaced_merchants",
+    "regional_audit_pursuit",
+    "armistice_commission"
+  ]
+}

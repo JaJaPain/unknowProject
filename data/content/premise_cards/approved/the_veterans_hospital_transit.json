@@ -1,0 +1,412 @@
+{
+  "id": "premise.the_veterans_hospital_transit",
+  "schema_version": 1,
+  "title": "The Veteran's Hospital Transit",
+  "logline": "A decommissioned naval hospital ship treating disabled veterans across three systems seeks justice against an industrial consortium whose defective wartime respirators caused systemic poisoning.",
+  "scale": "regional",
+  "tone": [
+    "melancholy",
+    "noir"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "hospital_commodore",
+      "kind": "person",
+      "archetype": "veteran",
+      "description": "Commanding officer of the decommissioned hospital ship; proud, weary, and fiercely protective of his disabled patients.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "fleet_medical_surgeon",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Chief physician aboard the hospital ship; blunt, exhausted, and desperate to prove the chemical cause of veteran poisoning.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_ombudsman",
+      "kind": "person",
+      "archetype": "bureaucrat",
+      "description": "Legal director for the regional manufacturing consortium; polished, evasive, and suppressing corporate liability.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consortium_picket_cruiser",
+      "kind": "ship",
+      "description": "A heavily armed private security cruiser stationed to interdict unauthorized medical evidence at gate boundaries.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "central_gate_customs_spire",
+      "kind": "place",
+      "description": "The administrative gateway controlling transit permits across the three-system cluster.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "naval_depot_graveyard",
+      "kind": "place",
+      "description": "An abandoned wartime quartermaster depot in a neighboring system containing sealed surplus stock.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "regional_manufacturing_consortium",
+      "kind": "faction",
+      "description": "The industrial giant that manufactured defective military respirators during the war.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "veterans_hospital_flotilla",
+      "kind": "faction",
+      "description": "The mutual-aid fraternity of disabled soldiers, nurses, and medical crews.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 2,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "refugees_moving",
+    "secret_half_exposed",
+    "alliance_broken"
+  ],
+  "public_situation": "A decommissioned naval hospital ship is refused docking across three star systems as corporate lawyers dispute veteran medical pension claims.",
+  "private_truth": "The veterans' chronic lung rot was caused by defective cuprite solder used in standard-issue wartime respirators produced by the region's largest manufacturing cartel.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "consortium_wartime_respirators_caused_toxic_poisoning"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Customs warnings flash around {role:central_gate_customs_spire} as corporate pickets delay the hospital ship's docking permits.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "fleet_medical_surgeon",
+          "target": "central_gate_customs_spire",
+          "reason": "She pays an outside pilot to collect an impounded crate of veteran respirator masks from a customs warehouse before corporate lawyers can seize and destroy it.",
+          "private_fact": "Spectrographic tests on the masks showed toxic neuro-heavy metal residues leeching from the intake filter housings.",
+          "outcome_tags": [
+            "crate_retrieved"
+          ],
+          "routes": {
+            "crate_retrieved": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "hospital_commodore",
+          "target": "central_gate_customs_spire",
+          "reason": "He hires the pilot to deliver sealed patient triage logs to the port registrar to formally petition against the customs blockade.",
+          "private_fact": "The triage logs document twelve fatal respiratory arrests occurring within forty-eight hours of docking refusal.",
+          "outcome_tags": [
+            "logs_delivered",
+            "petition_ignored"
+          ],
+          "routes": {
+            "logs_delivered": "next",
+            "petition_ignored": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Consortium pickets shadow veteran support craft throughout the neighboring industrial gateway.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "hospital_commodore",
+          "target": "regional_manufacturing_consortium",
+          "reason": "He pays the pilot to destroy a consortium surveillance interceptor and recover encrypted autopsy telemetry intercepted from the hospital's research wards.",
+          "private_fact": "The ombudsman has bribed regional port coroners to classify veteran deaths as combat hysteria rather than industrial poisoning.",
+          "outcome_tags": [
+            "autopsy_records_recovered"
+          ],
+          "routes": {
+            "autopsy_records_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "{role:consortium_ombudsman} files emergency warrants to seal the abandoned naval depot in the second neighboring system.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "regional_manufacturing_consortium",
+          "requester": "fleet_medical_surgeon",
+          "target": "naval_depot_graveyard",
+          "reason": "She hires the pilot to scan surviving crates of unissued wartime respirators in the depot to prove the toxic solder was used across entire regional production runs.",
+          "private_fact": "The consortium executives knew the solder broke down in humid recycler air but approved shipment to collect massive wartime bonuses.",
+          "outcome_tags": [
+            "toxic_batches_verified",
+            "depot_purged"
+          ],
+          "routes": {
+            "toxic_batches_verified": "next",
+            "depot_purged": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:consortium_picket_cruiser} blocks the approach to the regional health council tribunal dock, aiming weapons at incoming hospital couriers.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "hospital_commodore",
+          "target": "consortium_picket_cruiser",
+          "reason": "He begs the pilot to disable the picket cruiser's weapons systems before it destroys the courier shuttle carrying the forensic samples to the tribunal.",
+          "private_fact": "The cruiser captain hails offering a multi-million bearer bond if the pilot vents the respirator samples into the star.",
+          "outcome_tags": [
+            "cruiser_disabled",
+            "corporate_bribe_taken"
+          ],
+          "routes": {
+            "cruiser_disabled": "next",
+            "corporate_bribe_taken": "resolution:evidence_destroyed_veterans_abandoned"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the picket cruiser disabled and the forensic proof of industrial respirator poisoning assembled across three systems, the pilot must decide whether to deliver the evidence to the tribunal, negotiate a private hospice endowment, or sell out to the consortium.",
+        "options": [
+          {
+            "id": "deliver_evidence_to_tribunal",
+            "label": "Deliver the toxic samples to the regional health tribunal to force the consortium to fund lifelong veteran care",
+            "leads_to": "resolution:consortium_held_liable_veterans_cared_for"
+          },
+          {
+            "id": "broker_quiet_hospice_endowment",
+            "label": "Hand the evidence to the ombudsman in exchange for an irrevocable private endowment funding the hospital ship's wards",
+            "leads_to": "resolution:hospital_ship_endowed_quietly"
+          },
+          {
+            "id": "sell_samples_for_corporate_bounty",
+            "label": "Vent the samples and collect the consortium's multi-million payoff",
+            "leads_to": "resolution:evidence_destroyed_veterans_abandoned"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "consortium_held_liable_veterans_cared_for",
+      "reached_by": "The pilot delivers the forensic samples to the regional health tribunal.",
+      "summary": "The tribunal finds {role:regional_manufacturing_consortium} guilty of wartime negligence, mandating lifetime medical pensions for thousands of veterans across three systems.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "regional_manufacturing_consortium",
+          "delta": -3
+        },
+        {
+          "type": "standing",
+          "target": "veterans_hospital_flotilla",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "consortium_ombudsman",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospital_commodore",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_toxic_wartime_gear",
+          "public_summary": "A pilot proved a regional manufacturing cartel poisoned thousands of soldiers with defective wartime respirators."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "market_disrupted"
+      ]
+    },
+    {
+      "id": "hospital_ship_endowed_quietly",
+      "reached_by": "The pilot brokers a quiet private endowment with the consortium ombudsman.",
+      "summary": "{role:consortium_ombudsman} endows the hospital ship's hospice care in perpetuity. Public scandal is avoided, while {role:hospital_commodore} secures dignified retirement for his crew.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "veterans_hospital_flotilla",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospital_commodore",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fleet_medical_surgeon",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "consortium_ombudsman",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_veteran_hospice_endowment",
+          "public_summary": "A pilot forced a corporate manufacturing cartel to quietly fund lifetime hospice care for poisoned naval veterans."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "evidence_destroyed_veterans_abandoned",
+      "reached_by": "The pilot accepts the corporate payoff and vents the samples.",
+      "summary": "Consortium agents erase all forensic records. Poisoned veterans are denied pensions and evicted, while {role:consortium_ombudsman} secures a massive board promotion.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "regional_manufacturing_consortium",
+          "delta": 3
+        },
+        {
+          "type": "standing",
+          "target": "veterans_hospital_flotilla",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "consortium_ombudsman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospital_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_poisoned_veterans",
+          "public_summary": "A pilot destroyed forensic evidence proving an industrial cartel sold toxic respirators to wartime troops."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "hospital_flotilla_quarantined_and_lost",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "Medical life-support filters fail across the convoy. The hospital ship drifts into quarantined transit space, abandoned by regional authorities.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "regional_manufacturing_consortium",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "hospital_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "fleet_medical_surgeon",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "hospital_flotilla_quarantined_and_lost",
+  "loose_threads": [
+    {
+      "id": "t_respirator_production_contract",
+      "surface": "station_notice",
+      "detail": "The quartermaster procurement ledger shows a cost-reduction waiver signed by the consortium president six months before the war ended.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_cuprite_solder_shipment",
+      "surface": "cargo",
+      "detail": "The defective respirator solder is traced to a single refinery batch that failed purity tests but was stamped certified anyway.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "legacy",
+      "fear",
+      "greed"
+    ]
+  },
+  "law_hooks": [
+    "quarantine_orders",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Regional customs authorities turn away naval hospital vessel citing expired quarantine permits.",
+    "Veterans welfare societies stage protests outside border gate clearance pylons.",
+    "Industrial manufacturing consortium posts record quarterly dividends from civilian refits."
+  ],
+  "voice_direction": {
+    "hospital_commodore": "Low, gravelly, and speaks with rigid naval bearing. Pauses slightly to mask the physical pain of old wounds.",
+    "consortium_ombudsman": "Polished, breezy, and speaks with practiced diplomatic charm that turns icy and dismissive when defied.",
+    "fleet_medical_surgeon": "Harried, blunt, and cuts off administrative pleasantries to demand concrete medicine and fuel counts."
+  },
+  "novelty_tags": [
+    "hospital_ship",
+    "toxic_respirators",
+    "defective_wartime_solder",
+    "industrial_product_liability",
+    "veteran_health_tribunal"
+  ]
+}

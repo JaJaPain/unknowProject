@@ -1,0 +1,409 @@
+{
+  "id": "premise.the_pirate_dispatchers_pursuit",
+  "schema_version": 1,
+  "title": "The Pirate Dispatcher's Pursuit",
+  "logline": "A bounty hunter pilot tracks an elusive pirate broadcast ship across three star systems, discovering that the transmissions are emergency warnings sent by an aging flight dispatcher to protect independent freighters from private security ambushes.",
+  "scale": "regional",
+  "tone": [
+    "tense",
+    "noir"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "justice_vs_mercy"
+  ],
+  "roles": [
+    {
+      "id": "security_warden",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Chief commissioner of the regional transit authority; stern, authoritarian, and determined to silence rogue signals.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "pirate_dispatcher",
+      "kind": "person",
+      "archetype": "pilot",
+      "description": "Veteran flight controller flying an obsolete broadcasting cutter; frail, obstinate, and watching over independent haulers.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "freighter_convoy_skipper",
+      "kind": "person",
+      "archetype": "smuggler",
+      "description": "Leader of an informal tramp merchant flotilla; weathered, wary, and relying on the illegal radio warnings.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "warden_flagship_frigate",
+      "kind": "ship",
+      "description": "A heavy private security frigate running interdiction patrols at regional jump gates.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "gateway_customs_bastion",
+      "kind": "place",
+      "description": "A fortified transit hub where private security collects mandatory regional tolls.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "derelict_relay_nest",
+      "kind": "place",
+      "description": "A shadowed debris field in a neighboring system where automated broadcast repeaters hide.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "transit_security_syndicate",
+      "kind": "faction",
+      "description": "The private enforcement corporation licensed to police the regional gate network.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "route_opened",
+    "route_closed",
+    "faction_weakened"
+  ],
+  "public_situation": "Regional gate authorities offer heavy bounties for an outlaw radio ship jamming official customs frequencies across three star systems.",
+  "private_truth": "The broadcaster is a retired municipal flight controller alerting independent cargo pilots to private security cordons that impound ships under trumped-up fee violations.",
+  "core_why": {
+    "motive": "protecting_someone",
+    "secret": "broadcaster_transmits_warnings_to_prevent_security_shakedowns"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "location": "same_system",
+      "public_change": "Electronic jamming flares across customs channels around {role:gateway_customs_bastion} as pirate broadcasts redirect merchant traffic.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "pirate_dispatcher",
+          "requester": "security_warden",
+          "target": "gateway_customs_bastion",
+          "reason": "He pays a bounty pilot to triangulate the outlaw signal's jump signature across local gate beacons to determine which star system the broadcast cutter jumped to.",
+          "private_fact": "The security syndicate's private patrol reports show thirty independent cargo hulls seized and auctioned off last month without court oversight.",
+          "outcome_tags": [
+            "jump_vector_traced",
+            "signal_faded"
+          ],
+          "routes": {
+            "jump_vector_traced": "next",
+            "signal_faded": "next"
+          }
+        },
+        {
+          "verb": "delivery_courier",
+          "requester": "freighter_convoy_skipper",
+          "target": "gateway_customs_bastion",
+          "reason": "She pays the pilot to courier an emergency cargo demurrage waiver to the gate magistrate before private enforcers impound her lead bulk hauler.",
+          "private_fact": "Her cargo consists of life-support scrubber parts destined for outer habitats that cannot afford the syndicate's transit extortion.",
+          "outcome_tags": [
+            "waiver_delivered",
+            "waiver_rejected"
+          ],
+          "routes": {
+            "waiver_delivered": "next",
+            "waiver_rejected": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "location": "neighbouring_system",
+      "public_change": "Security cordons tighten in the neighboring system as merchant vessels divert from official transit lanes.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "freighter_convoy_skipper",
+          "target": "transit_security_syndicate",
+          "reason": "She hires the pilot to destroy a private security drone buoy and recover its intercepted flight telemetry before enforcers ambush her convoy.",
+          "private_fact": "Her nav computer holds distress pings from three missing haulers that were forced off course by syndicate drone arrays.",
+          "outcome_tags": [
+            "telemetry_recovered"
+          ],
+          "routes": {
+            "telemetry_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "location": "neighbouring_system",
+      "public_change": "Static crackles across the debris belt as the pirate broadcaster's antenna relays begin overheating.",
+      "missions": [
+        {
+          "verb": "purchase_delivery",
+          "requester": "pirate_dispatcher",
+          "target": "derelict_relay_nest",
+          "reason": "He hires the tracking pilot to purchase industrial vacuum tubes at a mining depot and bring them to his repeater site, knowing the pilot followed him.",
+          "private_fact": "He was the chief flight controller thirty years ago when the gates were public property before the municipal council privatized transit enforcement.",
+          "outcome_tags": [
+            "tubes_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "tubes_delivered": "next",
+            "abandoned": "resolution:broadcaster_captured_gates_monopolized"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "location": "any_system",
+      "public_change": "{role:warden_flagship_frigate} traps the broadcast cutter outside the outer gate, preparing to vaporize the unshielded craft.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "freighter_convoy_skipper",
+          "target": "warden_flagship_frigate",
+          "reason": "She begs the pilot to disable the flagship frigate's heavy laser turrets before it obliterates the frail radio cutter.",
+          "private_fact": "The security warden hails mid-combat offering double the standing bounty and lifetime gate transit passes if the pilot finishes off the pirate cutter.",
+          "outcome_tags": [
+            "frigate_disabled",
+            "warden_deal_accepted"
+          ],
+          "routes": {
+            "frigate_disabled": "next",
+            "warden_deal_accepted": "resolution:broadcaster_captured_gates_monopolized"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the warden's frigate disabled and the radio cutter secure, the pilot must decide whether to broadcast the syndicate's illegal shakedown logs across the region, broker a quiet exile for the old controller, or claim the warden's lucrative bounty.",
+        "options": [
+          {
+            "id": "broadcast_syndicate_logs",
+            "label": "Broadcast the warden's extortion registries across all three systems to collapse the private transit monopoly",
+            "leads_to": "resolution:extortion_ring_exposed_gates_opened"
+          },
+          {
+            "id": "broker_quiet_exile",
+            "label": "Escort the dispatcher into outer rim sanctuary while keeping the transmitter dark to end the hunting contract",
+            "leads_to": "resolution:dispatcher_rescued_silent_truce"
+          },
+          {
+            "id": "deliver_dispatcher_to_warden",
+            "label": "Surrender the broadcast cutter coordinates to the warden to claim the bounty and free gate passes",
+            "leads_to": "resolution:broadcaster_captured_gates_monopolized"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "extortion_ring_exposed_gates_opened",
+      "reached_by": "The pilot broadcasts the syndicate's extortion logs across all channels.",
+      "summary": "The illegal shakedown manifests leak across three systems. Regional magistrates cancel {role:transit_security_syndicate}'s charter, while {role:security_warden} is dismissed.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_security_syndicate",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_warden",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pirate_dispatcher",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_convoy_skipper",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "broke_gate_shakedown_monopoly",
+          "public_summary": "A pilot exposed a private security syndicate that was extorting independent freighters at regional jump gates."
+        }
+      ],
+      "seeds": [
+        "route_opened",
+        "faction_weakened"
+      ]
+    },
+    {
+      "id": "dispatcher_rescued_silent_truce",
+      "reached_by": "The pilot escorts the dispatcher into quiet outer-rim retirement.",
+      "summary": "{role:pirate_dispatcher} powers down his transmitter and vanishes into rim space. Independent haulers lose their early warnings, but the lethal bounty hunt ends.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "pirate_dispatcher",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_convoy_skipper",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_warden",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "standing",
+          "target": "transit_security_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_dispatcher_retirement",
+          "public_summary": "A pilot helped a famous rogue radio operator slip out of a corporate dragnet into safe retirement."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "witness_at_large"
+      ]
+    },
+    {
+      "id": "broadcaster_captured_gates_monopolized",
+      "reached_by": "The pilot takes the warden's offer or surrenders the dispatcher.",
+      "summary": "{role:warden_flagship_frigate} destroys the radio cutter. {role:security_warden} cements control over regional shipping gates, rewarding the pilot with lifetime toll waivers.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_security_syndicate",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "security_warden",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pirate_dispatcher",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_convoy_skipper",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "silenced_rebel_radio_pilot",
+          "public_summary": "A pilot hunted down a rogue radio operator who warned merchant freighters about corporate gate cordons."
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "convoy_ambushed_at_gate",
+      "reached_by": "The pilot never intervenes or abandons the chase.",
+      "summary": "Security frigates ambush the unguided merchant convoy outside the transit gate, impounding forty ships and leaving outer habitats without critical supplies.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "transit_security_syndicate",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "freighter_convoy_skipper",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "pirate_dispatcher",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "route_closed",
+        "market_disrupted"
+      ]
+    }
+  ],
+  "default_resolution": "convoy_ambushed_at_gate",
+  "loose_threads": [
+    {
+      "id": "t_gate_toll_rebate_ledger",
+      "surface": "station_notice",
+      "detail": "The regional gate transit register lists heavy fee exemptions granted to ships owned by directors of the security syndicate.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    },
+    {
+      "id": "t_transmitter_crystal_batch",
+      "surface": "cargo",
+      "detail": "The pirate cutter's broadcast crystals carry supply codes stolen from an administrative warehouse thirty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "control",
+      "greed",
+      "protecting_someone"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Regional transit security posts lucrative bounties for rogue flight beacon interference.",
+    "Independent cargo haulers voice outrage over escalating transit gate inspection fees.",
+    "Static and pirate traffic advisories disrupt commercial navigational bands across three sectors."
+  ],
+  "voice_direction": {
+    "security_warden": "Rigid, imperious, and speaks in measured military jargon. Disdains independent pilots as unlicensed hazards.",
+    "pirate_dispatcher": "Dry, gravelly, and speaks in rhythmic air-traffic control cadences. Calmly dismisses threats with tired, wry humor.",
+    "freighter_convoy_skipper": "Strained, urgent, and constantly monitors background radar beeps. Speaks with the raw anxiety of someone running on thin margins."
+  },
+  "novelty_tags": [
+    "pirate_radio_ship",
+    "gate_shakedown_toll",
+    "regional_pursuit",
+    "flight_dispatcher",
+    "freighter_convoy_defense"
+  ]
+}

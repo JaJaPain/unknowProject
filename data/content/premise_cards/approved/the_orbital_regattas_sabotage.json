@@ -1,0 +1,385 @@
+{
+  "id": "premise.the_orbital_regattas_sabotage",
+  "schema_version": 1,
+  "title": "The Orbital Regatta's Sabotage",
+  "logline": "A working-class rigging mechanic assisting an independent solar-sail racer discovers that a corporate yacht syndicate is using covert microwave lasers to shred rival sails during high-speed orbital regatta passes.",
+  "scale": "local",
+  "tone": [
+    "hopeful",
+    "tense"
+  ],
+  "themes": [
+    "labour_and_exploitation",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "independent_sail_mechanic",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Chief rigger for a family-owned solar racer; passionate, observant, and determined to see fair competition.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "syndicate_yacht_commodore",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Master of the dominant corporate racing syndicate; arrogant, hyper-competitive, and heavily leveraged by luxury gambling cartels.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "regatta_chief_marshal",
+      "kind": "person",
+      "archetype": "inspector",
+      "description": "Chief race judge for the planetary yacht club; punctilious, proud of tradition, and susceptible to wealthy pressure.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "syndicate_security_skiff",
+      "kind": "ship",
+      "description": "A swift armed race tender used by the corporate syndicate to enforce perimeter lanes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_regatta_slipway",
+      "kind": "place",
+      "description": "A glittering orbital marina where luxury racing yachts berth before planetary ring passes.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "high_gravity_course_buoy",
+      "kind": "place",
+      "description": "A high-speed turn marker situated in the perilous gravity tides of a ringed gas giant.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "independent_racers_guild",
+      "kind": "faction",
+      "description": "The association of small-budget privateer pilots and mechanics competing against corporate teams.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "gravity_tides"
+    ],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "rival_humiliated",
+    "market_disrupted",
+    "alliance_formed"
+  ],
+  "public_situation": "Spectator yachts crowd orbital marinas as the planetary solar-sail championship approaches its decisive high-gravity turn around {role:high_gravity_course_buoy}.",
+  "private_truth": "The corporate yacht's hull conceals a covert microwave emitter tuned to heat-stress the polymer sails of independent competitors until they tear during maximum acceleration.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "syndicate_yacht_lasers_shred_rival_sails"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Fanfare flares over station holos as race officials announce record prize pools for the upcoming ring pass.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "independent_sail_mechanic",
+          "target": "orbital_regatta_slipway",
+          "reason": "She pays an outside pilot to collect a replacement carbon-weave sail spar from a cargo depot before the qualifying heat closes.",
+          "private_fact": "Her pilot's qualifying sail shredded along clean thermal burn lines that could only be caused by directed electromagnetic beams.",
+          "outcome_tags": [
+            "spar_delivered"
+          ],
+          "routes": {
+            "spar_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "reversal",
+      "public_change": "A second independent racer suffers catastrophic sail blowout during trials, tumbling out of the course lane.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "syndicate_yacht_commodore",
+          "requester": "independent_sail_mechanic",
+          "target": "high_gravity_course_buoy",
+          "reason": "She hires the pilot to scan the course buoy's optical telemetry array to catch the invisible microwave pulses fired during the corporate yacht's pass.",
+          "private_fact": "The commodore has mortgaged three orbital racing docks to fund his gambling syndicate, and losing would ruin him.",
+          "outcome_tags": [
+            "thermal_pulse_proven",
+            "telemetry_scrambled"
+          ],
+          "routes": {
+            "thermal_pulse_proven": "next",
+            "telemetry_scrambled": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "crisis",
+      "public_change": "{role:regatta_chief_marshal} announces that protests will not be accepted without physical emitter hardware submitted before the final heat.",
+      "missions": [
+        {
+          "verb": "recover_combat_drop",
+          "requester": "independent_sail_mechanic",
+          "target": "independent_racers_guild",
+          "reason": "She pays the pilot to destroy a corporate telemetry drone trailing the syndicate yacht and recover the discarded laser focusing lens dumped into the ring field.",
+          "private_fact": "Her younger sister is piloting the independent family yacht in the final heat and faces fatal decompression if targeted at high speed.",
+          "outcome_tags": [
+            "lens_recovered"
+          ],
+          "routes": {
+            "lens_recovered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:syndicate_security_skiff} maneuvers across the marina approach, attempting to ram the mechanic's transport before she reaches the judges' box.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "independent_sail_mechanic",
+          "target": "syndicate_security_skiff",
+          "reason": "She pays the pilot to disable the corporate security skiff before it runs down her shuttle outside {role:orbital_regatta_slipway}.",
+          "private_fact": "The syndicate commodore hails mid-combat offering a luxury yacht charter share and a hundred thousand credits if the pilot destroys the optical lens.",
+          "outcome_tags": [
+            "skiff_disabled",
+            "commodore_bribe_taken"
+          ],
+          "routes": {
+            "skiff_disabled": "next",
+            "commodore_bribe_taken": "resolution:independent_racer_sabotaged_syndicate_wins"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the security skiff disabled and the sabotage hardware verified, the pilot must decide whether to deliver the lens to the chief marshal to disqualify the syndicate, force a lucrative prize split, or accept the commodore's private bribe.",
+        "options": [
+          {
+            "id": "submit_lens_to_marshal",
+            "label": "Deliver the emitter lens to the chief marshal on the grandstand to disqualify the syndicate yacht and award victory to the independent team",
+            "leads_to": "resolution:syndicate_disqualified_independents_triumph"
+          },
+          {
+            "id": "force_lucrative_prize_split",
+            "label": "Confront the commodore privately to force an equal split of the regatta purse without public scandal",
+            "leads_to": "resolution:compromise_championship_brokered"
+          },
+          {
+            "id": "sell_lens_to_commodore",
+            "label": "Surrender the focusing lens to the commodore to pocket the massive luxury charter buyout",
+            "leads_to": "resolution:independent_racer_sabotaged_syndicate_wins"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "syndicate_disqualified_independents_triumph",
+      "reached_by": "The pilot delivers the lens to the chief marshal.",
+      "summary": "The corporate yacht is disqualified before millions of spectators. {role:independent_sail_mechanic}'s family wins the championship, while {role:syndicate_yacht_commodore} is stripped of his license.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_racers_guild",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_yacht_commodore",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_sail_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "regatta_chief_marshal",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "exposed_regatta_laser_sabotage",
+          "public_summary": "A pilot proved a corporate racing syndicate used covert lasers to burn rival sails during an orbital regatta."
+        }
+      ],
+      "seeds": [
+        "rival_humiliated",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "compromise_championship_brokered",
+      "reached_by": "The pilot forces the commodore into a prize-sharing settlement.",
+      "summary": "The corporate team shares the purse under a quiet co-sponsorship deal. {role:independent_sail_mechanic} secures funding for her shop, while the commodore avoids public ruin.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_racers_guild",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_sail_mechanic",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_yacht_commodore",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "regatta_chief_marshal",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_regatta_purse_share",
+          "public_summary": "A pilot forced a wealthy racing syndicate to quietly divide its championship prize with working mechanics."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "independent_racer_sabotaged_syndicate_wins",
+      "reached_by": "The pilot takes the commodore's bribe or destroys the lens.",
+      "summary": "The independent yacht's sail tears during the final turn, crashing into ring dust. {role:syndicate_yacht_commodore} claims the cup, rewarding the pilot with luxury credits.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_racers_guild",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_yacht_commodore",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_sail_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_out_sail_racer",
+          "public_summary": "A pilot took a bribe to bury evidence of laser sabotage during a high-stakes planetary yacht race."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "independent_racer_lost_in_gravity_well",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "The laser strike cuts both sails during the gravity pass. The independent yacht is dragged down into the gas giant's crushing atmosphere, ending the race in tragedy.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "independent_racers_guild",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "independent_sail_mechanic",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "syndicate_yacht_commodore",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "independent_racer_lost_in_gravity_well",
+  "loose_threads": [
+    {
+      "id": "t_yacht_customs_afterburner_permit",
+      "surface": "station_notice",
+      "detail": "The yacht club dockmaster registry shows an unlisted hazardous microwave emitter waiver signed under a luxury yacht charter company's tax shield.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_regatta_gambling_margin_call",
+      "surface": "price_board",
+      "detail": "A private casino syndicate in the orbital marina booked massive short positions against the independent privateer yacht six hours before the trials.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "cornering_a_market",
+      "forged_records"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Spectator armadas gather along gas giant rings for the annual solar-sail regatta.",
+    "Independent privateer teams lodge protests over unmonitored electronic racing corridors.",
+    "Yacht syndicate commodore boasts of guaranteed victory in championship finals."
+  ],
+  "voice_direction": {
+    "independent_sail_mechanic": "Energetic, fast-talking, and speaks with fierce blue-collar pride. Uses technical sailcloth terms effortlessly under stress.",
+    "syndicate_yacht_commodore": "Effortlessly smooth, condescending, and speaks in aristocratic sporting jargon. Regards working mechanics with supreme indifference.",
+    "regatta_chief_marshal": "Stiff, pompous, and obsessed with procedural precedents. Frantically tries to avoid offending wealthy marina patrons."
+  },
+  "novelty_tags": [
+    "solar_sail_regatta",
+    "laser_sabotage",
+    "gravity_tide_racing",
+    "underdog_mechanic",
+    "luxury_yacht_syndicate"
+  ]
+}

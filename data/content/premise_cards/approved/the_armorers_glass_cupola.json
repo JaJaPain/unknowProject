@@ -1,0 +1,360 @@
+{
+  "id": "premise.the_armorers_glass_cupola",
+  "schema_version": 1,
+  "title": "The Armorer's Glass Cupola",
+  "logline": "An industrial mining cartel hires a pilot to steal an artisan glassblower's secret annealing formula, expecting a revolutionary composite for drill bits, only to discover the glassblower is a deserting naval metallurgist who crafts fragile decorative windows for station orphans.",
+  "scale": "personal",
+  "tone": [
+    "hopeful",
+    "absurd"
+  ],
+  "themes": [
+    "reinvention",
+    "chosen_family"
+  ],
+  "roles": [
+    {
+      "id": "retired_armor_metallurgist",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Former military heavy-armor specialist who deserted decades ago to craft decorative stained glass; gentle, patient, and protective of his quiet craft.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "cartel_industrial_spy",
+      "kind": "person",
+      "archetype": "con_artist",
+      "description": "Posing as a wealthy art procurement broker; slick, impatient, and convinced the glass formula is an untaxed industrial drill composite.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "creche_matron_guardian",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Director of the station orphanage ward where the glassblower installed colorful stained-glass skylights; fierce, practical, and protective of the children.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_glassworks_kiln",
+      "kind": "place",
+      "description": "A quiet, solar-heated annealing workshop smelling of melted silica and boric flux.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "promenade_orphan_creche",
+      "kind": "place",
+      "description": "A sunny residential ward adorned with colored glass observation cupolas.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "mining_equipment_cartel",
+      "kind": "faction",
+      "description": "The heavy extraction manufacturer desperate for hardened drill-bit composites.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "alliance_formed",
+    "quiet_cover_up",
+    "debt_owed_to_player"
+  ],
+  "public_situation": "Art galleries across the tourist promenade advertise private auctions for colored observation domes blown by a reclusive station artisan.",
+  "private_truth": "The artisan's secret annealing formula has no industrial hardness; it is pure decorative lead crystal crafted by a deserting naval metallurgist seeking peace after thirty years of forging warship armor.",
+  "core_why": {
+    "motive": "survival",
+    "secret": "secret_armor_patent_is_decorative_stained_glass"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Glowing kiln flues light the promenade exterior as the glassworks prepares a new batch of colored skylight panels.",
+      "missions": [
+        {
+          "verb": "deliver_ore",
+          "ore": "silicate",
+          "requester": "retired_armor_metallurgist",
+          "target": "orbital_glassworks_kiln",
+          "reason": "He hires an outside pilot to haul pure silicate sand from outer ring belts to melt a new batch of creche skylights before the gallery auction.",
+          "private_fact": "He recognized the art broker as an industrial procurement spy who used to audit armor contracts for the fleet thirty years ago.",
+          "outcome_tags": [
+            "silicate_delivered"
+          ],
+          "routes": {
+            "silicate_delivered": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "crisis",
+      "public_change": "{role:cartel_industrial_spy} deploys private security pickets around the glassworks, threatening to seize the workshop under corporate patent preemption.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "mining_equipment_cartel",
+          "requester": "cartel_industrial_spy",
+          "target": "orbital_glassworks_kiln",
+          "reason": "He pays the pilot to scan the kiln's thermal annealing registers to verify the crystalline hardness of the supposed hardened drill-bit composite.",
+          "private_fact": "The scan reveals the glass has zero drill utility and will shatter into harmless decorative powder under industrial torque.",
+          "outcome_tags": [
+            "fragility_proven",
+            "kiln_shielded"
+          ],
+          "routes": {
+            "fragility_proven": "next",
+            "kiln_shielded": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Corporate bailiffs assemble at {role:orbital_glassworks_kiln} with repossession warrants to seize all formula notebooks.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "retired_armor_metallurgist",
+          "target": "promenade_orphan_creche",
+          "reason": "He asks the pilot to courier the finished stained-glass rose cupola to the creche before the cartel's agents can seize and smash the delicate panels.",
+          "private_fact": "He chose to live among the creche children because their laughter is the only thing that quiets his memories of wartime hull breaches.",
+          "outcome_tags": [
+            "cupola_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "cupola_delivered": "next",
+            "abandoned": "resolution:kiln_shuttered_artisan_flees"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "Holding the delicate glass cupola and proof that the secret formula is worthless for industrial drills, the pilot must decide whether to install the window and reveal the truth to the spy, sell the decorative formula as fake drill tech, or report the deserter for a naval bounty.",
+        "options": [
+          {
+            "id": "install_window_debunk_spy",
+            "label": "Install the cupola at the creche and show the spy that the glass is pure decorative crystal",
+            "leads_to": "resolution:artisan_protected_creche_beautified"
+          },
+          {
+            "id": "sell_formula_as_drill_tech",
+            "label": "Sell the annealing formula to the cartel for a fortune and let their drill prototypes shatter",
+            "leads_to": "resolution:cartel_duped_by_decorative_formula"
+          },
+          {
+            "id": "report_deserter_to_marshals",
+            "label": "Report the artisan's military desertion record to provincial authorities for an arrest bounty",
+            "leads_to": "resolution:deserter_arrested_glassworks_seized"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "artisan_protected_creche_beautified",
+      "reached_by": "The pilot installs the cupola and shows the spy the glass is decorative.",
+      "summary": "The spy departs in disgusted embarrassment. {role:retired_armor_metallurgist} keeps his quiet home, and the creche children gaze through vibrant colored skylights.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_equipment_cartel",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "creche_matron_guardian",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_armor_metallurgist",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_industrial_spy",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "protected_deserter_glassblower",
+          "public_summary": "A pilot proved a feared industrial spy was wasting his time pursuing an old armor deserter's decorative stained glass."
+        }
+      ],
+      "seeds": [
+        "alliance_formed",
+        "quiet_cover_up"
+      ]
+    },
+    {
+      "id": "cartel_duped_by_decorative_formula",
+      "reached_by": "The pilot sells the formula to the cartel as industrial drill tech.",
+      "summary": "The cartel's drill prototypes shatter into glittering powder on test rocks. {role:cartel_industrial_spy} is fired, while {role:retired_armor_metallurgist} quietly endows the creche.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_equipment_cartel",
+          "delta": -2
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_industrial_spy",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_armor_metallurgist",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "creche_matron_guardian",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "sold_decorative_glass_as_armor",
+          "public_summary": "A pilot sold decorative stained-glass formulas to a mining cartel that thought it was buying super-hard drill plating."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "deserter_arrested_glassworks_seized",
+      "reached_by": "The pilot reports the artisan's desertion record to authorities.",
+      "summary": "Naval marshals arrest {role:retired_armor_metallurgist} for thirty-year-old desertion charges. The glassworks is padlocked, leaving {role:creche_matron_guardian} and the orphans in mourning.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_equipment_cartel",
+          "delta": 2
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_armor_metallurgist",
+          "fate": "imprisoned"
+        },
+        {
+          "type": "cast_fate",
+          "target": "creche_matron_guardian",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "cartel_industrial_spy",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "arrested_wartime_glassblower",
+          "public_summary": "A pilot turned an aging stained-glass artisan over to naval marshals for decades-old military desertion."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "kiln_shuttered_artisan_flees",
+      "reached_by": "The pilot never intervenes or abandons the delivery.",
+      "summary": "Cartel bailiffs smash the workshop kilns searching for secret blueprints. {role:retired_armor_metallurgist} flees into the outer belts, leaving the creche skylights dark.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "mining_equipment_cartel",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "retired_armor_metallurgist",
+          "fate": "fled"
+        },
+        {
+          "type": "cast_fate",
+          "target": "creche_matron_guardian",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "kiln_shuttered_artisan_flees",
+  "loose_threads": [
+    {
+      "id": "t_metallurgy_retention_bounty",
+      "surface": "station_notice",
+      "detail": "The provincial naval registry carries an open desertion docket for a chief armorer who fled a fleet shipyard thirty years ago.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_drill_composite_short_position",
+      "surface": "price_board",
+      "detail": "A private commodities broker took massive leveraged options on mining drill-bit patents linked to the art auction.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "cornering_a_market",
+      "debt_leverage",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "survival",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "tariff_on_goods",
+    "cargo_inspection"
+  ],
+  "radio_hooks": [
+    "Tourist promenade galleries auction hand-blown stained-glass skylights from reclusive artisan.",
+    "Mining tool manufacturers speculate on breakthrough ceramic hardening patents in local sector.",
+    "Station creche celebrates completion of vibrant observation dome renovation."
+  ],
+  "voice_direction": {
+    "retired_armor_metallurgist": "Gentle, gravelly, and speaks with unhurried warmth. Becomes completely dismissive whenever military rank or metallurgy is mentioned.",
+    "cartel_industrial_spy": "Fast-talking, slick, and uses affected art connoisseur phrasing that slips into cold corporate valuation when impatient.",
+    "creche_matron_guardian": "Sturdy, brisk, and speaks with fierce protective tenderness. Treats corporate agents like ill-behaved children needing a scolding."
+  },
+  "novelty_tags": [
+    "stained_glass_artisan",
+    "deserting_metallurgist",
+    "mistaken_armor_patent",
+    "orphan_creche_skylights",
+    "industrial_espionage_farce"
+  ]
+}

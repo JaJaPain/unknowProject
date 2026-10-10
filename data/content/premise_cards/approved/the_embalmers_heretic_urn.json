@@ -1,0 +1,338 @@
+{
+  "id": "premise.the_embalmers_heretic_urn",
+  "schema_version": 1,
+  "title": "The Embalmer's Heretic Urn",
+  "logline": "An orbital ossuary embalmer preparing a founding abbot's reliquary urn discovers a confession revealing that the monastery's celebrated survival during a reactor crisis was achieved by venting forty maintenance workers into space.",
+  "scale": "personal",
+  "tone": [
+    "tragic",
+    "melancholy"
+  ],
+  "themes": [
+    "faith_and_doubt",
+    "truth_vs_comfort"
+  ],
+  "roles": [
+    {
+      "id": "monastery_embalmer",
+      "kind": "person",
+      "archetype": "doctor",
+      "description": "Chief preparator of the orbital ossuary; gentle, devout, and shaken by a crisis of faith.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "archival_abbot",
+      "kind": "person",
+      "archetype": "preacher",
+      "description": "Lord prelate of the orbital sanctuary; dogmatic, regal, and fiercely protective of institutional sanctity.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "labourer_descendant",
+      "kind": "person",
+      "archetype": "labourer",
+      "description": "Station maintenance rigger whose ancestor was officially condemned as an unfaithful saboteur during the Great Dark.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_ossuary_spire",
+      "kind": "place",
+      "description": "A quiet zero-g reliquary where generations of station dead rest in stone alcoves.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "consecrated_stellar_vault",
+      "kind": "place",
+      "description": "The high solar tomb where canonized founding elders are enshrined overlooking the star.",
+      "reuse": "new_ok"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [],
+    "quirks_preferred": [],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "blockade"
+    ]
+  },
+  "accepts_seeds": [
+    "martyr_made",
+    "quiet_cover_up",
+    "secret_half_exposed"
+  ],
+  "public_situation": "Monastic pilgrims gather at {role:orbital_ossuary_spire} as {role:archival_abbot} prepares to translate the founding abbot's remains to the high stellar tomb.",
+  "private_truth": "The founding abbot's reliquary urn contains his personal deathbed confession, revealing that the miraculous survival of the shrine during the reactor crisis was accomplished by venting forty maintenance workers into space.",
+  "core_why": {
+    "motive": "faith",
+    "secret": "founder_vented_workers_to_save_shrine"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Pilgrim processions enter {role:orbital_ossuary_spire} as church litanies celebrate the miraculous salvation of the station.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "monastery_embalmer",
+          "target": "orbital_ossuary_spire",
+          "reason": "He pays an outside pilot to retrieve the founding abbot's antique bronze reliquary urn from the deep sub-level catacombs before liturgical inspection begins.",
+          "private_fact": "While preparing the urn he found an uncataloged recording cylinder concealed within the base seals.",
+          "outcome_tags": [
+            "urn_retrieved"
+          ],
+          "routes": {
+            "urn_retrieved": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "{role:archival_abbot} deploys monastic censors to seal the embalming suites and examine all archival containers.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "archival_abbot",
+          "requester": "labourer_descendant",
+          "target": "orbital_ossuary_spire",
+          "reason": "She pays the pilot to scan century-old station telemetry archives to correlate the confession cylinder's timestamps with the reactor venting logs.",
+          "private_fact": "Her great-grandfather was the lead technician who died in the auxiliary cooling deck while trying to manually lock the escape hatches.",
+          "outcome_tags": [
+            "venting_verified",
+            "records_unreadable"
+          ],
+          "routes": {
+            "venting_verified": "next",
+            "records_unreadable": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "climax",
+      "public_change": "Choirs begin the translation hymn as the abbot mounts the altar steps of {role:consecrated_stellar_vault}.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "monastery_embalmer",
+          "target": "consecrated_stellar_vault",
+          "reason": "He asks the pilot to transport the urn to the solar vault before church bailiffs confiscate and destroy the historical cylinder.",
+          "private_fact": "He fears that public revelation will cause thousands of devout stationers to lose their faith and abandon the faith's charitable clinics.",
+          "outcome_tags": [
+            "urn_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "urn_delivered": "next",
+            "abandoned": "resolution:reliquary_purged_in_plasma"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the founding abbot's confession verified, the pilot must decide whether to read the truth before the congregation, give the cylinder to the descendant, or let the abbot incinerate the past.",
+        "options": [
+          {
+            "id": "consecrate_with_confession",
+            "label": "Place the confession cylinder on the high altar to force public acknowledgment of the sacrifice",
+            "leads_to": "resolution:heretic_confession_canonized"
+          },
+          {
+            "id": "give_cylinder_to_family",
+            "label": "Hand the cylinder to the labourer descendant to clear her ancestor's name while keeping the church peaceful",
+            "leads_to": "resolution:family_vindicated_faith_intact"
+          },
+          {
+            "id": "surrender_cylinder_to_abbot",
+            "label": "Surrender the cylinder to the abbot for incineration to preserve orthodox stability",
+            "leads_to": "resolution:orthodoxy_preserved_truth_incinerated"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "heretic_confession_canonized",
+      "reached_by": "The pilot places the confession cylinder on the high altar.",
+      "summary": "The confession is read aloud. {role:archival_abbot} resigns in disgrace, while the vented technicians are canonized as the station's true saviors.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "archival_abbot",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "monastery_embalmer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "labourer_descendant",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "deed",
+          "tag": "unmasked_monastery_sacrifice",
+          "public_summary": "A pilot revealed that a revered monastery's founding miracle was built on the secret murder of forty dock workers."
+        }
+      ],
+      "seeds": [
+        "martyr_made",
+        "leader_discredited"
+      ]
+    },
+    {
+      "id": "family_vindicated_faith_intact",
+      "reached_by": "The pilot gives the confession cylinder to the labourer descendant.",
+      "summary": "{role:labourer_descendant} clears her family lineage in municipal court. The monastery preserves its public liturgy, while {role:monastery_embalmer} keeps silent vigil.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "labourer_descendant",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "monastery_embalmer",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "cast_fate",
+          "target": "archival_abbot",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "cleared_vented_worker_lineage",
+          "public_summary": "A pilot recovered an ancient monastery confession that cleared a branded family of century-old sabotage charges."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "orthodoxy_preserved_truth_incinerated",
+      "reached_by": "The pilot surrenders the cylinder to the abbot for incineration.",
+      "summary": "{role:archival_abbot} melts the cylinder in consecrated flame. The founding miracle remains dogma, while {role:labourer_descendant} is barred from the shrine.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "archival_abbot",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "monastery_embalmer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "labourer_descendant",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "burned_founder_confession",
+          "public_summary": "A pilot assisted an authoritarian abbot in destroying the deathbed confession of a station patriarch."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "reliquary_purged_in_plasma",
+      "reached_by": "The pilot never intervenes or abandons the delivery.",
+      "summary": "Monastic inquisitors seize the urn and incinerate its contents in the station plasma burner. {role:monastery_embalmer} resigns his holy vows in grief.",
+      "consequences": [
+        {
+          "type": "cast_fate",
+          "target": "monastery_embalmer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "labourer_descendant",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "archival_abbot",
+          "fate": "promoted"
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "reliquary_purged_in_plasma",
+  "loose_threads": [
+    {
+      "id": "t_decompression_seal_docket",
+      "surface": "station_notice",
+      "detail": "The monastery reliquary ledger contains an emergency requisition docket for forty blank zinc funeral plates dated the morning of the ventilation.",
+      "can_carry_methods": [
+        "forged_records",
+        "slow_infiltration"
+      ]
+    },
+    {
+      "id": "t_altar_tallow_requisition",
+      "surface": "cargo",
+      "detail": "The incense oil supplied to the high altar is billed through an unlisted industrial freight account registered to a municipal health commissioner.",
+      "can_carry_methods": [
+        "debt_leverage",
+        "cornering_a_market"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "slow_infiltration",
+      "forged_records",
+      "debt_leverage"
+    ],
+    "motives": [
+      "faith",
+      "fear",
+      "control"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "curfew"
+  ],
+  "radio_hooks": [
+    "Monastic council inaugurates new orbital reliquary spire amidst solemn bell tolls.",
+    "Station religious registry updates canonical index of approved theological treatises.",
+    "Pilgrim hostels report overcrowding near outer monastery transfer docks."
+  ],
+  "voice_direction": {
+    "monastery_embalmer": "Soft, solemn, and pauses frequently as if listening for distant bells. Speaks with painful reverence when handling remains.",
+    "archival_abbot": "Resonant, imperious, and speaks in formal ecclesiastical cadence. Dismisses dissenting theological queries with polished condescension.",
+    "labourer_descendant": "Blunt, weary, and speaks with fierce working-class pride. Refuses to use clerical titles when addressing monastery staff."
+  },
+  "novelty_tags": [
+    "orbital_ossuary",
+    "founder_confession",
+    "reactor_venting_sacrifice",
+    "monastic_crisis_of_faith",
+    "historical_canonization"
+  ]
+}

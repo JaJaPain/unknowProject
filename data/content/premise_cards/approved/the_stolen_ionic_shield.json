@@ -1,0 +1,403 @@
+{
+  "id": "premise.the_stolen_ionic_shield",
+  "schema_version": 1,
+  "title": "The Stolen Ionic Shield",
+  "logline": "An orbital shipyard engineer hires a pilot to test an experimental ionic shield in pulsar space, discovering that the shield's electromagnetic backwash will permanently burn out the system's solar storm warning relay.",
+  "scale": "local",
+  "tone": [
+    "hopeful",
+    "tense"
+  ],
+  "themes": [
+    "truth_vs_comfort",
+    "price_of_profit"
+  ],
+  "roles": [
+    {
+      "id": "testing_engineer",
+      "kind": "person",
+      "archetype": "engineer",
+      "description": "Senior propulsion tester for an orbital shipyard; brilliant, dedicated, and alarmed by dangerous test parameters.",
+      "reuse": "prefer_existing"
+    },
+    {
+      "id": "shipyard_executive",
+      "kind": "person",
+      "archetype": "official",
+      "description": "Vice-president of drydock development; slick, aggressive, and racing to meet a deadline with massive penalty clauses.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "relay_watchman",
+      "kind": "person",
+      "archetype": "mechanic",
+      "description": "Veteran operator of the system's deep-space storm warning array; stubborn, tired, and protective of habitat safety.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "corporate_escort_vessel",
+      "kind": "ship",
+      "description": "A heavy private security frigate sent to ensure the commercial test schedule proceeds without interruption.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "pulsar_testing_range",
+      "kind": "place",
+      "description": "A violently turbulent space corridor exposed to direct pulsar radiation flares.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "orbital_shipwright_slipway",
+      "kind": "place",
+      "description": "The massive drydock slipway where capital freighters and defensive shields are fitted.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "warning_relay_array",
+      "kind": "object",
+      "description": "The fragile communications buoy array that alerts asteroid mining settlements to incoming lethal solar storms.",
+      "reuse": "new_ok"
+    },
+    {
+      "id": "miners_mutual_union",
+      "kind": "faction",
+      "description": "The independent belt worker collective whose habitats rely on early solar flare warnings.",
+      "reuse": "prefer_existing"
+    }
+  ],
+  "requirements": {
+    "min_factions": 1,
+    "quirks_required": [
+      "pulsar"
+    ],
+    "quirks_preferred": [
+      "dense_debris"
+    ],
+    "quirks_forbidden": [
+      "dead_system"
+    ],
+    "states_required": [],
+    "states_forbidden": [
+      "martial_law"
+    ]
+  },
+  "accepts_seeds": [
+    "market_disrupted",
+    "public_outrage",
+    "alliance_formed"
+  ],
+  "public_situation": "Shipyard executives announce an open-corridor test of a heavy ionic pulsar shield capable of withstanding extreme stellar radiation.",
+  "private_truth": "The shield prototype's ionic pulse backwash will permanently burn out the system's early solar storm warning relay, leaving thousands of asteroid miners blind to lethal flares.",
+  "core_why": {
+    "motive": "greed",
+    "secret": "shield_pulse_burns_out_warning_relay"
+  },
+  "beats": [
+    {
+      "n": 1,
+      "function": "setup",
+      "public_change": "Promotional holos display shield test schedules as armed guards seal {role:orbital_shipwright_slipway}.",
+      "missions": [
+        {
+          "verb": "pickup_special",
+          "requester": "testing_engineer",
+          "target": "orbital_shipwright_slipway",
+          "reason": "She pays an outside pilot to mount the experimental ionic shield generator onto a test hull before shipyard executives arrive.",
+          "private_fact": "The prototype's calibration logs show a pulse backwash five times stronger than stated in the public licensing filing.",
+          "outcome_tags": [
+            "generator_mounted"
+          ],
+          "routes": {
+            "generator_mounted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 2,
+      "function": "pressure",
+      "public_change": "Pulsar flare activity rises as {role:relay_watchman} broadcasts warnings that the testing corridor encroaches on public buoy channels.",
+      "missions": [
+        {
+          "verb": "investigate_signal",
+          "culprit": "shipyard_executive",
+          "requester": "testing_engineer",
+          "target": "pulsar_testing_range",
+          "reason": "She hires the pilot to fly through the test corridor and scan the electromagnetic feedback line to determine if the relay array is in the discharge arc.",
+          "private_fact": "She knows that if the full-power test fires, the relay array's fragile quartz transceivers will be permanently fused.",
+          "outcome_tags": [
+            "burnout_risk_confirmed",
+            "telemetry_interrupted"
+          ],
+          "routes": {
+            "burnout_risk_confirmed": "next",
+            "telemetry_interrupted": "next"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 3,
+      "function": "reversal",
+      "public_change": "{role:relay_watchman} locks emergency storm beacons, threatening to file criminal hazard injunctions against the shipyard.",
+      "missions": [
+        {
+          "verb": "delivery_courier",
+          "requester": "relay_watchman",
+          "target": "orbital_shipwright_slipway",
+          "reason": "He asks the pilot to deliver emergency ceramic dampener coils from the relay station to the slipway so technicians can shield the array before ignition.",
+          "private_fact": "His daughter works an unshielded prospecting rig that will be vaporized if a pulsar flare hits without fifteen minutes of relay warning.",
+          "outcome_tags": [
+            "dampeners_delivered",
+            "abandoned"
+          ],
+          "routes": {
+            "dampeners_delivered": "next",
+            "abandoned": "resolution:testing_accident_destroys_range"
+          }
+        }
+      ],
+      "player_choice": null
+    },
+    {
+      "n": 4,
+      "function": "climax",
+      "public_change": "{role:corporate_escort_vessel} arrives on range, ordering all civilian traffic cleared for immediate ignition.",
+      "missions": [
+        {
+          "verb": "comms_reversal",
+          "requester": "relay_watchman",
+          "target": "corporate_escort_vessel",
+          "reason": "He pays the pilot to disable the corporate escort's command relay before it transmits the override signal to fire the unshielded test pulse.",
+          "private_fact": "The corporate captain hails mid-combat offering a massive equipment bonus if the pilot ignores the relay and fires the test generator.",
+          "outcome_tags": [
+            "escort_disabled",
+            "corporate_offer_taken"
+          ],
+          "routes": {
+            "escort_disabled": "next",
+            "corporate_offer_taken": "resolution:relay_fried_for_corporate_bonus"
+          }
+        }
+      ],
+      "player_choice": {
+        "when": "after_missions",
+        "prompt": "With the corporate escort disabled and the lethal pulse telemetry verified, the pilot must decide whether to abort the test to save the warning network, jury-rig directional dampeners, or fire the pulse for the executive's payout.",
+        "options": [
+          {
+            "id": "abort_and_alert_union",
+            "label": "Abort the test and transmit the discharge telemetry to the miners' union to shut down the testing range",
+            "leads_to": "resolution:warning_relay_protected"
+          },
+          {
+            "id": "deploy_jury_rigged_dampeners",
+            "label": "Install the dampener coils and execute a reduced-power deflection run to protect the relay while certifying the shield",
+            "leads_to": "resolution:compromise_deflection_certified"
+          },
+          {
+            "id": "fire_full_pulse_for_payout",
+            "label": "Fire the full-power test pulse to claim the corporate performance bonus",
+            "leads_to": "resolution:relay_fried_for_corporate_bonus"
+          }
+        ]
+      }
+    }
+  ],
+  "resolutions": [
+    {
+      "id": "warning_relay_protected",
+      "reached_by": "The pilot aborts the test and leaks the discharge telemetry to the miners' union.",
+      "summary": "The test is shut down. {role:miners_mutual_union} preserves its storm warning relay, while {role:shipyard_executive} is dismissed for criminal negligence.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_mutual_union",
+          "delta": 3
+        },
+        {
+          "type": "cast_fate",
+          "target": "shipyard_executive",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_watchman",
+          "fate": "alive_grateful"
+        },
+        {
+          "type": "cast_fate",
+          "target": "testing_engineer",
+          "fate": "promoted"
+        },
+        {
+          "type": "deed",
+          "tag": "saved_pulsar_storm_relay",
+          "public_summary": "A pilot aborted a reckless corporate shield test that would have blinded a system's solar flare warning network."
+        }
+      ],
+      "seeds": [
+        "public_outrage",
+        "alliance_formed"
+      ]
+    },
+    {
+      "id": "compromise_deflection_certified",
+      "reached_by": "The pilot installs dampeners and conducts a reduced-power test run.",
+      "summary": "The shield passes restricted trials without damaging {role:warning_relay_array}. {role:testing_engineer} earns a patent share, while the shipyard absorbs minor delay penalties.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_mutual_union",
+          "delta": 1
+        },
+        {
+          "type": "cast_fate",
+          "target": "testing_engineer",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_watchman",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "shipyard_executive",
+          "fate": "owes_debt"
+        },
+        {
+          "type": "deed",
+          "tag": "brokered_shield_safety_retrofit",
+          "public_summary": "A pilot forced an orbital shipyard to retrofit experimental pulsar shields with civic safety dampeners."
+        }
+      ],
+      "seeds": [
+        "quiet_cover_up",
+        "debt_owed_to_player"
+      ]
+    },
+    {
+      "id": "relay_fried_for_corporate_bonus",
+      "reached_by": "The pilot fires the full-power test pulse for the corporate payout.",
+      "summary": "The shield passes full certification. The warning relay is burned out, leaving miners vulnerable to pulsar flares while {role:shipyard_executive} pockets a fortune.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_mutual_union",
+          "delta": -3
+        },
+        {
+          "type": "cast_fate",
+          "target": "shipyard_executive",
+          "fate": "promoted"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_watchman",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "testing_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "deed",
+          "tag": "blinded_pulsar_warning_buoy",
+          "public_summary": "A pilot triggered a corporate shield test that permanently burned out an asteroid belt's storm warning relay."
+        }
+      ],
+      "seeds": [
+        "market_disrupted",
+        "grudge_against_player"
+      ]
+    },
+    {
+      "id": "testing_accident_destroys_range",
+      "reached_by": "The pilot never intervenes or abandons the defense.",
+      "summary": "An unmitigated pulse overloads the testing corridor, destroying the prototype generator and crippling {role:warning_relay_array}. The shipyard cancels the program in disgrace.",
+      "consequences": [
+        {
+          "type": "standing",
+          "target": "miners_mutual_union",
+          "delta": -1
+        },
+        {
+          "type": "cast_fate",
+          "target": "shipyard_executive",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "testing_engineer",
+          "fate": "ruined"
+        },
+        {
+          "type": "cast_fate",
+          "target": "relay_watchman",
+          "fate": "ruined"
+        }
+      ],
+      "seeds": [
+        "wreck_left_behind",
+        "route_closed"
+      ]
+    }
+  ],
+  "default_resolution": "testing_accident_destroys_range",
+  "loose_threads": [
+    {
+      "id": "t_warning_relay_repair_fund",
+      "surface": "station_notice",
+      "detail": "The port authority maintenance ledger records that repair credits for the solar warning buoy were quietly reallocated to the shipyard slipway.",
+      "can_carry_methods": [
+        "slow_infiltration",
+        "forged_records"
+      ]
+    },
+    {
+      "id": "t_ionic_shield_cabling",
+      "surface": "cargo",
+      "detail": "The prototype generator's high-voltage busbars bear serial stamps from an off-world transit foundry dissolved under monopoly regulations.",
+      "can_carry_methods": [
+        "cornering_a_market",
+        "debt_leverage"
+      ]
+    }
+  ],
+  "hidden_hand_compat": {
+    "methods": [
+      "debt_leverage",
+      "forged_records",
+      "slow_infiltration"
+    ],
+    "motives": [
+      "greed",
+      "control",
+      "legacy"
+    ]
+  },
+  "law_hooks": [
+    "salvage_registry",
+    "tariff_on_goods"
+  ],
+  "radio_hooks": [
+    "Shipyard consortia tout impending commercial rollout of revolutionary pulsar shield.",
+    "Belt miners lodge formal protests over high-power testing near public navigation corridors.",
+    "Pulsar radiation storms prompt temporary travel warnings across inner perimeter lanes."
+  ],
+  "voice_direction": {
+    "testing_engineer": "Methodical, crisp, and speaks with scientific enthusiasm that turns tense and defensive when civic hazards are raised.",
+    "shipyard_executive": "Effortlessly smooth, rapid, and speaks exclusively in investment portfolio jargon. Discards human concerns as sentimentality.",
+    "relay_watchman": "Blunt, raspy from dry recycler air, and speaks with furious protective urgency. Refuses corporate technical euphemisms."
+  },
+  "novelty_tags": [
+    "pulsar_shield",
+    "warning_relay_sabotage",
+    "solar_flare_hazard",
+    "collateral_emp",
+    "civic_safety_retrofit"
+  ]
+}
