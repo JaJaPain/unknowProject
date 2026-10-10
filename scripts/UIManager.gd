@@ -169,7 +169,9 @@ var _kaelen_intel_btn: Button = null
 
 const _CONTACT_MOODS := ["Chatty", "Tense", "Distracted", "Focused"]
 const _LOUNGE_TALK_SCALE := 1.05
-var _lounge_tuning_slot: int = 3
+## The layout-tuning preview slot (dev panel only); -1 = none. It drew
+## Kaelen's face into an empty slot in play (playtest 2026-10-10 finding 10).
+var _lounge_tuning_slot: int = -1
 var _lounge_portrait_offsets: Array[Vector2] = [
 	Vector2(0.07, -0.03),
 	Vector2(-0.14, -0.03),
@@ -6213,68 +6215,11 @@ func _add_lounge_card_buttons(
 	if kind == "stranger":
 		primary.pressed.connect(_on_stranger_card_pressed.bind(card_data))
 		return
-	var npc_name := str(card_data.get("name", ""))
-	var contact_key := _lounge_contact_key(card_data)
 	primary.pressed.connect(_on_lounge_card_pressed.bind(card_data))
 
-	# Playtest 2026-10-04 c finding 10: six buttons in a row ran off the card
-	# and over the neighbours (stealing their clicks). Now at most two, which
-	# never grow past the card: the one thing to do here (during a pickup hunt,
-	# "Ask about it"), and a "More" menu with the rest.
-	var actions := HBoxContainer.new()
-	actions.anchor_left = 0.11
-	actions.anchor_top = 0.72
-	actions.anchor_right = 0.89
-	actions.anchor_bottom = 0.79
-	actions.clip_contents = true
-	actions.add_theme_constant_override("separation", 4)
-	card.add_child(actions)
-	var person_name := preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name)
-	var part := str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
-	if lounge_hunt_active():
-		# Board pickups are a hunt: everyone can be asked, and only one has it.
-		var ask_btn := _lounge_card_action_button("Ask about it", "Ask %s about the %s." % [person_name, part])
-		ask_btn.pressed.connect(_on_lounge_hunt_ask.bind(npc_name))
-		actions.add_child(ask_btn)
-		_set_npc_attention_button(ask_btn, true, Color(1.0, 0.75, 0.2, 1.0))
-	elif lounge_handover_available(npc_name):
-		# The contact holding your pickup hands it over here (playtest
-		# 2026-10-03 finding 14).
-		var pickup_btn := _lounge_card_action_button("Pick up", "Ask %s for the %s." % [person_name, part])
-		pickup_btn.pressed.connect(_on_ask_for_part_pressed)
-		actions.add_child(pickup_btn)
-		_set_npc_attention_button(pickup_btn, true, Color(1.0, 0.75, 0.2, 1.0))
-	else:
-		# L2: buy them a drink: warms the contact (persisted), once per dock.
-		var drink_btn := _lounge_card_action_button("Drink", "Buy %s a drink (%d cr)." % [person_name, LOUNGE_DRINK_COST])
-		drink_btn.pressed.connect(_on_buy_drink_pressed.bind(npc_name, contact_key, card_data))
-		actions.add_child(drink_btn)
-	var more := MenuButton.new()
-	more.text = "More"
-	more.clip_text = true
-	more.flat = false
-	more.custom_minimum_size = Vector2.ZERO
-	more.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	more.add_theme_font_size_override("font_size", 10)
-	more.tooltip_text = "Other things to talk to %s about." % person_name
-	var menu := more.get_popup()
-	menu.add_theme_font_size_override("font_size", 13)
-	var menu_actions: Array[Callable] = []
-	if lounge_hunt_active() or lounge_handover_available(npc_name):
-		menu.add_item("Buy them a drink (%d cr)" % LOUNGE_DRINK_COST)
-		menu_actions.append(_on_buy_drink_pressed.bind(npc_name, contact_key, card_data))
-	var action_defs: Array = [["Their faction", "faction"], ["Any trouble?", "trouble"]]
-	if bool(card_data.get("rumor", false)):
-		action_defs.append(["Heard anything?", "rumor"])
-	action_defs.append(["Got work?", "work"])
-	for action_def in action_defs:
-		menu.add_item(str(action_def[0]))
-		menu_actions.append(_on_station_contact_action_pressed.bind(npc_name, str(action_def[1])))
-	menu.id_pressed.connect(func(id: int) -> void:
-		var index := menu.get_item_index(id)
-		if index >= 0 and index < menu_actions.size():
-			menu_actions[index].call())
-	actions.add_child(more)
+	# The card is just its Talk badge (Abe, playtest 2026-10-10 finding 10):
+	# asking about a pickup, a drink, work and the rest are choices in the
+	# conversation box on top (_lounge_hunt_menu, _lounge_extra_choices).
 
 
 ## A lounge card button that never grows past its share of the card.
@@ -6689,6 +6634,11 @@ func _refresh_lounge_cards_after_bundle_result() -> void:
 
 
 func _validate_generated_narrative_lines(lines: Array, kind: String) -> Dictionary:
+	# At an outpost nobody has just seen Kaelen: she's only at major stations.
+	if kind.begins_with("lounge") and current_station != null and is_instance_valid(current_station) 			and not GlobalState.is_major_station(current_station):
+		for l in lines:
+			if preload("res://scripts/story/GameWordGuard.gd").places_kaelen_here(str(l)):
+				return {"ok": false, "reason": "kaelen_not_at_outposts"}
 	var game_root := get_tree().current_scene
 	if game_root == null or not game_root.has_method("validate_and_register_narrative_lines"):
 		return {"ok": true, "reason": "ledger_unavailable"}
@@ -6812,6 +6762,7 @@ func _start_lounge_bundle_conversation(
 			"callback": func() -> void:
 				_on_lounge_bundle_intent_pressed(serial, intent_index),
 		})
+	choices.append_array(_lounge_extra_choices(card))
 	choices.append({
 		"text": "(nod and leave)",
 		"callback": func() -> void: _end_lounge_conversation(serial),
@@ -6942,7 +6893,43 @@ func _record_lounge_drink_relationship_event(
 
 
 func _on_lounge_card_pressed(card_data: Dictionary) -> void:
+	var npc_name := str(card_data.get("name", ""))
+	if str(card_data.get("kind", "")) == "npc" and (lounge_hunt_active() or lounge_handover_available(npc_name)):
+		_lounge_hunt_menu(card_data.duplicate(true))
+		return
 	_start_lounge_conversation(card_data.duplicate(true))
+
+
+## Talk while hunting for a pickup: what to say, in the box on top.
+func _lounge_hunt_menu(card: Dictionary) -> void:
+	var npc_name := str(card.get("name", ""))
+	var person := preload("res://scripts/domain/QuestNextStep.gd").person_name(npc_name)
+	var part := str(QuestManager.get_pickup_special_data().get("part_name", "the part"))
+	var choices: Array = []
+	if lounge_handover_available(npc_name):
+		choices.append({"text": "Ask for the %s" % part, "callback": func() -> void: _on_ask_for_part_pressed()})
+	else:
+		choices.append({"text": "Ask about the %s" % part, "callback": func() -> void: _on_lounge_hunt_ask(npc_name)})
+	choices.append({"text": "Just talk", "callback": func() -> void: _start_lounge_conversation(card)})
+	choices.append({"text": "Buy them a drink (%d SC)" % LOUNGE_DRINK_COST,
+		"callback": func() -> void: _on_buy_drink_pressed(npc_name, _lounge_contact_key(card), card)})
+	choices.append({"text": "(never mind)", "callback": func() -> void: clear_dock_message()})
+	_show_lounge_card_line(card, "%s looks up from their drink." % person, false, choices)
+
+
+## The things a card's old "More" menu held, as conversation choices.
+func _lounge_extra_choices(card: Dictionary, with_drink: bool = true) -> Array:
+	var npc_name := str(card.get("name", ""))
+	if str(card.get("kind", "")) != "npc" or npc_name.is_empty():
+		return []
+	var out: Array = []
+	if with_drink:
+		out.append({"text": "Buy them a drink (%d SC)" % LOUNGE_DRINK_COST,
+			"callback": func() -> void: _on_buy_drink_pressed(npc_name, _lounge_contact_key(card), card)})
+	if bool(card.get("rumor", false)):
+		out.append({"text": "Heard anything?", "callback": func() -> void: _on_station_contact_action_pressed(npc_name, "rumor")})
+	out.append({"text": "Got work?", "callback": func() -> void: _on_station_contact_action_pressed(npc_name, "work")})
+	return out
 
 
 func _start_lounge_conversation(card: Dictionary) -> void:

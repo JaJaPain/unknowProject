@@ -12343,9 +12343,16 @@ func _run_quest_reach_smoke_test() -> void:
 			if (b as Control).is_visible_in_tree() and r.size.x > 0.0 and not card_rect.encloses(r):
 				fail.call("A lounge button runs outside its card: '%s' %s vs card %s" % [str(b.get("text")), str(r), str(card_rect)])
 				return
-			if str(b.get("text")) == "Ask about it":
-				asked_cards += 1
-	print("[QuestReachSmokeTest] lounge cards: %d, asking buttons: %d" % [cards.size(), asked_cards])
+	# Asking is a choice in the box on top now, not a button on the card
+	# (playtest 2026-10-10 finding 10): Talk to a regular during the hunt.
+	var asker: String = regulars[0] if regulars[0] != holder else regulars[1]
+	ui._on_lounge_card_pressed({"name": asker, "kind": "npc"})
+	for i in 5:
+		await get_tree().process_frame
+	for b in ui.find_children("*", "BaseButton", true, false):
+		if (b as Control).is_visible_in_tree() and str(b.get("text")).begins_with("Ask about the"):
+			asked_cards += 1
+	print("[QuestReachSmokeTest] lounge cards: %d, asking choices: %d" % [cards.size(), asked_cards])
 	if "--lounge-shot" in OS.get_cmdline_user_args():
 		var landing_layer := get_node_or_null("LandingLayer")
 		if landing_layer != null:
@@ -12360,7 +12367,7 @@ func _run_quest_reach_smoke_test() -> void:
 			await get_tree().process_frame
 		await _hud_snapshot_save("user://lounge_hunt_reply.png")
 	if cards.is_empty() or asked_cards == 0:
-		fail.call("The lounge shows no 'Ask about it' during the hunt (cards %d)." % cards.size())
+		fail.call("Talking to a regular during the hunt offers no 'Ask about the...' choice (cards %d)." % cards.size())
 		return
 	for npc in regulars:
 		if npc != holder:

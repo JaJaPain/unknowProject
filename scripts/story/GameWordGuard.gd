@@ -29,3 +29,26 @@ static func is_clean(text: String) -> bool:
 
 static func _letter(c: String) -> bool:
 	return c >= "a" and c <= "z"
+
+
+## Whether `text` puts Kaelen somewhere right now ("saw Kaelen coming down the
+## corridor"): used at outposts, where she never is (playtest 2026-10-10
+## finding 10). Talking about her in general is fine.
+const _KAELEN_HERE_WORDS := ["saw", "seen", "see", "spotted", "coming", "here", "corridor", "bar", "lounge",
+	"just left", "walked", "walking", "over there", "next door", "upstairs", "in town", "on station"]
+
+
+static func places_kaelen_here(text: String) -> bool:
+	var lower := text.to_lower()
+	var at := lower.find("kaelen")
+	if at < 0:
+		return false
+	# The sentence with her name in it.
+	var start := maxi(0, lower.rfind(".", at) + 1)
+	var stop := lower.find(".", at)
+	var sentence := lower.substr(start, (stop if stop >= 0 else lower.length()) - start)
+	for w in _KAELEN_HERE_WORDS:
+		if sentence.contains(w):
+			return true
+	return false
+
