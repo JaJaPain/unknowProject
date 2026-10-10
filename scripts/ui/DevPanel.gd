@@ -6,6 +6,7 @@ signal spawn_boss_requested
 signal spawn_squad_requested
 signal stores_restock_requested
 signal force_dock_rumor_requested
+signal wreck_field_requested
 signal quiet_moment_requested(beat_id: String)
 signal ollama_auto_restart_toggled(enabled: bool)
 signal force_restart_ollama_requested
@@ -299,6 +300,12 @@ func _build_story_debug_tab() -> void:
 	force_rumor_btn.text = "Force Dock Rumor Roll"
 	force_rumor_btn.pressed.connect(func(): force_dock_rumor_requested.emit())
 	tab.add_child(force_rumor_btn)
+
+	# The wreck field normally needs 5 systems visited (playtest shortcut).
+	var wreck_btn := Button.new()
+	wreck_btn.text = "Start the Wreck Field Here"
+	wreck_btn.pressed.connect(func(): wreck_field_requested.emit())
+	tab.add_child(wreck_btn)
 
 	tab.add_child(HSeparator.new())
 	tab.add_child(_story_section_label("Quiet Moments"))

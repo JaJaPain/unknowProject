@@ -14525,6 +14525,14 @@ func _init_dev_panel() -> void:
 		if is_instance_valid(StoryManager):
 			StoryManager._maybe_fire_dock_rumor(null, true)
 	)
+	_dev_panel.wreck_field_requested.connect(func():
+		if not is_instance_valid(wreck_field_event):
+			return
+		if not str(wreck_field_event.current().get("system", "")).is_empty():
+			GlobalState.emit_chatter("SYSTEM", "DEBUG: the wreck field already started this campaign (%s)." % str(wreck_field_event.current().get("system", "")), Color(1.0, 0.85, 0.5))
+			return
+		wreck_field_event.try_start(true)
+	)
 	_dev_panel.quiet_moment_requested.connect(func(beat_id: String):
 		if not is_instance_valid(quiet_moment_director):
 			GlobalState.emit_chatter("SYSTEM", "DEBUG: quiet-moment director missing.", Color(1.0, 0.6, 0.6))
