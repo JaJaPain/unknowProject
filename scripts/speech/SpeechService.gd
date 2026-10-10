@@ -417,6 +417,13 @@ func resolve_voice_profile(value: Variant) -> StringName:
 	var named_npc: NpcDefinition = registry.npc_by_name(raw)
 	if named_npc != null:
 		return named_npc.voice_profile_id
+	# Voices made in code (VoiceDNA.register: intercepts, story casts) live in
+	# the provider mappings under their own profile id. Without this every one
+	# fell back to the neutral voice (playtest 2026-10-10 finding 8).
+	if registry.provider_voice_mappings.has(raw):
+		return StringName(raw)
+	if registry.provider_voice_mappings.has(canonical):
+		return canonical
 	for profile_id in registry.provider_voice_mappings:
 		var mapping: Dictionary = registry.provider_voice_mappings[profile_id]
 		if str(mapping.get("provider_voice", "")) == raw:
