@@ -15,6 +15,7 @@ func _initialize() -> void:
 	_test_pick_local()
 	_test_hard_jobs()
 	_test_rewrite()
+	_test_board_text()
 	if _failures.is_empty():
 		print("[PASS] Ore types in jobs and upgrades")
 		quit(0)
@@ -72,3 +73,18 @@ func _test_rewrite() -> void:
 	var out: Dictionary = Jobs.rewrite_job(job, "thorium")
 	_check(str(out["title"]) == "Thorium Run" and str(out["dialogue"]) == "Thorium, now.", "a job's text is rewritten")
 	_check(str(out["agent_name"]) == "Ore Baron", "names are left alone")
+
+
+# Playtest 2026-10-10 finding 6: the board's written text names the ore too.
+func _test_board_text() -> void:
+	var offer := {"title": "[URGENT] 35 m3 Ore Needed Before The Coolant Learns New Physics",
+		"body": "Need 35 m3 ore delivered to the main station.",
+		"generated_briefing": "Bring 35 m3 ore to the main station. Ignore any bucket labeled 'evidence'.",
+		"quest_data": {"objective": {"type": "DELIVER_ORE", "ore_type": "silicate", "amount_required": 35.0},
+			"dialogue_response": "Bring 35 m3 ore to the main station. Ignore any bucket labeled 'evidence'."}}
+	var out: Dictionary = preload("res://scripts/domain/MissionTextGenerator.gd")._name_the_ore(offer)
+	_check(str(out["title"]).contains("Silicate") and not str(out["title"]).contains(" Ore "), "the board title names the ore: %s" % out["title"])
+	_check(str(out["body"]).contains("35 m3 silicate"), "the body too: %s" % out["body"])
+	_check(str(out["generated_briefing"]).contains("silicate") and str(out["quest_data"]["dialogue_response"]).contains("silicate"), "the briefing and the accept line too")
+	var fuel := {"title": "Fuel Run", "quest_data": {"objective": {"type": "DELIVER_ORE", "ore_type": "fuel"}}}
+	_check(preload("res://scripts/domain/MissionTextGenerator.gd")._name_the_ore(fuel) == fuel, "fuel jobs are left alone")

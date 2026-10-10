@@ -142,11 +142,26 @@ static func apply_payload_to_offer(
 
 	if template.source_lane == "BOARD":
 		_apply_board_quest_data(rendered, payload, template, is_fallback)
+	rendered = _name_the_ore(rendered)
 	return {
 		"ok": true,
 		"offer": rendered,
 		"reason": "",
 	}
+
+
+## An ore job's written text names its ore: title, body, briefing, the accept
+## line and the job's own text all say the objective's type (playtest
+## 2026-10-10 finding 6: the model wrote "35 m3 ore" over a Silicate job).
+static func _name_the_ore(offer: Dictionary) -> Dictionary:
+	var quest: Dictionary = offer.get("quest_data", {}) if offer.get("quest_data", {}) is Dictionary else {}
+	var objective: Dictionary = quest.get("objective", {}) if quest.get("objective", {}) is Dictionary else {}
+	if str(objective.get("type", "")) != "DELIVER_ORE":
+		return offer
+	var ore := str(objective.get("ore_type", "")).strip_edges()
+	if ore.is_empty() or ore == "fuel" or ore == "water_ice":
+		return offer
+	return preload("res://scripts/economy/OreJobs.gd").rewrite_job(offer, ore)
 
 
 static func fallback_offer(
