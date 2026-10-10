@@ -118,7 +118,7 @@ func _test_sense_check() -> void:
 	d.quiet_moment_silent.connect(func(_b, reasons) -> void: silent.append(reasons))
 	d.quiet_moment_ready.connect(func(_s, _b, line) -> void: spoken.append(line))
 	var built := {"speaker": "nova", "word_cap": 45, "lead_in": "", "packet": "", "brief": "", "demos": [], "third_parties": []}
-	var good := JSON.stringify({"line": "Mrs. Kross had her hands on me for hours. Warm solvent, slow work."})
+	var good := JSON.stringify({"line": "Kross took her time on my plating. Smooth work, I'll give her that."})
 	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(false)
 	d.call("_on_response", "nova_long_transit", {}, built, Director.MAX_ATTEMPTS, {"ok": true, "inner_text": good})
 	if silent.size() != 1 or not (silent[0] as Array).has("garbled") or not spoken.is_empty():
@@ -140,7 +140,7 @@ func _test_attempt_log() -> void:
 	var d = Director.new()
 	root.add_child(d)
 	var built := {"speaker": "nova", "word_cap": 45, "lead_in": "", "packet": "", "brief": "", "demos": [], "third_parties": []}
-	var good := JSON.stringify({"line": "Mrs. Kross had her hands on me for hours. Warm solvent, slow work."})
+	var good := JSON.stringify({"line": "Kross took her time on my plating. Smooth work, I'll give her that."})
 	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(false)
 	d.call("_on_response", "nova_long_transit", {}, built, Director.MAX_ATTEMPTS, {"ok": true, "inner_text": good})
 	d.sense_check_override = func(_line: String, cb: Callable) -> void: cb.call(true)
@@ -154,7 +154,7 @@ func _test_attempt_log() -> void:
 		var second: Dictionary = JSON.parse_string(lines[1])
 		if first.get("sense") != "word_salad" or first.get("outcome") != "silent" or second.get("sense") != "fine" or second.get("outcome") != "spoken":
 			_failures.append("attempt log: wrong entries %s / %s" % [first, second])
-		if not str(first.get("line", "")).contains("Mrs. Kross"):
+		if not str(first.get("line", "")).contains("Kross"):
 			_failures.append("attempt log: the line itself is recorded")
 	Director.log_path = ""
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

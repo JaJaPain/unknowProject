@@ -97,17 +97,17 @@ func _test_lead_in_beats() -> void:
 func _test_transit_rotates_devices() -> void:
 	# Naming one device made it formulaic (20/20 identical). Both must appear.
 	var rng := _rng(4242)
-	var saw_jealousy := false
+	var saw_attention := false
 	var saw_dangle := false
 	for i in 8:
 		var req := Beats.build_request("nova_long_transit", rng)
 		var prompt := str(req.get("prompt", ""))
-		if prompt.contains("jealous"):
-			saw_jealousy = true
-		elif prompt.contains("dangles it in front of him"):
+		if prompt.contains("teases him to get it"):
+			saw_attention = true
+		elif prompt.contains("an excuse to get him talking"):
 			saw_dangle = true
-	if not saw_jealousy:
-		_failures.append("transit: jealousy device never selected in 8 draws")
+	if not saw_attention:
+		_failures.append("transit: attention device never selected in 8 draws")
 	if not saw_dangle:
 		_failures.append("transit: dangle device never selected in 8 draws")
 

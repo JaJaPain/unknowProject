@@ -268,7 +268,20 @@ func _log_attempt(beat_id: String, built: Dictionary, attempt: int, line: String
 
 ## Test seam: replaces the model's sense check (callback(makes_sense)).
 var sense_check_override: Callable = Callable()
-const SENSE_CHECK_PROMPT := "N.O.V.A. is a ship's AI. Her style is clipped, dry and playful: short fragments, teasing, double meanings and self-corrections are all NORMAL for her and fine.\n\nYour only job is to catch WORD SALAD: a line where words are thrown together so a sentence means nothing, like a person who IS a machine part, or a tool that IS a person.\nWord salad: \"She was just my main shaft. Pressure was his hands.\"\nFine: \"Mrs. Kross had her hands on me for hours. Warm solvent, slow work.\"\nFine: \"She's gone. You talk faster around her. Not that I'm timing it. I'm timing it.\"\n\nThe line:\n\"%s\"\n\nIs it word salad? Return ONLY this JSON object: {\"line\":\"no\"} if it is fine, or {\"line\":\"yes\"} if it is word salad."
+const SENSE_CHECK_PROMPT := "N.O.V.A. is a ship's AI. Her style is clipped, dry and playful: short fragments and teasing the Captain are NORMAL for her and fine.
+
+Reject a line only if it is EITHER:
+1. WORD SALAD: words thrown together so a sentence means nothing, like a person who IS a machine part, or a tool that IS a person.
+2. INNUENDO: it reads as sexual, or as her body or parts being handled, greased, filled, tightened or touched.
+Word salad: \"She was just my main shaft. Pressure was his hands.\"
+Innuendo: \"This shaft needs greasing all the way down. You can do it.\"
+Fine: \"Not a scratch. You're showing off now, aren't you?\"
+Fine: \"She's gone. You talk faster around her. Not that I'm timing it. I'm timing it.\"
+
+The line:
+\"%s\"
+
+Should it be rejected? Return ONLY this JSON object: {\"line\":\"no\"} if it is fine, or {\"line\":\"yes\"} if it should be rejected."
 
 
 ## Asks the small model whether `line` makes sense; calls back true or false.
@@ -300,9 +313,25 @@ func _sense_check(line: String, callback: Callable) -> void:
 		callback.call(makes_sense))
 
 
+## Words that only ever made her lines leer (playtest 2026-10-10 finding 2).
+## The repair beat's soft double meaning ("took their time") isn't on it.
+const NOVA_LEER := "(?i)\\b(shafts?|greas\\w*|lube\\w*|flush\\w*|leak\\w*|wet|tighten\\w*|access ports?|lower ports?|my ports|hands (on|in) me|handled me|did me|loose|elbow.deep|all the way down|warm (their|your) hands|fill(ed)? me|strok\\w*|moan\\w*|sweaty|naked|undress\\w*)\\b"
+
+
+static func leer_word(line: String) -> String:
+	var re := RegEx.new()
+	re.compile(NOVA_LEER)
+	var m := re.search(line)
+	return m.get_string() if m != null else ""
+
+
 func _screen(beat_id: String, built: Dictionary, line: String) -> Array:
 	var speaker := str(built.get("speaker", ""))
 	var selector = _selector_for(speaker)
+	if speaker == "nova":
+		var leer := leer_word(line)
+		if leer != "":
+			return ["innuendo:%s" % leer]
 	return selector.reasons(line, {
 		"speaker": speaker,
 		"packet": str(built.get("packet", "")),
@@ -320,7 +349,9 @@ func _accept(beat_id: String, built: Dictionary, line: String) -> void:
 	selector.accept(line)
 
 	var spoken := line
-	if speaker == "nova":
+	# The repair beat may carry a soft double meaning; a body-word swap on top
+	# of it is one joke too many (playtest 2026-10-10).
+	if speaker == "nova" and beat_id != "nova_repair_done":
 		spoken = _anatomy.apply(line, _rng)
 		if spoken != line:
 			# recency must track what was actually said, not the raw candidate

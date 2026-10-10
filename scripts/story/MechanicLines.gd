@@ -4,7 +4,7 @@ extends RefCounted
 ## and 4). Damaged ships get a line from their hull band, so nobody invents a
 ## crash the pilot never had; parts runs are a favour for somebody else's
 ## ship, paid back with a cheaper repair. All approved by Abe 2026-10-10
-## except SPOTLESS, which awaits approval.
+## (SPOTLESS too).
 
 ## Off the next repair at the shop whose parts run you finished, once.
 const FAVOUR_DISCOUNT := 0.25
@@ -55,7 +55,7 @@ const HULL_BANDS: Array = [
 	]],
 ]
 
-## Full hull: the model's examples and its fallback. Awaiting Abe's approval.
+## Full hull: the model's examples and its fallback. Approved by Abe 2026-10-10.
 const SPOTLESS: Array = [
 	"Not a scratch on that {ship}. You know you're bad for business, right? Go dent something and come back.",
 	"Your ship's in better shape than my bench. Come back when you've broken something; I've got bills.",

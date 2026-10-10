@@ -29,8 +29,8 @@ func _initialize() -> void:
 
 	# machine term already present reads as a stutter
 	s.reset()
-	out = s.apply("My cargo hold is stuffed and my waist is lower.", rng)
-	if out.to_lower().count("midsection coupling") > 1:
+	out = s.apply("My keel took it fine, and so did my spine.", rng)
+	if out.to_lower().count("keel") > 1:
 		_failures.append("stuttered: %s" % out)
 
 	# same correction must not repeat back to back
@@ -41,6 +41,20 @@ func _initialize() -> void:
 		_failures.append("repeated the same correction: %s" % second)
 	if not first.to_lower().contains("frame spars"):
 		_failures.append("first correction missing: %s" % first)
+
+	# the aside follows the word it corrects (playtest 2026-10-10)
+	s.reset()
+	out = s.apply("My ribs are clean. The paint's chipped where they hit.", rng)
+	if not (out.begins_with("My ribs, or at least my frame spars, are clean.") or out.begins_with("My ribs, well, my frame spars, are clean.")):
+		_failures.append("aside not right after the word: %s" % out)
+	s.reset()
+	out = s.apply("That load has me filled up to my larynx.", rng)
+	if not (out == "That load has me filled up to my larynx, or at least my vocal processor." or out == "That load has me filled up to my larynx, well, my vocal processor."):
+		_failures.append("aside at the end of a sentence: %s" % out)
+	s.reset()
+	out = s.apply("Somebody brushed my hairline.", rng)
+	if out != "Somebody brushed my hairline.":
+		_failures.append("matched inside a longer word: %s" % out)
 
 	# no body word at all: untouched
 	s.reset()
@@ -54,7 +68,7 @@ func _initialize() -> void:
 	var reloaded := Slip.new()
 	reloaded.load_from_dict(s.to_save_dict())
 	out = reloaded.apply("My throat is still dry.", rng)
-	if out.to_lower().contains("intake trunk"):
+	if out.to_lower().contains("air intake"):
 		_failures.append("recency did not survive save/load: %s" % out)
 
 	if _failures.is_empty():

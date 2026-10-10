@@ -19,41 +19,41 @@ extends RefCounted
 # correction lands flat.
 const Checks := preload("res://scripts/story/QuietMomentChecks.gd")
 
+# Playtest 2026-10-10: the awkward ones (midsection coupling, gimbal mounts,
+# dorsal spine housing) read as a broken machine, not a flirt. Kept only
+# swaps a listener gets at once.
 const PARTS := {
 	"larynx": "vocal processor",
-	"throat": "intake trunk",
+	"throat": "air intake",
 	"lungs": "air scrubbers",
 	"ribs": "frame spars",
-	"ribcage": "frame spars",
+	"ribcage": "frame",
 	"spine": "keel",
 	"backbone": "keel",
-	"sternum": "keel plate",
-	"waist": "midsection coupling",
-	"hips": "gimbal mounts",
+	"heart": "reactor",
+	"skin": "plating",
 	"knees": "landing gear",
-	"ankles": "landing struts",
 	"jaw": "docking clamp",
 	"teeth": "grapple hooks",
 	"veins": "coolant lines",
 	"nerves": "sensor net",
-	"eyes": "optical array",
+	"eyes": "optics",
 	"ears": "audio pickups",
 	"hair": "antenna array",
 	"fingers": "manipulators",
-	"elbows": "articulation joints",
-	"wrists": "articulation joints",
-	"neck": "dorsal spine housing",
-	"shoulders": "dorsal mounts",
 }
 
+# Said right after the body word, as one aside: "filled up to my larynx, or
+# at least my vocal processor". Tacked on at the end of the line it read as a
+# glitch (playtest 2026-10-10: "Who else saw it? My frame spars,
+# technically.").
 const TEMPLATES := [
-	"Or at least my %s.",
-	"My %s, technically.",
-	"Well. My %s.",
+	", or at least my %s",
+	", well, my %s",
 ]
 
 # She has already corrected herself; a second correction reads as a stutter.
-const ALREADY_CORRECTED := ["or at least", "i mean", "figure of speech", "well, not"]
+const ALREADY_CORRECTED := ["or at least", "i mean", "figure of speech", "well, not", "well, my"]
 
 const RECENT_WINDOW := 4
 
@@ -90,21 +90,47 @@ func apply(line: String, rng: RandomNumberGenerator) -> String:
 		_recent.remove_at(0)
 
 	var template := str(TEMPLATES[rng.randi_range(0, TEMPLATES.size() - 1)])
-	var tail := template % machine
-	var separator := " "
-	var last := clean.strip_edges()
-	if not last.is_empty() and not ".!?".contains(last.right(1)):
-		separator = ". "
-	return "%s%s%s" % [clean.strip_edges(), separator, tail]
+	var aside := template % machine
+	var text := clean.strip_edges()
+	var at := _own_part_end(text.to_lower(), part)
+	if at < 0:
+		return line
+	var rest := text.substr(at)
+	# Mid-sentence the aside is closed with a comma: "My ribs, or at least my
+	# frame spars, took it." Before punctuation or at the end it isn't.
+	if rest.is_empty() or ".!?,;:".contains(rest.left(1)):
+		return text.substr(0, at) + aside + rest
+	return text.substr(0, at) + aside + "," + rest
 
 
 # Only HER body. "you could feel it in your bones" is the Captain's, and
 # correcting that would be nonsense.
 static func _find_own_part(low: String) -> String:
 	for part in PARTS:
-		if low.contains("my %s" % part):
+		if _own_part_end(low, str(part)) >= 0:
 			return str(part)
 	return ""
+
+
+# Where "my <part>" ends as a whole word ("my hair", not "my hairline"), or -1.
+static func _own_part_end(low: String, part: String) -> int:
+	var needle := "my %s" % part
+	var from := 0
+	while true:
+		var i := low.find(needle, from)
+		if i < 0:
+			return -1
+		var end := i + needle.length()
+		var before_ok := i == 0 or not _is_letter(low[i - 1])
+		var after_ok := end >= low.length() or not _is_letter(low[end])
+		if before_ok and after_ok:
+			return end
+		from = i + 1
+	return -1
+
+
+static func _is_letter(c: String) -> bool:
+	return (c >= "a" and c <= "z") or c == "'"
 
 
 func reset() -> void:
