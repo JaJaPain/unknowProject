@@ -110,52 +110,52 @@ Pick them so you get **one ore job, one pickup, and one of anything else**
 
 ### 4b. The ore job
 
-- [ ] 4.6 **Fly to a belt.** Fly-to bends round planets and stations, no
+- [x] 4.6 **Fly to a belt.** Fly-to bends round planets and stations, no
       U-turns; stops outside stations and orbits.
-- [ ] 4.7 **NEW Scan Composition.** Far from any rock: no Scan button and C
+- [x] 4.7 **NEW Scan Composition.** Far from any rock: no Scan button and C
       does nothing. Within 400 m of a rock: the button appears, C pings, the
       bubble grows, the feed lists the ores, the overview names scanned rocks.
-- [ ] 4.8 **Mine the job's ore.** Scanning finds it in this system's belts.
+- [x] 4.8 **Mine the job's ore.** Scanning finds it in this system's belts.
       Mine a couple of minutes: N.O.V.A. makes one dry remark about the rocks.
 - [ ] 4.9 **Drone bay taught.** Target a rock and fly close: N.O.V.A.
       explains the drones once; "[G] LAUNCH SURVEY DRONE · N aboard". The
       inventory shows a locked RESERVE card (x2).
-- [ ] 4.10 **Lasers off.** While mining, press Dock: the lasers stop.
-- [ ] 4.11 **NEW Turn it in, then look at the buttons.** Hand in the ore
+- [x] 4.10 **Lasers off.** While mining, press Dock: the lasers stop.
+- [x] 4.11 **NEW Turn it in, then look at the buttons.** Hand in the ore
       job, then go to Sell/Bank: "Sell Ore (N m³...)" and "Bank N m³" show
       what's really left in the hold, not the amount before the hand-in.
       Kaelen never says "Zero ore?".
-- [ ] 4.12 **Sell or Bank.** With ore left: Bank is gold with a ★ while the
+- [x] 4.12 **Sell or Bank.** With ore left: Bank is gold with a ★ while the
       goal needs ore; bank it and the goal card's Silicate bar fills.
 
 ### 4c. The pickup
 
-- [ ] 4.13 **Where, not who.** The board and tracker name the outpost and
+- [x] 4.13 **Where, not who.** The board and tracker name the outpost and
       say someone in its lounge has it.
 - [ ] 4.14 **NEW No Kaelen at outposts.** In the outpost's lounge: no Broker
       Kaelen card and no faction agents, only locals.
-- [ ] 4.15 **The hunt.** Ask around: wrong people deflect, one names who has
+- [x] 4.15 **The hunt.** Ask around: wrong people deflect, one names who has
       it, the holder hands it over on the third ask (a drink counts). With
       ore still in the hold, nobody asks you to sell it first.
-- [ ] 4.16 **On the way back.** The HUD shows "... m³ + <item>"; N.O.V.A.
+- [x] 4.16 **On the way back.** The HUD shows "... m³ + <item>"; N.O.V.A.
       may say something about the job partway home (never at the station).
-- [ ] 4.17 **Outposts.** Docking at both outposts (Iron Reach and Kova)
+- [x] 4.17 **Outposts.** Docking at both outposts (Iron Reach and Kova)
       never clips the structure; freighters use other berths, not yours.
 
 ### 4d. Out flying, any time in this section
 
-- [ ] 4.18 **Receiver.** After the tutorial, 30 s of calm flight 1 km+ from
+- [x] 4.18 **Receiver.** After the tutorial, 30 s of calm flight 1 km+ from
       any station: N.O.V.A. explains the receiver once, a pulsing "[T] TUNE
       RECEIVER" prompt and a SYSTEM line. It hides near stations and with
       hostiles around. Try one: the timer bar drains; a payout banner at the
       end.
-- [ ] 4.19 **No job, she helps.** Between jobs, fly ~2.5 min with no job:
+- [x] 4.19 **No job, she helps.** Between jobs, fly ~2.5 min with no job:
       N.O.V.A. suggests something (not again for ~10 min).
-- [ ] 4.20 **The comet.** About 5 minutes into the session, a faint comet
+- [x] 4.20 **The comet.** About 5 minutes into the session, a faint comet
       crosses high in the sky.
-- [ ] 4.21 **F12.** Take a screenshot (flash + click + SYSTEM line); Esc >
+- [x] 4.21 **F12.** Take a screenshot (flash + click + SYSTEM line); Esc >
       GALLERY shows it.
-- [ ] 4.22 **N.O.V.A. DATABASE** (systems menu): Kaelen, the job givers and
+- [x] 4.22 **N.O.V.A. DATABASE** (systems menu): Kaelen, the job givers and
       the pickup holder are there with a line each.
 
 ## 5. The first upgrade: Shields Mk II (20 min)
