@@ -95,7 +95,7 @@ const HANDINS: Array = [
 const PERSONALITIES := {
 	"old_hand": {
 		"gender": "m",
-		"approved": false,
+		"approved": true,
 		"about": "a gruff old-timer: few words, has seen every kind of wreck, grumbles about young pilots, proud of his work, never hurries",
 		"bands": [
 			["Forty years on this deck, and I've seen worse exactly twice. Both times I said the same thing. Sit down, son. This'll take a while, and it won't be cheap.",
@@ -116,13 +116,13 @@ const PERSONALITIES := {
 	},
 	"tinkerer": {
 		"gender": "m",
-		"approved": false,
+		"approved": true,
 		"about": "an excitable tinkerer who loves machines more than people: talks to the ship like a pet, gets carried away, a bit awkward with pilots",
 		"bands": [
 			["Oh, you poor thing. Not you, the ship. Look what he did to you. Don't worry, girl, I've got you. You, Captain, have got the bill.",
 			"Oh, this is wonderful. I mean terrible! Terrible for you. For me it's a whole week of work. My kids are going to eat this month."],
 			["You know what I love about a hull this busted? You get to see how she's put together. You don't love it. That's fine. That's what the invoice is for.",
-			"Last month I rebuilt a hauler's whole spine with a spare from a mining rig. It still flies. Yours'll fly too, just with more of your money in it."],
+			"Last month I rebuilt a hauler's whole spine with a spare from a mining rig. It still flies. Yours'll fly too, just with less of your money inside it."],
 			["She's been through it, hasn't she? Hey there. Hey. We'll get those dents out. Captain, pay the nice man.",
 			"Ooh, a fresh scorch pattern. I keep a scrapbook, you know. My brother thinks it's weird. He's not wrong. That'll be the usual."],
 			["Couple of bumps. She's fine, she's just being dramatic. Ships are like that. So are pilots. Quick job.",
